@@ -134,6 +134,9 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen> {
     try {
       await TermuxBridge.run(TermuxBridge.logScript(port: port),
           background: false);
+      // Give the service a beat to register the session before we foreground
+      // the Termux activity.
+      await Future<void>.delayed(const Duration(milliseconds: 400));
     } catch (_) {}
     await TermuxBridge.openTermux();
   }

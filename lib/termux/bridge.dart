@@ -94,11 +94,44 @@ echo setup-finished
 """;
   }
 
-  /// Streams the setup/server logs live (run this one in the foreground so
-  /// the user watches it in a Termux window).
-  static String logScript({int port = 4096}) =>
-      "echo '=== install log ==='; tail -n 60 $termuxHome/.oc/install.log 2>/dev/null; "
-      "echo; echo '=== server log ==='; tail -f $termuxHome/.oc/server.log 2>/dev/null";
+  /// Full diagnostics dump shown in a visible Termux session: component
+  /// states first (so it's useful even before any logs exist), then logs.
+  static String logScript({int port = 4096}) {
+    final home = termuxHome;
+    return """
+mkdir -p $home/.oc
+touch $home/.oc/install.log $home/.oc/server.log
+clear
+echo ''
+echo '════════ OpenCode on-device diagnostics ════════'
+if command -v proot-distro >/dev/null 2>&1; then
+  echo '[ok]   proot-distro installed'
+else
+  echo '[FAIL] proot-distro missing'
+fi
+if [ -d \$PREFIX/var/lib/proot-distro/installed-rootfs/ubuntu ]; then
+  echo '[ok]   ubuntu chroot downloaded'
+else
+  echo '[....] ubuntu chroot not present yet'
+fi
+proot-distro login ubuntu -- bash -lc \\
+  'command -v opencode >/dev/null 2>&1 && echo "[ok]   opencode installed" || echo "[....] opencode not installed yet"' \\
+  2>/dev/null || echo '[....] opencode not installed yet'
+if (echo > /dev/tcp/127.0.0.1/$port) 2>/dev/null; then
+  echo '[ok]   server LISTENING on 127.0.0.1:$port'
+else
+  echo '[....] server not responding on 127.0.0.1:$port'
+fi
+echo ''
+echo '───── install.log (last 100 lines) ─────'
+tail -n 100 $home/.oc/install.log
+echo ''
+echo '───── server.log ─────'
+tail -n 40 $home/.oc/server.log
+echo ''
+echo '══════ end of diagnostics ══════'
+""";
+  }
 
   /// Stops any server we started on [port].
   static String stopScript({int port = 4096}) =>
