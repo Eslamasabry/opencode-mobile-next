@@ -22,12 +22,16 @@ class AppBootstrap {
   }
 }
 
-final bootstrapProvider =
-    FutureProvider<AppBootstrap>((ref) => AppBootstrap.create());
+/// Created once in main so every screen and the connection controller share
+/// the same profile cache and secure-storage view.
+final bootstrapProvider = Provider<AppBootstrap>(
+  (ref) => throw UnimplementedError('overridden in bootstrap'),
+);
 
 /// The live connection controller; overridden with a real instance in main().
 final connProvider = Provider<ConnectionController>(
-    (ref) => throw UnimplementedError('overridden in bootstrap'));
+  (ref) => throw UnimplementedError('overridden in bootstrap'),
+);
 
 /// Everything the UI needs about the active server connection.
 class ConnectionController extends ChangeNotifier {
@@ -87,7 +91,9 @@ class ConnectionController extends ChangeNotifier {
       version = health.version ?? '';
     } catch (e) {
       status = StreamStatus.disconnected;
-      lastError = e is ApiException ? e.message : 'Cannot reach ${profile.baseUrl}: $e';
+      lastError = e is ApiException
+          ? e.message
+          : 'Cannot reach ${profile.baseUrl}: $e';
       api = null;
       notifyListeners();
       return;
@@ -95,8 +101,9 @@ class ConnectionController extends ChangeNotifier {
 
     // Restore per-profile selections.
     final saved = store.modelFor(profile.id);
-    selectedModel =
-        (saved.$1 != null && saved.$2 != null) ? ModelRef(providerID: saved.$1!, modelID: saved.$2!) : null;
+    selectedModel = (saved.$1 != null && saved.$2 != null)
+        ? ModelRef(providerID: saved.$1!, modelID: saved.$2!)
+        : null;
     selectedAgent = store.agentFor(profile.id);
 
     unawaited(_loadCatalog());
@@ -111,7 +118,9 @@ class ConnectionController extends ChangeNotifier {
       if ((selectedModel?.modelID.isEmpty ?? true) && providers != null) {
         final p = providers!.defaultProviderID;
         final m = providers!.defaultModelID;
-        if (p != null && m != null) selectedModel = ModelRef(providerID: p, modelID: m);
+        if (p != null && m != null) {
+          selectedModel = ModelRef(providerID: p, modelID: m);
+        }
       }
       agents = await api!.agents();
       if (selectedAgent.isEmpty && agents.isNotEmpty) {
@@ -137,7 +146,10 @@ class ConnectionController extends ChangeNotifier {
     )..start();
   }
 
-  Future<void> disconnect({bool keepActive = false, bool silent = false}) async {
+  Future<void> disconnect({
+    bool keepActive = false,
+    bool silent = false,
+  }) async {
     await _events?.dispose();
     _events = null;
     _poll?.cancel();
@@ -186,7 +198,9 @@ class ConnectionController extends ChangeNotifier {
         if (info is Map<String, dynamic>) {
           final msg = MessageInfo.fromJson(info);
           if (msg.role == 'assistant') {
-            final working = (msg.time == null || !msg.time!.isDone) && msg.errorText == null;
+            final working =
+                (msg.time == null || !msg.time!.isDone) &&
+                msg.errorText == null;
             if (working) {
               busySessions.add(msg.sessionID);
             } else {
@@ -228,7 +242,10 @@ class ConnectionController extends ChangeNotifier {
         : props;
     final sessionID = inner['sessionID']?.toString();
     final permID = (inner['id'] ?? inner['permissionID'])?.toString();
-    if (sessionID == null || sessionID.isEmpty || permID == null || permID.isEmpty) {
+    if (sessionID == null ||
+        sessionID.isEmpty ||
+        permID == null ||
+        permID.isEmpty) {
       return;
     }
     permissions[sessionID] = PermissionRequest(
@@ -261,7 +278,9 @@ class ConnectionController extends ChangeNotifier {
         final statuses = await api!.sessionStatuses();
         busySessions
           ..clear()
-          ..addAll(statuses.entries.where((e) => e.value != 'idle').map((e) => e.key));
+          ..addAll(
+            statuses.entries.where((e) => e.value != 'idle').map((e) => e.key),
+          );
       } catch (_) {}
       notifyListeners();
     } catch (_) {}

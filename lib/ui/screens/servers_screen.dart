@@ -25,9 +25,12 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     if (conn.api != null && mounted) {
       Navigator.of(context).pushReplacementNamed('/home');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
           content: Text(conn.lastError ?? 'Connection failed'),
-          backgroundColor: Theme.of(context).colorScheme.error));
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
     }
   }
 
@@ -37,8 +40,8 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
       builder: (_) => _ProfileDialog(existing: existing),
     );
     if (result == null) return;
-    await ref.read(bootstrapProvider).value!.store.upsert(result);
-    await ref.read(bootstrapProvider).value!.store.load();
+    await ref.read(bootstrapProvider).store.upsert(result);
+    await ref.read(bootstrapProvider).store.load();
     // refresh store reference inside controller
     if (mounted) setState(() {});
   }
@@ -48,28 +51,36 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('Remove ${p.name}?'),
-        content: const Text('The saved server will be removed from this device.'),
+        content: const Text(
+          'The saved server will be removed from this device.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
-              style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(ctx).colorScheme.error),
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Remove')),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Remove'),
+          ),
         ],
       ),
     );
     if (ok != true) return;
-    await ref.read(bootstrapProvider).value!.store.remove(p.id);
-    await ref.read(bootstrapProvider).value!.store.load();
+    await ref.read(bootstrapProvider).store.remove(p.id);
+    await ref.read(bootstrapProvider).store.load();
     if (mounted) setState(() {});
   }
 
   void _addPreset(String name, String url, String hint) async {
-    final profiles = ref.read(bootstrapProvider).value!.store.profiles;
+    final profiles = ref.read(bootstrapProvider).store.profiles;
     if (profiles.any((p) => p.baseUrl == url)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$name preset already exists')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('$name preset already exists')));
       return;
     }
     final preset = ServerProfile(
@@ -77,8 +88,8 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
       name: name,
       baseUrl: url,
     );
-    await ref.read(bootstrapProvider).value!.store.upsert(preset);
-    await ref.read(bootstrapProvider).value!.store.load();
+    await ref.read(bootstrapProvider).store.upsert(preset);
+    await ref.read(bootstrapProvider).store.load();
     if (mounted) {
       setState(() {});
       _showHint(hint);
@@ -90,12 +101,18 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
       context: context,
       builder: (ctx) => Padding(
         padding: const EdgeInsets.all(20),
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment:
-            CrossAxisAlignment.start, children: [
-          Text('Start the server', style: Theme.of(ctx).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          Text(hint, style: Theme.of(ctx).textTheme.bodySmall),
-        ]),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Start the server',
+              style: Theme.of(ctx).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(hint, style: Theme.of(ctx).textTheme.bodySmall),
+          ],
+        ),
       ),
     );
   }
@@ -105,11 +122,16 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     final bootstrap = ref.watch(bootstrapProvider);
     return Scaffold(
       appBar: AppBar(
-        title: Row(children: [
-          Icon(Icons.terminal_rounded, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(width: 10),
-          const Text('OpenCode'),
-        ]),
+        title: Row(
+          children: [
+            Icon(
+              Icons.terminal_rounded,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: 10),
+            const Text('OpenCode'),
+          ],
+        ),
         actions: [
           IconButton(
             tooltip: 'Setup guide',
@@ -118,24 +140,28 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
           ),
         ],
       ),
-      body: bootstrap.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
-        data: (b) {
-          final store = b.store;
+      body: Builder(
+        builder: (context) {
+          final store = bootstrap.store;
           final activeId = store.activeId;
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
-              Text('SERVERS',
-                  style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                      color: Theme.of(context).hintColor, letterSpacing: 1)),
+              Text(
+                'SERVERS',
+                style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                  color: Theme.of(context).hintColor,
+                  letterSpacing: 1,
+                ),
+              ),
               const SizedBox(height: 6),
               for (final p in store.profiles)
                 Card.filled(
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   color: p.id == activeId
-                      ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: .35)
+                      ? Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer.withValues(alpha: .35)
                       : null,
                   child: ListTile(
                     onTap: () => _connect(p),
@@ -143,9 +169,12 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                     leading: CircleAvatar(
                       backgroundColor: p.id == activeId
                           ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.surfaceContainerHighest,
+                          : Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
                       child: Icon(
-                        p.baseUrl.contains('127.0.0.1') || p.baseUrl.contains('localhost')
+                        p.baseUrl.contains('127.0.0.1') ||
+                                p.baseUrl.contains('localhost')
                             ? Icons.smartphone_rounded
                             : Icons.dns_rounded,
                         size: 18,
@@ -154,10 +183,20 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                             : Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    title: Text(p.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-                    subtitle: Text(p.baseUrl,
-                        maxLines: 1, overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontFamily: 'monospace', fontSize: 11)),
+                    title: Text(
+                      p.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      p.baseUrl,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 11,
+                      ),
+                    ),
                     trailing: PopupMenuButton<String>(
                       onSelected: (v) {
                         if (v == 'edit') _edit(p);
@@ -175,18 +214,28 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
               if (store.profiles.isEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 32),
-                  child: Column(children: [
-                    Icon(Icons.cloud_off_rounded,
-                        size: 42, color: Theme.of(context).hintColor),
-                    const SizedBox(height: 12),
-                    Text('No servers yet',
-                        style: Theme.of(context).textTheme.titleSmall),
-                    const SizedBox(height: 4),
-                    Text('Add a remote host or the on-device Termux preset.',
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.cloud_off_rounded,
+                        size: 42,
+                        color: Theme.of(context).hintColor,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'No servers yet',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Add a remote host or the on-device Termux preset.',
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodySmall!
-                            .copyWith(color: Theme.of(context).hintColor)),
-                  ]),
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                          color: Theme.of(context).hintColor,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               const SizedBox(height: 16),
               OutlinedButton.icon(
@@ -195,9 +244,13 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                 label: const Text('Add server'),
               ),
               const SizedBox(height: 24),
-              Text('QUICK ADD',
-                  style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                      color: Theme.of(context).hintColor, letterSpacing: 1)),
+              Text(
+                'QUICK ADD',
+                style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                  color: Theme.of(context).hintColor,
+                  letterSpacing: 1,
+                ),
+              ),
               const SizedBox(height: 6),
               Card.filled(
                 margin: const EdgeInsets.symmetric(vertical: 4),
@@ -205,7 +258,9 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                   onTap: () => Navigator.pushNamed(context, '/termux-setup'),
                   leading: const Icon(Icons.smartphone_rounded),
                   title: const Text('On-device (Termux)'),
-                  subtitle: const Text('Guided setup — the app drives Termux for you'),
+                  subtitle: const Text(
+                    'Guided setup — the app drives Termux for you',
+                  ),
                 ),
               ),
               Card.filled(
@@ -239,47 +294,63 @@ class _ProfileDialog extends StatefulWidget {
 }
 
 class _ProfileDialogState extends State<_ProfileDialog> {
-  late final TextEditingController _name =
-      TextEditingController(text: widget.existing?.name ?? '');
+  late final TextEditingController _name = TextEditingController(
+    text: widget.existing?.name ?? '',
+  );
   late final TextEditingController _url = TextEditingController(
-      text: widget.existing?.baseUrl ?? 'http://');
-  late final TextEditingController _user =
-      TextEditingController(text: widget.existing?.username ?? '');
-  late final TextEditingController _pass =
-      TextEditingController(text: widget.existing?.password ?? '');
+    text: widget.existing?.baseUrl ?? 'http://',
+  );
+  late final TextEditingController _user = TextEditingController(
+    text: widget.existing?.username ?? '',
+  );
+  late final TextEditingController _pass = TextEditingController(
+    text: widget.existing?.password ?? '',
+  );
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(widget.existing == null ? 'Add server' : 'Edit server'),
       content: SingleChildScrollView(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(
-            controller: _name,
-            decoration: const InputDecoration(labelText: 'Name'),
-            autofocus: widget.existing == null,
-          ),
-          TextField(
-            controller: _url,
-            keyboardType: TextInputType.url,
-            decoration: const InputDecoration(labelText: 'Server URL',
-                hintText: 'http://host:4096'),
-          ),
-          TextField(
-            controller: _user,
-            decoration: const InputDecoration(labelText: 'Username (optional)',
-                hintText: 'opencode'),
-          ),
-          TextField(
-            controller: _pass,
-            obscureText: true,
-            decoration: const InputDecoration(labelText: 'Password (optional)',
-                helperText: 'Set OPENCODE_SERVER_PASSWORD on the server'),
-          ),
-        ]),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _name,
+              decoration: const InputDecoration(labelText: 'Name'),
+              autofocus: widget.existing == null,
+            ),
+            TextField(
+              controller: _url,
+              keyboardType: TextInputType.url,
+              decoration: const InputDecoration(
+                labelText: 'Server URL',
+                hintText: 'http://host:4096',
+              ),
+            ),
+            TextField(
+              controller: _user,
+              decoration: const InputDecoration(
+                labelText: 'Username (optional)',
+                hintText: 'opencode',
+              ),
+            ),
+            TextField(
+              controller: _pass,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Password (optional)',
+                helperText: 'Set OPENCODE_SERVER_PASSWORD on the server',
+              ),
+            ),
+          ],
+        ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
         FilledButton(
           onPressed: () {
             var url = _url.text.trim();
@@ -290,10 +361,15 @@ class _ProfileDialogState extends State<_ProfileDialog> {
             Navigator.pop(
               context,
               ServerProfile(
-                id: widget.existing?.id ??
+                id:
+                    widget.existing?.id ??
                     DateTime.now().microsecondsSinceEpoch.toString(),
-                name: _name.text.trim().isEmpty ? Uri.parse(url).host : _name.text.trim(),
-                baseUrl: url.endsWith('/') ? url.substring(0, url.length - 1) : url,
+                name: _name.text.trim().isEmpty
+                    ? Uri.parse(url).host
+                    : _name.text.trim(),
+                baseUrl: url.endsWith('/')
+                    ? url.substring(0, url.length - 1)
+                    : url,
                 username: _user.text.trim(),
                 password: _pass.text,
               ),

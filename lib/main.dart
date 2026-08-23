@@ -15,7 +15,10 @@ Future<void> main() async {
 
   runApp(
     ProviderScope(
-      overrides: [connProvider.overrideWithValue(conn)],
+      overrides: [
+        bootstrapProvider.overrideWithValue(bootstrap),
+        connProvider.overrideWithValue(conn),
+      ],
       child: const OcApp(),
     ),
   );
