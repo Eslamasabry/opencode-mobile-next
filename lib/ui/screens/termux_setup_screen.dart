@@ -115,16 +115,27 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen> {
       } catch (_) {/* not up yet */}
       if (!mounted) return;
       setState(() {});
-      if (_pollSeconds >= 300 && mounted) {
+      // First run pulls an Ubuntu chroot (~400MB): allow up to 15 minutes.
+      if (_pollSeconds >= 900 && mounted) {
         t.cancel();
         setState(() {
           _busy = false;
           _phase = _Phase.failed;
-          _error = 'The server did not come up within 5 minutes.\n'
-              'Check ~/.oc/server.log inside Termux for details.';
+          _error =
+              'The server did not come up within 15 minutes.\n'
+              'Open the live log to see what happened inside Termux '
+              '(~/.oc/install.log and ~/.oc/server.log).';
         });
       }
     });
+  }
+
+  Future<void> _openLiveLog() async {
+    try {
+      await TermuxBridge.run(TermuxBridge.logScript(port: port),
+          background: false);
+    } catch (_) {}
+    await TermuxBridge.openTermux();
   }
 
   Future<void> _finishConnect() async {
@@ -266,30 +277,36 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen> {
                     _Phase.ready => Column(crossAxisAlignment:
                         CrossAxisAlignment.start, children: [
                         const Text(
-                            'Node.js, opencode and the local server are set up '
-                            'for you. Takes a few minutes on first run.'),
+                            'Sets up Ubuntu (chroot), Node.js and opencode '
+                            'inside Termux, then starts the server. First run '
+                            'downloads ~400 MB — usually 5–15 minutes.'),
                         const SizedBox(height: 10),
                         FilledButton.icon(
                             onPressed: _busy ? null : _installAndStart,
                             icon: const Icon(Icons.rocket_launch_rounded),
                             label: const Text('Install & start')),
                       ]),
-                    _Phase.installing => const _ProgressLine(
-                        text: 'Installing node + opencode inside Termux…'),
+                    _Phase.installing => _ProgressLine(
+                        text:
+                            'Installing Ubuntu + opencode inside Termux… ($_pollSeconds s)'),
                     _Phase.starting => _ProgressLine(
                         text:
-                            'Waiting for server on 127.0.0.1:$port… ($_pollSeconds s)'),
+                            'Starting server on 127.0.0.1:$port… ($_pollSeconds s)'),
                     _Phase.connected => const Text('Connected!'),
                     _Phase.failed => Column(crossAxisAlignment:
                         CrossAxisAlignment.start, children: [
                         Text(_error ?? 'Something went wrong.',
                             style: TextStyle(color: theme.colorScheme.error)),
                         const SizedBox(height: 10),
-                        Wrap(spacing: 8, children: [
+                        Wrap(spacing: 8, runSpacing: 8, children: [
                           FilledButton.icon(
                               onPressed: _busy ? null : _retryFromScratch,
                               icon: const Icon(Icons.refresh_rounded),
                               label: const Text('Retry')),
+                          OutlinedButton.icon(
+                              onPressed: _openLiveLog,
+                              icon: const Icon(Icons.receipt_long_rounded),
+                              label: const Text('Live log in Termux')),
                           OutlinedButton(
                               onPressed: () =>
                                   setState(() => _phase = _Phase.needUnlock),
@@ -299,6 +316,24 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen> {
                     _ => null,
                   },
                 ),
+                if (_phase == _Phase.installing || _phase == _Phase.starting) ...[
+                  const SizedBox(height: 8),
+                  Row(children: [
+                    Expanded(
+                      child: Text(
+                        'You can watch progress: tap “Live log in Termux” below.',
+                        style: theme.textTheme.bodySmall!
+                            .copyWith(color: theme.hintColor),
+                      ),
+                    ),
+                  ]),
+                  const SizedBox(height: 6),
+                  OutlinedButton.icon(
+                    onPressed: _openLiveLog,
+                    icon: const Icon(Icons.receipt_long_rounded, size: 18),
+                    label: const Text('Live log in Termux'),
+                  ),
+                ],
               ],
             ),
           ),

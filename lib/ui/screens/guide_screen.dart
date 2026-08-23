@@ -46,10 +46,19 @@ class GuideScreen extends StatelessWidget {
                 'pasting one unlock line inside Termux once — both required by '
                 'Android\u2019s security model, not by this app.'),
             const Text('Prefer manual? Inside Termux run:'),
-            const Cmd('# install node & opencode\npkg update && pkg install nodejs-lts\nnpm i -g opencode-ai\n\n# start the server\nopencode serve --hostname 127.0.0.1 --port 4096'),
+            const Cmd('# plain-Termux npm installs are broken upstream\n'
+                '# (npm os=android -> no opencode-android-arm64 package),\n'
+                '# so we use an Ubuntu chroot:\n'
+                'pkg install proot-distro\n'
+                'proot-distro install ubuntu\n'
+                'proot-distro login ubuntu\n'
+                '  apt update && apt install -y nodejs npm\n'
+                '  npm i -g opencode-ai\n'
+                '  opencode serve --hostname 127.0.0.1 --port 4096 &\n'
+                'exit'),
             const Text(
-                'Then add a server pointing to http://127.0.0.1:4096. Keep Termux alive '
-                'with `termux-wake-lock`.'),
+                'The chroot shares the network stack, so http://127.0.0.1:4096 '
+                'works from this app. Run `termux-wake-lock` to keep it alive.'),
           ],
         ),
         _Section(

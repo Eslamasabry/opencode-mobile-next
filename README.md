@@ -81,9 +81,16 @@ Tap **On-device (Termux)** on the Servers screen. The app then:
 2. Copies an unlock line and jumps into Termux: you paste it once and press
    Enter. This sets `allow-external-apps=true` in `~/.termux/termux.properties`,
    which Termux itself requires before any external app may run commands.
-3. Installs node + opencode inside Termux via Termux's RUN_COMMAND service.
-4. Starts `opencode serve --hostname 127.0.0.1 --port 4096`, health-polls
-   `127.0.0.1:4096` for up to 5 minutes, saves the profile and connects.
+3. Installs **Ubuntu via proot-distro** inside Termux, then Node.js +
+   `opencode-ai` in the chroot, and starts
+   `opencode serve --hostname 127.0.0.1 --port 4096` detached.
+   (Plain-Termux npm installs of opencode are broken upstream — npm sees
+   `os=android` and no `opencode-android-arm64` package exists;
+   anomalyco/opencode#12515, #10504. The chroot is real glibc and shares the
+   network stack, so localhost works from the app.)
+4. Health-polls `127.0.0.1:4096` (up to 15 min on first run), saves the
+   profile and connects. A "Live log in Termux" button streams install/server
+   logs any time.
 
 Native side lives in [`MainActivity.kt`](android/app/src/main/kotlin/ai/opencode/opencode_mobile/MainActivity.kt)
 (method channel `oc/termux`) with the Dart wrapper in
@@ -92,12 +99,17 @@ Native side lives in [`MainActivity.kt`](android/app/src/main/kotlin/ai/opencode
 Prefer manual? Inside Termux:
 
 ```bash
-pkg update && pkg install nodejs-lts git
-npm i -g opencode-ai
-opencode serve --hostname 127.0.0.1 --port 4096
+pkg install proot-distro
+proot-distro install ubuntu
+proot-distro login ubuntu     # then inside the chroot:
+  apt update && apt install -y nodejs npm
+  npm i -g opencode-ai
+  opencode serve --hostname 127.0.0.1 --port 4096 &
+  exit
 ```
 
-Then add a server pointing at `http://127.0.0.1:4096`.
+The chroot shares the network stack, so the app reaches it at
+`http://127.0.0.1:4096`. Run `termux-wake-lock` to keep it alive.
 
 > The server can execute commands on its host; treat app access like SSH access.
 
