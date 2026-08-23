@@ -78,14 +78,14 @@ OC=$home/.oc/bin/opencode
 echo '[oc] resolving latest version…'
 VER=\$(curl -fsSL https://api.github.com/repos/anomalyco/opencode/releases/latest \\
       | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4)
-[ -n \"\$VER\" ] || VER=latest
-echo \"[oc] version: \$VER\"
+[ -n "\$VER" ] || VER=latest
+echo "[oc] version: \$VER"
 
 install_native() {
-  echo \"[oc] trying native musl build (~30s)…\"
-  local url=\"https://github.com/anomalyco/opencode/releases/download/\$VER/opencode-linux-arm64-musl.tar.gz\"
-  [ \"\$VER\" = latest ] && url=\"https://github.com/anomalyco/opencode/releases/latest/download/opencode-linux-arm64-musl.tar.gz\"
-  curl -fL \"\$url\" -o $home/.oc/native.tar.gz || return 1
+  echo "[oc] trying native musl build (~30s)…"
+  local url="https://github.com/anomalyco/opencode/releases/download/\$VER/opencode-linux-arm64-musl.tar.gz"
+  [ "\$VER" = latest ] && url="https://github.com/anomalyco/opencode/releases/latest/download/opencode-linux-arm64-musl.tar.gz"
+  curl -fL "\$url" -o $home/.oc/native.tar.gz || return 1
   rm -rf $home/.oc/native && mkdir -p $home/.oc/native
   tar -xzf $home/.oc/native.tar.gz -C $home/.oc/native || return 1
   find $home/.oc/native -name opencode -type f -exec cp {} \$OC \\;
@@ -118,15 +118,15 @@ install_proot() {
 RUNNER=''
 if install_native; then
   echo '[oc] native build OK'
-  RUNNER=\"direct\"
+  RUNNER="direct"
 else
   install_proot || { echo '[oc] SETUP FAILED - see messages above'; exit 1; }
-  RUNNER=\"proot\"
+  RUNNER="proot"
 fi
 
 pkill -f 'opencode serve --hostname 127.0.0.1 --port $port' 2>/dev/null || true
 echo '[oc] starting server…'
-if [ \"\$RUNNER\" = direct ]; then
+if [ "\$RUNNER" = direct ]; then
   setsid nohup \$OC serve --hostname 127.0.0.1 --port $port \\
     > $home/.oc/server.log 2>&1 &
 else
