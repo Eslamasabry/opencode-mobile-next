@@ -132,36 +132,50 @@ process_start() {
 }
 
 self_start=\$(process_start "\$\$")
-lock_candidate="\$LOCK.\$\$"
-printf '%s %s\n' "\$\$" "\$self_start" > "\$lock_candidate"
-if ! ln "\$lock_candidate" "\$LOCK" 2>/dev/null; then
+if [ -f "\$LOCK" ]; then
   owner_pid=''
   owner_start=''
   read -r owner_pid owner_start < "\$LOCK" 2>/dev/null || true
+  live_start=\$(process_start "\$owner_pid" 2>/dev/null || true)
+  if [ -n "\$owner_pid" ] && [ -n "\$owner_start" ] && [ "\$owner_start" = "\$live_start" ] &&
+     kill -0 "\$owner_pid" 2>/dev/null; then
+    echo "manager-already-running:\$owner_pid"
+    exit 0
+  fi
+  rm -f "\$LOCK"
+fi
+if mkdir "\$LOCK" 2>/dev/null; then
+  printf '%s %s\n' "\$\$" "\$self_start" > "\$LOCK/owner"
+else
+  owner_pid=''
+  owner_start=''
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    read -r owner_pid owner_start < "\$LOCK/owner" 2>/dev/null && break
+    sleep 0.1
+  done
   live_start=\$(process_start "\$owner_pid" 2>/dev/null || true)
   case "\$owner_pid" in
     ''|*[!0-9]*) ;;
     *) if [ -n "\$owner_start" ] && [ "\$owner_start" = "\$live_start" ] &&
          kill -0 "\$owner_pid" 2>/dev/null; then
-         rm -f "\$lock_candidate"
          echo "manager-already-running:\$owner_pid"
          exit 0
        fi ;;
   esac
-  rm -f "\$LOCK"
-  ln "\$lock_candidate" "\$LOCK" 2>/dev/null || {
-    echo 'setup-lock-unavailable' >&2
-    rm -f "\$lock_candidate"
-    exit 75
-  }
+  if [ -z "\$owner_pid" ] || [ -z "\$owner_start" ]; then
+    echo 'setup-lock-owner-missing; use Stop & retry' >&2
+  else
+    echo 'setup-lock-stale; use Stop & retry' >&2
+  fi
+  exit 75
 fi
-rm -f "\$lock_candidate"
 cleanup_dispatch() {
   lock_pid=''
   lock_start=''
-  read -r lock_pid lock_start < "\$LOCK" 2>/dev/null || true
+  read -r lock_pid lock_start < "\$LOCK/owner" 2>/dev/null || true
   if [ "\$lock_pid" = "\$\$" ] && [ "\$lock_start" = "\$self_start" ]; then
-    rm -f "\$LOCK"
+    rm -f "\$LOCK/owner" "\$LOCK"/owner.tmp.*
+    rmdir "\$LOCK" 2>/dev/null || true
   fi
 }
 trap cleanup_dispatch EXIT
@@ -171,7 +185,10 @@ printf '%s' $quotedPassword > "\$password_tmp"
 chmod 600 "\$password_tmp"
 mv "\$password_tmp" "\$OC_DIR/server.password"
 printf 'phase=queued\nmessage=Setup queued\nport=$port\nrunner=proot\nversion=\npid=\n' > "\$OC_DIR/state"
-nohup "\$MANAGER" setup '$port' '$version' >> "\$OC_DIR/install.log" 2>&1 </dev/null &
+# From this point a stale dispatcher lock is safer than deleting a lock while
+# the child is claiming it. Stop & retry handles stale ownership explicitly.
+trap - EXIT
+nohup "\$MANAGER" setup '$port' '$version' "\$\$" "\$self_start" >> "\$OC_DIR/install.log" 2>&1 </dev/null &
 manager_pid=\$!
 printf '%s\n' "\$manager_pid" > "\$OC_DIR/manager.pid"
 manager_start=\$(process_start "\$manager_pid" || true)
@@ -180,9 +197,24 @@ manager_start=\$(process_start "\$manager_pid" || true)
   echo 'manager-exited-before-start' >&2
   exit 70
 }
-printf '%s %s\n' "\$manager_pid" "\$manager_start" > "\$LOCK.tmp.\$\$"
-mv "\$LOCK.tmp.\$\$" "\$LOCK"
-trap - EXIT
+claimed=0
+for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+  lock_pid=''
+  lock_start=''
+  read -r lock_pid lock_start < "\$LOCK/owner" 2>/dev/null || true
+  if [ "\$lock_pid" = "\$manager_pid" ] && [ "\$lock_start" = "\$manager_start" ]; then
+    claimed=1
+    break
+  fi
+  kill -0 "\$manager_pid" 2>/dev/null || break
+  sleep 0.1
+done
+if [ "\$claimed" != 1 ]; then
+  kill -KILL "\$manager_pid" 2>/dev/null || true
+  wait "\$manager_pid" 2>/dev/null || true
+  echo 'manager-lock-claim-failed' >&2
+  exit 70
+fi
 echo "manager-started:\$manager_pid"
 ''';
   }
@@ -216,7 +248,16 @@ if [ -f "\$OC_DIR/state" ]; then cat "\$OC_DIR/state"; else echo 'No state file'
 echo '===== bootstrap files ====='
 ls -la "\$OC_DIR" 2>&1 || true
 echo '===== setup lock ====='
-if [ -f "\$OC_DIR/setup.lock" ]; then cat "\$OC_DIR/setup.lock"; else echo 'No setup lock'; fi
+if [ -f "\$OC_DIR/setup.lock" ]; then
+  echo 'Legacy file lock:'
+  cat "\$OC_DIR/setup.lock"
+elif [ -f "\$OC_DIR/setup.lock/owner" ]; then
+  cat "\$OC_DIR/setup.lock/owner"
+elif [ -d "\$OC_DIR/setup.lock" ]; then
+  echo 'Setup lock directory exists without an owner'
+else
+  echo 'No setup lock'
+fi
 echo '===== install.log (last 120 lines) ====='
 tail -n 120 "\$OC_DIR/install.log" 2>/dev/null || true
 echo '===== server.log (last 80 lines) ====='
@@ -250,9 +291,20 @@ kill_tree() {
   done
   kill -KILL "\$root" 2>/dev/null || true
 }
+read_lock() {
+  if [ -f "\$OC_DIR/setup.lock" ]; then
+    cat "\$OC_DIR/setup.lock"
+  else
+    cat "\$OC_DIR/setup.lock/owner" 2>/dev/null
+  fi
+}
 lock_pid=''
 lock_start=''
-read -r lock_pid lock_start < "\$OC_DIR/setup.lock" 2>/dev/null || true
+for _ in 1 2 3 4 5 6 7 8 9 10; do
+  read -r lock_pid lock_start < <(read_lock) && break
+  [ -d "\$OC_DIR/setup.lock" ] || break
+  sleep 0.1
+done
 live_start=\$(process_start "\$lock_pid" 2>/dev/null || true)
 if [ -n "\$lock_pid" ] && [ -n "\$lock_start" ] && [ "\$lock_start" = "\$live_start" ] &&
    kill -0 "\$lock_pid" 2>/dev/null; then
@@ -279,7 +331,20 @@ case "\$pid" in
     esac
     ;;
 esac
-rm -f "\$OC_DIR/setup.lock" "\$OC_DIR/manager.pid"
+current_pid=''
+current_start=''
+read -r current_pid current_start < <(read_lock) || true
+if [ "\$current_pid" != "\$lock_pid" ] || [ "\$current_start" != "\$lock_start" ]; then
+  echo 'setup-lock-owner-changed' >&2
+  exit 75
+fi
+if [ -f "\$OC_DIR/setup.lock" ]; then
+  rm -f "\$OC_DIR/setup.lock"
+else
+  rm -f "\$OC_DIR/setup.lock/owner" "\$OC_DIR/setup.lock"/owner.tmp.*
+  rmdir "\$OC_DIR/setup.lock" 2>/dev/null || true
+fi
+rm -f "\$OC_DIR/manager.pid"
 termux-wake-unlock >/dev/null 2>&1 || true
 printf 'phase=stopped\nmessage=Bootstrap state cleared\nport=$port\nrunner=\nversion=\npid=\n' > "$termuxHome/.oc/state"
 echo 'bootstrap-state-cleared'
@@ -297,7 +362,7 @@ OC_DIR="$HOME/.oc"
 STATE="$OC_DIR/state"
 MANAGER="$OC_DIR/manager.sh"
 MANAGER_PID="$OC_DIR/manager.pid"
-LOCK_FILE="$OC_DIR/setup.lock"
+LOCK_DIR="$OC_DIR/setup.lock"
 SERVER_PID="$OC_DIR/server.pid"
 SERVER_LOG="$OC_DIR/server.log"
 PASSWORD_FILE="$OC_DIR/server.password"
@@ -358,6 +423,50 @@ process_start() {
   stat_line=${stat_line#*) }
   set -- $stat_line
   printf '%s' "${20:-}"
+}
+
+claim_setup_lock() {
+  local expected_pid="$1"
+  local expected_start="$2"
+  local owner_pid=""
+  local owner_start=""
+  read -r owner_pid owner_start < "$LOCK_DIR/owner" 2>/dev/null || return 1
+  [ "$owner_pid" = "$expected_pid" ] && [ "$owner_start" = "$expected_start" ] || return 1
+  local self_start
+  self_start=$(process_start "$$") || return 1
+  printf '%s %s\n' "$$" "$self_start" > "$LOCK_DIR/owner.tmp.$$"
+  mv "$LOCK_DIR/owner.tmp.$$" "$LOCK_DIR/owner"
+}
+
+read_setup_lock() {
+  if [ -f "$LOCK_DIR" ]; then
+    cat "$LOCK_DIR"
+  else
+    cat "$LOCK_DIR/owner" 2>/dev/null
+  fi
+}
+
+clear_setup_lock() {
+  if [ -f "$LOCK_DIR" ]; then
+    rm -f "$LOCK_DIR"
+  else
+    rm -f "$LOCK_DIR/owner" "$LOCK_DIR"/owner.tmp.*
+    rmdir "$LOCK_DIR" 2>/dev/null || true
+  fi
+}
+
+clear_setup_lock_if_owner() {
+  local expected_pid="$1"
+  local expected_start="$2"
+  local current_pid=""
+  local current_start=""
+  read -r current_pid current_start < <(read_setup_lock) || true
+  if [ "$current_pid" = "$expected_pid" ] && [ "$current_start" = "$expected_start" ]; then
+    clear_setup_lock
+    return 0
+  fi
+  echo 'setup-lock-owner-changed' >&2
+  return 75
 }
 
 kill_tree() {
@@ -437,15 +546,25 @@ release_setup_lock() {
   local lock_start=""
   local self_start
   self_start=$(process_start "$$" || true)
-  read -r lock_pid lock_start < "$LOCK_FILE" 2>/dev/null || true
+  read -r lock_pid lock_start < <(read_setup_lock) || true
   if [ "$lock_pid" = "$$" ] && [ -n "$self_start" ] && [ "$lock_start" = "$self_start" ]; then
-    rm -f "$LOCK_FILE"
+    clear_setup_lock_if_owner "$lock_pid" "$lock_start"
   fi
 }
 
 stop_setup() {
-  local pid=""
-  if [ -f "$MANAGER_PID" ]; then
+  local lock_pid=""
+  local lock_start=""
+  local live_start
+  read -r lock_pid lock_start < <(read_setup_lock) || true
+  live_start=$(process_start "$lock_pid" 2>/dev/null || true)
+  local pid lock_owned
+  if [ -n "$lock_pid" ] && [ -n "$lock_start" ] && [ "$lock_start" = "$live_start" ] &&
+     kill -0 "$lock_pid" 2>/dev/null; then
+    lock_owned=1
+    pid="$lock_pid"
+  else
+    lock_owned=0
     pid=$(cat "$MANAGER_PID" 2>/dev/null || true)
   fi
   case "$pid" in
@@ -454,12 +573,15 @@ stop_setup() {
       if [ "$pid" != "$$" ] && kill -0 "$pid" 2>/dev/null; then
         if setup_process "$pid"; then
           kill_tree "$pid"
+        elif [ "$lock_owned" = 1 ]; then
+          echo 'bootstrap-owner-is-still-active' >&2
+          return 75
         fi
       fi
       ;;
   esac
   rm -f "$MANAGER_PID"
-  rm -f "$LOCK_FILE"
+  clear_setup_lock_if_owner "$lock_pid" "$lock_start"
 }
 
 cleanup_setup() {
@@ -476,8 +598,15 @@ cleanup_setup() {
 setup() {
   CURRENT_PORT="${1:-4096}"
   local requested_version="${2:-latest}"
+  local dispatcher_pid="${3:-}"
+  local dispatcher_start="${4:-}"
   SETUP_SUCCEEDED=0
   SERVER_STARTED=0
+  if ! claim_setup_lock "$dispatcher_pid" "$dispatcher_start"; then
+    write_state failed 'Setup manager could not claim its launch lock' "$CURRENT_PORT"
+    rm -f "$MANAGER_PID"
+    return 75
+  fi
   trap on_setup_error ERR
   trap cleanup_setup EXIT
   termux-wake-lock >/dev/null 2>&1 || true
@@ -588,6 +717,15 @@ status() {
 diagnostics() {
   printf '%s\n' '===== OpenCode on-device status ====='
   status
+  printf '%s\n' '===== setup lock ====='
+  if [ -f "$LOCK_DIR" ]; then
+    printf '%s\n' 'Legacy file lock:'
+    cat "$LOCK_DIR"
+  elif [ -d "$LOCK_DIR" ]; then
+    read_setup_lock || echo 'Directory lock has no owner'
+  else
+    echo 'No setup lock'
+  fi
   printf '%s\n' '===== install.log (last 120 lines) ====='
   tail -n 120 "$OC_DIR/install.log" 2>/dev/null || true
   printf '%s\n' '===== server.log (last 80 lines) ====='

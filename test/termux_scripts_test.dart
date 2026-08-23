@@ -63,11 +63,24 @@ pid=1234
     );
 
     final managerInstall = script.indexOf(r'cat > "$manager_tmp"');
-    final lockAcquire = script.indexOf(r'if ! ln "$lock_candidate" "$LOCK"');
+    final lockAcquire = script.indexOf(r'if mkdir "$LOCK"');
     final passwordWrite = script.indexOf("printf '%s' 'test-password'");
     expect(managerInstall, greaterThanOrEqualTo(0));
     expect(lockAcquire, greaterThan(managerInstall));
     expect(passwordWrite, greaterThan(lockAcquire));
+    expect(script, contains(r'$LOCK/owner'));
+    expect(script, isNot(contains(r'ln "$lock_candidate"')));
+    expect(script, contains(r'if [ -f "$LOCK" ]'));
+    expect(script, contains(r'"$$" "$self_start"'));
+  });
+
+  test('manager claims the dispatcher lock before package work', () {
+    final manager = TermuxBridge.managerScriptForTesting();
+    final claim = manager.indexOf(r'if ! claim_setup_lock');
+    final packageWork = manager.indexOf('termux-wake-lock');
+
+    expect(claim, greaterThanOrEqualTo(0));
+    expect(packageWork, greaterThan(claim));
   });
 
   test('only explicit manager launch markers are accepted', () {
