@@ -367,6 +367,7 @@ SERVER_PID="$OC_DIR/server.pid"
 SERVER_LOG="$OC_DIR/server.log"
 PASSWORD_FILE="$OC_DIR/server.password"
 LEGACY_MARKER="$OC_DIR/legacy-install"
+UBUNTU_INSTALL_MARKER="$OC_DIR/ubuntu-installing"
 mkdir -p "$OC_DIR"
 
 write_state() {
@@ -586,6 +587,7 @@ stop_setup() {
 
 cleanup_setup() {
   rm -f "$MANAGER_PID"
+  rm -f "$OC_DIR/ubuntu-base.tar.gz"
   release_setup_lock
   if [ "${SETUP_SUCCEEDED:-0}" != 1 ]; then
     if [ "${SERVER_STARTED:-0}" = 1 ]; then
@@ -593,6 +595,58 @@ cleanup_setup() {
     fi
     termux-wake-unlock >/dev/null 2>&1 || true
   fi
+}
+
+ubuntu_rootfs_exists() {
+  [ -d "$PREFIX/var/lib/proot-distro/containers/ubuntu/rootfs" ] ||
+    [ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/ubuntu" ]
+}
+
+ubuntu_usable() {
+  ubuntu_rootfs_exists &&
+    proot-distro login ubuntu -- true >/dev/null 2>&1
+}
+
+install_ubuntu_base() {
+  local archive="$OC_DIR/ubuntu-base.tar.gz"
+  local base_url='https://cdimage.ubuntu.com/ubuntu-base/releases/24.04/release'
+  local filename checksum
+  case "$(uname -m)" in
+    aarch64|arm64)
+      filename='ubuntu-base-24.04.4-base-arm64.tar.gz'
+      checksum='04207713ece899c3740823d33690441ad3a7f0ded1101aca744e2b0f37ac7ff2'
+      ;;
+    arm|armv7l|armv8l)
+      filename='ubuntu-base-24.04.4-base-armhf.tar.gz'
+      checksum='991520b47f6586f38a78505cf016e300b6191bb8ff86a0723481ec23a37ab7f4'
+      ;;
+    x86_64|amd64)
+      filename='ubuntu-base-24.04.4-base-amd64.tar.gz'
+      checksum='c1e67ef7b17a6300e136118bd1dc04725009cb376c1aad10abcf8cd453628d58'
+      ;;
+    *) fail_setup "Unsupported CPU architecture: $(uname -m)" "$CURRENT_PORT" ;;
+  esac
+
+  rm -f "$archive"
+  curl --fail --location --retry 5 --retry-all-errors --connect-timeout 20 \
+    "$base_url/$filename" -o "$archive"
+  printf '%s  %s\n' "$checksum" "$archive" | sha256sum -c -
+
+  if ubuntu_rootfs_exists; then
+    [ -f "$UBUNTU_INSTALL_MARKER" ] ||
+      fail_setup 'An existing Ubuntu container is not usable; setup will not delete it' "$CURRENT_PORT"
+    proot-distro remove ubuntu >/dev/null 2>&1 ||
+      fail_setup 'Could not remove the interrupted app-owned Ubuntu install' "$CURRENT_PORT"
+    if ubuntu_usable; then
+      rm -f "$UBUNTU_INSTALL_MARKER"
+      return
+    fi
+  fi
+  printf 'source=canonical-ubuntu-base-24.04.4\n' > "$UBUNTU_INSTALL_MARKER"
+  proot-distro install "$archive" --name ubuntu
+  rm -f "$archive"
+  ubuntu_usable || fail_setup 'Ubuntu Base extraction did not create a usable container' "$CURRENT_PORT"
+  rm -f "$UBUNTU_INSTALL_MARKER"
 }
 
 setup() {
@@ -613,15 +667,20 @@ setup() {
   write_state preparing 'Preparing Termux' "$CURRENT_PORT"
   printf '\n[oc] setup started at %s\n' "$(date -Iseconds 2>/dev/null || date)"
 
-  if ! command -v proot-distro >/dev/null 2>&1; then
+  if ! command -v proot-distro >/dev/null 2>&1 || ! command -v curl >/dev/null 2>&1; then
     write_state installing_dependencies 'Installing Termux dependencies' "$CURRENT_PORT"
+    pkg update -y
+    pkg install -y proot-distro curl
+  fi
+  if ! proot-distro install --help 2>&1 | grep -q -- '--name'; then
+    write_state installing_dependencies 'Updating proot-distro' "$CURRENT_PORT"
     pkg update -y
     pkg install -y proot-distro
   fi
 
-  if [ ! -d "$PREFIX/var/lib/proot-distro/installed-rootfs/ubuntu" ]; then
+  if [ -f "$UBUNTU_INSTALL_MARKER" ] || ! ubuntu_usable; then
     write_state installing_ubuntu 'Installing Ubuntu environment' "$CURRENT_PORT"
-    proot-distro install ubuntu
+    install_ubuntu_base
   fi
 
   write_state installing_opencode 'Installing OpenCode' "$CURRENT_PORT"

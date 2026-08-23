@@ -83,6 +83,59 @@ pid=1234
     expect(packageWork, greaterThan(claim));
   });
 
+  test('Ubuntu setup bypasses registries and verifies Canonical archives', () {
+    final manager = TermuxBridge.managerScriptForTesting();
+
+    expect(manager, isNot(contains('proot-distro install ubuntu')));
+    expect(manager, contains('cdimage.ubuntu.com/ubuntu-base/releases/24.04'));
+    expect(manager, contains('ubuntu-base-24.04.4-base-arm64.tar.gz'));
+    expect(manager, contains('ubuntu-base-24.04.4-base-armhf.tar.gz'));
+    expect(manager, contains('ubuntu-base-24.04.4-base-amd64.tar.gz'));
+    expect(
+      manager,
+      contains(
+        '04207713ece899c3740823d33690441ad3a7f0ded1101aca744e2b0f37ac7ff2',
+      ),
+    );
+    expect(manager, contains("printf '%s  %s\\n' \"\$checksum\""));
+    expect(manager, contains('sha256sum -c -'));
+    expect(manager, contains('proot-distro install "\$archive" --name ubuntu'));
+  });
+
+  test('Ubuntu detection supports v4 and v5 proot-distro layouts', () {
+    final manager = TermuxBridge.managerScriptForTesting();
+
+    expect(
+      manager,
+      contains('containers/ubuntu/rootfs'),
+    );
+    expect(
+      manager,
+      contains('installed-rootfs/ubuntu'),
+    );
+    expect(manager, contains('proot-distro login ubuntu -- true'));
+  });
+
+  test('only app-owned partial Ubuntu installs can be removed', () {
+    final manager = TermuxBridge.managerScriptForTesting();
+
+    expect(manager, contains('UBUNTU_INSTALL_MARKER='));
+    expect(manager, contains(r'[ -f "$UBUNTU_INSTALL_MARKER" ]'));
+    expect(
+      manager,
+      contains(r'[ -f "$UBUNTU_INSTALL_MARKER" ] || ! ubuntu_usable'),
+    );
+    expect(
+      manager,
+      contains('setup will not delete it'),
+    );
+    expect(manager, contains('proot-distro remove ubuntu'));
+    expect(
+      manager,
+      contains('Could not remove the interrupted app-owned Ubuntu install'),
+    );
+  });
+
   test('only explicit manager launch markers are accepted', () {
     expect(TermuxBridge.isLaunchAcknowledged('manager-started:123'), isTrue);
     expect(
