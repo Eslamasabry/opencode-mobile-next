@@ -37,6 +37,13 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _refresh());
   }
 
+  @override
+  void dispose() {
+    _watchdog?.cancel();
+    _poll?.cancel();
+    super.dispose();
+  }
+
   Future<void> _refresh() async {
     final installed = await TermuxBridge.isInstalled();
     if (!mounted) return;
@@ -74,33 +81,43 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen> {
     setState(() => _phase = _Phase.ready);
   }
 
+  Timer? _watchdog;
+  bool _refiredBackground = false;
+
   Future<void> _installAndStart() async {
     setState(() {
       _busy = true;
       _error = null;
       _phase = _Phase.installing;
     });
+    final script = TermuxBridge.installAndServeScript(port: port);
     try {
-      // Foreground session: the whole install runs visibly inside Termux.
-      await TermuxBridge.run(TermuxBridge.installAndServeScript(port: port),
-          background: false);
-      await Future<void>.delayed(const Duration(milliseconds: 400));
+      // Bring Termux to the foreground first so its process is alive and the
+      // user watches progress; then deliver the command.
       await TermuxBridge.openTermux();
-      if (!mounted) return;
-      setState(() {
-        _phase = _Phase.starting;
-        _pollSeconds = 0;
-      });
-      _startPolling();
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _busy = false;
-        _phase = _Phase.failed;
-        _error =
-            '$e\n\nIf you have not completed the unlock step yet, go back to step 2.';
-      });
+      await Future<void>.delayed(const Duration(milliseconds: 600));
+      await TermuxBridge.run(script, background: false);
+    } catch (_) {
+      // Visible-session path rejected - fall through; watchdog uses headless.
     }
+    if (!mounted) return;
+    setState(() {
+      _phase = _Phase.starting;
+      _pollSeconds = 0;
+    });
+
+    // Watchdog: if nothing is happening (some ROMs drop the visible-session
+    // path), re-fire the same idempotent script headless once.
+    _watchdog?.cancel();
+    _watchdog = Timer(const Duration(seconds: 12), () async {
+      if (!mounted || _phase != _Phase.starting || _refiredBackground) return;
+      _refiredBackground = true;
+      try {
+        await TermuxBridge.run(script, background: true);
+      } catch (_) {}
+    });
+
+    _startPolling();
   }
 
   void _startPolling() {
@@ -314,12 +331,10 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen> {
                           OutlinedButton.icon(
                               onPressed: _openLiveLog,
                               icon: const Icon(Icons.receipt_long_rounded),
-                              label: const Text('Live log in Termux')),
-                          OutlinedButton(
-                              onPressed: () =>
-                                  setState(() => _phase = _Phase.needUnlock),
-                              child: const Text('Back to unlock step')),
+                              label: const Text('Diagnostics')),
                         ]),
+                        const SizedBox(height: 8),
+                        const _ManualFallback(),
                       ]),
                     _ => null,
                   },
@@ -406,6 +421,44 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen> {
 }
 
 enum _StepState { idle, running, done, error }
+
+/// Last-resort escape hatch: copy the entire installer and paste it into
+/// Termux manually. Guarantees the user is never blocked by app<->Termux
+/// plumbing (RUN_COMMAND rejections, OEM background kills, …).
+class _ManualFallback extends StatelessWidget {
+  const _ManualFallback();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ExpansionTile(
+      tilePadding: EdgeInsets.zero,
+      childrenPadding: const EdgeInsets.only(bottom: 8),
+      title: Text('Manual fallback (paste into Termux)',
+          style: theme.textTheme.bodySmall!
+              .copyWith(color: theme.hintColor)),
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: OutlinedButton.icon(
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(
+                  text: TermuxBridge.installAndServeScript(port: 4096)));
+            },
+            icon: const Icon(Icons.copy_rounded, size: 16),
+            label: const Text('Copy installer script'),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Then paste it at the Termux prompt and press Enter. When it prints '
+          '"[oc] done", come back here — the app will connect automatically.',
+          style: theme.textTheme.bodySmall!.copyWith(color: theme.hintColor),
+        ),
+      ],
+    );
+  }
+}
 
 class _ProgressLine extends StatelessWidget {
   final String text;
