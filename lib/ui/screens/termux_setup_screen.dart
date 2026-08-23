@@ -41,6 +41,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
   bool _polling = false;
   int _elapsedSeconds = 0;
   String? _error;
+  String? _lastLaunchOutput;
 
   @override
   void initState() {
@@ -224,8 +225,38 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
         port: port,
         password: profile.password,
       );
-      await TermuxBridge.run(command);
+      final launch = await TermuxBridge.run(command);
+      _lastLaunchOutput = [
+        launch.stdout.trim(),
+        launch.stderr.trim(),
+      ].where((part) => part.isNotEmpty).join('\n');
+      final launched = TermuxBridge.isLaunchAcknowledged(launch.stdout);
+      if (!launched) {
+        throw TermuxBridgeException(
+          'Termux returned success without starting the setup manager.\n'
+          '${_lastLaunchOutput?.isEmpty ?? true ? 'No launcher output was returned.' : _lastLaunchOutput}',
+          code: 'invalid_launch_result',
+        );
+      }
+      var initialStatus = await TermuxBridge.status();
+      for (
+        var attempt = 0;
+        attempt < 10 && initialStatus.phase == 'idle';
+        attempt++
+      ) {
+        await Future<void>.delayed(const Duration(milliseconds: 250));
+        initialStatus = await TermuxBridge.status();
+      }
+      if (initialStatus.phase == 'idle' ||
+          initialStatus.message.contains('manager is missing')) {
+        throw TermuxBridgeException(
+          'The setup manager disappeared immediately after launch.\n'
+          'Launcher: $_lastLaunchOutput',
+          code: 'manager_missing',
+        );
+      }
       if (!mounted) return;
+      _status = initialStatus;
       setState(() => _phase = _Phase.installing);
       _startPolling();
       await _refreshStatus();
@@ -331,14 +362,16 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
   Future<void> _retry() async {
     if (_busy) return;
     setState(() => _busy = true);
+    var stopped = true;
     try {
       await TermuxBridge.run(TermuxBridge.stopScript(port: port));
     } on TermuxBridgeException catch (error) {
+      stopped = false;
       if (mounted) setState(() => _error = error.message);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
-    if (mounted) await _installAndStart();
+    if (mounted && stopped) await _installAndStart();
   }
 
   Future<void> _showDiagnostics() async {
@@ -351,6 +384,10 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       diagnostics = error.message;
     } finally {
       if (mounted) setState(() => _busy = false);
+    }
+    final output = _lastLaunchOutput;
+    if (output != null && output.isNotEmpty) {
+      diagnostics = '===== Last launcher result =====\n$output\n$diagnostics';
     }
     if (!mounted) return;
     await showDialog<void>(

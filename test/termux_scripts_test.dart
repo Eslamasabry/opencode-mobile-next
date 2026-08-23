@@ -55,4 +55,42 @@ pid=1234
 
     expect(result.successful, isTrue);
   });
+
+  test('manager is installed before the single-flight lock is acquired', () {
+    final script = TermuxBridge.installAndServeScript(
+      port: 4096,
+      password: 'test-password',
+    );
+
+    final managerInstall = script.indexOf(r'cat > "$manager_tmp"');
+    final lockAcquire = script.indexOf(r'if ! ln "$lock_candidate" "$LOCK"');
+    final passwordWrite = script.indexOf("printf '%s' 'test-password'");
+    expect(managerInstall, greaterThanOrEqualTo(0));
+    expect(lockAcquire, greaterThan(managerInstall));
+    expect(passwordWrite, greaterThan(lockAcquire));
+  });
+
+  test('only explicit manager launch markers are accepted', () {
+    expect(TermuxBridge.isLaunchAcknowledged('manager-started:123'), isTrue);
+    expect(
+      TermuxBridge.isLaunchAcknowledged('manager-already-running:456'),
+      isTrue,
+    );
+    expect(TermuxBridge.isLaunchAcknowledged(''), isFalse);
+    expect(
+      TermuxBridge.isLaunchAcknowledged('setup-lock-unavailable'),
+      isFalse,
+    );
+  });
+
+  test('manager-missing stop validates the lock owner before clearing', () {
+    final script = TermuxBridge.stopScript(port: 4096);
+
+    expect(script, contains(r'read -r lock_pid lock_start'));
+    expect(script, contains(r'[ "$lock_start" = "$live_start" ]'));
+    expect(script, contains(r'$OC_DIR/manager.sh setup '));
+    expect(script, contains(r'kill_tree "$pid"'));
+    expect(script, contains(r'kill -KILL "$root"'));
+    expect(script, contains(r'[ "$lock_owned" = 1 ]'));
+  });
 }

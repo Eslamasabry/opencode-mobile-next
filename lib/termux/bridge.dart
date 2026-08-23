@@ -72,6 +72,10 @@ class TermuxBridge {
     return result.stdout.trim();
   }
 
+  static bool isLaunchAcknowledged(String output) => RegExp(
+    r'(^|\n)manager-(started|already-running):[0-9]+($|\n)',
+  ).hasMatch(output.trim());
+
   static const unlockCommand =
       "mkdir -p ~/.termux && touch ~/.termux/termux.properties && "
       "grep -q '^allow-external-apps=true' ~/.termux/termux.properties || "
@@ -105,6 +109,20 @@ MANAGER="$_managerPath"
 LOCK="\$OC_DIR/setup.lock"
 mkdir -p "\$OC_DIR"
 umask 077
+
+if [ ! -e "\$MANAGER" ] && [ -d "\$OC_DIR/bin" ]; then
+  touch "\$OC_DIR/legacy-install"
+fi
+manager_tmp="\$MANAGER.tmp.\$\$"
+cat > "\$manager_tmp" <<'OC_MANAGER_EOF'
+$_managerScript
+OC_MANAGER_EOF
+chmod 700 "\$manager_tmp"
+mv "\$manager_tmp" "\$MANAGER"
+[ -x "\$MANAGER" ] || {
+  echo 'manager-install-failed' >&2
+  exit 74
+}
 
 process_start() {
   stat_line=\$(cat "/proc/\$1/stat" 2>/dev/null) || return 1
@@ -148,21 +166,20 @@ cleanup_dispatch() {
 }
 trap cleanup_dispatch EXIT
 
-if [ ! -e "\$MANAGER" ] && [ -d "\$OC_DIR/bin" ]; then
-  touch "\$OC_DIR/legacy-install"
-fi
-cat > "\$MANAGER.tmp" <<'OC_MANAGER_EOF'
-$_managerScript
-OC_MANAGER_EOF
-chmod 700 "\$MANAGER.tmp"
-mv "\$MANAGER.tmp" "\$MANAGER"
-printf '%s' $quotedPassword > "\$OC_DIR/server.password"
-chmod 600 "\$OC_DIR/server.password"
+password_tmp="\$OC_DIR/server.password.tmp.\$\$"
+printf '%s' $quotedPassword > "\$password_tmp"
+chmod 600 "\$password_tmp"
+mv "\$password_tmp" "\$OC_DIR/server.password"
 printf 'phase=queued\nmessage=Setup queued\nport=$port\nrunner=proot\nversion=\npid=\n' > "\$OC_DIR/state"
 nohup "\$MANAGER" setup '$port' '$version' >> "\$OC_DIR/install.log" 2>&1 </dev/null &
 manager_pid=\$!
 printf '%s\n' "\$manager_pid" > "\$OC_DIR/manager.pid"
-manager_start=\$(process_start "\$manager_pid")
+manager_start=\$(process_start "\$manager_pid" || true)
+[ -n "\$manager_start" ] || {
+  wait "\$manager_pid" 2>/dev/null || true
+  echo 'manager-exited-before-start' >&2
+  exit 70
+}
 printf '%s %s\n' "\$manager_pid" "\$manager_start" > "\$LOCK.tmp.\$\$"
 mv "\$LOCK.tmp.\$\$" "\$LOCK"
 trap - EXIT
@@ -175,6 +192,14 @@ echo "manager-started:\$manager_pid"
 if [ -x "$_managerPath" ]; then
   exec "$_managerPath" status
 fi
+if [ -f "$termuxHome/.oc/state" ]; then
+  port=4096
+  while IFS='=' read -r name value; do
+    [ "\$name" = port ] && port="\$value"
+  done < "$termuxHome/.oc/state"
+  printf 'phase=failed\nmessage=Setup manager is missing after launch\nport=%s\nrunner=\nversion=\npid=\n' "\$port"
+  exit 0
+fi
 printf 'phase=idle\nmessage=No setup has been started\nport=4096\nrunner=\nversion=\npid=\n'
 ''';
 
@@ -183,7 +208,19 @@ printf 'phase=idle\nmessage=No setup has been started\nport=4096\nrunner=\nversi
 if [ -x "$_managerPath" ]; then
   exec "$_managerPath" diagnostics
 fi
-echo 'OpenCode setup manager is not installed.'
+OC_DIR="$termuxHome/.oc"
+echo '===== OpenCode bootstrap diagnostics ====='
+echo 'Manager: missing or not executable'
+echo '===== state ====='
+if [ -f "\$OC_DIR/state" ]; then cat "\$OC_DIR/state"; else echo 'No state file'; fi
+echo '===== bootstrap files ====='
+ls -la "\$OC_DIR" 2>&1 || true
+echo '===== setup lock ====='
+if [ -f "\$OC_DIR/setup.lock" ]; then cat "\$OC_DIR/setup.lock"; else echo 'No setup lock'; fi
+echo '===== install.log (last 120 lines) ====='
+tail -n 120 "\$OC_DIR/install.log" 2>/dev/null || true
+echo '===== server.log (last 80 lines) ====='
+tail -n 80 "\$OC_DIR/server.log" 2>/dev/null || true
 ''';
 
   static String stopScript({int port = 4096}) =>
@@ -191,7 +228,61 @@ echo 'OpenCode setup manager is not installed.'
 if [ -x "$_managerPath" ]; then
   exec "$_managerPath" stop '$port'
 fi
-echo 'OpenCode setup manager is not installed.'
+OC_DIR="$termuxHome/.oc"
+process_start() {
+  stat_line=\$(cat "/proc/\$1/stat" 2>/dev/null) || return 1
+  stat_line=\${stat_line#*) }
+  set -- \$stat_line
+  printf '%s' "\${20:-}"
+}
+kill_tree() {
+  local root="\$1"
+  kill -STOP "\$root" 2>/dev/null || return 0
+  local stat_file stat_line child
+  for stat_file in /proc/[0-9]*/stat; do
+    stat_line=\$(cat "\$stat_file" 2>/dev/null || true)
+    [ -n "\$stat_line" ] || continue
+    child=\${stat_file#/proc/}
+    child=\${child%/stat}
+    stat_line=\${stat_line#*) }
+    set -- \$stat_line
+    [ "\${2:-}" = "\$root" ] && kill_tree "\$child"
+  done
+  kill -KILL "\$root" 2>/dev/null || true
+}
+lock_pid=''
+lock_start=''
+read -r lock_pid lock_start < "\$OC_DIR/setup.lock" 2>/dev/null || true
+live_start=\$(process_start "\$lock_pid" 2>/dev/null || true)
+if [ -n "\$lock_pid" ] && [ -n "\$lock_start" ] && [ "\$lock_start" = "\$live_start" ] &&
+   kill -0 "\$lock_pid" 2>/dev/null; then
+  lock_owned=1
+  pid="\$lock_pid"
+else
+  lock_owned=0
+  pid=\$(cat "\$OC_DIR/manager.pid" 2>/dev/null || true)
+fi
+case "\$pid" in
+  ''|*[!0-9]*) ;;
+  *)
+    command=\$(tr '\\0' ' ' < "/proc/\$pid/cmdline" 2>/dev/null || true)
+    case "\$command" in
+      *"\$OC_DIR/manager.sh setup "*)
+        kill_tree "\$pid"
+        ;;
+      *)
+        if [ "\$lock_owned" = 1 ] && kill -0 "\$pid" 2>/dev/null; then
+          echo 'bootstrap-owner-is-still-active' >&2
+          exit 75
+        fi
+        ;;
+    esac
+    ;;
+esac
+rm -f "\$OC_DIR/setup.lock" "\$OC_DIR/manager.pid"
+termux-wake-unlock >/dev/null 2>&1 || true
+printf 'phase=stopped\nmessage=Bootstrap state cleared\nport=$port\nrunner=\nversion=\npid=\n' > "$termuxHome/.oc/state"
+echo 'bootstrap-state-cleared'
 ''';
 
   static String managerScriptForTesting() => _managerScript;
@@ -269,6 +360,24 @@ process_start() {
   printf '%s' "${20:-}"
 }
 
+kill_tree() {
+  local root="$1"
+  kill -STOP "$root" 2>/dev/null || return 0
+  local stat_file stat_line child
+  for stat_file in /proc/[0-9]*/stat; do
+    stat_line=$(cat "$stat_file" 2>/dev/null || true)
+    [ -n "$stat_line" ] || continue
+    child=${stat_file#/proc/}
+    child=${child%/stat}
+    stat_line=${stat_line#*) }
+    set -- $stat_line
+    if [ "${2:-}" = "$root" ]; then
+      kill_tree "$child"
+    fi
+  done
+  kill -KILL "$root" 2>/dev/null || true
+}
+
 setup_process() {
   local pid="$1"
   local command
@@ -344,12 +453,7 @@ stop_setup() {
     *)
       if [ "$pid" != "$$" ] && kill -0 "$pid" 2>/dev/null; then
         if setup_process "$pid"; then
-            kill "$pid" 2>/dev/null || true
-            for _ in {1..10}; do
-              kill -0 "$pid" 2>/dev/null || break
-              sleep 0.2
-            done
-            kill -9 "$pid" 2>/dev/null || true
+          kill_tree "$pid"
         fi
       fi
       ;;
