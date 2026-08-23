@@ -81,7 +81,11 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen> {
       _phase = _Phase.installing;
     });
     try {
-      await TermuxBridge.run(TermuxBridge.installAndServeScript(port: port));
+      // Foreground session: the whole install runs visibly inside Termux.
+      await TermuxBridge.run(TermuxBridge.installAndServeScript(port: port),
+          background: false);
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      await TermuxBridge.openTermux();
       if (!mounted) return;
       setState(() {
         _phase = _Phase.starting;
@@ -280,9 +284,10 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen> {
                     _Phase.ready => Column(crossAxisAlignment:
                         CrossAxisAlignment.start, children: [
                         const Text(
-                            'Sets up Ubuntu (chroot), Node.js and opencode '
-                            'inside Termux, then starts the server. First run '
-                            'downloads ~400 MB — usually 5–15 minutes.'),
+                            'Tries the fast native build first (~30 s), '
+                            'falls back to an Ubuntu chroot only if needed. '
+                            'Progress runs visibly in Termux (opens it for you) '
+                            'while the app watches for the server.'),
                         const SizedBox(height: 10),
                         FilledButton.icon(
                             onPressed: _busy ? null : _installAndStart,

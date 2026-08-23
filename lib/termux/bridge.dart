@@ -57,40 +57,84 @@ class TermuxBridge {
   /// see anomalyco/opencode#12515 and #10504). The reliable path is a real
   /// glibc userland via proot-distro; its network namespace is shared, so
   /// `127.0.0.1:PORT` remains reachable from the Android side.
+  /// Installs opencode inside Termux and launches the server detached.
+  ///
+  /// Strategy (fastest first, all progress visible in the Termux session):
+  /// 1. Native: official near-static `linux-arm64-musl` build — usually runs
+  ///    on Android in seconds.
+  /// 2. Fallback: Ubuntu proot-distro chroot (real glibc; shared network).
+  ///
+  /// Plain-Termux `npm i -g opencode-ai` is never attempted: npm sees
+  /// os=android and looks for a nonexistent opencode-android-arm64 package
+  /// (anomalyco/opencode#12515); the glibc binary can't exec under bionic
+  /// (#10504).
   static String installAndServeScript({int port = 4096}) {
     final home = termuxHome;
     return """
-mkdir -p $home/.oc
+mkdir -p $home/.oc/bin
 termux-wake-lock >/dev/null 2>&1 || true
+OC=$home/.oc/bin/opencode
 
-{
-# --- heal broken Termux mirrors (fresh installs often point at dead hosts) ---
-command -v proot-distro >/dev/null 2>&1 || {
-  pkg update -y >/dev/null 2>&1 || {
-    printf 'deb https://packages.termux.dev/apt/termux-main stable main\\n' \\
-      > \$PREFIX/etc/apt/sources.list
-    pkg update -y >/dev/null 2>&1 || true
-  }
-  pkg install -y proot-distro
+echo '[oc] resolving latest version…'
+VER=\$(curl -fsSL https://api.github.com/repos/anomalyco/opencode/releases/latest \\
+      | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4)
+[ -n \"\$VER\" ] || VER=latest
+echo \"[oc] version: \$VER\"
+
+install_native() {
+  echo \"[oc] trying native musl build (~30s)…\"
+  local url=\"https://github.com/anomalyco/opencode/releases/download/\$VER/opencode-linux-arm64-musl.tar.gz\"
+  [ \"\$VER\" = latest ] && url=\"https://github.com/anomalyco/opencode/releases/latest/download/opencode-linux-arm64-musl.tar.gz\"
+  curl -fL \"\$url\" -o $home/.oc/native.tar.gz || return 1
+  rm -rf $home/.oc/native && mkdir -p $home/.oc/native
+  tar -xzf $home/.oc/native.tar.gz -C $home/.oc/native || return 1
+  find $home/.oc/native -name opencode -type f -exec cp {} \$OC \\;
+  chmod +x \$OC 2>/dev/null
+  [ -x \$OC ] || return 1
+  echo '[oc] checking native binary…'
+  \$OC --version >/dev/null 2>&1
 }
 
-[ -d \$PREFIX/var/lib/proot-distro/installed-rootfs/ubuntu ] \\
-  || proot-distro install ubuntu
+install_proot() {
+  echo '[oc] falling back to Ubuntu chroot (~400 MB, several minutes)…'
+  command -v proot-distro >/dev/null 2>&1 || {
+    pkg update -y >/dev/null 2>&1 || {
+      printf 'deb https://packages.termux.dev/apt/termux-main stable main\\n' \\
+        > \$PREFIX/etc/apt/sources.list
+      pkg update -y >/dev/null 2>&1 || true
+    }
+    pkg install -y proot-distro
+  }
+  [ -d \$PREFIX/var/lib/proot-distro/installed-rootfs/ubuntu ] \\
+    || proot-distro install ubuntu
+  proot-distro login ubuntu -- bash -lc '
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -y -o Acquire::Retries=5
+    apt-get install -y nodejs npm -o Acquire::Retries=5
+    npm i -g opencode-ai || { sleep 8; npm i -g opencode-ai; }
+  '
+}
 
-proot-distro login ubuntu -- bash -lc '
-  command -v opencode >/dev/null 2>&1 && exit 0
-  export DEBIAN_FRONTEND=noninteractive
-  apt-get update -y -o Acquire::Retries=5
-  apt-get install -y nodejs npm -o Acquire::Retries=5
-  npm i -g opencode-ai || { sleep 8; npm i -g opencode-ai; }
-'
+RUNNER=''
+if install_native; then
+  echo '[oc] native build OK'
+  RUNNER=\"direct\"
+else
+  install_proot || { echo '[oc] SETUP FAILED - see messages above'; exit 1; }
+  RUNNER=\"proot\"
+fi
 
 pkill -f 'opencode serve --hostname 127.0.0.1 --port $port' 2>/dev/null || true
-setsid nohup proot-distro login ubuntu -- bash -lc \\
-  'opencode serve --hostname 127.0.0.1 --port $port' \\
-  > $home/.oc/server.log 2>&1 &
-} >> $home/.oc/install.log 2>&1
-echo setup-finished
+echo '[oc] starting server…'
+if [ \"\$RUNNER\" = direct ]; then
+  setsid nohup \$OC serve --hostname 127.0.0.1 --port $port \\
+    > $home/.oc/server.log 2>&1 &
+else
+  setsid nohup proot-distro login ubuntu -- bash -lc \\
+    'opencode serve --hostname 127.0.0.1 --port $port' \\
+    > $home/.oc/server.log 2>&1 &
+fi
+echo '[oc] done - return to the OpenCode app'
 """;
   }
 
