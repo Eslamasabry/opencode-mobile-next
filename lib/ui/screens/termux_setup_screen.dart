@@ -39,9 +39,13 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
   bool _busy = false;
   bool _refreshing = false;
   bool _polling = false;
+  bool _monitoringFailed = false;
+  int _snapshotFailures = 0;
   int _elapsedSeconds = 0;
   String? _error;
   String? _lastLaunchOutput;
+  String _setupOutput = '';
+  final ScrollController _outputScrollController = ScrollController();
 
   @override
   void initState() {
@@ -59,6 +63,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _poll?.cancel();
+    _outputScrollController.dispose();
     super.dispose();
   }
 
@@ -217,6 +222,9 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       _busy = true;
       _error = null;
       _elapsedSeconds = 0;
+      _monitoringFailed = false;
+      _snapshotFailures = 0;
+      _setupOutput = '';
     });
     try {
       await TermuxBridge.verifyBridge();
@@ -281,8 +289,8 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
 
   void _startPolling() {
     _poll?.cancel();
-    _poll = Timer.periodic(const Duration(seconds: 3), (_) {
-      _elapsedSeconds += 3;
+    _poll = Timer.periodic(const Duration(seconds: 1), (_) {
+      _elapsedSeconds += 1;
       unawaited(_refreshStatus());
     });
   }
@@ -296,9 +304,27 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
     if (_polling) return;
     _polling = true;
     try {
-      final status = await TermuxBridge.status();
+      final snapshot = await TermuxBridge.setupSnapshot();
       if (!mounted) return;
+      _snapshotFailures = 0;
+      _monitoringFailed = false;
+      final status = snapshot.status;
+      final outputChanged = snapshot.output != _setupOutput;
+      final followOutput =
+          !_outputScrollController.hasClients ||
+          _outputScrollController.position.maxScrollExtent -
+                  _outputScrollController.position.pixels <
+              48;
       _status = status;
+      _setupOutput = snapshot.output;
+      if (outputChanged && followOutput) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted || !_outputScrollController.hasClients) return;
+          _outputScrollController.jumpTo(
+            _outputScrollController.position.maxScrollExtent,
+          );
+        });
+      }
       if (status.isRunning) {
         setState(() => _phase = _Phase.installing);
         if (_poll == null) _startPolling();
@@ -307,6 +333,8 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       _stopPolling();
       if (status.isFailed) {
         setState(() {
+          _monitoringFailed =
+              status.message == 'Could not read setup manager status';
           _phase = _Phase.failed;
           _error = status.message;
         });
@@ -332,14 +360,68 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       });
     } on TermuxBridgeException catch (error) {
       if (!mounted) return;
+      _snapshotFailures += 1;
+      final setupMayBeRunning =
+          _phase == _Phase.installing ||
+          _phase == _Phase.checking ||
+          _monitoringFailed ||
+          (_status?.isRunning ?? false);
+      if (setupMayBeRunning && _snapshotFailures < 3) {
+        if (_poll == null) _startPolling();
+        return;
+      }
       _stopPolling();
       setState(() {
+        _monitoringFailed = setupMayBeRunning;
         _phase = _Phase.failed;
-        _error = error.message;
+        _error = _monitoringFailed
+            ? 'Live output is temporarily unavailable. Setup may still be running.'
+            : error.message;
       });
     } finally {
       _polling = false;
     }
+  }
+
+  Future<void> _copySetupOutput() async {
+    if (_setupOutput.isEmpty) return;
+    await Clipboard.setData(ClipboardData(text: _setupOutput));
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Setup output copied.')));
+  }
+
+  Future<void> _copyFailureReport() async {
+    String diagnostics;
+    try {
+      diagnostics = await TermuxBridge.diagnostics();
+    } on TermuxBridgeException catch (error) {
+      diagnostics = 'Diagnostics unavailable: ${error.message}';
+    }
+    final report = [
+      if (_lastLaunchOutput?.isNotEmpty ?? false)
+        '===== Last launcher result =====\n$_lastLaunchOutput',
+      if (_error?.isNotEmpty ?? false) '===== Screen error =====\n$_error',
+      diagnostics,
+    ].join('\n');
+    await Clipboard.setData(ClipboardData(text: report));
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Failure report copied.')));
+  }
+
+  Future<void> _resumeLiveOutput() async {
+    if (_busy) return;
+    setState(() {
+      _phase = _Phase.installing;
+      _error = null;
+      _monitoringFailed = false;
+      _snapshotFailures = 0;
+    });
+    _startPolling();
+    await _refreshStatus();
   }
 
   Future<void> _finishConnect(ServerProfile profile) async {
@@ -372,50 +454,6 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       if (mounted) setState(() => _busy = false);
     }
     if (mounted && stopped) await _installAndStart();
-  }
-
-  Future<void> _showDiagnostics() async {
-    if (_busy) return;
-    setState(() => _busy = true);
-    String diagnostics;
-    try {
-      diagnostics = await TermuxBridge.diagnostics();
-    } on TermuxBridgeException catch (error) {
-      diagnostics = error.message;
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-    final output = _lastLaunchOutput;
-    if (output != null && output.isNotEmpty) {
-      diagnostics = '===== Last launcher result =====\n$output\n$diagnostics';
-    }
-    if (!mounted) return;
-    await showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Termux diagnostics'),
-        content: SizedBox(
-          width: 620,
-          child: SingleChildScrollView(
-            child: SelectableText(
-              diagnostics,
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () =>
-                Clipboard.setData(ClipboardData(text: diagnostics)),
-            child: const Text('Copy'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -591,10 +629,11 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                         ),
                       ),
                       const SizedBox(height: 8),
-                      OutlinedButton.icon(
-                        onPressed: _busy ? null : _showDiagnostics,
-                        icon: const Icon(Icons.receipt_long_rounded, size: 18),
-                        label: const Text('Diagnostics'),
+                      _LiveSetupTerminal(
+                        output: _setupOutput,
+                        running: true,
+                        controller: _outputScrollController,
+                        onCopy: _setupOutput.isEmpty ? null : _copySetupOutput,
                       ),
                     ],
                   ),
@@ -607,22 +646,36 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                         style: TextStyle(color: theme.colorScheme.error),
                       ),
                       const SizedBox(height: 10),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          FilledButton.icon(
-                            onPressed: _busy ? null : _retry,
-                            icon: const Icon(Icons.refresh_rounded),
-                            label: const Text('Stop & retry'),
-                          ),
-                          OutlinedButton.icon(
-                            onPressed: _busy ? null : _showDiagnostics,
-                            icon: const Icon(Icons.receipt_long_rounded),
-                            label: const Text('Diagnostics'),
-                          ),
-                        ],
+                      _LiveSetupTerminal(
+                        output: _setupOutput,
+                        running: false,
+                        controller: _outputScrollController,
+                        onCopy: _copyFailureReport,
+                        copyTooltip: 'Copy failure report',
                       ),
+                      const SizedBox(height: 10),
+                      if (_monitoringFailed)
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            FilledButton.icon(
+                              onPressed: _busy ? null : _resumeLiveOutput,
+                              icon: const Icon(Icons.sync_rounded),
+                              label: const Text('Resume live view'),
+                            ),
+                            OutlinedButton(
+                              onPressed: _busy ? null : _retry,
+                              child: const Text('Stop & retry'),
+                            ),
+                          ],
+                        )
+                      else
+                        FilledButton.icon(
+                          onPressed: _busy ? null : _retry,
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: const Text('Stop & retry'),
+                        ),
                     ],
                   ),
                   _ => null,
@@ -717,6 +770,107 @@ class _ProgressLine extends StatelessWidget {
       Expanded(child: Text(text)),
     ],
   );
+}
+
+class _LiveSetupTerminal extends StatelessWidget {
+  final String output;
+  final bool running;
+  final ScrollController controller;
+  final VoidCallback? onCopy;
+  final String copyTooltip;
+
+  const _LiveSetupTerminal({
+    required this.output,
+    required this.running,
+    required this.controller,
+    required this.onCopy,
+    this.copyTooltip = 'Copy output',
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const terminalBackground = Color(0xFF111318);
+    const terminalText = Color(0xFFD6DCCE);
+    const liveAccent = Color(0xFF82A98A);
+    final visibleOutput = output.isEmpty
+        ? r'$ Waiting for Termux output...'
+        : output;
+
+    return Container(
+      height: 220,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: terminalBackground,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withValues(alpha: .1)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            height: 38,
+            padding: const EdgeInsets.only(left: 12, right: 4),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: .035),
+              border: Border(
+                bottom: BorderSide(color: Colors.white.withValues(alpha: .08)),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.circle,
+                  size: 8,
+                  color: running ? liveAccent : Colors.white38,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  running ? 'LIVE OUTPUT' : 'LAST OUTPUT',
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontFamily: 'monospace',
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  onPressed: onCopy,
+                  tooltip: copyTooltip,
+                  icon: const Icon(Icons.copy_rounded, size: 16),
+                  color: Colors.white70,
+                  disabledColor: Colors.white24,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Scrollbar(
+              controller: controller,
+              thumbVisibility: true,
+              child: SingleChildScrollView(
+                controller: controller,
+                padding: const EdgeInsets.all(12),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: SelectableText(
+                    visibleOutput,
+                    style: const TextStyle(
+                      color: terminalText,
+                      fontFamily: 'monospace',
+                      fontSize: 11,
+                      height: 1.45,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class CmdPreview extends StatelessWidget {

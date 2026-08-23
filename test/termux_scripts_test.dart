@@ -14,6 +14,7 @@ void main() {
       ),
       'manager.sh': TermuxBridge.managerScriptForTesting(),
       'diagnostics.sh': TermuxBridge.diagnosticsScript(),
+      'snapshot.sh': TermuxBridge.setupSnapshotScript(),
       'status.sh': TermuxBridge.statusScript(),
       'unlock.sh': TermuxBridge.unlockCommand,
       'stop.sh': TermuxBridge.stopScript(port: 4096),
@@ -44,6 +45,29 @@ pid=1234
     expect(status.pid, 1234);
   });
 
+  test('setup snapshot keeps terminal output separate from status', () {
+    final snapshot = TermuxSetupSnapshot.parse('''
+phase=installing_opencode
+message=Installing OpenCode
+port=4096
+runner=proot
+version=
+pid=1234
+__OC_SETUP_OUTPUT__
+Unpacking nodejs...
+npm timing idealTree=7432
+phase=failed
+message=This belongs to the terminal
+''');
+
+    expect(snapshot.status.phase, 'installing_opencode');
+    expect(snapshot.status.pid, 1234);
+    expect(snapshot.output, contains('Unpacking nodejs...'));
+    expect(snapshot.output, contains('idealTree=7432'));
+    expect(snapshot.output, contains('phase=failed'));
+    expect(snapshot.status.message, 'Installing OpenCode');
+  });
+
   test('Android RESULT_OK and shell exit zero indicate success', () {
     final result = TermuxCommandResult.fromMap(const {
       'stdout': 'ok',
@@ -72,6 +96,16 @@ pid=1234
     expect(script, isNot(contains(r'ln "$lock_candidate"')));
     expect(script, contains(r'if [ -f "$LOCK" ]'));
     expect(script, contains(r'"$$" "$self_start"'));
+    expect(script, contains(r'> "$OC_DIR/install.log" 2>&1'));
+    expect(script, contains(r'rm -f "$OC_DIR/server-log.active"'));
+  });
+
+  test('live snapshot converts manager errors into a failed status', () {
+    final script = TermuxBridge.setupSnapshotScript();
+
+    expect(script, contains('Could not read setup manager status'));
+    expect(script, contains(r'manager_error="$manager_output"'));
+    expect(script, contains(r'[ -f "$OC_DIR/server-log.active" ]'));
   });
 
   test('manager claims the dispatcher lock before package work', () {
@@ -105,15 +139,19 @@ pid=1234
   test('Ubuntu detection supports v4 and v5 proot-distro layouts', () {
     final manager = TermuxBridge.managerScriptForTesting();
 
-    expect(
-      manager,
-      contains('containers/ubuntu/rootfs'),
-    );
-    expect(
-      manager,
-      contains('installed-rootfs/ubuntu'),
-    );
+    expect(manager, contains('containers/ubuntu/rootfs'));
+    expect(manager, contains('installed-rootfs/ubuntu'));
     expect(manager, contains('proot-distro login ubuntu -- true'));
+  });
+
+  test('npm setup prefers IPv4 and retries transient downloads', () {
+    final manager = TermuxBridge.managerScriptForTesting();
+
+    expect(manager, contains('--dns-result-order=ipv4first'));
+    expect(manager, contains('--fetch-retries=5'));
+    expect(manager, contains('--fetch-timeout=300000'));
+    expect(manager, contains('install_opencode ||'));
+    expect(manager, contains('retrying in 10 seconds'));
   });
 
   test('only app-owned partial Ubuntu installs can be removed', () {
@@ -125,10 +163,7 @@ pid=1234
       manager,
       contains(r'[ -f "$UBUNTU_INSTALL_MARKER" ] || ! ubuntu_usable'),
     );
-    expect(
-      manager,
-      contains('setup will not delete it'),
-    );
+    expect(manager, contains('setup will not delete it'));
     expect(manager, contains('proot-distro remove ubuntu'));
     expect(
       manager,

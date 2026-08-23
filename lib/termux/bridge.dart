@@ -67,6 +67,11 @@ class TermuxBridge {
     return TermuxSetupStatus.parse(result.stdout);
   }
 
+  static Future<TermuxSetupSnapshot> setupSnapshot() async {
+    final result = await run(setupSnapshotScript());
+    return TermuxSetupSnapshot.parse(result.stdout);
+  }
+
   static Future<String> diagnostics() async {
     final result = await run(diagnosticsScript());
     return result.stdout.trim();
@@ -188,7 +193,8 @@ printf 'phase=queued\nmessage=Setup queued\nport=$port\nrunner=proot\nversion=\n
 # From this point a stale dispatcher lock is safer than deleting a lock while
 # the child is claiming it. Stop & retry handles stale ownership explicitly.
 trap - EXIT
-nohup "\$MANAGER" setup '$port' '$version' "\$\$" "\$self_start" >> "\$OC_DIR/install.log" 2>&1 </dev/null &
+rm -f "\$OC_DIR/server-log.active"
+nohup "\$MANAGER" setup '$port' '$version' "\$\$" "\$self_start" > "\$OC_DIR/install.log" 2>&1 </dev/null &
 manager_pid=\$!
 printf '%s\n' "\$manager_pid" > "\$OC_DIR/manager.pid"
 manager_start=\$(process_start "\$manager_pid" || true)
@@ -233,6 +239,45 @@ if [ -f "$termuxHome/.oc/state" ]; then
   exit 0
 fi
 printf 'phase=idle\nmessage=No setup has been started\nport=4096\nrunner=\nversion=\npid=\n'
+''';
+
+  static String setupSnapshotScript() =>
+      '''
+OC_DIR="$termuxHome/.oc"
+if [ -x "$_managerPath" ]; then
+  if manager_output=\$("$_managerPath" status 2>&1); then
+    printf '%s\n' "\$manager_output"
+    manager_error=''
+  else
+    manager_error="\$manager_output"
+    port=4096
+    if [ -f "\$OC_DIR/state" ]; then
+      while IFS='=' read -r name value; do
+        [ "\$name" = port ] && port="\$value"
+      done < "\$OC_DIR/state"
+    fi
+    printf 'phase=failed\nmessage=Could not read setup manager status\nport=%s\nrunner=\nversion=\npid=\n' "\$port"
+  fi
+elif [ -f "\$OC_DIR/state" ]; then
+  manager_error='Setup manager is missing after launch'
+  port=4096
+  while IFS='=' read -r name value; do
+    [ "\$name" = port ] && port="\$value"
+  done < "\$OC_DIR/state"
+  printf 'phase=failed\nmessage=Setup manager is missing after launch\nport=%s\nrunner=\nversion=\npid=\n' "\$port"
+else
+  manager_error=''
+  printf 'phase=idle\nmessage=No setup has been started\nport=4096\nrunner=\nversion=\npid=\n'
+fi
+printf '%s\n' '__OC_SETUP_OUTPUT__'
+if [ -n "\$manager_error" ]; then
+  printf '[oc] status error: %s\n' "\$manager_error"
+fi
+tail -n 160 "\$OC_DIR/install.log" 2>/dev/null || true
+if [ -f "\$OC_DIR/server-log.active" ] && [ -s "\$OC_DIR/server.log" ]; then
+  printf '\n%s\n' '[oc] server output'
+  tail -n 60 "\$OC_DIR/server.log" 2>/dev/null || true
+fi
 ''';
 
   static String diagnosticsScript() =>
@@ -365,6 +410,7 @@ MANAGER_PID="$OC_DIR/manager.pid"
 LOCK_DIR="$OC_DIR/setup.lock"
 SERVER_PID="$OC_DIR/server.pid"
 SERVER_LOG="$OC_DIR/server.log"
+SERVER_LOG_ACTIVE="$OC_DIR/server-log.active"
 PASSWORD_FILE="$OC_DIR/server.password"
 LEGACY_MARKER="$OC_DIR/legacy-install"
 UBUNTU_INSTALL_MARKER="$OC_DIR/ubuntu-installing"
@@ -691,9 +737,19 @@ if ! command -v npm >/dev/null 2>&1 || ! command -v curl >/dev/null 2>&1; then
   apt-get update -y -o Acquire::Retries=5
   apt-get install -y nodejs npm curl ca-certificates -o Acquire::Retries=5
 fi
-npm install -g "opencode-ai@$OC_REQUESTED_VERSION" || {
-  sleep 5
-  npm install -g "opencode-ai@$OC_REQUESTED_VERSION"
+export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--dns-result-order=ipv4first"
+install_opencode() {
+  npm install -g \
+    --fetch-retries=5 \
+    --fetch-retry-mintimeout=10000 \
+    --fetch-retry-maxtimeout=60000 \
+    --fetch-timeout=300000 \
+    "opencode-ai@$OC_REQUESTED_VERSION"
+}
+install_opencode || {
+  printf '[oc] npm download failed; retrying in 10 seconds\n'
+  sleep 10
+  install_opencode
 }
 opencode --version
 OC_PROOT_SETUP
@@ -705,10 +761,11 @@ OC_PROOT_SETUP
   local password
   password=$(cat "$PASSWORD_FILE")
 
-  write_state starting_server 'Starting the local server' "$CURRENT_PORT" proot "$installed_version"
   stop_legacy_server "$CURRENT_PORT"
   stop_server "$CURRENT_PORT"
   : > "$SERVER_LOG"
+  : > "$SERVER_LOG_ACTIVE"
+  write_state starting_server 'Starting the local server' "$CURRENT_PORT" proot "$installed_version"
   nohup proot-distro login ubuntu -- env \
     OPENCODE_SERVER_USERNAME=opencode \
     OPENCODE_SERVER_PASSWORD="$password" \
@@ -766,7 +823,7 @@ status() {
       local manager_pid
       manager_pid=$(cat "$MANAGER_PID" 2>/dev/null || true)
       if [ -z "$manager_pid" ] || ! kill -0 "$manager_pid" 2>/dev/null || ! setup_process "$manager_pid"; then
-        write_state failed 'Setup stopped unexpectedly; open diagnostics for details' "$(read_state_value port)"
+        write_state failed 'Setup stopped unexpectedly; see live output for details' "$(read_state_value port)"
       fi
       ;;
   esac
@@ -916,6 +973,29 @@ class TermuxSetupStatus {
       runner: values['runner'] ?? '',
       version: values['version'] ?? '',
       pid: int.tryParse(values['pid'] ?? ''),
+    );
+  }
+}
+
+class TermuxSetupSnapshot {
+  static const _marker = '__OC_SETUP_OUTPUT__';
+
+  final TermuxSetupStatus status;
+  final String output;
+
+  const TermuxSetupSnapshot({required this.status, required this.output});
+
+  factory TermuxSetupSnapshot.parse(String raw) {
+    final markerIndex = raw.indexOf(_marker);
+    if (markerIndex < 0) {
+      return TermuxSetupSnapshot(
+        status: TermuxSetupStatus.parse(raw),
+        output: '',
+      );
+    }
+    return TermuxSetupSnapshot(
+      status: TermuxSetupStatus.parse(raw.substring(0, markerIndex)),
+      output: raw.substring(markerIndex + _marker.length).trim(),
     );
   }
 }
