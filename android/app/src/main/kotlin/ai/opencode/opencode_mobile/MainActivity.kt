@@ -67,9 +67,11 @@ class MainActivity : FlutterActivity() {
                     "com.termux.RUN_COMMAND_WORKDIR",
                     workdir ?: "/data/data/com.termux/files/home"
                 )
+                // BACKGROUND=false makes Termux open the command in a new,
+                // visible terminal session; true keeps it headless.
                 putExtra("com.termux.RUN_COMMAND_BACKGROUND", background)
             }
-            if (background) startService(intent) else startActivity(intent)
+            startService(intent)
             true
         } catch (_: Exception) {
             false

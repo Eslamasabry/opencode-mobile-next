@@ -64,16 +64,25 @@ mkdir -p $home/.oc
 termux-wake-lock >/dev/null 2>&1 || true
 
 {
-command -v proot-distro >/dev/null 2>&1 || pkg install -y proot-distro
+# --- heal broken Termux mirrors (fresh installs often point at dead hosts) ---
+command -v proot-distro >/dev/null 2>&1 || {
+  pkg update -y >/dev/null 2>&1 || {
+    printf 'deb https://packages.termux.dev/apt/termux-main stable main\\n' \\
+      > \$PREFIX/etc/apt/sources.list
+    pkg update -y >/dev/null 2>&1 || true
+  }
+  pkg install -y proot-distro
+}
+
 [ -d \$PREFIX/var/lib/proot-distro/installed-rootfs/ubuntu ] \\
   || proot-distro install ubuntu
 
 proot-distro login ubuntu -- bash -lc '
   command -v opencode >/dev/null 2>&1 && exit 0
   export DEBIAN_FRONTEND=noninteractive
-  apt-get update -y
-  apt-get install -y nodejs npm
-  npm i -g opencode-ai
+  apt-get update -y -o Acquire::Retries=5
+  apt-get install -y nodejs npm -o Acquire::Retries=5
+  npm i -g opencode-ai || { sleep 8; npm i -g opencode-ai; }
 '
 
 pkill -f 'opencode serve --hostname 127.0.0.1 --port $port' 2>/dev/null || true
