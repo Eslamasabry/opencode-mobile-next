@@ -720,6 +720,109 @@ void main() {
   });
 
   testWidgets(
+    'managed Termux profile migrates automatic big-pickle selection',
+    (tester) async {
+      final store = await _store({'oc.model.termux': 'opencode|big-pickle'});
+      final api = _V2Api(
+        providersResult: ProvidersResponse(
+          providers: [
+            ProviderInfo(
+              id: 'opencode',
+              name: 'OpenCode Zen',
+              modelIDs: const ['nemotron-3.5-lightning-free', 'big-pickle'],
+            ),
+          ],
+          defaultProviderID: 'opencode',
+          defaultModelID: 'big-pickle',
+        ),
+      );
+      final controller = ConnectionController(
+        store,
+        apiFactory: (_) => api,
+        repositoryFactory: (_) => _QuestionRepository(legacyUnavailable: false),
+        eventStreamFactory:
+            ({required api, required onEvent, required onStatus, onError}) =>
+                _FakeEventStream(
+                  api: api,
+                  onEvent: onEvent,
+                  onStatus: onStatus,
+                  onError: onError,
+                ),
+      );
+      addTearDown(controller.dispose);
+
+      await controller.connect(
+        ServerProfile(
+          id: 'termux',
+          name: 'This device (Termux)',
+          baseUrl: 'http://127.0.0.1:4096',
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(controller.selectedModel?.providerID, 'opencode');
+      expect(controller.selectedModel?.modelID, 'nemotron-3.5-lightning-free');
+      expect(store.modelFor('termux'), (
+        'opencode',
+        'nemotron-3.5-lightning-free',
+      ));
+      expect(store.modelWasExplicitlySelected('termux'), isFalse);
+      controller.dispose();
+    },
+  );
+
+  testWidgets('managed Termux profile preserves an explicit model', (
+    tester,
+  ) async {
+    final store = await _store({
+      'oc.model.termux': 'opencode|big-pickle',
+      'oc.modelExplicit.termux': true,
+    });
+    final api = _V2Api(
+      providersResult: ProvidersResponse(
+        providers: [
+          ProviderInfo(
+            id: 'opencode',
+            name: 'OpenCode Zen',
+            modelIDs: const ['nemotron-3.5-lightning-free', 'big-pickle'],
+          ),
+        ],
+        defaultProviderID: 'opencode',
+        defaultModelID: 'big-pickle',
+      ),
+    );
+    final controller = ConnectionController(
+      store,
+      apiFactory: (_) => api,
+      repositoryFactory: (_) => _QuestionRepository(legacyUnavailable: false),
+      eventStreamFactory:
+          ({required api, required onEvent, required onStatus, onError}) =>
+              _FakeEventStream(
+                api: api,
+                onEvent: onEvent,
+                onStatus: onStatus,
+                onError: onError,
+              ),
+    );
+    addTearDown(controller.dispose);
+
+    await controller.connect(
+      ServerProfile(
+        id: 'termux',
+        name: 'This device (Termux)',
+        baseUrl: 'http://127.0.0.1:4096',
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(controller.selectedModel?.modelID, 'big-pickle');
+    expect(store.modelWasExplicitlySelected('termux'), isTrue);
+    controller.dispose();
+  });
+
+  testWidgets(
     'health false and active-profile persistence failure fail closed',
     (tester) async {
       final unhealthyApi = _V2Api(healthy: false);

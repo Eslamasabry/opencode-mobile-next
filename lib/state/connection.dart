@@ -11,6 +11,11 @@ import '../api/product_repository.dart';
 import '../api/sse.dart';
 import 'profiles.dart';
 
+const _managedTermuxUrl = 'http://127.0.0.1:4096';
+const _termuxPreferredProvider = 'opencode';
+const _termuxPreferredModel = 'nemotron-3.5-lightning-free';
+const _termuxUnreliableLegacyModel = 'big-pickle';
+
 /// App-wide singletons that need async init before the UI can render.
 class AppBootstrap {
   final ProfileStore store;
@@ -282,6 +287,21 @@ class ConnectionController extends ChangeNotifier {
                 provider.id == model.providerID &&
                 provider.modelIDs.contains(model.modelID),
           );
+      final preferredTermuxModel = ModelRef(
+        providerID: _termuxPreferredProvider,
+        modelID: _termuxPreferredModel,
+      );
+      final shouldUseTermuxPreferredModel =
+          profileID != null &&
+          _connectedProfile?.baseUrl == _managedTermuxUrl &&
+          !store.modelWasExplicitlySelected(profileID) &&
+          validModel(preferredTermuxModel) &&
+          (nextModel == null ||
+              (nextModel.providerID == _termuxPreferredProvider &&
+                  nextModel.modelID == _termuxUnreliableLegacyModel));
+      if (shouldUseTermuxPreferredModel) {
+        nextModel = preferredTermuxModel;
+      }
       if (!validModel(nextModel)) {
         final defaultModel = ModelRef(
           providerID: nextProviders.defaultProviderID ?? '',
@@ -305,7 +325,10 @@ class ConnectionController extends ChangeNotifier {
         nextAgent = nextAgents.isEmpty ? '' : nextAgents.first.name;
       }
       if (profileID != null) {
-        if (!validModel(selectedModel)) {
+        final modelChanged =
+            nextModel?.providerID != selectedModel?.providerID ||
+            nextModel?.modelID != selectedModel?.modelID;
+        if (!validModel(selectedModel) || modelChanged) {
           if (nextModel == null) {
             await store.clearModel(profileID);
           } else {
@@ -1439,7 +1462,9 @@ class ConnectionController extends ChangeNotifier {
     selectedModel = ref;
     final p = profile;
     final generation = _generation;
-    if (p != null) await store.setModel(p.id, ref.providerID, ref.modelID);
+    if (p != null) {
+      await store.setModel(p.id, ref.providerID, ref.modelID, explicit: true);
+    }
     if (_disposed || generation != _generation) return;
     notifyListeners();
   }

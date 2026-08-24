@@ -84,6 +84,7 @@ class ProfileStore {
   static const _profilesKey = 'oc.profiles';
   static const _activeKey = 'oc.activeProfile';
   static const _modelKey = 'oc.model.'; // + profileId -> "providerID|modelID"
+  static const _modelExplicitKey = 'oc.modelExplicit.'; // + profileId
   static const _agentKey = 'oc.agent.'; // + profileId
 
   final SharedPreferences prefs;
@@ -217,11 +218,23 @@ class ProfileStore {
     return (parts[0], parts[1]);
   }
 
-  Future<void> setModel(String profileId, String providerID, String modelID) =>
-      prefs.setString('$_modelKey$profileId', '$providerID|$modelID');
+  bool modelWasExplicitlySelected(String profileId) =>
+      prefs.getBool('$_modelExplicitKey$profileId') ?? false;
 
-  Future<void> clearModel(String profileId) =>
-      prefs.remove('$_modelKey$profileId');
+  Future<void> setModel(
+    String profileId,
+    String providerID,
+    String modelID, {
+    bool explicit = false,
+  }) async {
+    await prefs.setString('$_modelKey$profileId', '$providerID|$modelID');
+    await prefs.setBool('$_modelExplicitKey$profileId', explicit);
+  }
+
+  Future<void> clearModel(String profileId) async {
+    await prefs.remove('$_modelKey$profileId');
+    await prefs.remove('$_modelExplicitKey$profileId');
+  }
 
   String agentFor(String profileId) =>
       prefs.getString('$_agentKey$profileId') ?? '';
