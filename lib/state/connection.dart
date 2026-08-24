@@ -14,7 +14,6 @@ import 'profiles.dart';
 const _managedTermuxUrl = 'http://127.0.0.1:4096';
 const _termuxPreferredProvider = 'opencode';
 const _termuxPreferredModel = 'nemotron-3.5-lightning-free';
-const _termuxUnreliableLegacyModel = 'big-pickle';
 
 /// App-wide singletons that need async init before the UI can render.
 class AppBootstrap {
@@ -294,11 +293,9 @@ class ConnectionController extends ChangeNotifier {
       final shouldUseTermuxPreferredModel =
           profileID != null &&
           _connectedProfile?.baseUrl == _managedTermuxUrl &&
-          !store.modelWasExplicitlySelected(profileID) &&
           validModel(preferredTermuxModel) &&
-          (nextModel == null ||
-              (nextModel.providerID == _termuxPreferredProvider &&
-                  nextModel.modelID == _termuxUnreliableLegacyModel));
+          (nextModel?.providerID != preferredTermuxModel.providerID ||
+              nextModel?.modelID != preferredTermuxModel.modelID);
       if (shouldUseTermuxPreferredModel) {
         nextModel = preferredTermuxModel;
       }

@@ -772,7 +772,7 @@ void main() {
     },
   );
 
-  testWidgets('managed Termux profile preserves an explicit model', (
+  testWidgets('managed Termux profile replaces an explicit legacy model', (
     tester,
   ) async {
     final store = await _store({
@@ -817,8 +817,12 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    expect(controller.selectedModel?.modelID, 'big-pickle');
-    expect(store.modelWasExplicitlySelected('termux'), isTrue);
+    expect(controller.selectedModel?.modelID, 'nemotron-3.5-lightning-free');
+    expect(store.modelFor('termux'), (
+      'opencode',
+      'nemotron-3.5-lightning-free',
+    ));
+    expect(store.modelWasExplicitlySelected('termux'), isFalse);
     controller.dispose();
   });
 
