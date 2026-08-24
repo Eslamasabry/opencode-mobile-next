@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -136,4 +137,119 @@ void main() {
       }
     }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
   });
+
+  test('catalog accepts the current v2 capability response shape', () async {
+    await HttpOverrides.runZoned(() async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final locations = <String?>[];
+      server.listen((request) async {
+        locations.add(request.uri.queryParameters['location[directory]']);
+        final data = switch (request.uri.path) {
+          '/api/provider' => [
+            {'id': 'opencode', 'name': 'OpenCode Zen'},
+          ],
+          '/api/model' => [
+            {
+              'id': 'model-1',
+              'providerID': 'opencode',
+              'name': 'Current model',
+              'capabilities': {
+                'tools': true,
+                'input': ['text', 'image'],
+                'output': ['text'],
+              },
+              'variants': [],
+              'status': 'active',
+              'enabled': true,
+              'limit': {'context': 200000, 'output': 32000},
+            },
+          ],
+          '/api/agent' => [
+            {
+              'id': 'build',
+              'mode': 'primary',
+              'hidden': false,
+              'description': 'Default agent',
+            },
+          ],
+          _ => <Object>[],
+        };
+        request.response.headers.contentType = ContentType.json;
+        request.response.write(jsonEncode({'data': data}));
+        await request.response.close();
+      });
+
+      try {
+        final api = OpenCodeApi(
+          baseUrl: 'http://${server.address.host}:${server.port}',
+        );
+        final repository = SdkProductRepository(api.sdkClient)
+          ..setLocation(directory: '/work/acme');
+        final catalog = await repository.loadCatalog();
+
+        expect(catalog.providers.single.name, 'OpenCode Zen');
+        expect(catalog.models.single.tools, isTrue);
+        expect(catalog.models.single.attachments, isTrue);
+        expect(catalog.models.single.contextLimit, 200000);
+        expect(catalog.agents.single.id, 'build');
+        expect(locations, everyElement('/work/acme'));
+      } finally {
+        await server.close(force: true);
+      }
+    }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+  });
+
+  test(
+    'terminal connection requests a guarded ticket before WebSocket',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        final receivedInput = Completer<String>();
+        String? tokenHeader;
+        String? tokenDirectory;
+        String? socketDirectory;
+        server.listen((request) async {
+          if (request.uri.path.endsWith('/connect-token')) {
+            tokenHeader = request.headers.value('x-opencode-ticket');
+            tokenDirectory = request.uri.queryParameters['directory'];
+            request.response.headers.contentType = ContentType.json;
+            request.response.write(
+              jsonEncode({'ticket': 'single-use-ticket', 'expires_in': 60}),
+            );
+            await request.response.close();
+            return;
+          }
+          socketDirectory = request.uri.queryParameters['directory'];
+          expect(request.uri.queryParameters['ticket'], 'single-use-ticket');
+          final socket = await WebSocketTransformer.upgrade(request);
+          socket.listen((data) {
+            if (!receivedInput.isCompleted) {
+              receivedInput.complete(data as String);
+            }
+          });
+          socket.add('ready');
+        });
+
+        try {
+          final api = OpenCodeApi(
+            baseUrl: 'http://${server.address.host}:${server.port}',
+          );
+          final repository = SdkProductRepository(api.sdkClient)
+            ..setLocation(directory: '/work/acme');
+          final channel = await repository.connectTerminal('pty_test');
+          final output = channel.output.first;
+          channel.write('pwd\r');
+
+          expect(await output, 'ready');
+          expect(await receivedInput.future, 'pwd\r');
+          expect(tokenHeader, '1');
+          expect(tokenDirectory, '/work/acme');
+          expect(socketDirectory, '/work/acme');
+          await channel.close();
+        } finally {
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
 }

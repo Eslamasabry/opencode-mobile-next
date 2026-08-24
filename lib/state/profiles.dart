@@ -59,6 +59,9 @@ String? validateServerProfileUrl(
   if (uri.query.isNotEmpty || uri.fragment.isNotEmpty) {
     return 'Remove query parameters and fragments from the server URL.';
   }
+  if (uri.path.isNotEmpty && uri.path != '/') {
+    return 'Remove the path from the server URL. Enter only its origin.';
+  }
   if (uri.scheme == 'http') {
     final host = uri.host.toLowerCase();
     final loopback = host == 'localhost' || host == '127.0.0.1';

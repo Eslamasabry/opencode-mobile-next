@@ -485,4 +485,32 @@ void main() {
     expect(find.text('New home'), findsOneWidget);
     expect(find.text('Old home'), findsNothing);
   });
+
+  testWidgets('remote quick add opens an editor without saving a fake host', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final store = ProfileStore(prefs: prefs);
+    await store.load();
+    final controller = ConnectionController(store);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          bootstrapProvider.overrideWithValue(AppBootstrap(store)),
+          connProvider.overrideWithValue(controller),
+        ],
+        child: const MaterialApp(home: ServersScreen()),
+      ),
+    );
+    await tester.tap(find.text('Remote machine (LAN)'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Add server'), findsNWidgets(2));
+    expect(find.text('Server URL'), findsOneWidget);
+    expect(store.profiles, isEmpty);
+    expect(find.text('Start the server'), findsNothing);
+  });
 }

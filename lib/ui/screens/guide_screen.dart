@@ -24,17 +24,18 @@ class GuideScreen extends StatelessWidget {
         _Section(
           title: '1 · Remote machine',
           children: [
-            const Text('On your dev box, expose the server:'),
+            const Text('On your dev box, start the server on loopback:'),
             const Cmd(
-              'OPENCODE_SERVER_PASSWORD=your-secret \\\n  opencode serve --hostname 0.0.0.0 --port 4096',
+              'OPENCODE_SERVER_PASSWORD=your-secret \\\n  opencode serve --hostname 127.0.0.1 --port 4096',
             ),
             const Text(
-              'Then add a server in the app pointing to http://<machine-ip>:4096 '
-              'with username opencode and your password.',
+              'Expose it through an HTTPS reverse proxy or encrypted tunnel, '
+              'then add the resulting https:// URL with username opencode and '
+              'your password. Remote HTTP is intentionally blocked.',
             ),
             _tip(
               context,
-              'Keep it off the public internet. Use a VPN like Tailscale, or an SSH tunnel:\n'
+              'Keep it off the public internet. Use HTTPS through a private network such as Tailscale, or an SSH tunnel:\n'
               'ssh -L 4096:127.0.0.1:4096 user@host\n…then connect to http://127.0.0.1:4096 from a port-forward app.',
             ),
           ],

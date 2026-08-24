@@ -122,6 +122,11 @@ void main() {
       validateServerProfileUrl('http://192.168.1.4:4096'),
       contains('HTTP is allowed only'),
     );
+    expect(
+      validateServerProfileUrl('https://server.example:4096/api'),
+      contains('Remove the path'),
+    );
+    expect(validateServerProfileUrl('https://server.example:4096/'), isNull);
   });
 
   test('Android cleartext and launch resources are release-safe', () {

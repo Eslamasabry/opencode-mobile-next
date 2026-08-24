@@ -75,48 +75,6 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     if (mounted) setState(() {});
   }
 
-  void _addPreset(String name, String url, String hint) async {
-    final profiles = ref.read(bootstrapProvider).store.profiles;
-    if (profiles.any((p) => p.baseUrl == url)) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('$name preset already exists')));
-      return;
-    }
-    final preset = ServerProfile(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
-      name: name,
-      baseUrl: url,
-    );
-    await ref.read(bootstrapProvider).store.upsert(preset);
-    await ref.read(bootstrapProvider).store.load();
-    if (mounted) {
-      setState(() {});
-      _showHint(hint);
-    }
-  }
-
-  void _showHint(String hint) {
-    showModalBottomSheet(
-      context: context,
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Start the server',
-              style: Theme.of(ctx).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(hint, style: Theme.of(ctx).textTheme.bodySmall),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final bootstrap = ref.watch(bootstrapProvider);
@@ -271,15 +229,10 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
               Card.filled(
                 margin: const EdgeInsets.symmetric(vertical: 4),
                 child: ListTile(
-                  onTap: () => _addPreset(
-                    'Remote dev box',
-                    'https://devbox.local:4096',
-                    'Expose the server through HTTPS before connecting from another device. '
-                        'Do not send an OpenCode password over LAN HTTP.',
-                  ),
+                  onTap: _busy ? null : () => _edit(),
                   leading: const Icon(Icons.dns_rounded),
                   title: const Text('Remote machine (LAN)'),
-                  subtitle: const Text('opencode serve --hostname 0.0.0.0'),
+                  subtitle: const Text('HTTPS URL or secure loopback tunnel'),
                 ),
               ),
             ],
@@ -345,6 +298,7 @@ class _ProfileDialogState extends State<_ProfileDialog> {
                 errorText: _error,
                 helperText:
                     'HTTP works only with localhost or 127.0.0.1 for Termux.',
+                helperMaxLines: 2,
               ),
             ),
             TextField(
@@ -362,6 +316,7 @@ class _ProfileDialogState extends State<_ProfileDialog> {
               decoration: const InputDecoration(
                 labelText: 'Password (optional)',
                 helperText: 'Set OPENCODE_SERVER_PASSWORD on the server',
+                helperMaxLines: 2,
               ),
             ),
           ],

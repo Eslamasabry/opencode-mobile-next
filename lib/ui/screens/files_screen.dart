@@ -283,6 +283,17 @@ class _FilesScreenState extends State<FilesScreen> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
+            subtitle: _search.text.isNotEmpty && node.path != node.name
+                ? Text(
+                    node.path,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 11,
+                    ),
+                  )
+                : null,
             onTap: () {
               if (node.isDir) {
                 _search.clear();

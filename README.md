@@ -65,12 +65,14 @@ Every release / OTA patch:
 
 ```bash
 OPENCODE_SERVER_PASSWORD=your-secret \
-  opencode serve --hostname 0.0.0.0 --port 4096
+  opencode serve --hostname 127.0.0.1 --port 4096
 ```
 
-Add a server in-app: `http://<machine-ip>:4096`, user `opencode`,
-password as above. For anything beyond trusted LANs use Tailscale or an SSH
-tunnel (`ssh -L 4096:127.0.0.1:4096 host`) and connect to localhost.
+Expose it through an HTTPS reverse proxy or encrypted tunnel, then add the
+resulting `https://` URL in-app with user `opencode` and the password above.
+Remote HTTP is intentionally blocked. With an SSH tunnel
+(`ssh -L 4096:127.0.0.1:4096 host`) and a port-forward app, connect to
+`http://127.0.0.1:4096`.
 
 ### On-device (Termux) — automated
 

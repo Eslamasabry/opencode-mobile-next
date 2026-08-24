@@ -495,6 +495,8 @@ class SdkProductRepository
       ptyID: id,
       directory: directory,
       workspace: workspace,
+      // Required by the server's CSRF guard but omitted from its OpenAPI spec.
+      headers: const {'x-opencode-ticket': '1'},
     );
     final ticket = token.data?.ticket;
     if (ticket == null) {
@@ -514,73 +516,95 @@ class SdkProductRepository
   });
 
   @override
-  Future<CatalogSnapshot> loadCatalog() =>
-      _guard('Could not load models and agents', () async {
-        final results = await Future.wait([
-          _client.getProvidersApi().v2ProviderList(
-            locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
-            locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
-          ),
-          _client.getModelsApi().v2ModelList(
-            locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
-            locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
-          ),
-          _client.getOpencodeHttpApiApi().v2AgentList(
-            locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
-            locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
-          ),
-        ]);
-        final providerResponse = results[0] as dynamic;
-        final modelResponse = results[1] as dynamic;
-        final agentResponse = results[2] as dynamic;
-        final providers = (providerResponse.data?.data as List? ?? const [])
-            .cast<sdk.ProviderV2Info>()
-            .map(
-              (provider) => CatalogProvider(
-                id: provider.id,
-                name: provider.name,
-                enabled: provider.disabled != true,
-                integrationID: provider.integrationID,
-              ),
-            )
-            .toList();
-        final models = (modelResponse.data?.data as List? ?? const [])
-            .cast<sdk.ModelV2Info>()
-            .map(
-              (model) => CatalogModel(
-                id: model.id,
-                providerID: model.providerID,
-                name: model.name,
-                family: model.family,
-                enabled: model.enabled,
-                status: model.status.value.toString(),
-                contextLimit: model.limit.context,
-                outputLimit: model.limit.output,
-                reasoning: model.capabilities.reasoning,
-                attachments: model.capabilities.attachment,
-                tools: model.capabilities.toolcall,
-                variants: model.variants.map((variant) => variant.id).toList(),
-              ),
-            )
-            .toList();
-        final agents = (agentResponse.data?.data as List? ?? const [])
-            .cast<sdk.AgentV2Info>()
-            .map(
-              (agent) => CatalogAgent(
-                id: agent.id,
-                mode: agent.mode.value.toString(),
-                description: agent.description,
-                hidden: agent.hidden,
-                maxSteps: agent.steps,
-              ),
-            )
-            .toList();
-        return CatalogSnapshot(
-          providers: providers,
-          models: models,
-          agents: agents,
-        );
-      });
+  Future<CatalogSnapshot> loadCatalog() => _guard(
+    'Could not load models and agents',
+    () async {
+      final query = <String, dynamic>{
+        if (_directory != null) 'location[directory]': _directory,
+        if (_workspace != null) 'location[workspace]': _workspace,
+      };
+      final results = await Future.wait([
+        _client.dio.get('/api/provider', queryParameters: query),
+        _client.dio.get('/api/model', queryParameters: query),
+        _client.dio.get('/api/agent', queryParameters: query),
+      ]);
+      final providers = _catalogData(results[0].data)
+          .map((provider) {
+            return CatalogProvider(
+              id: provider['id']?.toString() ?? '',
+              name:
+                  provider['name']?.toString() ??
+                  provider['id']?.toString() ??
+                  '',
+              enabled: provider['disabled'] != true,
+              integrationID: provider['integrationID']?.toString(),
+            );
+          })
+          .where((provider) => provider.id.isNotEmpty)
+          .toList();
+      final models = _catalogData(results[1].data)
+          .map((model) {
+            final capabilities = _stringMap(model['capabilities']);
+            final limit = _stringMap(model['limit']);
+            final inputs = capabilities['input'];
+            final attachments =
+                capabilities['attachment'] == true ||
+                (inputs is List && inputs.any((value) => value != 'text')) ||
+                (inputs is Map &&
+                    inputs.entries.any(
+                      (entry) => entry.key != 'text' && entry.value == true,
+                    ));
+            final variants = model['variants'];
+            final variantIDs = variants is Map
+                ? variants.keys.map((value) => value.toString()).toList()
+                : variants is List
+                ? variants
+                      .map(
+                        (value) => value is Map
+                            ? value['id']?.toString()
+                            : value.toString(),
+                      )
+                      .whereType<String>()
+                      .toList()
+                : <String>[];
+            return CatalogModel(
+              id: model['id']?.toString() ?? '',
+              providerID: model['providerID']?.toString() ?? '',
+              name: model['name']?.toString() ?? model['id']?.toString() ?? '',
+              family: model['family']?.toString(),
+              enabled: model['enabled'] != false,
+              status: model['status']?.toString() ?? 'unknown',
+              contextLimit: (limit['context'] as num?)?.toInt() ?? 0,
+              outputLimit: (limit['output'] as num?)?.toInt() ?? 0,
+              reasoning: capabilities['reasoning'] == true,
+              attachments: attachments,
+              tools:
+                  capabilities['toolcall'] == true ||
+                  capabilities['tools'] == true,
+              variants: variantIDs,
+            );
+          })
+          .where((model) => model.id.isNotEmpty)
+          .toList();
+      final agents = _catalogData(results[2].data)
+          .map((agent) {
+            return CatalogAgent(
+              id: agent['id']?.toString() ?? '',
+              mode: agent['mode']?.toString() ?? 'unknown',
+              description: agent['description']?.toString(),
+              hidden: agent['hidden'] == true,
+              maxSteps: (agent['steps'] as num?)?.toInt(),
+            );
+          })
+          .where((agent) => agent.id.isNotEmpty)
+          .toList();
+      return CatalogSnapshot(
+        providers: providers,
+        models: models,
+        agents: agents,
+      );
+    },
+  );
 
   @override
   Future<List<McpServerInfo>> listMcpServers() =>
@@ -933,6 +957,16 @@ class SdkProductRepository
     final segments = path.split('/').where((part) => part.isNotEmpty).toList();
     return segments.isEmpty ? path : segments.last;
   }
+
+  static List<Map<String, dynamic>> _catalogData(Object? response) {
+    final data = response is Map ? response['data'] : null;
+    return data is List
+        ? data.whereType<Map>().map(_stringMap).toList()
+        : const [];
+  }
+
+  static Map<String, dynamic> _stringMap(Object? value) =>
+      value is Map ? Map<String, dynamic>.from(value) : const {};
 
   static String _methodLabel(String type) => switch (type) {
     'key' => 'API key',
