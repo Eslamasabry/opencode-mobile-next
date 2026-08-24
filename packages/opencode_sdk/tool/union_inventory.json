@@ -1,0 +1,1267 @@
+{
+  "losslessRawJsonUnions": [
+    "Event",
+    "Auth",
+    "OutputFormat",
+    "Message",
+    "FilePartSource",
+    "ToolState",
+    "ModelPart",
+    "SessionStatus",
+    "PermissionRuleConfig",
+    "PermissionConfig",
+    "MCPStatus",
+    "SessionDurableEvent",
+    "OutputFormat1",
+    "V2Event",
+    "CredentialValue",
+    "IntegrationMethod",
+    "SkillV2Source",
+    "LLMToolContent",
+    "AgentColor",
+    "SessionMessage",
+    "ModelApi",
+    "ProviderApiModel",
+    "ConnectionInfo",
+    "IntegrationAttemptStatus",
+    "ReferenceSource",
+    "OpencodeSdkRawUnion001",
+    "OpencodeSdkRawUnion002",
+    "OpencodeSdkRawUnion003",
+    "OpencodeSdkRawUnion004",
+    "OpencodeSdkRawUnion005",
+    "OpencodeSdkRawUnion006",
+    "OpencodeSdkRawUnion007",
+    "OpencodeSdkRawUnion008",
+    "OpencodeSdkRawUnion009",
+    "OpencodeSdkRawUnion010",
+    "OpencodeSdkRawUnion011",
+    "OpencodeSdkRawUnion012",
+    "OpencodeSdkRawUnion013",
+    "OpencodeSdkRawUnion014",
+    "OpencodeSdkRawUnion015",
+    "OpencodeSdkRawUnion016",
+    "OpencodeSdkRawUnion017",
+    "OpencodeSdkRawUnion018",
+    "OpencodeSdkRawUnion019",
+    "OpencodeSdkRawUnion020",
+    "OpencodeSdkRawUnion021",
+    "OpencodeSdkRawUnion022",
+    "OpencodeSdkRawUnion023",
+    "OpencodeSdkRawUnion024",
+    "OpencodeSdkRawUnion025",
+    "OpencodeSdkRawUnion026",
+    "OpencodeSdkRawUnion027",
+    "OpencodeSdkRawUnion028",
+    "OpencodeSdkRawUnion029",
+    "OpencodeSdkRawUnion030",
+    "OpencodeSdkRawUnion031",
+    "OpencodeSdkRawUnion032",
+    "OpencodeSdkRawUnion033",
+    "OpencodeSdkRawUnion034",
+    "OpencodeSdkRawUnion035",
+    "OpencodeSdkRawUnion036",
+    "OpencodeSdkRawUnion037",
+    "OpencodeSdkRawUnion038",
+    "OpencodeSdkRawUnion039",
+    "OpencodeSdkRawUnion040",
+    "OpencodeSdkRawUnion041",
+    "OpencodeSdkRawUnion042",
+    "OpencodeSdkRawUnion043",
+    "OpencodeSdkRawUnion044",
+    "OpencodeSdkRawUnion045",
+    "OpencodeSdkRawUnion046",
+    "OpencodeSdkRawUnion047",
+    "OpencodeSdkRawUnion048",
+    "OpencodeSdkRawUnion049",
+    "OpencodeSdkRawUnion050",
+    "OpencodeSdkRawUnion051",
+    "OpencodeSdkRawUnion052",
+    "OpencodeSdkRawUnion053",
+    "OpencodeSdkRawUnion054",
+    "OpencodeSdkRawUnion055",
+    "OpencodeSdkRawUnion056",
+    "OpencodeSdkRawUnion057",
+    "OpencodeSdkRawUnion058",
+    "OpencodeSdkRawUnion059",
+    "OpencodeSdkRawUnion060",
+    "OpencodeSdkRawUnion061",
+    "OpencodeSdkRawUnion062",
+    "OpencodeSdkRawUnion063",
+    "OpencodeSdkRawUnion064",
+    "OpencodeSdkRawUnion065",
+    "OpencodeSdkRawUnion066",
+    "OpencodeSdkRawUnion067",
+    "OpencodeSdkRawUnion068",
+    "OpencodeSdkRawUnion069",
+    "OpencodeSdkRawUnion070",
+    "OpencodeSdkRawUnion071",
+    "OpencodeSdkRawUnion072",
+    "OpencodeSdkRawUnion073",
+    "OpencodeSdkRawUnion074",
+    "OpencodeSdkRawUnion075",
+    "OpencodeSdkRawUnion076",
+    "OpencodeSdkRawUnion077",
+    "OpencodeSdkRawUnion078",
+    "OpencodeSdkRawUnion079",
+    "OpencodeSdkRawUnion080",
+    "OpencodeSdkRawUnion081",
+    "OpencodeSdkRawUnion082",
+    "OpencodeSdkRawUnion083",
+    "OpencodeSdkRawUnion084",
+    "OpencodeSdkRawUnion085",
+    "OpencodeSdkRawUnion086",
+    "OpencodeSdkRawUnion087",
+    "OpencodeSdkRawUnion088",
+    "OpencodeSdkRawUnion089",
+    "OpencodeSdkRawUnion090",
+    "OpencodeSdkRawUnion091",
+    "OpencodeSdkRawUnion092",
+    "OpencodeSdkRawUnion093",
+    "OpencodeSdkRawUnion094",
+    "OpencodeSdkRawUnion095",
+    "OpencodeSdkRawUnion096",
+    "OpencodeSdkRawUnion097",
+    "OpencodeSdkRawUnion098",
+    "OpencodeSdkRawUnion099",
+    "OpencodeSdkRawUnion100",
+    "OpencodeSdkRawUnion101",
+    "OpencodeSdkRawUnion102",
+    "OpencodeSdkRawUnion103",
+    "OpencodeSdkRawUnion104",
+    "OpencodeSdkRawUnion105",
+    "OpencodeSdkRawUnion106",
+    "OpencodeSdkRawUnion107",
+    "OpencodeSdkRawUnion108",
+    "OpencodeSdkRawUnion109",
+    "OpencodeSdkRawUnion110",
+    "OpencodeSdkRawUnion111",
+    "OpencodeSdkRawUnion112",
+    "OpencodeSdkRawUnion113",
+    "OpencodeSdkRawUnion114",
+    "OpencodeSdkRawUnion115"
+  ],
+  "covered": [
+    {
+      "schema": "Event",
+      "className": "Event",
+      "file": "lib/src/model/event.dart",
+      "locations": [
+        "#/components/schemas/Event"
+      ]
+    },
+    {
+      "schema": "Auth",
+      "className": "Auth",
+      "file": "lib/src/model/auth.dart",
+      "locations": [
+        "#/components/schemas/Auth"
+      ]
+    },
+    {
+      "schema": "OutputFormat",
+      "className": "OutputFormat",
+      "file": "lib/src/model/output_format.dart",
+      "locations": [
+        "#/components/schemas/OutputFormat"
+      ]
+    },
+    {
+      "schema": "Message",
+      "className": "Message",
+      "file": "lib/src/model/message.dart",
+      "locations": [
+        "#/components/schemas/Message"
+      ]
+    },
+    {
+      "schema": "FilePartSource",
+      "className": "FilePartSource",
+      "file": "lib/src/model/file_part_source.dart",
+      "locations": [
+        "#/components/schemas/FilePartSource"
+      ]
+    },
+    {
+      "schema": "ToolState",
+      "className": "ToolState",
+      "file": "lib/src/model/tool_state.dart",
+      "locations": [
+        "#/components/schemas/ToolState"
+      ]
+    },
+    {
+      "schema": "Part",
+      "className": "ModelPart",
+      "file": "lib/src/model/model_part.dart",
+      "locations": [
+        "#/components/schemas/Part"
+      ]
+    },
+    {
+      "schema": "SessionStatus",
+      "className": "SessionStatus",
+      "file": "lib/src/model/session_status.dart",
+      "locations": [
+        "#/components/schemas/SessionStatus"
+      ]
+    },
+    {
+      "schema": "PermissionRuleConfig",
+      "className": "PermissionRuleConfig",
+      "file": "lib/src/model/permission_rule_config.dart",
+      "locations": [
+        "#/components/schemas/PermissionRuleConfig"
+      ]
+    },
+    {
+      "schema": "PermissionConfig",
+      "className": "PermissionConfig",
+      "file": "lib/src/model/permission_config.dart",
+      "locations": [
+        "#/components/schemas/PermissionConfig"
+      ]
+    },
+    {
+      "schema": "MCPStatus",
+      "className": "MCPStatus",
+      "file": "lib/src/model/mcp_status.dart",
+      "locations": [
+        "#/components/schemas/MCPStatus"
+      ]
+    },
+    {
+      "schema": "SessionDurableEvent",
+      "className": "SessionDurableEvent",
+      "file": "lib/src/model/session_durable_event.dart",
+      "locations": [
+        "#/components/schemas/SessionDurableEvent"
+      ]
+    },
+    {
+      "schema": "OutputFormat1",
+      "className": "OutputFormat1",
+      "file": "lib/src/model/output_format1.dart",
+      "locations": [
+        "#/components/schemas/OutputFormat1"
+      ]
+    },
+    {
+      "schema": "V2Event",
+      "className": "V2Event",
+      "file": "lib/src/model/v2_event.dart",
+      "locations": [
+        "#/components/schemas/V2Event"
+      ]
+    },
+    {
+      "schema": "CredentialValue",
+      "className": "CredentialValue",
+      "file": "lib/src/model/credential_value.dart",
+      "locations": [
+        "#/components/schemas/CredentialValue"
+      ]
+    },
+    {
+      "schema": "IntegrationMethod",
+      "className": "IntegrationMethod",
+      "file": "lib/src/model/integration_method.dart",
+      "locations": [
+        "#/components/schemas/IntegrationMethod"
+      ]
+    },
+    {
+      "schema": "SkillV2Source",
+      "className": "SkillV2Source",
+      "file": "lib/src/model/skill_v2_source.dart",
+      "locations": [
+        "#/components/schemas/SkillV2Source"
+      ]
+    },
+    {
+      "schema": "LLMToolContent",
+      "className": "LLMToolContent",
+      "file": "lib/src/model/llm_tool_content.dart",
+      "locations": [
+        "#/components/schemas/LLMToolContent"
+      ]
+    },
+    {
+      "schema": "AgentColor",
+      "className": "AgentColor",
+      "file": "lib/src/model/agent_color.dart",
+      "locations": [
+        "#/components/schemas/AgentColor"
+      ]
+    },
+    {
+      "schema": "SessionMessage",
+      "className": "SessionMessage",
+      "file": "lib/src/model/session_message.dart",
+      "locations": [
+        "#/components/schemas/SessionMessage"
+      ]
+    },
+    {
+      "schema": "ModelApi",
+      "className": "ModelApi",
+      "file": "lib/src/model/model_api.dart",
+      "locations": [
+        "#/components/schemas/ModelApi"
+      ]
+    },
+    {
+      "schema": "ProviderApiModel",
+      "className": "ProviderApiModel",
+      "file": "lib/src/model/provider_api_model.dart",
+      "locations": [
+        "#/components/schemas/ProviderApiModel"
+      ]
+    },
+    {
+      "schema": "ConnectionInfo",
+      "className": "ConnectionInfo",
+      "file": "lib/src/model/connection_info.dart",
+      "locations": [
+        "#/components/schemas/ConnectionInfo"
+      ]
+    },
+    {
+      "schema": "IntegrationAttemptStatus",
+      "className": "IntegrationAttemptStatus",
+      "file": "lib/src/model/integration_attempt_status.dart",
+      "locations": [
+        "#/components/schemas/IntegrationAttemptStatus"
+      ]
+    },
+    {
+      "schema": "ReferenceSource",
+      "className": "ReferenceSource",
+      "file": "lib/src/model/reference_source.dart",
+      "locations": [
+        "#/components/schemas/ReferenceSource"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion001",
+      "className": "OpencodeSdkRawUnion001",
+      "file": "lib/src/model/opencode_sdk_raw_union001.dart",
+      "locations": [
+        "#/components/schemas/AssistantMessage/properties/error"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion002",
+      "className": "OpencodeSdkRawUnion002",
+      "file": "lib/src/model/opencode_sdk_raw_union002.dart",
+      "locations": [
+        "#/components/schemas/GlobalEvent/properties/payload"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion003",
+      "className": "OpencodeSdkRawUnion003",
+      "file": "lib/src/model/opencode_sdk_raw_union003.dart",
+      "locations": [
+        "#/components/schemas/AgentConfig/properties/color"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion004",
+      "className": "OpencodeSdkRawUnion004",
+      "file": "lib/src/model/opencode_sdk_raw_union004.dart",
+      "locations": [
+        "#/components/schemas/ProviderConfig/properties/options/properties/timeout"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion005",
+      "className": "OpencodeSdkRawUnion005",
+      "file": "lib/src/model/opencode_sdk_raw_union005.dart",
+      "locations": [
+        "#/components/schemas/ProviderConfig/properties/options/properties/headerTimeout"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion006",
+      "className": "OpencodeSdkRawUnion006",
+      "file": "lib/src/model/opencode_sdk_raw_union006.dart",
+      "locations": [
+        "#/components/schemas/ProviderConfig/properties/models/additionalProperties/properties/interleaved"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion007",
+      "className": "OpencodeSdkRawUnion007",
+      "file": "lib/src/model/opencode_sdk_raw_union007.dart",
+      "locations": [
+        "#/components/schemas/McpRemoteConfig/properties/oauth"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion008",
+      "className": "OpencodeSdkRawUnion008",
+      "file": "lib/src/model/opencode_sdk_raw_union008.dart",
+      "locations": [
+        "#/components/schemas/Config/properties/references/additionalProperties"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion009",
+      "className": "OpencodeSdkRawUnion009",
+      "file": "lib/src/model/opencode_sdk_raw_union009.dart",
+      "locations": [
+        "#/components/schemas/Config/properties/reference/additionalProperties"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion010",
+      "className": "OpencodeSdkRawUnion010",
+      "file": "lib/src/model/opencode_sdk_raw_union010.dart",
+      "locations": [
+        "#/components/schemas/Config/properties/plugin/items"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion011",
+      "className": "OpencodeSdkRawUnion011",
+      "file": "lib/src/model/opencode_sdk_raw_union011.dart",
+      "locations": [
+        "#/components/schemas/Config/properties/autoupdate"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion012",
+      "className": "OpencodeSdkRawUnion012",
+      "file": "lib/src/model/opencode_sdk_raw_union012.dart",
+      "locations": [
+        "#/components/schemas/Config/properties/mcp/additionalProperties"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion013",
+      "className": "OpencodeSdkRawUnion013",
+      "file": "lib/src/model/opencode_sdk_raw_union013.dart",
+      "locations": [
+        "#/components/schemas/Config/properties/formatter"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion014",
+      "className": "OpencodeSdkRawUnion014",
+      "file": "lib/src/model/opencode_sdk_raw_union014.dart",
+      "locations": [
+        "#/components/schemas/Config/properties/lsp"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion015",
+      "className": "OpencodeSdkRawUnion015",
+      "file": "lib/src/model/opencode_sdk_raw_union015.dart",
+      "locations": [
+        "#/components/schemas/Model/properties/capabilities/properties/interleaved"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion016",
+      "className": "OpencodeSdkRawUnion016",
+      "file": "lib/src/model/opencode_sdk_raw_union016.dart",
+      "locations": [
+        "#/components/schemas/ProviderAuthMethod/properties/prompts/items"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion017",
+      "className": "OpencodeSdkRawUnion017",
+      "file": "lib/src/model/opencode_sdk_raw_union017.dart",
+      "locations": [
+        "#/components/schemas/EventTuiCommandExecute/properties/properties/properties/command"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion018",
+      "className": "OpencodeSdkRawUnion018",
+      "file": "lib/src/model/opencode_sdk_raw_union018.dart",
+      "locations": [
+        "#/components/schemas/Workspace/properties/timeUsed"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion019",
+      "className": "OpencodeSdkRawUnion019",
+      "file": "lib/src/model/opencode_sdk_raw_union019.dart",
+      "locations": [
+        "#/components/schemas/EventTuiCommandExecuteSchema2/properties/properties/properties/command"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion020",
+      "className": "OpencodeSdkRawUnion020",
+      "file": "lib/src/model/opencode_sdk_raw_union020.dart",
+      "locations": [
+        "#/components/schemas/SessionMessageAssistantTool/properties/state"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion021",
+      "className": "OpencodeSdkRawUnion021",
+      "file": "lib/src/model/opencode_sdk_raw_union021.dart",
+      "locations": [
+        "#/components/schemas/SessionMessageAssistant/properties/content/items"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion022",
+      "className": "OpencodeSdkRawUnion022",
+      "file": "lib/src/model/opencode_sdk_raw_union022.dart",
+      "locations": [
+        "#/components/schemas/IntegrationOAuthMethod/properties/prompts/items"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion023",
+      "className": "OpencodeSdkRawUnion023",
+      "file": "lib/src/model/opencode_sdk_raw_union023.dart",
+      "locations": [
+        "#/components/schemas/IntegrationAttempt/properties/time/properties/created"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion024",
+      "className": "OpencodeSdkRawUnion024",
+      "file": "lib/src/model/opencode_sdk_raw_union024.dart",
+      "locations": [
+        "#/components/schemas/IntegrationAttempt/properties/time/properties/expires"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion025",
+      "className": "OpencodeSdkRawUnion025",
+      "file": "lib/src/model/opencode_sdk_raw_union025.dart",
+      "locations": [
+        "#/components/schemas/IntegrationAttemptStatus/anyOf/0/properties/time/properties/created"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion026",
+      "className": "OpencodeSdkRawUnion026",
+      "file": "lib/src/model/opencode_sdk_raw_union026.dart",
+      "locations": [
+        "#/components/schemas/IntegrationAttemptStatus/anyOf/0/properties/time/properties/expires"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion027",
+      "className": "OpencodeSdkRawUnion027",
+      "file": "lib/src/model/opencode_sdk_raw_union027.dart",
+      "locations": [
+        "#/components/schemas/IntegrationAttemptStatus/anyOf/1/properties/time/properties/created"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion028",
+      "className": "OpencodeSdkRawUnion028",
+      "file": "lib/src/model/opencode_sdk_raw_union028.dart",
+      "locations": [
+        "#/components/schemas/IntegrationAttemptStatus/anyOf/1/properties/time/properties/expires"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion029",
+      "className": "OpencodeSdkRawUnion029",
+      "file": "lib/src/model/opencode_sdk_raw_union029.dart",
+      "locations": [
+        "#/components/schemas/IntegrationAttemptStatus/anyOf/2/properties/time/properties/created"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion030",
+      "className": "OpencodeSdkRawUnion030",
+      "file": "lib/src/model/opencode_sdk_raw_union030.dart",
+      "locations": [
+        "#/components/schemas/IntegrationAttemptStatus/anyOf/2/properties/time/properties/expires"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion031",
+      "className": "OpencodeSdkRawUnion031",
+      "file": "lib/src/model/opencode_sdk_raw_union031.dart",
+      "locations": [
+        "#/components/schemas/IntegrationAttemptStatus/anyOf/3/properties/time/properties/created"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion032",
+      "className": "OpencodeSdkRawUnion032",
+      "file": "lib/src/model/opencode_sdk_raw_union032.dart",
+      "locations": [
+        "#/components/schemas/IntegrationAttemptStatus/anyOf/3/properties/time/properties/expires"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion033",
+      "className": "OpencodeSdkRawUnion033",
+      "file": "lib/src/model/opencode_sdk_raw_union033.dart",
+      "locations": [
+        "#/components/schemas/SessionError/properties/data/properties/error"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion034",
+      "className": "OpencodeSdkRawUnion034",
+      "file": "lib/src/model/opencode_sdk_raw_union034.dart",
+      "locations": [
+        "#/components/schemas/TuiCommandExecute/properties/data/properties/command"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion035",
+      "className": "OpencodeSdkRawUnion035",
+      "file": "lib/src/model/opencode_sdk_raw_union035.dart",
+      "locations": [
+        "#/components/schemas/EventSessionError/properties/properties/properties/error"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion036",
+      "className": "OpencodeSdkRawUnion036",
+      "file": "lib/src/model/opencode_sdk_raw_union036.dart",
+      "locations": [
+        "#/paths/~1auth~1{providerID}/put/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion037",
+      "className": "OpencodeSdkRawUnion037",
+      "file": "lib/src/model/opencode_sdk_raw_union037.dart",
+      "locations": [
+        "#/paths/~1auth~1{providerID}/delete/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion038",
+      "className": "OpencodeSdkRawUnion038",
+      "file": "lib/src/model/opencode_sdk_raw_union038.dart",
+      "locations": [
+        "#/paths/~1log/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion039",
+      "className": "OpencodeSdkRawUnion039",
+      "file": "lib/src/model/opencode_sdk_raw_union039.dart",
+      "locations": [
+        "#/paths/~1experimental~1control-plane~1move-session/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion040",
+      "className": "OpencodeSdkRawUnion040",
+      "file": "lib/src/model/opencode_sdk_raw_union040.dart",
+      "locations": [
+        "#/paths/~1global~1config/patch/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion041",
+      "className": "OpencodeSdkRawUnion041",
+      "file": "lib/src/model/opencode_sdk_raw_union041.dart",
+      "locations": [
+        "#/paths/~1global~1upgrade/post/responses/200/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion042",
+      "className": "OpencodeSdkRawUnion042",
+      "file": "lib/src/model/opencode_sdk_raw_union042.dart",
+      "locations": [
+        "#/paths/~1global~1upgrade/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion043",
+      "className": "OpencodeSdkRawUnion043",
+      "file": "lib/src/model/opencode_sdk_raw_union043.dart",
+      "locations": [
+        "#/paths/~1config/patch/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion044",
+      "className": "OpencodeSdkRawUnion044",
+      "file": "lib/src/model/opencode_sdk_raw_union044.dart",
+      "locations": [
+        "#/paths/~1experimental~1tool/get/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion045",
+      "className": "OpencodeSdkRawUnion045",
+      "file": "lib/src/model/opencode_sdk_raw_union045.dart",
+      "locations": [
+        "#/paths/~1experimental~1tool~1ids/get/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion046",
+      "className": "OpencodeSdkRawUnion046",
+      "file": "lib/src/model/opencode_sdk_raw_union046.dart",
+      "locations": [
+        "#/paths/~1experimental~1worktree/get/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion047",
+      "className": "OpencodeSdkRawUnion047",
+      "file": "lib/src/model/opencode_sdk_raw_union047.dart",
+      "locations": [
+        "#/paths/~1experimental~1worktree/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion048",
+      "className": "OpencodeSdkRawUnion048",
+      "file": "lib/src/model/opencode_sdk_raw_union048.dart",
+      "locations": [
+        "#/paths/~1experimental~1worktree/delete/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion049",
+      "className": "OpencodeSdkRawUnion049",
+      "file": "lib/src/model/opencode_sdk_raw_union049.dart",
+      "locations": [
+        "#/paths/~1experimental~1worktree~1reset/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion050",
+      "className": "OpencodeSdkRawUnion050",
+      "file": "lib/src/model/opencode_sdk_raw_union050.dart",
+      "locations": [
+        "#/paths/~1experimental~1session/get/parameters/2/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion051",
+      "className": "OpencodeSdkRawUnion051",
+      "file": "lib/src/model/opencode_sdk_raw_union051.dart",
+      "locations": [
+        "#/paths/~1experimental~1session/get/parameters/7/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion052",
+      "className": "OpencodeSdkRawUnion052",
+      "file": "lib/src/model/opencode_sdk_raw_union052.dart",
+      "locations": [
+        "#/paths/~1experimental~1session~1{sessionID}~1background/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion053",
+      "className": "OpencodeSdkRawUnion053",
+      "file": "lib/src/model/opencode_sdk_raw_union053.dart",
+      "locations": [
+        "#/paths/~1vcs~1apply/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion054",
+      "className": "OpencodeSdkRawUnion054",
+      "file": "lib/src/model/opencode_sdk_raw_union054.dart",
+      "locations": [
+        "#/paths/~1mcp/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion055",
+      "className": "OpencodeSdkRawUnion055",
+      "file": "lib/src/model/opencode_sdk_raw_union055.dart",
+      "locations": [
+        "#/paths/~1mcp/post/requestBody/content/application~1json/schema/properties/config"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion056",
+      "className": "OpencodeSdkRawUnion056",
+      "file": "lib/src/model/opencode_sdk_raw_union056.dart",
+      "locations": [
+        "#/paths/~1mcp~1{name}~1auth/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion057",
+      "className": "OpencodeSdkRawUnion057",
+      "file": "lib/src/model/opencode_sdk_raw_union057.dart",
+      "locations": [
+        "#/paths/~1mcp~1{name}~1auth~1callback/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion058",
+      "className": "OpencodeSdkRawUnion058",
+      "file": "lib/src/model/opencode_sdk_raw_union058.dart",
+      "locations": [
+        "#/paths/~1mcp~1{name}~1auth~1authenticate/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion059",
+      "className": "OpencodeSdkRawUnion059",
+      "file": "lib/src/model/opencode_sdk_raw_union059.dart",
+      "locations": [
+        "#/paths/~1project~1{projectID}/patch/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion060",
+      "className": "OpencodeSdkRawUnion060",
+      "file": "lib/src/model/opencode_sdk_raw_union060.dart",
+      "locations": [
+        "#/paths/~1pty/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion061",
+      "className": "OpencodeSdkRawUnion061",
+      "file": "lib/src/model/opencode_sdk_raw_union061.dart",
+      "locations": [
+        "#/paths/~1pty~1{ptyID}/put/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion062",
+      "className": "OpencodeSdkRawUnion062",
+      "file": "lib/src/model/opencode_sdk_raw_union062.dart",
+      "locations": [
+        "#/paths/~1question~1{requestID}~1reply/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion063",
+      "className": "OpencodeSdkRawUnion063",
+      "file": "lib/src/model/opencode_sdk_raw_union063.dart",
+      "locations": [
+        "#/paths/~1question~1{requestID}~1reject/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion064",
+      "className": "OpencodeSdkRawUnion064",
+      "file": "lib/src/model/opencode_sdk_raw_union064.dart",
+      "locations": [
+        "#/paths/~1permission~1{requestID}~1reply/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion065",
+      "className": "OpencodeSdkRawUnion065",
+      "file": "lib/src/model/opencode_sdk_raw_union065.dart",
+      "locations": [
+        "#/paths/~1provider~1{providerID}~1oauth~1authorize/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion066",
+      "className": "OpencodeSdkRawUnion066",
+      "file": "lib/src/model/opencode_sdk_raw_union066.dart",
+      "locations": [
+        "#/paths/~1provider~1{providerID}~1oauth~1callback/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion067",
+      "className": "OpencodeSdkRawUnion067",
+      "file": "lib/src/model/opencode_sdk_raw_union067.dart",
+      "locations": [
+        "#/paths/~1session/get/parameters/4/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion068",
+      "className": "OpencodeSdkRawUnion068",
+      "file": "lib/src/model/opencode_sdk_raw_union068.dart",
+      "locations": [
+        "#/paths/~1session/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion069",
+      "className": "OpencodeSdkRawUnion069",
+      "file": "lib/src/model/opencode_sdk_raw_union069.dart",
+      "locations": [
+        "#/paths/~1session~1status/get/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion070",
+      "className": "OpencodeSdkRawUnion070",
+      "file": "lib/src/model/opencode_sdk_raw_union070.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}/get/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion071",
+      "className": "OpencodeSdkRawUnion071",
+      "file": "lib/src/model/opencode_sdk_raw_union071.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}/delete/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion072",
+      "className": "OpencodeSdkRawUnion072",
+      "file": "lib/src/model/opencode_sdk_raw_union072.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}/patch/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion073",
+      "className": "OpencodeSdkRawUnion073",
+      "file": "lib/src/model/opencode_sdk_raw_union073.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}~1children/get/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion074",
+      "className": "OpencodeSdkRawUnion074",
+      "file": "lib/src/model/opencode_sdk_raw_union074.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}~1todo/get/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion075",
+      "className": "OpencodeSdkRawUnion075",
+      "file": "lib/src/model/opencode_sdk_raw_union075.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}~1message/get/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion076",
+      "className": "OpencodeSdkRawUnion076",
+      "file": "lib/src/model/opencode_sdk_raw_union076.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}~1message/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion077",
+      "className": "OpencodeSdkRawUnion077",
+      "file": "lib/src/model/opencode_sdk_raw_union077.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}~1message/post/requestBody/content/application~1json/schema/properties/parts/items"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion078",
+      "className": "OpencodeSdkRawUnion078",
+      "file": "lib/src/model/opencode_sdk_raw_union078.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}~1message~1{messageID}/get/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion079",
+      "className": "OpencodeSdkRawUnion079",
+      "file": "lib/src/model/opencode_sdk_raw_union079.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}~1message~1{messageID}/delete/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion080",
+      "className": "OpencodeSdkRawUnion080",
+      "file": "lib/src/model/opencode_sdk_raw_union080.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}~1fork/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion081",
+      "className": "OpencodeSdkRawUnion081",
+      "file": "lib/src/model/opencode_sdk_raw_union081.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}~1abort/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion082",
+      "className": "OpencodeSdkRawUnion082",
+      "file": "lib/src/model/opencode_sdk_raw_union082.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}~1init/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion083",
+      "className": "OpencodeSdkRawUnion083",
+      "file": "lib/src/model/opencode_sdk_raw_union083.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}~1summarize/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion084",
+      "className": "OpencodeSdkRawUnion084",
+      "file": "lib/src/model/opencode_sdk_raw_union084.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}~1prompt_async/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion085",
+      "className": "OpencodeSdkRawUnion085",
+      "file": "lib/src/model/opencode_sdk_raw_union085.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}~1prompt_async/post/requestBody/content/application~1json/schema/properties/parts/items"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion086",
+      "className": "OpencodeSdkRawUnion086",
+      "file": "lib/src/model/opencode_sdk_raw_union086.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}~1command/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion087",
+      "className": "OpencodeSdkRawUnion087",
+      "file": "lib/src/model/opencode_sdk_raw_union087.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}~1shell/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion088",
+      "className": "OpencodeSdkRawUnion088",
+      "file": "lib/src/model/opencode_sdk_raw_union088.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}~1revert/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion089",
+      "className": "OpencodeSdkRawUnion089",
+      "file": "lib/src/model/opencode_sdk_raw_union089.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}~1unrevert/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion090",
+      "className": "OpencodeSdkRawUnion090",
+      "file": "lib/src/model/opencode_sdk_raw_union090.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}~1permissions~1{permissionID}/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion091",
+      "className": "OpencodeSdkRawUnion091",
+      "file": "lib/src/model/opencode_sdk_raw_union091.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}~1permissions~1{permissionID}/post/responses/404/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion092",
+      "className": "OpencodeSdkRawUnion092",
+      "file": "lib/src/model/opencode_sdk_raw_union092.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}~1message~1{messageID}~1part~1{partID}/delete/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion093",
+      "className": "OpencodeSdkRawUnion093",
+      "file": "lib/src/model/opencode_sdk_raw_union093.dart",
+      "locations": [
+        "#/paths/~1session~1{sessionID}~1message~1{messageID}~1part~1{partID}/patch/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion094",
+      "className": "OpencodeSdkRawUnion094",
+      "file": "lib/src/model/opencode_sdk_raw_union094.dart",
+      "locations": [
+        "#/paths/~1sync~1replay/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion095",
+      "className": "OpencodeSdkRawUnion095",
+      "file": "lib/src/model/opencode_sdk_raw_union095.dart",
+      "locations": [
+        "#/paths/~1sync~1steal/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion096",
+      "className": "OpencodeSdkRawUnion096",
+      "file": "lib/src/model/opencode_sdk_raw_union096.dart",
+      "locations": [
+        "#/paths/~1sync~1history/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion097",
+      "className": "OpencodeSdkRawUnion097",
+      "file": "lib/src/model/opencode_sdk_raw_union097.dart",
+      "locations": [
+        "#/paths/~1tui~1append-prompt/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion098",
+      "className": "OpencodeSdkRawUnion098",
+      "file": "lib/src/model/opencode_sdk_raw_union098.dart",
+      "locations": [
+        "#/paths/~1tui~1execute-command/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion099",
+      "className": "OpencodeSdkRawUnion099",
+      "file": "lib/src/model/opencode_sdk_raw_union099.dart",
+      "locations": [
+        "#/paths/~1tui~1publish/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion100",
+      "className": "OpencodeSdkRawUnion100",
+      "file": "lib/src/model/opencode_sdk_raw_union100.dart",
+      "locations": [
+        "#/paths/~1tui~1publish/post/requestBody/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion101",
+      "className": "OpencodeSdkRawUnion101",
+      "file": "lib/src/model/opencode_sdk_raw_union101.dart",
+      "locations": [
+        "#/paths/~1tui~1select-session/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion102",
+      "className": "OpencodeSdkRawUnion102",
+      "file": "lib/src/model/opencode_sdk_raw_union102.dart",
+      "locations": [
+        "#/paths/~1experimental~1workspace/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion103",
+      "className": "OpencodeSdkRawUnion103",
+      "file": "lib/src/model/opencode_sdk_raw_union103.dart",
+      "locations": [
+        "#/paths/~1experimental~1workspace~1{id}/delete/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion104",
+      "className": "OpencodeSdkRawUnion104",
+      "file": "lib/src/model/opencode_sdk_raw_union104.dart",
+      "locations": [
+        "#/paths/~1experimental~1workspace~1warp/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion105",
+      "className": "OpencodeSdkRawUnion105",
+      "file": "lib/src/model/opencode_sdk_raw_union105.dart",
+      "locations": [
+        "#/paths/~1api~1session/get/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion106",
+      "className": "OpencodeSdkRawUnion106",
+      "file": "lib/src/model/opencode_sdk_raw_union106.dart",
+      "locations": [
+        "#/paths/~1api~1session~1{sessionID}~1revert~1stage/post/responses/404/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion107",
+      "className": "OpencodeSdkRawUnion107",
+      "file": "lib/src/model/opencode_sdk_raw_union107.dart",
+      "locations": [
+        "#/paths/~1api~1session~1{sessionID}~1message~1{messageID}/get/responses/404/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion108",
+      "className": "OpencodeSdkRawUnion108",
+      "file": "lib/src/model/opencode_sdk_raw_union108.dart",
+      "locations": [
+        "#/paths/~1api~1session~1{sessionID}~1message/get/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion109",
+      "className": "OpencodeSdkRawUnion109",
+      "file": "lib/src/model/opencode_sdk_raw_union109.dart",
+      "locations": [
+        "#/paths/~1api~1session~1{sessionID}~1permission~1{requestID}/get/responses/404/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion110",
+      "className": "OpencodeSdkRawUnion110",
+      "file": "lib/src/model/opencode_sdk_raw_union110.dart",
+      "locations": [
+        "#/paths/~1api~1session~1{sessionID}~1permission~1{requestID}~1reply/post/responses/404/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion111",
+      "className": "OpencodeSdkRawUnion111",
+      "file": "lib/src/model/opencode_sdk_raw_union111.dart",
+      "locations": [
+        "#/paths/~1api~1session~1{sessionID}~1question~1{requestID}~1reply/post/responses/404/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion112",
+      "className": "OpencodeSdkRawUnion112",
+      "file": "lib/src/model/opencode_sdk_raw_union112.dart",
+      "locations": [
+        "#/paths/~1api~1session~1{sessionID}~1question~1{requestID}~1reject/post/responses/404/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion113",
+      "className": "OpencodeSdkRawUnion113",
+      "file": "lib/src/model/opencode_sdk_raw_union113.dart",
+      "locations": [
+        "#/paths/~1experimental~1project~1{projectID}~1copy/post/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion114",
+      "className": "OpencodeSdkRawUnion114",
+      "file": "lib/src/model/opencode_sdk_raw_union114.dart",
+      "locations": [
+        "#/paths/~1experimental~1project~1{projectID}~1copy/delete/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion115",
+      "className": "OpencodeSdkRawUnion115",
+      "file": "lib/src/model/opencode_sdk_raw_union115.dart",
+      "locations": [
+        "#/paths/~1experimental~1project~1{projectID}~1copy~1refresh/post/responses/400/content/application~1json/schema"
+      ]
+    }
+  ],
+  "residualLossyUnions": []
+}

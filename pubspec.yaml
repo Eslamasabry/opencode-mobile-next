@@ -1,7 +1,7 @@
 name: opencode_mobile
 description: "OpenCode client for Android - connect to a remote opencode server or one running on-device via Termux."
 publish_to: "none"
-version: 1.0.10+11
+version: 1.0.11+12
 
 environment:
   sdk: ^3.10.0
@@ -11,11 +11,19 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   dio: ^5.7.0
+  file_picker: ^11.0.3
   flutter_riverpod: ^2.6.1
   flutter_secure_storage: ^9.2.2
+  crypto: 3.0.7
+  opencode_sdk:
+    path: packages/opencode_sdk
+  path_provider: 2.1.6
+  record: 6.2.1
+  sherpa_onnx: 1.13.6
   shared_preferences: ^2.3.3
   url_launcher: ^6.3.1
   uuid: ^4.5.1
+  xterm: ^4.0.0
 
 dev_dependencies:
   flutter_test:
@@ -25,4 +33,6 @@ dev_dependencies:
 flutter:
   assets:
     - shorebird.yaml
+    - THIRD_PARTY_NOTICES.md
+    - LICENSES/
   uses-material-design: true

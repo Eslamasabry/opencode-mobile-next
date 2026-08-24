@@ -23,7 +23,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     setState(() => _busy = false);
     final conn = ref.read(connProvider);
     if (conn.api != null && mounted) {
-      Navigator.of(context).pushReplacementNamed('/home');
+      Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -133,6 +133,11 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            tooltip: 'About and open source notices',
+            icon: const Icon(Icons.info_outline_rounded),
+            onPressed: () => Navigator.pushNamed(context, '/about'),
+          ),
           IconButton(
             tooltip: 'Setup guide',
             icon: const Icon(Icons.help_outline_rounded),
@@ -268,9 +273,9 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                 child: ListTile(
                   onTap: () => _addPreset(
                     'Remote dev box',
-                    'http://192.168.1.100:4096',
-                    'On your machine run:\n\nOPENCODE_SERVER_PASSWORD=secret '
-                        'opencode serve --hostname 0.0.0.0 --port 4096',
+                    'https://devbox.local:4096',
+                    'Expose the server through HTTPS before connecting from another device. '
+                        'Do not send an OpenCode password over LAN HTTP.',
                   ),
                   leading: const Icon(Icons.dns_rounded),
                   title: const Text('Remote machine (LAN)'),
@@ -298,7 +303,7 @@ class _ProfileDialogState extends State<_ProfileDialog> {
     text: widget.existing?.name ?? '',
   );
   late final TextEditingController _url = TextEditingController(
-    text: widget.existing?.baseUrl ?? 'http://',
+    text: widget.existing?.baseUrl ?? 'https://',
   );
   late final TextEditingController _user = TextEditingController(
     text: widget.existing?.username ?? '',
@@ -306,6 +311,16 @@ class _ProfileDialogState extends State<_ProfileDialog> {
   late final TextEditingController _pass = TextEditingController(
     text: widget.existing?.password ?? '',
   );
+  String? _error;
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _url.dispose();
+    _user.dispose();
+    _pass.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -323,13 +338,18 @@ class _ProfileDialogState extends State<_ProfileDialog> {
             TextField(
               controller: _url,
               keyboardType: TextInputType.url,
-              decoration: const InputDecoration(
+              onChanged: (_) => setState(() => _error = null),
+              decoration: InputDecoration(
                 labelText: 'Server URL',
-                hintText: 'http://host:4096',
+                hintText: 'https://host:4096',
+                errorText: _error,
+                helperText:
+                    'HTTP works only with localhost or 127.0.0.1 for Termux.',
               ),
             ),
             TextField(
               controller: _user,
+              onChanged: (_) => setState(() => _error = null),
               decoration: const InputDecoration(
                 labelText: 'Username (optional)',
                 hintText: 'opencode',
@@ -337,6 +357,7 @@ class _ProfileDialogState extends State<_ProfileDialog> {
             ),
             TextField(
               controller: _pass,
+              onChanged: (_) => setState(() => _error = null),
               obscureText: true,
               decoration: const InputDecoration(
                 labelText: 'Password (optional)',
@@ -354,10 +375,17 @@ class _ProfileDialogState extends State<_ProfileDialog> {
         FilledButton(
           onPressed: () {
             var url = _url.text.trim();
-            if (!url.startsWith('http://') && !url.startsWith('https://')) {
-              url = 'http://$url';
+            final error = validateServerProfileUrl(
+              url,
+              username: _user.text,
+              password: _pass.text,
+            );
+            if (error != null) {
+              setState(() => _error = error);
+              return;
             }
-            if (Uri.tryParse(url)?.host.isEmpty ?? true) return;
+            final uri = Uri.parse(url);
+            url = uri.replace(scheme: uri.scheme.toLowerCase()).toString();
             Navigator.pop(
               context,
               ServerProfile(

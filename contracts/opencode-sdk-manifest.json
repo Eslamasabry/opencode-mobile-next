@@ -1,0 +1,322 @@
+{
+  "formatVersion": 3,
+  "source": {
+    "repository": "https://github.com/anomalyco/opencode",
+    "commit": "03bba464d46f3eddf74195919b1344aa937f7b11",
+    "path": "packages/sdk/openapi.json",
+    "file": "opencode-openapi-03bba464.json",
+    "sha256": "5bbd6493a1a488ef4294889341c896e420f814ecea95822100aaa9f3f95ab2d1",
+    "openapiVersion": "3.1.0"
+  },
+  "generator": {
+    "name": "openapi-generator-cli",
+    "version": "7.19.0",
+    "sha256": "3d8140c691410e0004b1bb9b1e431c1293734830f30d6d5922f8e5dbf2e42e19",
+    "target": "dart-dio",
+    "serializationLibrary": "json_serializable",
+    "config": "../tool/sdk/generator-config.json",
+    "templateOverrides": "../tool/sdk/templates",
+    "disallowAdditionalPropertiesIfNotPresent": false,
+    "unionStrategy": "hoistInlineAndGenerateDescriptorBackedRawJsonValue",
+    "losslessRawJsonUnionComponents": 140,
+    "residualLossyUnionComponents": 0,
+    "mixedAdditionalPropertiesStrategy": "typedFieldsWithCapturedUnknownEntriesAndDescriptorBackedUnion",
+    "losslessMixedAdditionalPropertiesSites": 6,
+    "residualLossyAdditionalPropertiesSites": 0,
+    "httpWireStrategy": "templateEncodedSegmentsNullBodyOmissionScalarUnionQueriesAndStatusAwareRuntime",
+    "errorResponseStrategy": "exactOperationStatusMediaSchemaRegistryWithGeneratedModelsAndLosslessUnionWrappers"
+  },
+  "normalization": {
+    "script": "../tool/sdk/normalize_openapi.dart",
+    "before": {
+      "sha256": "5bbd6493a1a488ef4294889341c896e420f814ecea95822100aaa9f3f95ab2d1",
+      "counts": {
+        "paths": 162,
+        "operations": 188,
+        "schemas": 472,
+        "parameters": 418,
+        "rootTags": 38,
+        "unionSchemas": 173,
+        "unionBranches": 776,
+        "deepObjectLocationParameters": 31,
+        "bracketedLocationParameters": 2,
+        "patternProperties": 1,
+        "nullableMarkers": 0,
+        "xEffectStreamExtensions": 1,
+        "requestBodies": 60,
+        "requiredRequestBodies": 14
+      }
+    },
+    "after": {
+      "sha256": "bd92134aca6c98709d5da0475cb93e7ba6ea80d1f0ae6703fc124514d198a9f4",
+      "counts": {
+        "paths": 162,
+        "operations": 188,
+        "schemas": 587,
+        "parameters": 449,
+        "rootTags": 32,
+        "unionSchemas": 169,
+        "unionBranches": 741,
+        "deepObjectLocationParameters": 0,
+        "bracketedLocationParameters": 64,
+        "patternProperties": 0,
+        "nullableMarkers": 7,
+        "xEffectStreamExtensions": 0,
+        "requestBodies": 60,
+        "requiredRequestBodies": 14
+      }
+    },
+    "changes": [
+      {
+        "kind": "deduplicateRootTags",
+        "strategy": "retainFirstDeclaration",
+        "before": 38,
+        "after": 32,
+        "removedDeclarations": 6,
+        "affectedNames": [
+          "opencode HttpApi",
+          "projectCopy",
+          "pty"
+        ]
+      },
+      {
+        "kind": "deduplicateExactUnionBranches",
+        "keywords": [
+          "anyOf",
+          "oneOf"
+        ],
+        "strategy": "canonicalJsonEqualityRetainFirst",
+        "duplicateBranchOccurrencesBefore": 26,
+        "duplicateBranchOccurrencesAfter": 0,
+        "removedBranches": 26,
+        "semanticChange": false
+      },
+      {
+        "kind": "expandDeepObjectLocationParameters",
+        "strategy": "exactBracketedWireParameters",
+        "deepObjectParametersBefore": 31,
+        "deepObjectParametersAfter": 0,
+        "bracketedParametersBefore": 2,
+        "bracketedParametersAfter": 64,
+        "createdParameters": 62,
+        "wireNames": [
+          "location[directory]",
+          "location[workspace]"
+        ],
+        "operationsBefore": 188,
+        "operationsAfter": 188
+      },
+      {
+        "kind": "normalizeSessionActiveMap",
+        "operationId": "v2.session.active",
+        "strategy": "additionalPropertiesWithPropertyNamesConstraint",
+        "patternPropertiesBefore": 1,
+        "patternPropertiesAfter": 0,
+        "additionalPropertiesAdded": 1,
+        "propertyNamesPattern": "^ses"
+      },
+      {
+        "kind": "matchSessionHistoryNumericParameters",
+        "operationId": "v2.session.history",
+        "canonicalSource": "OpenAPI parameters are strings",
+        "upstreamGeneratedSource": "JS SDK build patches parameters to numbers",
+        "parityTarget": "upstream-generated-sdk",
+        "decision": "Generate numeric Dart query parameters while recording, rather than erasing, the canonical string descriptors.",
+        "parameters": [
+          "limit",
+          "after"
+        ],
+        "stringSchemasBefore": 2,
+        "stringSchemasAfter": 0,
+        "numberSchemasBefore": 0,
+        "numberSchemasAfter": 2
+      },
+      {
+        "kind": "markExplicitNullableUnions",
+        "strategy": "retainAnyOfAndAddGeneratorNullableMetadata",
+        "explicitNullableUnionsBefore": 7,
+        "explicitNullableUnionsAfter": 7,
+        "nullableMarkersBefore": 0,
+        "nullableMarkersAfter": 7,
+        "semanticChange": false
+      },
+      {
+        "kind": "renameDartSanitizedComponentCollisions",
+        "strategy": "retainExactDartNameThenStableSchemaOrdinalAndApiModelSuffix",
+        "componentCollisionGroupsBefore": 7,
+        "componentCollisionGroupsAfter": 0,
+        "apiTypeCollisionsBefore": 1,
+        "apiTypeCollisionsAfter": 0,
+        "renamedSchemas": 8,
+        "rewrittenRefs": 8,
+        "mappings": {
+          "Event.tui.command.execute": "EventTuiCommandExecuteSchema2",
+          "Event.tui.prompt.append": "EventTuiPromptAppendSchema2",
+          "Event.tui.session.select": "EventTuiSessionSelectSchema2",
+          "Event.tui.toast.show": "EventTuiToastShowSchema2",
+          "question.rejected": "QuestionRejectedSchema2",
+          "question.replied": "QuestionRepliedSchema2",
+          "session.status": "SessionStatusSchema2",
+          "ProviderApi": "ProviderApiModel"
+        }
+      },
+      {
+        "kind": "stripGeneratorIrrelevantEffectStreamSchemas",
+        "strategy": "removeXEffectStreamExtensionFromTemporaryInputOnly",
+        "extensionsBefore": 1,
+        "extensionsAfter": 0,
+        "canonicalExtensionsRetained": 1
+      },
+      {
+        "kind": "collapseUnconstrainedAnyOf",
+        "strategy": "removeAnyOfContainingEmptySchemaAndRetainSiblings",
+        "unconstrainedUnionsBefore": 2,
+        "unconstrainedUnionsAfter": 0,
+        "semanticChange": false
+      },
+      {
+        "kind": "hoistInlineMeaningfulUnions",
+        "strategy": "stableNamedComponentRawJsonWrapper",
+        "createdComponents": 115,
+        "preservesExactSchemaDescriptors": true,
+        "semanticChange": false
+      },
+      {
+        "kind": "annotateCanonicalOperationIds",
+        "strategy": "temporaryGeneratorExtension",
+        "annotatedOperations": 188,
+        "canonicalSourceModified": false,
+        "semanticChange": false
+      }
+    ],
+    "invariants": {
+      "canonicalSourceModified": false,
+      "operationCoveragePreserved": true,
+      "meaningfulUnionsFlattened": false,
+      "requestBodiesBefore": 60,
+      "requestBodiesAfter": 60,
+      "requiredRequestBodiesBefore": 14,
+      "requiredRequestBodiesAfter": 14
+    }
+  },
+  "counts": {
+    "paths": 162,
+    "operations": 188,
+    "schemas": 472,
+    "generatedApiFiles": 32,
+    "generatedModelSourceFiles": 982,
+    "generatedSerializerFiles": 834
+  },
+  "deterministicSourceHashes": {
+    "algorithmScope": "UTF-8 relative path, NUL, byte length, NUL, file SHA-256 records sorted lexicographically; no absolute paths, mtimes, permissions, or host separators",
+    "generatedApi": {
+      "path": "../packages/opencode_sdk/lib/src/api",
+      "algorithm": "sha256(relative-path-nul-bytes-v1)",
+      "sha256": "461259d3ad1267168ef0bcf0feec39c9f02477e8b5d1aaf0efd397eb45a96e20"
+    },
+    "generatedModels": {
+      "path": "../packages/opencode_sdk/lib/src/model",
+      "algorithm": "sha256(relative-path-nul-bytes-v1)",
+      "sha256": "337568251140a2a65497342dda1ce27bcfc640aed9e5525a77bfc9c81c268294"
+    },
+    "generatedRuntime": {
+      "paths": [
+        "../packages/opencode_sdk/lib/src/http",
+        "../packages/opencode_sdk/lib/src/sse"
+      ],
+      "algorithm": "sha256(relative-path-nul-bytes-v1)",
+      "sha256": "2406da9a8d83abcfd16861d554c0a6b28febaa5691a74ece483c44f9f25303de"
+    },
+    "runtimeSources": {
+      "path": "../tool/sdk/runtime",
+      "algorithm": "sha256(relative-path-nul-bytes-v1)",
+      "sha256": "6b693a99b3c3548a10e4c7aee90f22e9c025aa00c2483a18f4343cf938f28d11"
+    },
+    "templates": {
+      "path": "../tool/sdk/templates",
+      "algorithm": "sha256(relative-path-nul-bytes-v1)",
+      "sha256": "41cd98aee0170979c459c6816dccf6612a08462b15dcf9ef1c9827abc8aa2ee0"
+    },
+    "testTemplates": {
+      "paths": [
+        "../tool/sdk/additional_properties_test.dart.template",
+        "../tool/sdk/contract_parity_test.dart.template",
+        "../tool/sdk/independent_verifier_mutation_test.dart.template",
+        "../tool/sdk/schema_category_fixtures_test.dart.template",
+        "../tool/sdk/smoke.dart.template",
+        "../tool/sdk/union_fixtures_test.dart.template"
+      ],
+      "algorithm": "sha256(relative-path-nul-bytes-v1)",
+      "sha256": "f96323141f74d86cf41ea1d96b8754227440224dae68e11525589d3681c10392"
+    }
+  },
+  "httpWireAudit": {
+    "optionalRequestBodiesOmittedWhenNull": 46,
+    "optionalRequestBodyContentTypesRemovedWhenOmitted": 46,
+    "rfc3986PathSegmentSubstitutions": 99,
+    "allowReservedPathSubstitutions": 0,
+    "strictRfc3986ExtraEscapes": [
+      "!",
+      "'",
+      "(",
+      ")",
+      "*"
+    ],
+    "scalarUnionQueryParameters": 3,
+    "nullableQueriesOmitted": 1,
+    "declaredNon2xxResponses": 332,
+    "operationsWithDeclaredNon2xxResponses": 186,
+    "errorDecoderRegistry": {
+      "entries": 332,
+      "generatedModelDecoders": 260,
+      "generatedLosslessUnionWrapperDecoders": 72,
+      "losslessDescriptorWrapperDecoders": 0,
+      "plainObjectDecoders": 0,
+      "selectionKey": [
+        "operationId",
+        "status",
+        "mediaType",
+        "schemaJson"
+      ],
+      "rawPayloadRetained": true,
+      "exactSchemaDescriptorRetained": true,
+      "undecodableGeneratedModelsUseLosslessWrapper": true
+    },
+    "clientDefaults": {
+      "baseUrl": "http://localhost:4096",
+      "receiveTimeout": null,
+      "injectedDioConfigurationPreserved": true,
+      "basePathOverrideAppliesToCreatedDioOnly": true,
+      "upstreamClient": "packages/sdk/js/src/gen/client.gen.ts",
+      "upstreamTimeoutOverride": "packages/sdk/js/src/v2/client.ts"
+    },
+    "sseReplacements": {
+      "operations": 4,
+      "operationIdMetadataAttached": true,
+      "declaredNon2xxMappedThroughErrorRegistry": true,
+      "initialRetryMilliseconds": 3000,
+      "maximumRetryMilliseconds": 30000,
+      "maximumErrorReconnectAttempts": null,
+      "cleanEofReconnects": false,
+      "reconnectDelayCancellable": true,
+      "lastEventIdHeaderUsesLastParsedSseId": true,
+      "upstreamImplementation": "packages/sdk/js/src/gen/core/serverSentEvents.gen.ts",
+      "durableSessionReplay": {
+        "serverCursorQuery": "after",
+        "exactlyOnceClaimed": false,
+        "limitation": "If the server ignores Last-Event-ID, reconnect may replay already delivered events; consumers must deduplicate by durable sequence."
+      }
+    },
+    "wildcardRoute": {
+      "operationId": "v2.fs.read",
+      "path": "/api/fs/read/*",
+      "upstreamCommit": "03bba464d46f3eddf74195919b1344aa937f7b11",
+      "definition": "packages/protocol/src/groups/fs.ts",
+      "handler": "packages/server/src/handlers/fs.ts",
+      "exercise": "packages/opencode/test/server/httpapi-exercise/index.ts",
+      "verifiedRequestPath": "/api/fs/read/hello.txt",
+      "literalGeneratedMethodDeprecated": true,
+      "replacement": "OpencodeSdk.v2FsReadPath"
+    }
+  }
+}

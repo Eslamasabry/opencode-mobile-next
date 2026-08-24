@@ -1,0 +1,15 @@
+{
+  "pubName": "opencode_sdk",
+  "pubVersion": "1.0.0",
+  "pubDescription": "Generated Dart SDK for the OpenCode HTTP API.",
+  "pubHomepage": "https://github.com/anomalyco/opencode",
+  "pubRepository": "https://github.com/anomalyco/opencode",
+  "pubPublishTo": "none",
+  "serializationLibrary": "json_serializable",
+  "equalityCheckMethod": "equatable",
+  "finalProperties": true,
+  "skipCopyWith": true,
+  "disallowAdditionalPropertiesIfNotPresent": false,
+  "enumUnknownDefaultCase": true,
+  "useEnumExtension": true
+}

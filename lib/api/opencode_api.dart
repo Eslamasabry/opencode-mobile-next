@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:opencode_sdk/opencode_sdk.dart' as sdk;
 
 import 'models.dart';
 
@@ -10,13 +11,44 @@ class OpenCodeApi {
   final String? username;
   final String? password;
   late final Dio _dio;
+  late final sdk.OpencodeSdk sdkClient;
+  String? _directory;
+  String? _workspace;
+  bool _closed = false;
+
+  Dio get dio => _dio;
+  String? get directory => _directory;
+  String? get workspace => _workspace;
+  bool get isClosed => _closed;
+
+  void setLocation({String? directory, String? workspace}) {
+    _directory = directory;
+    _workspace = workspace;
+  }
+
+  /// Cancels in-flight requests and closes the shared handwritten/SDK client.
+  void close() {
+    if (_closed) return;
+    _closed = true;
+    _dio.close(force: true);
+  }
+
+  Map<String, dynamic> _query([Map<String, dynamic> values = const {}]) => {
+    if (_directory != null) 'directory': _directory,
+    if (_workspace != null) 'workspace': _workspace,
+    ...values,
+  };
 
   static const connectTimeout = Duration(seconds: 8);
-  static const requestTimeout = Duration(minutes: 10); // sync endpoints can run long
+  static const requestTimeout = Duration(
+    minutes: 10,
+  ); // sync endpoints can run long
 
   OpenCodeApi({required this.baseUrl, this.username, this.password}) {
     final options = BaseOptions(
-      baseUrl: baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl,
+      baseUrl: baseUrl.endsWith('/')
+          ? baseUrl.substring(0, baseUrl.length - 1)
+          : baseUrl,
       connectTimeout: connectTimeout,
       receiveTimeout: requestTimeout,
       responseType: ResponseType.json,
@@ -24,24 +56,37 @@ class OpenCodeApi {
     );
     _dio = Dio(options);
     if (password != null && password!.isNotEmpty) {
-      final user = (username == null || username!.isEmpty) ? 'opencode' : username!;
+      final user = (username == null || username!.isEmpty)
+          ? 'opencode'
+          : username!;
       final token = base64Encode(utf8.encode('$user:$password'));
       _dio.options.headers['Authorization'] = 'Basic $token';
     }
+    // Generated APIs and the handwritten compatibility facade intentionally
+    // share transport, timeouts, base URL, and authentication.
+    sdkClient = sdk.OpencodeSdk(dio: _dio, interceptors: const []);
   }
 
   Never _fail(DioException e, String what) {
     final code = e.response?.statusCode;
-    final body = e.response?.data?.toString();
+    final responseData = e.response?.data;
+    final body = responseData?.toString();
+    final error = responseData is Map
+        ? Map<String, dynamic>.from(responseData)
+        : null;
     throw ApiException(
-        '$what failed${code != null ? ' (HTTP $code)' : ''}${body != null && code != null ? ': $body' : ''}',
-        statusCode: code);
+      '$what failed${code != null ? ' (HTTP $code)' : ''}${body != null && code != null ? ': $body' : ''}',
+      statusCode: code,
+      errorTag: error?['_tag']?.toString(),
+      requestID: error?['requestID']?.toString(),
+    );
   }
 
   /// Opens the long-lived `/event` SSE stream.
   Future<Response<ResponseBody>> openEventStream({CancelToken? cancelToken}) {
     return _dio.get<ResponseBody>(
       '/event',
+      queryParameters: _query(),
       options: Options(
         responseType: ResponseType.stream,
         headers: {'Accept': 'text/event-stream'},
@@ -64,7 +109,7 @@ class OpenCodeApi {
 
   Future<List<Session>> sessions() async {
     try {
-      final r = await _dio.get('/session');
+      final r = await _dio.get('/session', queryParameters: _query());
       return (r.data as List)
           .whereType<Map<String, dynamic>>()
           .map(Session.fromJson)
@@ -76,21 +121,29 @@ class OpenCodeApi {
 
   Future<Session> createSession() async {
     try {
-      final r = await _dio.post('/session', data: {});
+      final r = await _dio.post(
+        '/session',
+        data: {},
+        queryParameters: _query(),
+      );
       return Session.fromJson(Map<String, dynamic>.from(r.data as Map));
     } on DioException catch (e) {
       _fail(e, 'Create session');
     }
   }
 
-  Future<void> deleteSession(String id) => _dio.delete('/session/$id');
+  Future<void> deleteSession(String id) =>
+      _dio.delete('/session/$id', queryParameters: _query());
 
-  Future<void> renameSession(String id, String title) =>
-      _dio.patch('/session/$id', data: {'title': title});
+  Future<void> renameSession(String id, String title) => _dio.patch(
+    '/session/$id',
+    data: {'title': title},
+    queryParameters: _query(),
+  );
 
   Future<Session> session(String id) async {
     try {
-      final r = await _dio.get('/session/$id');
+      final r = await _dio.get('/session/$id', queryParameters: _query());
       return Session.fromJson(Map<String, dynamic>.from(r.data as Map));
     } on DioException catch (e) {
       _fail(e, 'Get session');
@@ -99,20 +152,21 @@ class OpenCodeApi {
 
   /// Returns {sessionID: "idle"|"busy"|"retry"}.
   Future<Map<String, String>> sessionStatuses() async {
-    final r = await _dio.get('/session/status');
+    final r = await _dio.get('/session/status', queryParameters: _query());
     final out = <String, String>{};
     final data = r.data;
     if (data is Map) {
       data.forEach((k, v) {
-        out[k.toString()] =
-            v is Map ? ((v['type'] ?? 'idle')).toString() : 'idle';
+        out[k.toString()] = v is Map
+            ? ((v['type'] ?? 'idle')).toString()
+            : 'idle';
       });
     }
     return out;
   }
 
   Future<List<MessageWithParts>> messages(String id) async {
-    final r = await _dio.get('/session/$id/message');
+    final r = await _dio.get('/session/$id/message', queryParameters: _query());
     return (r.data as List).map(_bundleFromJson).toList();
   }
 
@@ -133,47 +187,77 @@ class OpenCodeApi {
     required String text,
     ModelRef? model,
     String? agent,
+    List<PromptAttachment> attachments = const [],
   }) async {
     try {
-      await _dio.post('/session/$sessionID/prompt_async',
-          data: promptRequestBody(text: text, model: model, agent: agent));
+      await _dio.post(
+        '/session/$sessionID/prompt_async',
+        data: promptRequestBody(
+          text: text,
+          model: model,
+          agent: agent,
+          attachments: attachments,
+        ),
+        queryParameters: _query(),
+      );
     } on DioException catch (e) {
       _fail(e, 'Send prompt');
     }
   }
 
-  Future<void> shell(String sessionID,
-      {required String command, required String agent, ModelRef? model}) async {
+  Future<void> shell(
+    String sessionID, {
+    required String command,
+    required String agent,
+    ModelRef? model,
+  }) async {
     try {
-      await _dio.post('/session/$sessionID/shell',
-          data: shellRequestBody(command, agent: agent, model: model));
+      await _dio.post(
+        '/session/$sessionID/shell',
+        data: shellRequestBody(command, agent: agent, model: model),
+        queryParameters: _query(),
+      );
     } on DioException catch (e) {
       _fail(e, 'Run command');
     }
   }
 
-  Future<void> slashCommand(String sessionID, String command, String args,
-      {ModelRef? model}) async {
+  Future<void> slashCommand(
+    String sessionID,
+    String command,
+    String args, {
+    ModelRef? model,
+  }) async {
     try {
-      await _dio.post('/session/$sessionID/command',
-          data: commandRequestBody(command, args, model: model));
+      await _dio.post(
+        '/session/$sessionID/command',
+        data: commandRequestBody(command, args, model: model),
+        queryParameters: _query(),
+      );
     } on DioException catch (e) {
       _fail(e, 'Run /command');
     }
   }
 
-  Future<void> abort(String sessionID) => _dio.post('/session/$sessionID/abort');
+  Future<void> abort(String sessionID) =>
+      _dio.post('/session/$sessionID/abort', queryParameters: _query());
 
-  Future<void> initProject(String sessionID,
-      {required String messageID, required ModelRef model}) =>
-      _dio.post('/session/$sessionID/init', data: {
-        'messageID': messageID,
-        'providerID': model.providerID,
-        'modelID': model.modelID,
-      });
+  Future<void> initProject(
+    String sessionID, {
+    required String messageID,
+    required ModelRef model,
+  }) => _dio.post(
+    '/session/$sessionID/init',
+    data: {
+      'messageID': messageID,
+      'providerID': model.providerID,
+      'modelID': model.modelID,
+    },
+    queryParameters: _query(),
+  );
 
   Future<List<Todo>> todos(String id) async {
-    final r = await _dio.get('/session/$id/todo');
+    final r = await _dio.get('/session/$id/todo', queryParameters: _query());
     return (r.data as List)
         .whereType<Map<String, dynamic>>()
         .map(Todo.fromJson)
@@ -181,33 +265,94 @@ class OpenCodeApi {
   }
 
   Future<List<FileDiff>> diff(String id) async {
-    final r = await _dio.get('/session/$id/diff');
+    final r = await _dio.get('/session/$id/diff', queryParameters: _query());
     return (r.data as List)
         .whereType<Map<String, dynamic>>()
         .map(FileDiff.fromJson)
         .toList();
   }
 
-  Future<void> respondPermission(String sessionID, String permissionID, String response) =>
-      _dio.post('/session/$sessionID/permissions/$permissionID', data: {'response': response});
+  Future<List<PermissionRequest>> pendingPermissions() async {
+    try {
+      final response = await _dio.get('/permission', queryParameters: _query());
+      return (response.data as List? ?? const [])
+          .whereType<Map>()
+          .map(
+            (item) =>
+                PermissionRequest.fromJson(Map<String, dynamic>.from(item)),
+          )
+          .toList();
+    } on DioException catch (error) {
+      _fail(error, 'List pending permissions');
+    }
+  }
+
+  Future<void> respondPermission(
+    String requestID,
+    String reply, {
+    String? legacySessionID,
+    String? legacyPermissionID,
+  }) async {
+    if (reply != 'once' && reply != 'always' && reply != 'reject') {
+      throw ArgumentError.value(reply, 'reply', 'must match the API contract');
+    }
+    final encodedID = Uri.encodeComponent(requestID);
+    try {
+      await _dio.post(
+        '/permission/$encodedID/reply',
+        data: {'reply': reply},
+        queryParameters: _query(),
+      );
+    } on DioException catch (error) {
+      final status = error.response?.statusCode;
+      final responseData = error.response?.data;
+      final errorBody = responseData is Map
+          ? Map<String, dynamic>.from(responseData)
+          : null;
+      final permissionNotFoundError =
+          status == 404 &&
+          errorBody?['_tag']?.toString() == 'PermissionNotFoundError';
+      final canUseLegacy =
+          !permissionNotFoundError &&
+          (status == 404 || status == 405) &&
+          legacySessionID != null &&
+          legacySessionID.isNotEmpty &&
+          legacyPermissionID != null &&
+          legacyPermissionID.isNotEmpty;
+      if (!canUseLegacy) _fail(error, 'Reply to permission');
+
+      final encodedSessionID = Uri.encodeComponent(legacySessionID);
+      final encodedPermissionID = Uri.encodeComponent(legacyPermissionID);
+      try {
+        await _dio.post(
+          '/session/$encodedSessionID/permissions/$encodedPermissionID',
+          data: {'response': reply},
+          queryParameters: _query(),
+        );
+      } on DioException catch (legacyError) {
+        _fail(legacyError, 'Reply to permission');
+      }
+    }
+  }
 
   // ----- Providers / agents -----
 
   Future<ProvidersResponse> providers() async {
-    final r = await _dio.get('/config/providers');
+    final r = await _dio.get('/config/providers', queryParameters: _query());
     return ProvidersResponse.fromJson(Map<String, dynamic>.from(r.data as Map));
   }
 
   Future<List<AgentInfo>> agents() async {
     try {
-      final r = await _dio.get('/agent');
+      final r = await _dio.get('/agent', queryParameters: _query());
       final list = (r.data as List)
           .whereType<Map<String, dynamic>>()
           .map(AgentInfo.fromJson)
           .toList();
       // Primary agents first; subagents are not useful as chat targets.
       list.sort((a, b) {
-        int rank(AgentInfo x) => x.mode == null ? 0 : (x.mode == 'subagent' ? 2 : 1);
+        int rank(AgentInfo x) =>
+            x.mode == null ? 0 : (x.mode == 'subagent' ? 2 : 1);
         return rank(a).compareTo(rank(b));
       });
       return list;
@@ -220,7 +365,10 @@ class OpenCodeApi {
 
   Future<List<FileNode>> listFiles(String path) async {
     try {
-      final r = await _dio.get('/file', queryParameters: {'path': path});
+      final r = await _dio.get(
+        '/file',
+        queryParameters: _query({'path': path}),
+      );
       final nodes = (r.data as List)
           .whereType<Map<String, dynamic>>()
           .map(FileNode.fromJson)
@@ -237,8 +385,11 @@ class OpenCodeApi {
 
   Future<FileContent> fileContent(String path) async {
     try {
-      final r = await _dio.get('/file/content', queryParameters: {'path': path},
-          options: Options(responseType: ResponseType.plain));
+      final r = await _dio.get(
+        '/file/content',
+        queryParameters: _query({'path': path}),
+        options: Options(responseType: ResponseType.plain),
+      );
       final text = r.data?.toString() ?? '';
       Map<String, dynamic>? parsed;
       try {
@@ -246,7 +397,8 @@ class OpenCodeApi {
       } catch (_) {
         parsed = null;
       }
-      if (parsed != null && (parsed['content'] is String || parsed['content'] is List)) {
+      if (parsed != null &&
+          (parsed['content'] is String || parsed['content'] is List)) {
         return FileContent.fromJson(parsed);
       }
       // Server returned the raw file body
@@ -257,13 +409,18 @@ class OpenCodeApi {
   }
 
   Future<List<String>> findFile(String query) async {
-    final r = await _dio.get('/find/file',
-        queryParameters: {'query': query, 'limit': 50});
+    final r = await _dio.get(
+      '/find/file',
+      queryParameters: _query({'query': query, 'limit': 50}),
+    );
     return (r.data as List? ?? const []).map((e) => e.toString()).toList();
   }
 
   Future<List<FindMatch>> findText(String pattern) async {
-    final r = await _dio.get('/find', queryParameters: {'pattern': pattern});
+    final r = await _dio.get(
+      '/find',
+      queryParameters: _query({'pattern': pattern}),
+    );
     return (r.data as List)
         .whereType<Map<String, dynamic>>()
         .map(FindMatch.fromJson)
@@ -274,9 +431,17 @@ class OpenCodeApi {
 class ApiException implements Exception {
   final String message;
   final int? statusCode;
-  ApiException(this.message, {this.statusCode});
+  final String? errorTag;
+  final String? requestID;
+
+  ApiException(this.message, {this.statusCode, this.errorTag, this.requestID});
 
   bool get unauthorized => statusCode == 401 || statusCode == 403;
+
+  bool isPermissionNotFound(String id) =>
+      statusCode == 404 &&
+      errorTag == 'PermissionNotFoundError' &&
+      requestID == id;
 
   @override
   String toString() => message;

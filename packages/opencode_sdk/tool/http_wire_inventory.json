@@ -1,0 +1,5433 @@
+{
+  "counts": {
+    "optionalRequestBodies": 46,
+    "pathParameters": 99,
+    "scalarUnionQueryParameters": 3,
+    "nullableOmittedQueryParameters": 1,
+    "errorResponses": 332,
+    "operationsWithErrors": 186,
+    "errorDecoders": 332,
+    "generatedModelErrorDecoders": 260,
+    "generatedUnionWrapperErrorDecoders": 72,
+    "losslessDescriptorErrorDecoders": 0
+  },
+  "optionalRequestBodies": [
+    {
+      "operationId": "auth.set",
+      "method": "PUT",
+      "path": "/auth/{providerID}"
+    },
+    {
+      "operationId": "app.log",
+      "method": "POST",
+      "path": "/log"
+    },
+    {
+      "operationId": "experimental.controlPlane.moveSession",
+      "method": "POST",
+      "path": "/experimental/control-plane/move-session"
+    },
+    {
+      "operationId": "global.config.update",
+      "method": "PATCH",
+      "path": "/global/config"
+    },
+    {
+      "operationId": "global.upgrade",
+      "method": "POST",
+      "path": "/global/upgrade"
+    },
+    {
+      "operationId": "config.update",
+      "method": "PATCH",
+      "path": "/config"
+    },
+    {
+      "operationId": "experimental.console.switchOrg",
+      "method": "POST",
+      "path": "/experimental/console/switch"
+    },
+    {
+      "operationId": "worktree.create",
+      "method": "POST",
+      "path": "/experimental/worktree"
+    },
+    {
+      "operationId": "worktree.remove",
+      "method": "DELETE",
+      "path": "/experimental/worktree"
+    },
+    {
+      "operationId": "worktree.reset",
+      "method": "POST",
+      "path": "/experimental/worktree/reset"
+    },
+    {
+      "operationId": "vcs.apply",
+      "method": "POST",
+      "path": "/vcs/apply"
+    },
+    {
+      "operationId": "mcp.add",
+      "method": "POST",
+      "path": "/mcp"
+    },
+    {
+      "operationId": "mcp.auth.callback",
+      "method": "POST",
+      "path": "/mcp/{name}/auth/callback"
+    },
+    {
+      "operationId": "project.update",
+      "method": "PATCH",
+      "path": "/project/{projectID}"
+    },
+    {
+      "operationId": "experimental.projectCopy.generateName",
+      "method": "POST",
+      "path": "/experimental/project/{projectID}/copy/generate-name"
+    },
+    {
+      "operationId": "pty.create",
+      "method": "POST",
+      "path": "/pty"
+    },
+    {
+      "operationId": "pty.update",
+      "method": "PUT",
+      "path": "/pty/{ptyID}"
+    },
+    {
+      "operationId": "question.reply",
+      "method": "POST",
+      "path": "/question/{requestID}/reply"
+    },
+    {
+      "operationId": "permission.reply",
+      "method": "POST",
+      "path": "/permission/{requestID}/reply"
+    },
+    {
+      "operationId": "provider.oauth.authorize",
+      "method": "POST",
+      "path": "/provider/{providerID}/oauth/authorize"
+    },
+    {
+      "operationId": "provider.oauth.callback",
+      "method": "POST",
+      "path": "/provider/{providerID}/oauth/callback"
+    },
+    {
+      "operationId": "session.create",
+      "method": "POST",
+      "path": "/session"
+    },
+    {
+      "operationId": "session.update",
+      "method": "PATCH",
+      "path": "/session/{sessionID}"
+    },
+    {
+      "operationId": "session.prompt",
+      "method": "POST",
+      "path": "/session/{sessionID}/message"
+    },
+    {
+      "operationId": "session.fork",
+      "method": "POST",
+      "path": "/session/{sessionID}/fork"
+    },
+    {
+      "operationId": "session.init",
+      "method": "POST",
+      "path": "/session/{sessionID}/init"
+    },
+    {
+      "operationId": "session.summarize",
+      "method": "POST",
+      "path": "/session/{sessionID}/summarize"
+    },
+    {
+      "operationId": "session.prompt_async",
+      "method": "POST",
+      "path": "/session/{sessionID}/prompt_async"
+    },
+    {
+      "operationId": "session.command",
+      "method": "POST",
+      "path": "/session/{sessionID}/command"
+    },
+    {
+      "operationId": "session.shell",
+      "method": "POST",
+      "path": "/session/{sessionID}/shell"
+    },
+    {
+      "operationId": "session.revert",
+      "method": "POST",
+      "path": "/session/{sessionID}/revert"
+    },
+    {
+      "operationId": "permission.respond",
+      "method": "POST",
+      "path": "/session/{sessionID}/permissions/{permissionID}"
+    },
+    {
+      "operationId": "part.update",
+      "method": "PATCH",
+      "path": "/session/{sessionID}/message/{messageID}/part/{partID}"
+    },
+    {
+      "operationId": "sync.replay",
+      "method": "POST",
+      "path": "/sync/replay"
+    },
+    {
+      "operationId": "sync.steal",
+      "method": "POST",
+      "path": "/sync/steal"
+    },
+    {
+      "operationId": "sync.history.list",
+      "method": "POST",
+      "path": "/sync/history"
+    },
+    {
+      "operationId": "tui.appendPrompt",
+      "method": "POST",
+      "path": "/tui/append-prompt"
+    },
+    {
+      "operationId": "tui.executeCommand",
+      "method": "POST",
+      "path": "/tui/execute-command"
+    },
+    {
+      "operationId": "tui.showToast",
+      "method": "POST",
+      "path": "/tui/show-toast"
+    },
+    {
+      "operationId": "tui.publish",
+      "method": "POST",
+      "path": "/tui/publish"
+    },
+    {
+      "operationId": "tui.selectSession",
+      "method": "POST",
+      "path": "/tui/select-session"
+    },
+    {
+      "operationId": "tui.control.response",
+      "method": "POST",
+      "path": "/tui/control/response"
+    },
+    {
+      "operationId": "experimental.workspace.create",
+      "method": "POST",
+      "path": "/experimental/workspace"
+    },
+    {
+      "operationId": "experimental.workspace.warp",
+      "method": "POST",
+      "path": "/experimental/workspace/warp"
+    },
+    {
+      "operationId": "v2.projectCopy.create",
+      "method": "POST",
+      "path": "/experimental/project/{projectID}/copy"
+    },
+    {
+      "operationId": "v2.projectCopy.remove",
+      "method": "DELETE",
+      "path": "/experimental/project/{projectID}/copy"
+    }
+  ],
+  "pathParameters": [
+    {
+      "operationId": "auth.set",
+      "name": "providerID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "auth.remove",
+      "name": "providerID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "experimental.session.background",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "mcp.auth.start",
+      "name": "name",
+      "allowReserved": false
+    },
+    {
+      "operationId": "mcp.auth.remove",
+      "name": "name",
+      "allowReserved": false
+    },
+    {
+      "operationId": "mcp.auth.callback",
+      "name": "name",
+      "allowReserved": false
+    },
+    {
+      "operationId": "mcp.auth.authenticate",
+      "name": "name",
+      "allowReserved": false
+    },
+    {
+      "operationId": "mcp.connect",
+      "name": "name",
+      "allowReserved": false
+    },
+    {
+      "operationId": "mcp.disconnect",
+      "name": "name",
+      "allowReserved": false
+    },
+    {
+      "operationId": "project.update",
+      "name": "projectID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "project.directories",
+      "name": "projectID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "experimental.projectCopy.generateName",
+      "name": "projectID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "pty.get",
+      "name": "ptyID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "pty.update",
+      "name": "ptyID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "pty.remove",
+      "name": "ptyID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "pty.connectToken",
+      "name": "ptyID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "question.reply",
+      "name": "requestID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "question.reject",
+      "name": "requestID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "permission.reply",
+      "name": "requestID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "provider.oauth.authorize",
+      "name": "providerID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "provider.oauth.callback",
+      "name": "providerID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "session.get",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "session.delete",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "session.update",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "session.children",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "session.todo",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "session.diff",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "session.messages",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "session.prompt",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "session.message",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "session.message",
+      "name": "messageID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "session.deleteMessage",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "session.deleteMessage",
+      "name": "messageID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "session.fork",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "session.abort",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "session.init",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "session.share",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "session.unshare",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "session.summarize",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "session.prompt_async",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "session.command",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "session.shell",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "session.revert",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "session.unrevert",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "permission.respond",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "permission.respond",
+      "name": "permissionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "part.delete",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "part.delete",
+      "name": "messageID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "part.delete",
+      "name": "partID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "part.update",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "part.update",
+      "name": "messageID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "part.update",
+      "name": "partID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "experimental.workspace.remove",
+      "name": "id",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.get",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.switchAgent",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.switchModel",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.prompt",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.compact",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.wait",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.revert.stage",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.revert.clear",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.revert.commit",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.context",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.history",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.events",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.interrupt",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.message",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.message",
+      "name": "messageID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.messages",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.provider.get",
+      "name": "providerID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.integration.get",
+      "name": "integrationID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.integration.connect.key",
+      "name": "integrationID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.integration.connect.oauth",
+      "name": "integrationID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.integration.attempt.status",
+      "name": "attemptID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.integration.attempt.cancel",
+      "name": "attemptID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.integration.attempt.complete",
+      "name": "attemptID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.credential.remove",
+      "name": "credentialID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.credential.update",
+      "name": "credentialID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.permission.saved.remove",
+      "name": "id",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.permission.list",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.permission.create",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.permission.get",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.permission.get",
+      "name": "requestID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.permission.reply",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.permission.reply",
+      "name": "requestID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.pty.get",
+      "name": "ptyID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.pty.update",
+      "name": "ptyID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.pty.remove",
+      "name": "ptyID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.pty.connectToken",
+      "name": "ptyID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.pty.connect",
+      "name": "ptyID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.question.list",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.question.reply",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.question.reply",
+      "name": "requestID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.question.reject",
+      "name": "sessionID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.session.question.reject",
+      "name": "requestID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.projectCopy.create",
+      "name": "projectID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.projectCopy.remove",
+      "name": "projectID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "v2.projectCopy.refresh",
+      "name": "projectID",
+      "allowReserved": false
+    },
+    {
+      "operationId": "pty.connect",
+      "name": "ptyID",
+      "allowReserved": false
+    }
+  ],
+  "scalarUnionQueryParameters": [
+    {
+      "operationId": "experimental.session.list",
+      "name": "roots",
+      "branches": [
+        "boolean",
+        "string"
+      ]
+    },
+    {
+      "operationId": "experimental.session.list",
+      "name": "archived",
+      "branches": [
+        "boolean",
+        "string"
+      ]
+    },
+    {
+      "operationId": "session.list",
+      "name": "roots",
+      "branches": [
+        "boolean",
+        "string"
+      ]
+    }
+  ],
+  "nullableOmittedQueryParameters": [
+    {
+      "operationId": "v2.session.list",
+      "name": "workspace"
+    }
+  ],
+  "errorDecoderCounts": {
+    "total": 332,
+    "generatedModel": 260,
+    "generatedLosslessUnionWrapper": 72,
+    "losslessDescriptorWrapper": 0
+  },
+  "errorDecoderContracts": [
+    {
+      "operationId": "auth.set",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion036",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "auth.remove",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion037",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "app.log",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion038",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "experimental.controlPlane.moveSession",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/MoveSessionError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion039",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "global.health",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "global.event",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "global.config.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "global.config.update",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion040",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "global.dispose",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "global.upgrade",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion042",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "config.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "config.update",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion043",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "config.providers",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "experimental.capabilities.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "experimental.console.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "experimental.console.get",
+      "status": 500,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/effect_HttpApiError_InternalServerError\"}",
+      "payloadType": "EffectHttpApiErrorInternalServerError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "experimental.console.listOrgs",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "experimental.console.listOrgs",
+      "status": 500,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/effect_HttpApiError_InternalServerError\"}",
+      "payloadType": "EffectHttpApiErrorInternalServerError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "tool.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion044",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "tool.ids",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion045",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "worktree.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/WorktreeError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion046",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "worktree.create",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/WorktreeError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion047",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "worktree.remove",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/WorktreeError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion048",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "worktree.reset",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/WorktreeError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion049",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "experimental.session.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "experimental.session.background",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion052",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "experimental.resource.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "find.text",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "find.files",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "find.symbols",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "file.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "file.read",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "file.status",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "instance.dispose",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "path.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "vcs.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "vcs.status",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "vcs.diff",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "vcs.diff.raw",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "vcs.apply",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/VcsApplyError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion053",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "command.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "app.agents",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "app.skills",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "lsp.status",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "formatter.status",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "mcp.status",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "mcp.add",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion054",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "mcp.auth.start",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/McpUnsupportedOAuthError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion056",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "mcp.auth.start",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/McpServerNotFoundError\"}",
+      "payloadType": "McpServerNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "mcp.auth.remove",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "mcp.auth.remove",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/McpServerNotFoundError\"}",
+      "payloadType": "McpServerNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "mcp.auth.callback",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion057",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "mcp.auth.callback",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/McpServerNotFoundError\"}",
+      "payloadType": "McpServerNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "mcp.auth.authenticate",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/McpUnsupportedOAuthError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion058",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "mcp.auth.authenticate",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/McpServerNotFoundError\"}",
+      "payloadType": "McpServerNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "mcp.connect",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "mcp.connect",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/McpServerNotFoundError\"}",
+      "payloadType": "McpServerNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "mcp.disconnect",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "mcp.disconnect",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/McpServerNotFoundError\"}",
+      "payloadType": "McpServerNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "project.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "project.current",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "project.initGit",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "project.update",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion059",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "project.update",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/ProjectNotFoundError\"}",
+      "payloadType": "ProjectNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "project.directories",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "experimental.projectCopy.generateName",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "pty.shells",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "pty.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "pty.create",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion060",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "pty.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "pty.get",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/PtyNotFoundError\"}",
+      "payloadType": "PtyNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "pty.update",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion061",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "pty.update",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/PtyNotFoundError\"}",
+      "payloadType": "PtyNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "pty.remove",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "pty.remove",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/PtyNotFoundError\"}",
+      "payloadType": "PtyNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "pty.connectToken",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "pty.connectToken",
+      "status": 403,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/PtyForbiddenError\"}",
+      "payloadType": "PtyForbiddenError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "pty.connectToken",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/PtyNotFoundError\"}",
+      "payloadType": "PtyNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "question.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "question.reply",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion062",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "question.reply",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/QuestionNotFoundError\"}",
+      "payloadType": "QuestionNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "question.reject",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion063",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "question.reject",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/QuestionNotFoundError\"}",
+      "payloadType": "QuestionNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "permission.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "permission.reply",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion064",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "permission.reply",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/PermissionNotFoundError\"}",
+      "payloadType": "PermissionNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "provider.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "provider.auth",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "provider.oauth.authorize",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/ProviderAuthError1\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion065",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "provider.oauth.callback",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/ProviderAuthError1\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion066",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "session.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.create",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion068",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "session.status",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion069",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "session.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion070",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "session.get",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.delete",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion071",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "session.delete",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.update",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion072",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "session.update",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.children",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion073",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "session.children",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.todo",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion074",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "session.todo",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.diff",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.messages",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion075",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "session.messages",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.prompt",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion076",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "session.prompt",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.message",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion078",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "session.message",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.deleteMessage",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion079",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "session.deleteMessage",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.deleteMessage",
+      "status": 409,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/SessionBusyError\"}",
+      "payloadType": "SessionBusyError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.fork",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion080",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "session.fork",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.abort",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion081",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "session.init",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion082",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "session.init",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.share",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.share",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.share",
+      "status": 500,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/effect_HttpApiError_InternalServerError\"}",
+      "payloadType": "EffectHttpApiErrorInternalServerError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.unshare",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.unshare",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.unshare",
+      "status": 500,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/effect_HttpApiError_InternalServerError\"}",
+      "payloadType": "EffectHttpApiErrorInternalServerError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.summarize",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion083",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "session.summarize",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.prompt_async",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion084",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "session.prompt_async",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.command",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion086",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "session.command",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.shell",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion087",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "session.shell",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.shell",
+      "status": 409,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/SessionBusyError\"}",
+      "payloadType": "SessionBusyError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.revert",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion088",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "session.revert",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.revert",
+      "status": 409,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/SessionBusyError\"}",
+      "payloadType": "SessionBusyError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.unrevert",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion089",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "session.unrevert",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.unrevert",
+      "status": 409,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/SessionBusyError\"}",
+      "payloadType": "SessionBusyError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "permission.respond",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion090",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "permission.respond",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/NotFoundError\"},{\"$ref\":\"#/components/schemas/PermissionNotFoundError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion091",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "part.delete",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion092",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "part.delete",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "part.update",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion093",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "part.update",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "sync.start",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "sync.replay",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion094",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "sync.steal",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion095",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "sync.history.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion096",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "tui.appendPrompt",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion097",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "tui.openHelp",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "tui.openSessions",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "tui.openThemes",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "tui.openModels",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "tui.submitPrompt",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "tui.clearPrompt",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "tui.executeCommand",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion098",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "tui.showToast",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "tui.publish",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion099",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "tui.selectSession",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion101",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "tui.selectSession",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "tui.control.next",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "tui.control.response",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "experimental.workspace.adapter.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "experimental.workspace.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "experimental.workspace.create",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/WorkspaceCreateError\"},{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion102",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "experimental.workspace.syncList",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "experimental.workspace.status",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "experimental.workspace.remove",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion103",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "experimental.workspace.warp",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/WorkspaceWarpError\"},{\"$ref\":\"#/components/schemas/VcsApplyError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion104",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "experimental.workspace.warp",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.health.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.health.get",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.location.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.location.get",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.agent.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.agent.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/InvalidCursorError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion105",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "v2.session.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.create",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.create",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.active",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.active",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.get",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.get",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
+      "payloadType": "SessionNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.switchAgent",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.switchAgent",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.switchAgent",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
+      "payloadType": "SessionNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.switchModel",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.switchModel",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.switchModel",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
+      "payloadType": "SessionNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.prompt",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.prompt",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.prompt",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
+      "payloadType": "SessionNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.prompt",
+      "status": 409,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/ConflictError\"}",
+      "payloadType": "ConflictError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.compact",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.compact",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.compact",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
+      "payloadType": "SessionNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.compact",
+      "status": 503,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/ServiceUnavailableError\"}",
+      "payloadType": "ServiceUnavailableError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.wait",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.wait",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.wait",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
+      "payloadType": "SessionNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.wait",
+      "status": 503,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/ServiceUnavailableError\"}",
+      "payloadType": "ServiceUnavailableError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.revert.stage",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.revert.stage",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.revert.stage",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/MessageNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion106",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "v2.session.revert.stage",
+      "status": 500,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnknownError1\"}",
+      "payloadType": "UnknownError1",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.revert.clear",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.revert.clear",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.revert.clear",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
+      "payloadType": "SessionNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.revert.clear",
+      "status": 500,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnknownError1\"}",
+      "payloadType": "UnknownError1",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.revert.commit",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.revert.commit",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.revert.commit",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
+      "payloadType": "SessionNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.context",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.context",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.context",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
+      "payloadType": "SessionNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.context",
+      "status": 500,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnknownError1\"}",
+      "payloadType": "UnknownError1",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.history",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.history",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.history",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
+      "payloadType": "SessionNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.events",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.events",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.events",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
+      "payloadType": "SessionNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.interrupt",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.interrupt",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.interrupt",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
+      "payloadType": "SessionNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.message",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.message",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.message",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/MessageNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion107",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "v2.session.messages",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/InvalidCursorError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion108",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "v2.session.messages",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.messages",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
+      "payloadType": "SessionNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.messages",
+      "status": 500,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnknownError1\"}",
+      "payloadType": "UnknownError1",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.model.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.model.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.model.list",
+      "status": 503,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/ServiceUnavailableError\"}",
+      "payloadType": "ServiceUnavailableError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.provider.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.provider.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.provider.list",
+      "status": 503,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/ServiceUnavailableError\"}",
+      "payloadType": "ServiceUnavailableError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.provider.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.provider.get",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.provider.get",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/ProviderNotFoundError\"}",
+      "payloadType": "ProviderNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.provider.get",
+      "status": 503,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/ServiceUnavailableError\"}",
+      "payloadType": "ServiceUnavailableError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.integration.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.integration.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.integration.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.integration.get",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.integration.connect.key",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/InvalidRequestError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.integration.connect.key",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.integration.connect.oauth",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/InvalidRequestError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.integration.connect.oauth",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.integration.attempt.status",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.integration.attempt.status",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.integration.attempt.cancel",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.integration.attempt.cancel",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.integration.attempt.complete",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/InvalidRequestError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.integration.attempt.complete",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.credential.remove",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.credential.remove",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.credential.update",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.credential.update",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.permission.request.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.permission.request.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.permission.saved.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.permission.saved.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.permission.saved.remove",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.permission.saved.remove",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.permission.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.permission.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.permission.list",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
+      "payloadType": "SessionNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.permission.create",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.permission.create",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.permission.create",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
+      "payloadType": "SessionNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.permission.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.permission.get",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.permission.get",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/PermissionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion109",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "v2.session.permission.reply",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.permission.reply",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.permission.reply",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/PermissionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion110",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "v2.fs.read",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.fs.read",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.fs.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.fs.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.fs.find",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.fs.find",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.command.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.command.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.skill.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.skill.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.event.subscribe",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.event.subscribe",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.pty.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.pty.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.pty.create",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.pty.create",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.pty.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.pty.get",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.pty.get",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/PtyNotFoundError\"}",
+      "payloadType": "PtyNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.pty.update",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.pty.update",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.pty.update",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/PtyNotFoundError\"}",
+      "payloadType": "PtyNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.pty.remove",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.pty.remove",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.pty.remove",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/PtyNotFoundError\"}",
+      "payloadType": "PtyNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.pty.connectToken",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.pty.connectToken",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.pty.connectToken",
+      "status": 403,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/ForbiddenError\"}",
+      "payloadType": "ForbiddenError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.pty.connectToken",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/PtyNotFoundError\"}",
+      "payloadType": "PtyNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.pty.connect",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.pty.connect",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.pty.connect",
+      "status": 403,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/ForbiddenError\"}",
+      "payloadType": "ForbiddenError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.pty.connect",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/PtyNotFoundError\"}",
+      "payloadType": "PtyNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.question.request.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.question.request.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.question.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.question.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.question.list",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
+      "payloadType": "SessionNotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.question.reply",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.question.reply",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.question.reply",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/QuestionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion111",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "v2.session.question.reject",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.question.reject",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.session.question.reject",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/QuestionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion112",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "v2.reference.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}",
+      "payloadType": "InvalidRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.reference.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}",
+      "payloadType": "UnauthorizedError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "v2.projectCopy.create",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/ProjectCopyError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion113",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "v2.projectCopy.remove",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/ProjectCopyError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion114",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "v2.projectCopy.refresh",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/ProjectCopyError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion115",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
+      "operationId": "pty.connect",
+      "status": 403,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/effect_HttpApiError_Forbidden\"}",
+      "payloadType": "EffectHttpApiErrorForbidden",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "pty.connect",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    }
+  ],
+  "errorResponses": [
+    {
+      "operationId": "auth.set",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "auth.remove",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "app.log",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "experimental.controlPlane.moveSession",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/MoveSessionError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "global.health",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "global.event",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "global.config.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "global.config.update",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "global.dispose",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "global.upgrade",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "config.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "config.update",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "config.providers",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "experimental.capabilities.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "experimental.console.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "experimental.console.get",
+      "status": 500,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/effect_HttpApiError_InternalServerError\"}"
+    },
+    {
+      "operationId": "experimental.console.listOrgs",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "experimental.console.listOrgs",
+      "status": 500,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/effect_HttpApiError_InternalServerError\"}"
+    },
+    {
+      "operationId": "tool.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "tool.ids",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "worktree.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/WorktreeError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "worktree.create",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/WorktreeError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "worktree.remove",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/WorktreeError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "worktree.reset",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/WorktreeError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "experimental.session.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "experimental.session.background",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "experimental.resource.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "find.text",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "find.files",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "find.symbols",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "file.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "file.read",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "file.status",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "instance.dispose",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "path.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "vcs.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "vcs.status",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "vcs.diff",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "vcs.diff.raw",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "vcs.apply",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/VcsApplyError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "command.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "app.agents",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "app.skills",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "lsp.status",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "formatter.status",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "mcp.status",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "mcp.add",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "mcp.auth.start",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/McpUnsupportedOAuthError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "mcp.auth.start",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/McpServerNotFoundError\"}"
+    },
+    {
+      "operationId": "mcp.auth.remove",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "mcp.auth.remove",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/McpServerNotFoundError\"}"
+    },
+    {
+      "operationId": "mcp.auth.callback",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "mcp.auth.callback",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/McpServerNotFoundError\"}"
+    },
+    {
+      "operationId": "mcp.auth.authenticate",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/McpUnsupportedOAuthError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "mcp.auth.authenticate",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/McpServerNotFoundError\"}"
+    },
+    {
+      "operationId": "mcp.connect",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "mcp.connect",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/McpServerNotFoundError\"}"
+    },
+    {
+      "operationId": "mcp.disconnect",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "mcp.disconnect",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/McpServerNotFoundError\"}"
+    },
+    {
+      "operationId": "project.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "project.current",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "project.initGit",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "project.update",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "project.update",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/ProjectNotFoundError\"}"
+    },
+    {
+      "operationId": "project.directories",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "experimental.projectCopy.generateName",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "pty.shells",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "pty.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "pty.create",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "pty.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "pty.get",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/PtyNotFoundError\"}"
+    },
+    {
+      "operationId": "pty.update",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "pty.update",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/PtyNotFoundError\"}"
+    },
+    {
+      "operationId": "pty.remove",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "pty.remove",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/PtyNotFoundError\"}"
+    },
+    {
+      "operationId": "pty.connectToken",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "pty.connectToken",
+      "status": 403,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/PtyForbiddenError\"}"
+    },
+    {
+      "operationId": "pty.connectToken",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/PtyNotFoundError\"}"
+    },
+    {
+      "operationId": "question.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "question.reply",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "question.reply",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/QuestionNotFoundError\"}"
+    },
+    {
+      "operationId": "question.reject",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "question.reject",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/QuestionNotFoundError\"}"
+    },
+    {
+      "operationId": "permission.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "permission.reply",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "permission.reply",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/PermissionNotFoundError\"}"
+    },
+    {
+      "operationId": "provider.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "provider.auth",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "provider.oauth.authorize",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/ProviderAuthError1\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "provider.oauth.callback",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/ProviderAuthError1\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "session.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "session.create",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "session.status",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "session.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "session.get",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    },
+    {
+      "operationId": "session.delete",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "session.delete",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    },
+    {
+      "operationId": "session.update",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "session.update",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    },
+    {
+      "operationId": "session.children",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "session.children",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    },
+    {
+      "operationId": "session.todo",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "session.todo",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    },
+    {
+      "operationId": "session.diff",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "session.messages",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "session.messages",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    },
+    {
+      "operationId": "session.prompt",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "session.prompt",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    },
+    {
+      "operationId": "session.message",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "session.message",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    },
+    {
+      "operationId": "session.deleteMessage",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "session.deleteMessage",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    },
+    {
+      "operationId": "session.deleteMessage",
+      "status": 409,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/SessionBusyError\"}"
+    },
+    {
+      "operationId": "session.fork",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "session.fork",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    },
+    {
+      "operationId": "session.abort",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "session.init",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "session.init",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    },
+    {
+      "operationId": "session.share",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "session.share",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    },
+    {
+      "operationId": "session.share",
+      "status": 500,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/effect_HttpApiError_InternalServerError\"}"
+    },
+    {
+      "operationId": "session.unshare",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "session.unshare",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    },
+    {
+      "operationId": "session.unshare",
+      "status": 500,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/effect_HttpApiError_InternalServerError\"}"
+    },
+    {
+      "operationId": "session.summarize",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "session.summarize",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    },
+    {
+      "operationId": "session.prompt_async",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "session.prompt_async",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    },
+    {
+      "operationId": "session.command",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "session.command",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    },
+    {
+      "operationId": "session.shell",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "session.shell",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    },
+    {
+      "operationId": "session.shell",
+      "status": 409,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/SessionBusyError\"}"
+    },
+    {
+      "operationId": "session.revert",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "session.revert",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    },
+    {
+      "operationId": "session.revert",
+      "status": 409,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/SessionBusyError\"}"
+    },
+    {
+      "operationId": "session.unrevert",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "session.unrevert",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    },
+    {
+      "operationId": "session.unrevert",
+      "status": 409,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/SessionBusyError\"}"
+    },
+    {
+      "operationId": "permission.respond",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "permission.respond",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/NotFoundError\"},{\"$ref\":\"#/components/schemas/PermissionNotFoundError\"}]}"
+    },
+    {
+      "operationId": "part.delete",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "part.delete",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    },
+    {
+      "operationId": "part.update",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "part.update",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    },
+    {
+      "operationId": "sync.start",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "sync.replay",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "sync.steal",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "sync.history.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "tui.appendPrompt",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "tui.openHelp",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "tui.openSessions",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "tui.openThemes",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "tui.openModels",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "tui.submitPrompt",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "tui.clearPrompt",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "tui.executeCommand",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "tui.showToast",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "tui.publish",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "tui.selectSession",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "tui.selectSession",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    },
+    {
+      "operationId": "tui.control.next",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "tui.control.response",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "experimental.workspace.adapter.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "experimental.workspace.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "experimental.workspace.create",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/WorkspaceCreateError\"},{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "experimental.workspace.syncList",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "experimental.workspace.status",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}"
+    },
+    {
+      "operationId": "experimental.workspace.remove",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "experimental.workspace.warp",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/WorkspaceWarpError\"},{\"$ref\":\"#/components/schemas/VcsApplyError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "experimental.workspace.warp",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    },
+    {
+      "operationId": "v2.health.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.health.get",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.location.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.location.get",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.agent.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.agent.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/InvalidCursorError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "v2.session.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.create",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.session.create",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.active",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.session.active",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.session.get",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.get",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}"
+    },
+    {
+      "operationId": "v2.session.switchAgent",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.session.switchAgent",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.switchAgent",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}"
+    },
+    {
+      "operationId": "v2.session.switchModel",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.session.switchModel",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.switchModel",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}"
+    },
+    {
+      "operationId": "v2.session.prompt",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.session.prompt",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.prompt",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}"
+    },
+    {
+      "operationId": "v2.session.prompt",
+      "status": 409,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/ConflictError\"}"
+    },
+    {
+      "operationId": "v2.session.compact",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.session.compact",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.compact",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}"
+    },
+    {
+      "operationId": "v2.session.compact",
+      "status": 503,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/ServiceUnavailableError\"}"
+    },
+    {
+      "operationId": "v2.session.wait",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.session.wait",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.wait",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}"
+    },
+    {
+      "operationId": "v2.session.wait",
+      "status": 503,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/ServiceUnavailableError\"}"
+    },
+    {
+      "operationId": "v2.session.revert.stage",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.session.revert.stage",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.revert.stage",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/MessageNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}"
+    },
+    {
+      "operationId": "v2.session.revert.stage",
+      "status": 500,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnknownError1\"}"
+    },
+    {
+      "operationId": "v2.session.revert.clear",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.session.revert.clear",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.revert.clear",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}"
+    },
+    {
+      "operationId": "v2.session.revert.clear",
+      "status": 500,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnknownError1\"}"
+    },
+    {
+      "operationId": "v2.session.revert.commit",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.session.revert.commit",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.revert.commit",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}"
+    },
+    {
+      "operationId": "v2.session.context",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.session.context",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.context",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}"
+    },
+    {
+      "operationId": "v2.session.context",
+      "status": 500,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnknownError1\"}"
+    },
+    {
+      "operationId": "v2.session.history",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.session.history",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.history",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}"
+    },
+    {
+      "operationId": "v2.session.events",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.session.events",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.events",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}"
+    },
+    {
+      "operationId": "v2.session.interrupt",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.session.interrupt",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.interrupt",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}"
+    },
+    {
+      "operationId": "v2.session.message",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.session.message",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.message",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/MessageNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}"
+    },
+    {
+      "operationId": "v2.session.messages",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/InvalidCursorError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "v2.session.messages",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.messages",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}"
+    },
+    {
+      "operationId": "v2.session.messages",
+      "status": 500,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnknownError1\"}"
+    },
+    {
+      "operationId": "v2.model.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.model.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.model.list",
+      "status": 503,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/ServiceUnavailableError\"}"
+    },
+    {
+      "operationId": "v2.provider.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.provider.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.provider.list",
+      "status": 503,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/ServiceUnavailableError\"}"
+    },
+    {
+      "operationId": "v2.provider.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.provider.get",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.provider.get",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/ProviderNotFoundError\"}"
+    },
+    {
+      "operationId": "v2.provider.get",
+      "status": 503,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/ServiceUnavailableError\"}"
+    },
+    {
+      "operationId": "v2.integration.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.integration.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.integration.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.integration.get",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.integration.connect.key",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/InvalidRequestError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "v2.integration.connect.key",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.integration.connect.oauth",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/InvalidRequestError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "v2.integration.connect.oauth",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.integration.attempt.status",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.integration.attempt.status",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.integration.attempt.cancel",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.integration.attempt.cancel",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.integration.attempt.complete",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/InvalidRequestError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "v2.integration.attempt.complete",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.credential.remove",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.credential.remove",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.credential.update",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.credential.update",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.permission.request.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.permission.request.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.permission.saved.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.permission.saved.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.permission.saved.remove",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.permission.saved.remove",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.permission.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.session.permission.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.permission.list",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}"
+    },
+    {
+      "operationId": "v2.session.permission.create",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.session.permission.create",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.permission.create",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}"
+    },
+    {
+      "operationId": "v2.session.permission.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.session.permission.get",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.permission.get",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/PermissionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}"
+    },
+    {
+      "operationId": "v2.session.permission.reply",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.session.permission.reply",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.permission.reply",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/PermissionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}"
+    },
+    {
+      "operationId": "v2.fs.read",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.fs.read",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.fs.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.fs.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.fs.find",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.fs.find",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.command.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.command.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.skill.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.skill.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.event.subscribe",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.event.subscribe",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.pty.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.pty.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.pty.create",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.pty.create",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.pty.get",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.pty.get",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.pty.get",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/PtyNotFoundError\"}"
+    },
+    {
+      "operationId": "v2.pty.update",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.pty.update",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.pty.update",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/PtyNotFoundError\"}"
+    },
+    {
+      "operationId": "v2.pty.remove",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.pty.remove",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.pty.remove",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/PtyNotFoundError\"}"
+    },
+    {
+      "operationId": "v2.pty.connectToken",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.pty.connectToken",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.pty.connectToken",
+      "status": 403,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/ForbiddenError\"}"
+    },
+    {
+      "operationId": "v2.pty.connectToken",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/PtyNotFoundError\"}"
+    },
+    {
+      "operationId": "v2.pty.connect",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.pty.connect",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.pty.connect",
+      "status": 403,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/ForbiddenError\"}"
+    },
+    {
+      "operationId": "v2.pty.connect",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/PtyNotFoundError\"}"
+    },
+    {
+      "operationId": "v2.question.request.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.question.request.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.question.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.session.question.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.question.list",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}"
+    },
+    {
+      "operationId": "v2.session.question.reply",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.session.question.reply",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.question.reply",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/QuestionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}"
+    },
+    {
+      "operationId": "v2.session.question.reject",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.session.question.reject",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.session.question.reject",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/QuestionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}"
+    },
+    {
+      "operationId": "v2.reference.list",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/InvalidRequestError\"}"
+    },
+    {
+      "operationId": "v2.reference.list",
+      "status": 401,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/UnauthorizedError\"}"
+    },
+    {
+      "operationId": "v2.projectCopy.create",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/ProjectCopyError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "v2.projectCopy.remove",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/ProjectCopyError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "v2.projectCopy.refresh",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/ProjectCopyError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}"
+    },
+    {
+      "operationId": "pty.connect",
+      "status": 403,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/effect_HttpApiError_Forbidden\"}"
+    },
+    {
+      "operationId": "pty.connect",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}"
+    }
+  ]
+}

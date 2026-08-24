@@ -1,0 +1,228 @@
+{
+  "losslessMixedAdditionalProperties": [
+    {
+      "location": "#/components/schemas/PermissionConfig/anyOf/1",
+      "strategy": "descriptorBackedRawJsonUnion",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "read": {
+            "$ref": "#/components/schemas/PermissionRuleConfig"
+          },
+          "edit": {
+            "$ref": "#/components/schemas/PermissionRuleConfig"
+          },
+          "glob": {
+            "$ref": "#/components/schemas/PermissionRuleConfig"
+          },
+          "grep": {
+            "$ref": "#/components/schemas/PermissionRuleConfig"
+          },
+          "list": {
+            "$ref": "#/components/schemas/PermissionRuleConfig"
+          },
+          "bash": {
+            "$ref": "#/components/schemas/PermissionRuleConfig"
+          },
+          "task": {
+            "$ref": "#/components/schemas/PermissionRuleConfig"
+          },
+          "external_directory": {
+            "$ref": "#/components/schemas/PermissionRuleConfig"
+          },
+          "todowrite": {
+            "$ref": "#/components/schemas/PermissionActionConfig"
+          },
+          "question": {
+            "$ref": "#/components/schemas/PermissionActionConfig"
+          },
+          "webfetch": {
+            "$ref": "#/components/schemas/PermissionActionConfig"
+          },
+          "websearch": {
+            "$ref": "#/components/schemas/PermissionActionConfig"
+          },
+          "lsp": {
+            "$ref": "#/components/schemas/PermissionRuleConfig"
+          },
+          "doom_loop": {
+            "$ref": "#/components/schemas/PermissionActionConfig"
+          },
+          "skill": {
+            "$ref": "#/components/schemas/PermissionRuleConfig"
+          }
+        },
+        "additionalProperties": {
+          "$ref": "#/components/schemas/PermissionRuleConfig"
+        }
+      }
+    },
+    {
+      "location": "#/components/schemas/AgentConfig",
+      "strategy": "typedFieldsWithAdditionalProperties",
+      "className": "AgentConfig",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string"
+          },
+          "variant": {
+            "type": "string"
+          },
+          "temperature": {
+            "type": "number"
+          },
+          "top_p": {
+            "type": "number"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "tools": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "boolean"
+            }
+          },
+          "disable": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "subagent",
+              "primary",
+              "all"
+            ]
+          },
+          "hidden": {
+            "type": "boolean"
+          },
+          "options": {
+            "type": "object"
+          },
+          "color": {
+            "$ref": "#/components/schemas/OpencodeSdkRawUnion003"
+          },
+          "steps": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "maxSteps": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "permission": {
+            "$ref": "#/components/schemas/PermissionConfig"
+          }
+        },
+        "additionalProperties": {}
+      }
+    },
+    {
+      "location": "#/components/schemas/ProviderConfig/properties/options",
+      "strategy": "typedFieldsWithAdditionalProperties",
+      "className": "ProviderConfigOptions",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "apiKey": {
+            "type": "string"
+          },
+          "baseURL": {
+            "type": "string"
+          },
+          "enterpriseUrl": {
+            "type": "string"
+          },
+          "setCacheKey": {
+            "type": "boolean"
+          },
+          "timeout": {
+            "$ref": "#/components/schemas/OpencodeSdkRawUnion004"
+          },
+          "headerTimeout": {
+            "$ref": "#/components/schemas/OpencodeSdkRawUnion005"
+          },
+          "chunkTimeout": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          }
+        },
+        "additionalProperties": {}
+      }
+    },
+    {
+      "location": "#/components/schemas/ProviderConfig/properties/models/additionalProperties/properties/variants/additionalProperties",
+      "strategy": "typedFieldsWithAdditionalProperties",
+      "className": "ProviderConfigModelsValueVariantsValue",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "disabled": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": {}
+      }
+    },
+    {
+      "location": "#/components/schemas/Config/properties/mode",
+      "strategy": "typedFieldsWithAdditionalProperties",
+      "className": "ConfigMode",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "build": {
+            "$ref": "#/components/schemas/AgentConfig"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/AgentConfig"
+          }
+        },
+        "additionalProperties": {
+          "$ref": "#/components/schemas/AgentConfig"
+        }
+      }
+    },
+    {
+      "location": "#/components/schemas/Config/properties/agent",
+      "strategy": "typedFieldsWithAdditionalProperties",
+      "className": "ConfigAgent",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "plan": {
+            "$ref": "#/components/schemas/AgentConfig"
+          },
+          "build": {
+            "$ref": "#/components/schemas/AgentConfig"
+          },
+          "general": {
+            "$ref": "#/components/schemas/AgentConfig"
+          },
+          "explore": {
+            "$ref": "#/components/schemas/AgentConfig"
+          },
+          "title": {
+            "$ref": "#/components/schemas/AgentConfig"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/AgentConfig"
+          },
+          "compaction": {
+            "$ref": "#/components/schemas/AgentConfig"
+          }
+        },
+        "additionalProperties": {
+          "$ref": "#/components/schemas/AgentConfig"
+        }
+      }
+    }
+  ],
+  "residualLossyAdditionalProperties": []
+}

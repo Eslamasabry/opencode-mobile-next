@@ -1,13 +1,17 @@
 package ai.opencode.opencode_mobile
 
+import android.Manifest
 import android.app.Activity
+import android.app.ActivityManager
 import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.StatFs
 import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -18,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class MainActivity : FlutterActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private var permissionResult: MethodChannel.Result? = null
+    private var microphonePermissionResult: MethodChannel.Result? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -40,6 +45,23 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, VOICE_CHANNEL_NAME)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "getDeviceInfo" -> result.success(voiceDeviceInfo())
+                    "requestMicrophonePermission" -> requestMicrophonePermission(result)
+                    "openAppSettings" -> {
+                        startActivity(
+                            Intent(
+                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                Uri.parse("package:$packageName")
+                            )
+                        )
+                        result.success(null)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
     }
 
     override fun onRequestPermissionsResult(
@@ -48,10 +70,58 @@ class MainActivity : FlutterActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode != RUN_COMMAND_PERMISSION_REQUEST) return
-        val result = permissionResult ?: return
-        permissionResult = null
-        result.success(grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED)
+        when (requestCode) {
+            RUN_COMMAND_PERMISSION_REQUEST -> {
+                val result = permissionResult ?: return
+                permissionResult = null
+                result.success(grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED)
+            }
+            MICROPHONE_PERMISSION_REQUEST -> {
+                val result = microphonePermissionResult ?: return
+                microphonePermissionResult = null
+                val granted = grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED
+                val status = if (granted) {
+                    "granted"
+                } else if (!shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
+                    "permanentlyDenied"
+                } else {
+                    "denied"
+                }
+                result.success(status)
+            }
+        }
+    }
+
+    private fun voiceDeviceInfo(): Map<String, Any> {
+        val storage = StatFs(filesDir.absolutePath)
+        val activityManager = getSystemService(ActivityManager::class.java)
+        return mapOf(
+            "availableStorageBytes" to storage.availableBytes,
+            "memoryClassMb" to activityManager.memoryClass,
+            "supportedAbis" to Build.SUPPORTED_ABIS.toList(),
+            "hasMicrophone" to packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE)
+        )
+    }
+
+    private fun requestMicrophonePermission(result: MethodChannel.Result) {
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+            result.success("granted")
+            return
+        }
+        val permissionPreferences = getSharedPreferences("voice_permissions", MODE_PRIVATE)
+        if (permissionPreferences.getBoolean("microphone_requested", false) &&
+            !shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)
+        ) {
+            result.success("permanentlyDenied")
+            return
+        }
+        if (microphonePermissionResult != null) {
+            result.error("permission_in_progress", "A microphone permission request is already open.", null)
+            return
+        }
+        microphonePermissionResult = result
+        permissionPreferences.edit().putBoolean("microphone_requested", true).apply()
+        requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), MICROPHONE_PERMISSION_REQUEST)
     }
 
     private fun capabilities(): Map<String, Any?> {
@@ -207,11 +277,13 @@ class MainActivity : FlutterActivity() {
 
     companion object {
         private const val CHANNEL_NAME = "oc/termux"
+        private const val VOICE_CHANNEL_NAME = "oc/voice"
         private const val TERMUX_PACKAGE = "com.termux"
         private const val TERMUX_HOME = "/data/data/com.termux/files/home"
         private const val TERMUX_BASH = "/data/data/com.termux/files/usr/bin/bash"
         private const val RUN_COMMAND_PERMISSION = "com.termux.permission.RUN_COMMAND"
         private const val RUN_COMMAND_PERMISSION_REQUEST = 4701
+        private const val MICROPHONE_PERMISSION_REQUEST = 4702
         private const val ACTION_RUN_COMMAND = "com.termux.RUN_COMMAND"
         private const val RUN_COMMAND_SERVICE = "com.termux.app.RunCommandService"
         private const val EXTRA_COMMAND_PATH = "com.termux.RUN_COMMAND_PATH"

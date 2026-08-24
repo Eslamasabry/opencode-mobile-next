@@ -20,18 +20,56 @@ class ServerProfile {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'baseUrl': baseUrl,
-        'username': username,
-      };
+    'id': id,
+    'name': name,
+    'baseUrl': baseUrl,
+    'username': username,
+  };
 
   static ServerProfile fromJson(Map<String, dynamic> j) => ServerProfile(
-        id: j['id'] as String,
-        name: (j['name'] ?? '').toString(),
-        baseUrl: (j['baseUrl'] ?? '').toString(),
-        username: (j['username'] ?? '').toString(),
-      );
+    id: j['id'] as String,
+    name: (j['name'] ?? '').toString(),
+    baseUrl: (j['baseUrl'] ?? '').toString(),
+    username: (j['username'] ?? '').toString(),
+  );
+}
+
+/// Validates the transport boundary used by both profile editing and connect.
+/// Android only permits cleartext traffic to the two Termux loopback names.
+String? validateServerProfileUrl(
+  String value, {
+  String username = '',
+  String password = '',
+}) {
+  final raw = value.trim();
+  if (raw.isEmpty) return 'Enter a server URL.';
+  if (!raw.contains('://')) {
+    return 'Include https://. Use http:// only for localhost or 127.0.0.1.';
+  }
+  final uri = Uri.tryParse(raw);
+  if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
+    return 'Enter a complete server URL, such as https://server.example:4096.';
+  }
+  if (uri.scheme != 'https' && uri.scheme != 'http') {
+    return 'Server URLs must use https://, or http:// for local Termux.';
+  }
+  if (uri.userInfo.isNotEmpty) {
+    return 'Do not put credentials in the URL. Use the fields below.';
+  }
+  if (uri.query.isNotEmpty || uri.fragment.isNotEmpty) {
+    return 'Remove query parameters and fragments from the server URL.';
+  }
+  if (uri.scheme == 'http') {
+    final host = uri.host.toLowerCase();
+    final loopback = host == 'localhost' || host == '127.0.0.1';
+    if (!loopback) {
+      if (username.trim().isNotEmpty || password.isNotEmpty) {
+        return 'HTTPS is required outside this device. Basic credentials must never be sent over HTTP.';
+      }
+      return 'HTTP is allowed only for localhost or 127.0.0.1. Use HTTPS for LAN and remote servers.';
+    }
+  }
+  return null;
 }
 
 /// Persists server profiles. Metadata in SharedPreferences, secrets in the
@@ -74,7 +112,9 @@ class ProfileStore {
 
   Future<void> _persist() async {
     await prefs.setString(
-        _profilesKey, jsonEncode(_cache.map((p) => p.toJson()).toList()));
+      _profilesKey,
+      jsonEncode(_cache.map((p) => p.toJson()).toList()),
+    );
   }
 
   Future<void> upsert(ServerProfile profile) async {
@@ -130,7 +170,8 @@ class ProfileStore {
   Future<void> setModel(String profileId, String providerID, String modelID) =>
       prefs.setString('$_modelKey$profileId', '$providerID|$modelID');
 
-  String agentFor(String profileId) => prefs.getString('$_agentKey$profileId') ?? '';
+  String agentFor(String profileId) =>
+      prefs.getString('$_agentKey$profileId') ?? '';
 
   Future<void> setAgent(String profileId, String agent) =>
       prefs.setString('$_agentKey$profileId', agent);

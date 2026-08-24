@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 /// Data types for the opencode HTTP server API.
@@ -9,9 +10,9 @@ class Health {
   Health({required this.healthy, this.version});
 
   factory Health.fromJson(Map<String, dynamic> j) => Health(
-        healthy: (j['healthy'] as bool?) ?? false,
-        version: j['version'] as String?,
-      );
+    healthy: (j['healthy'] as bool?) ?? false,
+    version: j['version'] as String?,
+  );
 }
 
 // ---------------- Sessions ----------------
@@ -19,11 +20,16 @@ class Health {
 class SessionTime {
   final int? created;
   final int? updated;
-  SessionTime({this.created, this.updated});
+  final int? archived;
+  SessionTime({this.created, this.updated, this.archived});
 
   factory SessionTime.fromJson(dynamic v) {
     if (v is Map<String, dynamic>) {
-      return SessionTime(created: _asInt(v['created']), updated: _asInt(v['updated']));
+      return SessionTime(
+        created: _asInt(v['created']),
+        updated: _asInt(v['updated']),
+        archived: _asInt(v['archived']),
+      );
     }
     return SessionTime();
   }
@@ -35,6 +41,7 @@ class Session {
   final String? parentID;
   final String? directory;
   final bool reverted;
+  final String? shareUrl;
   final SessionTime? time;
   Session({
     required this.id,
@@ -42,17 +49,21 @@ class Session {
     this.parentID,
     this.directory,
     this.reverted = false,
+    this.shareUrl,
     this.time,
   });
 
   factory Session.fromJson(Map<String, dynamic> j) => Session(
-        id: j['id'] as String,
-        title: j['title'] as String?,
-        parentID: j['parentID'] as String?,
-        directory: j['directory'] as String?,
-        reverted: j['revert'] != null,
-        time: SessionTime.fromJson(j['time']),
-      );
+    id: j['id'] as String,
+    title: j['title'] as String?,
+    parentID: j['parentID'] as String?,
+    directory: j['directory'] as String?,
+    reverted: j['revert'] != null,
+    shareUrl: j['share'] is Map ? (j['share'] as Map)['url']?.toString() : null,
+    time: SessionTime.fromJson(j['time']),
+  );
+
+  bool get archived => time?.archived != null;
 }
 
 // ---------------- Messages & parts ----------------
@@ -64,7 +75,10 @@ class MsgTime {
 
   factory MsgTime.fromJson(dynamic v) {
     if (v is Map<String, dynamic>) {
-      return MsgTime(created: _asInt(v['created']), completed: _asInt(v['completed']));
+      return MsgTime(
+        created: _asInt(v['created']),
+        completed: _asInt(v['completed']),
+      );
     }
     return MsgTime();
   }
@@ -156,8 +170,12 @@ class ToolState {
 
   static String _pretty(dynamic v) {
     if (v == null) return '';
+    if (v is String) return v;
     try {
-      return v.toString().replaceAll('\n', ' ').trim();
+      if (v is Map || v is List) {
+        return const JsonEncoder.withIndent('  ').convert(v);
+      }
+      return v.toString().trim();
     } catch (_) {
       return '';
     }
@@ -175,11 +193,17 @@ class ToolState {
     final meta = v['metadata'] is Map<String, dynamic>
         ? v['metadata'] as Map<String, dynamic>
         : null;
+    final input = status == 'pending' ? _pretty(v['raw']) : _pretty(v['input']);
+    final output = switch (status) {
+      'completed' => _pretty(v['output']),
+      'error' => _pretty(v['error']),
+      _ => '',
+    };
     return ToolState(
       status: status,
       title: v['title']?.toString(),
-      inputJson: _pretty(v['input']),
-      output: v['output']?.toString(),
+      inputJson: input,
+      output: output,
       metadata: meta,
     );
   }
@@ -188,7 +212,8 @@ class ToolState {
 /// One part of a message. The opencode part union is loose; we keep what we render.
 class Part {
   final String? id;
-  final String type; // text | reasoning | tool | file | step-start | step-finish | snapshot
+  final String
+  type; // text | reasoning | tool | file | step-start | step-finish | snapshot
   final String text;
   final String? messageID;
   final String? callID;
@@ -213,7 +238,8 @@ class Part {
       !synthetic &&
       ((type == 'text' && text.trim().isNotEmpty) ||
           (type == 'reasoning' && text.trim().isNotEmpty) ||
-          (type == 'tool'));
+          type == 'tool' ||
+          type == 'file');
 
   factory Part.fromJson(Map<String, dynamic> j) {
     return Part(
@@ -233,7 +259,8 @@ class Part {
 class MessageWithParts {
   final MessageInfo info;
   List<Part> parts;
-  MessageWithParts({required this.info, List<Part>? parts}) : parts = parts ?? [];
+  MessageWithParts({required this.info, List<Part>? parts})
+    : parts = parts ?? [];
 }
 
 // ---------------- Requests ----------------
@@ -243,7 +270,31 @@ class ModelRef {
   final String modelID;
   ModelRef({required this.providerID, required this.modelID});
 
-  Map<String, dynamic> toJson() => {'providerID': providerID, 'modelID': modelID};
+  Map<String, dynamic> toJson() => {
+    'providerID': providerID,
+    'modelID': modelID,
+  };
+
+  String get wireName => '$providerID/$modelID';
+}
+
+class PromptAttachment {
+  final String mime;
+  final String filename;
+  final String url;
+
+  const PromptAttachment({
+    required this.mime,
+    required this.filename,
+    required this.url,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'type': 'file',
+    'mime': mime,
+    'filename': filename,
+    'url': url,
+  };
 }
 
 Map<String, dynamic> promptRequestBody({
@@ -251,21 +302,28 @@ Map<String, dynamic> promptRequestBody({
   ModelRef? model,
   String? agent,
   String? messageID,
-}) =>
-    {
-      'messageID': ?messageID,
-      'model': ?model?.toJson(),
-      'agent': ?agent,
-      'parts': [
-        {'type': 'text', 'text': text}
-      ],
-    };
+  List<PromptAttachment> attachments = const [],
+}) => {
+  'messageID': ?messageID,
+  'model': ?model?.toJson(),
+  'agent': ?agent,
+  'parts': [
+    {'type': 'text', 'text': text},
+    ...attachments.map((attachment) => attachment.toJson()),
+  ],
+};
 
-Map<String, dynamic> shellRequestBody(String command, {String agent = 'build', ModelRef? model}) =>
-    {'agent': agent, 'model': ?model?.toJson(), 'command': command};
+Map<String, dynamic> shellRequestBody(
+  String command, {
+  String agent = 'build',
+  ModelRef? model,
+}) => {'agent': agent, 'model': ?model?.toJson(), 'command': command};
 
-Map<String, dynamic> commandRequestBody(String command, String args, {ModelRef? model}) =>
-    {'command': command, 'arguments': args, 'model': ?model?.toJson()};
+Map<String, dynamic> commandRequestBody(
+  String command,
+  String args, {
+  ModelRef? model,
+}) => {'command': command, 'arguments': args, 'model': ?model?.wireName};
 
 // ---------------- Providers / agents ----------------
 
@@ -280,7 +338,11 @@ class ProvidersResponse {
   final List<ProviderInfo> providers;
   final String? defaultProviderID;
   final String? defaultModelID;
-  ProvidersResponse({required this.providers, this.defaultProviderID, this.defaultModelID});
+  ProvidersResponse({
+    required this.providers,
+    this.defaultProviderID,
+    this.defaultModelID,
+  });
 
   factory ProvidersResponse.fromJson(Map<String, dynamic> j) {
     final providers = <ProviderInfo>[];
@@ -320,7 +382,11 @@ class ProvidersResponse {
         defM = parts[1];
       }
     }
-    return ProvidersResponse(providers: providers, defaultProviderID: defP, defaultModelID: defM);
+    return ProvidersResponse(
+      providers: providers,
+      defaultProviderID: defP,
+      defaultModelID: defM,
+    );
   }
 }
 
@@ -329,8 +395,10 @@ class AgentInfo {
   final String? mode;
   AgentInfo({required this.name, this.mode});
 
-  factory AgentInfo.fromJson(Map<String, dynamic> j) =>
-      AgentInfo(name: (j['name'] ?? '').toString(), mode: j['mode']?.toString());
+  factory AgentInfo.fromJson(Map<String, dynamic> j) => AgentInfo(
+    name: (j['name'] ?? '').toString(),
+    mode: j['mode']?.toString(),
+  );
 }
 
 // ---------------- Files ----------------
@@ -342,34 +410,68 @@ class FileNode {
   FileNode({required this.name, required this.path, required this.isDir});
 
   factory FileNode.fromJson(Map<String, dynamic> j) => FileNode(
-        name: (j['name'] ?? '').toString(),
-        path: (j['path'] ?? j['name'] ?? '').toString(),
-        isDir: (j['type'] ?? 'file').toString() == 'directory',
-      );
+    name: (j['name'] ?? '').toString(),
+    path: (j['path'] ?? j['name'] ?? '').toString(),
+    isDir: (j['type'] ?? 'file').toString() == 'directory',
+  );
 }
 
 class FileContent {
   final String content;
-  FileContent(this.content);
+  final String type;
+  final String? encoding;
+  final String? mimeType;
+
+  const FileContent(
+    this.content, {
+    this.type = 'text',
+    this.encoding,
+    this.mimeType,
+  });
+
+  bool get isBinary => type == 'binary';
 
   factory FileContent.fromJson(Map<String, dynamic> j) {
     final c = j['content'];
-    if (c is String) return FileContent(c);
+    final type = (j['type'] ?? 'text').toString();
+    final encoding = j['encoding']?.toString();
+    final mimeType = j['mimeType']?.toString();
+    if (c is String) {
+      return FileContent(c, type: type, encoding: encoding, mimeType: mimeType);
+    }
     if (c is List) {
       // Some versions return array of lines
-      return FileContent(c.map((e) => e.toString()).join('\n'));
+      return FileContent(
+        c.map((e) => e.toString()).join('\n'),
+        type: type,
+        encoding: encoding,
+        mimeType: mimeType,
+      );
     }
-    return FileContent('');
+    return FileContent('', type: type, encoding: encoding, mimeType: mimeType);
   }
 
-  Uint8List bytes() => Uint8List.fromList(content.codeUnits);
+  Uint8List bytes() {
+    if (encoding == 'base64') {
+      try {
+        return base64Decode(content);
+      } on FormatException {
+        return Uint8List(0);
+      }
+    }
+    return Uint8List.fromList(utf8.encode(content));
+  }
 }
 
 class FindMatch {
   final String path;
   final int lineNumber;
   final String snippet;
-  FindMatch({required this.path, required this.lineNumber, required this.snippet});
+  FindMatch({
+    required this.path,
+    required this.lineNumber,
+    required this.snippet,
+  });
 
   factory FindMatch.fromJson(Map<String, dynamic> j) {
     final lines = j['lines'];
@@ -395,9 +497,9 @@ class Todo {
   Todo({required this.content, required this.status});
 
   factory Todo.fromJson(Map<String, dynamic> j) => Todo(
-        content: (j['content'] ?? '').toString(),
-        status: (j['status'] ?? 'pending').toString(),
-      );
+    content: (j['content'] ?? '').toString(),
+    status: (j['status'] ?? 'pending').toString(),
+  );
 
   bool get done => status == 'completed';
 }
@@ -409,10 +511,10 @@ class FileDiff {
   FileDiff({required this.file, this.before, this.after});
 
   factory FileDiff.fromJson(Map<String, dynamic> j) => FileDiff(
-        file: (j['file'] ?? '').toString(),
-        before: j['before'] as String?,
-        after: j['after'] as String?,
-      );
+    file: (j['file'] ?? '').toString(),
+    before: j['before'] as String?,
+    after: j['after'] as String?,
+  );
 
   ({int added, int removed}) get counts => countLineChanges(before, after);
 }
@@ -425,26 +527,64 @@ class EventEnvelope {
   EventEnvelope({required this.type, this.properties = const {}});
 
   factory EventEnvelope.fromJson(Map<String, dynamic> j) => EventEnvelope(
-        type: (j['type'] ?? '').toString(),
-        properties: j['properties'] is Map<String, dynamic>
-            ? j['properties'] as Map<String, dynamic>
-            : const {},
-      );
+    type: (j['type'] ?? '').toString(),
+    properties: j['properties'] is Map<String, dynamic>
+        ? j['properties'] as Map<String, dynamic>
+        : const {},
+  );
+}
+
+class PermissionTool {
+  final String messageID;
+  final String callID;
+
+  PermissionTool({required this.messageID, required this.callID});
+
+  factory PermissionTool.fromJson(Map<String, dynamic> json) => PermissionTool(
+    messageID: (json['messageID'] ?? '').toString(),
+    callID: (json['callID'] ?? '').toString(),
+  );
 }
 
 class PermissionRequest {
-  final String key;
+  final String id;
   final String sessionID;
-  final String permissionID;
-  final String type;
-  final String title;
+  final String permission;
+  final List<String> patterns;
+  final Map<String, dynamic> metadata;
+  final List<String> always;
+  final PermissionTool? tool;
+
   PermissionRequest({
-    required this.key,
+    required this.id,
     required this.sessionID,
-    required this.permissionID,
-    required this.type,
-    required this.title,
+    required this.permission,
+    this.patterns = const [],
+    this.metadata = const {},
+    this.always = const [],
+    this.tool,
   });
+
+  factory PermissionRequest.fromJson(Map<String, dynamic> json) =>
+      PermissionRequest(
+        id: (json['id'] ?? '').toString(),
+        sessionID: (json['sessionID'] ?? '').toString(),
+        permission: (json['permission'] ?? '').toString(),
+        patterns: json['patterns'] is List
+            ? (json['patterns'] as List).map((item) => item.toString()).toList()
+            : const [],
+        metadata: json['metadata'] is Map
+            ? Map<String, dynamic>.from(json['metadata'] as Map)
+            : const {},
+        always: json['always'] is List
+            ? (json['always'] as List).map((item) => item.toString()).toList()
+            : const [],
+        tool: json['tool'] is Map
+            ? PermissionTool.fromJson(
+                Map<String, dynamic>.from(json['tool'] as Map),
+              )
+            : null,
+      );
 }
 
 // ---------------- Helpers ----------------

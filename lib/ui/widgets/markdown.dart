@@ -3,6 +3,90 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+Future<void> openMarkdownExternalLink(
+  BuildContext context,
+  String value, {
+  Future<bool> Function(Uri uri)? launcher,
+}) async {
+  final uri = Uri.tryParse(value);
+  final scheme = uri?.scheme.toLowerCase();
+  if (uri == null ||
+      uri.host.isEmpty ||
+      uri.userInfo.isNotEmpty ||
+      (scheme != 'https' && scheme != 'http')) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Link blocked. Chat links may open only https:// URLs, or confirmed http:// URLs.',
+          ),
+        ),
+      );
+    }
+    return;
+  }
+
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      icon: Icon(
+        scheme == 'http'
+            ? Icons.warning_amber_rounded
+            : Icons.open_in_new_rounded,
+      ),
+      title: Text(
+        scheme == 'http' ? 'Open insecure HTTP link?' : 'Open external link?',
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Host'),
+          const SizedBox(height: 4),
+          SelectableText(
+            uri.host,
+            style: const TextStyle(fontFamily: 'monospace'),
+          ),
+          if (scheme == 'http') ...[
+            const SizedBox(height: 12),
+            const Text(
+              'HTTP is not encrypted. Other devices on the network may read or change what you send and receive.',
+            ),
+          ],
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: Text(scheme == 'http' ? 'Open HTTP link' : 'Open link'),
+        ),
+      ],
+    ),
+  );
+  if (confirmed != true || !context.mounted) return;
+
+  try {
+    final opened =
+        await (launcher?.call(uri) ??
+            launchUrl(uri, mode: LaunchMode.externalApplication));
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No app could open this link.')),
+      );
+    }
+  } catch (error) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not open link: $error')));
+    }
+  }
+}
+
 /// Lightweight markdown renderer tuned for LLM chat output:
 /// headings, bold/italic/strikethrough, inline code, fenced code blocks,
 /// bullet/ordered lists, blockquotes, horizontal rules and links.
@@ -11,7 +95,12 @@ class MarkdownText extends StatelessWidget {
   final TextStyle? baseStyle;
   final String? codeBlockLanguage;
 
-  const MarkdownText(this.data, {super.key, this.baseStyle, this.codeBlockLanguage});
+  const MarkdownText(
+    this.data, {
+    super.key,
+    this.baseStyle,
+    this.codeBlockLanguage,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -71,10 +160,12 @@ class MarkdownText extends StatelessWidget {
       // Horizontal rule
       if (RegExp(r'^\s*(-{3,}|\*{3,}|_{3,})\s*$').hasMatch(line)) {
         flushParagraph();
-        widgets.add(const Padding(
-          padding: EdgeInsets.symmetric(vertical: 4),
-          child: Divider(height: 1),
-        ));
+        widgets.add(
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 4),
+            child: Divider(height: 1),
+          ),
+        );
         i++;
         continue;
       }
@@ -107,7 +198,8 @@ class MarkdownText extends StatelessWidget {
       if (RegExp(r'^\s*\d+[.)]\s+').hasMatch(line)) {
         flushParagraph();
         final items = <String>[];
-        while (i < lines.length && RegExp(r'^\s*\d+[.)]\s+').hasMatch(lines[i])) {
+        while (i < lines.length &&
+            RegExp(r'^\s*\d+[.)]\s+').hasMatch(lines[i])) {
           items.add(lines[i].replaceFirst(RegExp(r'^\s*\d+[.)]\s+'), ''));
           i++;
         }
@@ -159,7 +251,12 @@ class _Quote extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 6, 8, 6),
       decoration: BoxDecoration(
-        border: Border(left: BorderSide(color: theme.colorScheme.primary.withValues(alpha: .5), width: 3)),
+        border: Border(
+          left: BorderSide(
+            color: theme.colorScheme.primary.withValues(alpha: .5),
+            width: 3,
+          ),
+        ),
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: .35),
       ),
       child: Text.rich(_InlineParser(text).parse(context)),
@@ -188,12 +285,14 @@ class _List extends StatelessWidget {
                   child: Text(
                     ordered ? '${i + 1}.' : '\u2022',
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-                Expanded(child: Text.rich(_InlineParser(items[i]).parse(context))),
+                Expanded(
+                  child: Text.rich(_InlineParser(items[i]).parse(context)),
+                ),
               ],
             ),
           ),
@@ -253,36 +352,47 @@ class _InlineParser {
         // [label](url)
         final url = m.group(8)!;
         final gesture = TapGestureRecognizer()
-          ..onTap = () async {
-            final uri = Uri.tryParse(url);
-            if (uri != null) {
-              await launchUrl(uri, mode: LaunchMode.externalApplication);
-            }
-          };
-        spans.add(TextSpan(
-          text: m.group(7),
-          style: base.copyWith(
-            color: theme.colorScheme.primary,
-            decoration: TextDecoration.underline,
+          ..onTap = () => openMarkdownExternalLink(context, url);
+        spans.add(
+          TextSpan(
+            text: m.group(7),
+            style: base.copyWith(
+              color: theme.colorScheme.primary,
+              decoration: TextDecoration.underline,
+            ),
+            recognizer: gesture,
           ),
-          recognizer: gesture,
-        ));
+        );
       } else if (m.group(6) != null) {
         spans.add(_CodeSpan(m.group(6)!, base: base, context: context));
       } else if (m.group(5) != null) {
-        spans.add(TextSpan(
+        spans.add(
+          TextSpan(
             text: m.group(5),
-            style: base.copyWith(decoration: TextDecoration.lineThrough)));
+            style: base.copyWith(decoration: TextDecoration.lineThrough),
+          ),
+        );
       } else if (m.group(1) != null || m.group(4) != null) {
-        spans.add(TextSpan(
+        spans.add(
+          TextSpan(
             text: m.group(1) ?? m.group(4),
-            style: base.copyWith(fontWeight: FontWeight.w700)));
+            style: base.copyWith(fontWeight: FontWeight.w700),
+          ),
+        );
       } else if (m.group(2) != null) {
-        spans.add(TextSpan(text: m.group(2),
-            style: base.copyWith(fontWeight: FontWeight.w700)));
+        spans.add(
+          TextSpan(
+            text: m.group(2),
+            style: base.copyWith(fontWeight: FontWeight.w700),
+          ),
+        );
       } else if (m.group(3) != null) {
-        spans.add(TextSpan(text: m.group(3),
-            style: base.copyWith(fontStyle: FontStyle.italic)));
+        spans.add(
+          TextSpan(
+            text: m.group(3),
+            style: base.copyWith(fontStyle: FontStyle.italic),
+          ),
+        );
       } else {
         spans.add(TextSpan(text: m[0]));
       }
@@ -294,30 +404,35 @@ class _InlineParser {
 }
 
 class _CodeSpan extends WidgetSpan {
-  _CodeSpan(String code, {required TextStyle base, required BuildContext context})
-      : super(
-          alignment: PlaceholderAlignment.middle,
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 2),
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: .6),
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(
-                color: Theme.of(context).dividerColor.withValues(alpha: .4),
-                width: .5,
-              ),
-            ),
-            child: Text(
-              code,
-              style: base.copyWith(
-                fontFamily: 'monospace',
-                fontSize: (base.fontSize ?? 14) - 1.5,
-                color: Theme.of(context).colorScheme.tertiary,
-              ),
-            ),
-          ),
-        );
+  _CodeSpan(
+    String code, {
+    required TextStyle base,
+    required BuildContext context,
+  }) : super(
+         alignment: PlaceholderAlignment.middle,
+         child: Container(
+           margin: const EdgeInsets.symmetric(horizontal: 2),
+           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+           decoration: BoxDecoration(
+             color: Theme.of(
+               context,
+             ).colorScheme.surfaceContainerHighest.withValues(alpha: .6),
+             borderRadius: BorderRadius.circular(4),
+             border: Border.all(
+               color: Theme.of(context).dividerColor.withValues(alpha: .4),
+               width: .5,
+             ),
+           ),
+           child: Text(
+             code,
+             style: base.copyWith(
+               fontFamily: 'monospace',
+               fontSize: (base.fontSize ?? 14) - 1.5,
+               color: Theme.of(context).colorScheme.tertiary,
+             ),
+           ),
+         ),
+       );
 }
 
 /// Scrollable, selectable monospace block with a copy button.
@@ -363,17 +478,26 @@ class CodeBlock extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(right: 4),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 1,
+                    ),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: .7),
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: .7),
                       borderRadius: BorderRadius.circular(4),
                     ),
-                    child: Text(language!,
-                        style: theme.textTheme.labelSmall!
-                            .copyWith(fontSize: 10, color: theme.hintColor)),
+                    child: Text(
+                      language!,
+                      style: theme.textTheme.labelSmall!.copyWith(
+                        fontSize: 10,
+                        color: theme.hintColor,
+                      ),
+                    ),
                   ),
                 ),
               IconButton(
+                tooltip: 'Copy code',
                 visualDensity: VisualDensity.compact,
                 iconSize: 16,
                 icon: Icon(Icons.copy_rounded, color: theme.hintColor),
@@ -381,8 +505,10 @@ class CodeBlock extends StatelessWidget {
                   await Clipboard.setData(ClipboardData(text: code));
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Copied ${language ?? 'code'}'),
-                          duration: const Duration(seconds: 1)),
+                      SnackBar(
+                        content: Text('Copied ${language ?? 'code'}'),
+                        duration: const Duration(seconds: 1),
+                      ),
                     );
                   }
                 },

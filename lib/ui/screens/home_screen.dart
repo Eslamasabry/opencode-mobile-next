@@ -4,11 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../api/sse.dart';
 import '../../state/connection.dart';
 import '../widgets/pickers.dart';
-import 'chat_screen.dart';
 import 'files_screen.dart';
-import 'guide_screen.dart';
+import 'library_screen.dart';
+import 'requests_screen.dart';
+import 'settings_screen.dart';
+import 'terminal_screen.dart';
+import 'workspace_screen.dart';
 
-/// Main app shell once connected: Chats / Files / Guide tabs.
+/// Main mobile product shell for a connected OpenCode server.
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -54,41 +57,86 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final theme = Theme.of(context);
     final navigator = Navigator.of(context);
 
+    final tabs = [
+      WorkspaceScreen(controller: conn),
+      FilesScreen(controller: conn),
+      TerminalScreen(controller: conn),
+      LibraryScreen(controller: conn),
+    ];
+    const destinations = [
+      NavigationDestination(
+        icon: Icon(Icons.workspaces_outline),
+        selectedIcon: Icon(Icons.workspaces_rounded),
+        label: 'Workspace',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.folder_outlined),
+        selectedIcon: Icon(Icons.folder_rounded),
+        label: 'Files',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.terminal_outlined),
+        selectedIcon: Icon(Icons.terminal_rounded),
+        label: 'Terminal',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.more_horiz_rounded),
+        selectedIcon: Icon(Icons.more_rounded),
+        label: 'More',
+      ),
+    ];
+    final pending = conn.permissions.length + conn.questions.length;
+
     return Scaffold(
       appBar: AppBar(
-        title: Row(children: [
-          _StatusDot(status: conn.status),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              conn.profile?.name ?? 'OpenCode',
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 17),
-            ),
-          ),
-          if (conn.version != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-              decoration: BoxDecoration(
-                color:
-                    theme.colorScheme.surfaceContainerHighest.withValues(alpha: .6),
-                borderRadius: BorderRadius.circular(10),
+        title: Row(
+          children: [
+            _StatusDot(status: conn.status),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                conn.profile?.name ?? 'OpenCode',
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 17),
               ),
-              child: Text('v${conn.version}',
-                  style: theme.textTheme.labelSmall!
-                      .copyWith(color: theme.hintColor)),
             ),
-        ]),
+            Text(
+              _titles[_tab],
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.hintColor,
+              ),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
             tooltip: 'Model / agent',
             icon: const Icon(Icons.tune_rounded),
             onPressed: () => showModelPicker(context, ref),
           ),
+          Badge(
+            isLabelVisible: pending > 0,
+            label: Text('$pending'),
+            child: IconButton(
+              tooltip: 'Pending requests',
+              icon: const Icon(Icons.notifications_outlined),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => RequestsScreen(controller: conn),
+                ),
+              ),
+            ),
+          ),
           PopupMenuButton<String>(
             onSelected: (v) {
               if (v == 'refresh') conn.refreshSessions();
-              if (v == 'guide') navigator.pushNamed('/guide');
+              if (v == 'settings') {
+                navigator.push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => SettingsScreen(controller: conn),
+                  ),
+                );
+              }
               if (v == 'disconnect') {
                 conn.disconnect().then((_) {
                   navigator.pushNamedAndRemoveUntil('/servers', (_) => false);
@@ -96,42 +144,58 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               }
             },
             itemBuilder: (_) => const [
-              PopupMenuItem(value: 'refresh', child: Text('Refresh sessions')),
-              PopupMenuItem(value: 'guide', child: Text('Setup guide')),
+              PopupMenuItem(value: 'refresh', child: Text('Refresh')),
+              PopupMenuItem(value: 'settings', child: Text('Settings')),
               PopupMenuItem(value: 'disconnect', child: Text('Disconnect')),
             ],
           ),
         ],
       ),
-      body: IndexedStack(
-        index: _tab,
-        children: [
-          SessionsTab(controller: conn),
-          FilesScreen(controller: conn),
-          GuideScreen(embedded: true),
-        ],
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final content = Column(
+            children: [
+              if (conn.status != StreamStatus.connected)
+                _ConnectionBanner(controller: conn),
+              Expanded(
+                child: IndexedStack(index: _tab, children: tabs),
+              ),
+            ],
+          );
+          if (constraints.maxWidth < 760) return content;
+          return Row(
+            children: [
+              NavigationRail(
+                selectedIndex: _tab,
+                extended: constraints.maxWidth >= 1040,
+                onDestinationSelected: (index) => setState(() => _tab = index),
+                destinations: [
+                  for (final destination in destinations)
+                    NavigationRailDestination(
+                      icon: destination.icon,
+                      selectedIcon: destination.selectedIcon,
+                      label: Text(destination.label),
+                    ),
+                ],
+              ),
+              const VerticalDivider(width: 1),
+              Expanded(child: content),
+            ],
+          );
+        },
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tab,
-        height: 64,
-        onDestinationSelected: (i) => setState(() => _tab = i),
-        destinations: const [
-          NavigationDestination(
-              icon: Icon(Icons.chat_bubble_outline_rounded),
-              selectedIcon: Icon(Icons.chat_bubble_rounded),
-              label: 'Chats'),
-          NavigationDestination(
-              icon: Icon(Icons.folder_outlined),
-              selectedIcon: Icon(Icons.folder_rounded),
-              label: 'Files'),
-          NavigationDestination(
-              icon: Icon(Icons.menu_book_outlined),
-              selectedIcon: Icon(Icons.menu_book_rounded),
-              label: 'Guide'),
-        ],
-      ),
+      bottomNavigationBar: MediaQuery.sizeOf(context).width < 760
+          ? NavigationBar(
+              selectedIndex: _tab,
+              height: 64,
+              onDestinationSelected: (i) => setState(() => _tab = i),
+              destinations: destinations,
+            )
+          : null,
     );
   }
+
+  static const _titles = ['Workspace', 'Files', 'Terminal', 'Library'];
 }
 
 class _StatusDot extends StatelessWidget {
@@ -142,27 +206,62 @@ class _StatusDot extends StatelessWidget {
   Widget build(BuildContext context) {
     final (color, pulse) = switch (status) {
       StreamStatus.connected => (Colors.green.shade400, false),
-      StreamStatus.connecting || StreamStatus.reconnecting =>
-        (Colors.orange.shade400, true),
+      StreamStatus.connecting ||
+      StreamStatus.reconnecting => (Colors.orange.shade400, true),
       StreamStatus.disconnected => (Colors.red.shade400, false),
     };
     return Tooltip(
       message: switch (status) {
-        StreamStatus.connected => 'Live event stream connected',
-        StreamStatus.connecting => 'Connecting…',
-        StreamStatus.reconnecting => 'Reconnecting…',
-        StreamStatus.disconnected => 'Disconnected (polling fallback)',
+        StreamStatus.connected => 'Connected',
+        StreamStatus.connecting => 'Connecting',
+        StreamStatus.reconnecting => 'Reconnecting',
+        StreamStatus.disconnected => 'Offline',
       },
       child: pulse
           ? SizedBox(
               width: 12,
               height: 12,
-              child: CircularProgressIndicator(strokeWidth: 2, color: color))
+              child: CircularProgressIndicator(strokeWidth: 2, color: color),
+            )
           : Container(
               width: 10,
               height: 10,
-              decoration:
-                  BoxDecoration(color: color, shape: BoxShape.circle)),
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
+    );
+  }
+}
+
+class _ConnectionBanner extends StatelessWidget {
+  final ConnectionController controller;
+  const _ConnectionBanner({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    final reconnecting =
+        controller.status == StreamStatus.connecting ||
+        controller.status == StreamStatus.reconnecting;
+    return MaterialBanner(
+      leading: reconnecting
+          ? const SizedBox.square(
+              dimension: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.cloud_off_outlined),
+      content: Text(
+        reconnecting
+            ? 'Reconnecting. Live updates may be delayed.'
+            : 'Live updates are offline. Displayed data may be stale, and actions can fail until OpenCode reconnects.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            final profile = controller.profile;
+            if (profile != null) controller.connect(profile);
+          },
+          child: const Text('Retry'),
+        ),
+      ],
     );
   }
 }

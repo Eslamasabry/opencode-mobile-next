@@ -1,0 +1,3 @@
+{{#bodyParam}}{{^required}}if ({{{paramName}}} != null) {
+  {{/required}}_bodyData = jsonEncode({{{paramName}}});{{^required}}
+}{{/required}}{{/bodyParam}}

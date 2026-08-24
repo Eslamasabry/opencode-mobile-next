@@ -33,16 +33,21 @@ class _ModelAgentSheetState extends ConsumerState<_ModelAgentSheet> {
     if (providers == null || providers.providers.isEmpty) {
       return Padding(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text('No models available', style: theme.textTheme.titleSmall),
-          const SizedBox(height: 6),
-          Text(
-            'Configure a provider on the opencode server first '
-            '(run `opencode auth login` there).',
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall!.copyWith(color: theme.hintColor),
-          ),
-        ]),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('No models available', style: theme.textTheme.titleSmall),
+            const SizedBox(height: 6),
+            Text(
+              'Configure a provider on the opencode server first '
+              '(run `opencode auth login` there).',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall!.copyWith(
+                color: theme.hintColor,
+              ),
+            ),
+          ],
+        ),
       );
     }
 
@@ -53,8 +58,9 @@ class _ModelAgentSheetState extends ConsumerState<_ModelAgentSheet> {
           providers.defaultProviderID ?? providers.providers.first.id;
       _pickedProvider = currentProvider;
     }
-    final provider =
-        providers.providers.firstWhere((p) => p.id == currentProvider);
+    final provider = providers.providers.firstWhere(
+      (p) => p.id == currentProvider,
+    );
 
     return DraggableScrollableSheet(
       expand: false,
@@ -64,9 +70,13 @@ class _ModelAgentSheetState extends ConsumerState<_ModelAgentSheet> {
         controller: scroll,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         children: [
-          Text('AGENT',
-              style: theme.textTheme.labelSmall!
-                  .copyWith(color: theme.hintColor, letterSpacing: 1)),
+          Text(
+            'AGENT',
+            style: theme.textTheme.labelSmall!.copyWith(
+              color: theme.hintColor,
+              letterSpacing: 1,
+            ),
+          ),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -79,15 +89,22 @@ class _ModelAgentSheetState extends ConsumerState<_ModelAgentSheet> {
                   onSelected: (_) => ref.read(connProvider).selectAgent(a.name),
                 ),
               if (conn.agents.isEmpty)
-                Text('No agents found',
-                    style: theme.textTheme.bodySmall!
-                        .copyWith(color: theme.hintColor)),
+                Text(
+                  'No agents found',
+                  style: theme.textTheme.bodySmall!.copyWith(
+                    color: theme.hintColor,
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 18),
-          Text('PROVIDER',
-              style: theme.textTheme.labelSmall!
-                  .copyWith(color: theme.hintColor, letterSpacing: 1)),
+          Text(
+            'PROVIDER',
+            style: theme.textTheme.labelSmall!.copyWith(
+              color: theme.hintColor,
+              letterSpacing: 1,
+            ),
+          ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
             initialValue: provider.id,
@@ -95,16 +112,23 @@ class _ModelAgentSheetState extends ConsumerState<_ModelAgentSheet> {
             items: [
               for (final p in providers.providers)
                 DropdownMenuItem(
-                    value: p.id,
-                    child: Text('${p.name} (${p.modelIDs.length})',
-                        overflow: TextOverflow.ellipsis)),
+                  value: p.id,
+                  child: Text(
+                    '${p.name} (${p.modelIDs.length})',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
             ],
             onChanged: (v) => setState(() => _pickedProvider = v),
           ),
           const SizedBox(height: 12),
-          Text('MODEL',
-              style: theme.textTheme.labelSmall!
-                  .copyWith(color: theme.hintColor, letterSpacing: 1)),
+          Text(
+            'MODEL',
+            style: theme.textTheme.labelSmall!.copyWith(
+              color: theme.hintColor,
+              letterSpacing: 1,
+            ),
+          ),
           const SizedBox(height: 8),
           ...provider.modelIDs.map((m) {
             final active =
@@ -117,15 +141,22 @@ class _ModelAgentSheetState extends ConsumerState<_ModelAgentSheet> {
               child: ListTile(
                 dense: true,
                 onTap: () async {
-                  await ref.read(connProvider).selectModel(
-                      ModelRef(providerID: provider.id, modelID: m));
+                  await ref
+                      .read(connProvider)
+                      .selectModel(
+                        ModelRef(providerID: provider.id, modelID: m),
+                      );
                   if (context.mounted) Navigator.pop(context);
                 },
-                title: Text(m,
-                    style:
-                        const TextStyle(fontFamily: 'monospace', fontSize: 13)),
+                title: Text(
+                  m,
+                  style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
+                ),
                 trailing: active
-                    ? Icon(Icons.check_rounded, color: theme.colorScheme.primary)
+                    ? Icon(
+                        Icons.check_rounded,
+                        color: theme.colorScheme.primary,
+                      )
                     : null,
               ),
             );

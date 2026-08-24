@@ -1,0 +1,26 @@
+{{#enumName}}
+{{#description}}/// {{{description}}}{{/description}}
+{{#isDeprecated}}
+@Deprecated('{{{enumName}}} has been deprecated')
+{{/isDeprecated}}
+enum {{{ enumName }}} {
+{{#allowableValues}}
+{{#enumVars}}
+{{^isNull}}
+{{#description}}
+    /// {{{.}}}
+{{/description}}
+@JsonValue({{#isString}}r{{/isString}}{{{value}}})
+{{{name}}}({{#isString}}r{{/isString}}{{{value}}}){{^-last}},{{/-last}}{{#-last}};{{/-last}}
+{{/isNull}}
+{{/enumVars}}
+{{/allowableValues}}
+
+const {{{enumName}}}(this.value);
+
+final Object value;
+
+@override
+String toString() => value.toString();
+}
+{{/enumName}}

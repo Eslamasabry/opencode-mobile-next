@@ -15,14 +15,19 @@ cd "$(dirname "$0")/.."
 export PATH="$HOME/.shorebird/bin:$PATH"
 
 VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: *//')
+BUILD_NAME=${VERSION%%+*}
+BUILD_NUMBER=${VERSION##*+}
 
 if [[ "${1:-release}" == "patch" ]]; then
   echo "==> Shipping OTA patch for $VERSION"
-  shorebird patch android --release-version "$VERSION" --flavor '' --dry-run && \
-    shorebird patch android --release-version "$VERSION" --flavor ''
+  shorebird patch android --release-version latest --dry-run && \
+    shorebird patch android --release-version latest
 else
   echo "==> Shipping new release $VERSION"
-  shorebird release android --release-version "$VERSION" \
+  shorebird release android \
+    --build-name "$BUILD_NAME" \
+    --build-number "$BUILD_NUMBER" \
+    --flutter-version 3.47.1 \
     --artifact apk
   echo "==> APK: ./build/app/outputs/flutter-apk/app-release.apk"
 fi

@@ -1,0 +1,102 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/api/models.dart';
+import 'package:opencode_mobile/api/opencode_api.dart';
+import 'package:opencode_mobile/api/product_repository.dart';
+import 'package:opencode_mobile/api/sse.dart';
+import 'package:opencode_mobile/state/connection.dart';
+import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/ui/screens/home_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class _ShellApi extends OpenCodeApi {
+  _ShellApi() : super(baseUrl: 'http://localhost');
+
+  @override
+  Future<List<Session>> sessions() async => [];
+
+  @override
+  Future<List<FileNode>> listFiles([String path = '']) async => [];
+}
+
+class _ShellRepository implements ProductRepository {
+  @override
+  void setLocation({String? directory, String? workspace}) {}
+
+  @override
+  Future<List<WorkspaceProject>> listProjects() async => [];
+
+  @override
+  Future<List<WorkspaceInfo>> listWorkspaces() async => [];
+
+  @override
+  Future<List<TerminalProcess>> listTerminals() async => [];
+
+  @override
+  Future<CatalogSnapshot> loadCatalog() async =>
+      const CatalogSnapshot(providers: [], models: [], agents: []);
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+Future<ConnectionController> _controller() async {
+  SharedPreferences.setMockInitialValues({});
+  final prefs = await SharedPreferences.getInstance();
+  return ConnectionController(ProfileStore(prefs: prefs))
+    ..api = _ShellApi()
+    ..repository = _ShellRepository()
+    ..status = StreamStatus.connected;
+}
+
+Future<void> _pumpShell(
+  WidgetTester tester,
+  ConnectionController controller,
+) async {
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [connProvider.overrideWithValue(controller)],
+      child: const MaterialApp(home: HomeScreen()),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('phone shell uses product bottom navigation', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+
+    await _pumpShell(tester, controller);
+
+    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(NavigationRail), findsNothing);
+    expect(find.text('Workspace'), findsWidgets);
+    expect(find.text('Files'), findsOneWidget);
+    expect(find.text('Terminal'), findsOneWidget);
+    expect(find.text('More'), findsOneWidget);
+    expect(find.text('API'), findsNothing);
+    expect(find.text('Guide'), findsNothing);
+  });
+
+  testWidgets('tablet shell switches to navigation rail', (tester) async {
+    tester.view.physicalSize = const Size(1024, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+
+    await _pumpShell(tester, controller);
+
+    expect(find.byType(NavigationRail), findsOneWidget);
+    expect(find.byType(NavigationBar), findsNothing);
+  });
+}

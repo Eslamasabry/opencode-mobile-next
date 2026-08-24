@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/models.dart';
 import '../api/opencode_api.dart';
+import '../api/product_repository.dart';
 import '../api/sse.dart';
 import 'profiles.dart';
 
@@ -33,17 +34,59 @@ final connProvider = Provider<ConnectionController>(
   (ref) => throw UnimplementedError('overridden in bootstrap'),
 );
 
+typedef OpenCodeApiFactory = OpenCodeApi Function(ServerProfile profile);
+typedef ProductRepositoryFactory = ProductRepository Function(OpenCodeApi api);
+typedef EventStreamFactory =
+    EventStream Function({
+      required OpenCodeApi api,
+      required void Function(EventEnvelope event) onEvent,
+      required void Function(StreamStatus status) onStatus,
+      void Function(Object error)? onError,
+    });
+
 /// Everything the UI needs about the active server connection.
 class ConnectionController extends ChangeNotifier {
   final ProfileStore store;
+  final OpenCodeApiFactory _apiFactory;
+  final ProductRepositoryFactory _repositoryFactory;
+  final EventStreamFactory _eventStreamFactory;
 
   OpenCodeApi? api;
+  ProductRepository? repository;
   EventStream? _events;
   Timer? _poll;
+  ServerProfile? _connectedProfile;
+  Future<void> _activeProfileWrite = Future.value();
+  int _generation = 0;
+  int _sessionsRefreshGeneration = 0;
+  int _catalogRefreshGeneration = 0;
+  int _questionsRefreshGeneration = 0;
+  int _sessionRevision = 0;
 
   StreamStatus status = StreamStatus.disconnected;
   String? version;
   String? lastError;
+
+  int connectionRevision = 0;
+  int locationRevision = 0;
+  String? directory;
+  String? workspace;
+  bool locationLoading = false;
+  String? locationError;
+  bool sessionsLoading = false;
+  String? sessionsError;
+  bool catalogLoading = false;
+  String? catalogError;
+  bool permissionsLoading = false;
+  String? permissionsError;
+  bool questionsLoading = false;
+  String? questionsError;
+
+  bool get connectionLoading =>
+      status == StreamStatus.connecting || status == StreamStatus.reconnecting;
+  String? get connectionError => lastError;
+  bool get pollingFallbackEnabled => _poll?.isActive ?? false;
+  bool get shouldPoll => api != null && status != StreamStatus.connected;
 
   ProvidersResponse? providers;
   List<AgentInfo> agents = [];
@@ -54,14 +97,58 @@ class ConnectionController extends ChangeNotifier {
   Map<String, Session> sessionsById = {};
   Set<String> busySessions = {};
 
-  /// Outstanding permission asks keyed by sessionID.
+  /// Outstanding permission asks keyed by request ID.
   Map<String, PermissionRequest> permissions = {};
+  Map<String, PendingQuestion> questions = {};
+  int ptyRevision = 0;
+  EventEnvelope? lastPtyEvent;
+  final Set<String> _resolvedPermissionIDs = {};
+  final Map<String, ({String sessionID, String permissionID})>
+  _legacyPermissionIdentities = {};
+  int _permissionRevision = 0;
+  Timer? _permissionHydrationRetry;
+  int _permissionHydrationGeneration = 0;
+  bool _disposed = false;
+
+  static const _permissionHydrationRetryDelays = [
+    Duration(milliseconds: 250),
+    Duration(seconds: 1),
+    Duration(seconds: 2),
+  ];
 
   /// Broadcast of every event for screen-scoped listeners (chat streaming).
   final _eventBus = StreamController<EventEnvelope>.broadcast();
   Stream<EventEnvelope> get events => _eventBus.stream;
 
-  ConnectionController(this.store);
+  ConnectionController(
+    this.store, {
+    OpenCodeApiFactory? apiFactory,
+    ProductRepositoryFactory? repositoryFactory,
+    EventStreamFactory? eventStreamFactory,
+  }) : _apiFactory = apiFactory ?? _createApi,
+       _repositoryFactory = repositoryFactory ?? _createRepository,
+       _eventStreamFactory = eventStreamFactory ?? _createEventStream;
+
+  static OpenCodeApi _createApi(ServerProfile profile) => OpenCodeApi(
+    baseUrl: profile.baseUrl,
+    username: profile.username,
+    password: profile.password,
+  );
+
+  static ProductRepository _createRepository(OpenCodeApi api) =>
+      SdkProductRepository(api.sdkClient);
+
+  static EventStream _createEventStream({
+    required OpenCodeApi api,
+    required void Function(EventEnvelope event) onEvent,
+    required void Function(StreamStatus status) onStatus,
+    void Function(Object error)? onError,
+  }) => EventStream(
+    api: api,
+    onEvent: onEvent,
+    onStatus: onStatus,
+    onError: onError,
+  );
 
   bool get isConnected => status == StreamStatus.connected && api != null;
 
@@ -75,26 +162,56 @@ class ConnectionController extends ChangeNotifier {
   }
 
   Future<void> connect(ServerProfile profile) async {
-    await disconnect(keepActive: true, silent: true);
-    await store.setActiveId(profile.id);
-    api = OpenCodeApi(
-      baseUrl: profile.baseUrl,
+    final validationError = validateServerProfileUrl(
+      profile.baseUrl,
       username: profile.username,
       password: profile.password,
     );
+    if (validationError != null) {
+      _beginGeneration();
+      _retireTransport();
+      status = StreamStatus.disconnected;
+      lastError = validationError;
+      notifyListeners();
+      return;
+    }
+    final generation = _beginGeneration();
+    _retireTransport();
+    final currentApi = _apiFactory(profile)
+      ..setLocation(directory: null, workspace: null);
+    final currentRepository = _repositoryFactory(currentApi)
+      ..setLocation(directory: null, workspace: null);
+    api = currentApi;
+    repository = currentRepository;
+    _connectedProfile = profile;
+    directory = null;
+    workspace = null;
+    locationRevision += 1;
+    _clearLocationData();
     status = StreamStatus.connecting;
     lastError = null;
+    locationError = null;
     notifyListeners();
+    enablePollingFallback();
+
+    await _writeActiveProfile(generation, profile.id);
+    if (!_isCurrent(generation, currentApi)) return;
 
     try {
-      final health = await api!.health();
+      final health = await currentApi.health();
+      if (!_isCurrent(generation, currentApi)) return;
       version = health.version ?? '';
     } catch (e) {
+      if (!_isCurrent(generation, currentApi)) return;
       status = StreamStatus.disconnected;
       lastError = e is ApiException
           ? e.message
           : 'Cannot reach ${profile.baseUrl}: $e';
       api = null;
+      repository = null;
+      currentApi.close();
+      _poll?.cancel();
+      _poll = null;
       notifyListeners();
       return;
     }
@@ -107,79 +224,132 @@ class ConnectionController extends ChangeNotifier {
     selectedAgent = store.agentFor(profile.id);
 
     unawaited(_loadCatalog());
-    _startEvents();
+    _startEvents(generation, currentApi);
     unawaited(refreshSessions());
+    unawaited(refreshPendingPermissions());
+    unawaited(refreshPendingQuestions());
     notifyListeners();
   }
 
   Future<void> _loadCatalog() async {
+    final currentApi = api;
+    final generation = _generation;
+    if (currentApi == null) return;
+    final refreshGeneration = ++_catalogRefreshGeneration;
+    catalogLoading = true;
+    catalogError = null;
+    notifyListeners();
     try {
-      providers = await api!.providers();
-      if ((selectedModel?.modelID.isEmpty ?? true) && providers != null) {
-        final p = providers!.defaultProviderID;
-        final m = providers!.defaultModelID;
+      final results = await Future.wait<Object>([
+        currentApi.providers(),
+        currentApi.agents(),
+      ]);
+      if (!_isCurrentCatalogRefresh(
+        generation,
+        currentApi,
+        refreshGeneration,
+      )) {
+        return;
+      }
+      final nextProviders = results[0] as ProvidersResponse;
+      final nextAgents = results[1] as List<AgentInfo>;
+      providers = nextProviders;
+      agents = nextAgents;
+      if ((selectedModel?.modelID.isEmpty ?? true)) {
+        final p = nextProviders.defaultProviderID;
+        final m = nextProviders.defaultModelID;
         if (p != null && m != null) {
           selectedModel = ModelRef(providerID: p, modelID: m);
         }
       }
-      agents = await api!.agents();
-      if (selectedAgent.isEmpty && agents.isNotEmpty) {
-        selectedAgent = agents.first.name;
+      if (selectedAgent.isEmpty && nextAgents.isNotEmpty) {
+        selectedAgent = nextAgents.first.name;
       }
+      catalogLoading = false;
       notifyListeners();
-    } catch (_) {
-      // Non-fatal; pickers show empty but chat still works.
+    } catch (error) {
+      if (!_isCurrentCatalogRefresh(
+        generation,
+        currentApi,
+        refreshGeneration,
+      )) {
+        return;
+      }
+      catalogLoading = false;
+      catalogError = error.toString();
+      _recordLocationError(catalogError!);
+      notifyListeners();
     }
   }
 
-  void _startEvents() {
-    _events = EventStream(
-      api: api!,
-      onEvent: _onEvent,
+  void _startEvents(int generation, OpenCodeApi currentApi) {
+    late final EventStream stream;
+    stream = _eventStreamFactory(
+      api: currentApi,
+      onEvent: (event) {
+        if (!_isCurrentStream(generation, currentApi, stream)) return;
+        _onEvent(event);
+      },
       onStatus: (s) {
+        if (!_isCurrentStream(generation, currentApi, stream)) return;
         status = s;
+        if (s == StreamStatus.connected) {
+          lastError = null;
+          unawaited(refreshPendingPermissions());
+        } else {
+          _cancelPermissionHydration();
+        }
         notifyListeners();
       },
       onError: (e) {
+        if (!_isCurrentStream(generation, currentApi, stream)) return;
         lastError = e.toString();
+        notifyListeners();
       },
-    )..start();
+    );
+    _events = stream;
+    stream.start();
   }
 
   Future<void> disconnect({
     bool keepActive = false,
     bool silent = false,
   }) async {
-    await _events?.dispose();
-    _events = null;
-    _poll?.cancel();
-    _poll = null;
-    sessionsById = {};
-    busySessions = {};
-    permissions = {};
-    providers = null;
-    agents = [];
+    final generation = _beginGeneration();
+    _retireTransport();
+    _clearLocationData();
     version = null;
-    api = null;
+    _connectedProfile = null;
+    directory = null;
+    workspace = null;
+    locationRevision += 1;
+    locationLoading = false;
+    locationError = null;
     status = StreamStatus.disconnected;
-    if (!keepActive) await store.setActiveId(null);
     if (!silent) notifyListeners();
+    if (!keepActive) await _writeActiveProfile(generation, null);
   }
 
   // ---------------- Event handling ----------------
 
   void _onEvent(EventEnvelope env) {
+    if (_disposed) return;
     final props = env.properties;
     switch (env.type) {
       case 'server.connected':
         final v = props['version']?.toString();
-        if (v != null && v.isNotEmpty) version = v;
+        if (v != null && v.isNotEmpty) {
+          version = v;
+          notifyListeners();
+        }
         break;
 
+      case 'session.created':
       case 'session.updated':
         final info = props['info'];
         if (info is Map<String, dynamic>) {
           final s = Session.fromJson(info);
+          _sessionRevision += 1;
           sessionsById[s.id] = s;
           notifyListeners();
         }
@@ -188,7 +358,12 @@ class ConnectionController extends ChangeNotifier {
       case 'session.deleted':
         final info = props['info'];
         if (info is Map<String, dynamic>) {
-          sessionsById.remove(info['id']?.toString());
+          final id = info['id']?.toString();
+          _sessionRevision += 1;
+          sessionsById.remove(id);
+          busySessions.remove(id);
+          permissions.removeWhere((_, value) => value.sessionID == id);
+          questions.removeWhere((_, value) => value.sessionID == id);
           notifyListeners();
         }
         break;
@@ -198,6 +373,7 @@ class ConnectionController extends ChangeNotifier {
         if (info is Map<String, dynamic>) {
           final msg = MessageInfo.fromJson(info);
           if (msg.role == 'assistant') {
+            _sessionRevision += 1;
             final working =
                 (msg.time == null || !msg.time!.isDone) &&
                 msg.errorText == null;
@@ -211,23 +387,113 @@ class ConnectionController extends ChangeNotifier {
         }
         break;
 
-      case 'permission.updated':
+      case 'message.removed':
+        final sid = props['sessionID']?.toString();
+        if (sid != null && sid.isNotEmpty) {
+          _sessionRevision += 1;
+          unawaited(_refreshOneSession(sid));
+        }
+        break;
+
+      case 'permission.asked':
         _handlePermission(props);
         break;
 
+      case 'permission.v2.asked':
+        _handlePermissionV2(props);
+        break;
+
+      case 'permission.updated':
+        _handleLegacyPermission(props);
+        break;
+
+      case 'permission.replied':
+      case 'permission.v2.replied':
+        _handlePermissionReply(props);
+        break;
+
+      case 'question.asked':
+      case 'question.updated':
+      case 'question.v2.asked':
+        _questionsRefreshGeneration += 1;
+        questionsLoading = false;
+        final question = PendingQuestion.fromJson(props);
+        if (question.id.isNotEmpty && question.sessionID.isNotEmpty) {
+          questions[question.id] = question;
+          notifyListeners();
+        }
+        break;
+
+      case 'question.replied':
+      case 'question.rejected':
+      case 'question.v2.replied':
+      case 'question.v2.rejected':
+        _questionsRefreshGeneration += 1;
+        questionsLoading = false;
+        final id = props['requestID']?.toString() ?? props['id']?.toString();
+        if (id != null && questions.remove(id) != null) notifyListeners();
+        break;
+
+      case 'session.status':
+        final sid = props['sessionID']?.toString();
+        final rawStatus = props['status'];
+        final sessionStatus = rawStatus is Map
+            ? rawStatus['type']?.toString()
+            : rawStatus?.toString();
+        if (sid != null && sid.isNotEmpty) {
+          _sessionRevision += 1;
+          switch (sessionStatus) {
+            case 'idle':
+              busySessions.remove(sid);
+              unawaited(_refreshOneSession(sid));
+              break;
+            case 'busy':
+            case 'retry':
+              busySessions.add(sid);
+              break;
+            default:
+              break;
+          }
+          notifyListeners();
+        }
+        break;
+
       case 'session.error':
+        final sid = props['sessionID']?.toString();
+        _sessionRevision += 1;
+        if (sid != null) busySessions.remove(sid);
         final err = props['error'];
         if (err is Map<String, dynamic>) {
           lastError = err['message']?.toString() ?? lastError;
         }
+        notifyListeners();
         break;
 
       case 'session.idle':
         final sid = props['sessionID']?.toString();
         if (sid != null) {
+          _sessionRevision += 1;
           busySessions.remove(sid);
           unawaited(_refreshOneSession(sid));
+          notifyListeners();
         }
+        break;
+
+      case 'session.compacted':
+        final sid = props['sessionID']?.toString();
+        if (sid != null && sid.isNotEmpty) {
+          _sessionRevision += 1;
+          unawaited(_refreshOneSession(sid));
+        }
+        break;
+
+      case 'pty.created':
+      case 'pty.updated':
+      case 'pty.exited':
+      case 'pty.deleted':
+        lastPtyEvent = env;
+        ptyRevision += 1;
+        notifyListeners();
         break;
 
       default:
@@ -237,80 +503,447 @@ class ConnectionController extends ChangeNotifier {
   }
 
   void _handlePermission(Map<String, dynamic> props) {
-    final inner = props['info'] is Map<String, dynamic>
-        ? props['info'] as Map<String, dynamic>
-        : props;
-    final sessionID = inner['sessionID']?.toString();
-    final permID = (inner['id'] ?? inner['permissionID'])?.toString();
-    if (sessionID == null ||
-        sessionID.isEmpty ||
-        permID == null ||
-        permID.isEmpty) {
-      return;
-    }
-    permissions[sessionID] = PermissionRequest(
-      key: '$sessionID/$permID',
-      sessionID: sessionID,
-      permissionID: permID,
-      type: (inner['type'] ?? '').toString(),
-      title: (inner['title'] ?? inner['type'] ?? 'Permission').toString(),
-    );
+    final permission = PermissionRequest.fromJson(props);
+    if (permission.sessionID.isEmpty || permission.id.isEmpty) return;
+    _resolvedPermissionIDs.remove(permission.id);
+    _legacyPermissionIdentities.remove(permission.id);
+    permissions[permission.id] = permission;
+    _permissionRevision += 1;
     notifyListeners();
   }
 
-  Future<void> answerPermission(String sessionID, String response) async {
-    final p = permissions.remove(sessionID);
+  void _handlePermissionV2(Map<String, dynamic> props) {
+    final permission = PermissionRequest.fromJson({
+      'id': props['id'],
+      'sessionID': props['sessionID'],
+      'permission': props['action'],
+      'patterns': props['resources'],
+      'metadata': props['metadata'],
+      'always': props['save'],
+      if (props['source'] is Map) 'tool': props['source'],
+    });
+    if (permission.sessionID.isEmpty || permission.id.isEmpty) return;
+    _resolvedPermissionIDs.remove(permission.id);
+    _legacyPermissionIdentities.remove(permission.id);
+    permissions[permission.id] = permission;
+    _permissionRevision += 1;
     notifyListeners();
-    if (p == null || api == null) return;
-    try {
-      await api!.respondPermission(sessionID, p.permissionID, response);
-    } catch (_) {}
   }
+
+  void _handleLegacyPermission(Map<String, dynamic> props) {
+    final id = props['id']?.toString() ?? '';
+    final sessionID = props['sessionID']?.toString() ?? '';
+    if (id.isEmpty || sessionID.isEmpty) return;
+    final rawPattern = props['pattern'];
+    final patterns = rawPattern is List
+        ? rawPattern.map((item) => item.toString()).toList()
+        : rawPattern == null
+        ? const <String>[]
+        : [rawPattern.toString()];
+    final messageID = props['messageID']?.toString() ?? '';
+    final callID = props['callID']?.toString() ?? '';
+    final permission = PermissionRequest(
+      id: id,
+      sessionID: sessionID,
+      permission: props['type']?.toString() ?? '',
+      patterns: patterns,
+      metadata: props['metadata'] is Map
+          ? Map<String, dynamic>.from(props['metadata'] as Map)
+          : const {},
+      tool: messageID.isNotEmpty && callID.isNotEmpty
+          ? PermissionTool(messageID: messageID, callID: callID)
+          : null,
+    );
+    _resolvedPermissionIDs.remove(id);
+    permissions[id] = permission;
+    _legacyPermissionIdentities[id] = (sessionID: sessionID, permissionID: id);
+    _permissionRevision += 1;
+    notifyListeners();
+  }
+
+  void _handlePermissionReply(Map<String, dynamic> props) {
+    final requestID =
+        props['requestID']?.toString() ?? props['permissionID']?.toString();
+    if (requestID == null || requestID.isEmpty) return;
+    _resolvePermission(requestID);
+  }
+
+  void _resolvePermission(String requestID) {
+    _resolvedPermissionIDs.add(requestID);
+    permissions.remove(requestID);
+    _legacyPermissionIdentities.remove(requestID);
+    _permissionRevision += 1;
+    notifyListeners();
+  }
+
+  PermissionRequest? permissionForSession(String sessionID) {
+    for (final permission in permissions.values) {
+      if (permission.sessionID == sessionID) return permission;
+    }
+    return null;
+  }
+
+  List<PermissionRequest> permissionsForSession(String sessionID) => permissions
+      .values
+      .where((permission) => permission.sessionID == sessionID)
+      .toList();
+
+  Future<void> refreshPendingPermissions() async {
+    final currentApi = api;
+    final connectionGeneration = _generation;
+    if (currentApi == null) return;
+    _permissionHydrationRetry?.cancel();
+    _permissionHydrationRetry = null;
+    final generation = ++_permissionHydrationGeneration;
+    permissionsLoading = true;
+    permissionsError = null;
+    notifyListeners();
+    await _hydratePendingPermissions(
+      currentApi,
+      connectionGeneration,
+      generation,
+      0,
+    );
+  }
+
+  Future<void> _hydratePendingPermissions(
+    OpenCodeApi currentApi,
+    int connectionGeneration,
+    int generation,
+    int attempt,
+  ) async {
+    final revision = _permissionRevision;
+    final permissionsAtStart = Map<String, PermissionRequest>.of(permissions);
+    try {
+      final pending = await currentApi.pendingPermissions();
+      if (!_isCurrentPermissionHydration(
+        currentApi,
+        connectionGeneration,
+        generation,
+      )) {
+        return;
+      }
+      final unresolved = {
+        for (final permission in pending)
+          if (!_resolvedPermissionIDs.contains(permission.id))
+            permission.id: permission,
+      };
+      if (revision == _permissionRevision) {
+        _resolvedPermissionIDs.addAll(
+          permissions.keys.where((id) => !unresolved.containsKey(id)),
+        );
+        permissions = unresolved;
+      } else {
+        for (final entry in permissionsAtStart.entries) {
+          if (!unresolved.containsKey(entry.key) &&
+              identical(permissions[entry.key], entry.value)) {
+            permissions.remove(entry.key);
+            _resolvedPermissionIDs.add(entry.key);
+          }
+        }
+        permissions.addAll(unresolved);
+      }
+      _legacyPermissionIdentities.removeWhere(
+        (id, _) => !permissions.containsKey(id),
+      );
+      permissionsLoading = false;
+      permissionsError = null;
+      notifyListeners();
+    } catch (error) {
+      if (!_isCurrentPermissionHydration(
+            currentApi,
+            connectionGeneration,
+            generation,
+          ) ||
+          attempt >= _permissionHydrationRetryDelays.length) {
+        if (_isCurrentPermissionHydration(
+          currentApi,
+          connectionGeneration,
+          generation,
+        )) {
+          permissionsLoading = false;
+          permissionsError = error.toString();
+          _recordLocationError(permissionsError!);
+          notifyListeners();
+        }
+        return;
+      }
+      _permissionHydrationRetry = Timer(
+        _permissionHydrationRetryDelays[attempt],
+        () => unawaited(
+          _hydratePendingPermissions(
+            currentApi,
+            connectionGeneration,
+            generation,
+            attempt + 1,
+          ),
+        ),
+      );
+    }
+  }
+
+  bool _isCurrentPermissionHydration(
+    OpenCodeApi currentApi,
+    int connectionGeneration,
+    int generation,
+  ) =>
+      _isCurrent(connectionGeneration, currentApi) &&
+      generation == _permissionHydrationGeneration;
+
+  void _cancelPermissionHydration() {
+    _permissionHydrationGeneration += 1;
+    _permissionHydrationRetry?.cancel();
+    _permissionHydrationRetry = null;
+    permissionsLoading = false;
+  }
+
+  Future<void> answerPermission(String requestID, String response) async {
+    final permission = permissions[requestID];
+    final currentApi = api;
+    final generation = _generation;
+    if (permission == null) {
+      if (_resolvedPermissionIDs.contains(requestID)) return;
+      throw StateError('Permission request $requestID is no longer pending');
+    }
+    if (currentApi == null) {
+      throw StateError('Not connected to OpenCode');
+    }
+    try {
+      final legacyIdentity = _legacyPermissionIdentities[requestID];
+      await currentApi.respondPermission(
+        permission.id,
+        response,
+        legacySessionID: legacyIdentity?.sessionID,
+        legacyPermissionID: legacyIdentity?.permissionID,
+      );
+      if (!_isCurrent(generation, currentApi)) return;
+      _resolvePermission(requestID);
+    } catch (error) {
+      if (!_isCurrent(generation, currentApi)) return;
+      if (_resolvedPermissionIDs.contains(requestID)) return;
+      if (error is ApiException && error.isPermissionNotFound(permission.id)) {
+        _resolvePermission(requestID);
+        return;
+      }
+      lastError = error.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  Future<void> refreshPendingQuestions() async {
+    final current = repository;
+    final currentApi = api;
+    final generation = _generation;
+    if (current == null) return;
+    final refreshGeneration = ++_questionsRefreshGeneration;
+    questionsLoading = true;
+    questionsError = null;
+    notifyListeners();
+    try {
+      final pending = await current.listQuestions();
+      if (!_isCurrentQuestionsRefresh(
+        generation,
+        currentApi,
+        current,
+        refreshGeneration,
+      )) {
+        return;
+      }
+      questions = {for (final question in pending) question.id: question};
+      questionsLoading = false;
+      notifyListeners();
+    } catch (error) {
+      if (!_isCurrentQuestionsRefresh(
+        generation,
+        currentApi,
+        current,
+        refreshGeneration,
+      )) {
+        return;
+      }
+      questionsLoading = false;
+      questionsError = error.toString();
+      _recordLocationError(questionsError!);
+      notifyListeners();
+    }
+  }
+
+  Future<void> answerQuestion(
+    String requestID,
+    List<List<String>> answers,
+  ) async {
+    final current = repository;
+    final currentApi = api;
+    final generation = _generation;
+    if (current == null) throw StateError('Not connected to OpenCode');
+    await current.answerQuestion(requestID, answers);
+    if (!_isCurrent(generation, currentApi) || repository != current) return;
+    questions.remove(requestID);
+    notifyListeners();
+  }
+
+  Future<void> rejectQuestion(String requestID) async {
+    final current = repository;
+    final currentApi = api;
+    final generation = _generation;
+    if (current == null) throw StateError('Not connected to OpenCode');
+    await current.rejectQuestion(requestID);
+    if (!_isCurrent(generation, currentApi) || repository != current) return;
+    questions.remove(requestID);
+    notifyListeners();
+  }
+
+  @visibleForTesting
+  void handleEventForTesting(EventEnvelope event) => _onEvent(event);
 
   // ---------------- Sessions ----------------
 
   Future<void> refreshSessions() async {
-    if (api == null) return;
+    final currentApi = api;
+    final generation = _generation;
+    if (currentApi == null) return;
+    final refreshGeneration = ++_sessionsRefreshGeneration;
+    final revision = _sessionRevision;
+    sessionsLoading = true;
+    sessionsError = null;
+    notifyListeners();
     try {
-      final list = await api!.sessions();
-      sessionsById = {for (final s in list) s.id: s};
+      final list = await currentApi.sessions();
+      if (!_isCurrentSessionsRefresh(
+        generation,
+        currentApi,
+        refreshGeneration,
+      )) {
+        return;
+      }
+      Map<String, String>? statuses;
+      Object? statusError;
       try {
-        final statuses = await api!.sessionStatuses();
+        statuses = await currentApi.sessionStatuses();
+      } catch (error) {
+        statusError = error;
+      }
+      if (!_isCurrentSessionsRefresh(
+        generation,
+        currentApi,
+        refreshGeneration,
+      )) {
+        return;
+      }
+      if (revision != _sessionRevision) {
+        sessionsLoading = false;
+        notifyListeners();
+        return;
+      }
+      sessionsById = {for (final s in list) s.id: s};
+      if (statuses != null) {
         busySessions
           ..clear()
           ..addAll(
             statuses.entries.where((e) => e.value != 'idle').map((e) => e.key),
           );
-      } catch (_) {}
+      }
+      sessionsLoading = false;
+      sessionsError = statusError?.toString();
+      if (statusError != null) _recordLocationError(sessionsError!);
       notifyListeners();
-    } catch (_) {}
+    } catch (error) {
+      if (!_isCurrentSessionsRefresh(
+        generation,
+        currentApi,
+        refreshGeneration,
+      )) {
+        return;
+      }
+      sessionsLoading = false;
+      sessionsError = error.toString();
+      _recordLocationError(sessionsError!);
+      notifyListeners();
+    }
   }
 
   Future<void> _refreshOneSession(String id) async {
-    if (api == null) return;
+    final currentApi = api;
+    final generation = _generation;
+    if (currentApi == null) return;
+    final revision = _sessionRevision;
     try {
-      sessionsById[id] = await api!.session(id);
+      final session = await currentApi.session(id);
+      if (!_isCurrent(generation, currentApi) || revision != _sessionRevision) {
+        return;
+      }
+      sessionsById[id] = session;
       notifyListeners();
     } catch (_) {}
   }
 
   /// Polling fallback when SSE is unavailable.
   void enablePollingFallback() {
-    _poll?.cancel();
+    if (_poll?.isActive ?? false) return;
     _poll = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (!isConnected) return;
-      refreshSessions();
+      if (!shouldPoll || sessionsLoading) return;
+      unawaited(refreshSessions());
     });
   }
 
   List<Session> sortedSessions() {
-    final list = sessionsById.values.where((s) => s.parentID == null).toList()
-      ..sort((a, b) {
-        final au = a.time?.updated ?? a.time?.created ?? 0;
-        final bu = b.time?.updated ?? b.time?.created ?? 0;
-        return bu.compareTo(au);
-      });
+    final list =
+        sessionsById.values
+            .where((s) => s.parentID == null && !s.archived)
+            .toList()
+          ..sort((a, b) {
+            final au = a.time?.updated ?? a.time?.created ?? 0;
+            final bu = b.time?.updated ?? b.time?.created ?? 0;
+            return bu.compareTo(au);
+          });
     return list;
+  }
+
+  List<Session> archivedSessions() {
+    final list =
+        sessionsById.values.where((session) => session.archived).toList()..sort(
+          (a, b) => (b.time?.archived ?? 0).compareTo(a.time?.archived ?? 0),
+        );
+    return list;
+  }
+
+  Future<void> selectLocation({String? directory, String? workspace}) async {
+    final profile = _connectedProfile;
+    if (profile == null || api == null) return;
+    if (this.directory == directory && this.workspace == workspace) return;
+
+    final generation = _beginGeneration();
+    final previousVersion = version;
+    _retireTransport();
+    final currentApi = _apiFactory(profile)
+      ..setLocation(directory: directory, workspace: workspace);
+    final currentRepository = _repositoryFactory(currentApi)
+      ..setLocation(directory: directory, workspace: workspace);
+    api = currentApi;
+    repository = currentRepository;
+    this.directory = directory;
+    this.workspace = workspace;
+    version = previousVersion;
+    locationRevision += 1;
+    locationLoading = true;
+    locationError = null;
+    lastError = null;
+    _clearLocationData();
+    status = StreamStatus.connecting;
+    notifyListeners();
+    enablePollingFallback();
+    _startEvents(generation, currentApi);
+
+    await Future.wait<void>([
+      refreshSessions(),
+      _loadCatalog(),
+      refreshPendingPermissions(),
+      refreshPendingQuestions(),
+    ]);
+    if (!_isCurrent(generation, currentApi)) return;
+    locationLoading = false;
+    notifyListeners();
   }
 
   // ---------------- Selection persistence ----------------
@@ -318,14 +951,127 @@ class ConnectionController extends ChangeNotifier {
   Future<void> selectModel(ModelRef ref) async {
     selectedModel = ref;
     final p = profile;
+    final generation = _generation;
     if (p != null) await store.setModel(p.id, ref.providerID, ref.modelID);
+    if (_disposed || generation != _generation) return;
     notifyListeners();
   }
 
   Future<void> selectAgent(String name) async {
     selectedAgent = name;
     final p = profile;
+    final generation = _generation;
     if (p != null) await store.setAgent(p.id, name);
+    if (_disposed || generation != _generation) return;
     notifyListeners();
+  }
+
+  int _beginGeneration() {
+    _generation += 1;
+    connectionRevision = _generation;
+    return _generation;
+  }
+
+  bool _isCurrent(int generation, OpenCodeApi? currentApi) =>
+      !_disposed && generation == _generation && identical(api, currentApi);
+
+  bool _isCurrentStream(
+    int generation,
+    OpenCodeApi currentApi,
+    EventStream stream,
+  ) => _isCurrent(generation, currentApi) && identical(_events, stream);
+
+  bool _isCurrentSessionsRefresh(
+    int generation,
+    OpenCodeApi currentApi,
+    int refreshGeneration,
+  ) =>
+      _isCurrent(generation, currentApi) &&
+      refreshGeneration == _sessionsRefreshGeneration;
+
+  bool _isCurrentCatalogRefresh(
+    int generation,
+    OpenCodeApi currentApi,
+    int refreshGeneration,
+  ) =>
+      _isCurrent(generation, currentApi) &&
+      refreshGeneration == _catalogRefreshGeneration;
+
+  bool _isCurrentQuestionsRefresh(
+    int generation,
+    OpenCodeApi? currentApi,
+    ProductRepository currentRepository,
+    int refreshGeneration,
+  ) =>
+      _isCurrent(generation, currentApi) &&
+      identical(repository, currentRepository) &&
+      refreshGeneration == _questionsRefreshGeneration;
+
+  void _retireTransport() {
+    _cancelPermissionHydration();
+    final oldEvents = _events;
+    _events = null;
+    unawaited(oldEvents?.dispose());
+    _poll?.cancel();
+    _poll = null;
+    final oldApi = api;
+    api = null;
+    repository = null;
+    oldApi?.close();
+  }
+
+  void _clearLocationData() {
+    _sessionsRefreshGeneration += 1;
+    _catalogRefreshGeneration += 1;
+    _questionsRefreshGeneration += 1;
+    _sessionRevision += 1;
+    sessionsById = {};
+    busySessions = {};
+    permissions = {};
+    questions = {};
+    _resolvedPermissionIDs.clear();
+    _legacyPermissionIdentities.clear();
+    _permissionRevision = 0;
+    providers = null;
+    agents = [];
+    sessionsLoading = false;
+    sessionsError = null;
+    catalogLoading = false;
+    catalogError = null;
+    permissionsLoading = false;
+    permissionsError = null;
+    questionsLoading = false;
+    questionsError = null;
+    lastPtyEvent = null;
+  }
+
+  void _recordLocationError(String error) {
+    if (locationLoading) locationError ??= error;
+  }
+
+  Future<void> _writeActiveProfile(int generation, String? id) {
+    final previous = _activeProfileWrite;
+    final write = () async {
+      try {
+        await previous;
+      } catch (_) {
+        // A later generation still needs a chance to persist its selection.
+      }
+      if (_disposed || generation != _generation) return;
+      await store.setActiveId(id);
+    }();
+    _activeProfileWrite = write;
+    return write;
+  }
+
+  @override
+  void dispose() {
+    if (_disposed) return;
+    _disposed = true;
+    _generation += 1;
+    connectionRevision = _generation;
+    _retireTransport();
+    unawaited(_eventBus.close());
+    super.dispose();
   }
 }
