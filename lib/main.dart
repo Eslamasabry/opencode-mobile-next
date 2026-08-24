@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'state/connection.dart';
+import 'ui/app_theme.dart';
 import 'ui/screens/guide_screen.dart';
 import 'ui/screens/about_screen.dart';
 import 'ui/screens/home_screen.dart';
@@ -25,39 +26,44 @@ Future<void> main() async {
   );
 }
 
-class OcApp extends StatelessWidget {
+class OcApp extends ConsumerStatefulWidget {
   const OcApp({super.key});
 
   @override
+  ConsumerState<OcApp> createState() => _OcAppState();
+}
+
+class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
+  late final ConnectionController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = ref.read(connProvider);
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        _controller.resumeFromLifecycle();
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.detached:
+        _controller.suspendForLifecycle();
+      case AppLifecycleState.inactive:
+        break;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF34D399),
-      brightness: Brightness.dark,
-    );
     return MaterialApp(
       title: 'OpenCode',
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.dark,
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        colorScheme: scheme,
-        scaffoldBackgroundColor: const Color(0xFF0F1115),
-        appBarTheme: AppBarTheme(
-          backgroundColor: const Color(0xFF0F1115),
-          foregroundColor: Colors.grey.shade100,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-        ),
-        filledButtonTheme: FilledButtonThemeData(
-          style: FilledButton.styleFrom(minimumSize: const Size(48, 48)),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48)),
-        ),
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
-        ),
-      ),
+      darkTheme: AppTheme.dark(),
       initialRoute: '/',
       routes: {
         '/': (_) => _Root(),
@@ -75,6 +81,12 @@ class OcApp extends StatelessWidget {
         return null;
       },
     );
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 }
 
@@ -102,7 +114,7 @@ class _RootState extends ConsumerState<_Root> {
     if (_started) return;
     final conn = _controller;
     final profile = conn.profile;
-    if (profile == null) return;
+    if (profile == null || profile.requiresPasswordReentry) return;
     _started = true;
     WidgetsBinding.instance.addPostFrameCallback((_) => conn.connect(profile));
   }
@@ -114,65 +126,23 @@ class _RootState extends ConsumerState<_Root> {
     if (conn.api != null && conn.repository != null && conn.version != null) {
       return const HomeScreen();
     }
+    if (conn.profile!.requiresPasswordReentry) {
+      return const ServersScreen();
+    }
     _connectSaved();
     return Scaffold(
       body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 360),
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (conn.lastError == null)
-                    const CircularProgressIndicator()
-                  else
-                    Icon(
-                      Icons.cloud_off_outlined,
-                      size: 42,
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  const SizedBox(height: 20),
-                  Text(
-                    conn.lastError == null
-                        ? 'Connecting to ${conn.profile!.name}'
-                        : 'Could not connect',
-                    style: Theme.of(context).textTheme.titleMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    conn.lastError ?? conn.profile!.baseUrl,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 20),
-                  if (conn.lastError != null)
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        OutlinedButton(
-                          onPressed: () => Navigator.of(
-                            context,
-                          ).pushNamedAndRemoveUntil('/servers', (_) => false),
-                          child: const Text('Change server'),
-                        ),
-                        FilledButton(
-                          onPressed: () {
-                            _started = false;
-                            _connectSaved();
-                          },
-                          child: const Text('Try again'),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
-            ),
-          ),
+        child: _SavedServerConnectionView(
+          profileName: conn.profile!.name,
+          baseUrl: conn.profile!.baseUrl,
+          error: conn.lastError,
+          onChangeServer: () => Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil('/servers', (_) => false),
+          onRetry: () {
+            _started = false;
+            _connectSaved();
+          },
         ),
       ),
     );
@@ -182,5 +152,163 @@ class _RootState extends ConsumerState<_Root> {
   void dispose() {
     _controller.removeListener(_changed);
     super.dispose();
+  }
+}
+
+class _SavedServerConnectionView extends StatelessWidget {
+  final String profileName;
+  final String baseUrl;
+  final String? error;
+  final VoidCallback onChangeServer;
+  final VoidCallback onRetry;
+
+  const _SavedServerConnectionView({
+    required this.profileName,
+    required this.baseUrl,
+    required this.error,
+    required this.onChangeServer,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final failed = error != null;
+
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      label: failed
+          ? 'Could not connect to $profileName. $error'
+          : 'Connecting to $profileName',
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: scheme.outlineVariant.withValues(alpha: .75),
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x33000000),
+                    blurRadius: 36,
+                    offset: Offset(0, 18),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 26, 24, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: failed
+                              ? scheme.errorContainer
+                              : scheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Icon(
+                          failed
+                              ? Icons.cloud_off_outlined
+                              : Icons.terminal_rounded,
+                          color: failed
+                              ? scheme.onErrorContainer
+                              : scheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      failed
+                          ? 'Could not connect'
+                          : 'Connecting to $profileName',
+                      style: theme.textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      failed ? error! : 'Opening your saved workspace.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        height: 1.45,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainer,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.dns_outlined,
+                            size: 18,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 9),
+                          Expanded(
+                            child: Text(
+                              baseUrl,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (!failed) ...[
+                      const SizedBox(height: 22),
+                      const LinearProgressIndicator(
+                        key: ValueKey('saved-server-connect-progress'),
+                        minHeight: 3,
+                        borderRadius: BorderRadius.all(Radius.circular(2)),
+                      ),
+                    ] else ...[
+                      const SizedBox(height: 22),
+                      Wrap(
+                        alignment: WrapAlignment.end,
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: [
+                          OutlinedButton(
+                            onPressed: onChangeServer,
+                            child: const Text('Change server'),
+                          ),
+                          FilledButton.icon(
+                            onPressed: onRetry,
+                            icon: const Icon(Icons.refresh_rounded, size: 19),
+                            label: const Text('Try again'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

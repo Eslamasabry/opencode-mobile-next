@@ -50,6 +50,9 @@ class _TerminalScreenState extends State<TerminalScreen> {
         ptyRevision == _ptyRevision) {
       return;
     }
+    final locationChanged =
+        !identical(repository, _activeRepository) ||
+        revision != _locationRevision;
     _activeRepository = repository;
     _locationRevision = revision;
     _ptyRevision = ptyRevision;
@@ -57,6 +60,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
     setState(() {
       _processes = null;
       _error = null;
+      if (locationChanged) _creating = false;
     });
     _load();
   }
@@ -67,6 +71,11 @@ class _TerminalScreenState extends State<TerminalScreen> {
         ? (repository as LocationAwareProductRepository).locationRevision
         : 0,
   );
+
+  bool _isCurrentLocation(ProductRepository repository, int revision) =>
+      mounted &&
+      identical(repository, _repository) &&
+      revision == _revisionOf(repository);
 
   Future<void> _load() async {
     final generation = ++_loadGeneration;
@@ -91,40 +100,57 @@ class _TerminalScreenState extends State<TerminalScreen> {
   Future<void> _create() async {
     final repository = _repository;
     if (repository == null || _creating) return;
+    final revision = _revisionOf(repository);
     setState(() => _creating = true);
     try {
       final process = await repository.createTerminal(
         title: 'Terminal ${(_processes?.length ?? 0) + 1}',
       );
-      if (!mounted) return;
-      await _open(process);
+      if (!_isCurrentLocation(repository, revision)) return;
+      await _open(process, repository);
+      if (!_isCurrentLocation(repository, revision)) return;
       await _load();
     } catch (error) {
-      if (mounted) _showError(error.toString());
+      if (_isCurrentLocation(repository, revision)) {
+        _showError(error.toString());
+      }
     } finally {
-      if (mounted) setState(() => _creating = false);
+      if (_isCurrentLocation(repository, revision)) {
+        setState(() => _creating = false);
+      }
     }
   }
 
-  Future<void> _open(TerminalProcess process) async {
+  Future<void> _open(
+    TerminalProcess process, [
+    ProductRepository? repository,
+  ]) async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) =>
-            TerminalSurface(repository: _repository!, process: process),
+        builder: (_) => TerminalSurface(
+          repository: repository ?? _repository!,
+          repositoryResolver: () => widget.controller.repository,
+          repositoryChanges: widget.controller,
+          process: process,
+        ),
       ),
     );
   }
 
   Future<void> _rename(TerminalProcess process) async {
-    final controller = TextEditingController(text: process.title);
+    final repository = _repository;
+    if (repository == null) return;
+    final revision = _revisionOf(repository);
+    var editedTitle = process.title;
     final title = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Rename terminal'),
-        content: TextField(
-          controller: controller,
+        content: TextFormField(
+          initialValue: process.title,
           autofocus: true,
           decoration: const InputDecoration(labelText: 'Title'),
+          onChanged: (value) => editedTitle = value,
         ),
         actions: [
           TextButton(
@@ -132,23 +158,31 @@ class _TerminalScreenState extends State<TerminalScreen> {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            onPressed: () => Navigator.pop(context, editedTitle.trim()),
             child: const Text('Save'),
           ),
         ],
       ),
     );
-    controller.dispose();
-    if (title?.isNotEmpty != true) return;
+    if (title?.isNotEmpty != true ||
+        !_isCurrentLocation(repository, revision)) {
+      return;
+    }
     try {
-      await _repository?.renameTerminal(process.id, title!);
+      await repository.renameTerminal(process.id, title!);
+      if (!_isCurrentLocation(repository, revision)) return;
       await _load();
     } catch (error) {
-      if (mounted) _showError(error.toString());
+      if (_isCurrentLocation(repository, revision)) {
+        _showError(error.toString());
+      }
     }
   }
 
   Future<void> _remove(TerminalProcess process) async {
+    final repository = _repository;
+    if (repository == null) return;
+    final revision = _revisionOf(repository);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -173,12 +207,15 @@ class _TerminalScreenState extends State<TerminalScreen> {
         ],
       ),
     );
-    if (confirmed != true) return;
+    if (confirmed != true || !_isCurrentLocation(repository, revision)) return;
     try {
-      await _repository?.removeTerminal(process.id);
+      await repository.removeTerminal(process.id);
+      if (!_isCurrentLocation(repository, revision)) return;
       await _load();
     } catch (error) {
-      if (mounted) _showError(error.toString());
+      if (_isCurrentLocation(repository, revision)) {
+        _showError(error.toString());
+      }
     }
   }
 
@@ -310,11 +347,15 @@ class _ProcessIndicator extends StatelessWidget {
 
 class TerminalSurface extends StatefulWidget {
   final ProductRepository repository;
+  final ProductRepository? Function()? repositoryResolver;
+  final Listenable? repositoryChanges;
   final TerminalProcess process;
 
   const TerminalSurface({
     super.key,
     required this.repository,
+    this.repositoryResolver,
+    this.repositoryChanges,
     required this.process,
   });
 
@@ -322,7 +363,8 @@ class TerminalSurface extends StatefulWidget {
   State<TerminalSurface> createState() => _TerminalSurfaceState();
 }
 
-class _TerminalSurfaceState extends State<TerminalSurface> {
+class _TerminalSurfaceState extends State<TerminalSurface>
+    with WidgetsBindingObserver {
   late final xterm.Terminal _terminal;
   final _terminalController = xterm.TerminalController();
   final _scrollController = ScrollController();
@@ -336,32 +378,106 @@ class _TerminalSurfaceState extends State<TerminalSurface> {
   int _connectionGeneration = 0;
   Timer? _resizeTimer;
   bool _accessibleMode = false;
+  bool _lifecycleSuspended = false;
   String _transcript = '';
+  final _transcriptSanitizer = _TerminalTranscriptSanitizer();
+  ProductRepository? _activeRepository;
+
+  ProductRepository? get _repository => widget.repositoryResolver == null
+      ? widget.repository
+      : widget.repositoryResolver!();
+
+  bool get _canWrite =>
+      !_lifecycleSuspended &&
+      !_connecting &&
+      !_closed &&
+      _error == null &&
+      _channel != null;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    widget.repositoryChanges?.addListener(_repositoryChanged);
+    _activeRepository = _repository;
     _terminal = xterm.Terminal(
       maxLines: 5000,
       onOutput: _write,
       onResize: _resize,
     );
-    _connect();
+    final lifecycleState = WidgetsBinding.instance.lifecycleState;
+    _lifecycleSuspended =
+        lifecycleState == AppLifecycleState.hidden ||
+        lifecycleState == AppLifecycleState.paused ||
+        lifecycleState == AppLifecycleState.detached;
+    if (!_lifecycleSuspended) _connect();
+  }
+
+  @override
+  void didUpdateWidget(covariant TerminalSurface oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.repositoryChanges, widget.repositoryChanges)) {
+      oldWidget.repositoryChanges?.removeListener(_repositoryChanged);
+      widget.repositoryChanges?.addListener(_repositoryChanged);
+    }
+    _repositoryChanged(
+      forceReconnect: oldWidget.process.id != widget.process.id,
+    );
+  }
+
+  void _repositoryChanged({bool forceReconnect = false}) {
+    final repository = _repository;
+    if (!forceReconnect && identical(repository, _activeRepository)) return;
+    _activeRepository = repository;
+    if (repository == null) {
+      _connectionGeneration++;
+      _resizeTimer?.cancel();
+      _resizeTimer = null;
+      final subscription = _subscription;
+      final channel = _channel;
+      _subscription = null;
+      _channel = null;
+      if (mounted && !_lifecycleSuspended) {
+        setState(() {
+          _connecting = false;
+          _closed = true;
+          _error = 'The server transport is reconnecting.';
+        });
+      }
+      unawaited(_closeConnection(subscription, channel).catchError((_) {}));
+      return;
+    }
+    if (!_lifecycleSuspended && mounted) unawaited(_connect());
   }
 
   Future<void> _connect() async {
+    if (_lifecycleSuspended) return;
     final generation = ++_connectionGeneration;
+    final repository = _repository;
     setState(() {
       _connecting = true;
       _error = null;
     });
+    final previousSubscription = _subscription;
+    final previousChannel = _channel;
+    _subscription = null;
+    _channel = null;
     try {
-      await _subscription?.cancel();
-      await _channel?.close();
-      final channel = await widget.repository.connectTerminal(
-        widget.process.id,
-      );
-      if (!mounted || generation != _connectionGeneration) {
+      await _closeConnectionBestEffort(previousSubscription, previousChannel);
+      if (!mounted ||
+          _lifecycleSuspended ||
+          generation != _connectionGeneration) {
+        return;
+      }
+      if (repository == null) {
+        throw StateError('The server transport is reconnecting.');
+      }
+      _activeRepository = repository;
+      _transcriptSanitizer.reset();
+      final channel = await repository.connectTerminal(widget.process.id);
+      if (!mounted ||
+          _lifecycleSuspended ||
+          generation != _connectionGeneration) {
         await channel.close();
         return;
       }
@@ -396,15 +512,84 @@ class _TerminalSurfaceState extends State<TerminalSurface> {
       if (mounted && generation == _connectionGeneration) {
         setState(() {
           _connecting = false;
+          _closed = true;
           _error = error.toString();
         });
       }
     }
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.detached:
+        _suspendForLifecycle();
+      case AppLifecycleState.resumed:
+        _resumeFromLifecycle();
+      case AppLifecycleState.inactive:
+        break;
+    }
+  }
+
+  void _suspendForLifecycle() {
+    if (_lifecycleSuspended) return;
+    _lifecycleSuspended = true;
+    _connectionGeneration++;
+    _resizeTimer?.cancel();
+    _resizeTimer = null;
+    final subscription = _subscription;
+    final channel = _channel;
+    _subscription = null;
+    _channel = null;
+    if (mounted) {
+      setState(() {
+        _connecting = false;
+        _closed = true;
+        _error = null;
+      });
+    }
+    unawaited(_closeConnection(subscription, channel).catchError((_) {}));
+  }
+
+  void _resumeFromLifecycle() {
+    if (!_lifecycleSuspended || !mounted) return;
+    _lifecycleSuspended = false;
+    unawaited(_connect());
+  }
+
+  Future<void> _closeConnection(
+    StreamSubscription<String>? subscription,
+    TerminalChannel? channel,
+  ) async {
+    // Retired transports are generation-guarded, so their potentially slow
+    // cleanup must never hold up the replacement connection.
+    if (subscription != null) {
+      unawaited(subscription.cancel().catchError((_) {}));
+    }
+    if (channel != null) {
+      unawaited(channel.close().catchError((_) {}));
+    }
+  }
+
+  Future<void> _closeConnectionBestEffort(
+    StreamSubscription<String>? subscription,
+    TerminalChannel? channel,
+  ) async {
+    try {
+      await _closeConnection(
+        subscription,
+        channel,
+      ).timeout(const Duration(seconds: 2));
+    } catch (_) {
+      // A retired transport must not prevent its replacement from connecting.
+    }
+  }
+
   void _write(String value) {
-    if (_connecting || _closed) return;
-    _channel?.write(value);
+    if (!_canWrite) return;
+    _channel!.write(value);
   }
 
   void _sendControl(String value) {
@@ -413,9 +598,8 @@ class _TerminalSurfaceState extends State<TerminalSurface> {
   }
 
   void _appendTranscript(String chunk) {
-    final plain = chunk
-        .replaceAll(RegExp(r'\x1B\[[0-?]*[ -/]*[@-~]'), '')
-        .replaceAll('\r', '');
+    final plain = _transcriptSanitizer.add(chunk);
+    if (plain.isEmpty) return;
     _transcript = '$_transcript$plain';
     if (_transcript.length > 100000) {
       _transcript = _transcript.substring(_transcript.length - 100000);
@@ -425,7 +609,7 @@ class _TerminalSurfaceState extends State<TerminalSurface> {
 
   void _sendAccessibleInput() {
     final value = _accessibleInput.text;
-    if (value.isEmpty) return;
+    if (value.isEmpty || !_canWrite) return;
     _write('$value\r');
     _accessibleInput.clear();
   }
@@ -434,9 +618,11 @@ class _TerminalSurfaceState extends State<TerminalSurface> {
     if (cols <= 0 || rows <= 0) return;
     _resizeTimer?.cancel();
     _resizeTimer = Timer(const Duration(milliseconds: 150), () {
-      if (!mounted || _closed) return;
+      if (!mounted || !_canWrite) return;
+      final repository = _repository;
+      if (repository == null) return;
       unawaited(
-        widget.repository
+        repository
             .resizeTerminal(widget.process.id, rows: rows, cols: cols)
             .catchError((_) {}),
       );
@@ -453,6 +639,16 @@ class _TerminalSurfaceState extends State<TerminalSurface> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final status = _lifecycleSuspended
+        ? 'Paused'
+        : _connecting
+        ? 'Connecting'
+        : _error != null
+        ? 'Unavailable'
+        : _closed
+        ? 'Connection closed'
+        : 'Connected - PID ${widget.process.pid}';
+    final canWrite = _canWrite;
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
@@ -460,14 +656,15 @@ class _TerminalSurfaceState extends State<TerminalSurface> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(widget.process.title, overflow: TextOverflow.ellipsis),
-            Text(
-              _connecting
-                  ? 'Connecting'
-                  : _closed
-                  ? 'Exited'
-                  : 'PID ${widget.process.pid}',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.hintColor,
+            Semantics(
+              liveRegion: true,
+              label: 'Terminal status: $status',
+              excludeSemantics: true,
+              child: Text(
+                status,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.hintColor,
+                ),
               ),
             ),
           ],
@@ -493,7 +690,7 @@ class _TerminalSurfaceState extends State<TerminalSurface> {
           IconButton(
             key: const Key('terminal-reconnect'),
             tooltip: 'Reconnect',
-            onPressed: _connecting ? null : _connect,
+            onPressed: _connecting || _lifecycleSuspended ? null : _connect,
             icon: const Icon(Icons.refresh_rounded),
           ),
         ],
@@ -513,7 +710,7 @@ class _TerminalSurfaceState extends State<TerminalSurface> {
                 ? _AccessibleTerminal(
                     transcript: _transcript,
                     input: _accessibleInput,
-                    enabled: !_connecting && !_closed,
+                    enabled: canWrite,
                     onSend: _sendAccessibleInput,
                   )
                 : ColoredBox(
@@ -533,7 +730,7 @@ class _TerminalSurfaceState extends State<TerminalSurface> {
                           keyboardAppearance: Brightness.dark,
                           deleteDetection: true,
                           hardwareKeyboardOnly: false,
-                          readOnly: _connecting || _closed,
+                          readOnly: !canWrite,
                           padding: const EdgeInsets.all(10),
                           textStyle: const xterm.TerminalStyle(
                             fontFamily: 'monospace',
@@ -546,53 +743,61 @@ class _TerminalSurfaceState extends State<TerminalSurface> {
           ),
           SafeArea(
             top: false,
-            child: SizedBox(
-              height: 56,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                children: [
-                  _TerminalKey(
-                    label: 'Ctrl-C',
-                    semanticLabel: 'Interrupt, Control C',
-                    onTap: () => _sendControl('\x03'),
+            child: Semantics(
+              container: true,
+              label: 'Terminal control keys. Swipe horizontally for more.',
+              child: SizedBox(
+                height: 56,
+                child: ListView(
+                  key: const Key('terminal-control-strip'),
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
                   ),
-                  _TerminalKey(
-                    label: 'Ctrl-D',
-                    semanticLabel: 'End of input, Control D',
-                    onTap: () => _sendControl('\x04'),
-                  ),
-                  _TerminalKey(
-                    label: 'Esc',
-                    semanticLabel: 'Escape key',
-                    onTap: () => _sendControl('\x1b'),
-                  ),
-                  _TerminalKey(
-                    label: 'Tab',
-                    semanticLabel: 'Tab key',
-                    onTap: () => _sendControl('\t'),
-                  ),
-                  _TerminalKey(
-                    label: '↑',
-                    semanticLabel: 'Up arrow key',
-                    onTap: () => _sendControl('\x1b[A'),
-                  ),
-                  _TerminalKey(
-                    label: '↓',
-                    semanticLabel: 'Down arrow key',
-                    onTap: () => _sendControl('\x1b[B'),
-                  ),
-                  _TerminalKey(
-                    label: '←',
-                    semanticLabel: 'Left arrow key',
-                    onTap: () => _sendControl('\x1b[D'),
-                  ),
-                  _TerminalKey(
-                    label: '→',
-                    semanticLabel: 'Right arrow key',
-                    onTap: () => _sendControl('\x1b[C'),
-                  ),
-                ],
+                  children: [
+                    _TerminalKey(
+                      label: 'Ctrl-C',
+                      semanticLabel: 'Interrupt, Control C',
+                      onTap: canWrite ? () => _sendControl('\x03') : null,
+                    ),
+                    _TerminalKey(
+                      label: 'Ctrl-D',
+                      semanticLabel: 'End of input, Control D',
+                      onTap: canWrite ? () => _sendControl('\x04') : null,
+                    ),
+                    _TerminalKey(
+                      label: 'Esc',
+                      semanticLabel: 'Escape key',
+                      onTap: canWrite ? () => _sendControl('\x1b') : null,
+                    ),
+                    _TerminalKey(
+                      label: 'Tab',
+                      semanticLabel: 'Tab key',
+                      onTap: canWrite ? () => _sendControl('\t') : null,
+                    ),
+                    _TerminalKey(
+                      label: '↑',
+                      semanticLabel: 'Up arrow key',
+                      onTap: canWrite ? () => _sendControl('\x1b[A') : null,
+                    ),
+                    _TerminalKey(
+                      label: '↓',
+                      semanticLabel: 'Down arrow key',
+                      onTap: canWrite ? () => _sendControl('\x1b[B') : null,
+                    ),
+                    _TerminalKey(
+                      label: '←',
+                      semanticLabel: 'Left arrow key',
+                      onTap: canWrite ? () => _sendControl('\x1b[D') : null,
+                    ),
+                    _TerminalKey(
+                      label: '→',
+                      semanticLabel: 'Right arrow key',
+                      onTap: canWrite ? () => _sendControl('\x1b[C') : null,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -603,10 +808,12 @@ class _TerminalSurfaceState extends State<TerminalSurface> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    widget.repositoryChanges?.removeListener(_repositoryChanged);
     _connectionGeneration++;
     _resizeTimer?.cancel();
-    _subscription?.cancel();
-    unawaited(_channel?.close());
+    unawaited(_subscription?.cancel().catchError((_) {}));
+    unawaited(_channel?.close().catchError((_) {}));
     _terminalController.dispose();
     _scrollController.dispose();
     _focus.dispose();
@@ -618,7 +825,7 @@ class _TerminalSurfaceState extends State<TerminalSurface> {
 class _TerminalKey extends StatelessWidget {
   final String label;
   final String semanticLabel;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const _TerminalKey({
     required this.label,
@@ -631,10 +838,14 @@ class _TerminalKey extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: 2),
     child: Semantics(
       button: true,
+      enabled: onTap != null,
       label: semanticLabel,
+      hint: onTap == null
+          ? 'Unavailable while the terminal is disconnected'
+          : 'Sends this key to the terminal',
       excludeSemantics: true,
-      child: SizedBox(
-        height: 48,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
         child: OutlinedButton(onPressed: onTap, child: Text(label)),
       ),
     ),
@@ -687,10 +898,13 @@ class _AccessibleTerminal extends StatelessWidget {
                   key: const Key('terminal-accessible-input'),
                   controller: input,
                   enabled: enabled,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Terminal command input',
                     hintText: 'Type a command',
-                    border: OutlineInputBorder(),
+                    helperText: enabled
+                        ? null
+                        : 'Input is unavailable while disconnected.',
+                    border: const OutlineInputBorder(),
                   ),
                   textInputAction: TextInputAction.send,
                   onSubmitted: (_) => onSend(),
@@ -698,7 +912,9 @@ class _AccessibleTerminal extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               IconButton.filled(
-                tooltip: 'Send command to terminal',
+                tooltip: enabled
+                    ? 'Send command to terminal'
+                    : 'Terminal input unavailable',
                 onPressed: enabled ? onSend : null,
                 icon: const Icon(Icons.keyboard_return_rounded),
               ),
@@ -707,5 +923,126 @@ class _AccessibleTerminal extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Converts a stream of terminal bytes decoded as text into a readable,
+/// append-only transcript. Terminal rendering commands are intentionally not
+/// exposed to assistive technology.
+class _TerminalTranscriptSanitizer {
+  static const _normal = 0;
+  static const _escape = 1;
+  static const _escapeIntermediate = 2;
+  static const _csi = 3;
+  static const _osc = 4;
+  static const _oscEscape = 5;
+  static const _controlString = 6;
+  static const _controlStringEscape = 7;
+
+  int _state = _normal;
+  bool _pendingCarriageReturn = false;
+
+  void reset() {
+    _state = _normal;
+    _pendingCarriageReturn = false;
+  }
+
+  String add(String chunk) {
+    // OpenCode prefixes binary WebSocket metadata frames with NUL. The
+    // repository decodes binary frames to strings, so keep them out of the
+    // human-readable transcript regardless of their JSON payload shape.
+    if (chunk.isEmpty || (_state == _normal && chunk.startsWith('\x00'))) {
+      return '';
+    }
+    final output = StringBuffer();
+
+    for (final rune in chunk.runes) {
+      if (_state == _normal && _pendingCarriageReturn) {
+        if (rune == 0x0a) {
+          output.write('\n');
+          _pendingCarriageReturn = false;
+          continue;
+        }
+        output.write('\n');
+        _pendingCarriageReturn = false;
+      }
+
+      switch (_state) {
+        case _normal:
+          if (rune == 0x1b) {
+            _state = _escape;
+          } else if (rune == 0x9b) {
+            _state = _csi;
+          } else if (rune == 0x9d) {
+            _state = _osc;
+          } else if (rune == 0x90 ||
+              rune == 0x98 ||
+              rune == 0x9e ||
+              rune == 0x9f) {
+            _state = _controlString;
+          } else if (rune == 0x0d) {
+            _pendingCarriageReturn = true;
+          } else if (rune == 0x0a || rune == 0x09) {
+            output.writeCharCode(rune);
+          } else if ((rune >= 0x20 && rune != 0x7f) &&
+              !(rune >= 0x80 && rune <= 0x9f)) {
+            output.writeCharCode(rune);
+          }
+        case _escape:
+          if (rune == 0x5b) {
+            _state = _csi;
+          } else if (rune == 0x5d) {
+            _state = _osc;
+          } else if (rune == 0x50 ||
+              rune == 0x58 ||
+              rune == 0x5e ||
+              rune == 0x5f) {
+            _state = _controlString;
+          } else if (rune >= 0x20 && rune <= 0x2f) {
+            _state = _escapeIntermediate;
+          } else if (rune != 0x1b) {
+            _state = _normal;
+          }
+        case _escapeIntermediate:
+          if (rune == 0x1b) {
+            _state = _escape;
+          } else if (rune >= 0x30 && rune <= 0x7e) {
+            _state = _normal;
+          } else if (rune < 0x20 || rune > 0x2f) {
+            _state = _normal;
+          }
+        case _csi:
+          if (rune == 0x1b) {
+            _state = _escape;
+          } else if (rune >= 0x40 && rune <= 0x7e) {
+            _state = _normal;
+          }
+        case _osc:
+          if (rune == 0x07 || rune == 0x9c) {
+            _state = _normal;
+          } else if (rune == 0x1b) {
+            _state = _oscEscape;
+          }
+        case _oscEscape:
+          if (rune == 0x5c) {
+            _state = _normal;
+          } else if (rune != 0x1b) {
+            _state = _osc;
+          }
+        case _controlString:
+          if (rune == 0x9c) {
+            _state = _normal;
+          } else if (rune == 0x1b) {
+            _state = _controlStringEscape;
+          }
+        case _controlStringEscape:
+          if (rune == 0x5c) {
+            _state = _normal;
+          } else if (rune != 0x1b) {
+            _state = _controlString;
+          }
+      }
+    }
+    return output.toString();
   }
 }

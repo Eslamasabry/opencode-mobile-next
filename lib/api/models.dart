@@ -133,7 +133,9 @@ class MessageInfo {
     final err = j['error'];
     String? errText;
     if (err is Map<String, dynamic>) {
-      errText = (err['message'] ?? err['name'])?.toString();
+      final data = err['data'];
+      final nestedMessage = data is Map ? data['message'] : null;
+      errText = (err['message'] ?? nestedMessage ?? err['name'])?.toString();
     } else if (err is String) {
       errText = err;
     }
@@ -219,7 +221,9 @@ class Part {
   final String? callID;
   final String? toolName;
   final ToolState toolState;
+  final String? mime;
   final String? filename;
+  final String? url;
   final bool synthetic;
 
   Part({
@@ -230,7 +234,9 @@ class Part {
     this.callID,
     this.toolName,
     ToolState? toolState,
+    this.mime,
     this.filename,
+    this.url,
     this.synthetic = false,
   }) : toolState = toolState ?? ToolState(status: 'pending');
 
@@ -250,7 +256,9 @@ class Part {
       callID: j['callID']?.toString(),
       toolName: j['tool']?.toString(),
       toolState: ToolState.fromJson(j['state']),
+      mime: j['mime']?.toString(),
       filename: j['filename']?.toString(),
+      url: j['url']?.toString(),
       synthetic: (j['synthetic'] as bool?) ?? false,
     );
   }

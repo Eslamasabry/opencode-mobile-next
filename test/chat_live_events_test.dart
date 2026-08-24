@@ -16,6 +16,15 @@ class _FakeOpenCodeApi extends OpenCodeApi {
   Future<List<MessageWithParts>> Function(String id)? messagesHandler;
   Completer<void>? promptCompleter;
   int promptCalls = 0;
+  final List<
+    ({String text, ModelRef? model, List<PromptAttachment> attachments})
+  >
+  prompts = [];
+  String? slashCommandName;
+  String? slashArguments;
+  ModelRef? slashModel;
+  bool failRename = false;
+  bool failDelete = false;
 
   @override
   Future<List<MessageWithParts>> messages(String id) =>
@@ -33,7 +42,30 @@ class _FakeOpenCodeApi extends OpenCodeApi {
     List<PromptAttachment> attachments = const [],
   }) {
     promptCalls += 1;
+    prompts.add((text: text, model: model, attachments: attachments));
     return promptCompleter?.future ?? Future.value();
+  }
+
+  @override
+  Future<void> slashCommand(
+    String sessionID,
+    String command,
+    String args, {
+    ModelRef? model,
+  }) async {
+    slashCommandName = command;
+    slashArguments = args;
+    slashModel = model;
+  }
+
+  @override
+  Future<void> renameSession(String id, String title) async {
+    if (failRename) throw StateError('rename failed');
+  }
+
+  @override
+  Future<void> deleteSession(String id) async {
+    if (failDelete) throw StateError('delete failed');
   }
 }
 
@@ -105,9 +137,24 @@ Future<void> _pumpEvent(WidgetTester tester) async {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('message errors surface nested data.message', () {
+    final info = MessageInfo.fromJson({
+      'id': 'assistant-1',
+      'sessionID': 'session-1',
+      'role': 'assistant',
+      'error': {
+        'name': 'ProviderError',
+        'data': {'message': 'The selected model is unavailable'},
+      },
+    });
+
+    expect(info.errorText, 'The selected model is unavailable');
+  });
+
   testWidgets('applies split text, reasoning, and tool input deltas', (
     tester,
   ) async {
+    final semantics = tester.ensureSemantics();
     final api = _FakeOpenCodeApi()
       ..messagesHandler = (_) async => [
         _message('assistant-1', 'assistant', [
@@ -145,12 +192,30 @@ void main() {
     await _pumpEvent(tester);
 
     expect(find.text('Hello'), findsOneWidget);
-    await tester.tap(find.text('reasoning (tap to expand)'));
+    final reasoningToggle = find.byKey(const Key('reasoning-toggle'));
+    expect(tester.getSize(reasoningToggle).height, greaterThanOrEqualTo(48));
+    expect(find.bySemanticsLabel('Expand reasoning details'), findsOneWidget);
+    await tester.tap(reasoningToggle);
     await _pumpEvent(tester);
     expect(find.text('why this works'), findsOneWidget);
+    expect(find.bySemanticsLabel('Collapse reasoning details'), findsOneWidget);
+    final reasoningTextNode = tester.getSemantics(find.text('why this works'));
+    for (
+      var ancestor = reasoningTextNode.parent;
+      ancestor != null;
+      ancestor = ancestor.parent
+    ) {
+      expect(
+        ancestor.flagsCollection.isButton,
+        isFalse,
+        reason:
+            'Expanded reasoning text must remain readable outside the button',
+      );
+    }
     await tester.tap(find.text('search'));
     await _pumpEvent(tester);
     expect(find.text('{"query":"chat"}'), findsOneWidget);
+    semantics.dispose();
   });
 
   testWidgets('removes individual parts and complete messages', (tester) async {
@@ -275,6 +340,73 @@ void main() {
   });
 
   testWidgets(
+    'out-of-order canonical users reconcile by prompt instead of timestamp',
+    (tester) async {
+      final api = _FakeOpenCodeApi();
+      final controller = await _pumpChat(tester, api);
+
+      await tester.enterText(find.byType(TextField), 'first prompt');
+      await tester.tap(find.byTooltip('Send'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'second prompt');
+      await tester.tap(find.byTooltip('Send'));
+      await tester.pumpAndSettle();
+
+      controller.handleEventForTesting(
+        _event('message.part.updated', {
+          'sessionID': 'session-1',
+          'part': _partJson(
+            id: 'part-second',
+            messageID: 'user-second',
+            type: 'text',
+            text: 'second prompt',
+          ),
+        }),
+      );
+      controller.handleEventForTesting(
+        _event('message.updated', {
+          'info': {
+            'id': 'user-second',
+            'sessionID': 'session-1',
+            'role': 'user',
+            'time': {'created': DateTime.now().millisecondsSinceEpoch},
+          },
+        }),
+      );
+      await _pumpEvent(tester);
+
+      expect(find.text('first prompt'), findsOneWidget);
+      expect(find.text('second prompt'), findsOneWidget);
+
+      controller.handleEventForTesting(
+        _event('message.updated', {
+          'info': {
+            'id': 'user-first',
+            'sessionID': 'session-1',
+            'role': 'user',
+            'time': {'created': DateTime.now().millisecondsSinceEpoch - 1000},
+          },
+        }),
+      );
+      controller.handleEventForTesting(
+        _event('message.part.updated', {
+          'sessionID': 'session-1',
+          'part': _partJson(
+            id: 'part-first',
+            messageID: 'user-first',
+            type: 'text',
+            text: 'first prompt',
+          ),
+        }),
+      );
+      await _pumpEvent(tester);
+
+      expect(find.text('first prompt'), findsOneWidget);
+      expect(find.text('second prompt'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
     'failed send removes optimism, restores input, and blocks repeats',
     (tester) async {
       final prompt = Completer<void>();
@@ -328,5 +460,214 @@ void main() {
       find.bySemanticsLabel('Copy attachment filename diagram.png'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('retry preserves mixed and attachment-only file parts', (
+    tester,
+  ) async {
+    const textUrl = 'data:text/plain;base64,bm90ZXM=';
+    const imageUrl = 'data:image/png;base64,iVBORw0KGgo=';
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('user-files', 'user', [
+          Part(
+            type: 'file',
+            mime: 'text/plain',
+            filename: 'notes.txt',
+            url: textUrl,
+          ),
+        ]),
+        _message('user-mixed', 'user', [
+          Part(type: 'text', text: 'Review this'),
+          Part(
+            type: 'file',
+            mime: 'image/png',
+            filename: 'diagram.png',
+            url: imageUrl,
+          ),
+        ], created: 2),
+      ];
+    final controller = await _pumpChat(tester, api);
+
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Retry last prompt'));
+    await tester.pumpAndSettle();
+
+    expect(api.prompts.single.text, 'Review this');
+    expect(api.prompts.single.attachments.single.toJson(), {
+      'type': 'file',
+      'mime': 'image/png',
+      'filename': 'diagram.png',
+      'url': imageUrl,
+    });
+
+    controller.handleEventForTesting(
+      _event('message.removed', {
+        'sessionID': 'session-1',
+        'messageID': 'user-mixed',
+      }),
+    );
+    await _pumpEvent(tester);
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Retry last prompt'));
+    await tester.pumpAndSettle();
+
+    expect(api.prompts.last.text, isEmpty);
+    expect(api.prompts.last.attachments.single.toJson(), {
+      'type': 'file',
+      'mime': 'text/plain',
+      'filename': 'notes.txt',
+      'url': textUrl,
+    });
+  });
+
+  testWidgets('manual slash command passes the selected model', (tester) async {
+    final api = _FakeOpenCodeApi();
+    final controller = await _pumpChat(tester, api);
+    controller.selectedModel = ModelRef(
+      providerID: 'anthropic',
+      modelID: 'claude-sonnet',
+    );
+
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Run command'));
+    await tester.pumpAndSettle();
+    final commandField = find.byWidgetPredicate(
+      (widget) =>
+          widget is TextField && widget.decoration?.labelText == 'Command',
+    );
+    final argumentsField = find.byWidgetPredicate(
+      (widget) =>
+          widget is TextField && widget.decoration?.labelText == 'Arguments',
+    );
+    await tester.enterText(commandField, '/review');
+    await tester.enterText(argumentsField, '--staged');
+    await tester.tap(find.widgetWithText(FilledButton, 'Run'));
+    await tester.pumpAndSettle();
+
+    expect(api.slashCommandName, 'review');
+    expect(api.slashArguments, '--staged');
+    expect(api.slashModel?.providerID, 'anthropic');
+    expect(api.slashModel?.modelID, 'claude-sonnet');
+  });
+
+  testWidgets('session rename and delete failures preserve the session', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..failRename = true
+      ..failDelete = true;
+    final controller = await _controller(api);
+    addTearDown(controller.dispose);
+    controller.sessionsById = {
+      'session-1': Session(
+        id: 'session-1',
+        title: 'Original title',
+        time: SessionTime(created: 1, updated: 1),
+      ),
+    };
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: SessionsTab(controller: controller)),
+      ),
+    );
+
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Could not delete chat:'), findsOneWidget);
+    expect(controller.sessionsById, contains('session-1'));
+    expect(find.text('Original title'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Rename'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Changed title');
+    await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Could not rename chat:'), findsOneWidget);
+    expect(controller.sessionsById['session-1']?.title, 'Original title');
+    expect(find.text('Original title'), findsOneWidget);
+  });
+
+  testWidgets('attachment count limit is enforced before opening the picker', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi();
+    final controller = await _controller(api);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: MaterialApp(
+          home: ChatScreen(
+            sessionID: 'session-1',
+            initialAttachments: List.generate(
+              5,
+              (index) => PromptAttachment(
+                mime: 'text/plain',
+                filename: 'file-$index.txt',
+                url: 'data:text/plain;base64,WA==',
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Attach file'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('attach up to 5 files'), findsOneWidget);
+  });
+
+  testWidgets('attachment remove action is accessible and at least 48dp', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    final api = _FakeOpenCodeApi();
+    final controller = await _controller(api);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: const MaterialApp(
+          home: ChatScreen(
+            sessionID: 'session-1',
+            initialAttachments: [
+              PromptAttachment(
+                mime: 'text/plain',
+                filename: 'notes.txt',
+                url: 'data:text/plain;base64,bm90ZXM=',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final remove = find.byTooltip('Remove attachment notes.txt');
+    expect(remove, findsOneWidget);
+    final size = tester.getSize(remove);
+    expect(size.width, greaterThanOrEqualTo(48));
+    expect(size.height, greaterThanOrEqualTo(48));
+    expect(
+      find.bySemanticsLabel('Remove attachment notes.txt'),
+      findsOneWidget,
+    );
+
+    await tester.tap(remove);
+    await tester.pumpAndSettle();
+    expect(remove, findsNothing);
+    semantics.dispose();
   });
 }

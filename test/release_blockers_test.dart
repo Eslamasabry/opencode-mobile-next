@@ -27,6 +27,12 @@ class _ReleaseApi extends OpenCodeApi {
   Future<List<PermissionRequest>> pendingPermissions() async => [];
 
   @override
+  Future<List<PermissionRequest>> pendingPermissionsV2() async => [];
+
+  @override
+  Future<List<Map<String, dynamic>>> pendingQuestionsV2() async => [];
+
+  @override
   Future<List<Session>> sessions() async => [];
 
   @override

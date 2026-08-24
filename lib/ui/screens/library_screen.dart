@@ -418,13 +418,16 @@ class IntegrationsScreen extends StatefulWidget {
 class _IntegrationsScreenState extends State<IntegrationsScreen>
     with WidgetsBindingObserver {
   List<McpServerInfo>? _servers;
-  List<McpResourceInfo> _resources = const [];
-  List<IntegrationInfo> _integrations = const [];
-  String? _error;
+  List<McpResourceInfo>? _resources;
+  List<IntegrationInfo>? _integrations;
+  String? _serverError;
   String? _resourceError;
+  String? _integrationError;
   final Set<String> _busy = {};
   bool _refreshOnResume = false;
-  int _loadGeneration = 0;
+  int _serverLoadGeneration = 0;
+  int _resourceLoadGeneration = 0;
+  int _integrationLoadGeneration = 0;
 
   @override
   void initState() {
@@ -442,37 +445,56 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   }
 
   Future<void> _load() async {
-    final generation = ++_loadGeneration;
     final repository = widget.controller.repository;
     if (repository == null) return;
-    setState(() {
-      _error = null;
-      _resourceError = null;
-    });
+    await Future.wait([
+      _loadServers(repository),
+      _loadResources(repository),
+      _loadIntegrations(repository),
+    ]);
+  }
+
+  Future<void> _loadServers(ProductRepository repository) async {
+    final generation = ++_serverLoadGeneration;
+    setState(() => _serverError = null);
     try {
       final servers = await repository.listMcpServers();
-      if (mounted && generation == _loadGeneration) {
+      if (mounted && generation == _serverLoadGeneration) {
         setState(() => _servers = servers);
       }
     } catch (error) {
-      if (mounted && generation == _loadGeneration) {
-        setState(() => _error = error.toString());
+      if (mounted && generation == _serverLoadGeneration) {
+        setState(() => _serverError = error.toString());
       }
     }
+  }
+
+  Future<void> _loadResources(ProductRepository repository) async {
+    final generation = ++_resourceLoadGeneration;
+    setState(() => _resourceError = null);
     try {
-      final values = await Future.wait([
-        repository.listMcpResources(),
-        repository.listIntegrations(),
-      ]);
-      if (mounted && generation == _loadGeneration) {
-        setState(() {
-          _resources = values[0] as List<McpResourceInfo>;
-          _integrations = values[1] as List<IntegrationInfo>;
-        });
+      final resources = await repository.listMcpResources();
+      if (mounted && generation == _resourceLoadGeneration) {
+        setState(() => _resources = resources);
       }
     } catch (error) {
-      if (mounted && generation == _loadGeneration) {
+      if (mounted && generation == _resourceLoadGeneration) {
         setState(() => _resourceError = error.toString());
+      }
+    }
+  }
+
+  Future<void> _loadIntegrations(ProductRepository repository) async {
+    final generation = ++_integrationLoadGeneration;
+    setState(() => _integrationError = null);
+    try {
+      final integrations = await repository.listIntegrations();
+      if (mounted && generation == _integrationLoadGeneration) {
+        setState(() => _integrations = integrations);
+      }
+    } catch (error) {
+      if (mounted && generation == _integrationLoadGeneration) {
+        setState(() => _integrationError = error.toString());
       }
     }
   }
@@ -489,8 +511,12 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
         case 'needs_auth':
         case 'needs_client_registration':
           final url = await repository.startMcpAuthentication(server.name);
+          final destination = parseAuthorizationUrl(url);
+          if (!mounted || !await _confirmAuthorizationLaunch(destination)) {
+            return;
+          }
           final launched = await launchUrl(
-            Uri.parse(url),
+            destination,
             mode: LaunchMode.externalApplication,
           );
           if (!launched) {
@@ -519,101 +545,160 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('MCP and integrations')),
-      body: _servers == null && _error == null
-          ? const LoadingList()
-          : _error != null && _servers == null
-          ? ProductErrorState(message: _error!, onRetry: _load)
-          : RefreshIndicator(
-              onRefresh: _load,
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.only(bottom: 24),
-                children: [
-                  const SectionLabel('MCP servers'),
-                  if (_servers!.isEmpty)
-                    const ListTile(
-                      leading: Icon(Icons.hub_outlined),
-                      title: Text('No MCP servers configured'),
-                      subtitle: Text(
-                        'Add MCP servers in your OpenCode configuration.',
-                      ),
-                    )
-                  else
-                    for (final server in _servers!)
-                      ListTile(
-                        leading: _McpStatus(status: server.status),
-                        title: Text(server.name),
-                        subtitle: Text(
-                          server.error?.isNotEmpty == true
-                              ? server.error!
-                              : _statusLabel(server.status),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+      body: RefreshIndicator(
+        onRefresh: _load,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 24),
+          children: [
+            const SectionLabel('MCP servers'),
+            if (_serverError != null)
+              _SectionLoadError(
+                message: _serverError!,
+                onRetry: () => _loadServers(widget.controller.repository!),
+              )
+            else if (_servers == null)
+              const _SectionLoading(label: 'Loading MCP servers')
+            else if (_servers!.isEmpty)
+              const ListTile(
+                leading: Icon(Icons.hub_outlined),
+                title: Text('No MCP servers configured'),
+                subtitle: Text(
+                  'Add MCP servers in your OpenCode configuration.',
+                ),
+              )
+            else
+              for (final server in _servers!)
+                ListTile(
+                  leading: _McpStatus(status: server.status),
+                  title: Text(server.name),
+                  subtitle: Text(
+                    server.error?.isNotEmpty == true
+                        ? server.error!
+                        : _statusLabel(server.status),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing: _busy.contains(server.name)
+                      ? const SizedBox.square(
+                          dimension: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : TextButton(
+                          onPressed: () => _action(server),
+                          child: Text(_actionLabel(server.status)),
                         ),
-                        trailing: _busy.contains(server.name)
-                            ? const SizedBox.square(
-                                dimension: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
+                ),
+            const SectionLabel('Provider connections'),
+            if (_integrationError != null)
+              _SectionLoadError(
+                message: _integrationError!,
+                onRetry: () => _loadIntegrations(widget.controller.repository!),
+              )
+            else if (_integrations == null)
+              const _SectionLoading(label: 'Loading provider connections')
+            else if (_integrations!.isEmpty)
+              const ListTile(
+                leading: Icon(Icons.link_off_rounded),
+                title: Text('No provider connections available'),
+                subtitle: Text(
+                  'This server did not return any provider integrations.',
+                ),
+              )
+            else
+              for (final integration in _integrations!)
+                ListTile(
+                  leading: const Icon(Icons.link_rounded),
+                  title: Text(integration.name),
+                  subtitle: Text(_integrationSubtitle(integration)),
+                  trailing: integration.connectionCount > 0
+                      ? const Text(
+                          'Connected\n(server-managed)',
+                          textAlign: TextAlign.end,
+                        )
+                      : TextButton(
+                          onPressed:
+                              integration.methods.any(
+                                (method) =>
+                                    method.type == 'key' ||
+                                    method.type == 'oauth',
                               )
-                            : TextButton(
-                                onPressed: () => _action(server),
-                                child: Text(_actionLabel(server.status)),
-                              ),
-                      ),
-                  if (_integrations.isNotEmpty) ...[
-                    const SectionLabel('Provider connections'),
-                    for (final integration in _integrations)
-                      ListTile(
-                        leading: const Icon(Icons.link_rounded),
-                        title: Text(integration.name),
-                        subtitle: Text(_integrationSubtitle(integration)),
-                        trailing: integration.connectionCount > 0
-                            ? const Text(
-                                'Connected\n(server-managed)',
-                                textAlign: TextAlign.end,
-                              )
-                            : TextButton(
-                                onPressed:
-                                    integration.methods.any(
-                                      (method) =>
-                                          method.type == 'key' ||
-                                          method.type == 'oauth',
-                                    )
-                                    ? () => _connectIntegration(integration)
-                                    : null,
-                                child: const Text('Connect'),
-                              ),
-                      ),
-                  ],
-                  if (_resources.isNotEmpty) ...[
-                    const SectionLabel('Available resources'),
-                    for (final resource in _resources)
-                      ListTile(
-                        leading: const Icon(Icons.description_outlined),
-                        title: Text(resource.name),
-                        subtitle: Text(
-                          '${resource.server} - ${resource.uri}',
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                              ? () => _connectIntegration(integration)
+                              : null,
+                          child: const Text('Connect'),
                         ),
-                      ),
-                  ],
-                  if (_resourceError != null)
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text(
-                        _resourceError!,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
+                ),
+            const SectionLabel('Available resources'),
+            if (_resourceError != null)
+              _SectionLoadError(
+                message: _resourceError!,
+                onRetry: () => _loadResources(widget.controller.repository!),
+              )
+            else if (_resources == null)
+              const _SectionLoading(label: 'Loading available resources')
+            else if (_resources!.isEmpty)
+              const ListTile(
+                leading: Icon(Icons.description_outlined),
+                title: Text('No resources available'),
+                subtitle: Text(
+                  'Connected MCP servers have not exposed any resources.',
+                ),
+              )
+            else
+              for (final resource in _resources!)
+                ListTile(
+                  leading: const Icon(Icons.description_outlined),
+                  title: Text(resource.name),
+                  subtitle: Text(
+                    '${resource.server} - ${resource.uri}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+          ],
+        ),
+      ),
     );
+  }
+
+  Future<bool> _confirmAuthorizationLaunch(Uri destination) async {
+    final host = destination.hasPort
+        ? '${destination.host}:${destination.port}'
+        : destination.host;
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Open authorization page?'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'You are leaving this app to authenticate in your browser.',
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Destination host',
+                  style: Theme.of(context).textTheme.labelMedium,
+                ),
+                const SizedBox(height: 4),
+                SelectableText(host),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton.icon(
+                onPressed: () => Navigator.pop(context, true),
+                icon: const Icon(Icons.open_in_browser_rounded),
+                label: const Text('Open browser'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   static String _statusLabel(String status) => switch (status) {
@@ -738,8 +823,10 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
         method.id!,
         inputs: inputs,
       );
+      final destination = parseAuthorizationUrl(launch.url);
+      if (!mounted || !await _confirmAuthorizationLaunch(destination)) return;
       final opened = await launchUrl(
-        Uri.parse(launch.url),
+        destination,
         mode: LaunchMode.externalApplication,
       );
       if (!opened) throw const ProductException('Could not open OAuth');
@@ -756,76 +843,10 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     IntegrationMethodInfo method,
   ) async {
     if (method.prompts.isEmpty) return const {};
-    final textControllers = <String, TextEditingController>{};
-    final values = <String, String>{};
-    for (final prompt in method.prompts) {
-      if (prompt['type'] == 'text') {
-        textControllers[prompt['key'].toString()] = TextEditingController();
-      }
-    }
-    final result = await showDialog<Map<String, String>>(
+    return showDialog<Map<String, String>>(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(method.label),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                for (final prompt in method.prompts)
-                  if (prompt['type'] == 'select')
-                    DropdownButtonFormField<String>(
-                      decoration: InputDecoration(
-                        labelText: prompt['message']?.toString(),
-                      ),
-                      items: [
-                        for (final option
-                            in (prompt['options'] as List? ?? const []))
-                          if (option is Map)
-                            DropdownMenuItem(
-                              value: option['value']?.toString(),
-                              child: Text(option['label']?.toString() ?? ''),
-                            ),
-                      ],
-                      onChanged: (value) => setDialogState(() {
-                        if (value != null) {
-                          values[prompt['key'].toString()] = value;
-                        }
-                      }),
-                    )
-                  else if (prompt['type'] == 'text')
-                    TextField(
-                      controller: textControllers[prompt['key'].toString()],
-                      decoration: InputDecoration(
-                        labelText: prompt['message']?.toString(),
-                        hintText: prompt['placeholder']?.toString(),
-                      ),
-                    ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                for (final entry in textControllers.entries) {
-                  values[entry.key] = entry.value.text;
-                }
-                Navigator.pop(context, values);
-              },
-              child: const Text('Continue'),
-            ),
-          ],
-        ),
-      ),
+      builder: (context) => _OAuthInputsDialog(method: method),
     );
-    for (final controller in textControllers.values) {
-      controller.dispose();
-    }
-    return result;
   }
 
   Future<void> _runIntegrationAction(
@@ -849,10 +870,201 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
 
   @override
   void dispose() {
-    _loadGeneration++;
+    _serverLoadGeneration++;
+    _resourceLoadGeneration++;
+    _integrationLoadGeneration++;
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
+}
+
+bool _isPromptVisible(Map<String, dynamic> prompt, Map<String, String> values) {
+  final when = prompt['when'];
+  if (when is! Map) return true;
+  final key = when['key']?.toString();
+  final expected = when['value']?.toString();
+  final operation = when['op']?.toString();
+  if (key == null || expected == null) return true;
+  return switch (operation) {
+    'eq' => values[key] == expected,
+    'neq' => values[key] != expected,
+    _ => true,
+  };
+}
+
+bool _isPromptRequired(Map<String, dynamic> prompt) =>
+    prompt['required'] != false;
+
+class _OAuthInputsDialog extends StatefulWidget {
+  final IntegrationMethodInfo method;
+  const _OAuthInputsDialog({required this.method});
+
+  @override
+  State<_OAuthInputsDialog> createState() => _OAuthInputsDialogState();
+}
+
+class _OAuthInputsDialogState extends State<_OAuthInputsDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _textControllers = <String, TextEditingController>{};
+  final _values = <String, String>{};
+
+  @override
+  void initState() {
+    super.initState();
+    for (final prompt in widget.method.prompts) {
+      if (prompt['type'] == 'text') {
+        _textControllers[prompt['key'].toString()] = TextEditingController();
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: Text(widget.method.label),
+    content: SingleChildScrollView(
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final prompt in widget.method.prompts)
+              if (_isPromptVisible(prompt, _values))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: prompt['type'] == 'select'
+                      ? DropdownButtonFormField<String>(
+                          key: ValueKey('oauth-prompt-${prompt['key']}'),
+                          initialValue: _values[prompt['key'].toString()],
+                          decoration: InputDecoration(
+                            labelText: prompt['message']?.toString(),
+                            border: const OutlineInputBorder(),
+                          ),
+                          items: [
+                            for (final option
+                                in (prompt['options'] as List? ?? const []))
+                              if (option is Map && option.containsKey('value'))
+                                DropdownMenuItem(
+                                  value: option['value'].toString(),
+                                  child: Text(
+                                    option['label']?.toString() ?? '',
+                                  ),
+                                ),
+                          ],
+                          validator: (value) =>
+                              _isPromptRequired(prompt) && value == null
+                              ? 'Select an option'
+                              : null,
+                          onChanged: (value) => setState(() {
+                            final key = prompt['key'].toString();
+                            if (value == null) {
+                              _values.remove(key);
+                            } else {
+                              _values[key] = value;
+                            }
+                          }),
+                        )
+                      : TextFormField(
+                          key: ValueKey('oauth-prompt-${prompt['key']}'),
+                          controller:
+                              _textControllers[prompt['key'].toString()],
+                          decoration: InputDecoration(
+                            labelText: prompt['message']?.toString(),
+                            hintText: prompt['placeholder']?.toString(),
+                            border: const OutlineInputBorder(),
+                          ),
+                          validator: (value) =>
+                              _isPromptRequired(prompt) &&
+                                  (value == null || value.trim().isEmpty)
+                              ? 'Enter a value'
+                              : null,
+                          onChanged: (value) => setState(
+                            () => _values[prompt['key'].toString()] = value,
+                          ),
+                        ),
+                ),
+          ],
+        ),
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Cancel'),
+      ),
+      FilledButton(onPressed: _submit, child: const Text('Continue')),
+    ],
+  );
+
+  void _submit() {
+    if (_formKey.currentState?.validate() != true) return;
+    final visibleValues = <String, String>{};
+    for (final prompt in widget.method.prompts) {
+      if (!_isPromptVisible(prompt, _values)) continue;
+      final key = prompt['key'].toString();
+      if (prompt['type'] == 'text') {
+        visibleValues[key] = _textControllers[key]?.text ?? '';
+      } else if (_values[key] case final value?) {
+        visibleValues[key] = value;
+      }
+    }
+    Navigator.pop(context, visibleValues);
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _textControllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+}
+
+/// Parses a server-provided authorization URL using the app's external-launch
+/// policy. Authentication is allowed only on HTTPS origins without embedded
+/// credentials.
+Uri parseAuthorizationUrl(String value) {
+  final uri = Uri.tryParse(value.trim());
+  if (uri == null ||
+      uri.scheme.toLowerCase() != 'https' ||
+      uri.host.trim().isEmpty ||
+      uri.userInfo.isNotEmpty) {
+    throw const ProductException(
+      'The server returned an unsafe authorization link. '
+      'Only HTTPS links with a valid host and no embedded credentials are allowed.',
+    );
+  }
+  return uri;
+}
+
+class _SectionLoading extends StatelessWidget {
+  final String label;
+  const _SectionLoading({required this.label});
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+    leading: const SizedBox.square(
+      dimension: 20,
+      child: CircularProgressIndicator(strokeWidth: 2),
+    ),
+    title: Text(label),
+  );
+}
+
+class _SectionLoadError extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+  const _SectionLoadError({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+    leading: Icon(
+      Icons.error_outline_rounded,
+      color: Theme.of(context).colorScheme.error,
+    ),
+    title: const Text('Could not load this section'),
+    subtitle: Text(message, maxLines: 3, overflow: TextOverflow.ellipsis),
+    trailing: TextButton(onPressed: onRetry, child: const Text('Retry')),
+  );
 }
 
 class _McpStatus extends StatelessWidget {

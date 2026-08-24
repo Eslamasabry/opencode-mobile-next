@@ -15,21 +15,41 @@ class ServersScreen extends ConsumerStatefulWidget {
 class _ServersScreenState extends ConsumerState<ServersScreen> {
   bool _busy = false;
 
-  Future<void> _connect(ServerProfile p) async {
-    if (_busy) return;
-    setState(() => _busy = true);
-    await ref.read(connProvider).connect(p);
+  void _showFailure(String message) {
     if (!mounted) return;
-    setState(() => _busy = false);
-    final conn = ref.read(connProvider);
-    if (conn.api != null && mounted) {
-      Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
         SnackBar(
-          content: Text(conn.lastError ?? 'Connection failed'),
+          content: Text(message),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
+      );
+  }
+
+  Future<void> _connect(ServerProfile p) async {
+    if (_busy) return;
+    if (p.requiresPasswordReentry) {
+      await _edit(p);
+      return;
+    }
+    setState(() => _busy = true);
+    final conn = ref.read(connProvider);
+    Object? failure;
+    try {
+      await conn.connect(p);
+    } catch (error) {
+      failure = error;
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+    if (!mounted) return;
+    if (conn.api != null && failure == null) {
+      Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
+    } else {
+      _showFailure(
+        '${conn.lastError ?? failure?.toString() ?? 'Connection failed'} '
+        'Check the server address and credentials, then try again.',
       );
     }
   }
@@ -39,11 +59,39 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
       context: context,
       builder: (_) => _ProfileDialog(existing: existing),
     );
-    if (result == null) return;
-    await ref.read(bootstrapProvider).store.upsert(result);
-    await ref.read(bootstrapProvider).store.load();
-    // refresh store reference inside controller
-    if (mounted) setState(() {});
+    if (result == null || !mounted) return;
+    final store = ref.read(bootstrapProvider).store;
+    final wasActive = store.activeId == result.id;
+    var saved = false;
+    setState(() => _busy = true);
+    try {
+      await store.upsert(result);
+      saved = true;
+      if (wasActive) {
+        final savedProfile = store.profiles.firstWhere(
+          (profile) => profile.id == result.id,
+        );
+        final conn = ref.read(connProvider);
+        await conn.connect(savedProfile);
+        if (conn.api == null) {
+          throw StateError(conn.lastError ?? 'The server did not connect.');
+        }
+      }
+    } catch (error) {
+      if (saved) {
+        _showFailure(
+          '${result.name} was saved, but it could not reconnect. Check the '
+          'server address and credentials, then try again. ($error)',
+        );
+      } else {
+        _showFailure(
+          'Could not save ${result.name}. The existing profile was left '
+          'unchanged. Check device storage and try again. ($error)',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<void> _delete(ServerProfile p) async {
@@ -69,10 +117,34 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
         ],
       ),
     );
-    if (ok != true) return;
-    await ref.read(bootstrapProvider).store.remove(p.id);
-    await ref.read(bootstrapProvider).store.load();
-    if (mounted) setState(() {});
+    if (ok != true || !mounted) return;
+    final store = ref.read(bootstrapProvider).store;
+    final wasActive = store.activeId == p.id;
+    var removed = false;
+    setState(() => _busy = true);
+    try {
+      // Remove the durable profile first. A failed delete must not tear down a
+      // still-saved active connection.
+      await store.remove(p.id);
+      removed = true;
+      if (wasActive) {
+        await ref.read(connProvider).disconnect(keepActive: true);
+      }
+    } catch (error) {
+      if (removed) {
+        _showFailure(
+          '${p.name} was removed, but its connection could not be closed '
+          'cleanly. Restart the app before connecting elsewhere. ($error)',
+        );
+      } else {
+        _showFailure(
+          'Could not remove ${p.name}. The saved profile and current '
+          'connection were kept. Check device storage and try again. ($error)',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override
@@ -107,6 +179,10 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
         builder: (context) {
           final store = bootstrap.store;
           final activeId = store.activeId;
+          final needsPassword = store.profiles.any(
+            (profile) =>
+                profile.id == activeId && profile.requiresPasswordReentry,
+          );
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
@@ -118,6 +194,54 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                 ),
               ),
               const SizedBox(height: 6),
+              if (needsPassword) ...[
+                Semantics(
+                  container: true,
+                  liveRegion: true,
+                  excludeSemantics: true,
+                  label:
+                      'Password re-entry required for the active server. Edit the server and save its password before connecting.',
+                  child: Container(
+                    key: const Key('password-reentry-banner'),
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.errorContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.lock_reset_rounded,
+                          color: Theme.of(context).colorScheme.onErrorContainer,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'A saved password can no longer be read. Edit the active server and re-enter its password before connecting.',
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onErrorContainer,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+              if (_busy)
+                Semantics(
+                  label: 'Server operation in progress',
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: LinearProgressIndicator(
+                      key: Key('server-operation-progress'),
+                    ),
+                  ),
+                ),
               for (final p in store.profiles)
                 Card.filled(
                   margin: const EdgeInsets.symmetric(vertical: 4),
@@ -127,8 +251,10 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                         ).colorScheme.primaryContainer.withValues(alpha: .35)
                       : null,
                   child: ListTile(
-                    onTap: () => _connect(p),
-                    onLongPress: () => _delete(p),
+                    enabled: !_busy,
+                    onTap: _busy ? null : () => _connect(p),
+                    onLongPress: _busy ? null : () => _delete(p),
+                    isThreeLine: p.requiresPasswordReentry,
                     leading: CircleAvatar(
                       backgroundColor: p.id == activeId
                           ? Theme.of(context).colorScheme.primary
@@ -151,16 +277,31 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    subtitle: Text(
-                      p.baseUrl,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontFamily: 'monospace',
-                        fontSize: 11,
-                      ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          p.baseUrl,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 11,
+                          ),
+                        ),
+                        if (p.requiresPasswordReentry)
+                          Text(
+                            'Password re-entry required',
+                            key: ValueKey('password-reentry-${p.id}'),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                      ],
                     ),
                     trailing: PopupMenuButton<String>(
+                      enabled: !_busy,
                       onSelected: (v) {
                         if (v == 'edit') _edit(p);
                         if (v == 'del') _delete(p);
@@ -265,6 +406,7 @@ class _ProfileDialogState extends State<_ProfileDialog> {
     text: widget.existing?.password ?? '',
   );
   String? _error;
+  bool get _needsPassword => widget.existing?.requiresPasswordReentry ?? false;
 
   @override
   void dispose() {
@@ -278,11 +420,39 @@ class _ProfileDialogState extends State<_ProfileDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget.existing == null ? 'Add server' : 'Edit server'),
+      title: Text(
+        widget.existing == null
+            ? 'Add server'
+            : _needsPassword
+            ? 'Re-enter password'
+            : 'Edit server',
+      ),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (_needsPassword) ...[
+              Semantics(
+                container: true,
+                excludeSemantics: true,
+                label:
+                    'The saved password is unavailable. Enter it again, or leave it empty only if this server no longer requires a password.',
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.errorContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'The saved password is unavailable. Enter it again, or leave it empty only if this server no longer requires one.',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onErrorContainer,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             TextField(
               controller: _name,
               decoration: const InputDecoration(labelText: 'Name'),
@@ -311,11 +481,16 @@ class _ProfileDialogState extends State<_ProfileDialog> {
             ),
             TextField(
               controller: _pass,
+              autofocus: _needsPassword,
               onChanged: (_) => setState(() => _error = null),
               obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Password (optional)',
-                helperText: 'Set OPENCODE_SERVER_PASSWORD on the server',
+              decoration: InputDecoration(
+                labelText: _needsPassword
+                    ? 'Re-enter password'
+                    : 'Password (optional)',
+                helperText: _needsPassword
+                    ? 'Saving an empty value confirms this server no longer uses a password.'
+                    : 'Set OPENCODE_SERVER_PASSWORD on the server',
                 helperMaxLines: 2,
               ),
             ),

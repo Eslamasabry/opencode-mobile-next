@@ -287,6 +287,84 @@ class OpenCodeApi {
     }
   }
 
+  /// Lists requests exposed by the V2 compatibility API.
+  ///
+  /// Unlike the location-scoped legacy endpoint, this endpoint wraps its
+  /// result in `{location, data}` and uses the V2 permission field names.
+  Future<List<PermissionRequest>> pendingPermissionsV2() async {
+    try {
+      final response = await _dio.get(
+        '/api/permission/request',
+        queryParameters: _v2LocationQuery(),
+      );
+      return _v2EnvelopeData(response.data, 'permission')
+          .map(
+            (item) => PermissionRequest.fromJson({
+              'id': item['id'],
+              'sessionID': item['sessionID'],
+              'permission': item['action'],
+              'patterns': item['resources'],
+              'metadata': item['metadata'],
+              'always': item['save'],
+              if (item['source'] is Map) 'tool': item['source'],
+            }),
+          )
+          .where(
+            (permission) =>
+                permission.id.isNotEmpty && permission.sessionID.isNotEmpty,
+          )
+          .toList();
+    } on DioException catch (error) {
+      _fail(error, 'List V2 pending permissions');
+    }
+  }
+
+  /// Returns raw V2 question objects from the global `{location, data}`
+  /// envelope. The app's repository model owns question parsing.
+  Future<List<Map<String, dynamic>>> pendingQuestionsV2() async {
+    try {
+      final response = await _dio.get(
+        '/api/question/request',
+        queryParameters: _v2LocationQuery(),
+      );
+      return _v2EnvelopeData(response.data, 'question');
+    } on DioException catch (error) {
+      _fail(error, 'List V2 pending questions');
+    }
+  }
+
+  Map<String, dynamic> _v2LocationQuery() => {
+    if (_directory != null) 'location[directory]': _directory,
+    if (_workspace != null) 'location[workspace]': _workspace,
+  };
+
+  List<Map<String, dynamic>> _v2EnvelopeData(dynamic raw, String kind) {
+    if (raw is! Map) {
+      throw ApiException('Malformed V2 $kind request envelope');
+    }
+    final location = raw['location'];
+    if (location is! Map) {
+      throw ApiException('Malformed V2 $kind request location');
+    }
+    final responseLocation = Map<String, dynamic>.from(location);
+    final locationMatches =
+        (_directory == null ||
+            responseLocation['directory']?.toString() == _directory) &&
+        (_workspace == null ||
+            responseLocation['workspace']?.toString() == _workspace);
+    if (!locationMatches) {
+      throw ApiException('Mismatched V2 $kind request location');
+    }
+    final data = raw['data'];
+    if (data is! List || data.any((item) => item is! Map)) {
+      throw ApiException('Malformed V2 $kind request data');
+    }
+    return data
+        .cast<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
+  }
+
   Future<void> respondPermission(
     String requestID,
     String reply, {
@@ -332,6 +410,55 @@ class OpenCodeApi {
       } on DioException catch (legacyError) {
         _fail(legacyError, 'Reply to permission');
       }
+    }
+  }
+
+  Future<void> respondPermissionV2(
+    String sessionID,
+    String requestID,
+    String reply,
+  ) async {
+    if (reply != 'once' && reply != 'always' && reply != 'reject') {
+      throw ArgumentError.value(reply, 'reply', 'must match the API contract');
+    }
+    final encodedSessionID = Uri.encodeComponent(sessionID);
+    final encodedRequestID = Uri.encodeComponent(requestID);
+    try {
+      await _dio.post(
+        '/api/session/$encodedSessionID/permission/$encodedRequestID/reply',
+        data: {'reply': reply},
+      );
+    } on DioException catch (error) {
+      _fail(error, 'Reply to permission');
+    }
+  }
+
+  Future<void> answerQuestionV2(
+    String sessionID,
+    String requestID,
+    List<List<String>> answers,
+  ) async {
+    final encodedSessionID = Uri.encodeComponent(sessionID);
+    final encodedRequestID = Uri.encodeComponent(requestID);
+    try {
+      await _dio.post(
+        '/api/session/$encodedSessionID/question/$encodedRequestID/reply',
+        data: {'answers': answers},
+      );
+    } on DioException catch (error) {
+      _fail(error, 'Reply to question');
+    }
+  }
+
+  Future<void> rejectQuestionV2(String sessionID, String requestID) async {
+    final encodedSessionID = Uri.encodeComponent(sessionID);
+    final encodedRequestID = Uri.encodeComponent(requestID);
+    try {
+      await _dio.post(
+        '/api/session/$encodedSessionID/question/$encodedRequestID/reject',
+      );
+    } on DioException catch (error) {
+      _fail(error, 'Reject question');
     }
   }
 
@@ -441,6 +568,11 @@ class ApiException implements Exception {
   bool isPermissionNotFound(String id) =>
       statusCode == 404 &&
       errorTag == 'PermissionNotFoundError' &&
+      requestID == id;
+
+  bool isQuestionNotFound(String id) =>
+      statusCode == 404 &&
+      errorTag == 'QuestionNotFoundError' &&
       requestID == id;
 
   @override

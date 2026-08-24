@@ -36,7 +36,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _onConnChanged() {
     if (!mounted) return;
     final conn = ref.read(connProvider);
-    if (conn.status == StreamStatus.disconnected && conn.api == null) {
+    if (conn.status == StreamStatus.disconnected &&
+        conn.api == null &&
+        !conn.lifecycleSuspended) {
       Navigator.of(context).pushNamedAndRemoveUntil('/servers', (_) => false);
       return;
     }
@@ -54,7 +56,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final conn = ref.watch(connProvider);
-    final theme = Theme.of(context);
     final navigator = Navigator.of(context);
 
     final tabs = [
@@ -89,24 +90,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            _StatusDot(status: conn.status),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                conn.profile?.name ?? 'OpenCode',
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 17),
-              ),
-            ),
-            Text(
-              _titles[_tab],
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.hintColor,
-              ),
-            ),
-          ],
+        title: _WorkspaceAppBarTitle(
+          profileName: conn.profile?.name ?? 'OpenCode',
+          tabTitle: _titles[_tab],
+          status: conn.status,
+          compact: MediaQuery.sizeOf(context).width < 600,
         ),
         actions: [
           IconButton(
@@ -196,6 +184,73 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   static const _titles = ['Workspace', 'Files', 'Terminal', 'Library'];
+}
+
+class _WorkspaceAppBarTitle extends StatelessWidget {
+  final String profileName;
+  final String tabTitle;
+  final StreamStatus status;
+  final bool compact;
+
+  const _WorkspaceAppBarTitle({
+    required this.profileName,
+    required this.tabTitle,
+    required this.status,
+    required this.compact,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final profile = Tooltip(
+      message: profileName,
+      child: Semantics(
+        label: 'Server: $profileName',
+        excludeSemantics: true,
+        child: Text(
+          profileName,
+          key: const ValueKey('server-profile-title'),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 17),
+        ),
+      ),
+    );
+    final page = Text(
+      tabTitle,
+      key: const ValueKey('current-tab-title'),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
+    );
+    final server = Row(
+      children: [
+        _StatusDot(status: status),
+        const SizedBox(width: 8),
+        Expanded(child: profile),
+      ],
+    );
+
+    if (compact) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          server,
+          const SizedBox(height: 1),
+          Padding(padding: const EdgeInsets.only(left: 18), child: page),
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(child: server),
+        const SizedBox(width: 12),
+        page,
+      ],
+    );
+  }
 }
 
 class _StatusDot extends StatelessWidget {

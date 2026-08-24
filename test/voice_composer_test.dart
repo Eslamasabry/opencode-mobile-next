@@ -1,3 +1,5 @@
+import 'dart:ui' show Tristate;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -7,6 +9,7 @@ import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/voice/controller.dart';
+import 'package:opencode_mobile/voice/model_manager.dart';
 import 'package:opencode_mobile/voice/notices.dart';
 import 'package:opencode_mobile/voice/voice_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -154,6 +157,7 @@ void main() {
   );
 
   testWidgets('model setup renders at 320dp with 2x text', (tester) async {
+    final semantics = tester.ensureSemantics();
     await tester.binding.setSurfaceSize(const Size(320, 640));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final manager = await readyVoiceModelManager();
@@ -184,6 +188,123 @@ void main() {
     expect(find.text('Local voice input'), findsOneWidget);
     expect(find.textContaining('Audio stays on this device'), findsOneWidget);
     expect(find.text('High accuracy'), findsOneWidget);
+    final modelTarget = find.byKey(const Key('voice-model-base'));
+    final modelNode = tester.getSemantics(modelTarget);
+    expect(tester.getSize(modelTarget).height, greaterThanOrEqualTo(48));
+    expect(modelNode.flagsCollection.isButton, isTrue);
+    expect(modelNode.flagsCollection.isEnabled, Tristate.isTrue);
+
+    final redownloadTarget = find.byKey(const Key('voice-redownload-base'));
+    final redownloadNode = tester.getSemantics(redownloadTarget);
+    expect(tester.getSize(redownloadTarget).height, greaterThanOrEqualTo(48));
+    for (
+      var ancestor = redownloadNode.parent;
+      ancestor != null;
+      ancestor = ancestor.parent
+    ) {
+      expect(
+        ancestor.flagsCollection.isButton,
+        isFalse,
+        reason:
+            'Model maintenance actions must not be nested in a button: $ancestor',
+      );
+    }
+    expect(
+      tester
+          .getSize(find.byKey(const Key('voice-model-secondary-action')))
+          .height,
+      greaterThanOrEqualTo(48),
+    );
+    expect(
+      tester
+          .getSize(find.byKey(const Key('voice-model-primary-action')))
+          .height,
+      greaterThanOrEqualTo(48),
+    );
+    expect(tester.takeException(), isNull);
+    semantics.dispose();
+  });
+
+  testWidgets(
+    'busy model setup exposes disabled cards without nested actions',
+    (tester) async {
+      final semantics = tester.ensureSemantics();
+      final manager = await readyVoiceModelManager()
+        ..state = VoiceModelState.downloading;
+      addTearDown(manager.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: FilledButton(
+                onPressed: () => showVoiceModelSetupSheet(context, manager),
+                child: const Text('Open setup'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Open setup'));
+      await tester.pump();
+
+      final modelNode = tester.getSemantics(
+        find.byKey(const Key('voice-model-base')),
+      );
+      expect(modelNode.flagsCollection.isEnabled, isNot(Tristate.none));
+      expect(modelNode.flagsCollection.isEnabled, Tristate.isFalse);
+      expect(find.byKey(const Key('voice-redownload-base')), findsNothing);
+      expect(find.byKey(const Key('voice-delete-base')), findsNothing);
+      expect(
+        tester
+            .getSize(find.byKey(const Key('voice-model-secondary-action')))
+            .height,
+        greaterThanOrEqualTo(48),
+      );
+      semantics.dispose();
+    },
+  );
+
+  testWidgets('voice draft actions stack at 320dp with 2x text', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(320, 640));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final voice = await _voice();
+    addTearDown(voice.controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: const TextScaler.linear(2)),
+          child: child!,
+        ),
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: FilledButton(
+              onPressed: () =>
+                  showVoiceComposerSheet(context, voice.controller),
+              child: const Text('Open voice'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open voice'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.tap(find.byKey(const Key('stop-voice-recording')));
+    await tester.pump();
+
+    final cancel = find.byKey(const Key('voice-composer-cancel'));
+    final insert = find.byKey(const Key('insert-voice-draft'));
+    expect(tester.getSize(cancel).height, greaterThanOrEqualTo(48));
+    expect(tester.getSize(insert).height, greaterThanOrEqualTo(48));
+    expect(tester.getTopLeft(cancel).dx, tester.getTopLeft(insert).dx);
+    expect(
+      tester.getTopLeft(insert).dy,
+      greaterThan(tester.getTopLeft(cancel).dy),
+    );
     expect(tester.takeException(), isNull);
   });
 

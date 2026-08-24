@@ -5,6 +5,7 @@ class TermuxBridge {
 
   static const termuxHome = '/data/data/com.termux/files/home';
   static const _managerPath = '$termuxHome/.oc/manager.sh';
+  static const defaultOpenCodeVersion = '1.18.21';
 
   static Future<TermuxCapabilities> capabilities() async {
     final raw = await _channel.invokeMapMethod<String, dynamic>(
@@ -90,7 +91,7 @@ class TermuxBridge {
   static String installAndServeScript({
     int port = 4096,
     required String password,
-    String version = 'latest',
+    String version = defaultOpenCodeVersion,
   }) {
     if (port < 1024 || port > 65535) {
       throw ArgumentError.value(
@@ -194,7 +195,8 @@ printf 'phase=queued\nmessage=Setup queued\nport=$port\nrunner=proot\nversion=\n
 # the child is claiming it. Stop & retry handles stale ownership explicitly.
 trap - EXIT
 rm -f "\$OC_DIR/server-log.active"
-nohup "\$MANAGER" setup '$port' '$version' "\$\$" "\$self_start" > "\$OC_DIR/install.log" 2>&1 </dev/null &
+"\$MANAGER" rotate-log install
+nohup "\$MANAGER" setup '$port' '$version' "\$\$" "\$self_start" > >("\$MANAGER" write-log install) 2>&1 </dev/null &
 manager_pid=\$!
 printf '%s\n' "\$manager_pid" > "\$OC_DIR/manager.pid"
 manager_start=\$(process_start "\$manager_pid" || true)
@@ -413,8 +415,90 @@ SERVER_LOG="$OC_DIR/server.log"
 SERVER_LOG_ACTIVE="$OC_DIR/server-log.active"
 PASSWORD_FILE="$OC_DIR/server.password"
 LEGACY_MARKER="$OC_DIR/legacy-install"
-UBUNTU_INSTALL_MARKER="$OC_DIR/ubuntu-installing"
+UBUNTU_INSTALL_MARKER="$OC_DIR/opencode-ubuntu-installing"
+SERVER_RUNNER="$OC_DIR/server-runner.sh"
+PROOT_NAME=opencode-ubuntu
+LOG_MAX_BYTES=1048576
+LOG_BACKUPS=2
+DISK_RESERVE_KIB=524288
+FRESH_SETUP_REQUIRED_KIB=1572864
+UPDATE_REQUIRED_KIB=786432
 mkdir -p "$OC_DIR"
+
+log_path() {
+  case "${1:-}" in
+    install) printf '%s' "$OC_DIR/install.log" ;;
+    server) printf '%s' "$SERVER_LOG" ;;
+    *) return 64 ;;
+  esac
+}
+
+rotate_log() {
+  local path
+  path=$(log_path "${1:-}") || return 64
+  local size=0
+  if [ -f "$path" ]; then
+    size=$(wc -c < "$path" 2>/dev/null || printf '0')
+  fi
+  case "$size" in ''|*[!0-9]*) size=0 ;; esac
+  [ "$size" -eq 0 ] || {
+    rm -f "$path.$LOG_BACKUPS"
+    local index=$((LOG_BACKUPS - 1))
+    while [ "$index" -ge 1 ]; do
+      [ ! -f "$path.$index" ] || mv "$path.$index" "$path.$((index + 1))"
+      index=$((index - 1))
+    done
+    mv "$path" "$path.1"
+    local bounded="$path.1.tmp.$$"
+    tail -c "$LOG_MAX_BYTES" "$path.1" > "$bounded"
+    chmod 600 "$bounded"
+    mv "$bounded" "$path.1"
+  }
+  : > "$path"
+  chmod 600 "$path"
+}
+
+write_log() {
+  local name="${1:-}"
+  local path
+  path=$(log_path "$name") || return 64
+  touch "$path"
+  chmod 600 "$path"
+  local LC_ALL=C
+  local size
+  size=$(wc -c < "$path" 2>/dev/null || printf '0')
+  case "$size" in ''|*[!0-9]*) size=0 ;; esac
+  local line=''
+  while IFS= read -r line || [ -n "$line" ]; do
+    printf '%s\n' "$line" >> "$path"
+    size=$((size + ${#line} + 1))
+    if [ "$size" -ge "$LOG_MAX_BYTES" ]; then
+      rotate_log "$name"
+      size=0
+    fi
+    line=''
+  done
+}
+
+install_server_runner() {
+  local tmp="$SERVER_RUNNER.tmp.$$"
+  cat > "$tmp" <<'OC_SERVER_RUNNER'
+#!/data/data/com.termux/files/usr/bin/bash
+set -uo pipefail
+port="$1"
+password_file="$2"
+manager="$3"
+"$manager" rotate-log server
+proot-distro login opencode-ubuntu -- env \
+  OPENCODE_SERVER_USERNAME=opencode \
+  OPENCODE_SERVER_PASSWORD="$(cat "$password_file")" \
+  opencode serve --hostname 127.0.0.1 --port "$port" \
+  2>&1 | "$manager" write-log server
+exit "${PIPESTATUS[0]}"
+OC_SERVER_RUNNER
+  chmod 700 "$tmp"
+  mv "$tmp" "$SERVER_RUNNER"
+}
 
 write_state() {
   local phase="$1"
@@ -441,9 +525,12 @@ fail_setup() {
 on_setup_error() {
   local code=$?
   local line="${BASH_LINENO[0]:-unknown}"
+  local stage
+  stage=$(read_state_value message)
+  [ -n "$stage" ] || stage='Setup'
   trap - ERR
-  write_state failed "Setup failed at line $line (exit $code)" "$CURRENT_PORT"
-  printf '[oc] ERROR: setup failed at line %s (exit %s)\n' "$line" "$code"
+  write_state failed "$stage failed (exit $code; setup line $line)" "$CURRENT_PORT"
+  printf '[oc] ERROR: %s failed at setup line %s (exit %s)\n' "$stage" "$line" "$code"
   exit "$code"
 }
 
@@ -550,7 +637,7 @@ server_process() {
   local command
   command=$(process_command "$pid" || true)
   case "$command" in
-    *opencode*serve*--hostname*127.0.0.1*--port*"$port"*) return 0 ;;
+    *"$SERVER_RUNNER $port "*) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -565,12 +652,7 @@ stop_server() {
     ''|*[!0-9]*) ;;
     *)
       if kill -0 "$pid" 2>/dev/null && server_process "$pid" "$port"; then
-        kill "$pid" 2>/dev/null || true
-        for _ in {1..10}; do
-          kill -0 "$pid" 2>/dev/null || break
-          sleep 0.2
-        done
-        kill -9 "$pid" 2>/dev/null || true
+        kill_tree "$pid"
       fi
       ;;
   esac
@@ -633,24 +715,143 @@ stop_setup() {
 
 cleanup_setup() {
   rm -f "$MANAGER_PID"
-  rm -f "$OC_DIR/ubuntu-base.tar.gz"
+  rm -f "$OC_DIR/ubuntu-base.tar.gz" "$OC_DIR/ubuntu-base.tar.gz.tmp"
   release_setup_lock
   if [ "${SETUP_SUCCEEDED:-0}" != 1 ]; then
     if [ "${SERVER_STARTED:-0}" = 1 ]; then
       stop_server "$CURRENT_PORT"
     fi
-    termux-wake-unlock >/dev/null 2>&1 || true
   fi
+  termux-wake-unlock >/dev/null 2>&1 || true
 }
 
 ubuntu_rootfs_exists() {
-  [ -d "$PREFIX/var/lib/proot-distro/containers/ubuntu/rootfs" ] ||
-    [ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/ubuntu" ]
+  [ -d "$PREFIX/var/lib/proot-distro/containers/$PROOT_NAME/rootfs" ] ||
+    [ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$PROOT_NAME" ]
 }
 
 ubuntu_usable() {
   ubuntu_rootfs_exists &&
-    proot-distro login ubuntu -- true >/dev/null 2>&1
+    proot-distro login "$PROOT_NAME" -- true >/dev/null 2>&1
+}
+
+cleanup_app_owned_partial_install() {
+  rm -f "$OC_DIR/ubuntu-base.tar.gz" "$OC_DIR/ubuntu-base.tar.gz.tmp"
+  if [ -f "$UBUNTU_INSTALL_MARKER" ] && ubuntu_rootfs_exists && ! ubuntu_usable; then
+    command -v proot-distro >/dev/null 2>&1 || return 0
+    printf '[oc] removing interrupted app-owned Ubuntu install\n'
+    proot-distro remove "$PROOT_NAME" >/dev/null 2>&1 ||
+      fail_setup 'Could not remove the interrupted app-owned Ubuntu install' "$CURRENT_PORT"
+    rm -f "$UBUNTU_INSTALL_MARKER"
+  fi
+}
+
+require_setup_space() {
+  local required_kib="$FRESH_SETUP_REQUIRED_KIB"
+  if ubuntu_usable; then
+    required_kib="$UPDATE_REQUIRED_KIB"
+  fi
+  local disk_line available_kib
+  disk_line=$(df -Pk "$HOME" 2>/dev/null | tail -n 1) ||
+    fail_setup 'Could not check available storage before setup' "$CURRENT_PORT"
+  set -- $disk_line
+  available_kib="${4:-}"
+  case "$available_kib" in
+    ''|*[!0-9]*) fail_setup 'Could not read available storage before setup' "$CURRENT_PORT" ;;
+  esac
+  if [ "$available_kib" -lt "$required_kib" ]; then
+    local required_mib=$((required_kib / 1024))
+    local available_mib=$((available_kib / 1024))
+    local reserve_mib=$((DISK_RESERVE_KIB / 1024))
+    fail_setup "Not enough storage: ${available_mib} MiB free; setup needs ${required_mib} MiB including a ${reserve_mib} MiB safety reserve" "$CURRENT_PORT"
+  fi
+  printf '[oc] storage preflight: %s MiB free; preserving %s MiB reserve\n' \
+    "$((available_kib / 1024))" "$((DISK_RESERVE_KIB / 1024))"
+}
+
+select_official_termux_repository() {
+  local source_file="$PREFIX/etc/apt/sources.list"
+  local desired_source='deb https://packages.termux.dev/apt/termux-main stable main'
+  mkdir -p "$PREFIX/etc/apt"
+  # Keep the user's previous main-repository selection recoverable. Other
+  # optional Termux repositories in sources.list.d are deliberately untouched.
+  if [ -s "$source_file" ] && [ ! -e "$source_file.oc-before-opencode" ]; then
+    cp "$source_file" "$source_file.oc-before-opencode" || return 1
+  fi
+  local source_tmp="$source_file.oc-tmp.$$"
+  printf '%s\n' "$desired_source" > "$source_tmp" || return 1
+  chmod 644 "$source_tmp" || return 1
+  mv "$source_tmp" "$source_file" || return 1
+  printf '[oc] selected official Termux repository: packages.termux.dev\n'
+}
+
+termux_main_repository_configured() {
+  local source_file
+  for source_file in \
+    "$PREFIX/etc/apt/sources.list" \
+    "$PREFIX/etc/apt/sources.list.d/"*.list \
+    "$PREFIX/etc/apt/sources.list.d/"*.sources; do
+    [ -f "$source_file" ] || continue
+    if [ -n "$(grep -Ev '^[[:space:]]*(#|$)' "$source_file" 2>/dev/null || true)" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+proot_supports_named_containers() {
+  local help_output
+  help_output=$(proot-distro install --help 2>&1) || return 1
+  case "$help_output" in
+    *--name*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+termux_dependencies_healthy() {
+  command -v curl >/dev/null 2>&1 || return 1
+  command -v proot-distro >/dev/null 2>&1 || return 1
+  curl --version >/dev/null 2>&1 || return 1
+  proot_supports_named_containers
+}
+
+prepare_termux_dependencies() {
+  if termux_dependencies_healthy; then
+    printf '[oc] existing Termux dependencies are healthy; package upgrade skipped\n'
+    return 0
+  fi
+
+  export DEBIAN_FRONTEND=noninteractive
+  write_state installing_dependencies 'Refreshing Termux packages' "$CURRENT_PORT"
+  if termux_main_repository_configured; then
+    if ! apt-get update; then
+      printf '[oc] current Termux repository failed; switching the main repository to packages.termux.dev\n'
+      select_official_termux_repository ||
+        fail_setup 'Could not select the official Termux package repository' "$CURRENT_PORT"
+      apt-get update ||
+        fail_setup 'Could not refresh packages.termux.dev; check the network and retry' "$CURRENT_PORT"
+    fi
+  else
+    select_official_termux_repository ||
+      fail_setup 'Could not select the official Termux package repository' "$CURRENT_PORT"
+    apt-get update ||
+      fail_setup 'Could not refresh packages.termux.dev; check the network and retry' "$CURRENT_PORT"
+  fi
+
+  # A partial dependency install can leave libcurl ahead of OpenSSL. Repair the
+  # entire package set first, keeping existing config files non-interactively.
+  write_state installing_dependencies 'Repairing the Termux package set' "$CURRENT_PORT"
+  apt-get -y --no-remove -o Dpkg::Options::="--force-confold" --fix-broken install ||
+    fail_setup 'Could not repair the interrupted Termux package transaction' "$CURRENT_PORT"
+  apt-get -y --no-remove -o Dpkg::Options::="--force-confold" upgrade ||
+    fail_setup 'Could not complete the safe Termux package upgrade' "$CURRENT_PORT"
+
+  write_state installing_dependencies 'Installing Termux dependencies' "$CURRENT_PORT"
+  apt-get -y --no-remove -o Dpkg::Options::="--force-confold" install \
+    proot-distro curl openssl ||
+    fail_setup 'Could not install the Termux dependencies' "$CURRENT_PORT"
+  termux_dependencies_healthy ||
+    fail_setup 'Termux dependencies are still unusable after the package repair' "$CURRENT_PORT"
 }
 
 install_ubuntu_base() {
@@ -681,7 +882,7 @@ install_ubuntu_base() {
   if ubuntu_rootfs_exists; then
     [ -f "$UBUNTU_INSTALL_MARKER" ] ||
       fail_setup 'An existing Ubuntu container is not usable; setup will not delete it' "$CURRENT_PORT"
-    proot-distro remove ubuntu >/dev/null 2>&1 ||
+    proot-distro remove "$PROOT_NAME" >/dev/null 2>&1 ||
       fail_setup 'Could not remove the interrupted app-owned Ubuntu install' "$CURRENT_PORT"
     if ubuntu_usable; then
       rm -f "$UBUNTU_INSTALL_MARKER"
@@ -689,7 +890,7 @@ install_ubuntu_base() {
     fi
   fi
   printf 'source=canonical-ubuntu-base-24.04.4\n' > "$UBUNTU_INSTALL_MARKER"
-  proot-distro install "$archive" --name ubuntu
+  proot-distro install "$archive" --name "$PROOT_NAME"
   rm -f "$archive"
   ubuntu_usable || fail_setup 'Ubuntu Base extraction did not create a usable container' "$CURRENT_PORT"
   rm -f "$UBUNTU_INSTALL_MARKER"
@@ -697,7 +898,7 @@ install_ubuntu_base() {
 
 setup() {
   CURRENT_PORT="${1:-4096}"
-  local requested_version="${2:-latest}"
+  local requested_version="${2:-1.18.21}"
   local dispatcher_pid="${3:-}"
   local dispatcher_start="${4:-}"
   SETUP_SUCCEEDED=0
@@ -713,16 +914,10 @@ setup() {
   write_state preparing 'Preparing Termux' "$CURRENT_PORT"
   printf '\n[oc] setup started at %s\n' "$(date -Iseconds 2>/dev/null || date)"
 
-  if ! command -v proot-distro >/dev/null 2>&1 || ! command -v curl >/dev/null 2>&1; then
-    write_state installing_dependencies 'Installing Termux dependencies' "$CURRENT_PORT"
-    pkg update -y
-    pkg install -y proot-distro curl
-  fi
-  if ! proot-distro install --help 2>&1 | grep -q -- '--name'; then
-    write_state installing_dependencies 'Updating proot-distro' "$CURRENT_PORT"
-    pkg update -y
-    pkg install -y proot-distro
-  fi
+  cleanup_app_owned_partial_install
+  require_setup_space
+
+  prepare_termux_dependencies
 
   if [ -f "$UBUNTU_INSTALL_MARKER" ] || ! ubuntu_usable; then
     write_state installing_ubuntu 'Installing Ubuntu environment' "$CURRENT_PORT"
@@ -730,7 +925,7 @@ setup() {
   fi
 
   write_state installing_opencode 'Installing OpenCode' "$CURRENT_PORT"
-  proot-distro login ubuntu -- env OC_REQUESTED_VERSION="$requested_version" bash -s <<'OC_PROOT_SETUP'
+  proot-distro login "$PROOT_NAME" -- env OC_REQUESTED_VERSION="$requested_version" bash -s <<'OC_PROOT_SETUP'
 set -Eeuo pipefail
 export DEBIAN_FRONTEND=noninteractive
 if ! command -v npm >/dev/null 2>&1 || ! command -v curl >/dev/null 2>&1; then
@@ -755,7 +950,7 @@ opencode --version
 OC_PROOT_SETUP
 
   local installed_version
-  installed_version=$(proot-distro login ubuntu -- opencode --version 2>/dev/null | tr -d '\r\n')
+  installed_version=$(proot-distro login "$PROOT_NAME" -- opencode --version 2>/dev/null | tr -d '\r\n')
   [ -n "$installed_version" ] || fail_setup 'OpenCode installed but did not report a version' "$CURRENT_PORT"
   [ -s "$PASSWORD_FILE" ] || fail_setup 'The local server password is missing' "$CURRENT_PORT"
   local password
@@ -763,14 +958,11 @@ OC_PROOT_SETUP
 
   stop_legacy_server "$CURRENT_PORT"
   stop_server "$CURRENT_PORT"
-  : > "$SERVER_LOG"
+  install_server_runner
   : > "$SERVER_LOG_ACTIVE"
   write_state starting_server 'Starting the local server' "$CURRENT_PORT" proot "$installed_version"
-  nohup proot-distro login ubuntu -- env \
-    OPENCODE_SERVER_USERNAME=opencode \
-    OPENCODE_SERVER_PASSWORD="$password" \
-    opencode serve --hostname 127.0.0.1 --port "$CURRENT_PORT" \
-    >> "$SERVER_LOG" 2>&1 </dev/null &
+  nohup "$SERVER_RUNNER" "$CURRENT_PORT" "$PASSWORD_FILE" "$MANAGER" \
+    >/dev/null 2>&1 </dev/null &
   local server_pid=$!
   SERVER_STARTED=1
   printf '%s\n' "$server_pid" > "$SERVER_PID"
@@ -783,7 +975,7 @@ OC_PROOT_SETUP
       exec 3>&-
       exec 3<&-
       local auth_codes
-      auth_codes=$(proot-distro login ubuntu -- env \
+      auth_codes=$(proot-distro login "$PROOT_NAME" -- env \
         OC_PORT="$CURRENT_PORT" OC_PASSWORD="$password" bash -s <<'OC_AUTH_CHECK'
 unauth=$(curl --max-time 2 -s -o /dev/null -w '%{http_code}' \
   "http://127.0.0.1:$OC_PORT/global/health" || true)
@@ -864,6 +1056,8 @@ case "${1:-status}" in
   status) status ;;
   diagnostics) diagnostics ;;
   stop) shift; stop "$@" ;;
+  rotate-log) shift; rotate_log "$@" ;;
+  write-log) shift; write_log "$@" ;;
   *) echo "usage: $0 {setup|status|diagnostics|stop}" >&2; exit 64 ;;
 esac
 ''';

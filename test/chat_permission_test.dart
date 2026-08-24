@@ -42,6 +42,10 @@ class _FakeOpenCodeApi extends OpenCodeApi {
   @override
   Future<List<PermissionRequest>> pendingPermissions() async =>
       pendingPermissionsResult;
+
+  @override
+  Future<List<PermissionRequest>> pendingPermissionsV2() =>
+      Future.error(ApiException('V2 unavailable', statusCode: 404));
 }
 
 Future<ConnectionController> _controller(_FakeOpenCodeApi api) async {

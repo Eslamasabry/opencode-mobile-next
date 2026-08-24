@@ -41,10 +41,32 @@ class _ShellRepository implements ProductRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-Future<ConnectionController> _controller() async {
+class _ShellProfileStore extends ProfileStore {
+  final ServerProfile? profile;
+
+  _ShellProfileStore({required super.prefs, this.profile});
+
+  @override
+  List<ServerProfile> get profiles => [?profile];
+
+  @override
+  String? get activeId => profile?.id;
+}
+
+Future<ConnectionController> _controller({String? profileName}) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
-  return ConnectionController(ProfileStore(prefs: prefs))
+  final store = _ShellProfileStore(
+    prefs: prefs,
+    profile: profileName == null
+        ? null
+        : ServerProfile(
+            id: 'local',
+            name: profileName,
+            baseUrl: 'http://localhost:4096',
+          ),
+  );
+  return ConnectionController(store)
     ..api = _ShellApi()
     ..repository = _ShellRepository()
     ..status = StreamStatus.connected;
@@ -86,6 +108,30 @@ void main() {
     expect(find.text('Guide'), findsNothing);
   });
 
+  testWidgets('phone header separates long local server and workspace labels', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(411, 891);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final controller = await _controller(profileName: 'This device (Termux)');
+    addTearDown(controller.dispose);
+
+    await _pumpShell(tester, controller);
+
+    final profile = find.byKey(const ValueKey('server-profile-title'));
+    final tab = find.byKey(const ValueKey('current-tab-title'));
+    expect(profile, findsOneWidget);
+    expect(tab, findsOneWidget);
+    expect(tester.getRect(profile).bottom, lessThan(tester.getRect(tab).top));
+    expect(
+      tester.getSemantics(profile).label,
+      contains('Server: This device (Termux)'),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('tablet shell switches to navigation rail', (tester) async {
     tester.view.physicalSize = const Size(1024, 900);
     tester.view.devicePixelRatio = 1;
@@ -98,5 +144,10 @@ void main() {
 
     expect(find.byType(NavigationRail), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
+    final profile = tester.getRect(
+      find.byKey(const ValueKey('server-profile-title')),
+    );
+    final tab = tester.getRect(find.byKey(const ValueKey('current-tab-title')));
+    expect((profile.center.dy - tab.center.dy).abs(), lessThan(2));
   });
 }

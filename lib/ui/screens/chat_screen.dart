@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,61 @@ import '../../voice/controller.dart';
 import '../../voice/voice_ui.dart';
 import '../widgets/markdown.dart';
 import '../widgets/tool_card.dart';
+
+const _maxAttachmentCount = 5;
+const _maxAttachmentBytes = 10 * 1024 * 1024;
+const _maxAggregateAttachmentBytes = 20 * 1024 * 1024;
+
+@visibleForTesting
+Future<Uint8List?> readAttachmentBytesWithinLimit(
+  PlatformFile file, {
+  required int maxBytes,
+}) async {
+  if (maxBytes < 0) {
+    throw ArgumentError.value(maxBytes, 'maxBytes', 'must not be negative');
+  }
+
+  final inMemoryBytes = file.bytes;
+  if (inMemoryBytes != null) {
+    return inMemoryBytes.length <= maxBytes ? inMemoryBytes : null;
+  }
+
+  final stream =
+      file.readStream ??
+      (file.path == null ? null : file.xFile.openRead(0, maxBytes + 1));
+  if (stream == null) {
+    throw StateError('The selected file could not be read.');
+  }
+
+  // Retain at most the allowed payload plus one byte. The extra byte detects a
+  // file that grew after the picker reported its metadata without allowing an
+  // unbounded read or allocation.
+  final bytes = BytesBuilder();
+  var byteCount = 0;
+  final iterator = StreamIterator<List<int>>(stream);
+  try {
+    while (byteCount <= maxBytes && await iterator.moveNext()) {
+      final chunk = iterator.current;
+      if (chunk.isEmpty) continue;
+      final remaining = maxBytes + 1 - byteCount;
+      final acceptedLength = chunk.length < remaining
+          ? chunk.length
+          : remaining;
+      if (acceptedLength == chunk.length) {
+        bytes.add(chunk);
+      } else {
+        final acceptedBytes = Uint8List(acceptedLength)
+          ..setRange(0, acceptedLength, chunk);
+        bytes.add(acceptedBytes);
+      }
+      byteCount += acceptedLength;
+      if (byteCount > maxBytes) return null;
+    }
+    return bytes.takeBytes();
+  } finally {
+    await iterator.cancel();
+  }
+}
 
 String _fmtSessionTime(int ms) {
   final d = DateTime.fromMillisecondsSinceEpoch(ms);
@@ -131,13 +187,7 @@ class SessionsTab extends StatelessWidget {
                         ),
                       ),
                       trailing: PopupMenuButton<String>(
-                        onSelected: (v) async {
-                          if (v == 'rename') await _rename(context, s);
-                          if (v == 'delete') {
-                            await controller.api!.deleteSession(s.id);
-                            await controller.refreshSessions();
-                          }
-                        },
+                        onSelected: (v) => _sessionAction(context, v, s),
                         itemBuilder: (_) => const [
                           PopupMenuItem(value: 'rename', child: Text('Rename')),
                           PopupMenuItem(value: 'delete', child: Text('Delete')),
@@ -166,19 +216,23 @@ class SessionsTab extends StatelessWidget {
   }
 
   Future<void> _rename(BuildContext context, Session s) async {
-    final ctrl = TextEditingController(text: s.title ?? '');
+    var draftTitle = s.title ?? '';
     final title = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Rename chat'),
-        content: TextField(controller: ctrl, autofocus: true),
+        content: TextFormField(
+          initialValue: draftTitle,
+          autofocus: true,
+          onChanged: (value) => draftTitle = value,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+            onPressed: () => Navigator.pop(ctx, draftTitle.trim()),
             child: const Text('Save'),
           ),
         ],
@@ -187,6 +241,27 @@ class SessionsTab extends StatelessWidget {
     if (title != null && title.isNotEmpty) {
       await controller.api!.renameSession(s.id, title);
       await controller.refreshSessions();
+    }
+  }
+
+  Future<void> _sessionAction(
+    BuildContext context,
+    String action,
+    Session session,
+  ) async {
+    try {
+      if (action == 'rename') {
+        await _rename(context, session);
+      } else if (action == 'delete') {
+        await controller.api!.deleteSession(session.id);
+        await controller.refreshSessions();
+      }
+    } catch (error) {
+      if (!context.mounted) return;
+      final verb = action == 'delete' ? 'delete' : 'rename';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not $verb chat: $error')));
     }
   }
 }
@@ -434,13 +509,24 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
     }
     if (pending == null) {
-      for (final candidate in _pendingSends) {
+      final parts = canonicalParts ?? _messageByID(info.id)?.parts ?? const [];
+      final matches = _pendingSends
+          .where(
+            (candidate) =>
+                candidate.canonicalID == null &&
+                _matchesPendingPrompt(parts, candidate),
+          )
+          .toList();
+      if (matches.isNotEmpty) {
         final created = info.time?.created;
-        if (candidate.canonicalID == null &&
-            (created == null || created >= candidate.createdAt - 2000)) {
-          pending = candidate;
-          break;
+        if (created != null) {
+          matches.sort(
+            (a, b) => (a.createdAt - created).abs().compareTo(
+              (b.createdAt - created).abs(),
+            ),
+          );
         }
+        pending = matches.first;
       }
     }
     if (pending == null) return false;
@@ -524,6 +610,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         );
       }
     }
+    if (bundle.info.role == 'user') {
+      _reconcilePendingMessage(bundle.info, canonicalParts: bundle.parts);
+    }
   }
 
   bool _isSupportedDeltaField(String field) =>
@@ -584,7 +673,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     callID: part.callID,
     toolName: part.toolName,
     toolState: toolState ?? part.toolState,
+    mime: part.mime,
     filename: part.filename,
+    url: part.url,
     synthetic: part.synthetic,
   );
 
@@ -621,8 +712,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (message.info.role != 'user') continue;
       for (final pending in List<_PendingSend>.from(_pendingSends)) {
         if (pending.canonicalID != null) continue;
-        if (_promptSignature(message.parts) ==
-            _pendingSignature(pending.text, pending.attachments)) {
+        if (_matchesPendingPrompt(message.parts, pending)) {
           _reconcilePendingMessage(
             message.info,
             canonicalParts: message.parts,
@@ -722,11 +812,29 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     return merged;
   }
 
-  String _pendingSignature(String text, List<PromptAttachment> attachments) =>
-      '${text.trim()}\u0000${attachments.map((a) => a.filename).join('\u0000')}';
+  bool _matchesPendingPrompt(List<Part> parts, _PendingSend pending) {
+    final text = parts
+        .where((part) => part.type == 'text')
+        .map((part) => part.text)
+        .join('\n')
+        .trim();
+    if (text != pending.text.trim()) return false;
 
-  String _promptSignature(List<Part> parts) =>
-      '${parts.where((p) => p.type == 'text').map((p) => p.text).join('\n').trim()}\u0000${parts.where((p) => p.type == 'file').map((p) => p.filename ?? '').join('\u0000')}';
+    final files = parts.where((part) => part.type == 'file').toList();
+    if (files.length != pending.attachments.length) return false;
+    for (var i = 0; i < files.length; i++) {
+      final part = files[i];
+      final attachment = pending.attachments[i];
+      if ((part.filename ?? '') != attachment.filename) return false;
+      if (part.mime?.isNotEmpty == true && part.mime != attachment.mime) {
+        return false;
+      }
+      if (part.url?.isNotEmpty == true && part.url != attachment.url) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   Future<void> _send() async {
     await _voice?.cancel();
@@ -763,7 +871,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           parts: [
             if (text.isNotEmpty) Part(type: 'text', text: text),
             for (final attachment in attachments)
-              Part(type: 'file', filename: attachment.filename),
+              Part(
+                type: 'file',
+                mime: attachment.mime,
+                filename: attachment.filename,
+                url: attachment.url,
+              ),
           ],
         ),
       );
@@ -836,19 +949,45 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _pickAttachment() async {
     try {
+      if (_attachments.length >= _maxAttachmentCount) {
+        throw StateError('You can attach up to $_maxAttachmentCount files.');
+      }
+      final currentBytes = _attachments.fold<int>(
+        0,
+        (total, attachment) => total + _attachmentByteLength(attachment),
+      );
+      if (currentBytes >= _maxAggregateAttachmentBytes) {
+        throw StateError('Attachments must total no more than 20 MB.');
+      }
       final result = await FilePicker.pickFiles(
         dialogTitle: 'Attach to prompt',
         allowMultiple: false,
-        withData: true,
+        withData: false,
+        withReadStream: true,
       );
       if (result == null || result.files.isEmpty) return;
       final file = result.files.single;
-      if (file.size > 10 * 1024 * 1024) {
-        throw StateError('Attachments must be smaller than 10 MB.');
+      final size = file.size;
+      if (size > _maxAttachmentBytes) {
+        throw StateError('Each attachment must be 10 MB or smaller.');
       }
-      final bytes = file.bytes;
+      if (size > 0 && currentBytes + size > _maxAggregateAttachmentBytes) {
+        throw StateError('Attachments must total no more than 20 MB.');
+      }
+      final remainingAggregateBytes =
+          _maxAggregateAttachmentBytes - currentBytes;
+      final readLimit = remainingAggregateBytes < _maxAttachmentBytes
+          ? remainingAggregateBytes
+          : _maxAttachmentBytes;
+      final bytes = await readAttachmentBytesWithinLimit(
+        file,
+        maxBytes: readLimit,
+      );
+      if (bytes == null && readLimit < _maxAttachmentBytes) {
+        throw StateError('Attachments must total no more than 20 MB.');
+      }
       if (bytes == null) {
-        throw StateError('The selected file could not be read.');
+        throw StateError('Each attachment must be 10 MB or smaller.');
       }
       final mime = _mimeForFilename(file.name);
       final attachment = PromptAttachment(
@@ -860,6 +999,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     } catch (error) {
       if (mounted) _showActionError(error);
     }
+  }
+
+  int _attachmentByteLength(PromptAttachment attachment) {
+    final comma = attachment.url.indexOf(',');
+    if (comma < 0) return 0;
+    final header = attachment.url.substring(0, comma);
+    final payload = attachment.url.substring(comma + 1);
+    if (!header.endsWith(';base64')) return utf8.encode(payload).length;
+    final padding = payload.endsWith('==')
+        ? 2
+        : payload.endsWith('=')
+        ? 1
+        : 0;
+    return (payload.length * 3 ~/ 4) - padding;
   }
 
   String _mimeForFilename(String filename) {
@@ -1056,13 +1209,39 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             .map((part) => part.text)
             .join('\n') ??
         '';
-    if (text.trim().isEmpty) return;
+    final files =
+        target?.parts.where((part) => part.type == 'file').toList() ??
+        const <Part>[];
+    if (text.trim().isEmpty && files.isEmpty) return;
+    final attachments = <PromptAttachment>[];
+    for (final file in files) {
+      final url = file.url;
+      if (url == null || url.isEmpty) {
+        _showActionError(
+          'This prompt cannot be retried because an attachment is unavailable.',
+        );
+        return;
+      }
+      final filename = file.filename?.isNotEmpty == true
+          ? file.filename!
+          : 'attachment';
+      attachments.add(
+        PromptAttachment(
+          mime: file.mime?.isNotEmpty == true
+              ? file.mime!
+              : _mimeForFilename(filename),
+          filename: filename,
+          url: url,
+        ),
+      );
+    }
     try {
       await _conn.api!.promptAsync(
         widget.sessionID,
         text: text,
         model: _conn.selectedModel,
         agent: _conn.selectedAgent.isEmpty ? null : _conn.selectedAgent,
+        attachments: attachments,
       );
     } catch (error) {
       if (mounted) _showActionError(error);
@@ -1229,7 +1408,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final c = cmdCtrl.text.trim().replaceFirst('/', '');
     if (c.isEmpty) return;
     try {
-      await _conn.api!.slashCommand(widget.sessionID, c, argCtrl.text.trim());
+      await _conn.api!.slashCommand(
+        widget.sessionID,
+        c,
+        argCtrl.text.trim(),
+        model: _conn.selectedModel,
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -1413,7 +1597,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                             children: [
                               if (_attachments.isNotEmpty)
                                 SizedBox(
-                                  height: 44,
+                                  height: 56,
                                   child: ListView(
                                     scrollDirection: Axis.horizontal,
                                     children: [
@@ -1422,13 +1606,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                           padding: const EdgeInsets.only(
                                             right: 6,
                                           ),
-                                          child: InputChip(
-                                            avatar: const Icon(
-                                              Icons.attach_file_rounded,
-                                              size: 16,
-                                            ),
-                                            label: Text(attachment.filename),
-                                            onDeleted: () => setState(
+                                          child: _PendingAttachmentChip(
+                                            attachment: attachment,
+                                            onRemove: () => setState(
                                               () => _attachments.remove(
                                                 attachment,
                                               ),
@@ -1548,6 +1728,59 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _composer.dispose();
     _focus.dispose();
     super.dispose();
+  }
+}
+
+class _PendingAttachmentChip extends StatelessWidget {
+  const _PendingAttachmentChip({
+    required this.attachment,
+    required this.onRemove,
+  });
+
+  final PromptAttachment attachment;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: theme.colorScheme.surfaceContainerHighest,
+      shape: StadiumBorder(
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(left: 12),
+            child: Icon(Icons.attach_file_rounded, size: 16),
+          ),
+          const SizedBox(width: 6),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 220),
+            child: Text(
+              attachment.filename,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Semantics(
+            container: true,
+            excludeSemantics: true,
+            label: 'Remove attachment ${attachment.filename}',
+            button: true,
+            onTap: onRemove,
+            child: IconButton(
+              tooltip: 'Remove attachment ${attachment.filename}',
+              constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+              onPressed: onRemove,
+              icon: const Icon(Icons.close_rounded, size: 18),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -1988,19 +2221,23 @@ class _ReasoningState extends State<_Reasoning> {
           ),
         ),
       ),
-      child: Semantics(
-        button: true,
-        expanded: _open,
-        label: 'Reasoning details',
-        child: InkWell(
-          onTap: () => setState(() => _open = !_open),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(8, 4, 4, 4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ConstrainedBox(
-                  constraints: const BoxConstraints(minHeight: 40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(
+            button: true,
+            expanded: _open,
+            excludeSemantics: true,
+            label: _open
+                ? 'Collapse reasoning details'
+                : 'Expand reasoning details',
+            child: InkWell(
+              key: const Key('reasoning-toggle'),
+              onTap: () => setState(() => _open = !_open),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 48),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 4, 4, 4),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -2010,30 +2247,32 @@ class _ReasoningState extends State<_Reasoning> {
                         color: theme.hintColor,
                       ),
                       const SizedBox(width: 5),
-                      Text(
-                        _open ? 'reasoning' : 'reasoning (tap to expand)',
-                        style: theme.textTheme.labelSmall!.copyWith(
-                          color: theme.hintColor,
+                      Flexible(
+                        child: Text(
+                          _open ? 'reasoning' : 'reasoning (tap to expand)',
+                          style: theme.textTheme.labelSmall!.copyWith(
+                            color: theme.hintColor,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                if (_open)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      widget.text,
-                      style: theme.textTheme.bodySmall!.copyWith(
-                        fontStyle: FontStyle.italic,
-                        color: theme.hintColor,
-                      ),
-                    ),
-                  ),
-              ],
+              ),
             ),
           ),
-        ),
+          if (_open)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 4, 4, 4),
+              child: Text(
+                widget.text,
+                style: theme.textTheme.bodySmall!.copyWith(
+                  fontStyle: FontStyle.italic,
+                  color: theme.hintColor,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

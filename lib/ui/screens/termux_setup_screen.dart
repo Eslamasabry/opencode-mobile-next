@@ -218,6 +218,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
 
   Future<void> _installAndStart() async {
     if (_busy || _phase == _Phase.installing) return;
+    var launchRequested = false;
     setState(() {
       _busy = true;
       _error = null;
@@ -225,6 +226,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       _monitoringFailed = false;
       _snapshotFailures = 0;
       _setupOutput = '';
+      _lastLaunchOutput = null;
     });
     try {
       await TermuxBridge.verifyBridge();
@@ -233,6 +235,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
         port: port,
         password: profile.password,
       );
+      launchRequested = true;
       final launch = await TermuxBridge.run(command);
       _lastLaunchOutput = [
         launch.stdout.trim(),
@@ -270,6 +273,11 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       await _refreshStatus();
     } on TermuxBridgeException catch (error) {
       if (!mounted) return;
+      if (launchRequested &&
+          error.code == 'command_timeout' &&
+          await _recoverPersistedSetupAfterTimeout()) {
+        return;
+      }
       setState(() {
         _phase = error.code == 'permission_denied'
             ? _Phase.needUnlock
@@ -285,6 +293,66 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<bool> _recoverPersistedSetupAfterTimeout() async {
+    try {
+      final snapshot = await TermuxBridge.setupSnapshot();
+      if (!mounted || snapshot.status.phase == 'idle') return false;
+      _status = snapshot.status;
+      _setupOutput = snapshot.output;
+      if (snapshot.status.isRunning) {
+        setState(() {
+          _phase = _Phase.installing;
+          _error = null;
+        });
+        _startPolling();
+      } else if (snapshot.status.isFailed) {
+        setState(() {
+          _phase = _Phase.failed;
+          _error = _persistedFailureMessage(snapshot.status, snapshot.output);
+        });
+      } else if (snapshot.status.isReady) {
+        final profile = _localProfile();
+        if (profile == null) return false;
+        await _finishConnect(profile);
+      } else {
+        setState(() => _phase = _Phase.ready);
+      }
+      return true;
+    } on TermuxBridgeException {
+      return false;
+    }
+  }
+
+  String _persistedFailureMessage(
+    TermuxSetupStatus status,
+    String output, {
+    String? bridgeMessage,
+  }) {
+    final outputLines = output
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
+    String? rootCause;
+    for (final line in outputLines.reversed) {
+      if (line.contains('[oc] ERROR:') ||
+          line.contains('CANNOT LINK EXECUTABLE') ||
+          line.contains('cannot locate symbol') ||
+          line.contains('SSL_') ||
+          line.startsWith('E:')) {
+        rootCause = line;
+        break;
+      }
+    }
+    rootCause ??= outputLines.isEmpty ? null : outputLines.last;
+    return [
+      status.message,
+      if (rootCause != null && rootCause != status.message)
+        'Last setup output: $rootCause',
+      if (bridgeMessage != null) 'Bridge detail: $bridgeMessage',
+    ].join('\n');
   }
 
   void _startPolling() {
@@ -336,7 +404,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
           _monitoringFailed =
               status.message == 'Could not read setup manager status';
           _phase = _Phase.failed;
-          _error = status.message;
+          _error = _persistedFailureMessage(status, snapshot.output);
         });
         return;
       }
@@ -374,8 +442,12 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       setState(() {
         _monitoringFailed = setupMayBeRunning;
         _phase = _Phase.failed;
-        _error = _monitoringFailed
-            ? 'Live output is temporarily unavailable. Setup may still be running.'
+        _error = setupMayBeRunning && _status != null
+            ? _persistedFailureMessage(
+                _status!,
+                _setupOutput,
+                bridgeMessage: error.message,
+              )
             : error.message;
       });
     } finally {
@@ -438,7 +510,43 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       return;
     }
     setState(() => _phase = _Phase.connected);
+  }
+
+  void _continueToApp() {
     Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
+  }
+
+  Future<void> _stopServer() async {
+    if (_busy) return;
+    _stopPolling();
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await TermuxBridge.run(TermuxBridge.stopScript(port: port));
+      await ref.read(connProvider).disconnect();
+      if (!mounted) return;
+      setState(() {
+        _status = null;
+        _phase = _Phase.ready;
+        _error = 'The local server is stopped. Its installed files are kept.';
+      });
+    } on TermuxBridgeException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _phase = _Phase.failed;
+        _error = 'Could not stop the local server: ${error.message}';
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _phase = _Phase.failed;
+        _error = 'The server stopped, but the app could not disconnect: $error';
+      });
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<void> _retry() async {
@@ -493,7 +601,8 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
               _stepTile(
                 n: 1,
                 title: 'Get Termux',
-                state: _phase == _Phase.needTermux
+                state:
+                    const {_Phase.checking, _Phase.needTermux}.contains(_phase)
                     ? _StepState.idle
                     : _StepState.done,
                 body: _phase == _Phase.needTermux
@@ -637,7 +746,52 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                       ),
                     ],
                   ),
-                  _Phase.connected => const Text('Connected.'),
+                  _Phase.connected => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle_rounded,
+                            size: 18,
+                            color: Colors.green.shade400,
+                          ),
+                          const SizedBox(width: 8),
+                          const Expanded(
+                            child: Text('OpenCode is running on this phone.'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        _status?.version.isNotEmpty == true
+                            ? 'Version ${_status!.version} · $localUrl'
+                            : localUrl,
+                        style: theme.textTheme.bodySmall!.copyWith(
+                          color: theme.hintColor,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          FilledButton.icon(
+                            onPressed: _busy ? null : _continueToApp,
+                            icon: const Icon(Icons.arrow_forward_rounded),
+                            label: const Text('Continue to app'),
+                          ),
+                          OutlinedButton.icon(
+                            onPressed: _busy ? null : _stopServer,
+                            icon: const Icon(Icons.stop_circle_outlined),
+                            label: Text(
+                              _busy ? 'Stopping...' : 'Stop local server',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                   _Phase.failed => Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

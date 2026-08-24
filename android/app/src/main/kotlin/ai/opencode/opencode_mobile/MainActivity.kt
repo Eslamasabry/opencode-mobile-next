@@ -121,7 +121,14 @@ class MainActivity : FlutterActivity() {
         }
         microphonePermissionResult = result
         permissionPreferences.edit().putBoolean("microphone_requested", true).apply()
-        requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), MICROPHONE_PERMISSION_REQUEST)
+        val permissions = mutableListOf(Manifest.permission.RECORD_AUDIO)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        requestPermissions(permissions.toTypedArray(), MICROPHONE_PERMISSION_REQUEST)
     }
 
     private fun capabilities(): Map<String, Any?> {

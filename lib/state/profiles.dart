@@ -10,6 +10,8 @@ class ServerProfile {
   String baseUrl;
   String username;
   String password; // kept in secure storage, mirrored here at runtime
+  /// Runtime-only signal that the saved password could not be decrypted.
+  bool requiresPasswordReentry;
 
   ServerProfile({
     required this.id,
@@ -17,6 +19,7 @@ class ServerProfile {
     required this.baseUrl,
     this.username = '',
     this.password = '',
+    this.requiresPasswordReentry = false,
   });
 
   Map<String, dynamic> toJson() => {
@@ -86,7 +89,8 @@ class ProfileStore {
   final SharedPreferences prefs;
   final FlutterSecureStorage secure;
 
-  ProfileStore({required this.prefs}) : secure = const FlutterSecureStorage();
+  ProfileStore({required this.prefs, FlutterSecureStorage? secure})
+    : secure = secure ?? const FlutterSecureStorage();
 
   List<ServerProfile> _cache = [];
   List<ServerProfile> get profiles => List.unmodifiable(_cache);
@@ -108,47 +112,90 @@ class ProfileStore {
     }
     // Restore secrets.
     for (final p in _cache) {
-      p.password = await secure.read(key: 'pw.${p.id}') ?? '';
+      try {
+        p.password = await secure.read(key: 'pw.${p.id}') ?? '';
+        p.requiresPasswordReentry = false;
+      } catch (_) {
+        // Keystore entries can become unreadable after a device restore or a
+        // lock-screen security change. Keep the non-secret profile usable so
+        // the user can re-enter its password instead of failing app startup.
+        p.password = '';
+        p.requiresPasswordReentry = true;
+      }
     }
     return _cache;
   }
 
-  Future<void> _persist() async {
-    await prefs.setString(
-      _profilesKey,
-      jsonEncode(_cache.map((p) => p.toJson()).toList()),
-    );
+  String _encode(List<ServerProfile> profiles) =>
+      jsonEncode(profiles.map((p) => p.toJson()).toList());
+
+  Future<void> _restoreProfiles(String? raw) async {
+    final restored = raw == null
+        ? await prefs.remove(_profilesKey)
+        : await prefs.setString(_profilesKey, raw);
+    if (!restored) {
+      throw StateError('Could not restore the saved server profiles');
+    }
   }
 
   Future<void> upsert(ServerProfile profile) async {
+    final previousRaw = prefs.getString(_profilesKey);
+    final next = List<ServerProfile>.of(_cache);
     final i = _cache.indexWhere((p) => p.id == profile.id);
     if (i >= 0) {
-      _cache[i] = profile;
+      next[i] = profile;
     } else {
-      _cache.add(profile);
+      next.add(profile);
     }
-    if (profile.password.isEmpty) {
-      await secure.delete(key: 'pw.${profile.id}');
-    } else {
-      await secure.write(key: 'pw.${profile.id}', value: profile.password);
+    if (!await prefs.setString(_profilesKey, _encode(next))) {
+      throw StateError('Could not save the server profile');
     }
-    await _persist();
+    try {
+      if (profile.password.isEmpty) {
+        await secure.delete(key: 'pw.${profile.id}');
+      } else {
+        await secure.write(key: 'pw.${profile.id}', value: profile.password);
+      }
+    } catch (_) {
+      await _restoreProfiles(previousRaw);
+      rethrow;
+    }
+    profile.requiresPasswordReentry = false;
+    _cache = next;
   }
 
   Future<void> remove(String id) async {
-    _cache.removeWhere((p) => p.id == id);
-    await secure.delete(key: 'pw.$id');
-    if (prefs.getString(_activeKey) == id) await setActiveId(null);
-    await _persist();
+    final previousRaw = prefs.getString(_profilesKey);
+    final previousActive = prefs.getString(_activeKey);
+    final next = _cache.where((profile) => profile.id != id).toList();
+    if (!await prefs.setString(_profilesKey, _encode(next))) {
+      throw StateError('Could not remove the server profile');
+    }
+    try {
+      if (previousActive == id) await setActiveId(null);
+      await secure.delete(key: 'pw.$id');
+    } catch (_) {
+      await _restoreProfiles(previousRaw);
+      if (previousActive == id &&
+          !await prefs.setString(_activeKey, previousActive!)) {
+        throw StateError('Could not restore the active server profile');
+      }
+      rethrow;
+    }
+    _cache = next;
   }
 
   String? get activeId => prefs.getString(_activeKey);
 
   Future<void> setActiveId(String? id) async {
     if (id == null) {
-      await prefs.remove(_activeKey);
+      if (!await prefs.remove(_activeKey)) {
+        throw StateError('Could not clear the active server profile');
+      }
     } else {
-      await prefs.setString(_activeKey, id);
+      if (!await prefs.setString(_activeKey, id)) {
+        throw StateError('Could not save the active server profile');
+      }
     }
   }
 
@@ -172,6 +219,9 @@ class ProfileStore {
 
   Future<void> setModel(String profileId, String providerID, String modelID) =>
       prefs.setString('$_modelKey$profileId', '$providerID|$modelID');
+
+  Future<void> clearModel(String profileId) =>
+      prefs.remove('$_modelKey$profileId');
 
   String agentFor(String profileId) =>
       prefs.getString('$_agentKey$profileId') ?? '';

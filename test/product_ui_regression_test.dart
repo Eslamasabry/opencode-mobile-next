@@ -19,15 +19,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xterm/xterm.dart';
 
 class _TestApi extends OpenCodeApi {
-  _TestApi({this.files, this.contents = const {}})
+  _TestApi({this.files, this.findFiles, this.contents = const {}})
     : super(baseUrl: 'http://localhost');
 
   final Future<List<FileNode>> Function(String path)? files;
+  final Future<List<String>> Function(String query)? findFiles;
   final Map<String, FileContent> contents;
 
   @override
   Future<List<FileNode>> listFiles([String path = '']) async =>
       files?.call(path) ?? const [];
+
+  @override
+  Future<List<String>> findFile(String query) async =>
+      findFiles?.call(query) ?? const [];
 
   @override
   Future<FileContent> fileContent(String path) async => contents[path]!;
@@ -126,6 +131,42 @@ class _TerminalRepository extends _LocationRepository {
   }
 }
 
+class _DelayedTerminalRepository extends _LocationRepository {
+  _DelayedTerminalRepository({required this.processes});
+
+  final List<TerminalProcess> processes;
+  final createResult = Completer<TerminalProcess>();
+  final renameResult = Completer<void>();
+  final removeResult = Completer<void>();
+  int createCalls = 0;
+  int renameCalls = 0;
+  int removeCalls = 0;
+
+  @override
+  Future<List<TerminalProcess>> listTerminals() async {
+    terminalLoads++;
+    return processes;
+  }
+
+  @override
+  Future<TerminalProcess> createTerminal({String? title}) {
+    createCalls++;
+    return createResult.future;
+  }
+
+  @override
+  Future<void> renameTerminal(String id, String title) {
+    renameCalls++;
+    return renameResult.future;
+  }
+
+  @override
+  Future<void> removeTerminal(String id) {
+    removeCalls++;
+    return removeResult.future;
+  }
+}
+
 class _ReconnectController extends ConnectionController {
   _ReconnectController(super.store, this.ready);
 
@@ -210,6 +251,16 @@ Future<ConnectionController> _controllerWithoutApi() async {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  const terminalProcess = TerminalProcess(
+    id: 'pty-1',
+    title: 'Shell',
+    command: 'bash',
+    arguments: [],
+    directory: '/work',
+    running: true,
+    pid: 42,
+  );
+
   testWidgets('persisted startup waits for reconnect before loading tabs', (
     tester,
   ) async {
@@ -290,6 +341,119 @@ void main() {
     },
   );
 
+  testWidgets('nested files use project-relative API paths and breadcrumbs', (
+    tester,
+  ) async {
+    final requestedPaths = <String>[];
+    final api = _TestApi(
+      files: (path) async {
+        requestedPaths.add(path);
+        return switch (path) {
+          '' => [FileNode(name: 'lib', path: '/lib', isDir: true)],
+          'lib' => [FileNode(name: 'ui', path: 'lib/ui', isDir: true)],
+          'lib/ui' => [
+            FileNode(
+              name: 'screen.dart',
+              path: 'lib/ui/screen.dart',
+              isDir: false,
+            ),
+          ],
+          _ => const <FileNode>[],
+        };
+      },
+    );
+    final controller = await _controller(
+      api: api,
+      repository: _LocationRepository(),
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: FilesScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('lib'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ui'));
+    await tester.pumpAndSettle();
+
+    expect(requestedPaths, ['', 'lib', 'lib/ui']);
+    expect(find.widgetWithText(ActionChip, '/'), findsOneWidget);
+    expect(find.text('/lib/ui'), findsNothing);
+
+    await tester.tap(find.widgetWithText(ActionChip, 'lib'));
+    await tester.pumpAndSettle();
+    expect(requestedPaths.last, 'lib');
+  });
+
+  testWidgets('file search clear control has an accessible tooltip', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    final controller = await _controller(repository: _LocationRepository());
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: FilesScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'query');
+    await tester.pump();
+
+    expect(find.byTooltip('Clear file search'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('Clear file search')), findsOneWidget);
+    semantics.dispose();
+  });
+
+  testWidgets('clearing file search restores the directory it started in', (
+    tester,
+  ) async {
+    final requestedPaths = <String>[];
+    final api = _TestApi(
+      files: (path) async {
+        requestedPaths.add(path);
+        return switch (path) {
+          '' => [FileNode(name: 'lib', path: 'lib', isDir: true)],
+          'lib' => [
+            FileNode(name: 'src', path: 'lib/src', isDir: true),
+            FileNode(name: 'local.dart', path: 'lib/local.dart', isDir: false),
+          ],
+          _ => const <FileNode>[],
+        };
+      },
+      findFiles: (_) async => const ['test/result.dart'],
+    );
+    final controller = await _controller(
+      api: api,
+      repository: _LocationRepository(),
+    );
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: FilesScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('lib'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'result');
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pumpAndSettle();
+    expect(find.text('result.dart'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Clear file search'));
+    await tester.pumpAndSettle();
+
+    expect(requestedPaths.last, 'lib');
+    expect(find.text('local.dart'), findsOneWidget);
+    expect(find.text('result.dart'), findsNothing);
+  });
+
   testWidgets('binary files render metadata instead of base64 source', (
     tester,
   ) async {
@@ -329,18 +493,12 @@ void main() {
     'terminal reconnects, forwards control input, and closes channels',
     (tester) async {
       final repository = _TerminalRepository();
-      const process = TerminalProcess(
-        id: 'pty-1',
-        title: 'Shell',
-        command: 'bash',
-        arguments: [],
-        directory: '/work',
-        running: true,
-        pid: 42,
-      );
       await tester.pumpWidget(
         MaterialApp(
-          home: TerminalSurface(repository: repository, process: process),
+          home: TerminalSurface(
+            repository: repository,
+            process: terminalProcess,
+          ),
         ),
       );
       await tester.pump();
@@ -376,6 +534,124 @@ void main() {
       expect(repository.channels.last.closed, isTrue);
     },
   );
+
+  testWidgets('stale terminal create does not open in a new repository', (
+    tester,
+  ) async {
+    final oldRepository = _DelayedTerminalRepository(processes: const []);
+    final newRepository = _TerminalRepository();
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final controller = _SignalController(ProfileStore(prefs: prefs))
+      ..api = _TestApi()
+      ..repository = oldRepository
+      ..status = StreamStatus.connected;
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: TerminalScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FloatingActionButton, 'Terminal'));
+    await tester.pump();
+    expect(oldRepository.createCalls, 1);
+
+    controller.signalLocation(newRepository);
+    await tester.pumpAndSettle();
+    expect(newRepository.terminalLoads, 1);
+
+    oldRepository.createResult.complete(terminalProcess);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 20));
+
+    expect(find.byType(TerminalSurface), findsNothing);
+    expect(newRepository.terminalLoads, 1);
+    final createButton = tester.widget<FloatingActionButton>(
+      find.byType(FloatingActionButton),
+    );
+    expect(createButton.onPressed, isNotNull);
+  });
+
+  testWidgets('stale terminal rename does not reload a new workspace', (
+    tester,
+  ) async {
+    final repository = _DelayedTerminalRepository(
+      processes: const [terminalProcess],
+    );
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final controller = _SignalController(ProfileStore(prefs: prefs))
+      ..api = _TestApi()
+      ..repository = repository
+      ..status = StreamStatus.connected;
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: TerminalScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Terminal actions'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Rename'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Renamed');
+    await tester.tap(find.text('Save'));
+    await tester.pump();
+    expect(repository.renameCalls, 1);
+
+    repository.setLocation(workspace: 'new-workspace');
+    controller.signalLocation(repository);
+    await tester.pumpAndSettle();
+    expect(repository.terminalLoads, 2);
+
+    repository.renameResult.complete();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 20));
+    expect(repository.terminalLoads, 2);
+  });
+
+  testWidgets('stale terminal remove does not reload a new repository', (
+    tester,
+  ) async {
+    final oldRepository = _DelayedTerminalRepository(
+      processes: const [terminalProcess],
+    );
+    final newRepository = _TerminalRepository();
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final controller = _SignalController(ProfileStore(prefs: prefs))
+      ..api = _TestApi()
+      ..repository = oldRepository
+      ..status = StreamStatus.connected;
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: TerminalScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Terminal actions'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Stop'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Stop'));
+    await tester.pump();
+    expect(oldRepository.removeCalls, 1);
+
+    controller.signalLocation(newRepository);
+    await tester.pumpAndSettle();
+    expect(newRepository.terminalLoads, 1);
+
+    oldRepository.removeResult.complete();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 20));
+    expect(newRepository.terminalLoads, 1);
+  });
 
   testWidgets('permission actions wrap on a narrow screen', (tester) async {
     tester.view.physicalSize = const Size(280, 700);

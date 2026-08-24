@@ -26,8 +26,8 @@ round-trip.
 
 | Tool | Version |
 |---|---|
-| Flutter | 3.38+ (built with 3.38.5) |
-| Android SDK | API 35 |
+| Flutter | 3.47.1 (the version pinned for Shorebird releases) |
+| Android SDK | API 36 |
 | Shorebird CLI | 1.6.x |
 
 ## Build & run
@@ -38,7 +38,7 @@ flutter run                # debug on device/emulator
 flutter build apk --release
 ```
 
-## Ship it with Shorebird
+## Store releases and Shorebird patches
 
 One-time:
 
@@ -49,15 +49,120 @@ shorebird login     # free account at console.shorebird.dev
 shorebird doctor    # expect "No issues detected!"
 ```
 
-Every release / OTA patch:
+The release helper is fail-closed. It accepts only `release` or `patch`, requires
+a clean `master` synchronized with its same-named tracked upstream (normally
+`origin/master`), and runs `flutter analyze`, the complete `flutter test` suite,
+and a Shorebird dry-run. It uploads nothing unless `--publish` is supplied
+explicitly.
+
+### Signing migration blocker
+
+**Do not publish a store release yet.** The current
+[`android/app/build.gradle.kts`](android/app/build.gradle.kts) signs release
+builds with Flutter's debug key. `./scripts/release.sh release` intentionally
+stops at this gate before analysis, building, or upload.
+
+Before the first store release, choose and protect a production upload key,
+enroll in Play App Signing, move key material and passwords outside version
+control, create an explicit Gradle `release` signing configuration backed by a
+complete local `android/key.properties`, and replace the debug release signing
+configuration. Do not commit a keystore or `key.properties`; both are already
+ignored under `android/`. Export `RELEASE_CERT_SHA256` as the expected upload
+certificate fingerprint before running the helper. The helper checks the AAB's
+actual certificate after its dry-run and before any upload.
+
+Also decide how to handle existing debug-signed sideload installs: Android
+cannot upgrade them in place to an APK signed by a different key, so those users
+must uninstall the old build (losing its local app data) before installing the
+new production-signed line. This repository does not perform that signing
+migration automatically.
+
+### Full Play Store release (AAB)
+
+After the signing blocker is resolved, bump `version:` in `pubspec.yaml` to a
+unique `x.y.z+build` value, commit it, and push it so local `master` exactly
+matches `origin/master`. Ensure `flutter --version` reports exactly 3.47.1, the
+same Flutter version pinned for the Shorebird build. Then validate and publish
+as two distinct actions:
 
 ```bash
-./scripts/release.sh          # shorebird release android -> store-ready APK
-./scripts/release.sh patch    # Dart-only change? push it over the air
+./scripts/release.sh release             # gates + dry-run; uploads nothing
+./scripts/release.sh release --publish   # repeats validation, then uploads
 ```
 
-`shorebird.yaml` already contains this app's `app_id`. Note Shorebird patches
-**Dart only** — changes to `android/` need a new full release.
+The store artifact is
+`build/app/outputs/bundle/release/app-release.aab`. The helper creates the
+Shorebird release but does not upload to Google Play, create a GitHub release,
+tag, commit, or push. After verifying the published release, create an immutable
+baseline tag containing the exact `pubspec.yaml` version (including build
+number), for example `v1.0.12+13`, and push that tag explicitly. Patches fetch
+that tag from the tracked remote and require its commit to match the local tag
+before using it as the full-release source tree.
+
+### OTA patch
+
+Keep `pubspec.yaml` at the exact full-release version, commit and push the Dart
+fix, then run:
+
+```bash
+./scripts/release.sh patch             # gates + dry-run; uploads nothing
+./scripts/release.sh patch --publish   # repeats validation, then uploads
+```
+
+The patch always passes the exact `x.y.z+build` value to Shorebird; it never
+targets `latest`. It rejects changes since `v<x.y.z+build>` to Android native
+files (including Android code inside local packages), dependencies, Shorebird
+configuration, and bundled asset inputs. It also never enables Shorebird's
+`--allow-native-diffs` or `--allow-asset-diffs` escape hatches. Use a new full
+store release for any rejected change.
+
+`shorebird.yaml` already contains this app's `app_id`. Shorebird patches update
+Dart code only; the installed app applies a downloaded patch after restart.
+
+### GitHub sideload APK (separate distribution)
+
+The Play Store AAB is not a sideloadable APK, and the release helper never
+publishes GitHub assets. Derive a universal APK from the exact published AAB
+with Android's `bundletool`, passing the production signing key explicitly.
+Password files and the keystore in this example must live outside the
+repository:
+
+```bash
+release_version='1.0.12+13'
+aab='build/app/outputs/bundle/release/app-release.aab'
+apks="build/sideload/$release_version/app.apks"
+apk="build/sideload/$release_version/opencode-$release_version.apk"
+
+mkdir -p "build/sideload/$release_version"
+java -jar "$BUNDLETOOL_JAR" build-apks \
+  --bundle="$aab" \
+  --output="$apks" \
+  --mode=universal \
+  --ks="$ANDROID_KEYSTORE_PATH" \
+  --ks-pass="file:$ANDROID_KEYSTORE_PASSWORD_FILE" \
+  --ks-key-alias="$ANDROID_KEY_ALIAS" \
+  --key-pass="file:$ANDROID_KEY_PASSWORD_FILE"
+unzip -p "$apks" universal.apk >"$apk"
+apksigner verify --verbose --print-certs "$apk"
+```
+
+Compare the printed SHA-256 certificate digest with `RELEASE_CERT_SHA256`, then
+native-test the universal APK on every supported device mode before attaching
+it manually to a GitHub Release for `v$release_version`. Never use an APK set
+generated without explicit bundletool signing parameters for distribution;
+bundletool otherwise falls back to a debug key. Keep GitHub sideload
+publication separate from the Shorebird/Play release so neither path silently
+publishes the other.
+
+This command signs the GitHub APK with the **upload-key** certificate represented
+by `RELEASE_CERT_SHA256`; that certificate defines the GitHub sideload upgrade
+line. With Play App Signing, Google normally signs Play-delivered APKs with the
+separate **app-signing** certificate shown in Play Console. A user generally
+cannot switch between the Play and GitHub channels in place unless those app
+certificates were intentionally made identical; switching requires uninstalling
+the existing app and loses its local data. Verify the upload-key fingerprint for
+GitHub artifacts and the Play app-signing fingerprint for Play artifacts. The
+current debug-signing blocker applies to both production channels.
 
 ## Connecting to opencode
 

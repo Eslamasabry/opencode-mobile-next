@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:opencode_sdk/opencode_sdk.dart' as sdk;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/models.dart';
@@ -61,7 +62,10 @@ class ConnectionController extends ChangeNotifier {
   int _sessionsRefreshGeneration = 0;
   int _catalogRefreshGeneration = 0;
   int _questionsRefreshGeneration = 0;
+  int _questionRevision = 0;
+  final Map<String, int> _questionRevisions = {};
   int _sessionRevision = 0;
+  final Map<String, int> _sessionRevisions = {};
 
   StreamStatus status = StreamStatus.disconnected;
   String? version;
@@ -105,10 +109,19 @@ class ConnectionController extends ChangeNotifier {
   final Set<String> _resolvedPermissionIDs = {};
   final Map<String, ({String sessionID, String permissionID})>
   _legacyPermissionIdentities = {};
+  final Map<String, String> _v2PermissionSessions = {};
+  final Map<String, String> _v2QuestionSessions = {};
+  final Set<String> _resolvedQuestionIDs = {};
   int _permissionRevision = 0;
   Timer? _permissionHydrationRetry;
   int _permissionHydrationGeneration = 0;
   bool _disposed = false;
+  bool _lifecycleSuspended = false;
+  Future<void>? _lifecycleResume;
+
+  /// True only while the app intentionally has its transport retired in the
+  /// background. UI must not treat this as a user-initiated disconnect.
+  bool get lifecycleSuspended => _lifecycleSuspended;
 
   static const _permissionHydrationRetryDelays = [
     Duration(milliseconds: 250),
@@ -162,6 +175,8 @@ class ConnectionController extends ChangeNotifier {
   }
 
   Future<void> connect(ServerProfile profile) async {
+    _lifecycleSuspended = false;
+    _lifecycleResume = null;
     final validationError = validateServerProfileUrl(
       profile.baseUrl,
       username: profile.username,
@@ -194,25 +209,29 @@ class ConnectionController extends ChangeNotifier {
     notifyListeners();
     enablePollingFallback();
 
-    await _writeActiveProfile(generation, profile.id);
+    try {
+      await _writeActiveProfile(generation, profile.id);
+    } catch (error) {
+      if (!_isCurrent(generation, currentApi)) return;
+      _failCurrentConnection(
+        'Could not save the active server profile: $error',
+      );
+      return;
+    }
     if (!_isCurrent(generation, currentApi)) return;
 
     try {
       final health = await currentApi.health();
       if (!_isCurrent(generation, currentApi)) return;
+      if (!health.healthy) {
+        throw ApiException('Server health check reported unhealthy');
+      }
       version = health.version ?? '';
     } catch (e) {
       if (!_isCurrent(generation, currentApi)) return;
-      status = StreamStatus.disconnected;
-      lastError = e is ApiException
-          ? e.message
-          : 'Cannot reach ${profile.baseUrl}: $e';
-      api = null;
-      repository = null;
-      currentApi.close();
-      _poll?.cancel();
-      _poll = null;
-      notifyListeners();
+      _failCurrentConnection(
+        e is ApiException ? e.message : 'Cannot reach ${profile.baseUrl}: $e',
+      );
       return;
     }
 
@@ -253,18 +272,64 @@ class ConnectionController extends ChangeNotifier {
       }
       final nextProviders = results[0] as ProvidersResponse;
       final nextAgents = results[1] as List<AgentInfo>;
-      providers = nextProviders;
-      agents = nextAgents;
-      if ((selectedModel?.modelID.isEmpty ?? true)) {
-        final p = nextProviders.defaultProviderID;
-        final m = nextProviders.defaultModelID;
-        if (p != null && m != null) {
-          selectedModel = ModelRef(providerID: p, modelID: m);
+      final profileID = _connectedProfile?.id;
+      var nextModel = selectedModel;
+      bool validModel(ModelRef? model) =>
+          model != null &&
+          nextProviders.providers.any(
+            (provider) =>
+                provider.id == model.providerID &&
+                provider.modelIDs.contains(model.modelID),
+          );
+      if (!validModel(nextModel)) {
+        final defaultModel = ModelRef(
+          providerID: nextProviders.defaultProviderID ?? '',
+          modelID: nextProviders.defaultModelID ?? '',
+        );
+        nextModel = validModel(defaultModel) ? defaultModel : null;
+        if (nextModel == null) {
+          for (final provider in nextProviders.providers) {
+            if (provider.modelIDs.isNotEmpty) {
+              nextModel = ModelRef(
+                providerID: provider.id,
+                modelID: provider.modelIDs.first,
+              );
+              break;
+            }
+          }
         }
       }
-      if (selectedAgent.isEmpty && nextAgents.isNotEmpty) {
-        selectedAgent = nextAgents.first.name;
+      var nextAgent = selectedAgent;
+      if (!nextAgents.any((agent) => agent.name == nextAgent)) {
+        nextAgent = nextAgents.isEmpty ? '' : nextAgents.first.name;
       }
+      if (profileID != null) {
+        if (!validModel(selectedModel)) {
+          if (nextModel == null) {
+            await store.clearModel(profileID);
+          } else {
+            await store.setModel(
+              profileID,
+              nextModel.providerID,
+              nextModel.modelID,
+            );
+          }
+        }
+        if (nextAgent != selectedAgent) {
+          await store.setAgent(profileID, nextAgent);
+        }
+      }
+      if (!_isCurrentCatalogRefresh(
+        generation,
+        currentApi,
+        refreshGeneration,
+      )) {
+        return;
+      }
+      providers = nextProviders;
+      agents = nextAgents;
+      selectedModel = nextModel;
+      selectedAgent = nextAgent;
       catalogLoading = false;
       notifyListeners();
     } catch (error) {
@@ -296,6 +361,7 @@ class ConnectionController extends ChangeNotifier {
         if (s == StreamStatus.connected) {
           lastError = null;
           unawaited(refreshPendingPermissions());
+          unawaited(refreshPendingQuestions());
         } else {
           _cancelPermissionHydration();
         }
@@ -315,6 +381,8 @@ class ConnectionController extends ChangeNotifier {
     bool keepActive = false,
     bool silent = false,
   }) async {
+    _lifecycleSuspended = false;
+    _lifecycleResume = null;
     final generation = _beginGeneration();
     _retireTransport();
     _clearLocationData();
@@ -327,7 +395,15 @@ class ConnectionController extends ChangeNotifier {
     locationError = null;
     status = StreamStatus.disconnected;
     if (!silent) notifyListeners();
-    if (!keepActive) await _writeActiveProfile(generation, null);
+    if (!keepActive) {
+      try {
+        await _writeActiveProfile(generation, null);
+      } catch (error) {
+        if (_disposed || generation != _generation) return;
+        lastError = 'Could not clear the active server profile: $error';
+        notifyListeners();
+      }
+    }
   }
 
   // ---------------- Event handling ----------------
@@ -349,7 +425,7 @@ class ConnectionController extends ChangeNotifier {
         final info = props['info'];
         if (info is Map<String, dynamic>) {
           final s = Session.fromJson(info);
-          _sessionRevision += 1;
+          _markSessionChanged(s.id);
           sessionsById[s.id] = s;
           notifyListeners();
         }
@@ -359,12 +435,28 @@ class ConnectionController extends ChangeNotifier {
         final info = props['info'];
         if (info is Map<String, dynamic>) {
           final id = info['id']?.toString();
-          _sessionRevision += 1;
-          sessionsById.remove(id);
-          busySessions.remove(id);
-          permissions.removeWhere((_, value) => value.sessionID == id);
-          questions.removeWhere((_, value) => value.sessionID == id);
-          notifyListeners();
+          if (id != null && id.isNotEmpty) {
+            _markSessionChanged(id);
+            sessionsById.remove(id);
+            busySessions.remove(id);
+            permissions.removeWhere((_, value) => value.sessionID == id);
+            final removedQuestionIDs = questions.entries
+                .where((entry) => entry.value.sessionID == id)
+                .map((entry) => entry.key)
+                .toList();
+            for (final questionID in removedQuestionIDs) {
+              _markQuestionChanged(questionID);
+              questions.remove(questionID);
+            }
+            _legacyPermissionIdentities.removeWhere(
+              (_, identity) => identity.sessionID == id,
+            );
+            _v2PermissionSessions.removeWhere(
+              (_, sessionID) => sessionID == id,
+            );
+            _v2QuestionSessions.removeWhere((_, sessionID) => sessionID == id);
+            notifyListeners();
+          }
         }
         break;
 
@@ -373,7 +465,7 @@ class ConnectionController extends ChangeNotifier {
         if (info is Map<String, dynamic>) {
           final msg = MessageInfo.fromJson(info);
           if (msg.role == 'assistant') {
-            _sessionRevision += 1;
+            _markSessionChanged(msg.sessionID);
             final working =
                 (msg.time == null || !msg.time!.isDone) &&
                 msg.errorText == null;
@@ -390,7 +482,7 @@ class ConnectionController extends ChangeNotifier {
       case 'message.removed':
         final sid = props['sessionID']?.toString();
         if (sid != null && sid.isNotEmpty) {
-          _sessionRevision += 1;
+          _markSessionChanged(sid);
           unawaited(_refreshOneSession(sid));
         }
         break;
@@ -414,11 +506,24 @@ class ConnectionController extends ChangeNotifier {
 
       case 'question.asked':
       case 'question.updated':
-      case 'question.v2.asked':
-        _questionsRefreshGeneration += 1;
         questionsLoading = false;
         final question = PendingQuestion.fromJson(props);
         if (question.id.isNotEmpty && question.sessionID.isNotEmpty) {
+          _markQuestionChanged(question.id);
+          _resolvedQuestionIDs.remove(question.id);
+          _v2QuestionSessions.remove(question.id);
+          questions[question.id] = question;
+          notifyListeners();
+        }
+        break;
+
+      case 'question.v2.asked':
+        questionsLoading = false;
+        final question = PendingQuestion.fromJson(props);
+        if (question.id.isNotEmpty && question.sessionID.isNotEmpty) {
+          _markQuestionChanged(question.id);
+          _resolvedQuestionIDs.remove(question.id);
+          _v2QuestionSessions[question.id] = question.sessionID;
           questions[question.id] = question;
           notifyListeners();
         }
@@ -428,10 +533,14 @@ class ConnectionController extends ChangeNotifier {
       case 'question.rejected':
       case 'question.v2.replied':
       case 'question.v2.rejected':
-        _questionsRefreshGeneration += 1;
         questionsLoading = false;
         final id = props['requestID']?.toString() ?? props['id']?.toString();
-        if (id != null && questions.remove(id) != null) notifyListeners();
+        if (id != null && id.isNotEmpty) {
+          _markQuestionChanged(id);
+          _resolvedQuestionIDs.add(id);
+          _v2QuestionSessions.remove(id);
+          if (questions.remove(id) != null) notifyListeners();
+        }
         break;
 
       case 'session.status':
@@ -441,7 +550,7 @@ class ConnectionController extends ChangeNotifier {
             ? rawStatus['type']?.toString()
             : rawStatus?.toString();
         if (sid != null && sid.isNotEmpty) {
-          _sessionRevision += 1;
+          _markSessionChanged(sid);
           switch (sessionStatus) {
             case 'idle':
               busySessions.remove(sid);
@@ -460,11 +569,17 @@ class ConnectionController extends ChangeNotifier {
 
       case 'session.error':
         final sid = props['sessionID']?.toString();
-        _sessionRevision += 1;
-        if (sid != null) busySessions.remove(sid);
+        if (sid != null) {
+          _markSessionChanged(sid);
+          busySessions.remove(sid);
+        }
         final err = props['error'];
         if (err is Map<String, dynamic>) {
-          lastError = err['message']?.toString() ?? lastError;
+          final data = err['data'];
+          lastError =
+              err['message']?.toString() ??
+              (data is Map ? data['message']?.toString() : null) ??
+              lastError;
         }
         notifyListeners();
         break;
@@ -472,7 +587,7 @@ class ConnectionController extends ChangeNotifier {
       case 'session.idle':
         final sid = props['sessionID']?.toString();
         if (sid != null) {
-          _sessionRevision += 1;
+          _markSessionChanged(sid);
           busySessions.remove(sid);
           unawaited(_refreshOneSession(sid));
           notifyListeners();
@@ -482,7 +597,7 @@ class ConnectionController extends ChangeNotifier {
       case 'session.compacted':
         final sid = props['sessionID']?.toString();
         if (sid != null && sid.isNotEmpty) {
-          _sessionRevision += 1;
+          _markSessionChanged(sid);
           unawaited(_refreshOneSession(sid));
         }
         break;
@@ -507,6 +622,7 @@ class ConnectionController extends ChangeNotifier {
     if (permission.sessionID.isEmpty || permission.id.isEmpty) return;
     _resolvedPermissionIDs.remove(permission.id);
     _legacyPermissionIdentities.remove(permission.id);
+    _v2PermissionSessions.remove(permission.id);
     permissions[permission.id] = permission;
     _permissionRevision += 1;
     notifyListeners();
@@ -525,6 +641,7 @@ class ConnectionController extends ChangeNotifier {
     if (permission.sessionID.isEmpty || permission.id.isEmpty) return;
     _resolvedPermissionIDs.remove(permission.id);
     _legacyPermissionIdentities.remove(permission.id);
+    _v2PermissionSessions[permission.id] = permission.sessionID;
     permissions[permission.id] = permission;
     _permissionRevision += 1;
     notifyListeners();
@@ -555,6 +672,7 @@ class ConnectionController extends ChangeNotifier {
           : null,
     );
     _resolvedPermissionIDs.remove(id);
+    _v2PermissionSessions.remove(id);
     permissions[id] = permission;
     _legacyPermissionIdentities[id] = (sessionID: sessionID, permissionID: id);
     _permissionRevision += 1;
@@ -572,6 +690,7 @@ class ConnectionController extends ChangeNotifier {
     _resolvedPermissionIDs.add(requestID);
     permissions.remove(requestID);
     _legacyPermissionIdentities.remove(requestID);
+    _v2PermissionSessions.remove(requestID);
     _permissionRevision += 1;
     notifyListeners();
   }
@@ -615,7 +734,7 @@ class ConnectionController extends ChangeNotifier {
     final revision = _permissionRevision;
     final permissionsAtStart = Map<String, PermissionRequest>.of(permissions);
     try {
-      final pending = await currentApi.pendingPermissions();
+      final results = await _loadPendingPermissions(currentApi);
       if (!_isCurrentPermissionHydration(
         currentApi,
         connectionGeneration,
@@ -624,10 +743,18 @@ class ConnectionController extends ChangeNotifier {
         return;
       }
       final unresolved = {
-        for (final permission in pending)
+        for (final permission in results.pending)
           if (!_resolvedPermissionIDs.contains(permission.id))
             permission.id: permission,
       };
+      if (!results.v2Succeeded) {
+        for (final entry in permissions.entries) {
+          if (_v2PermissionSessions.containsKey(entry.key) &&
+              !_resolvedPermissionIDs.contains(entry.key)) {
+            unresolved.putIfAbsent(entry.key, () => entry.value);
+          }
+        }
+      }
       if (revision == _permissionRevision) {
         _resolvedPermissionIDs.addAll(
           permissions.keys.where((id) => !unresolved.containsKey(id)),
@@ -646,6 +773,20 @@ class ConnectionController extends ChangeNotifier {
       _legacyPermissionIdentities.removeWhere(
         (id, _) => !permissions.containsKey(id),
       );
+      _v2PermissionSessions.removeWhere(
+        (id, _) => !permissions.containsKey(id),
+      );
+      if (results.v2Succeeded) {
+        _v2PermissionSessions.removeWhere(
+          (id, _) => !results.v2IDs.contains(id),
+        );
+        for (final id in results.v2IDs) {
+          final permission = permissions[id];
+          if (permission != null) {
+            _v2PermissionSessions[id] = permission.sessionID;
+          }
+        }
+      }
       permissionsLoading = false;
       permissionsError = null;
       notifyListeners();
@@ -682,6 +823,54 @@ class ConnectionController extends ChangeNotifier {
     }
   }
 
+  Future<
+    ({List<PermissionRequest> pending, Set<String> v2IDs, bool v2Succeeded})
+  >
+  _loadPendingPermissions(OpenCodeApi currentApi) async {
+    List<PermissionRequest>? legacy;
+    List<PermissionRequest>? v2;
+    Object? legacyError;
+    Object? v2Error;
+    await Future.wait<void>([
+      () async {
+        try {
+          legacy = await currentApi.pendingPermissions();
+        } catch (error) {
+          legacyError = error;
+        }
+      }(),
+      () async {
+        try {
+          v2 = await currentApi.pendingPermissionsV2();
+        } catch (error) {
+          v2Error = error;
+        }
+      }(),
+    ]);
+    if (legacy == null && v2 == null) {
+      throw ApiException(
+        'Could not hydrate pending permissions: '
+        '${legacyError ?? v2Error ?? 'no endpoint available'}',
+      );
+    }
+    final merged = <String, PermissionRequest>{
+      for (final permission in legacy ?? const <PermissionRequest>[])
+        permission.id: permission,
+      // Prefer V2 when both APIs briefly expose the same request so reply
+      // routing follows the newer, session-scoped contract.
+      for (final permission in v2 ?? const <PermissionRequest>[])
+        permission.id: permission,
+    };
+    return (
+      pending: merged.values.toList(),
+      v2IDs: {
+        for (final permission in v2 ?? const <PermissionRequest>[])
+          permission.id,
+      },
+      v2Succeeded: v2 != null,
+    );
+  }
+
   bool _isCurrentPermissionHydration(
     OpenCodeApi currentApi,
     int connectionGeneration,
@@ -710,12 +899,21 @@ class ConnectionController extends ChangeNotifier {
     }
     try {
       final legacyIdentity = _legacyPermissionIdentities[requestID];
-      await currentApi.respondPermission(
-        permission.id,
-        response,
-        legacySessionID: legacyIdentity?.sessionID,
-        legacyPermissionID: legacyIdentity?.permissionID,
-      );
+      final v2SessionID = _v2PermissionSessions[requestID];
+      if (v2SessionID != null) {
+        await currentApi.respondPermissionV2(
+          v2SessionID,
+          permission.id,
+          response,
+        );
+      } else {
+        await currentApi.respondPermission(
+          permission.id,
+          response,
+          legacySessionID: legacyIdentity?.sessionID,
+          legacyPermissionID: legacyIdentity?.permissionID,
+        );
+      }
       if (!_isCurrent(generation, currentApi)) return;
       _resolvePermission(requestID);
     } catch (error) {
@@ -737,11 +935,12 @@ class ConnectionController extends ChangeNotifier {
     final generation = _generation;
     if (current == null) return;
     final refreshGeneration = ++_questionsRefreshGeneration;
+    final revision = _questionRevision;
     questionsLoading = true;
     questionsError = null;
     notifyListeners();
     try {
-      final pending = await current.listQuestions();
+      final results = await _loadPendingQuestions(currentApi, current);
       if (!_isCurrentQuestionsRefresh(
         generation,
         currentApi,
@@ -750,7 +949,37 @@ class ConnectionController extends ChangeNotifier {
       )) {
         return;
       }
-      questions = {for (final question in pending) question.id: question};
+      final hydrated = {
+        for (final question in results.pending)
+          if (!_resolvedQuestionIDs.contains(question.id))
+            question.id: question,
+      };
+      if (!results.v2Succeeded) {
+        for (final entry in questions.entries) {
+          if (_v2QuestionSessions.containsKey(entry.key) &&
+              !_resolvedQuestionIDs.contains(entry.key)) {
+            hydrated.putIfAbsent(entry.key, () => entry.value);
+          }
+        }
+      }
+      final questionIDs = {...questions.keys, ...hydrated.keys};
+      for (final id in questionIDs) {
+        if ((_questionRevisions[id] ?? 0) > revision) continue;
+        final question = hydrated[id];
+        if (question == null) {
+          questions.remove(id);
+          _v2QuestionSessions.remove(id);
+        } else {
+          questions[id] = question;
+          if (results.v2Succeeded) {
+            if (results.v2IDs.contains(id)) {
+              _v2QuestionSessions[id] = question.sessionID;
+            } else {
+              _v2QuestionSessions.remove(id);
+            }
+          }
+        }
+      }
       questionsLoading = false;
       notifyListeners();
     } catch (error) {
@@ -769,6 +998,60 @@ class ConnectionController extends ChangeNotifier {
     }
   }
 
+  Future<({List<PendingQuestion> pending, Set<String> v2IDs, bool v2Succeeded})>
+  _loadPendingQuestions(
+    OpenCodeApi? currentApi,
+    ProductRepository currentRepository,
+  ) async {
+    List<PendingQuestion>? legacy;
+    List<PendingQuestion>? v2;
+    Object? legacyError;
+    Object? v2Error;
+    await Future.wait<void>([
+      () async {
+        try {
+          legacy = await currentRepository.listQuestions();
+        } catch (error) {
+          legacyError = error;
+        }
+      }(),
+      () async {
+        if (currentApi == null) return;
+        try {
+          final raw = await currentApi.pendingQuestionsV2();
+          v2 = raw
+              .map(PendingQuestion.fromJson)
+              .where(
+                (question) =>
+                    question.id.isNotEmpty && question.sessionID.isNotEmpty,
+              )
+              .toList();
+        } catch (error) {
+          v2Error = error;
+        }
+      }(),
+    ]);
+    if (legacy == null && v2 == null) {
+      throw StateError(
+        'Could not hydrate pending questions: '
+        '${legacyError ?? v2Error ?? 'no endpoint available'}',
+      );
+    }
+    final merged = <String, PendingQuestion>{
+      for (final question in legacy ?? const <PendingQuestion>[])
+        question.id: question,
+      for (final question in v2 ?? const <PendingQuestion>[])
+        question.id: question,
+    };
+    return (
+      pending: merged.values.toList(),
+      v2IDs: {
+        for (final question in v2 ?? const <PendingQuestion>[]) question.id,
+      },
+      v2Succeeded: v2 != null,
+    );
+  }
+
   Future<void> answerQuestion(
     String requestID,
     List<List<String>> answers,
@@ -777,10 +1060,24 @@ class ConnectionController extends ChangeNotifier {
     final currentApi = api;
     final generation = _generation;
     if (current == null) throw StateError('Not connected to OpenCode');
-    await current.answerQuestion(requestID, answers);
+    final v2SessionID = _v2QuestionSessions[requestID];
+    try {
+      if (v2SessionID != null) {
+        if (currentApi == null) throw StateError('Not connected to OpenCode');
+        await currentApi.answerQuestionV2(v2SessionID, requestID, answers);
+      } else {
+        await current.answerQuestion(requestID, answers);
+      }
+    } catch (error) {
+      if (!_isCurrent(generation, currentApi) || repository != current) return;
+      if (_isQuestionNotFound(error, requestID)) {
+        _resolveQuestion(requestID);
+        return;
+      }
+      rethrow;
+    }
     if (!_isCurrent(generation, currentApi) || repository != current) return;
-    questions.remove(requestID);
-    notifyListeners();
+    _resolveQuestion(requestID);
   }
 
   Future<void> rejectQuestion(String requestID) async {
@@ -788,10 +1085,49 @@ class ConnectionController extends ChangeNotifier {
     final currentApi = api;
     final generation = _generation;
     if (current == null) throw StateError('Not connected to OpenCode');
-    await current.rejectQuestion(requestID);
+    final v2SessionID = _v2QuestionSessions[requestID];
+    try {
+      if (v2SessionID != null) {
+        if (currentApi == null) throw StateError('Not connected to OpenCode');
+        await currentApi.rejectQuestionV2(v2SessionID, requestID);
+      } else {
+        await current.rejectQuestion(requestID);
+      }
+    } catch (error) {
+      if (!_isCurrent(generation, currentApi) || repository != current) return;
+      if (_isQuestionNotFound(error, requestID)) {
+        _resolveQuestion(requestID);
+        return;
+      }
+      rethrow;
+    }
     if (!_isCurrent(generation, currentApi) || repository != current) return;
+    _resolveQuestion(requestID);
+  }
+
+  void _resolveQuestion(String requestID) {
+    _markQuestionChanged(requestID);
+    questionsLoading = false;
+    _v2QuestionSessions.remove(requestID);
+    _resolvedQuestionIDs.add(requestID);
     questions.remove(requestID);
     notifyListeners();
+  }
+
+  bool _isQuestionNotFound(Object error, String requestID) {
+    if (error is ApiException) return error.isQuestionNotFound(requestID);
+    if (error is ProductException && error.cause != null) {
+      return _isQuestionNotFound(error.cause!, requestID);
+    }
+    if (error is sdk.OpenCodeApiException && error.statusCode == 404) {
+      final decoded = error.payloadAs<sdk.QuestionNotFoundError>();
+      if (decoded != null) return decoded.requestID == requestID;
+      final raw = error.rawPayload;
+      return raw is Map &&
+          raw['_tag']?.toString() == 'QuestionNotFoundError' &&
+          raw['requestID']?.toString() == requestID;
+    }
+    return false;
   }
 
   @visibleForTesting
@@ -831,18 +1167,31 @@ class ConnectionController extends ChangeNotifier {
       )) {
         return;
       }
-      if (revision != _sessionRevision) {
-        sessionsLoading = false;
-        notifyListeners();
-        return;
+      final hydrated = {for (final session in list) session.id: session};
+      final sessionIDs = {...sessionsById.keys, ...hydrated.keys};
+      for (final id in sessionIDs) {
+        if ((_sessionRevisions[id] ?? 0) > revision) continue;
+        final session = hydrated[id];
+        if (session == null) {
+          sessionsById.remove(id);
+        } else {
+          sessionsById[id] = session;
+        }
       }
-      sessionsById = {for (final s in list) s.id: s};
       if (statuses != null) {
-        busySessions
-          ..clear()
-          ..addAll(
-            statuses.entries.where((e) => e.value != 'idle').map((e) => e.key),
-          );
+        final statusIDs = {
+          ...sessionsById.keys,
+          ...busySessions,
+          ...statuses.keys,
+        };
+        for (final id in statusIDs) {
+          if ((_sessionRevisions[id] ?? 0) > revision) continue;
+          if (statuses[id] != null && statuses[id] != 'idle') {
+            busySessions.add(id);
+          } else {
+            busySessions.remove(id);
+          }
+        }
       }
       sessionsLoading = false;
       sessionsError = statusError?.toString();
@@ -867,10 +1216,11 @@ class ConnectionController extends ChangeNotifier {
     final currentApi = api;
     final generation = _generation;
     if (currentApi == null) return;
-    final revision = _sessionRevision;
+    final revision = _sessionRevisions[id] ?? 0;
     try {
       final session = await currentApi.session(id);
-      if (!_isCurrent(generation, currentApi) || revision != _sessionRevision) {
+      if (!_isCurrent(generation, currentApi) ||
+          revision != (_sessionRevisions[id] ?? 0)) {
         return;
       }
       sessionsById[id] = session;
@@ -885,6 +1235,85 @@ class ConnectionController extends ChangeNotifier {
       if (!shouldPoll || sessionsLoading) return;
       unawaited(refreshSessions());
     });
+  }
+
+  /// Stops all network work while the application is backgrounded without
+  /// clearing the selected profile, location, or already-rendered data.
+  void suspendForLifecycle() {
+    if (_disposed || _lifecycleSuspended) return;
+    _lifecycleSuspended = true;
+    // A resume already in flight is invalidated by the generation change
+    // below. Detach it so a later resume can create a fresh transport.
+    _lifecycleResume = null;
+    if (api == null) return;
+    _beginGeneration();
+    _retireTransport();
+    status = StreamStatus.disconnected;
+    notifyListeners();
+  }
+
+  /// Recreates one transport for the profile/location retained by
+  /// [suspendForLifecycle]. Concurrent resume signals share the same future.
+  Future<void> resumeFromLifecycle() {
+    if (_disposed) return Future.value();
+    final inFlight = _lifecycleResume;
+    if (inFlight != null) return inFlight;
+    if (!_lifecycleSuspended) return Future.value();
+    _lifecycleSuspended = false;
+    final profile = _connectedProfile;
+    if (profile == null) return Future.value();
+    final resumed = _resumeLifecycleTransport(
+      profile,
+      directory: directory,
+      workspace: workspace,
+    );
+    late final Future<void> tracked;
+    tracked = resumed.whenComplete(() {
+      if (identical(_lifecycleResume, tracked)) _lifecycleResume = null;
+    });
+    _lifecycleResume = tracked;
+    return tracked;
+  }
+
+  Future<void> _resumeLifecycleTransport(
+    ServerProfile profile, {
+    String? directory,
+    String? workspace,
+  }) async {
+    final generation = _beginGeneration();
+    final currentApi = _apiFactory(profile)
+      ..setLocation(directory: directory, workspace: workspace);
+    final currentRepository = _repositoryFactory(currentApi)
+      ..setLocation(directory: directory, workspace: workspace);
+    api = currentApi;
+    repository = currentRepository;
+    status = StreamStatus.connecting;
+    lastError = null;
+    notifyListeners();
+    enablePollingFallback();
+    try {
+      final health = await currentApi.health();
+      if (!_isCurrent(generation, currentApi)) return;
+      if (!health.healthy) {
+        throw ApiException('Server health check reported unhealthy');
+      }
+      version = health.version ?? version ?? '';
+    } catch (error) {
+      if (!_isCurrent(generation, currentApi)) return;
+      _failCurrentConnection(
+        error is ApiException
+            ? error.message
+            : 'Cannot reach ${profile.baseUrl}: $error',
+      );
+      return;
+    }
+    _startEvents(generation, currentApi);
+    await Future.wait<void>([
+      refreshSessions(),
+      _loadCatalog(),
+      refreshPendingPermissions(),
+      refreshPendingQuestions(),
+    ]);
   }
 
   List<Session> sortedSessions() {
@@ -1007,6 +1436,25 @@ class ConnectionController extends ChangeNotifier {
       identical(repository, currentRepository) &&
       refreshGeneration == _questionsRefreshGeneration;
 
+  void _markSessionChanged(String id) {
+    _sessionRevision += 1;
+    _sessionRevisions[id] = _sessionRevision;
+  }
+
+  void _markQuestionChanged(String id) {
+    _questionRevision += 1;
+    _questionRevisions[id] = _questionRevision;
+  }
+
+  void _failCurrentConnection(String error) {
+    _retireTransport();
+    _connectedProfile = null;
+    version = null;
+    status = StreamStatus.disconnected;
+    lastError = error;
+    notifyListeners();
+  }
+
   void _retireTransport() {
     _cancelPermissionHydration();
     final oldEvents = _events;
@@ -1024,13 +1472,19 @@ class ConnectionController extends ChangeNotifier {
     _sessionsRefreshGeneration += 1;
     _catalogRefreshGeneration += 1;
     _questionsRefreshGeneration += 1;
+    _questionRevision += 1;
+    _questionRevisions.clear();
     _sessionRevision += 1;
+    _sessionRevisions.clear();
     sessionsById = {};
     busySessions = {};
     permissions = {};
     questions = {};
     _resolvedPermissionIDs.clear();
     _legacyPermissionIdentities.clear();
+    _v2PermissionSessions.clear();
+    _v2QuestionSessions.clear();
+    _resolvedQuestionIDs.clear();
     _permissionRevision = 0;
     providers = null;
     agents = [];

@@ -26,6 +26,10 @@ class _HydrationApi extends OpenCodeApi {
     }
     return result;
   }
+
+  @override
+  Future<List<PermissionRequest>> pendingPermissionsV2() =>
+      Future.error(ApiException('V2 unavailable', statusCode: 404));
 }
 
 class _ReplyApi extends OpenCodeApi {

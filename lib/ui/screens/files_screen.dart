@@ -22,6 +22,7 @@ class _FilesScreenState extends State<FilesScreen> {
   String? _error;
   bool _loading = false;
   String? _selectedPath;
+  String? _searchOriginPath;
   final _search = TextEditingController();
   ProductRepository? _repository;
   int _locationRevision = -1;
@@ -55,6 +56,7 @@ class _FilesScreenState extends State<FilesScreen> {
     _locationRevision = revision;
     _requestGeneration++;
     _search.clear();
+    _searchOriginPath = null;
     setState(() {
       _entries = null;
       _path = '';
@@ -71,7 +73,17 @@ class _FilesScreenState extends State<FilesScreen> {
         : 0,
   );
 
+  String _relativePath(String path) =>
+      path.split('/').where((component) => component.isNotEmpty).join('/');
+
+  void _navigateTo(String path) {
+    _searchOriginPath = null;
+    _search.clear();
+    _load(path);
+  }
+
   Future<void> _load(String path) async {
+    path = _relativePath(path);
     final api = widget.controller.api;
     final generation = ++_requestGeneration;
     if (api == null) {
@@ -89,7 +101,15 @@ class _FilesScreenState extends State<FilesScreen> {
       final nodes = await api.listFiles(path);
       if (!mounted || generation != _requestGeneration) return;
       setState(() {
-        _entries = nodes;
+        _entries = nodes
+            .map(
+              (node) => FileNode(
+                name: node.name,
+                path: _relativePath(node.path),
+                isDir: node.isDir,
+              ),
+            )
+            .toList();
         _path = path;
       });
     } catch (e) {
@@ -104,9 +124,12 @@ class _FilesScreenState extends State<FilesScreen> {
 
   Future<void> _searchFiles(String q) async {
     if (q.trim().isEmpty) {
-      await _load(_path);
+      final origin = _searchOriginPath ?? _path;
+      _searchOriginPath = null;
+      await _load(origin);
       return;
     }
+    _searchOriginPath ??= _path;
     final api = widget.controller.api;
     final generation = ++_requestGeneration;
     if (api == null) return;
@@ -119,8 +142,9 @@ class _FilesScreenState extends State<FilesScreen> {
       if (!mounted || generation != _requestGeneration) return;
       setState(() {
         _entries = results.map((r) {
-          final parts = r.split('/');
-          return FileNode(name: parts.last, path: r, isDir: false);
+          final path = _relativePath(r);
+          final parts = path.split('/');
+          return FileNode(name: parts.last, path: path, isDir: false);
         }).toList();
       });
     } catch (e) {
@@ -134,15 +158,15 @@ class _FilesScreenState extends State<FilesScreen> {
   }
 
   void _openFile(FileNode node) {
+    final path = _relativePath(node.path);
     if (MediaQuery.sizeOf(context).width >= 900) {
-      setState(() => _selectedPath = node.path);
+      setState(() => _selectedPath = path);
       return;
     }
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) =>
-          _FileViewer(controller: widget.controller, path: node.path),
+      builder: (_) => _FileViewer(controller: widget.controller, path: path),
     );
   }
 
@@ -164,10 +188,17 @@ class _FilesScreenState extends State<FilesScreen> {
               suffixIcon: _search.text.isEmpty
                   ? null
                   : IconButton(
-                      icon: const Icon(Icons.clear_rounded, size: 18),
+                      tooltip: 'Clear file search',
+                      icon: const Icon(
+                        Icons.clear_rounded,
+                        size: 18,
+                        semanticLabel: 'Clear file search',
+                      ),
                       onPressed: () {
                         _search.clear();
-                        _load('');
+                        final origin = _searchOriginPath ?? _path;
+                        _searchOriginPath = null;
+                        _load(origin);
                       },
                     ),
               border: OutlineInputBorder(
@@ -186,11 +217,8 @@ class _FilesScreenState extends State<FilesScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               children: [
                 ActionChip(
-                  label: Text(_path.isEmpty ? '/' : '/${crumbs.join('/')}'),
-                  onPressed: () {
-                    _search.clear();
-                    _load('');
-                  },
+                  label: const Text('/'),
+                  onPressed: () => _navigateTo(''),
                 ),
                 for (var i = 1; i <= crumbs.length; i++)
                   Padding(
@@ -199,10 +227,7 @@ class _FilesScreenState extends State<FilesScreen> {
                       label: Text(crumbs[i - 1]),
                       onPressed: i == crumbs.length
                           ? null
-                          : () {
-                              _search.clear();
-                              _load('/${crumbs.take(i).join('/')}');
-                            },
+                          : () => _navigateTo(crumbs.take(i).join('/')),
                     ),
                   ),
               ],
@@ -296,14 +321,7 @@ class _FilesScreenState extends State<FilesScreen> {
                 : null,
             onTap: () {
               if (node.isDir) {
-                _search.clear();
-                final base = _path.isEmpty
-                    ? ''
-                    : (_path.endsWith('/') ? _path : '$_path/');
-                final child = node.path.startsWith('/')
-                    ? node.path.substring(1)
-                    : node.path;
-                _load('$base$child');
+                _navigateTo(node.path);
               } else {
                 _openFile(node);
               }

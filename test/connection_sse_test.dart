@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -49,6 +50,14 @@ class _ControlledApi extends OpenCodeApi {
   Future<List<PermissionRequest>> pendingPermissions() async => const [];
 
   @override
+  Future<List<PermissionRequest>> pendingPermissionsV2() =>
+      Future.error(ApiException('V2 unavailable', statusCode: 404));
+
+  @override
+  Future<List<Map<String, dynamic>>> pendingQuestionsV2() =>
+      Future.error(ApiException('V2 unavailable', statusCode: 404));
+
+  @override
   void close() {
     closed = true;
     super.close();
@@ -64,6 +73,25 @@ class _FailingStreamApi extends OpenCodeApi {
   Future<Response<ResponseBody>> openEventStream({CancelToken? cancelToken}) {
     calls += 1;
     return Future.error(ApiException('stream unavailable'));
+  }
+}
+
+class _StreamApi extends OpenCodeApi {
+  _StreamApi(this.createStream) : super(baseUrl: 'http://127.0.0.1:1');
+
+  final Stream<Uint8List> Function(int call) createStream;
+  int calls = 0;
+
+  @override
+  Future<Response<ResponseBody>> openEventStream({CancelToken? cancelToken}) {
+    calls += 1;
+    return Future.value(
+      Response(
+        requestOptions: RequestOptions(path: '/event'),
+        statusCode: 200,
+        data: ResponseBody(createStream(calls), 200),
+      ),
+    );
   }
 }
 
@@ -225,6 +253,196 @@ void main() {
 
     expect(api.calls, 1);
     expect(statuses, hasLength(statusCount));
+    api.close();
+  });
+
+  testWidgets('immediate HTTP 200 closes retain exponential retry backoff', (
+    tester,
+  ) async {
+    final api = _StreamApi((_) => const Stream<Uint8List>.empty());
+    final stream = EventStream(api: api, onEvent: (_) {}, onStatus: (_) {});
+
+    stream.start();
+    await tester.pump();
+    await tester.pump();
+    await tester.pump();
+    expect(api.calls, 1);
+
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump();
+    expect(api.calls, 2);
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump();
+    expect(api.calls, 2);
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump();
+    expect(api.calls, 3);
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump();
+    expect(api.calls, 3);
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump();
+    expect(api.calls, 4);
+
+    await stream.dispose();
+    api.close();
+  });
+
+  testWidgets('stream error is reported once with no uncaught zone error', (
+    tester,
+  ) async {
+    final api = _StreamApi(
+      (_) => Stream<Uint8List>.multi((source) {
+        source.addError(StateError('stream failed'));
+        source.close();
+      }),
+    );
+    final reportedErrors = <Object>[];
+    final uncaughtErrors = <Object>[];
+    late EventStream stream;
+
+    await runZonedGuarded(() async {
+      stream = EventStream(
+        api: api,
+        onEvent: (_) {},
+        onStatus: (_) {},
+        onError: reportedErrors.add,
+      );
+      stream.start();
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+      await stream.dispose();
+    }, (error, _) => uncaughtErrors.add(error));
+
+    expect(reportedErrors, hasLength(1));
+    expect(uncaughtErrors, isEmpty);
+    api.close();
+  });
+
+  testWidgets('oversized unterminated data is discarded and parser recovers', (
+    tester,
+  ) async {
+    final controller = StreamController<Uint8List>();
+    final api = _StreamApi((_) => controller.stream);
+    final events = <EventEnvelope>[];
+    final stream = EventStream(api: api, onEvent: events.add, onStatus: (_) {});
+    stream.start();
+    await tester.pump();
+
+    controller.add(
+      Uint8List.fromList(utf8.encode('data: ${'x' * (9 * 1024 * 1024)}')),
+    );
+    await tester.pump();
+    expect(events, isEmpty);
+
+    controller.add(
+      Uint8List.fromList(
+        utf8.encode('\ndata: {"type":"server.recovered"}\n\n'),
+      ),
+    );
+    await tester.pump();
+    expect(events.single.type, 'server.recovered');
+
+    await controller.close();
+    await tester.pump();
+    await stream.dispose();
+    api.close();
+  });
+
+  testWidgets('valid event larger than 64 KiB is delivered intact', (
+    tester,
+  ) async {
+    final controller = StreamController<Uint8List>();
+    final api = _StreamApi((_) => controller.stream);
+    final events = <EventEnvelope>[];
+    final stream = EventStream(api: api, onEvent: events.add, onStatus: (_) {});
+    stream.start();
+    await tester.pump();
+
+    final text = 'large-output-' * (128 * 1024 ~/ 13);
+    controller.add(
+      Uint8List.fromList(
+        utf8.encode(
+          'data: ${jsonEncode({
+            'type': 'message.part.updated',
+            'properties': {'text': text},
+          })}\n\n',
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(events, hasLength(1));
+    expect(events.single.type, 'message.part.updated');
+    expect(events.single.properties['text'], text);
+
+    await controller.close();
+    await tester.pump();
+    await stream.dispose();
+    api.close();
+  });
+
+  testWidgets('stream error cancels a source that does not close', (
+    tester,
+  ) async {
+    var cancellations = 0;
+    final controller = StreamController<Uint8List>(
+      sync: true,
+      onCancel: () => cancellations += 1,
+    );
+    final api = _StreamApi((_) => controller.stream);
+    final reportedErrors = <Object>[];
+    final stream = EventStream(
+      api: api,
+      onEvent: (_) {},
+      onStatus: (_) {},
+      onError: reportedErrors.add,
+    );
+    stream.start();
+    await tester.pump();
+
+    controller.addError(StateError('source remains open'));
+    await tester.pump();
+    await tester.pump();
+
+    expect(reportedErrors, hasLength(1));
+    expect(cancellations, 1);
+
+    await stream.dispose();
+    // Intentionally leave the synthetic source open: the regression is that
+    // EventStream must cancel it rather than relying on the source to close.
+    api.close();
+  });
+
+  testWidgets('chunk-split UTF-8 SSE event is decoded without corruption', (
+    tester,
+  ) async {
+    final controller = StreamController<Uint8List>();
+    final api = _StreamApi((_) => controller.stream);
+    final events = <EventEnvelope>[];
+    final stream = EventStream(api: api, onEvent: events.add, onStatus: (_) {});
+    stream.start();
+    await tester.pump();
+
+    final bytes = utf8.encode(
+      ': keepalive\r\ndata: ${jsonEncode({
+        'type': 'message.é',
+        'properties': {'text': '你好'},
+      })}\r\n\r\n',
+    );
+    for (final byte in bytes) {
+      controller.add(Uint8List.fromList([byte]));
+    }
+    await tester.pump();
+
+    expect(events, hasLength(1));
+    expect(events.single.type, 'message.é');
+    expect(events.single.properties['text'], '你好');
+
+    await controller.close();
+    await tester.pump();
+    await stream.dispose();
     api.close();
   });
 

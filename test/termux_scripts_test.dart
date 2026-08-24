@@ -5,8 +5,8 @@ import 'package:opencode_mobile/termux/bridge.dart';
 
 void main() {
   test('generated termux scripts pass bash syntax validation', () {
-    final directory = Directory('/tmp/opencode/scripts')
-      ..createSync(recursive: true);
+    final directory = Directory.systemTemp.createTempSync('oc-scripts-');
+    addTearDown(() => directory.deleteSync(recursive: true));
     final scripts = {
       'install.sh': TermuxBridge.installAndServeScript(
         port: 4096,
@@ -96,8 +96,22 @@ message=This belongs to the terminal
     expect(script, isNot(contains(r'ln "$lock_candidate"')));
     expect(script, contains(r'if [ -f "$LOCK" ]'));
     expect(script, contains(r'"$$" "$self_start"'));
-    expect(script, contains(r'> "$OC_DIR/install.log" 2>&1'));
+    expect(script, contains(r'"$MANAGER" rotate-log install'));
+    expect(script, contains(r'> >("$MANAGER" write-log install) 2>&1'));
     expect(script, contains(r'rm -f "$OC_DIR/server-log.active"'));
+  });
+
+  test('default setup pins the validated OpenCode release', () {
+    final script = TermuxBridge.installAndServeScript(
+      port: 4096,
+      password: 'test-password',
+    );
+    final manager = TermuxBridge.managerScriptForTesting();
+
+    expect(TermuxBridge.defaultOpenCodeVersion, '1.18.21');
+    expect(script, contains("setup '4096' '1.18.21'"));
+    expect(manager, contains(r'local requested_version="${2:-1.18.21}"'));
+    expect(manager, contains('"opencode-ai@\$OC_REQUESTED_VERSION"'));
   });
 
   test('live snapshot converts manager errors into a failed status', () {
@@ -117,6 +131,217 @@ message=This belongs to the terminal
     expect(packageWork, greaterThan(claim));
   });
 
+  test('setup wake lock is released on every exit and explicit stop', () {
+    final manager = TermuxBridge.managerScriptForTesting();
+    final cleanup = manager.substring(
+      manager.indexOf('cleanup_setup() {'),
+      manager.indexOf('ubuntu_rootfs_exists()'),
+    );
+
+    expect(cleanup, contains('termux-wake-unlock'));
+    expect(
+      cleanup.indexOf('termux-wake-unlock'),
+      greaterThan(cleanup.indexOf('if [ "\${SETUP_SUCCEEDED:-0}" != 1 ]')),
+    );
+    expect(manager, contains("stop() {"));
+    expect(
+      manager.split('termux-wake-unlock').length - 1,
+      greaterThanOrEqualTo(2),
+    );
+  });
+
+  test('setup reserves disk space and only cleans app-owned partial data', () {
+    final manager = TermuxBridge.managerScriptForTesting();
+
+    expect(manager, contains('DISK_RESERVE_KIB=524288'));
+    expect(manager, contains('FRESH_SETUP_REQUIRED_KIB=1572864'));
+    expect(manager, contains('require_setup_space'));
+    expect(manager, contains(r'df -Pk "$HOME"'));
+    expect(manager, contains('including a \${reserve_mib} MiB safety reserve'));
+    expect(manager, contains('cleanup_app_owned_partial_install'));
+    expect(manager, contains(r'[ -f "$UBUNTU_INSTALL_MARKER" ]'));
+    expect(manager, contains(r'proot-distro remove "$PROOT_NAME"'));
+    expect(manager, isNot(contains(r'rm -rf "$PREFIX/var/lib/proot-distro"')));
+  });
+
+  test('unhealthy setup repairs packages without allowing removals', () {
+    final manager = TermuxBridge.managerScriptForTesting();
+    final health = manager.indexOf('termux_dependencies_healthy()');
+    final prepare = manager.indexOf('prepare_termux_dependencies()');
+    final prepareCall = manager.indexOf('\n  prepare_termux_dependencies\n');
+    final ubuntu = manager.indexOf("write_state installing_ubuntu");
+
+    expect(health, greaterThanOrEqualTo(0));
+    expect(prepare, greaterThan(health));
+    expect(prepareCall, greaterThan(prepare));
+    expect(ubuntu, greaterThan(prepareCall));
+    expect(
+      manager,
+      contains('deb https://packages.termux.dev/apt/termux-main stable main'),
+    );
+    expect(manager, contains(r'$source_file.oc-before-opencode'));
+    expect(manager, contains('DEBIAN_FRONTEND=noninteractive'));
+    expect(manager, contains('--no-remove'));
+    expect(manager, contains('--fix-broken install'));
+    expect(manager, contains('Dpkg::Options::="--force-confold" upgrade'));
+    expect(
+      manager.indexOf('--fix-broken install'),
+      lessThan(manager.indexOf('Dpkg::Options::="--force-confold" upgrade')),
+    );
+    expect(
+      manager.indexOf('Dpkg::Options::="--force-confold" upgrade'),
+      lessThan(manager.indexOf('install \\\n    proot-distro curl openssl')),
+    );
+    expect(manager, contains('curl --version >/dev/null 2>&1'));
+    expect(manager, isNot(contains('full-upgrade')));
+    expect(manager, isNot(contains('pkg install -y proot-distro curl')));
+  });
+
+  test(
+    'healthy custom repository skips apt and drains long named-container help',
+    () {
+      final directory = Directory.systemTemp.createTempSync(
+        'oc-termux-health-',
+      );
+      addTearDown(() => directory.deleteSync(recursive: true));
+      final home = Directory('${directory.path}/home')..createSync();
+      final prefix = Directory('${directory.path}/prefix')..createSync();
+      final apt = Directory('${prefix.path}/etc/apt')
+        ..createSync(recursive: true);
+      final sources = File('${apt.path}/sources.list')
+        ..writeAsStringSync(
+          'deb https://healthy.example.test/termux-main stable main\n',
+        );
+      final bin = Directory('${directory.path}/bin')..createSync();
+      final curl = File('${bin.path}/curl')
+        ..writeAsStringSync('''#!/usr/bin/env bash
+if [ "\${1:-}" = --version ]; then echo 'curl healthy'; exit 0; fi
+exit 64
+''');
+      final proot = File('${bin.path}/proot-distro')
+        ..writeAsStringSync('''#!/usr/bin/env bash
+if [ "\${1:-}" = install ] && [ "\${2:-}" = --help ]; then
+  i=0
+  while [ "\$i" -lt 10000 ]; do printf 'long help line %s\\n' "\$i"; i=\$((i + 1)); done
+  printf '%s\\n' '  --name NAME'
+  exit 0
+fi
+exit 64
+''');
+      final aptMarker = File('${directory.path}/apt-called');
+      final aptGet = File('${bin.path}/apt-get')
+        ..writeAsStringSync('''#!/usr/bin/env bash
+: > "\$APT_MARKER"
+exit 99
+''');
+      final chmod = Process.runSync('chmod', [
+        '700',
+        curl.path,
+        proot.path,
+        aptGet.path,
+      ]);
+      expect(chmod.exitCode, 0, reason: '${chmod.stdout}\n${chmod.stderr}');
+
+      final manager = TermuxBridge.managerScriptForTesting();
+      final functionPrefix = manager.substring(
+        0,
+        manager.indexOf('\ninstall_ubuntu_base() {'),
+      );
+      final probe = File('${directory.path}/probe.sh')
+        ..writeAsStringSync(
+          '$functionPrefix\nCURRENT_PORT=4096\nprepare_termux_dependencies\n',
+        );
+      final result = Process.runSync(
+        'bash',
+        [probe.path],
+        environment: {
+          ...Platform.environment,
+          'HOME': home.path,
+          'PREFIX': prefix.path,
+          'APT_MARKER': aptMarker.path,
+          'PATH': '${bin.path}:${Platform.environment['PATH'] ?? ''}',
+        },
+      );
+
+      expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
+      expect(result.stdout, contains('package upgrade skipped'));
+      expect(aptMarker.existsSync(), isFalse);
+      expect(
+        sources.readAsStringSync(),
+        'deb https://healthy.example.test/termux-main stable main\n',
+      );
+      expect(File('${sources.path}.oc-before-opencode').existsSync(), isFalse);
+    },
+  );
+
+  test('unexpected manager errors persist the active setup stage', () {
+    final manager = TermuxBridge.managerScriptForTesting();
+
+    expect(manager, contains(r'stage=$(read_state_value message)'));
+    expect(
+      manager,
+      contains(
+        r'write_state failed "$stage failed (exit $code; setup line $line)"',
+      ),
+    );
+    expect(
+      manager,
+      contains(
+        "fail_setup 'Could not complete the safe Termux package upgrade'",
+      ),
+    );
+  });
+
+  test(
+    'install and server logs are bounded and rotated by executable code',
+    () {
+      final directory = Directory.systemTemp.createTempSync('oc-log-test-');
+      addTearDown(() => directory.deleteSync(recursive: true));
+      final home = Directory('${directory.path}/home')..createSync();
+      final manager = File('${directory.path}/manager.sh')
+        ..writeAsStringSync(TermuxBridge.managerScriptForTesting());
+      final input = File('${directory.path}/input.log');
+      final line = '${List.filled(1023, 'x').join()}\n';
+      input.writeAsStringSync(List.filled(2300, line).join());
+
+      final result = Process.runSync(
+        'bash',
+        [
+          '-c',
+          'bash "\$1" write-log install < "\$2"',
+          '_',
+          manager.path,
+          input.path,
+        ],
+        environment: {...Platform.environment, 'HOME': home.path},
+      );
+
+      expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
+      final logDirectory = Directory('${home.path}/.oc');
+      final logs = logDirectory
+          .listSync()
+          .whereType<File>()
+          .where((file) => file.path.contains('install.log'))
+          .toList();
+      expect(logs, isNotEmpty);
+      expect(logs.length, lessThanOrEqualTo(3));
+      for (final log in logs) {
+        expect(log.lengthSync(), lessThanOrEqualTo(1048576), reason: log.path);
+      }
+    },
+  );
+
+  test(
+    'server runs through the bounded logger and stop validates its runner',
+    () {
+      final manager = TermuxBridge.managerScriptForTesting();
+
+      expect(manager, contains(r'2>&1 | "$manager" write-log server'));
+      expect(manager, contains(r'*"$SERVER_RUNNER $port "*'));
+      expect(manager, contains(r'kill_tree "$pid"'));
+    },
+  );
+
   test('Ubuntu setup bypasses registries and verifies Canonical archives', () {
     final manager = TermuxBridge.managerScriptForTesting();
 
@@ -133,15 +358,21 @@ message=This belongs to the terminal
     );
     expect(manager, contains("printf '%s  %s\\n' \"\$checksum\""));
     expect(manager, contains('sha256sum -c -'));
-    expect(manager, contains('proot-distro install "\$archive" --name ubuntu'));
+    expect(
+      manager,
+      contains('proot-distro install "\$archive" --name "\$PROOT_NAME"'),
+    );
   });
 
-  test('Ubuntu detection supports v4 and v5 proot-distro layouts', () {
+  test('OpenCode Ubuntu is isolated in its own v4 or v5 container', () {
     final manager = TermuxBridge.managerScriptForTesting();
 
-    expect(manager, contains('containers/ubuntu/rootfs'));
-    expect(manager, contains('installed-rootfs/ubuntu'));
-    expect(manager, contains('proot-distro login ubuntu -- true'));
+    expect(manager, contains('PROOT_NAME=opencode-ubuntu'));
+    expect(manager, contains(r'containers/$PROOT_NAME/rootfs'));
+    expect(manager, contains(r'installed-rootfs/$PROOT_NAME'));
+    expect(manager, contains(r'proot-distro login "$PROOT_NAME" -- true'));
+    expect(manager, isNot(contains('proot-distro login ubuntu')));
+    expect(manager, isNot(contains('proot-distro remove ubuntu')));
   });
 
   test('npm setup prefers IPv4 and retries transient downloads', () {
@@ -157,14 +388,17 @@ message=This belongs to the terminal
   test('only app-owned partial Ubuntu installs can be removed', () {
     final manager = TermuxBridge.managerScriptForTesting();
 
-    expect(manager, contains('UBUNTU_INSTALL_MARKER='));
+    expect(
+      manager,
+      contains(r'UBUNTU_INSTALL_MARKER="$OC_DIR/opencode-ubuntu-installing"'),
+    );
     expect(manager, contains(r'[ -f "$UBUNTU_INSTALL_MARKER" ]'));
     expect(
       manager,
       contains(r'[ -f "$UBUNTU_INSTALL_MARKER" ] || ! ubuntu_usable'),
     );
     expect(manager, contains('setup will not delete it'));
-    expect(manager, contains('proot-distro remove ubuntu'));
+    expect(manager, contains(r'proot-distro remove "$PROOT_NAME"'));
     expect(
       manager,
       contains('Could not remove the interrupted app-owned Ubuntu install'),

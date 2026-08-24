@@ -1,0 +1,422 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+readonly SOURCE_SCRIPT="$REPO_ROOT/scripts/release.sh"
+TEST_ROOT="$(mktemp -d)"
+readonly TEST_ROOT
+trap 'rm -rf "$TEST_ROOT"' EXIT
+
+TEST_NUMBER=0
+FIXTURE=""
+OUTPUT=""
+STATUS=0
+
+fail_test() {
+  echo "FAIL: $*" >&2
+  if [[ -n "$OUTPUT" ]]; then
+    echo "--- command output ---" >&2
+    echo "$OUTPUT" >&2
+  fi
+  exit 1
+}
+
+new_fixture() {
+  TEST_NUMBER=$((TEST_NUMBER + 1))
+  FIXTURE="$TEST_ROOT/case-$TEST_NUMBER"
+  mkdir -p "$FIXTURE/scripts" "$FIXTURE/android/app" "$FIXTURE/mock-bin" "$FIXTURE/home"
+  cp "$SOURCE_SCRIPT" "$FIXTURE/scripts/release.sh"
+  chmod +x "$FIXTURE/scripts/release.sh"
+  : >"$FIXTURE/commands.log"
+
+  cat >"$FIXTURE/pubspec.yaml" <<'EOF'
+name: release_fixture
+version: 1.0.12+13
+EOF
+
+  cat >"$FIXTURE/android/app/build.gradle.kts" <<'EOF'
+android {
+    signingConfigs.create("release")
+    buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("debug")
+        }
+        release {
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
+}
+EOF
+
+  cat >"$FIXTURE/android/key.properties" <<'EOF'
+storeFile=/secure/release.jks
+storePassword=fixture-store-password
+keyAlias=release
+keyPassword=fixture-key-password
+EOF
+
+  cat >"$FIXTURE/mock-bin/git" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'git' >>"$MOCK_COMMAND_LOG"
+printf ' %s' "$@" >>"$MOCK_COMMAND_LOG"
+printf '\n' >>"$MOCK_COMMAND_LOG"
+
+case "${1:-}" in
+  status)
+    printf '%s' "${MOCK_GIT_STATUS:-}"
+    ;;
+  symbolic-ref)
+    [[ "${MOCK_DETACHED:-false}" != true ]] || exit 1
+    printf '%s\n' "${MOCK_BRANCH:-master}"
+    ;;
+  fetch)
+    if [[ "${*: -1}" == refs/tags/* && "${MOCK_REMOTE_TAG_EXISTS:-true}" != true ]]; then
+      exit 1
+    fi
+    [[ "${MOCK_FETCH_FAIL:-false}" != true ]] || exit 1
+    ;;
+  rev-list)
+    printf '%s\n' "${MOCK_COUNTS:-0 0}"
+    ;;
+  merge-base)
+    [[ "${MOCK_TAG_ANCESTOR:-true}" == true ]] || exit 1
+    ;;
+  diff)
+    printf '%s' "${MOCK_DIFF_FILES:-}"
+    ;;
+  rev-parse)
+    case "${2:-}" in
+      --is-inside-work-tree)
+        printf 'true\n'
+        ;;
+      --abbrev-ref)
+        [[ "${MOCK_NO_UPSTREAM:-false}" != true ]] || exit 1
+        printf '%s\n' "${MOCK_UPSTREAM:-origin/master}"
+        ;;
+      --verify)
+        if [[ "${3:-}" == 'FETCH_HEAD^{commit}' ]]; then
+          printf '%s\n' "${MOCK_REMOTE_TAG_COMMIT:-base-commit}"
+        else
+          [[ "${MOCK_TAG_EXISTS:-true}" == true ]] || exit 1
+          printf '%s\n' "${MOCK_LOCAL_TAG_COMMIT:-base-commit}"
+        fi
+        ;;
+      *)
+        exit 2
+        ;;
+    esac
+    ;;
+  *)
+    exit 2
+    ;;
+esac
+EOF
+
+  cat >"$FIXTURE/mock-bin/flutter" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'flutter %s\n' "$*" >>"$MOCK_COMMAND_LOG"
+if [[ "${1:-}" == "--version" ]]; then
+  printf 'Flutter %s • channel stable\n' "${MOCK_FLUTTER_VERSION:-3.47.1}"
+  exit 0
+fi
+if [[ "${MOCK_FLUTTER_FAIL:-}" == "${1:-}" ]]; then
+  exit 1
+fi
+EOF
+
+  cat >"$FIXTURE/mock-bin/shorebird" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'shorebird %s\n' "$*" >>"$MOCK_COMMAND_LOG"
+[[ "${MOCK_SHOREBIRD_FAIL:-false}" != true ]] || exit 1
+if [[ "${1:-}" == release && "$*" == *'--dry-run'* ]]; then
+  mkdir -p build/app/outputs/bundle/release
+  : >build/app/outputs/bundle/release/app-release.aab
+fi
+EOF
+
+  cat >"$FIXTURE/mock-bin/keytool" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'keytool %s\n' "$*" >>"$MOCK_COMMAND_LOG"
+printf 'Certificate fingerprints:\n'
+printf '         SHA256: AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA\n'
+EOF
+
+  chmod +x "$FIXTURE/mock-bin/git" "$FIXTURE/mock-bin/flutter" "$FIXTURE/mock-bin/shorebird" "$FIXTURE/mock-bin/keytool"
+}
+
+run_release() {
+  set +e
+  OUTPUT="$({
+    env \
+      HOME="$FIXTURE/home" \
+      PATH="$FIXTURE/mock-bin:/usr/bin:/bin" \
+      MOCK_COMMAND_LOG="$FIXTURE/commands.log" \
+      MOCK_GIT_STATUS="${MOCK_GIT_STATUS:-}" \
+      MOCK_BRANCH="${MOCK_BRANCH:-master}" \
+      MOCK_DETACHED="${MOCK_DETACHED:-false}" \
+      MOCK_NO_UPSTREAM="${MOCK_NO_UPSTREAM:-false}" \
+      MOCK_UPSTREAM="${MOCK_UPSTREAM:-origin/master}" \
+      MOCK_FETCH_FAIL="${MOCK_FETCH_FAIL:-false}" \
+      MOCK_COUNTS="${MOCK_COUNTS:-0 0}" \
+      MOCK_TAG_EXISTS="${MOCK_TAG_EXISTS:-true}" \
+      MOCK_TAG_ANCESTOR="${MOCK_TAG_ANCESTOR:-true}" \
+      MOCK_LOCAL_TAG_COMMIT="${MOCK_LOCAL_TAG_COMMIT:-base-commit}" \
+      MOCK_REMOTE_TAG_EXISTS="${MOCK_REMOTE_TAG_EXISTS:-true}" \
+      MOCK_REMOTE_TAG_COMMIT="${MOCK_REMOTE_TAG_COMMIT:-base-commit}" \
+      MOCK_DIFF_FILES="${MOCK_DIFF_FILES:-}" \
+      MOCK_FLUTTER_VERSION="${MOCK_FLUTTER_VERSION:-3.47.1}" \
+      MOCK_FLUTTER_FAIL="${MOCK_FLUTTER_FAIL:-}" \
+      MOCK_SHOREBIRD_FAIL="${MOCK_SHOREBIRD_FAIL:-false}" \
+      RELEASE_CERT_SHA256="${RELEASE_CERT_SHA256:-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA}" \
+      "$FIXTURE/scripts/release.sh" "$@"
+  } 2>&1)"
+  STATUS=$?
+  set -e
+}
+
+assert_status() {
+  [[ "$STATUS" == "$1" ]] || fail_test "expected status $1, got $STATUS"
+}
+
+assert_output_contains() {
+  [[ "$OUTPUT" == *"$1"* ]] || fail_test "output does not contain: $1"
+}
+
+assert_log_contains() {
+  local log
+  log="$(<"$FIXTURE/commands.log")"
+  [[ "$log" == *"$1"* ]] || fail_test "command log does not contain: $1"
+}
+
+assert_log_not_contains() {
+  local log
+  log="$(<"$FIXTURE/commands.log")"
+  [[ "$log" != *"$1"* ]] || fail_test "command log unexpectedly contains: $1"
+}
+
+assert_log_line_count() {
+  local expected="$1"
+  local pattern="$2"
+  local actual
+  actual="$(awk -v pattern="$pattern" 'index($0, pattern) == 1 { count++ } END { print count + 0 }' "$FIXTURE/commands.log")"
+  [[ "$actual" == "$expected" ]] ||
+    fail_test "expected $expected log lines beginning with '$pattern', got $actual"
+}
+
+test_strict_arguments() {
+  new_fixture
+  run_release
+  assert_status 64
+  assert_output_contains 'Usage: ./scripts/release.sh <release|patch> [--publish]'
+  assert_log_line_count 0 'shorebird '
+
+  run_release ship
+  assert_status 64
+  assert_log_line_count 0 'shorebird '
+
+  run_release release --yes
+  assert_status 64
+  assert_log_line_count 0 'shorebird '
+
+  run_release release --publish extra
+  assert_status 64
+  assert_log_line_count 0 'shorebird '
+}
+
+test_git_gates() {
+  new_fixture
+  MOCK_GIT_STATUS=' M lib/main.dart' run_release patch
+  assert_status 1
+  assert_output_contains 'worktree is not clean'
+  assert_log_not_contains 'flutter analyze'
+  assert_log_not_contains 'shorebird '
+
+  new_fixture
+  MOCK_BRANCH='feature/risky' run_release patch
+  assert_status 1
+  assert_output_contains 'Releases must run from master'
+
+  new_fixture
+  MOCK_NO_UPSTREAM=true run_release patch
+  assert_status 1
+  assert_output_contains 'has no upstream branch'
+
+  new_fixture
+  MOCK_COUNTS='1 2' run_release patch
+  assert_status 1
+  assert_output_contains 'behind 1, ahead 2'
+  assert_log_not_contains 'shorebird '
+}
+
+test_flutter_toolchain_gate() {
+  new_fixture
+  MOCK_FLUTTER_VERSION='3.38.5' run_release patch --publish
+  assert_status 1
+  assert_output_contains 'Flutter 3.47.1 is required'
+  assert_output_contains 'PATH provides 3.38.5'
+  assert_log_not_contains 'git status'
+  assert_log_not_contains 'shorebird '
+}
+
+test_release_signing_blocker() {
+  new_fixture
+  cat >"$FIXTURE/android/app/build.gradle.kts" <<'EOF'
+android {
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+}
+EOF
+  run_release release --publish
+  assert_status 1
+  assert_output_contains 'does not have an explicit release signing configuration'
+  assert_log_not_contains 'flutter analyze'
+  assert_log_not_contains 'shorebird '
+
+  new_fixture
+  cat >"$FIXTURE/android/app/build.gradle.kts" <<'EOF'
+android {
+    buildTypes {
+        release {}
+    }
+}
+EOF
+  run_release release
+  assert_status 1
+  assert_output_contains 'does not have an explicit release signing configuration'
+  assert_log_not_contains 'flutter analyze'
+  assert_log_not_contains 'shorebird '
+
+  new_fixture
+  : >"$FIXTURE/android/key.properties"
+  run_release release
+  assert_status 1
+  assert_output_contains 'no non-empty storeFile'
+  assert_log_not_contains 'flutter analyze'
+  assert_log_not_contains 'shorebird '
+}
+
+test_release_is_dry_run_by_default_and_builds_aab() {
+  new_fixture
+  run_release release
+  assert_status 0
+  assert_output_contains 'nothing was uploaded'
+  assert_log_contains 'flutter analyze'
+  assert_log_contains 'flutter test'
+  assert_log_contains 'shorebird release android --build-name 1.0.12 --build-number 13 --flutter-version 3.47.1 --artifact aab --dry-run'
+  assert_log_line_count 1 'shorebird '
+  assert_log_not_contains '--artifact apk'
+
+  new_fixture
+  run_release release --publish
+  assert_status 0
+  assert_output_contains 'AAB: ./build/app/outputs/bundle/release/app-release.aab'
+  assert_output_contains 'Create immutable baseline tag v1.0.12+13'
+  assert_log_line_count 2 'shorebird '
+
+  new_fixture
+  RELEASE_CERT_SHA256='BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB' run_release release --publish
+  assert_status 1
+  assert_output_contains 'AAB signing certificate does not match'
+  assert_log_line_count 1 'shorebird '
+}
+
+test_quality_gate_failure_prevents_shorebird() {
+  new_fixture
+  MOCK_FLUTTER_FAIL='analyze' run_release release --publish
+  assert_status 1
+  assert_log_contains 'flutter analyze'
+  assert_log_not_contains 'flutter test'
+  assert_log_not_contains 'shorebird '
+
+  new_fixture
+  MOCK_FLUTTER_FAIL='test' run_release patch --publish
+  assert_status 1
+  assert_log_contains 'flutter analyze'
+  assert_log_contains 'flutter test'
+  assert_log_not_contains 'shorebird '
+}
+
+test_patch_targets_exact_version_and_requires_baseline() {
+  new_fixture
+  MOCK_DIFF_FILES=$'lib/main.dart\n' run_release patch
+  assert_status 0
+  assert_output_contains 'nothing was uploaded'
+  assert_log_contains 'shorebird patch android --release-version 1.0.12+13 --dry-run'
+  assert_log_not_contains 'latest'
+  assert_log_line_count 1 'shorebird '
+
+  new_fixture
+  MOCK_DIFF_FILES=$'lib/main.dart\n' run_release patch --publish
+  assert_status 0
+  assert_log_line_count 2 'shorebird '
+  assert_log_not_contains '--allow-native-diffs'
+  assert_log_not_contains '--allow-asset-diffs'
+
+  new_fixture
+  MOCK_TAG_EXISTS=false run_release patch
+  assert_status 1
+  assert_output_contains 'Patch baseline tag v1.0.12+13 is missing'
+  assert_log_not_contains 'flutter analyze'
+  assert_log_not_contains 'shorebird '
+
+  new_fixture
+  MOCK_REMOTE_TAG_EXISTS=false run_release patch
+  assert_status 1
+  assert_output_contains 'baseline tag v1.0.12+13 is missing from origin'
+  assert_log_not_contains 'flutter analyze'
+  assert_log_not_contains 'shorebird '
+
+  new_fixture
+  MOCK_REMOTE_TAG_COMMIT='different-commit' run_release patch
+  assert_status 1
+  assert_output_contains 'Local tag v1.0.12+13 does not match'
+  assert_log_not_contains 'flutter analyze'
+  assert_log_not_contains 'shorebird '
+
+  new_fixture
+  MOCK_TAG_ANCESTOR=false run_release patch
+  assert_status 1
+  assert_output_contains 'baseline tag v1.0.12+13 is not an ancestor'
+  assert_log_not_contains 'flutter analyze'
+  assert_log_not_contains 'shorebird '
+}
+
+test_patch_rejects_native_and_asset_inputs() {
+  new_fixture
+  MOCK_DIFF_FILES=$'lib/main.dart\nandroid/app/src/main/kotlin/MainActivity.kt\npackages/plugin/android/build.gradle\npubspec.lock\n' run_release patch --publish
+  assert_status 1
+  assert_output_contains 'changes native, dependency, or bundled-asset inputs'
+  assert_output_contains 'android/app/src/main/kotlin/MainActivity.kt'
+  assert_output_contains 'packages/plugin/android/build.gradle'
+  assert_output_contains 'pubspec.lock'
+  assert_log_not_contains 'flutter analyze'
+  assert_log_not_contains 'shorebird '
+}
+
+test_invalid_version_is_rejected() {
+  new_fixture
+  sed -i 's/version: .*/version: latest/' "$FIXTURE/pubspec.yaml"
+  run_release patch --publish
+  assert_status 1
+  assert_output_contains 'x.y.z+positive-build-number'
+  assert_log_not_contains 'shorebird '
+}
+
+test_strict_arguments
+test_git_gates
+test_flutter_toolchain_gate
+test_release_signing_blocker
+test_release_is_dry_run_by_default_and_builds_aab
+test_quality_gate_failure_prevents_shorebird
+test_patch_targets_exact_version_and_requires_baseline
+test_patch_rejects_native_and_asset_inputs
+test_invalid_version_is_rejected
+
+echo "PASS: release script safety contract"

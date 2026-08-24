@@ -390,10 +390,21 @@ class _QuestionSheetState extends State<_QuestionSheet> {
     });
     final answers = <List<String>>[];
     for (var i = 0; i < _answers.length; i++) {
-      answers.add([
-        ..._answers[i],
-        if (_custom[i].text.trim().isNotEmpty) _custom[i].text.trim(),
-      ]);
+      final prompt = widget.question.prompts[i];
+      final customAnswer = _custom[i].text.trim();
+      if (prompt.multiple) {
+        answers.add([
+          ..._answers[i],
+          if (customAnswer.isNotEmpty) customAnswer,
+        ]);
+      } else {
+        answers.add([
+          if (customAnswer.isNotEmpty)
+            customAnswer
+          else if (_answers[i].isNotEmpty)
+            _answers[i].first,
+        ]);
+      }
     }
     try {
       await widget.controller.answerQuestion(widget.question.id, answers);
@@ -531,6 +542,7 @@ class _QuestionSheetState extends State<_QuestionSheet> {
                                       onChanged: (value) {
                                         if (value == null) return;
                                         setState(() {
+                                          _custom[index].clear();
                                           _answers[index]
                                             ..clear()
                                             ..add(value);
@@ -555,7 +567,14 @@ class _QuestionSheetState extends State<_QuestionSheet> {
                                     TextField(
                                       controller: _custom[index],
                                       maxLines: 3,
-                                      onChanged: (_) => setState(() {}),
+                                      onChanged: (value) {
+                                        setState(() {
+                                          if (!prompt.multiple &&
+                                              value.trim().isNotEmpty) {
+                                            _answers[index].clear();
+                                          }
+                                        });
+                                      },
                                       decoration: const InputDecoration(
                                         labelText: 'Your answer',
                                         border: OutlineInputBorder(),

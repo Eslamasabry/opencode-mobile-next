@@ -124,141 +124,11 @@ class _VoiceModelSetupSheet extends StatelessWidget {
                     separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
                       final pack = voiceModelPacks[index];
-                      final selected = manager.selectedPack.id == pack.id;
-                      final installed = manager.isInstalled(pack);
-                      final support = manager.supportFor(pack);
-                      return Semantics(
-                        selected: selected,
-                        button: true,
-                        label:
-                            '${pack.label}, ${formatModelBytes(pack.downloadBytes)}, ${installed ? 'installed' : 'not installed'}',
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(16),
-                          onTap: busy || !support.supported
-                              ? null
-                              : () => manager.selectPack(pack),
-                          child: AnimatedContainer(
-                            duration: MediaQuery.disableAnimationsOf(context)
-                                ? Duration.zero
-                                : const Duration(milliseconds: 160),
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: selected
-                                  ? theme.colorScheme.primaryContainer
-                                        .withValues(alpha: .45)
-                                  : theme.colorScheme.surfaceContainerLow,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: selected
-                                    ? theme.colorScheme.primary
-                                    : theme.colorScheme.outlineVariant,
-                                width: selected ? 1.5 : 1,
-                              ),
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Icon(
-                                    selected
-                                        ? Icons.radio_button_checked_rounded
-                                        : Icons.radio_button_unchecked_rounded,
-                                    color: selected
-                                        ? theme.colorScheme.primary
-                                        : theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Wrap(
-                                        spacing: 8,
-                                        runSpacing: 4,
-                                        crossAxisAlignment:
-                                            WrapCrossAlignment.center,
-                                        children: [
-                                          Text(
-                                            pack.label,
-                                            style: theme.textTheme.titleMedium,
-                                          ),
-                                          if (pack.id == 'base')
-                                            const Chip(
-                                              label: Text('Default'),
-                                              visualDensity:
-                                                  VisualDensity.compact,
-                                            ),
-                                          if (pack.id == 'small')
-                                            const Chip(
-                                              label: Text('Optional'),
-                                              visualDensity:
-                                                  VisualDensity.compact,
-                                            ),
-                                          if (installed)
-                                            const Chip(
-                                              avatar: Icon(
-                                                Icons.check_rounded,
-                                                size: 16,
-                                              ),
-                                              label: Text('Installed'),
-                                              visualDensity:
-                                                  VisualDensity.compact,
-                                            ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 3),
-                                      Text(
-                                        '${formatModelBytes(pack.downloadBytes)} download',
-                                        style: theme.textTheme.labelLarge,
-                                      ),
-                                      const SizedBox(height: 3),
-                                      Text(
-                                        pack.description,
-                                        style: theme.textTheme.bodySmall,
-                                      ),
-                                      if (!support.supported) ...[
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          support.reason!,
-                                          style: TextStyle(
-                                            color: theme.colorScheme.error,
-                                          ),
-                                        ),
-                                      ],
-                                      if (installed && !busy) ...[
-                                        const SizedBox(height: 8),
-                                        Wrap(
-                                          spacing: 4,
-                                          runSpacing: 4,
-                                          children: [
-                                            TextButton.icon(
-                                              onPressed: () =>
-                                                  manager.redownloadPack(pack),
-                                              icon: const Icon(
-                                                Icons.refresh_rounded,
-                                              ),
-                                              label: const Text('Re-download'),
-                                            ),
-                                            TextButton.icon(
-                                              onPressed: () =>
-                                                  _confirmDelete(context, pack),
-                                              icon: const Icon(
-                                                Icons.delete_outline_rounded,
-                                              ),
-                                              label: const Text('Delete'),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                      return _VoiceModelCard(
+                        manager: manager,
+                        pack: pack,
+                        busy: busy,
+                        onDelete: () => _confirmDelete(context, pack),
                       );
                     },
                   ),
@@ -312,47 +182,45 @@ class _VoiceModelSetupSheet extends StatelessWidget {
                   ],
                   if (manager.error != null) ...[
                     const SizedBox(height: 10),
-                    Text(
-                      'Model setup failed: ${manager.error}',
-                      style: TextStyle(color: theme.colorScheme.error),
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        'Model setup failed: ${manager.error}',
+                        style: TextStyle(color: theme.colorScheme.error),
+                      ),
                     ),
                   ],
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: busy
-                              ? manager.cancelDownload
-                              : () => Navigator.pop(context, false),
-                          child: Text(busy ? 'Cancel download' : 'Not now'),
-                        ),
+                  _AdaptiveVoiceActions(
+                    secondary: OutlinedButton(
+                      key: const Key('voice-model-secondary-action'),
+                      style: _voiceButtonStyle(),
+                      onPressed: busy
+                          ? manager.cancelDownload
+                          : () => Navigator.pop(context, false),
+                      child: Text(busy ? 'Cancel download' : 'Not now'),
+                    ),
+                    primary: FilledButton.icon(
+                      key: const Key('voice-model-primary-action'),
+                      style: _voiceButtonStyle(),
+                      onPressed: busy
+                          ? null
+                          : manager.isInstalled(manager.selectedPack)
+                          ? () => Navigator.pop(context, true)
+                          : manager.supportFor(manager.selectedPack).supported
+                          ? manager.downloadSelected
+                          : null,
+                      icon: Icon(
+                        manager.isInstalled(manager.selectedPack)
+                            ? Icons.mic_rounded
+                            : Icons.download_rounded,
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: FilledButton.icon(
-                          onPressed: busy
-                              ? null
-                              : manager.isInstalled(manager.selectedPack)
-                              ? () => Navigator.pop(context, true)
-                              : manager
-                                    .supportFor(manager.selectedPack)
-                                    .supported
-                              ? manager.downloadSelected
-                              : null,
-                          icon: Icon(
-                            manager.isInstalled(manager.selectedPack)
-                                ? Icons.mic_rounded
-                                : Icons.download_rounded,
-                          ),
-                          label: Text(
-                            manager.isInstalled(manager.selectedPack)
-                                ? 'Use model'
-                                : 'Download',
-                          ),
-                        ),
+                      label: Text(
+                        manager.isInstalled(manager.selectedPack)
+                            ? 'Use model'
+                            : 'Download',
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),
@@ -373,10 +241,12 @@ class _VoiceModelSetupSheet extends StatelessWidget {
         ),
         actions: [
           TextButton(
+            style: _voiceButtonStyle(),
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Keep'),
           ),
           FilledButton(
+            style: _voiceButtonStyle(),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Delete'),
           ),
@@ -386,6 +256,213 @@ class _VoiceModelSetupSheet extends StatelessWidget {
     if (confirmed == true) await manager.deletePack(pack);
   }
 }
+
+class _VoiceModelCard extends StatelessWidget {
+  const _VoiceModelCard({
+    required this.manager,
+    required this.pack,
+    required this.busy,
+    required this.onDelete,
+  });
+
+  final VoiceModelManager manager;
+  final VoiceModelPack pack;
+  final bool busy;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final selected = manager.selectedPack.id == pack.id;
+    final installed = manager.isInstalled(pack);
+    final support = manager.supportFor(pack);
+    final enabled = !busy && support.supported;
+    final badges = [
+      if (pack.id == 'base') 'default',
+      if (pack.id == 'small') 'optional',
+      installed ? 'installed' : 'not installed',
+    ];
+
+    return Semantics(
+      container: true,
+      explicitChildNodes: true,
+      child: AnimatedContainer(
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 160),
+        decoration: BoxDecoration(
+          color: selected
+              ? theme.colorScheme.primaryContainer.withValues(alpha: .45)
+              : theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outlineVariant,
+            width: selected ? 1.5 : 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Semantics(
+              button: true,
+              selected: selected,
+              enabled: enabled,
+              excludeSemantics: true,
+              label:
+                  '${pack.label}, ${formatModelBytes(pack.downloadBytes)}, ${badges.join(', ')}. ${pack.description}',
+              hint: !support.supported
+                  ? support.reason
+                  : busy
+                  ? 'Unavailable while model setup is in progress'
+                  : selected
+                  ? 'Selected'
+                  : 'Double tap to select',
+              child: InkWell(
+                key: Key('voice-model-${pack.id}'),
+                borderRadius: BorderRadius.circular(16),
+                onTap: enabled ? () => manager.selectPack(pack) : null,
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          minWidth: 48,
+                          minHeight: 48,
+                        ),
+                        child: Icon(
+                          selected
+                              ? Icons.radio_button_checked_rounded
+                              : Icons.radio_button_unchecked_rounded,
+                          color: selected
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 4,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Text(
+                                  pack.label,
+                                  style: theme.textTheme.titleMedium,
+                                ),
+                                if (pack.id == 'base')
+                                  const Chip(
+                                    label: Text('Default'),
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                if (pack.id == 'small')
+                                  const Chip(
+                                    label: Text('Optional'),
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                if (installed)
+                                  const Chip(
+                                    avatar: Icon(Icons.check_rounded, size: 16),
+                                    label: Text('Installed'),
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              '${formatModelBytes(pack.downloadBytes)} download',
+                              style: theme.textTheme.labelLarge,
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              pack.description,
+                              style: theme.textTheme.bodySmall,
+                            ),
+                            if (!support.supported) ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                support.reason!,
+                                style: TextStyle(
+                                  color: theme.colorScheme.error,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            if (installed && !busy)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+                child: Wrap(
+                  spacing: 4,
+                  runSpacing: 4,
+                  children: [
+                    TextButton.icon(
+                      key: Key('voice-redownload-${pack.id}'),
+                      style: _voiceButtonStyle(),
+                      onPressed: () => manager.redownloadPack(pack),
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Re-download'),
+                    ),
+                    TextButton.icon(
+                      key: Key('voice-delete-${pack.id}'),
+                      style: _voiceButtonStyle(),
+                      onPressed: onDelete,
+                      icon: const Icon(Icons.delete_outline_rounded),
+                      label: const Text('Delete'),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AdaptiveVoiceActions extends StatelessWidget {
+  const _AdaptiveVoiceActions({required this.secondary, required this.primary});
+
+  final Widget secondary;
+  final Widget primary;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final stack =
+          constraints.maxWidth < 360 ||
+          MediaQuery.textScalerOf(context).scale(1) > 1.3;
+      if (stack) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [secondary, const SizedBox(height: 8), primary],
+        );
+      }
+      return Row(
+        children: [
+          Expanded(child: secondary),
+          const SizedBox(width: 10),
+          Expanded(child: primary),
+        ],
+      );
+    },
+  );
+}
+
+ButtonStyle _voiceButtonStyle() =>
+    const ButtonStyle(minimumSize: WidgetStatePropertyAll(Size(48, 48)));
 
 Future<String?> showVoiceComposerSheet(
   BuildContext context,
@@ -476,21 +553,26 @@ class _VoiceComposerSheetState extends State<_VoiceComposerSheet> {
                       ),
                     ),
                   if (controller.state == VoiceComposerState.error) ...[
-                    Text(
-                      '${controller.error}',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        '${controller.error}',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
                     if (controller.error is VoicePermissionDenied &&
                         (controller.error! as VoicePermissionDenied).permanent)
                       OutlinedButton.icon(
+                        style: _voiceButtonStyle(),
                         onPressed: voiceDevicePlatform.openAppSettings,
                         icon: const Icon(Icons.settings_outlined),
                         label: const Text('Open app settings'),
                       ),
                     FilledButton.icon(
+                      style: _voiceButtonStyle(),
                       onPressed: controller.startListening,
                       icon: const Icon(Icons.refresh_rounded),
                       label: const Text('Try again'),
@@ -498,40 +580,44 @@ class _VoiceComposerSheetState extends State<_VoiceComposerSheet> {
                   ],
                   if (controller.state == VoiceComposerState.idle) ...[
                     FilledButton.icon(
+                      style: _voiceButtonStyle(),
                       onPressed: controller.startListening,
                       icon: const Icon(Icons.mic_rounded),
                       label: const Text('Start listening'),
                     ),
                   ],
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: _close,
-                          child: const Text('Cancel'),
-                        ),
+                  if (controller.state == VoiceComposerState.draft)
+                    _AdaptiveVoiceActions(
+                      secondary: OutlinedButton(
+                        key: const Key('voice-composer-cancel'),
+                        style: _voiceButtonStyle(),
+                        onPressed: _close,
+                        child: const Text('Cancel'),
                       ),
-                      if (controller.state == VoiceComposerState.draft) ...[
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: FilledButton.icon(
-                            key: const Key('insert-voice-draft'),
-                            onPressed: () async {
-                              final text = _draft.text.trim();
-                              if (text.isEmpty) return;
-                              await controller.cancel();
-                              if (context.mounted) Navigator.pop(context, text);
-                            },
-                            icon: const Icon(Icons.add_rounded),
-                            label: const Text('Insert'),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+                      primary: FilledButton.icon(
+                        key: const Key('insert-voice-draft'),
+                        style: _voiceButtonStyle(),
+                        onPressed: () async {
+                          final text = _draft.text.trim();
+                          if (text.isEmpty) return;
+                          await controller.cancel();
+                          if (context.mounted) Navigator.pop(context, text);
+                        },
+                        icon: const Icon(Icons.add_rounded),
+                        label: const Text('Insert'),
+                      ),
+                    )
+                  else
+                    OutlinedButton(
+                      key: const Key('voice-composer-cancel'),
+                      style: _voiceButtonStyle(),
+                      onPressed: _close,
+                      child: const Text('Cancel'),
+                    ),
                   const SizedBox(height: 8),
                   TextButton.icon(
+                    style: _voiceButtonStyle(),
                     onPressed:
                         controller.state == VoiceComposerState.listening ||
                             controller.state ==
@@ -644,6 +730,7 @@ class _VoiceStatus extends StatelessWidget {
               style: FilledButton.styleFrom(
                 backgroundColor: theme.colorScheme.error,
                 foregroundColor: theme.colorScheme.onError,
+                minimumSize: const Size(48, 48),
               ),
               onPressed: controller.stopListening,
               icon: const Icon(Icons.stop_rounded),
