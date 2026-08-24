@@ -327,6 +327,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   VoiceComposerController? _voice;
   bool _voiceOpening = false;
   String? _localShareUrl;
+  String? _promptError;
 
   String? get _shareUrl =>
       _conn.sessionsById[widget.sessionID]?.shareUrl ?? _localShareUrl;
@@ -461,6 +462,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           final msg = MessageInfo.fromJson(info);
           if (msg.sessionID != widget.sessionID) break;
           setState(() {
+            if (msg.role == 'assistant' && msg.errorText != null) {
+              _promptError = msg.errorText;
+            }
             _messageVersions[msg.id] = ++_eventVersion;
             if (!_reconcilePendingMessage(msg)) {
               final idx = _messages.indexWhere((m) => m.info.id == msg.id);
@@ -476,6 +480,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           });
         }
         break;
+      case 'session.error':
+        if (env.properties['sessionID']?.toString() != widget.sessionID) {
+          break;
+        }
+        setState(() {
+          _promptError = _eventErrorMessage(env.properties['error']);
+        });
+        break;
       case 'session.updated':
         final info = env.properties['info'];
         if (info is Map<String, dynamic> &&
@@ -487,6 +499,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   String _partKey(String messageID, String partID) => '$messageID\u0000$partID';
+
+  String _eventErrorMessage(Object? raw) {
+    if (raw is Map) {
+      final data = raw['data'];
+      final nested = data is Map ? data['message'] : null;
+      return (raw['message'] ?? nested ?? raw['name'])?.toString() ??
+          'OpenCode could not complete this prompt.';
+    }
+    final text = raw?.toString().trim();
+    return text?.isNotEmpty == true
+        ? text!
+        : 'OpenCode could not complete this prompt.';
+  }
 
   MessageWithParts? _messageByID(String messageID) {
     for (final message in _messages) {
@@ -859,6 +884,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // Optimistic user bubble.
     setState(() {
       _sending = true;
+      _promptError = null;
       _pendingSends.add(pending);
       _messages.add(
         MessageWithParts(
@@ -1530,6 +1556,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         children: [
           if (shareUrl != null)
             _SharedSessionBanner(url: shareUrl, onStop: _stopSharing),
+          if (_promptError case final promptError?)
+            _PromptErrorBanner(
+              message: promptError,
+              onDismiss: () => setState(() => _promptError = null),
+            ),
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
@@ -1927,6 +1958,59 @@ class _PermissionDialogState extends State<_PermissionDialog> {
 class _TypingIndicator extends StatefulWidget {
   @override
   State<_TypingIndicator> createState() => __TypingIndicatorState();
+}
+
+class _PromptErrorBanner extends StatelessWidget {
+  final String message;
+  final VoidCallback onDismiss;
+
+  const _PromptErrorBanner({required this.message, required this.onDismiss});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      child: Container(
+        key: const ValueKey('prompt-error-banner'),
+        margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+        padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
+        decoration: BoxDecoration(
+          color: scheme.errorContainer,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: scheme.error.withValues(alpha: .35)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.error_outline_rounded,
+              size: 20,
+              color: scheme.onErrorContainer,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(color: scheme.onErrorContainer, height: 1.35),
+              ),
+            ),
+            IconButton(
+              tooltip: 'Dismiss prompt error',
+              visualDensity: VisualDensity.compact,
+              onPressed: onDismiss,
+              icon: Icon(
+                Icons.close_rounded,
+                size: 19,
+                color: scheme.onErrorContainer,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class __TypingIndicatorState extends State<_TypingIndicator>

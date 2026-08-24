@@ -642,6 +642,31 @@ void main() {
     expect(controller.busySessions, containsAll(['session-2', 'session-3']));
   });
 
+  test('connected stream reconciles a missed idle event', () async {
+    final api = _V2Api()..statusesCompleter = Completer<Map<String, String>>();
+    final controller = ConnectionController(await _store())
+      ..api = api
+      ..status = StreamStatus.connected;
+    addTearDown(controller.dispose);
+
+    controller.handleEventForTesting(
+      EventEnvelope(
+        type: 'session.status',
+        properties: const {
+          'sessionID': 'session-1',
+          'status': {'type': 'busy'},
+        },
+      ),
+    );
+    expect(controller.busySessions, contains('session-1'));
+
+    final reconciliation = controller.reconcileBusySessionsForTesting();
+    api.statusesCompleter!.complete(const {});
+    await reconciliation;
+
+    expect(controller.busySessions, isNot(contains('session-1')));
+  });
+
   testWidgets('catalog replaces stale saved model and agent', (tester) async {
     final store = await _store({
       'oc.model.server': 'removed-provider|removed-model',

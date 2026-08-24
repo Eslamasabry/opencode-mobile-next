@@ -121,6 +121,23 @@ Dart code only; the installed app applies a downloaded patch after restart.
 
 ### GitHub sideload APK (separate distribution)
 
+Every installable GitHub APK must first be registered as a full Shorebird
+release. Until the production-signing migration is complete, create the next
+versioned sideload baseline with the pinned Flutter toolchain:
+
+```bash
+shorebird release android --artifact apk --flutter-version 3.47.1
+```
+
+Publish the exact APK produced by that command. Never publish an APK from a raw
+`flutter build apk`: using Shorebird's Flutter binary alone does not register a
+release, so that install cannot receive automatic patches. Tag the published
+source with the exact `v<x.y.z+build>` value so `./scripts/release.sh patch`
+can verify and target the baseline later.
+
+After production signing is configured, use the store AAB derivation below so
+the GitHub channel has an explicit, stable certificate lineage.
+
 The Play Store AAB is not a sideloadable APK, and the release helper never
 publishes GitHub assets. Derive a universal APK from the exact published AAB
 with Android's `bundletool`, passing the production signing key explicitly.

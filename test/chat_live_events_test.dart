@@ -432,6 +432,44 @@ void main() {
     },
   );
 
+  testWidgets('session errors stop thinking and remain visible in chat', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi();
+    final controller = await _pumpChat(tester, api);
+
+    await tester.enterText(find.byType(TextField), 'hello');
+    await tester.tap(find.byTooltip('Send'));
+    await _pumpEvent(tester);
+
+    controller.handleEventForTesting(
+      _event('session.status', {
+        'sessionID': 'session-1',
+        'status': {'type': 'busy'},
+      }),
+    );
+    await _pumpEvent(tester);
+    expect(find.text('thinking…'), findsOneWidget);
+
+    controller.handleEventForTesting(
+      _event('session.error', {
+        'sessionID': 'session-1',
+        'error': {
+          'name': 'ProviderError',
+          'data': {'message': 'Sign in to the selected model provider.'},
+        },
+      }),
+    );
+    await _pumpEvent(tester);
+
+    expect(find.text('thinking…'), findsNothing);
+    expect(find.byKey(const ValueKey('prompt-error-banner')), findsOneWidget);
+    expect(
+      find.text('Sign in to the selected model provider.'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('renders attachment-only and mixed user prompts accessibly', (
     tester,
   ) async {

@@ -56,6 +56,7 @@ class ConnectionController extends ChangeNotifier {
   ProductRepository? repository;
   EventStream? _events;
   Timer? _poll;
+  Future<void>? _busyStatusRefresh;
   ServerProfile? _connectedProfile;
   Future<void> _activeProfileWrite = Future.value();
   int _generation = 0;
@@ -1228,14 +1229,71 @@ class ConnectionController extends ChangeNotifier {
     } catch (_) {}
   }
 
-  /// Polling fallback when SSE is unavailable.
+  /// Polling fallback plus terminal-state reconciliation for connected SSE.
   void enablePollingFallback() {
     if (_poll?.isActive ?? false) return;
     _poll = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (!shouldPoll || sessionsLoading) return;
-      unawaited(refreshSessions());
+      if (sessionsLoading) return;
+      if (shouldPoll) {
+        unawaited(refreshSessions());
+      } else if (busySessions.isNotEmpty) {
+        // An otherwise healthy SSE connection can still lose one terminal
+        // event during a network handoff. Reconcile only active sessions so a
+        // missed `idle` cannot leave the chat thinking forever.
+        unawaited(_refreshBusySessionStatuses());
+      }
     });
   }
+
+  Future<void> _refreshBusySessionStatuses() {
+    final inFlight = _busyStatusRefresh;
+    if (inFlight != null) return inFlight;
+    late final Future<void> tracked;
+    tracked = _reconcileBusySessionStatuses().whenComplete(() {
+      if (identical(_busyStatusRefresh, tracked)) {
+        _busyStatusRefresh = null;
+      }
+    });
+    _busyStatusRefresh = tracked;
+    return tracked;
+  }
+
+  Future<void> _reconcileBusySessionStatuses() async {
+    final currentApi = api;
+    final generation = _generation;
+    final tracked = {
+      for (final id in busySessions) id: _sessionRevisions[id] ?? 0,
+    };
+    if (currentApi == null || tracked.isEmpty) return;
+
+    Map<String, String> statuses;
+    try {
+      statuses = await currentApi.sessionStatuses();
+    } catch (_) {
+      // SSE remains authoritative when this lightweight recovery check fails.
+      return;
+    }
+    if (!_isCurrent(generation, currentApi)) return;
+
+    var changed = false;
+    for (final entry in tracked.entries) {
+      if ((_sessionRevisions[entry.key] ?? 0) != entry.value) continue;
+      final remoteStatus = statuses[entry.key] ?? 'idle';
+      if (remoteStatus == 'idle') {
+        final removed = busySessions.remove(entry.key);
+        changed = removed || changed;
+        if (removed) {
+          _markSessionChanged(entry.key);
+          unawaited(_refreshOneSession(entry.key));
+        }
+      }
+    }
+    if (changed) notifyListeners();
+  }
+
+  @visibleForTesting
+  Future<void> reconcileBusySessionsForTesting() =>
+      _refreshBusySessionStatuses();
 
   /// Stops all network work while the application is backgrounded without
   /// clearing the selected profile, location, or already-rendered data.
@@ -1462,6 +1520,7 @@ class ConnectionController extends ChangeNotifier {
     unawaited(oldEvents?.dispose());
     _poll?.cancel();
     _poll = null;
+    _busyStatusRefresh = null;
     final oldApi = api;
     api = null;
     repository = null;
