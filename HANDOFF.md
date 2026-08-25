@@ -5,16 +5,43 @@ Last updated: 2026-08-25 (Asia/Dubai)
 ## Current GitHub APK
 
 - Branch: `master`
-- App version: `1.0.17+18`
-- Git tag: `v1.0.17+18`
-- APK: <https://github.com/Eslamasabry/oc_app/releases/download/v1.0.17%2B18/app-release.apk>
-- APK SHA-256: `ca1be0aa4260ab533d56ff1cf5e65adad8cbbfbffff9f3e5ac6cdc155473fe24`
-- Shorebird release ID: `789345`
+- App version: `1.0.18+19`
+- Git tag: `v1.0.18+19`
+- APK: <https://github.com/Eslamasabry/oc_app/releases/download/v1.0.18%2B19/app-release.apk>
+- APK SHA-256: `41190803397f5c481d7e12c919221b5441f7651de9a27bef645ba6c928c44896`
+- Shorebird release ID: `789571`
 
 This APK includes the OpenCode-driven model/mode/agent picker, repaired diff viewer,
-and in-app image/file previews. It was installed on the Android simulator and
-verified as version code 18/version name `1.0.17`. Flutter analysis was clean and
-all 190 tests passed.
+in-app image/file previews, wake-time UI reconciliation, and the opt-in Android
+foreground service for live background coding sessions. It was installed on the
+Android simulator and verified as version code 19/version name `1.0.18`. Flutter
+analysis was clean and all 197 tests passed.
+
+## Background connection behavior
+
+Settings now offers `Keep coding session live`. It starts an Android `dataSync`
+foreground service with a persistent notification and keeps SSE and an open terminal
+transport alive while the Activity is backgrounded. A second explicit action opens
+Android's battery-optimization exemption prompt. The app still reconciles chat,
+workspace, files, terminal lists, requests, and catalog data whenever it wakes, even
+when the live transport survived.
+
+The exact release APK was tested across Home-backgrounding and forced deep idle. The
+same process and foreground service survived, the setting survived the upgrade from
+version code 18 to 19, and no fatal exception was logged. Android 15+ limits
+`dataSync` foreground-service use to six background hours per rolling 24-hour period;
+the battery exemption does not bypass that platform limit.
+
+## Shorebird wake patch for `1.0.17+18`
+
+- Shorebird release ID: `789345`
+- Stable Patch 1 ID: `617081`
+- Patch commit: `b83bf27c5636a7f48707ad8f15fc669a82946c26`
+
+This Dart-only patch rehydrates screen-owned data after resume and SSE reconnects.
+It repairs stale chat, workspace, file, and terminal UI for existing `1.0.17+18`
+installs. The foreground service and Android permissions are native changes and
+therefore require installing `1.0.18+19`; Shorebird cannot add them to an older APK.
 
 ## Shorebird preview patch for `1.0.16+17`
 
