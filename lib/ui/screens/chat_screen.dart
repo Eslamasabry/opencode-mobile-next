@@ -2575,7 +2575,7 @@ class _UserMessageContent extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (text.isNotEmpty) SelectableText(text),
+        if (text.isNotEmpty) MarkdownText(text),
         if (text.isNotEmpty && files.isNotEmpty) const SizedBox(height: 8),
         for (final file in files) _AttachmentPart(part: file),
       ],

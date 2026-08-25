@@ -261,7 +261,11 @@ class _ToolCardState extends State<ToolCard> {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    _Mono(text: widget.state.inputJson!, maxLines: 20),
+                    _Mono(
+                      text: widget.state.inputJson!,
+                      name: 'tool-input.json',
+                      maxLines: 20,
+                    ),
                   ],
                   if (widget.state.output?.isNotEmpty ?? false) ...[
                     const SizedBox(height: 6),
@@ -273,7 +277,11 @@ class _ToolCardState extends State<ToolCard> {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    _Mono(text: widget.state.output!, maxLines: 200),
+                    _Mono(
+                      text: widget.state.output!,
+                      name: 'tool-output.txt',
+                      maxLines: 200,
+                    ),
                   ],
                 ],
               ),
@@ -446,7 +454,7 @@ class _ToolOutputPreview extends StatelessWidget {
                                 style: theme.textTheme.labelSmall,
                               ),
                             ),
-                            const Icon(Icons.open_in_full_rounded, size: 13),
+                            const Icon(Icons.visibility_outlined, size: 13),
                           ],
                         ),
                       ),
@@ -570,8 +578,9 @@ class _ToolOutputFileTileState extends State<_ToolOutputFileTile> {
 
 class _Mono extends StatelessWidget {
   final String text;
+  final String name;
   final int maxLines;
-  const _Mono({required this.text, this.maxLines = 100});
+  const _Mono({required this.text, required this.name, this.maxLines = 100});
 
   @override
   Widget build(BuildContext context) {
@@ -587,11 +596,12 @@ class _Mono extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
       ),
       child: SingleChildScrollView(
-        child: SelectableText(
-          text.length > 8000 ? '${text.substring(0, 8000)}\n… truncated' : text,
-          style: theme.textTheme.bodySmall!.copyWith(
-            fontFamily: 'monospace',
-            fontSize: 11.5,
+        child: SmartTextPreview(
+          data: FilePreviewData(
+            name: name,
+            text: text.length > 8000
+                ? '${text.substring(0, 8000)}\n… truncated'
+                : text,
           ),
         ),
       ),

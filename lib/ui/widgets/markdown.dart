@@ -131,6 +131,28 @@ class MarkdownText extends StatelessWidget {
     while (i < lines.length) {
       final line = lines[i];
 
+      // GitHub-flavored Markdown table. A table starts with a header row and
+      // a delimiter row such as `| --- | :---: | ---: |`.
+      if (i + 1 < lines.length &&
+          _tableCells(line).length >= 2 &&
+          _isTableDelimiter(lines[i + 1])) {
+        flushParagraph();
+        final headers = _tableCells(line);
+        final delimiter = _tableCells(lines[i + 1]);
+        final rows = <List<String>>[];
+        i += 2;
+        while (i < lines.length) {
+          final cells = _tableCells(lines[i]);
+          if (lines[i].trim().isEmpty || cells.length < 2) break;
+          rows.add(cells);
+          i++;
+        }
+        widgets.add(
+          _MarkdownTable(headers: headers, delimiter: delimiter, rows: rows),
+        );
+        continue;
+      }
+
       // Fenced code block
       final fence = RegExp(r'^\s*```\s*(\S*)\s*$').firstMatch(line);
       if (fence != null) {
@@ -219,6 +241,91 @@ class MarkdownText extends StatelessWidget {
     }
     flushParagraph();
     return widgets;
+  }
+}
+
+List<String> _tableCells(String line) {
+  final trimmed = line.trim();
+  if (!trimmed.contains('|')) return const [];
+  var body = trimmed;
+  if (body.startsWith('|')) body = body.substring(1);
+  if (body.endsWith('|')) body = body.substring(0, body.length - 1);
+  return body.split(RegExp(r'(?<!\\)\|')).map((cell) {
+    return cell.trim().replaceAll(r'\|', '|');
+  }).toList();
+}
+
+bool _isTableDelimiter(String line) {
+  final cells = _tableCells(line);
+  return cells.length >= 2 &&
+      cells.every((cell) => RegExp(r'^:?-{3,}:?$').hasMatch(cell));
+}
+
+class _MarkdownTable extends StatelessWidget {
+  const _MarkdownTable({
+    required this.headers,
+    required this.delimiter,
+    required this.rows,
+  });
+
+  final List<String> headers;
+  final List<String> delimiter;
+  final List<List<String>> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    String cellAt(List<String> cells, int index) =>
+        index < cells.length ? cells[index] : '';
+    bool rightAligned(int index) =>
+        index < delimiter.length && delimiter[index].trim().endsWith(':');
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            headingRowColor: WidgetStatePropertyAll(
+              theme.colorScheme.surfaceContainerHighest.withValues(alpha: .7),
+            ),
+            headingTextStyle: theme.textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+            dataTextStyle: theme.textTheme.bodySmall,
+            horizontalMargin: 12,
+            columnSpacing: 22,
+            dividerThickness: .7,
+            columns: [
+              for (var column = 0; column < headers.length; column++)
+                DataColumn(
+                  numeric: rightAligned(column),
+                  label: Text.rich(
+                    _InlineParser(headers[column]).parse(context),
+                  ),
+                ),
+            ],
+            rows: [
+              for (final row in rows)
+                DataRow(
+                  cells: [
+                    for (var column = 0; column < headers.length; column++)
+                      DataCell(
+                        Text.rich(
+                          _InlineParser(cellAt(row, column)).parse(context),
+                        ),
+                      ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

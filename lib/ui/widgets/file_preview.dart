@@ -4,6 +4,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'markdown.dart';
+
 /// Normalized file content that can be rendered by [FilePreviewBody].
 class FilePreviewData {
   FilePreviewData({
@@ -269,7 +271,7 @@ class _FilePreviewSheetState extends State<_FilePreviewSheet> {
                             dimension: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.add_comment_outlined, size: 20),
+                        : const Icon(Icons.attach_file_rounded, size: 20),
                   ),
                 if (data.exportBytes != null)
                   IconButton(
@@ -361,14 +363,9 @@ class FilePreviewBody extends StatelessWidget {
     if (data.text != null) {
       return SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: SelectableText(
-          data.text!,
+        child: SmartTextPreview(
           key: const Key('file-preview-text'),
-          style: theme.textTheme.bodySmall?.copyWith(
-            fontFamily: 'monospace',
-            fontSize: 12.5,
-            height: 1.45,
-          ),
+          data: data,
         ),
       );
     }
@@ -380,6 +377,144 @@ class FilePreviewBody extends StatelessWidget {
         if (data.byteLength != null) '${data.byteLength} bytes',
         'This format cannot be rendered in the app yet.',
       ].join('\n'),
+    );
+  }
+}
+
+/// Renders textual artifacts according to their actual content while keeping
+/// a selectable raw representation available for Markdown.
+class SmartTextPreview extends StatefulWidget {
+  const SmartTextPreview({super.key, required this.data});
+
+  final FilePreviewData data;
+
+  @override
+  State<SmartTextPreview> createState() => _SmartTextPreviewState();
+}
+
+class _SmartTextPreviewState extends State<SmartTextPreview> {
+  bool _rawMarkdown = false;
+
+  String get _text => widget.data.text ?? '';
+
+  bool get _isMarkdown {
+    final mime = widget.data.mimeType;
+    final name = widget.data.name.toLowerCase();
+    if (mime == 'text/markdown' ||
+        name.endsWith('.md') ||
+        name.endsWith('.mdx')) {
+      return true;
+    }
+    return RegExp(
+      r'(^|\n)#{1,6}\s+|(^|\n)```|(^|\n)\|[^\n]+\|\s*\n\|?\s*:?-{3,}',
+      multiLine: true,
+    ).hasMatch(_text);
+  }
+
+  String? get _language {
+    final name = widget.data.name.toLowerCase().split('?').first;
+    final dot = name.lastIndexOf('.');
+    final extension = dot < 0 ? '' : name.substring(dot + 1);
+    return switch (extension) {
+      'dart' => 'dart',
+      'js' || 'mjs' || 'cjs' => 'javascript',
+      'ts' => 'typescript',
+      'tsx' => 'tsx',
+      'jsx' => 'jsx',
+      'py' => 'python',
+      'go' => 'go',
+      'rs' => 'rust',
+      'java' => 'java',
+      'kt' || 'kts' => 'kotlin',
+      'swift' => 'swift',
+      'c' || 'h' => 'c',
+      'cc' || 'cpp' || 'cxx' || 'hpp' => 'cpp',
+      'cs' => 'csharp',
+      'sh' || 'bash' || 'zsh' => 'shell',
+      'html' || 'htm' => 'html',
+      'css' => 'css',
+      'scss' => 'scss',
+      'xml' || 'svg' => 'xml',
+      'yaml' || 'yml' => 'yaml',
+      'toml' => 'toml',
+      'sql' => 'sql',
+      'gradle' => 'gradle',
+      'diff' || 'patch' => 'diff',
+      _ => null,
+    };
+  }
+
+  String? get _prettyJson {
+    final mime = widget.data.mimeType;
+    final name = widget.data.name.toLowerCase();
+    final trimmed = _text.trim();
+    final candidate =
+        mime == 'application/json' ||
+        name.endsWith('.json') ||
+        ((trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+            (trimmed.startsWith('[') && trimmed.endsWith(']')));
+    if (!candidate) return null;
+    try {
+      return const JsonEncoder.withIndent('  ').convert(jsonDecode(trimmed));
+    } on FormatException {
+      return null;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final prettyJson = _prettyJson;
+    final language = _language;
+    if (_isMarkdown) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextButton(
+                    key: const Key('file-preview-rendered-mode'),
+                    onPressed: _rawMarkdown
+                        ? () => setState(() => _rawMarkdown = false)
+                        : null,
+                    child: const Text('Rendered'),
+                  ),
+                  TextButton(
+                    key: const Key('file-preview-raw-mode'),
+                    onPressed: _rawMarkdown
+                        ? null
+                        : () => setState(() => _rawMarkdown = true),
+                    child: const Text('Raw'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (_rawMarkdown)
+            CodeBlock(code: _text, language: 'markdown')
+          else
+            MarkdownText(_text),
+        ],
+      );
+    }
+    if (prettyJson != null) {
+      return CodeBlock(code: prettyJson, language: 'json');
+    }
+    if (language != null) {
+      return CodeBlock(code: _text, language: language);
+    }
+    return SelectableText(
+      _text,
+      style: theme.textTheme.bodySmall?.copyWith(height: 1.45),
     );
   }
 }
