@@ -15,7 +15,27 @@ This APK includes the OpenCode-driven model/mode/agent picker, repaired diff vie
 in-app image/file previews, wake-time UI reconciliation, and the opt-in Android
 foreground service for live background coding sessions. It was installed on the
 Android simulator and verified as version code 19/version name `1.0.18`. Flutter
-analysis was clean and all 197 tests passed.
+analysis was clean and all 199 tests passed.
+
+## Shorebird generated-artifact patch for `1.0.18+19`
+
+- Shorebird release ID: `789571`
+- Stable Patch 1 ID: `617162`
+- Artifact workflow commit: `adfdeca`
+- Smart text commit: `65c145c`
+
+Tool results such as `{"filePath":"/tmp/opencode/shots/captcha-r1.png"}` are
+now first-class chat artifacts. The app retrieves them from the connected
+OpenCode server, renders images inline, opens images and text files in the
+shared viewer, saves them through Android's system document destination, and
+can attach the fetched bytes back to the composer for a follow-up comment.
+
+Text rendering is content-aware across chat, tool output, generated artifacts,
+and the workspace file viewer. Markdown has rendered/raw modes and formatted
+tables; JSON is indented; recognized source files use selectable,
+language-labelled code blocks. No native- or asset-diff override was used.
+The simulator downloaded Patch 1 on first launch and activated
+`patches/1/dlc.vmcode` after a cold restart; no Flutter fatal error was logged.
 
 ## Background connection behavior
 
@@ -97,6 +117,7 @@ Patch 2 forces the managed local Termux profile (`http://127.0.0.1:4096`) back t
 git status --short --branch
 git log -3 --oneline --decorate
 /home/eslam/.shorebird/bin/shorebird patches list --release-version=1.0.16+17
+/home/eslam/.shorebird/bin/shorebird patches list --release-version=1.0.18+19
 /home/eslam/.config/shorebird/bin/shorebird patches list --release-version=1.0.14+15
 adb devices -l
 ```
