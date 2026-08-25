@@ -320,6 +320,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       {};
   int _eventVersion = 0;
   int _loadGeneration = 0;
+  int _dataRefreshRevision = 0;
   bool _sending = false;
   bool _permissionDialogScheduled = false;
   bool _permissionDismissScheduled = false;
@@ -340,6 +341,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _attachments.addAll(widget.initialAttachments);
     _conn = _readConn();
+    _dataRefreshRevision = _conn.dataRefreshRevision;
     _conn.addListener(_onConnectionChanged);
     _load();
     _sub = _conn.events.listen(_onEvent);
@@ -1288,8 +1290,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   void _onConnectionChanged() {
     if (!mounted) return;
+    final shouldRehydrate =
+        _dataRefreshRevision != _conn.dataRefreshRevision && _conn.api != null;
+    _dataRefreshRevision = _conn.dataRefreshRevision;
     _dismissResolvedPermissionDialog();
     setState(() {});
+    if (shouldRehydrate) unawaited(_load());
     _schedulePermissionDialog();
   }
 

@@ -22,6 +22,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
   bool _creating = false;
   ProductRepository? _activeRepository;
   int _locationRevision = -1;
+  int _dataRefreshRevision = -1;
   int _ptyRevision = -1;
   int _loadGeneration = 0;
 
@@ -38,15 +39,18 @@ class _TerminalScreenState extends State<TerminalScreen> {
   void _captureLocation() {
     _activeRepository = _repository;
     _locationRevision = _revisionOf(_repository);
+    _dataRefreshRevision = widget.controller.dataRefreshRevision;
     _ptyRevision = widget.controller.ptyRevision;
   }
 
   void _controllerChanged() {
     final repository = _repository;
     final revision = _revisionOf(repository);
+    final dataRefreshRevision = widget.controller.dataRefreshRevision;
     final ptyRevision = widget.controller.ptyRevision;
     if (identical(repository, _activeRepository) &&
         revision == _locationRevision &&
+        dataRefreshRevision == _dataRefreshRevision &&
         ptyRevision == _ptyRevision) {
       return;
     }
@@ -55,8 +59,20 @@ class _TerminalScreenState extends State<TerminalScreen> {
         revision != _locationRevision;
     _activeRepository = repository;
     _locationRevision = revision;
+    final dataRefreshChanged = dataRefreshRevision != _dataRefreshRevision;
+    _dataRefreshRevision = dataRefreshRevision;
     _ptyRevision = ptyRevision;
     _loadGeneration++;
+    if (widget.controller.lifecycleSuspended) {
+      setState(() {
+        _processes ??= const [];
+        _error = null;
+      });
+      return;
+    }
+    if (widget.controller.connectionLoading && !dataRefreshChanged) {
+      return;
+    }
     setState(() {
       _processes = null;
       _error = null;
@@ -130,6 +146,8 @@ class _TerminalScreenState extends State<TerminalScreen> {
         builder: (_) => TerminalSurface(
           repository: repository ?? _repository!,
           repositoryResolver: () => widget.controller.repository,
+          dataRefreshRevisionResolver: () =>
+              widget.controller.dataRefreshRevision,
           repositoryChanges: widget.controller,
           process: process,
         ),
@@ -348,6 +366,7 @@ class _ProcessIndicator extends StatelessWidget {
 class TerminalSurface extends StatefulWidget {
   final ProductRepository repository;
   final ProductRepository? Function()? repositoryResolver;
+  final int Function()? dataRefreshRevisionResolver;
   final Listenable? repositoryChanges;
   final TerminalProcess process;
 
@@ -355,6 +374,7 @@ class TerminalSurface extends StatefulWidget {
     super.key,
     required this.repository,
     this.repositoryResolver,
+    this.dataRefreshRevisionResolver,
     this.repositoryChanges,
     required this.process,
   });
@@ -382,6 +402,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
   String _transcript = '';
   final _transcriptSanitizer = _TerminalTranscriptSanitizer();
   ProductRepository? _activeRepository;
+  int _activeDataRefreshRevision = -1;
 
   ProductRepository? get _repository => widget.repositoryResolver == null
       ? widget.repository
@@ -400,6 +421,8 @@ class _TerminalSurfaceState extends State<TerminalSurface>
     WidgetsBinding.instance.addObserver(this);
     widget.repositoryChanges?.addListener(_repositoryChanged);
     _activeRepository = _repository;
+    _activeDataRefreshRevision =
+        widget.dataRefreshRevisionResolver?.call() ?? -1;
     _terminal = xterm.Terminal(
       maxLines: 5000,
       onOutput: _write,
@@ -427,8 +450,17 @@ class _TerminalSurfaceState extends State<TerminalSurface>
 
   void _repositoryChanged({bool forceReconnect = false}) {
     final repository = _repository;
-    if (!forceReconnect && identical(repository, _activeRepository)) return;
+    final dataRefreshRevision =
+        widget.dataRefreshRevisionResolver?.call() ?? -1;
+    final dataRefreshChanged =
+        dataRefreshRevision != _activeDataRefreshRevision;
+    if (!forceReconnect &&
+        !dataRefreshChanged &&
+        identical(repository, _activeRepository)) {
+      return;
+    }
     _activeRepository = repository;
+    _activeDataRefreshRevision = dataRefreshRevision;
     if (repository == null) {
       _connectionGeneration++;
       _resizeTimer?.cancel();

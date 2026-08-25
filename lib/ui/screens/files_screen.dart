@@ -27,6 +27,8 @@ class _FilesScreenState extends State<FilesScreen> {
   final _search = TextEditingController();
   ProductRepository? _repository;
   int _locationRevision = -1;
+  int _controllerLocationRevision = -1;
+  int _dataRefreshRevision = -1;
   int _requestGeneration = 0;
 
   @override
@@ -45,17 +47,48 @@ class _FilesScreenState extends State<FilesScreen> {
   void _captureLocation() {
     _repository = widget.controller.repository;
     _locationRevision = _revisionOf(_repository);
+    _controllerLocationRevision = widget.controller.locationRevision;
+    _dataRefreshRevision = widget.controller.dataRefreshRevision;
   }
 
   void _controllerChanged() {
     final repository = widget.controller.repository;
     final revision = _revisionOf(repository);
-    if (identical(repository, _repository) && revision == _locationRevision) {
+    final controllerLocationChanged =
+        _controllerLocationRevision != widget.controller.locationRevision;
+    final dataRefreshChanged =
+        _dataRefreshRevision != widget.controller.dataRefreshRevision;
+    if (identical(repository, _repository) &&
+        revision == _locationRevision &&
+        !controllerLocationChanged &&
+        !dataRefreshChanged) {
       return;
     }
     _repository = repository;
     _locationRevision = revision;
+    _controllerLocationRevision = widget.controller.locationRevision;
+    _dataRefreshRevision = widget.controller.dataRefreshRevision;
     _requestGeneration++;
+    if (widget.controller.lifecycleSuspended) {
+      setState(() {
+        _loading = false;
+        _entries ??= const [];
+      });
+      return;
+    }
+    if (widget.controller.connectionLoading &&
+        !dataRefreshChanged &&
+        !controllerLocationChanged) {
+      return;
+    }
+    if (dataRefreshChanged && !controllerLocationChanged) {
+      if (_search.text.trim().isNotEmpty) {
+        _searchFiles(_search.text);
+      } else {
+        _load(_path);
+      }
+      return;
+    }
     _search.clear();
     _searchOriginPath = null;
     setState(() {

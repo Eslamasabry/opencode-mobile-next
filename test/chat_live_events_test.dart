@@ -197,6 +197,33 @@ void main() {
     expect(find.byTooltip('Copy patch'), findsOneWidget);
   });
 
+  testWidgets('foreground data refresh rehydrates messages missed while away', (
+    tester,
+  ) async {
+    var text = 'Before background';
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('assistant-1', 'assistant', [
+          Part(
+            id: 'text-1',
+            messageID: 'assistant-1',
+            type: 'text',
+            text: text,
+          ),
+        ]),
+      ];
+    final controller = await _pumpChat(tester, api);
+    expect(find.text('Before background'), findsOneWidget);
+
+    text = 'Completed while backgrounded';
+    controller.signalDataRefreshForTesting();
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Completed while backgrounded'), findsOneWidget);
+    expect(find.text('Before background'), findsNothing);
+  });
+
   testWidgets('applies split text, reasoning, and tool input deltas', (
     tester,
   ) async {

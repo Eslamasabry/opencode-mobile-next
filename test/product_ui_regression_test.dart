@@ -388,6 +388,50 @@ void main() {
     expect(requestedPaths.last, 'lib');
   });
 
+  testWidgets('foreground refresh reloads the current file directory', (
+    tester,
+  ) async {
+    var refreshed = false;
+    final requestedPaths = <String>[];
+    final api = _TestApi(
+      files: (path) async {
+        requestedPaths.add(path);
+        if (path.isEmpty) {
+          return [FileNode(name: 'lib', path: 'lib', isDir: true)];
+        }
+        return [
+          FileNode(
+            name: refreshed ? 'after.dart' : 'before.dart',
+            path: 'lib/${refreshed ? 'after.dart' : 'before.dart'}',
+            isDir: false,
+          ),
+        ];
+      },
+    );
+    final controller = await _controller(
+      api: api,
+      repository: _LocationRepository(),
+    );
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: FilesScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('lib'));
+    await tester.pumpAndSettle();
+    expect(find.text('before.dart'), findsOneWidget);
+
+    refreshed = true;
+    controller.signalDataRefreshForTesting();
+    await tester.pumpAndSettle();
+
+    expect(requestedPaths.last, 'lib');
+    expect(find.text('after.dart'), findsOneWidget);
+    expect(find.text('before.dart'), findsNothing);
+  });
+
   testWidgets('file search clear control has an accessible tooltip', (
     tester,
   ) async {

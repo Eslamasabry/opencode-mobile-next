@@ -137,6 +137,11 @@ class ConnectionController extends ChangeNotifier {
   String? lastError;
 
   int connectionRevision = 0;
+
+  /// Advances whenever a usable transport is ready and screen-owned data
+  /// should be rehydrated. This also advances after an SSE reconnection so
+  /// events missed during a network handoff are reconciled from REST.
+  int dataRefreshRevision = 0;
   int locationRevision = 0;
   String? directory;
   String? workspace;
@@ -313,6 +318,7 @@ class ConnectionController extends ChangeNotifier {
 
     unawaited(_loadCatalog());
     _startEvents(generation, currentApi);
+    _markDataRefreshReady(generation, currentApi);
     unawaited(refreshSessions());
     unawaited(refreshPendingPermissions());
     unawaited(refreshPendingQuestions());
@@ -519,11 +525,17 @@ class ConnectionController extends ChangeNotifier {
       },
       onStatus: (s) {
         if (!_isCurrentStream(generation, currentApi, stream)) return;
+        final previousStatus = status;
         status = s;
         if (s == StreamStatus.connected) {
           lastError = null;
           unawaited(refreshPendingPermissions());
           unawaited(refreshPendingQuestions());
+          if (previousStatus == StreamStatus.reconnecting ||
+              previousStatus == StreamStatus.disconnected) {
+            _markDataRefreshReady(generation, currentApi);
+            unawaited(refreshSessions());
+          }
         } else {
           _cancelPermissionHydration();
         }
@@ -1527,6 +1539,7 @@ class ConnectionController extends ChangeNotifier {
       return;
     }
     _startEvents(generation, currentApi);
+    _markDataRefreshReady(generation, currentApi);
     await Future.wait<void>([
       refreshSessions(),
       _loadCatalog(),
@@ -1582,6 +1595,7 @@ class ConnectionController extends ChangeNotifier {
     notifyListeners();
     enablePollingFallback();
     _startEvents(generation, currentApi);
+    _markDataRefreshReady(generation, currentApi);
 
     await Future.wait<void>([
       refreshSessions(),
@@ -1642,6 +1656,16 @@ class ConnectionController extends ChangeNotifier {
     _generation += 1;
     connectionRevision = _generation;
     return _generation;
+  }
+
+  void _markDataRefreshReady(int generation, OpenCodeApi currentApi) {
+    if (_isCurrent(generation, currentApi)) dataRefreshRevision += 1;
+  }
+
+  @visibleForTesting
+  void signalDataRefreshForTesting() {
+    dataRefreshRevision += 1;
+    notifyListeners();
   }
 
   bool _isCurrent(int generation, OpenCodeApi? currentApi) =>

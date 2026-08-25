@@ -547,12 +547,14 @@ void main() {
     );
     await tester.pump();
     final callsBeforeReconnect = repository.listCalls;
+    final refreshRevisionBeforeReconnect = controller.dataRefreshRevision;
 
     streams.single.emitStatus(StreamStatus.reconnecting);
     streams.single.emitStatus(StreamStatus.connected);
     await tester.pump();
 
     expect(repository.listCalls, callsBeforeReconnect + 1);
+    expect(controller.dataRefreshRevision, refreshRevisionBeforeReconnect + 1);
     controller.dispose();
   });
 
@@ -904,6 +906,7 @@ void main() {
       workspace: 'workspace-1',
     );
     expect(apis, hasLength(2));
+    final refreshRevisionBeforeResume = controller.dataRefreshRevision;
 
     final suspendedApi = apis.last;
     final suspendedStream = streams.last;
@@ -924,6 +927,7 @@ void main() {
     expect(apis.last.workspace, 'workspace-1');
     expect(apis.last.healthCalls, 1);
     expect(controller.status, StreamStatus.connected);
+    expect(controller.dataRefreshRevision, refreshRevisionBeforeResume + 1);
     controller.dispose();
   });
 

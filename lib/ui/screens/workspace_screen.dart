@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -24,18 +26,26 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   String? _selectedDirectory;
   bool _creating = false;
   int _loadGeneration = 0;
+  int _dataRefreshRevision = 0;
 
   ProductRepository? get _repository => widget.controller.repository;
 
   @override
   void initState() {
     super.initState();
+    _dataRefreshRevision = widget.controller.dataRefreshRevision;
     widget.controller.addListener(_changed);
     _load();
   }
 
   void _changed() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    final shouldReload =
+        _dataRefreshRevision != widget.controller.dataRefreshRevision &&
+        widget.controller.repository != null;
+    _dataRefreshRevision = widget.controller.dataRefreshRevision;
+    setState(() {});
+    if (shouldReload) unawaited(_load());
   }
 
   Future<void> _load() async {
