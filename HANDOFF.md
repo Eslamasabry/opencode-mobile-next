@@ -5,13 +5,34 @@ Last updated: 2026-08-25 (Asia/Dubai)
 ## Current GitHub APK
 
 - Branch: `master`
-- App version: `1.0.15+16`
-- Git tag: `v1.0.15+16`
-- APK: <https://github.com/Eslamasabry/oc_app/releases/download/v1.0.15%2B16/app-release.apk>
-- APK SHA-256: `dd9a1be5f038626713e65d45d50232b283226e6704bc797dd92a98d8f2e91a95`
-- Shorebird status: built with Shorebird Flutter `3.47.1`, but no `1.0.15+16` Shorebird release was published
+- App version: `1.0.17+18`
+- Git tag: `v1.0.17+18`
+- APK: <https://github.com/Eslamasabry/oc_app/releases/download/v1.0.17%2B18/app-release.apk>
+- APK SHA-256: `ca1be0aa4260ab533d56ff1cf5e65adad8cbbfbffff9f3e5ac6cdc155473fe24`
+- Shorebird release ID: `789345`
 
-The version was advanced so the existing `1.0.14+15` OTA patches cannot replace the overhauled model selector and chat composer. The APK was installed on the Android simulator, restarted twice, and confirmed to retain the new selector. Flutter analysis was clean and all 183 tests passed.
+This APK includes the OpenCode-driven model/mode/agent picker, repaired diff viewer,
+and in-app image/file previews. It was installed on the Android simulator and
+verified as version code 18/version name `1.0.17`. Flutter analysis was clean and
+all 190 tests passed.
+
+## Shorebird preview patch for `1.0.16+17`
+
+- Shorebird release ID: `789134`
+- Stable Patch 1 ID: `617007`
+- Patch branch/tag: `v1.0.16+17-patch1`
+- Patch commit: `760c71dcc2de7bffb54cd70ded2b262481e74502`
+
+The image/file preview implementation was rebuilt from the exact `v1.0.16+17`
+release tag and published with `shorebird patch android
+--release-version=1.0.16+17`. No native- or asset-diff override was used. The
+first launch downloads the patch; the next full app launch activates it.
+
+The first patch attempt was safely cancelled because newly referenced Material
+icon glyphs changed the tree-shaken font asset. The patch branch reuses glyphs
+already present in the original APK, after which Shorebird's compatibility gate
+passed. Analysis was clean, the full 190-test suite passed before that icon-only
+adjustment, and the focused 30 preview/chat tests passed afterward.
 
 ## Previous Shorebird baseline
 
@@ -48,6 +69,7 @@ Patch 2 forces the managed local Termux profile (`http://127.0.0.1:4096`) back t
 ```bash
 git status --short --branch
 git log -3 --oneline --decorate
+/home/eslam/.shorebird/bin/shorebird patches list --release-version=1.0.16+17
 /home/eslam/.config/shorebird/bin/shorebird patches list --release-version=1.0.14+15
 adb devices -l
 ```
