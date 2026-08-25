@@ -148,6 +148,8 @@ class _TerminalScreenState extends State<TerminalScreen> {
           repositoryResolver: () => widget.controller.repository,
           dataRefreshRevisionResolver: () =>
               widget.controller.dataRefreshRevision,
+          keepLiveInBackgroundResolver: () =>
+              widget.controller.keepLiveInBackground,
           repositoryChanges: widget.controller,
           process: process,
         ),
@@ -367,6 +369,7 @@ class TerminalSurface extends StatefulWidget {
   final ProductRepository repository;
   final ProductRepository? Function()? repositoryResolver;
   final int Function()? dataRefreshRevisionResolver;
+  final bool Function()? keepLiveInBackgroundResolver;
   final Listenable? repositoryChanges;
   final TerminalProcess process;
 
@@ -375,6 +378,7 @@ class TerminalSurface extends StatefulWidget {
     required this.repository,
     this.repositoryResolver,
     this.dataRefreshRevisionResolver,
+    this.keepLiveInBackgroundResolver,
     this.repositoryChanges,
     required this.process,
   });
@@ -566,6 +570,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
   }
 
   void _suspendForLifecycle() {
+    if (widget.keepLiveInBackgroundResolver?.call() == true) return;
     if (_lifecycleSuspended) return;
     _lifecycleSuspended = true;
     _connectionGeneration++;

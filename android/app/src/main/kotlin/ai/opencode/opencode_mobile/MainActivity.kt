@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.app.ActivityManager
 import android.app.PendingIntent
+import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -11,6 +12,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
 import android.os.StatFs
 import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
@@ -23,6 +25,7 @@ class MainActivity : FlutterActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private var permissionResult: MethodChannel.Result? = null
     private var microphonePermissionResult: MethodChannel.Result? = null
+    private var backgroundPermissionResult: MethodChannel.Result? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -62,6 +65,22 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, BACKGROUND_CHANNEL_NAME)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "getStatus" -> result.success(backgroundStatus())
+                    "enable" -> enableBackgroundConnection(result)
+                    "disable" -> {
+                        BackgroundConnectionService.stop(this)
+                        result.success(backgroundStatus(enabled = false))
+                    }
+                    "requestBatteryOptimizationExemption" -> {
+                        requestBatteryOptimizationExemption()
+                        result.success(backgroundStatus())
+                    }
+                    else -> result.notImplemented()
+                }
+            }
     }
 
     override fun onRequestPermissionsResult(
@@ -89,7 +108,78 @@ class MainActivity : FlutterActivity() {
                 }
                 result.success(status)
             }
+            BACKGROUND_NOTIFICATION_PERMISSION_REQUEST -> {
+                val result = backgroundPermissionResult ?: return
+                backgroundPermissionResult = null
+                val granted = grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED
+                if (granted) {
+                    startBackgroundConnection(result)
+                } else {
+                    result.error(
+                        "notification_denied",
+                        "Notification access is required so Android can show the live connection.",
+                        null
+                    )
+                }
+            }
         }
+    }
+
+    private fun enableBackgroundConnection(result: MethodChannel.Result) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            if (backgroundPermissionResult != null) {
+                result.error("permission_in_progress", "A notification permission request is open.", null)
+                return
+            }
+            backgroundPermissionResult = result
+            requestPermissions(
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                BACKGROUND_NOTIFICATION_PERMISSION_REQUEST
+            )
+            return
+        }
+        startBackgroundConnection(result)
+    }
+
+    private fun startBackgroundConnection(result: MethodChannel.Result) {
+        try {
+            BackgroundConnectionService.start(this)
+            result.success(backgroundStatus(enabled = true))
+        } catch (error: Exception) {
+            result.error(
+                "foreground_service_failed",
+                error.message ?: "Android could not start the live connection.",
+                null
+            )
+        }
+    }
+
+    private fun backgroundStatus(enabled: Boolean = BackgroundConnectionService.active): Map<String, Any> {
+        val notifications = getSystemService(NotificationManager::class.java)
+        val notificationGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            notifications.areNotificationsEnabled()
+        val power = getSystemService(PowerManager::class.java)
+        return mapOf(
+            "enabled" to enabled,
+            "active" to BackgroundConnectionService.active,
+            "notificationGranted" to notificationGranted,
+            "batteryOptimizationIgnored" to power.isIgnoringBatteryOptimizations(packageName)
+        )
+    }
+
+    private fun requestBatteryOptimizationExemption() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
+        val power = getSystemService(PowerManager::class.java)
+        if (power.isIgnoringBatteryOptimizations(packageName)) return
+        startActivity(
+            Intent(
+                Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                Uri.parse("package:$packageName")
+            )
+        )
     }
 
     private fun voiceDeviceInfo(): Map<String, Any> {
@@ -285,12 +375,14 @@ class MainActivity : FlutterActivity() {
     companion object {
         private const val CHANNEL_NAME = "oc/termux"
         private const val VOICE_CHANNEL_NAME = "oc/voice"
+        private const val BACKGROUND_CHANNEL_NAME = "oc/background"
         private const val TERMUX_PACKAGE = "com.termux"
         private const val TERMUX_HOME = "/data/data/com.termux/files/home"
         private const val TERMUX_BASH = "/data/data/com.termux/files/usr/bin/bash"
         private const val RUN_COMMAND_PERMISSION = "com.termux.permission.RUN_COMMAND"
         private const val RUN_COMMAND_PERMISSION_REQUEST = 4701
         private const val MICROPHONE_PERMISSION_REQUEST = 4702
+        private const val BACKGROUND_NOTIFICATION_PERMISSION_REQUEST = 4703
         private const val ACTION_RUN_COMMAND = "com.termux.RUN_COMMAND"
         private const val RUN_COMMAND_SERVICE = "com.termux.app.RunCommandService"
         private const val EXTRA_COMMAND_PATH = "com.termux.RUN_COMMAND_PATH"

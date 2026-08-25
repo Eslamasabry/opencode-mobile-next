@@ -9,6 +9,7 @@ import '../api/models.dart';
 import '../api/opencode_api.dart';
 import '../api/product_repository.dart';
 import '../api/sse.dart';
+import '../background/live_background.dart';
 import 'profiles.dart';
 
 Map<String, dynamic> _catalogMap(Object? value) =>
@@ -112,6 +113,7 @@ typedef EventStreamFactory =
 /// Everything the UI needs about the active server connection.
 class ConnectionController extends ChangeNotifier {
   final ProfileStore store;
+  final BackgroundLiveController backgroundLive;
   final OpenCodeApiFactory _apiFactory;
   final ProductRepositoryFactory _repositoryFactory;
   final EventStreamFactory _eventStreamFactory;
@@ -211,9 +213,26 @@ class ConnectionController extends ChangeNotifier {
     OpenCodeApiFactory? apiFactory,
     ProductRepositoryFactory? repositoryFactory,
     EventStreamFactory? eventStreamFactory,
+    BackgroundLiveController? backgroundLive,
   }) : _apiFactory = apiFactory ?? _createApi,
        _repositoryFactory = repositoryFactory ?? _createRepository,
-       _eventStreamFactory = eventStreamFactory ?? _createEventStream;
+       _eventStreamFactory = eventStreamFactory ?? _createEventStream,
+       backgroundLive =
+           backgroundLive ??
+           BackgroundLiveController(preferences: store.prefs) {
+    this.backgroundLive.addListener(_backgroundLiveChanged);
+  }
+
+  bool get keepLiveInBackground => backgroundLive.enabled;
+
+  Future<bool> setKeepLiveInBackground(bool enabled) =>
+      backgroundLive.setEnabled(enabled);
+
+  Future<void> restoreBackgroundLiveMode() => backgroundLive.restore();
+
+  void _backgroundLiveChanged() {
+    if (!_disposed) notifyListeners();
+  }
 
   static OpenCodeApi _createApi(ServerProfile profile) => OpenCodeApi(
     baseUrl: profile.baseUrl,
@@ -1471,6 +1490,7 @@ class ConnectionController extends ChangeNotifier {
   /// Stops all network work while the application is backgrounded without
   /// clearing the selected profile, location, or already-rendered data.
   void suspendForLifecycle() {
+    if (keepLiveInBackground) return;
     if (_disposed || _lifecycleSuspended) return;
     _lifecycleSuspended = true;
     // A resume already in flight is invalidated by the generation change
@@ -1489,7 +1509,10 @@ class ConnectionController extends ChangeNotifier {
     if (_disposed) return Future.value();
     final inFlight = _lifecycleResume;
     if (inFlight != null) return inFlight;
-    if (!_lifecycleSuspended) return Future.value();
+    if (!_lifecycleSuspended) {
+      if (keepLiveInBackground) return _reconcileAfterBackground();
+      return Future.value();
+    }
     _lifecycleSuspended = false;
     final profile = _connectedProfile;
     if (profile == null) return Future.value();
@@ -1504,6 +1527,20 @@ class ConnectionController extends ChangeNotifier {
     });
     _lifecycleResume = tracked;
     return tracked;
+  }
+
+  Future<void> _reconcileAfterBackground() async {
+    final currentApi = api;
+    if (currentApi == null) return;
+    final generation = _generation;
+    _markDataRefreshReady(generation, currentApi);
+    notifyListeners();
+    await Future.wait([
+      refreshSessions(),
+      refreshCatalog(),
+      refreshPendingPermissions(),
+      refreshPendingQuestions(),
+    ]);
   }
 
   Future<void> _resumeLifecycleTransport(
@@ -1795,6 +1832,8 @@ class ConnectionController extends ChangeNotifier {
     _generation += 1;
     connectionRevision = _generation;
     _retireTransport();
+    backgroundLive.removeListener(_backgroundLiveChanged);
+    backgroundLive.dispose();
     unawaited(_eventBus.close());
     super.dispose();
   }

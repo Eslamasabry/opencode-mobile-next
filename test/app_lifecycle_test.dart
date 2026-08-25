@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
+import 'package:opencode_mobile/background/live_background.dart';
 import 'package:opencode_mobile/main.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
@@ -105,5 +106,31 @@ void main() {
     expect(connection.lifecycleSuspended, isTrue);
     expect(find.byType(HomeScreen), findsOneWidget);
     expect(find.byType(ServersScreen), findsNothing);
+  });
+
+  test('opted-in background mode keeps the shared transport active', () async {
+    SharedPreferences.setMockInitialValues({
+      BackgroundLiveController.preferenceKey: true,
+    });
+    final store = ProfileStore(prefs: await SharedPreferences.getInstance());
+    final backgroundLive = BackgroundLiveController(
+      preferences: store.prefs,
+      invoke: (method, [arguments]) async => const {
+        'enabled': true,
+        'active': true,
+        'notificationGranted': true,
+        'batteryOptimizationIgnored': false,
+      },
+    );
+    final connection = ConnectionController(
+      store,
+      backgroundLive: backgroundLive,
+    )..status = StreamStatus.connected;
+    addTearDown(connection.dispose);
+
+    connection.suspendForLifecycle();
+
+    expect(connection.lifecycleSuspended, isFalse);
+    expect(connection.status, StreamStatus.connected);
   });
 }

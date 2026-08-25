@@ -262,6 +262,34 @@ void main() {
     },
   );
 
+  testWidgets('opted-in terminal remains connected while backgrounded', (
+    tester,
+  ) async {
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final repository = _TerminalRepository();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: TerminalSurface(
+          repository: repository,
+          keepLiveInBackgroundResolver: () => true,
+          process: _process,
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(repository.channels, hasLength(1));
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump();
+
+    expect(repository.channels.single.closeCalls, 0);
+    expect(find.textContaining('Connected - PID 42'), findsOneWidget);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(repository.channels, hasLength(1));
+  });
+
   testWidgets('lifecycle invalidates a pending terminal connection', (
     tester,
   ) async {

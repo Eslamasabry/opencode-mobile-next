@@ -14,7 +14,8 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends State<SettingsScreen>
+    with WidgetsBindingObserver {
   Health? _health;
   String? _healthError;
   bool _checking = false;
@@ -22,7 +23,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    widget.controller.backgroundLive.addListener(_backgroundChanged);
     _checkHealth();
+    widget.controller.backgroundLive.refreshStatus();
+  }
+
+  void _backgroundChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      widget.controller.backgroundLive.refreshStatus();
+    }
   }
 
   Future<void> _checkHealth() async {
@@ -105,6 +120,62 @@ class _SettingsScreenState extends State<SettingsScreen> {
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => Navigator.of(context).pushNamed('/servers'),
           ),
+          const SectionLabel('Background connection'),
+          SwitchListTile(
+            secondary: const Icon(Icons.sync_lock_rounded),
+            title: const Text('Keep coding session live'),
+            subtitle: const Text(
+              'Keeps server events and terminals connected while this app is in the background. '
+              'Uses more battery and shows a persistent Android notification.',
+            ),
+            value: controller.keepLiveInBackground,
+            onChanged: controller.backgroundLive.busy
+                ? null
+                : (value) async {
+                    final enabled = await controller.setKeepLiveInBackground(
+                      value,
+                    );
+                    if (!context.mounted) return;
+                    final error = controller.backgroundLive.lastError;
+                    if (error != null || enabled != value) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            error ?? 'Android did not enable background mode.',
+                          ),
+                        ),
+                      );
+                    }
+                  },
+          ),
+          if (controller.keepLiveInBackground)
+            ListTile(
+              leading: Icon(
+                controller.backgroundLive.batteryOptimizationIgnored
+                    ? Icons.battery_charging_full_rounded
+                    : Icons.battery_alert_outlined,
+              ),
+              title: Text(
+                controller.backgroundLive.batteryOptimizationIgnored
+                    ? 'Unrestricted battery access allowed'
+                    : 'Allow unrestricted battery access',
+              ),
+              subtitle: Text(
+                controller.backgroundLive.batteryOptimizationIgnored
+                    ? 'Android may still apply its foreground-service time limit.'
+                    : 'Optional. Helps preserve the live connection during Doze. '
+                          'Android 15+ limits data-sync background work to six hours per 24 hours.',
+              ),
+              trailing: controller.backgroundLive.batteryOptimizationIgnored
+                  ? const Icon(Icons.check_rounded)
+                  : const Icon(Icons.open_in_new_rounded),
+              onTap: controller.backgroundLive.batteryOptimizationIgnored
+                  ? null
+                  : () async {
+                      await controller.backgroundLive
+                          .requestBatteryOptimizationExemption();
+                    },
+            ),
           const SectionLabel('Defaults'),
           ListTile(
             leading: const Icon(Icons.model_training_outlined),
@@ -190,5 +261,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    widget.controller.backgroundLive.removeListener(_backgroundChanged);
+    super.dispose();
   }
 }

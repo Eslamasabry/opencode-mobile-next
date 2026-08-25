@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -41,6 +43,9 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
     super.initState();
     _controller = ref.read(connProvider);
     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_controller.restoreBackgroundLiveMode());
+    });
   }
 
   @override
