@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
+import '../widgets/file_preview.dart';
 import '../widgets/product_states.dart';
 
 /// Project file browser backed by `/file`, with name search (`/find/file`)
@@ -391,6 +392,16 @@ class __FileViewerState extends State<_FileViewer> {
     return text;
   }
 
+  FilePreviewData get _previewData {
+    final content = _content!;
+    return FilePreviewData(
+      name: widget.path.split('/').last,
+      mimeType: content.mimeType,
+      bytes: content.isBinary ? content.bytes() : null,
+      text: content.isBinary ? null : _displayText,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -460,57 +471,7 @@ class __FileViewerState extends State<_FileViewer> {
                         style: TextStyle(color: theme.colorScheme.error),
                       ),
                     )
-                  : _content!.isBinary
-                  ? _BinaryFileState(content: _content!)
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.all(12),
-                      child: SelectableText(
-                        _displayText,
-                        style: theme.textTheme.bodySmall!.copyWith(
-                          fontFamily: 'monospace',
-                          fontSize: 12.5,
-                          height: 1.45,
-                        ),
-                      ),
-                    ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _BinaryFileState extends StatelessWidget {
-  final FileContent content;
-
-  const _BinaryFileState({required this.content});
-
-  @override
-  Widget build(BuildContext context) {
-    final bytes = content.bytes();
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.insert_drive_file_outlined, size: 42),
-            const SizedBox(height: 12),
-            Text('Binary file', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 6),
-            Text(
-              [
-                content.mimeType ?? 'Unknown media type',
-                '${bytes.length} bytes',
-                if (content.encoding != null) content.encoding!,
-              ].join(' - '),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Binary data is not rendered as source text.',
-              textAlign: TextAlign.center,
+                  : FilePreviewBody(data: _previewData),
             ),
           ],
         ),

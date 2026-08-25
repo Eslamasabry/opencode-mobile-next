@@ -531,7 +531,13 @@ void main() {
         ]),
         _message('user-2', 'user', [
           Part(type: 'text', text: 'Review this image'),
-          Part(type: 'file', filename: 'diagram.png'),
+          Part(
+            type: 'file',
+            mime: 'image/png',
+            filename: 'diagram.png',
+            url:
+                'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2ZKgAAAAASUVORK5CYII=',
+          ),
         ], created: 2),
       ];
     await _pumpChat(tester, api);
@@ -542,13 +548,22 @@ void main() {
     expect(find.text('diagram.png'), findsOneWidget);
     expect(find.text('PNG · prompt attachment'), findsOneWidget);
     expect(
-      find.bySemanticsLabel('Copy attachment filename report.pdf'),
+      find.bySemanticsLabel('Preview attachment report.pdf'),
       findsOneWidget,
     );
     expect(
-      find.bySemanticsLabel('Copy attachment filename diagram.png'),
+      find.bySemanticsLabel('Preview attachment diagram.png'),
       findsOneWidget,
     );
+
+    final diagram = find.text('diagram.png');
+    await tester.ensureVisible(diagram);
+    await tester.pumpAndSettle();
+    await tester.tap(diagram);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('file-preview-sheet')), findsOneWidget);
+    expect(find.byKey(const Key('file-preview-image')), findsOneWidget);
+    expect(find.text('Pinch to zoom'), findsOneWidget);
   });
 
   testWidgets('retry preserves mixed and attachment-only file parts', (
@@ -757,6 +772,23 @@ void main() {
       find.bySemanticsLabel('Remove attachment notes.txt'),
       findsOneWidget,
     );
+
+    final preview = find.bySemanticsLabel('Preview attachment notes.txt');
+    expect(
+      tester.getSemantics(preview),
+      matchesSemantics(
+        label: 'Preview attachment notes.txt',
+        isButton: true,
+        hasTapAction: true,
+      ),
+    );
+    await tester.tap(preview);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('file-preview-sheet')), findsOneWidget);
+    expect(find.byKey(const Key('file-preview-text')), findsOneWidget);
+    expect(find.text('notes'), findsOneWidget);
+    await tester.tap(find.byTooltip('Close preview'));
+    await tester.pumpAndSettle();
 
     await tester.tap(remove);
     await tester.pumpAndSettle();

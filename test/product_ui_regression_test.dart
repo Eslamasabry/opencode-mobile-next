@@ -454,9 +454,7 @@ void main() {
     expect(find.text('result.dart'), findsNothing);
   });
 
-  testWidgets('binary files render metadata instead of base64 source', (
-    tester,
-  ) async {
+  testWidgets('unsupported binary files show preview metadata', (tester) async {
     final api = _TestApi(
       files: (_) async => [
         FileNode(name: 'image.bin', path: 'image.bin', isDir: false),
@@ -484,9 +482,41 @@ void main() {
     await tester.tap(find.text('image.bin'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Binary file'), findsOneWidget);
+    expect(find.text('Preview unavailable'), findsOneWidget);
     expect(find.textContaining('application/octet-stream'), findsOneWidget);
     expect(find.text('AAEC'), findsNothing);
+  });
+
+  testWidgets('image files open as a zoomable preview', (tester) async {
+    final api = _TestApi(
+      files: (_) async => [
+        FileNode(name: 'pixel.png', path: 'pixel.png', isDir: false),
+      ],
+      contents: const {
+        'pixel.png': FileContent(
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2ZKgAAAAASUVORK5CYII=',
+          type: 'binary',
+          encoding: 'base64',
+        ),
+      },
+    );
+    final controller = await _controller(
+      api: api,
+      repository: _LocationRepository(),
+    );
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: FilesScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('pixel.png'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('file-preview-image')), findsOneWidget);
+    expect(find.text('Pinch to zoom'), findsOneWidget);
+    expect(find.byType(InteractiveViewer), findsOneWidget);
   });
 
   testWidgets(

@@ -11,6 +11,7 @@ import '../../api/models.dart';
 import '../../state/connection.dart';
 import '../../voice/controller.dart';
 import '../../voice/voice_ui.dart';
+import '../widgets/file_preview.dart';
 import '../widgets/markdown.dart';
 import '../widgets/pickers.dart';
 import '../widgets/tool_card.dart';
@@ -2021,6 +2022,15 @@ class _PendingAttachmentChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    void openPreview() => showFilePreviewSheet(
+      context,
+      FilePreviewData.fromDataUrl(
+        name: attachment.filename,
+        mimeType: attachment.mime,
+        url: attachment.url,
+      ),
+    );
+
     return Material(
       color: theme.colorScheme.surfaceContainerHighest,
       shape: StadiumBorder(
@@ -2030,17 +2040,39 @@ class _PendingAttachmentChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(left: 12),
-            child: Icon(Icons.attach_file_rounded, size: 16),
-          ),
-          const SizedBox(width: 6),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 220),
-            child: Text(
-              attachment.filename,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+          Semantics(
+            button: true,
+            excludeSemantics: true,
+            label: 'Preview attachment ${attachment.filename}',
+            onTap: openPreview,
+            child: Tooltip(
+              message: 'Preview ${attachment.filename}',
+              child: InkWell(
+                onTap: openPreview,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 48),
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 12),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.attach_file_rounded, size: 16),
+                        const SizedBox(width: 6),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 180),
+                          child: Text(
+                            attachment.filename,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.visibility_outlined, size: 16),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
           Semantics(
@@ -2465,21 +2497,25 @@ class _AttachmentPart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    void openPreview() => showFilePreviewSheet(
+      context,
+      FilePreviewData.fromDataUrl(
+        name: _filename,
+        mimeType: part.mime,
+        url: part.url,
+      ),
+    );
+
     return Semantics(
       button: true,
       excludeSemantics: true,
-      label: 'Copy attachment filename $_filename',
+      label: 'Preview attachment $_filename',
+      onTap: openPreview,
       child: Tooltip(
-        message: 'Copy attachment filename',
+        message: 'Preview attachment',
         child: InkWell(
           borderRadius: BorderRadius.circular(10),
-          onTap: () async {
-            await Clipboard.setData(ClipboardData(text: _filename));
-            if (!context.mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Attachment filename copied')),
-            );
-          },
+          onTap: openPreview,
           child: Container(
             margin: const EdgeInsets.only(bottom: 4),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
@@ -2518,7 +2554,7 @@ class _AttachmentPart extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Icon(Icons.copy_rounded, size: 15),
+                const Icon(Icons.visibility_outlined, size: 15),
               ],
             ),
           ),
