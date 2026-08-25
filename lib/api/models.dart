@@ -154,6 +154,142 @@ class MessageInfo {
   }
 }
 
+class ToolOutputFile {
+  final String? path;
+  final String? url;
+  final String? mimeType;
+  final String? filename;
+
+  const ToolOutputFile({this.path, this.url, this.mimeType, this.filename});
+
+  String get displayName {
+    final explicit = filename?.trim();
+    if (explicit?.isNotEmpty == true) return explicit!;
+    final location = path?.trim().isNotEmpty == true ? path! : url ?? '';
+    final withoutQuery = location.split('?').first;
+    final segments = withoutQuery.replaceAll('\\', '/').split('/');
+    return segments.lastWhere(
+      (segment) => segment.isNotEmpty,
+      orElse: () => 'Generated file',
+    );
+  }
+
+  bool get isImage {
+    if (mimeType?.toLowerCase().startsWith('image/') == true) return true;
+    final name = displayName.toLowerCase();
+    return const [
+      '.png',
+      '.jpg',
+      '.jpeg',
+      '.gif',
+      '.webp',
+      '.bmp',
+    ].any(name.endsWith);
+  }
+
+  String get identity => [
+    path ?? '',
+    filename ?? '',
+    mimeType ?? '',
+    if (url != null)
+      '${url!.length}:${url!.substring(0, url!.length.clamp(0, 80))}',
+  ].join('|');
+}
+
+List<ToolOutputFile> _toolOutputFiles(dynamic output, dynamic attachments) {
+  final files = <ToolOutputFile>[];
+  final locations = <String>{};
+
+  void add({String? path, String? url, String? mimeType, String? filename}) {
+    final normalizedPath = path?.trim();
+    final normalizedUrl = url?.trim();
+    final location = normalizedPath?.isNotEmpty == true
+        ? normalizedPath!
+        : normalizedUrl?.isNotEmpty == true
+        ? normalizedUrl!
+        : null;
+    if (location == null || !locations.add(location)) return;
+    final file = ToolOutputFile(
+      path: normalizedPath?.isNotEmpty == true ? normalizedPath : null,
+      url: normalizedUrl?.isNotEmpty == true ? normalizedUrl : null,
+      mimeType: mimeType?.trim(),
+      filename: filename?.trim(),
+    );
+    files.add(file);
+  }
+
+  bool looksLikeFile(String value) {
+    final lower = value.split('?').first.toLowerCase();
+    if (lower.startsWith('data:')) return true;
+    final slash = lower.lastIndexOf('/');
+    final dot = lower.lastIndexOf('.');
+    return dot > slash && dot < lower.length - 1;
+  }
+
+  void scan(dynamic value, [int depth = 0]) {
+    if (value == null || depth > 6 || files.length >= 8) return;
+    if (value is String) {
+      final trimmed = value.trim();
+      if ((trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+          (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+        try {
+          scan(jsonDecode(trimmed), depth + 1);
+          return;
+        } catch (_) {}
+      }
+      if (looksLikeFile(trimmed)) {
+        if (trimmed.startsWith('data:') || trimmed.startsWith('http')) {
+          add(url: trimmed);
+        } else {
+          add(path: trimmed);
+        }
+      }
+      return;
+    }
+    if (value is List) {
+      for (final item in value) {
+        scan(item, depth + 1);
+      }
+      return;
+    }
+    if (value is Map) {
+      final map = Map<String, dynamic>.from(value);
+      final hasExplicitFilePath =
+          map.containsKey('filePath') ||
+          map.containsKey('filepath') ||
+          map.containsKey('file_path');
+      final rawPath = hasExplicitFilePath
+          ? map['filePath'] ?? map['filepath'] ?? map['file_path']
+          : map['path'];
+      final rawUrl = map['url'];
+      final mime = (map['mime'] ?? map['mimeType'])?.toString();
+      final filename = (map['filename'] ?? map['name'])?.toString();
+      final path = rawPath?.toString();
+      final url = rawUrl?.toString();
+      if ((path != null && (hasExplicitFilePath || looksLikeFile(path))) ||
+          (url != null && looksLikeFile(url)) ||
+          mime?.trim().isNotEmpty == true) {
+        if (url?.startsWith('file://') == true && path == null) {
+          add(
+            path: Uri.tryParse(url!)?.toFilePath(),
+            mimeType: mime,
+            filename: filename,
+          );
+        } else {
+          add(path: path, url: url, mimeType: mime, filename: filename);
+        }
+      }
+      for (final item in map.values) {
+        scan(item, depth + 1);
+      }
+    }
+  }
+
+  scan(attachments);
+  scan(output);
+  return List.unmodifiable(files);
+}
+
 /// Tool state extracted from a tool part's `state` object.
 class ToolState {
   final String status; // pending | running | completed | error
@@ -161,6 +297,7 @@ class ToolState {
   final String? inputJson;
   final String? output;
   final Map<String, dynamic>? metadata;
+  final List<ToolOutputFile> outputFiles;
 
   ToolState({
     required this.status,
@@ -168,6 +305,7 @@ class ToolState {
     this.inputJson,
     this.output,
     this.metadata,
+    this.outputFiles = const [],
   });
 
   static String _pretty(dynamic v) {
@@ -207,6 +345,7 @@ class ToolState {
       inputJson: input,
       output: output,
       metadata: meta,
+      outputFiles: _toolOutputFiles(v['output'], v['attachments']),
     );
   }
 }

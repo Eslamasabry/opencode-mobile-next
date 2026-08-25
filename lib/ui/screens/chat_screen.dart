@@ -688,6 +688,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           inputJson: '${state.inputJson ?? ''}$delta',
           output: state.output,
           metadata: state.metadata,
+          outputFiles: state.outputFiles,
         ),
       );
     }
@@ -1478,6 +1479,87 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
+  Future<FilePreviewData> _loadToolOutputFile(ToolOutputFile file) async {
+    final path = file.path;
+    final api = _conn.api;
+    if (path == null || path.isEmpty || api == null) {
+      return FilePreviewData(
+        name: file.displayName,
+        mimeType: file.mimeType,
+        error: 'The generated file is not available from this server.',
+      );
+    }
+    final content = await api.fileContent(path);
+    final binary = content.isBinary || content.encoding == 'base64';
+    final bytes = binary ? content.bytes() : null;
+    return FilePreviewData(
+      name: file.displayName,
+      mimeType: file.mimeType ?? content.mimeType,
+      bytes: bytes,
+      text: binary ? null : content.content,
+      error: binary && bytes!.isEmpty
+          ? 'The server returned empty image data.'
+          : null,
+    );
+  }
+
+  Future<void> _attachToolOutputFile(
+    ToolOutputFile file,
+    FilePreviewData data,
+  ) async {
+    final bytes = data.exportBytes;
+    if (data.error != null || bytes == null) {
+      throw StateError(data.error ?? 'The file has no content to attach.');
+    }
+    if (_attachments.length >= _maxAttachmentCount) {
+      throw StateError('You can attach up to $_maxAttachmentCount files.');
+    }
+    if (bytes.length > _maxAttachmentBytes) {
+      throw StateError('Each attachment must be 10 MB or smaller.');
+    }
+    final currentBytes = _attachments.fold<int>(
+      0,
+      (total, attachment) => total + _attachmentByteLength(attachment),
+    );
+    if (currentBytes + bytes.length > _maxAggregateAttachmentBytes) {
+      throw StateError('Attachments must total no more than 20 MB.');
+    }
+    final mime = data.mimeType ?? file.mimeType ?? 'application/octet-stream';
+    final attachment = PromptAttachment(
+      mime: mime,
+      filename: file.displayName,
+      url: 'data:$mime;base64,${base64Encode(bytes)}',
+    );
+    if (!mounted) return;
+    setState(() => _attachments.add(attachment));
+    _focus.requestFocus();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${file.displayName} attached. Add your comment.'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> _downloadToolOutputFile(
+    ToolOutputFile file,
+    FilePreviewData data,
+  ) async {
+    final bytes = data.exportBytes;
+    if (data.error != null || bytes == null) {
+      throw StateError(data.error ?? 'The file has no content to save.');
+    }
+    final savedPath = await FilePicker.saveFile(
+      dialogTitle: 'Save ${file.displayName}',
+      fileName: file.displayName,
+      bytes: bytes,
+    );
+    if (!mounted || savedPath == null) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${file.displayName} saved to your device.')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -1620,7 +1702,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                       final index = _messages.length - 1 - i;
                                       if (index < 0) return _TypingIndicator();
                                       final m = _messages[index];
-                                      return _MessageView(m: m);
+                                      return _MessageView(
+                                        m: m,
+                                        filePreviewLoader: _loadToolOutputFile,
+                                        onAttachFile: _attachToolOutputFile,
+                                        onDownloadFile: _downloadToolOutputFile,
+                                      );
                                     },
                                   ),
                                 ),
@@ -2358,7 +2445,15 @@ class __TypingIndicatorState extends State<_TypingIndicator>
 
 class _MessageView extends StatelessWidget {
   final MessageWithParts m;
-  const _MessageView({required this.m});
+  final ToolOutputFileLoader filePreviewLoader;
+  final ToolOutputFileAction onAttachFile;
+  final ToolOutputFileAction onDownloadFile;
+  const _MessageView({
+    required this.m,
+    required this.filePreviewLoader,
+    required this.onAttachFile,
+    required this.onDownloadFile,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -2412,6 +2507,9 @@ class _MessageView extends StatelessWidget {
                           ToolCard(
                             toolName: p.toolName ?? 'tool',
                             state: p.toolState,
+                            filePreviewLoader: filePreviewLoader,
+                            onAttachFile: onAttachFile,
+                            onDownloadFile: onDownloadFile,
                           )
                         else if (p.type == 'file')
                           Padding(

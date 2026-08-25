@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -72,6 +73,12 @@ class FilePreviewData {
 
   int? get byteLength => bytes?.length;
 
+  Uint8List? get exportBytes {
+    if (bytes != null) return bytes;
+    if (text != null) return Uint8List.fromList(utf8.encode(text!));
+    return null;
+  }
+
   static String? _normalizedMime(String? value) {
     final normalized = value?.split(';').first.trim().toLowerCase();
     return normalized == null || normalized.isEmpty ? null : normalized;
@@ -115,23 +122,87 @@ class FilePreviewData {
       mime == 'image/svg+xml';
 }
 
-Future<void> showFilePreviewSheet(BuildContext context, FilePreviewData data) =>
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      showDragHandle: true,
-      builder: (context) => _FilePreviewSheet(data: data),
-    );
+Future<void> showFilePreviewSheet(
+  BuildContext context,
+  FilePreviewData data, {
+  Future<void> Function()? onAttach,
+  Future<void> Function()? onDownload,
+}) => showModalBottomSheet<void>(
+  context: context,
+  isScrollControlled: true,
+  useSafeArea: true,
+  showDragHandle: true,
+  builder: (context) =>
+      _FilePreviewSheet(data: data, onAttach: onAttach, onDownload: onDownload),
+);
 
-class _FilePreviewSheet extends StatelessWidget {
-  const _FilePreviewSheet({required this.data});
+class _FilePreviewSheet extends StatefulWidget {
+  const _FilePreviewSheet({required this.data, this.onAttach, this.onDownload});
 
   final FilePreviewData data;
+  final Future<void> Function()? onAttach;
+  final Future<void> Function()? onDownload;
+
+  @override
+  State<_FilePreviewSheet> createState() => _FilePreviewSheetState();
+}
+
+class _FilePreviewSheetState extends State<_FilePreviewSheet> {
+  bool _attaching = false;
+  bool _downloading = false;
+
+  Future<void> _attach() async {
+    final action = widget.onAttach;
+    if (action == null || _attaching) return;
+    setState(() => _attaching = true);
+    try {
+      await action();
+      if (mounted) Navigator.of(context).pop();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not attach file: $error')));
+      setState(() => _attaching = false);
+    }
+  }
+
+  Future<void> _download() async {
+    if (_downloading) return;
+    final bytes = widget.data.exportBytes;
+    if (bytes == null) return;
+    setState(() => _downloading = true);
+    try {
+      final action = widget.onDownload;
+      if (action != null) {
+        await action();
+      } else {
+        final savedPath = await FilePicker.saveFile(
+          dialogTitle: 'Save ${widget.data.name}',
+          fileName: widget.data.name,
+          bytes: bytes,
+        );
+        if (mounted && savedPath != null) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('${widget.data.name} saved.')));
+        }
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Could not save file: $error')));
+      }
+    } finally {
+      if (mounted) setState(() => _downloading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final data = widget.data;
     return SizedBox(
       key: const Key('file-preview-sheet'),
       height: MediaQuery.sizeOf(context).height * .86,
@@ -187,6 +258,30 @@ class _FilePreviewSheet extends StatelessWidget {
                       );
                     },
                     icon: const Icon(Icons.copy_rounded, size: 19),
+                  ),
+                if (widget.onAttach != null)
+                  IconButton(
+                    key: const Key('file-preview-attach'),
+                    tooltip: 'Attach to prompt',
+                    onPressed: _attaching ? null : _attach,
+                    icon: _attaching
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.add_comment_outlined, size: 20),
+                  ),
+                if (data.exportBytes != null)
+                  IconButton(
+                    key: const Key('file-preview-download'),
+                    tooltip: 'Save to device',
+                    onPressed: _downloading ? null : _download,
+                    icon: _downloading
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.download_rounded, size: 20),
                   ),
                 IconButton(
                   tooltip: 'Close preview',
