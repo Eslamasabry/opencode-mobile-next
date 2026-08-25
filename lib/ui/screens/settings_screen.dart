@@ -4,6 +4,7 @@ import '../../api/models.dart';
 import '../../state/connection.dart';
 import '../../voice/notices.dart';
 import '../widgets/product_states.dart';
+import '../widgets/pickers.dart';
 
 class SettingsScreen extends StatefulWidget {
   final ConnectionController controller;
@@ -111,9 +112,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle: Text(
               controller.selectedModel == null
                   ? 'Server default'
-                  : '${controller.selectedModel!.providerID}/${controller.selectedModel!.modelID}',
+                  : [
+                      '${controller.selectedModel!.providerID}/${controller.selectedModel!.modelID}',
+                      if (controller.selectedVariant.isNotEmpty)
+                        controller.selectedVariant,
+                    ].join(' · '),
               style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
             ),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => showModelPicker(context),
           ),
           ListTile(
             leading: const Icon(Icons.support_agent_outlined),
@@ -123,6 +130,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ? 'Server default'
                   : controller.selectedAgent,
             ),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => showModelPicker(context),
           ),
           const SectionLabel('Experimental'),
           const ListTile(

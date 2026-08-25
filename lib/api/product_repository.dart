@@ -60,6 +60,31 @@ class TerminalProcess {
   });
 }
 
+class CatalogVariant {
+  final String id;
+  final bool disabled;
+  final Map<String, dynamic> options;
+
+  const CatalogVariant({
+    required this.id,
+    this.disabled = false,
+    this.options = const {},
+  });
+
+  String? get reasoningEffort {
+    final value = options['reasoningEffort'] ?? options['reasoning_effort'];
+    return value?.toString();
+  }
+
+  bool get isFast {
+    final normalizedID = id.toLowerCase();
+    final effort = reasoningEffort?.toLowerCase();
+    return effort == 'low' ||
+        normalizedID == 'fast' ||
+        normalizedID.contains('turbo');
+  }
+}
+
 class CatalogModel {
   final String id;
   final String providerID;
@@ -72,7 +97,7 @@ class CatalogModel {
   final bool reasoning;
   final bool attachments;
   final bool tools;
-  final List<String> variants;
+  final List<CatalogVariant> variants;
 
   const CatalogModel({
     required this.id,
@@ -554,19 +579,39 @@ class SdkProductRepository
                     inputs.entries.any(
                       (entry) => entry.key != 'text' && entry.value == true,
                     ));
-            final variants = model['variants'];
-            final variantIDs = variants is Map
-                ? variants.keys.map((value) => value.toString()).toList()
-                : variants is List
-                ? variants
-                      .map(
-                        (value) => value is Map
-                            ? value['id']?.toString()
-                            : value.toString(),
-                      )
-                      .whereType<String>()
-                      .toList()
-                : <String>[];
+            final rawVariants = model['variants'];
+            final variants = <CatalogVariant>[];
+            if (rawVariants is Map) {
+              for (final entry in rawVariants.entries) {
+                final metadata = _stringMap(entry.value);
+                final body = _stringMap(metadata['body']);
+                variants.add(
+                  CatalogVariant(
+                    id: entry.key.toString(),
+                    disabled: metadata['disabled'] == true,
+                    options: body.isEmpty ? metadata : body,
+                  ),
+                );
+              }
+            } else if (rawVariants is List) {
+              for (final value in rawVariants) {
+                if (value is Map) {
+                  final metadata = _stringMap(value);
+                  final id = metadata['id']?.toString() ?? '';
+                  if (id.isEmpty) continue;
+                  final body = _stringMap(metadata['body']);
+                  variants.add(
+                    CatalogVariant(
+                      id: id,
+                      disabled: metadata['disabled'] == true,
+                      options: body.isEmpty ? metadata : body,
+                    ),
+                  );
+                } else if (value != null) {
+                  variants.add(CatalogVariant(id: value.toString()));
+                }
+              }
+            }
             return CatalogModel(
               id: model['id']?.toString() ?? '',
               providerID: model['providerID']?.toString() ?? '',
@@ -581,7 +626,7 @@ class SdkProductRepository
               tools:
                   capabilities['toolcall'] == true ||
                   capabilities['tools'] == true,
-              variants: variantIDs,
+              variants: variants,
             );
           })
           .where((model) => model.id.isNotEmpty)
@@ -959,7 +1004,9 @@ class SdkProductRepository
   }
 
   static List<Map<String, dynamic>> _catalogData(Object? response) {
-    final data = response is Map ? response['data'] : null;
+    final data = response is Map && response.containsKey('data')
+        ? response['data']
+        : response;
     return data is List
         ? data.whereType<Map>().map(_stringMap).toList()
         : const [];

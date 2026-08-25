@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/models.dart';
+import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 
-/// Bottom sheet for choosing the active agent, provider, and model.
 Future<void> showModelPicker(BuildContext context) {
-  return showModalBottomSheet(
+  return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
@@ -17,17 +17,76 @@ Future<void> showModelPicker(BuildContext context) {
   );
 }
 
-class _ModelAgentSheet extends ConsumerStatefulWidget {
+class _ModelAgentSheet extends ConsumerWidget {
   const _ModelAgentSheet();
 
   @override
-  ConsumerState<_ModelAgentSheet> createState() => _ModelAgentSheetState();
+  Widget build(BuildContext context, WidgetRef ref) => DraggableScrollableSheet(
+    expand: false,
+    minChildSize: .56,
+    initialChildSize: .88,
+    maxChildSize: .96,
+    snap: true,
+    snapSizes: const [.88, .96],
+    builder: (context, scrollController) => Material(
+      color: Theme.of(context).colorScheme.surfaceContainerLow,
+      child: ModelCatalogView(
+        controller: ref.watch(connProvider),
+        scrollController: scrollController,
+        onApplied: () => Navigator.maybePop(context),
+        onClose: () => Navigator.maybePop(context),
+      ),
+    ),
+  );
 }
 
-class _ModelAgentSheetState extends ConsumerState<_ModelAgentSheet> {
+enum _ModelIntent { all, fast, reasoning, context }
+
+/// The single model, mode, provider, and agent selector used throughout the app.
+class ModelCatalogView extends StatefulWidget {
+  const ModelCatalogView({
+    super.key,
+    required this.controller,
+    this.scrollController,
+    this.onApplied,
+    this.onClose,
+    this.showHeader = true,
+  });
+
+  final ConnectionController controller;
+  final ScrollController? scrollController;
+  final VoidCallback? onApplied;
+  final VoidCallback? onClose;
+  final bool showHeader;
+
+  @override
+  State<ModelCatalogView> createState() => _ModelCatalogViewState();
+}
+
+class _ModelCatalogViewState extends State<ModelCatalogView> {
   final _search = TextEditingController();
-  String? _pickedProvider;
   String _query = '';
+  String _provider = '*';
+  _ModelIntent _intent = _ModelIntent.all;
+  ModelRef? _draftModel;
+  String _draftVariant = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _syncDraft();
+  }
+
+  @override
+  void didUpdateWidget(covariant ModelCatalogView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) _syncDraft();
+  }
+
+  void _syncDraft() {
+    _draftModel = widget.controller.selectedModel;
+    _draftVariant = widget.controller.selectedVariant;
+  }
 
   @override
   void dispose() {
@@ -36,261 +95,28 @@ class _ModelAgentSheetState extends ConsumerState<_ModelAgentSheet> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final conn = ref.watch(connProvider);
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: widget.controller,
+    builder: (context, _) {
+      final catalog = widget.controller.catalog;
+      return Column(
+        children: [
+          if (widget.showHeader) _header(context),
+          if (widget.showHeader) const Divider(height: 1),
+          Expanded(
+            child: catalog == null
+                ? _catalogState()
+                : _catalog(context, catalog),
+          ),
+        ],
+      );
+    },
+  );
+
+  Widget _header(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final providers = conn.providers;
-    final selected = conn.selectedModel;
-
-    return DraggableScrollableSheet(
-      expand: false,
-      minChildSize: .52,
-      initialChildSize: .82,
-      maxChildSize: .94,
-      snap: true,
-      snapSizes: const [.82, .94],
-      builder: (context, scrollController) => Material(
-        color: scheme.surfaceContainerLow,
-        child: Column(
-          children: [
-            _PickerHeader(
-              selected: selected,
-              onClose: () => Navigator.pop(context),
-            ),
-            Divider(color: scheme.outlineVariant.withValues(alpha: .7)),
-            if (providers == null)
-              Expanded(
-                child: conn.catalogError != null
-                    ? _CatalogError(
-                        message: conn.catalogError!,
-                        onRetry: conn.catalogLoading
-                            ? null
-                            : conn.refreshCatalog,
-                      )
-                    : const _CatalogLoading(),
-              )
-            else if (providers.providers.isEmpty)
-              const Expanded(child: _CatalogEmpty())
-            else
-              Expanded(
-                child: _buildCatalog(
-                  context,
-                  conn,
-                  providers,
-                  selected,
-                  scrollController,
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCatalog(
-    BuildContext context,
-    ConnectionController conn,
-    ProvidersResponse providers,
-    ModelRef? selected,
-    ScrollController scrollController,
-  ) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    var providerID = _pickedProvider ?? selected?.providerID;
-    if (!providers.providers.any((provider) => provider.id == providerID)) {
-      providerID = providers.defaultProviderID ?? providers.providers.first.id;
-    }
-    final provider = providers.providers.firstWhere(
-      (candidate) => candidate.id == providerID,
-    );
-    final currentAgent =
-        conn.agents.any((agent) => agent.name == conn.selectedAgent)
-        ? conn.selectedAgent
-        : conn.agents.firstOrNull?.name;
-    final normalizedQuery = _query.trim().toLowerCase();
-    final models = provider.modelIDs
-        .where(
-          (model) =>
-              normalizedQuery.isEmpty ||
-              model.toLowerCase().contains(normalizedQuery),
-        )
-        .toList();
-
-    final agentPicker = _PickerSelect<String>(
-      label: 'Agent',
-      value: currentAgent,
-      placeholder: conn.agents.isEmpty ? 'No agents' : 'Choose agent',
-      items: [
-        for (final agent in conn.agents) (value: agent.name, label: agent.name),
-      ],
-      onChanged: (value) {
-        if (value != null) conn.selectAgent(value);
-      },
-    );
-    final providerPicker = _PickerSelect<String>(
-      label: 'Provider',
-      value: provider.id,
-      placeholder: 'Choose provider',
-      items: [
-        for (final item in providers.providers)
-          (value: item.id, label: '${item.name} · ${item.modelIDs.length}'),
-      ],
-      onChanged: (value) {
-        if (value == null) return;
-        setState(() {
-          _pickedProvider = value;
-          _query = '';
-          _search.clear();
-        });
-      },
-    );
-
-    return CustomScrollView(
-      controller: scrollController,
-      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-          sliver: SliverToBoxAdapter(
-            child: TextField(
-              key: const Key('model-picker-search'),
-              controller: _search,
-              textInputAction: TextInputAction.search,
-              onChanged: (value) => setState(() => _query = value),
-              decoration: InputDecoration(
-                hintText: 'Search ${provider.name} models',
-                prefixIcon: const Icon(Icons.search_rounded),
-                suffixIcon: _query.isEmpty
-                    ? null
-                    : IconButton(
-                        tooltip: 'Clear model search',
-                        onPressed: () {
-                          _search.clear();
-                          setState(() => _query = '');
-                        },
-                        icon: const Icon(Icons.close_rounded),
-                      ),
-              ),
-            ),
-          ),
-        ),
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
-          sliver: SliverToBoxAdapter(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                if (constraints.maxWidth < 520) {
-                  return Column(
-                    children: [
-                      agentPicker,
-                      const SizedBox(height: 12),
-                      providerPicker,
-                    ],
-                  );
-                }
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(child: agentPicker),
-                    const SizedBox(width: 12),
-                    Expanded(child: providerPicker),
-                  ],
-                );
-              },
-            ),
-          ),
-        ),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 2, 20, 10),
-            child: Row(
-              children: [
-                Text('Models', style: theme.textTheme.titleSmall),
-                const SizedBox(width: 8),
-                Text(
-                  '${models.length}',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-                const Spacer(),
-                if (selected?.providerID == provider.id)
-                  Flexible(
-                    child: Text(
-                      'Current · ${selected?.modelID ?? 'None'}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: scheme.primary,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-        SliverToBoxAdapter(
-          child: Divider(color: scheme.outlineVariant.withValues(alpha: .65)),
-        ),
-        if (models.isEmpty)
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: _NoModelResults(
-              hasQuery: normalizedQuery.isNotEmpty,
-              onClear: normalizedQuery.isEmpty
-                  ? null
-                  : () {
-                      _search.clear();
-                      setState(() => _query = '');
-                    },
-            ),
-          )
-        else
-          SliverPadding(
-            padding: const EdgeInsets.only(bottom: 24),
-            sliver: SliverList.separated(
-              itemCount: models.length,
-              separatorBuilder: (_, _) => Divider(
-                indent: 20,
-                endIndent: 20,
-                color: scheme.outlineVariant.withValues(alpha: .45),
-              ),
-              itemBuilder: (context, index) {
-                final model = models[index];
-                final active =
-                    selected?.providerID == provider.id &&
-                    selected?.modelID == model;
-                return _ModelRow(
-                  key: ValueKey('model-option-${provider.id}-$model'),
-                  model: model,
-                  providerName: provider.name,
-                  active: active,
-                  onTap: () async {
-                    await conn.selectModel(
-                      ModelRef(providerID: provider.id, modelID: model),
-                    );
-                    if (context.mounted) Navigator.pop(context);
-                  },
-                );
-              },
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _PickerHeader extends StatelessWidget {
-  const _PickerHeader({required this.selected, required this.onClose});
-
-  final ModelRef? selected;
-  final VoidCallback onClose;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final selected = widget.controller.selectedModel;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 14, 12, 12),
       child: Row(
@@ -309,190 +135,419 @@ class _PickerHeader extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Model & agent', style: theme.textTheme.titleLarge),
+                Text('Model, mode & agent', style: theme.textTheme.titleLarge),
                 const SizedBox(height: 2),
                 Text(
                   selected == null
-                      ? 'Choose how this conversation runs'
-                      : '${selected!.providerID} / ${selected!.modelID}',
+                      ? 'Choose how new prompts run'
+                      : [
+                          '${selected.providerID}/${selected.modelID}',
+                          if (widget.controller.selectedVariant.isNotEmpty)
+                            widget.controller.selectedVariant,
+                        ].join(' · '),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant,
-                    fontFamily: selected == null ? null : 'monospace',
                   ),
                 ),
               ],
             ),
           ),
-          IconButton(
-            tooltip: 'Close model selector',
-            onPressed: onClose,
-            icon: const Icon(Icons.close_rounded),
+          if (widget.onClose != null)
+            IconButton(
+              tooltip: 'Close model selector',
+              onPressed: widget.onClose,
+              icon: const Icon(Icons.close_rounded),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _catalogState() {
+    final controller = widget.controller;
+    if (controller.catalogError != null) {
+      return _PickerState(
+        icon: Icons.sync_problem_rounded,
+        title: 'Could not load models',
+        message: controller.catalogError!,
+        action: FilledButton.tonalIcon(
+          onPressed: controller.catalogLoading
+              ? null
+              : controller.refreshCatalog,
+          icon: const Icon(Icons.refresh_rounded),
+          label: const Text('Try again'),
+        ),
+      );
+    }
+    return const _CatalogLoading();
+  }
+
+  Widget _catalog(BuildContext context, CatalogSnapshot catalog) {
+    if (catalog.models.isEmpty) {
+      return const _PickerState(
+        icon: Icons.inventory_2_outlined,
+        title: 'No models available',
+        message: 'Configure a provider on the OpenCode server, then refresh.',
+      );
+    }
+    final normalized = _query.trim().toLowerCase();
+    final providerNames = {
+      for (final provider in catalog.providers) provider.id: provider.name,
+    };
+    final models = catalog.models.where((model) {
+      final matchesProvider = _provider == '*' || model.providerID == _provider;
+      final matchesQuery =
+          normalized.isEmpty ||
+          model.name.toLowerCase().contains(normalized) ||
+          model.id.toLowerCase().contains(normalized) ||
+          model.providerID.toLowerCase().contains(normalized);
+      final matchesIntent = switch (_intent) {
+        _ModelIntent.all || _ModelIntent.context => true,
+        _ModelIntent.fast => model.variants.any(
+          (variant) => !variant.disabled && variant.isFast,
+        ),
+        _ModelIntent.reasoning => model.reasoning,
+      };
+      return matchesProvider && matchesQuery && matchesIntent;
+    }).toList();
+    if (_intent == _ModelIntent.context) {
+      models.sort((a, b) => b.contextLimit.compareTo(a.contextLimit));
+    }
+
+    return ListView(
+      controller: widget.scrollController,
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
+      children: [
+        if (!widget.controller.catalogDetailed)
+          const _Notice(
+            icon: Icons.info_outline_rounded,
+            text:
+                'This server returned a basic catalog. Capability and context details are unavailable.',
+          ),
+        _agentPicker(catalog),
+        const SizedBox(height: 12),
+        TextField(
+          key: const Key('model-picker-search'),
+          controller: _search,
+          textInputAction: TextInputAction.search,
+          onChanged: (value) => setState(() => _query = value),
+          decoration: InputDecoration(
+            hintText: 'Search models or providers',
+            prefixIcon: const Icon(Icons.search_rounded),
+            suffixIcon: _query.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: 'Clear model search',
+                    onPressed: () {
+                      _search.clear();
+                      setState(() => _query = '');
+                    },
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        _providerPicker(catalog),
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _intentChip('All', _ModelIntent.all),
+              _intentChip('Fast modes', _ModelIntent.fast),
+              _intentChip('Reasoning', _ModelIntent.reasoning),
+              _intentChip('Largest context', _ModelIntent.context),
+            ],
+          ),
+        ),
+        const SizedBox(height: 18),
+        Row(
+          children: [
+            Text('Models', style: Theme.of(context).textTheme.titleSmall),
+            const SizedBox(width: 8),
+            Text('${models.length}'),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (models.isEmpty)
+          _PickerState(
+            icon: Icons.search_off_rounded,
+            title: 'No matching models',
+            message: _intent == _ModelIntent.fast
+                ? 'No model reports an explicit fast or low-effort mode.'
+                : 'Try another search, provider, or capability filter.',
+          )
+        else
+          for (final model in models) ...[
+            _modelRow(
+              context,
+              model,
+              providerNames[model.providerID] ?? model.providerID,
+            ),
+            const Divider(height: 1),
+          ],
+      ],
+    );
+  }
+
+  Widget _agentPicker(CatalogSnapshot catalog) {
+    final visible = catalog.agents.where((agent) => !agent.hidden).toList();
+    final value =
+        visible.any((agent) => agent.id == widget.controller.selectedAgent)
+        ? widget.controller.selectedAgent
+        : null;
+    return DropdownButtonFormField<String>(
+      key: const Key('model-picker-agent'),
+      isExpanded: true,
+      initialValue: value,
+      decoration: const InputDecoration(
+        labelText: 'Agent',
+        prefixIcon: Icon(Icons.support_agent_outlined),
+      ),
+      hint: Text(visible.isEmpty ? 'No agents available' : 'Server default'),
+      items: [
+        for (final agent in visible)
+          DropdownMenuItem(
+            value: agent.id,
+            child: Text(
+              agent.mode == 'unknown'
+                  ? agent.id
+                  : '${agent.id} · ${agent.mode}',
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+      ],
+      onChanged: visible.isEmpty
+          ? null
+          : (value) {
+              if (value != null) widget.controller.selectAgent(value);
+            },
+    );
+  }
+
+  Widget _providerPicker(CatalogSnapshot catalog) {
+    final providers = catalog.providers
+        .where((provider) => provider.enabled)
+        .toList();
+    return DropdownButtonFormField<String>(
+      key: const Key('model-picker-provider'),
+      isExpanded: true,
+      initialValue: providers.any((provider) => provider.id == _provider)
+          ? _provider
+          : '*',
+      decoration: const InputDecoration(
+        labelText: 'Provider',
+        prefixIcon: Icon(Icons.cloud_outlined),
+      ),
+      items: [
+        const DropdownMenuItem(value: '*', child: Text('All providers')),
+        for (final provider in providers)
+          DropdownMenuItem(
+            value: provider.id,
+            child: Text(provider.name, overflow: TextOverflow.ellipsis),
+          ),
+      ],
+      onChanged: (value) => setState(() => _provider = value ?? '*'),
+    );
+  }
+
+  Widget _intentChip(String label, _ModelIntent intent) => Padding(
+    padding: const EdgeInsets.only(right: 8),
+    child: ChoiceChip(
+      label: Text(label),
+      selected: _intent == intent,
+      onSelected: (_) => setState(() => _intent = intent),
+    ),
+  );
+
+  Widget _modelRow(
+    BuildContext context,
+    CatalogModel model,
+    String providerName,
+  ) {
+    final scheme = Theme.of(context).colorScheme;
+    final current =
+        widget.controller.selectedModel?.providerID == model.providerID &&
+        widget.controller.selectedModel?.modelID == model.id;
+    final draft =
+        _draftModel?.providerID == model.providerID &&
+        _draftModel?.modelID == model.id;
+    final enabled = model.enabled;
+    return Semantics(
+      selected: current,
+      button: true,
+      label: '${model.name}, $providerName${current ? ', current model' : ''}',
+      child: Material(
+        color: draft
+            ? scheme.primary.withValues(alpha: .07)
+            : Colors.transparent,
+        child: Column(
+          children: [
+            ListTile(
+              key: ValueKey('model-option-${model.providerID}-${model.id}'),
+              enabled: enabled,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+              title: Text(
+                model.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: current ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+              subtitle: Text(
+                [
+                  '${model.providerID}/${model.id}',
+                  if (model.contextLimit > 0)
+                    '${_number(model.contextLimit)} context',
+                  if (model.outputLimit > 0)
+                    '${_number(model.outputLimit)} output',
+                ].join(' · '),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: Icon(
+                current
+                    ? Icons.check_circle_rounded
+                    : Icons.expand_more_rounded,
+                color: current ? scheme.primary : null,
+              ),
+              onTap: enabled
+                  ? () => setState(() {
+                      _draftModel = ModelRef(
+                        providerID: model.providerID,
+                        modelID: model.id,
+                      );
+                      _draftVariant = current
+                          ? widget.controller.selectedVariant
+                          : '';
+                    })
+                  : null,
+            ),
+            if (draft && enabled) _modelOptions(context, model),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _modelOptions(BuildContext context, CatalogModel model) {
+    final theme = Theme.of(context);
+    final variants = model.variants.where((variant) => !variant.disabled);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              if (model.reasoning) const Chip(label: Text('Reasoning')),
+              if (model.tools) const Chip(label: Text('Tools')),
+              if (model.attachments) const Chip(label: Text('Attachments')),
+              if (variants.any((variant) => variant.isFast))
+                const Chip(label: Text('Fast mode available')),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text('Thinking mode', style: theme.textTheme.labelLarge),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ChoiceChip(
+                key: ValueKey('model-variant-${model.id}-default'),
+                label: const Text('Default'),
+                selected: _draftVariant.isEmpty,
+                onSelected: (_) => setState(() => _draftVariant = ''),
+              ),
+              for (final variant in variants)
+                ChoiceChip(
+                  key: ValueKey('model-variant-${model.id}-${variant.id}'),
+                  label: Text(_variantLabel(variant)),
+                  selected: _draftVariant == variant.id,
+                  onSelected: (_) => setState(() => _draftVariant = variant.id),
+                ),
+            ],
+          ),
+          if (model.variants.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                'This provider exposes only its default mode.',
+                style: theme.textTheme.bodySmall,
+              ),
+            ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              key: ValueKey('use-model-${model.providerID}-${model.id}'),
+              onPressed: () async {
+                await widget.controller.selectModel(
+                  _draftModel!,
+                  variant: _draftVariant,
+                );
+                widget.onApplied?.call();
+                if (mounted && widget.onApplied == null) setState(_syncDraft);
+              },
+              icon: const Icon(Icons.check_rounded),
+              label: const Text('Use model and mode'),
+            ),
           ),
         ],
       ),
     );
   }
-}
 
-class _PickerSelect<T> extends StatelessWidget {
-  const _PickerSelect({
-    required this.label,
-    required this.value,
-    required this.placeholder,
-    required this.items,
-    required this.onChanged,
-  });
+  static String _variantLabel(CatalogVariant variant) {
+    final effort = variant.reasoningEffort;
+    if (effort == null || variant.id.toLowerCase() == effort.toLowerCase()) {
+      return variant.id;
+    }
+    return '${variant.id} · $effort effort';
+  }
 
-  final String label;
-  final T? value;
-  final String placeholder;
-  final List<({T value, String label})> items;
-  final ValueChanged<T?> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 2, bottom: 7),
-          child: Text(
-            label,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: scheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 54),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainer,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: scheme.outlineVariant.withValues(alpha: .8),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<T>(
-                  value: value,
-                  isExpanded: true,
-                  borderRadius: BorderRadius.circular(14),
-                  menuMaxHeight: 360,
-                  hint: Text(placeholder),
-                  items: [
-                    for (final item in items)
-                      DropdownMenuItem<T>(
-                        value: item.value,
-                        child: Text(
-                          item.label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                  ],
-                  onChanged: items.isEmpty ? null : onChanged,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
+  static String _number(int value) {
+    final text = value.toString();
+    final out = StringBuffer();
+    for (var index = 0; index < text.length; index++) {
+      if (index > 0 && (text.length - index) % 3 == 0) out.write(',');
+      out.write(text[index]);
+    }
+    return out.toString();
   }
 }
 
-class _ModelRow extends StatelessWidget {
-  const _ModelRow({
-    super.key,
-    required this.model,
-    required this.providerName,
-    required this.active,
-    required this.onTap,
-  });
-
-  final String model;
-  final String providerName;
-  final bool active;
-  final VoidCallback onTap;
+class _Notice extends StatelessWidget {
+  const _Notice({required this.icon, required this.text});
+  final IconData icon;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return Semantics(
-      selected: active,
-      button: true,
-      label: '$model, $providerName${active ? ', current model' : ''}',
-      child: Material(
-        color: active
-            ? scheme.primary.withValues(alpha: .09)
-            : Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 64),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
-              child: Row(
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    width: 4,
-                    height: active ? 32 : 10,
-                    decoration: BoxDecoration(
-                      color: active ? scheme.primary : scheme.outlineVariant,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          model,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontFamily: 'monospace',
-                            fontWeight: active
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                            color: active ? scheme.primary : scheme.onSurface,
-                          ),
-                        ),
-                        if (active) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            'Active for new prompts',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Icon(
-                    active
-                        ? Icons.check_circle_rounded
-                        : Icons.arrow_forward_rounded,
-                    size: active ? 22 : 18,
-                    color: active ? scheme.primary : scheme.onSurfaceVariant,
-                  ),
-                ],
-              ),
-            ),
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: scheme.secondaryContainer.withValues(alpha: .45),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, size: 19, color: scheme.onSecondaryContainer),
+              const SizedBox(width: 9),
+              Expanded(child: Text(text)),
+            ],
           ),
         ),
       ),
@@ -512,10 +567,10 @@ class _CatalogLoading extends StatelessWidget {
       child: ListView.separated(
         physics: const NeverScrollableScrollPhysics(),
         padding: const EdgeInsets.all(20),
-        itemCount: 5,
+        itemCount: 6,
         separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (_, index) => Container(
-          height: index < 2 ? 54 : 64,
+          height: index < 3 ? 54 : 72,
           decoration: BoxDecoration(
             color: scheme.surfaceContainerHighest.withValues(alpha: .55),
             borderRadius: BorderRadius.circular(14),
@@ -526,60 +581,6 @@ class _CatalogLoading extends StatelessWidget {
   }
 }
 
-class _CatalogError extends StatelessWidget {
-  const _CatalogError({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback? onRetry;
-
-  @override
-  Widget build(BuildContext context) => _PickerState(
-    icon: Icons.sync_problem_rounded,
-    title: 'Could not load models',
-    message: message,
-    action: FilledButton.tonalIcon(
-      onPressed: onRetry,
-      icon: const Icon(Icons.refresh_rounded),
-      label: const Text('Try again'),
-    ),
-  );
-}
-
-class _CatalogEmpty extends StatelessWidget {
-  const _CatalogEmpty();
-
-  @override
-  Widget build(BuildContext context) => const _PickerState(
-    icon: Icons.inventory_2_outlined,
-    title: 'No models available',
-    message:
-        'Configure a provider on the OpenCode server, then reopen this selector.',
-  );
-}
-
-class _NoModelResults extends StatelessWidget {
-  const _NoModelResults({required this.hasQuery, required this.onClear});
-
-  final bool hasQuery;
-  final VoidCallback? onClear;
-
-  @override
-  Widget build(BuildContext context) => _PickerState(
-    icon: hasQuery ? Icons.search_off_rounded : Icons.inventory_2_outlined,
-    title: hasQuery ? 'No matching models' : 'No models from this provider',
-    message: hasQuery
-        ? 'Try a shorter model name or clear the search.'
-        : 'Choose another provider to continue.',
-    action: onClear == null
-        ? null
-        : TextButton.icon(
-            onPressed: onClear,
-            icon: const Icon(Icons.close_rounded),
-            label: const Text('Clear search'),
-          ),
-  );
-}
-
 class _PickerState extends StatelessWidget {
   const _PickerState({
     required this.icon,
@@ -587,7 +588,6 @@ class _PickerState extends StatelessWidget {
     required this.message,
     this.action,
   });
-
   final IconData icon;
   final String title;
   final String message;
@@ -604,7 +604,7 @@ class _PickerState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 36, color: scheme.onSurfaceVariant),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
             Text(title, style: theme.textTheme.titleMedium),
             const SizedBox(height: 6),
             Text(
@@ -614,7 +614,7 @@ class _PickerState extends StatelessWidget {
                 color: scheme.onSurfaceVariant,
               ),
             ),
-            if (action != null) ...[const SizedBox(height: 18), action!],
+            if (action != null) ...[const SizedBox(height: 16), action!],
           ],
         ),
       ),

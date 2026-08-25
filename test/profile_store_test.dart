@@ -48,4 +48,15 @@ void main() {
       expect(store.active, same(profiles.single));
     },
   );
+
+  test('persists and clears a thinking variant per profile', () async {
+    SharedPreferences.setMockInitialValues({});
+    final store = ProfileStore(prefs: await SharedPreferences.getInstance());
+
+    await store.setVariant('server-1', 'high');
+    expect(store.variantFor('server-1'), 'high');
+
+    await store.setVariant('server-1', '');
+    expect(store.variantFor('server-1'), isEmpty);
+  });
 }

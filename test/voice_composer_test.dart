@@ -30,6 +30,7 @@ class _VoiceChatApi extends OpenCodeApi {
     required String text,
     ModelRef? model,
     String? agent,
+    String? variant,
     List<PromptAttachment> attachments = const [],
   }) async {
     promptCalls++;

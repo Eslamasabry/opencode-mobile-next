@@ -86,6 +86,7 @@ class ProfileStore {
   static const _modelKey = 'oc.model.'; // + profileId -> "providerID|modelID"
   static const _modelExplicitKey = 'oc.modelExplicit.'; // + profileId
   static const _agentKey = 'oc.agent.'; // + profileId
+  static const _variantKey = 'oc.variant.'; // + profileId
 
   final SharedPreferences prefs;
   final FlutterSecureStorage secure;
@@ -234,6 +235,18 @@ class ProfileStore {
   Future<void> clearModel(String profileId) async {
     await prefs.remove('$_modelKey$profileId');
     await prefs.remove('$_modelExplicitKey$profileId');
+    await prefs.remove('$_variantKey$profileId');
+  }
+
+  String variantFor(String profileId) =>
+      prefs.getString('$_variantKey$profileId') ?? '';
+
+  Future<void> setVariant(String profileId, String variant) async {
+    if (variant.isEmpty) {
+      await prefs.remove('$_variantKey$profileId');
+    } else {
+      await prefs.setString('$_variantKey$profileId', variant);
+    }
   }
 
   String agentFor(String profileId) =>

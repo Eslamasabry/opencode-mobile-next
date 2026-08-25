@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
+import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
@@ -33,6 +34,74 @@ Future<ConnectionController> _controller() async {
       defaultModelID: 'nemotron-3.5-lightning-free',
     )
     ..agents = [AgentInfo(name: 'build'), AgentInfo(name: 'plan')]
+    ..catalogDetailed = true
+    ..catalog = const CatalogSnapshot(
+      providers: [
+        CatalogProvider(id: 'opencode', name: 'OpenCode Zen', enabled: true),
+        CatalogProvider(id: 'local', name: 'Local models', enabled: true),
+      ],
+      models: [
+        CatalogModel(
+          id: 'nemotron-3.5-lightning-free',
+          providerID: 'opencode',
+          name: 'Nemotron Lightning',
+          enabled: true,
+          status: 'active',
+          contextLimit: 131072,
+          outputLimit: 16384,
+          reasoning: true,
+          attachments: true,
+          tools: true,
+          variants: [
+            CatalogVariant(id: 'fast', options: {'reasoningEffort': 'low'}),
+            CatalogVariant(id: 'deep', options: {'reasoningEffort': 'high'}),
+          ],
+        ),
+        CatalogModel(
+          id: 'nemotron-3-ultra-free',
+          providerID: 'opencode',
+          name: 'Nemotron Ultra',
+          enabled: true,
+          status: 'active',
+          contextLimit: 262144,
+          outputLimit: 32768,
+          reasoning: true,
+          attachments: false,
+          tools: true,
+          variants: [],
+        ),
+        CatalogModel(
+          id: 'big-pickle',
+          providerID: 'opencode',
+          name: 'Big Pickle',
+          enabled: true,
+          status: 'active',
+          contextLimit: 65536,
+          outputLimit: 8192,
+          reasoning: false,
+          attachments: false,
+          tools: true,
+          variants: [],
+        ),
+        CatalogModel(
+          id: 'small-local',
+          providerID: 'local',
+          name: 'Small local',
+          enabled: true,
+          status: 'active',
+          contextLimit: 32768,
+          outputLimit: 4096,
+          reasoning: false,
+          attachments: false,
+          tools: false,
+          variants: [],
+        ),
+      ],
+      agents: [
+        CatalogAgent(id: 'build', mode: 'primary', hidden: false),
+        CatalogAgent(id: 'plan', mode: 'primary', hidden: false),
+      ],
+    )
     ..selectedAgent = 'build'
     ..selectedModel = ModelRef(
       providerID: 'opencode',
@@ -81,10 +150,9 @@ void main() {
     await tester.tap(find.text('Choose model'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Model & agent'), findsOneWidget);
+    expect(find.text('Model, mode & agent'), findsOneWidget);
     expect(find.byKey(const Key('model-picker-search')), findsOneWidget);
-    expect(find.text('Active for new prompts'), findsOneWidget);
-    expect(find.text('big-pickle'), findsOneWidget);
+    expect(find.textContaining('131,072 context'), findsOneWidget);
 
     await tester.enterText(
       find.byKey(const Key('model-picker-search')),
@@ -92,15 +160,46 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('nemotron-3-ultra-free'), findsOneWidget);
-    expect(find.text('big-pickle'), findsNothing);
+    expect(find.text('Nemotron Ultra'), findsOneWidget);
+    expect(find.text('Big Pickle'), findsNothing);
 
-    await tester.tap(find.text('nemotron-3-ultra-free'));
+    await tester.tap(find.text('Nemotron Ultra'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Use model and mode'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Use model and mode'));
     await tester.pumpAndSettle();
 
     expect(controller.selectedModel?.providerID, 'opencode');
     expect(controller.selectedModel?.modelID, 'nemotron-3-ultra-free');
-    expect(find.text('Model & agent'), findsNothing);
+    expect(find.text('Model, mode & agent'), findsNothing);
+  });
+
+  testWidgets('explicit fast thinking mode is selected and persisted', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(411, 891));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(controller));
+
+    await tester.tap(find.text('Choose model'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Fast modes'));
+    await tester.pumpAndSettle();
+    expect(find.text('Nemotron Lightning'), findsOneWidget);
+    expect(find.text('Nemotron Ultra'), findsNothing);
+
+    await tester.tap(find.text('Nemotron Lightning'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('fast · low effort'));
+    await tester.ensureVisible(find.text('Use model and mode'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Use model and mode'));
+    await tester.pumpAndSettle();
+
+    expect(controller.selectedVariant, 'fast');
   });
 
   testWidgets('model selector remains usable at 320dp with 2x text', (
@@ -118,7 +217,9 @@ void main() {
     expect(find.byTooltip('Close model selector'), findsOneWidget);
     expect(find.byKey(const Key('model-picker-search')), findsOneWidget);
     expect(find.text('Agent'), findsOneWidget);
-    expect(find.text('Provider'), findsOneWidget);
+    await tester.drag(find.byType(ListView).first, const Offset(0, -260));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('model-picker-provider')), findsWidgets);
     expect(tester.takeException(), isNull);
   });
 }

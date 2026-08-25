@@ -12,9 +12,35 @@ class _RealHttpOverrides extends HttpOverrides {}
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('configured providers retain OpenCode model variant metadata', () {
+    final response = ProvidersResponse.fromJson({
+      'providers': [
+        {
+          'id': 'provider',
+          'name': 'Provider',
+          'models': {
+            'model': {
+              'name': 'Model',
+              'variants': {
+                'fast': {'reasoningEffort': 'low'},
+              },
+            },
+          },
+        },
+      ],
+      'default': {'provider': 'model'},
+    });
+
+    expect(
+      response.providers.single.modelData['model']?['variants'],
+      contains('fast'),
+    );
+  });
+
   test('prompt request serializes OpenCode file parts', () {
     final body = promptRequestBody(
       text: 'Review this',
+      variant: 'fast',
       attachments: const [
         PromptAttachment(
           mime: 'text/plain',
@@ -33,6 +59,7 @@ void main() {
         'url': 'data:text/plain;base64,bm90ZXM=',
       },
     ]);
+    expect(body['variant'], 'fast');
   });
 
   test('command request serializes model as generated contract string', () {
@@ -49,6 +76,17 @@ void main() {
     });
   });
 
+  test('shell request serializes the selected thinking variant', () {
+    final body = shellRequestBody(
+      'flutter test',
+      model: ModelRef(providerID: 'provider', modelID: 'model'),
+      variant: 'high',
+    );
+
+    expect(body['variant'], 'high');
+    expect(body['model'], {'providerID': 'provider', 'modelID': 'model'});
+  });
+
   test('binary file content preserves metadata and decodes bytes', () {
     final content = FileContent.fromJson({
       'type': 'binary',
@@ -61,6 +99,20 @@ void main() {
     expect(content.encoding, 'base64');
     expect(content.mimeType, 'application/octet-stream');
     expect(content.bytes(), [0, 1, 2, 255]);
+  });
+
+  test('current OpenCode diff shape preserves patch and server counts', () {
+    final diff = FileDiff.fromJson({
+      'file': 'lib/main.dart',
+      'patch': '@@ -1 +1 @@\n-old\n+new',
+      'additions': 7,
+      'deletions': 3,
+      'status': 'modified',
+    });
+
+    expect(diff.patch, contains('+new'));
+    expect(diff.counts, (added: 7, removed: 3));
+    expect(diff.status, 'modified');
   });
 
   test('generated project response maps to app model with location', () async {
@@ -158,7 +210,11 @@ void main() {
                 'input': ['text', 'image'],
                 'output': ['text'],
               },
-              'variants': [],
+              'variants': {
+                'fast': {
+                  'body': {'reasoningEffort': 'low'},
+                },
+              },
               'status': 'active',
               'enabled': true,
               'limit': {'context': 200000, 'output': 32000},
@@ -175,7 +231,9 @@ void main() {
           _ => <Object>[],
         };
         request.response.headers.contentType = ContentType.json;
-        request.response.write(jsonEncode({'data': data}));
+        request.response.write(
+          jsonEncode(request.uri.path == '/api/model' ? data : {'data': data}),
+        );
         await request.response.close();
       });
 
@@ -191,6 +249,9 @@ void main() {
         expect(catalog.models.single.tools, isTrue);
         expect(catalog.models.single.attachments, isTrue);
         expect(catalog.models.single.contextLimit, 200000);
+        expect(catalog.models.single.variants.single.id, 'fast');
+        expect(catalog.models.single.variants.single.reasoningEffort, 'low');
+        expect(catalog.models.single.variants.single.isFast, isTrue);
         expect(catalog.agents.single.id, 'build');
         expect(locations, everyElement('/work/acme'));
       } finally {

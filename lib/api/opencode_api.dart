@@ -187,6 +187,7 @@ class OpenCodeApi {
     required String text,
     ModelRef? model,
     String? agent,
+    String? variant,
     List<PromptAttachment> attachments = const [],
   }) async {
     try {
@@ -196,6 +197,7 @@ class OpenCodeApi {
           text: text,
           model: model,
           agent: agent,
+          variant: variant,
           attachments: attachments,
         ),
         queryParameters: _query(),
@@ -210,11 +212,17 @@ class OpenCodeApi {
     required String command,
     required String agent,
     ModelRef? model,
+    String? variant,
   }) async {
     try {
       await _dio.post(
         '/session/$sessionID/shell',
-        data: shellRequestBody(command, agent: agent, model: model),
+        data: shellRequestBody(
+          command,
+          agent: agent,
+          model: model,
+          variant: variant,
+        ),
         queryParameters: _query(),
       );
     } on DioException catch (e) {
@@ -227,11 +235,12 @@ class OpenCodeApi {
     String command,
     String args, {
     ModelRef? model,
+    String? variant,
   }) async {
     try {
       await _dio.post(
         '/session/$sessionID/command',
-        data: commandRequestBody(command, args, model: model),
+        data: commandRequestBody(command, args, model: model, variant: variant),
         queryParameters: _query(),
       );
     } on DioException catch (e) {
@@ -267,8 +276,8 @@ class OpenCodeApi {
   Future<List<FileDiff>> diff(String id) async {
     final r = await _dio.get('/session/$id/diff', queryParameters: _query());
     return (r.data as List)
-        .whereType<Map<String, dynamic>>()
-        .map(FileDiff.fromJson)
+        .whereType<Map>()
+        .map((value) => FileDiff.fromJson(Map<String, dynamic>.from(value)))
         .toList();
   }
 

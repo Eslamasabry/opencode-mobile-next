@@ -5,6 +5,7 @@ import '../../api/models.dart' show ModelRef;
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
+import '../widgets/pickers.dart';
 import 'requests_screen.dart';
 import 'settings_screen.dart';
 
@@ -117,6 +118,7 @@ class CatalogScreen extends StatefulWidget {
 
 class _CatalogScreenState extends State<CatalogScreen> {
   CatalogSnapshot? _catalog;
+  // ignore: unused_field
   String? _error;
   String _query = '';
   int _loadGeneration = 0;
@@ -124,7 +126,9 @@ class _CatalogScreenState extends State<CatalogScreen> {
   @override
   void initState() {
     super.initState();
-    _load();
+    if (widget.controller.catalog == null) {
+      widget.controller.refreshCatalog();
+    }
   }
 
   Future<void> _load() async {
@@ -144,28 +148,13 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Models and agents'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Models'),
-              Tab(text: 'Providers'),
-              Tab(text: 'Agents'),
-            ],
-          ),
-        ),
-        body: _catalog == null && _error == null
-            ? const LoadingList()
-            : _error != null && _catalog == null
-            ? ProductErrorState(message: _error!, onRetry: _load)
-            : TabBarView(children: [_models(), _providers(), _agents()]),
-      ),
+    return Scaffold(
+      appBar: AppBar(title: const Text('Models and agents')),
+      body: ModelCatalogView(controller: widget.controller, showHeader: false),
     );
   }
 
+  // ignore: unused_element
   Widget _models() {
     final models = _catalog!.models.where((model) {
       final query = _query.toLowerCase();
@@ -236,6 +225,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
     );
   }
 
+  // ignore: unused_element
   Widget _providers() {
     if (_catalog!.providers.isEmpty) {
       return RefreshIndicator(
@@ -282,6 +272,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
     );
   }
 
+  // ignore: unused_element
   Widget _agents() {
     final agents = _catalog!.agents.where((agent) => !agent.hidden).toList();
     if (agents.isEmpty) {
@@ -361,7 +352,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                       const _CapabilityChip(label: 'Attachments'),
                     if (model.tools) const _CapabilityChip(label: 'Tools'),
                     for (final variant in model.variants)
-                      _CapabilityChip(label: variant),
+                      _CapabilityChip(label: variant.id),
                   ],
                 ),
                 const SizedBox(height: 20),

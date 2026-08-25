@@ -915,6 +915,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         text: text,
         model: _conn.selectedModel,
         agent: _conn.selectedAgent.isNotEmpty ? _conn.selectedAgent : null,
+        variant: _conn.selectedVariant.isEmpty ? null : _conn.selectedVariant,
         attachments: attachments,
       );
       if (!mounted) return;
@@ -1268,6 +1269,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         text: text,
         model: _conn.selectedModel,
         agent: _conn.selectedAgent.isEmpty ? null : _conn.selectedAgent,
+        variant: _conn.selectedVariant.isEmpty ? null : _conn.selectedVariant,
         attachments: attachments,
       );
     } catch (error) {
@@ -1385,6 +1387,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         command: cmd,
         agent: _conn.selectedAgent.isNotEmpty ? _conn.selectedAgent : 'build',
         model: _conn.selectedModel,
+        variant: _conn.selectedVariant.isEmpty ? null : _conn.selectedVariant,
       );
     } catch (e) {
       if (mounted) {
@@ -1440,6 +1443,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         c,
         argCtrl.text.trim(),
         model: _conn.selectedModel,
+        variant: _conn.selectedVariant.isEmpty ? null : _conn.selectedVariant,
       );
     } catch (e) {
       if (mounted) {
@@ -1624,6 +1628,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         voiceOpening: _voiceOpening,
                         selectedAgent: _conn.selectedAgent,
                         selectedModel: _conn.selectedModel,
+                        selectedVariant: _conn.selectedVariant,
                         onAttach: _pickAttachment,
                         onVoice: _openVoice,
                         onSend: _send,
@@ -1663,6 +1668,7 @@ class _ChatComposer extends StatelessWidget {
     required this.voiceOpening,
     required this.selectedAgent,
     required this.selectedModel,
+    required this.selectedVariant,
     required this.onAttach,
     required this.onVoice,
     required this.onSend,
@@ -1679,6 +1685,7 @@ class _ChatComposer extends StatelessWidget {
   final bool voiceOpening;
   final String selectedAgent;
   final ModelRef? selectedModel;
+  final String selectedVariant;
   final VoidCallback onAttach;
   final VoidCallback onVoice;
   final VoidCallback onSend;
@@ -1841,6 +1848,12 @@ class _ChatComposer extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           _ComposerAction(
+            key: const Key('composer-model-context'),
+            tooltip: _contextLabel,
+            onPressed: onChooseModel,
+            icon: const Icon(Icons.tune_rounded),
+          ),
+          _ComposerAction(
             tooltip: 'Attach file',
             onPressed: busy || sending ? null : onAttach,
             icon: const Icon(Icons.attach_file_rounded),
@@ -1885,6 +1898,7 @@ class _ChatComposer extends StatelessWidget {
     if (selectedAgent.isNotEmpty) parts.add(selectedAgent);
     final model = selectedModel?.modelID;
     if (model != null && model.isNotEmpty) parts.add(model);
+    if (selectedVariant.isNotEmpty) parts.add(selectedVariant);
     return parts.isEmpty ? 'Choose model' : parts.join(' · ');
   }
 }
@@ -2862,6 +2876,11 @@ class _FileDiffView extends StatelessWidget {
     final beforeLines = diff.before?.split('\n') ?? [];
     final afterLines = diff.after?.split('\n') ?? [];
 
+    final patch = diff.patch;
+    if (patch != null && patch.isNotEmpty) {
+      return _patchView(context, patch);
+    }
+
     // Naive alignment: common prefix/suffix; middle block replaced.
     int p = 0;
     while (p < beforeLines.length &&
@@ -2947,6 +2966,122 @@ class _FileDiffView extends StatelessWidget {
     );
   }
 
+  Widget _patchView(BuildContext context, String patch) {
+    final theme = Theme.of(context);
+    final rows = patch.split('\n').map((line) {
+      final kind = line.startsWith('@@')
+          ? _DiffLineKind.header
+          : line.startsWith('+') && !line.startsWith('+++')
+          ? _DiffLineKind.added
+          : line.startsWith('-') && !line.startsWith('---')
+          ? _DiffLineKind.removed
+          : _DiffLineKind.context;
+      return _patchRow(line, kind, theme);
+    }).toList();
+    return _diffScaffold(context, rows);
+  }
+
+  Widget _diffScaffold(BuildContext context, List<Widget> rows) {
+    final theme = Theme.of(context);
+    final copyText = diff.after ?? diff.patch ?? '';
+    final copyLabel = diff.after != null ? 'Copy updated file' : 'Copy patch';
+    return SafeArea(
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * .85,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 8, 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          diff.file,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 13,
+                          ),
+                        ),
+                        if (diff.status != null)
+                          Text(
+                            diff.status!,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: copyLabel,
+                    icon: const Icon(Icons.copy_rounded, size: 18),
+                    onPressed: copyText.isEmpty
+                        ? null
+                        : () =>
+                              Clipboard.setData(ClipboardData(text: copyText)),
+                  ),
+                ],
+              ),
+            ),
+            Divider(height: 1, color: theme.dividerColor),
+            Expanded(
+              child: SingleChildScrollView(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.all(8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: rows.isEmpty
+                        ? [
+                            const Padding(
+                              padding: EdgeInsets.all(20),
+                              child: Text('(empty diff)'),
+                            ),
+                          ]
+                        : rows,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _patchRow(String line, _DiffLineKind kind, ThemeData theme) {
+    final bg = switch (kind) {
+      _DiffLineKind.added => Colors.green.withValues(alpha: .15),
+      _DiffLineKind.removed => theme.colorScheme.error.withValues(alpha: .15),
+      _DiffLineKind.header => theme.colorScheme.primary.withValues(alpha: .12),
+      _DiffLineKind.context => null,
+    };
+    final foreground = switch (kind) {
+      _DiffLineKind.removed => theme.colorScheme.error,
+      _DiffLineKind.header => theme.colorScheme.primary,
+      _ => null,
+    };
+    return Container(
+      color: bg,
+      constraints: const BoxConstraints(minWidth: 400),
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: Text(
+        line,
+        style: TextStyle(
+          fontFamily: 'monospace',
+          fontSize: 12,
+          height: 1.4,
+          color: foreground,
+        ),
+      ),
+    );
+  }
+
   Widget _row(
     String line,
     bool? addedRemoved /*null=keep,true=add,false=remove*/,
@@ -2973,3 +3108,5 @@ class _FileDiffView extends StatelessWidget {
     );
   }
 }
+
+enum _DiffLineKind { context, added, removed, header }

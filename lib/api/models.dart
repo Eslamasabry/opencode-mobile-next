@@ -309,12 +309,14 @@ Map<String, dynamic> promptRequestBody({
   required String text,
   ModelRef? model,
   String? agent,
+  String? variant,
   String? messageID,
   List<PromptAttachment> attachments = const [],
 }) => {
   'messageID': ?messageID,
   'model': ?model?.toJson(),
   'agent': ?agent,
+  'variant': ?variant,
   'parts': [
     {'type': 'text', 'text': text},
     ...attachments.map((attachment) => attachment.toJson()),
@@ -325,13 +327,25 @@ Map<String, dynamic> shellRequestBody(
   String command, {
   String agent = 'build',
   ModelRef? model,
-}) => {'agent': agent, 'model': ?model?.toJson(), 'command': command};
+  String? variant,
+}) => {
+  'agent': agent,
+  'model': ?model?.toJson(),
+  'variant': ?variant,
+  'command': command,
+};
 
 Map<String, dynamic> commandRequestBody(
   String command,
   String args, {
   ModelRef? model,
-}) => {'command': command, 'arguments': args, 'model': ?model?.wireName};
+  String? variant,
+}) => {
+  'command': command,
+  'arguments': args,
+  'model': ?model?.wireName,
+  'variant': ?variant,
+};
 
 // ---------------- Providers / agents ----------------
 
@@ -339,7 +353,13 @@ class ProviderInfo {
   final String id;
   final String name;
   final List<String> modelIDs;
-  ProviderInfo({required this.id, required this.name, required this.modelIDs});
+  final Map<String, Map<String, dynamic>> modelData;
+  ProviderInfo({
+    required this.id,
+    required this.name,
+    required this.modelIDs,
+    this.modelData = const {},
+  });
 }
 
 class ProvidersResponse {
@@ -360,6 +380,7 @@ class ProvidersResponse {
       final id = p['id'].toString();
       final name = (p['name'] ?? id).toString();
       final models = <String>[];
+      final modelData = <String, Map<String, dynamic>>{};
       final rawModels = p['models'];
       if (rawModels is Map<String, dynamic>) {
         for (final entry in rawModels.entries) {
@@ -367,13 +388,21 @@ class ProvidersResponse {
           final m = entry.value;
           var hidden = false;
           if (m is Map<String, dynamic>) {
+            modelData[entry.key] = Map<String, dynamic>.from(m);
             final opts = m['options'];
             if (opts is Map<String, dynamic>) hidden = opts['hidden'] == true;
           }
           if (!hidden) models.add(entry.key);
         }
       }
-      providers.add(ProviderInfo(id: id, name: name, modelIDs: models));
+      providers.add(
+        ProviderInfo(
+          id: id,
+          name: name,
+          modelIDs: models,
+          modelData: modelData,
+        ),
+      );
     }
     String? defP;
     String? defM;
@@ -516,15 +545,35 @@ class FileDiff {
   final String file;
   final String? before;
   final String? after;
-  FileDiff({required this.file, this.before, this.after});
+  final String? patch;
+  final int? additions;
+  final int? deletions;
+  final String? status;
+
+  FileDiff({
+    required this.file,
+    this.before,
+    this.after,
+    this.patch,
+    this.additions,
+    this.deletions,
+    this.status,
+  });
 
   factory FileDiff.fromJson(Map<String, dynamic> j) => FileDiff(
     file: (j['file'] ?? '').toString(),
-    before: j['before'] as String?,
-    after: j['after'] as String?,
+    before: j['before']?.toString(),
+    after: j['after']?.toString(),
+    patch: j['patch']?.toString(),
+    additions: _asInt(j['additions']),
+    deletions: _asInt(j['deletions']),
+    status: j['status']?.toString(),
   );
 
-  ({int added, int removed}) get counts => countLineChanges(before, after);
+  ({int added, int removed}) get counts =>
+      additions != null || deletions != null
+      ? (added: additions ?? 0, removed: deletions ?? 0)
+      : countLineChanges(before, after);
 }
 
 // ---------------- Events / permissions ----------------

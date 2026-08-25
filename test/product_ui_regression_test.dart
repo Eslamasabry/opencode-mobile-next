@@ -704,15 +704,22 @@ void main() {
             reasoning: true,
             attachments: true,
             tools: true,
-            variants: List.generate(24, (index) => 'variant-$index'),
+            variants: List.generate(
+              24,
+              (index) => CatalogVariant(id: 'variant-$index'),
+            ),
           ),
         ],
       );
     final controller = await _controller(repository: repository);
+    controller.catalog = repository.catalog;
+    controller.catalogDetailed = true;
     addTearDown(controller.dispose);
     await tester.pumpWidget(
       MaterialApp(home: CatalogScreen(controller: controller)),
     );
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(ListView), const Offset(0, -500));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Large model'));
     await tester.pumpAndSettle();

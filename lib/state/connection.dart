@@ -11,9 +11,69 @@ import '../api/product_repository.dart';
 import '../api/sse.dart';
 import 'profiles.dart';
 
-const _managedTermuxUrl = 'http://127.0.0.1:4096';
-const _termuxPreferredProvider = 'opencode';
-const _termuxPreferredModel = 'nemotron-3.5-lightning-free';
+Map<String, dynamic> _catalogMap(Object? value) =>
+    value is Map ? Map<String, dynamic>.from(value) : const {};
+
+List<CatalogVariant> _catalogVariants(Object? value) {
+  if (value is! Map) return const [];
+  return [
+    for (final entry in value.entries)
+      if (entry.key.toString().isNotEmpty)
+        CatalogVariant(
+          id: entry.key.toString(),
+          disabled: _catalogMap(entry.value)['disabled'] == true,
+          options: _catalogMap(_catalogMap(entry.value)['body']).isNotEmpty
+              ? _catalogMap(_catalogMap(entry.value)['body'])
+              : _catalogMap(entry.value),
+        ),
+  ];
+}
+
+CatalogModel _catalogModelFromProvider(ProviderInfo provider, String modelID) {
+  final raw = provider.modelData[modelID] ?? const <String, dynamic>{};
+  final capabilities = _catalogMap(raw['capabilities']);
+  final limit = _catalogMap(raw['limit']);
+  final input = capabilities['input'];
+  final attachments =
+      capabilities['attachment'] == true ||
+      (input is List && input.any((value) => value != 'text')) ||
+      (input is Map &&
+          input.entries.any(
+            (entry) => entry.key != 'text' && entry.value == true,
+          ));
+  return CatalogModel(
+    id: modelID,
+    providerID: provider.id,
+    name: raw['name']?.toString() ?? modelID,
+    family: raw['family']?.toString(),
+    enabled: raw['enabled'] != false,
+    status: raw['status']?.toString() ?? 'unknown',
+    contextLimit: (limit['context'] as num?)?.toInt() ?? 0,
+    outputLimit: (limit['output'] as num?)?.toInt() ?? 0,
+    reasoning: capabilities['reasoning'] == true,
+    attachments: attachments,
+    tools: capabilities['toolcall'] == true || capabilities['tools'] == true,
+    variants: _catalogVariants(raw['variants']),
+  );
+}
+
+CatalogModel _mergeCatalogModel(CatalogModel detailed, CatalogModel base) {
+  if (detailed.variants.isNotEmpty || base.variants.isEmpty) return detailed;
+  return CatalogModel(
+    id: detailed.id,
+    providerID: detailed.providerID,
+    name: detailed.name,
+    family: detailed.family,
+    enabled: detailed.enabled,
+    status: detailed.status,
+    contextLimit: detailed.contextLimit,
+    outputLimit: detailed.outputLimit,
+    reasoning: detailed.reasoning,
+    attachments: detailed.attachments,
+    tools: detailed.tools,
+    variants: base.variants,
+  );
+}
 
 /// App-wide singletons that need async init before the UI can render.
 class AppBootstrap {
@@ -99,9 +159,12 @@ class ConnectionController extends ChangeNotifier {
 
   ProvidersResponse? providers;
   List<AgentInfo> agents = [];
+  CatalogSnapshot? catalog;
+  bool catalogDetailed = false;
 
   ModelRef? selectedModel;
   String selectedAgent = '';
+  String selectedVariant = '';
 
   Map<String, Session> sessionsById = {};
   Set<String> busySessions = {};
@@ -246,6 +309,7 @@ class ConnectionController extends ChangeNotifier {
         ? ModelRef(providerID: saved.$1!, modelID: saved.$2!)
         : null;
     selectedAgent = store.agentFor(profile.id);
+    selectedVariant = store.variantFor(profile.id);
 
     unawaited(_loadCatalog());
     _startEvents(generation, currentApi);
@@ -257,6 +321,7 @@ class ConnectionController extends ChangeNotifier {
 
   Future<void> _loadCatalog() async {
     final currentApi = api;
+    final currentRepository = repository;
     final generation = _generation;
     if (currentApi == null) return;
     final refreshGeneration = ++_catalogRefreshGeneration;
@@ -264,9 +329,19 @@ class ConnectionController extends ChangeNotifier {
     catalogError = null;
     notifyListeners();
     try {
-      final results = await Future.wait<Object>([
+      Future<CatalogSnapshot?> loadDetailedCatalog() async {
+        if (currentRepository == null) return null;
+        try {
+          return await currentRepository.loadCatalog();
+        } catch (_) {
+          return null;
+        }
+      }
+
+      final results = await Future.wait<Object?>([
         currentApi.providers(),
         currentApi.agents(),
+        loadDetailedCatalog(),
       ]);
       if (!_isCurrentCatalogRefresh(
         generation,
@@ -277,6 +352,62 @@ class ConnectionController extends ChangeNotifier {
       }
       final nextProviders = results[0] as ProvidersResponse;
       final nextAgents = results[1] as List<AgentInfo>;
+      final detailedCatalog = results[2] as CatalogSnapshot?;
+      final fallbackCatalog = CatalogSnapshot(
+        providers: [
+          for (final provider in nextProviders.providers)
+            CatalogProvider(
+              id: provider.id,
+              name: provider.name,
+              enabled: true,
+            ),
+        ],
+        models: [
+          for (final provider in nextProviders.providers)
+            for (final modelID in provider.modelIDs)
+              _catalogModelFromProvider(provider, modelID),
+        ],
+        agents: [
+          for (final agent in nextAgents)
+            CatalogAgent(
+              id: agent.name,
+              mode: agent.mode ?? 'unknown',
+              description: null,
+              hidden: false,
+            ),
+        ],
+      );
+      final nextCatalog = detailedCatalog == null
+          ? fallbackCatalog
+          : CatalogSnapshot(
+              providers: detailedCatalog.providers.isEmpty
+                  ? fallbackCatalog.providers
+                  : detailedCatalog.providers,
+              models: detailedCatalog.models.isEmpty
+                  ? fallbackCatalog.models
+                  : [
+                      for (final model in detailedCatalog.models)
+                        _mergeCatalogModel(
+                          model,
+                          fallbackCatalog.models.firstWhere(
+                            (base) =>
+                                base.providerID == model.providerID &&
+                                base.id == model.id,
+                            orElse: () => model,
+                          ),
+                        ),
+                      for (final base in fallbackCatalog.models)
+                        if (!detailedCatalog.models.any(
+                          (model) =>
+                              model.providerID == base.providerID &&
+                              model.id == base.id,
+                        ))
+                          base,
+                    ],
+              agents: detailedCatalog.agents.isEmpty
+                  ? fallbackCatalog.agents
+                  : detailedCatalog.agents,
+            );
       final profileID = _connectedProfile?.id;
       var nextModel = selectedModel;
       bool validModel(ModelRef? model) =>
@@ -286,19 +417,6 @@ class ConnectionController extends ChangeNotifier {
                 provider.id == model.providerID &&
                 provider.modelIDs.contains(model.modelID),
           );
-      final preferredTermuxModel = ModelRef(
-        providerID: _termuxPreferredProvider,
-        modelID: _termuxPreferredModel,
-      );
-      final shouldUseTermuxPreferredModel =
-          profileID != null &&
-          _connectedProfile?.baseUrl == _managedTermuxUrl &&
-          validModel(preferredTermuxModel) &&
-          (nextModel?.providerID != preferredTermuxModel.providerID ||
-              nextModel?.modelID != preferredTermuxModel.modelID);
-      if (shouldUseTermuxPreferredModel) {
-        nextModel = preferredTermuxModel;
-      }
       if (!validModel(nextModel)) {
         final defaultModel = ModelRef(
           providerID: nextProviders.defaultProviderID ?? '',
@@ -316,6 +434,19 @@ class ConnectionController extends ChangeNotifier {
             }
           }
         }
+      }
+      var nextVariant = selectedVariant;
+      final catalogModel = nextCatalog.models.where(
+        (model) =>
+            model.providerID == nextModel?.providerID &&
+            model.id == nextModel?.modelID,
+      );
+      final validVariants = catalogModel.isEmpty
+          ? const <CatalogVariant>[]
+          : catalogModel.first.variants.where((variant) => !variant.disabled);
+      if (nextVariant.isNotEmpty &&
+          !validVariants.any((variant) => variant.id == nextVariant)) {
+        nextVariant = '';
       }
       var nextAgent = selectedAgent;
       if (!nextAgents.any((agent) => agent.name == nextAgent)) {
@@ -339,6 +470,9 @@ class ConnectionController extends ChangeNotifier {
         if (nextAgent != selectedAgent) {
           await store.setAgent(profileID, nextAgent);
         }
+        if (nextVariant != selectedVariant) {
+          await store.setVariant(profileID, nextVariant);
+        }
       }
       if (!_isCurrentCatalogRefresh(
         generation,
@@ -349,8 +483,15 @@ class ConnectionController extends ChangeNotifier {
       }
       providers = nextProviders;
       agents = nextAgents;
+      catalog = nextCatalog;
+      catalogDetailed =
+          detailedCatalog?.models.isNotEmpty == true ||
+          nextProviders.providers.any(
+            (provider) => provider.modelData.isNotEmpty,
+          );
       selectedModel = nextModel;
       selectedAgent = nextAgent;
+      selectedVariant = nextVariant;
       catalogLoading = false;
       notifyListeners();
     } catch (error) {
@@ -1455,15 +1596,35 @@ class ConnectionController extends ChangeNotifier {
 
   // ---------------- Selection persistence ----------------
 
-  Future<void> selectModel(ModelRef ref) async {
+  Future<void> selectModel(ModelRef ref, {String? variant}) async {
+    final nextVariant = variant ?? '';
+    final matchingModel = catalog?.models.where(
+      (model) => model.providerID == ref.providerID && model.id == ref.modelID,
+    );
+    if (nextVariant.isNotEmpty &&
+        (matchingModel == null ||
+            matchingModel.isEmpty ||
+            !matchingModel.first.variants.any(
+              (item) => item.id == nextVariant && !item.disabled,
+            ))) {
+      return;
+    }
     selectedModel = ref;
+    selectedVariant = nextVariant;
     final p = profile;
     final generation = _generation;
     if (p != null) {
       await store.setModel(p.id, ref.providerID, ref.modelID, explicit: true);
+      await store.setVariant(p.id, nextVariant);
     }
     if (_disposed || generation != _generation) return;
     notifyListeners();
+  }
+
+  Future<void> selectVariant(String variant) async {
+    final model = selectedModel;
+    if (model == null) return;
+    await selectModel(model, variant: variant);
   }
 
   Future<void> selectAgent(String name) async {
@@ -1571,6 +1732,8 @@ class ConnectionController extends ChangeNotifier {
     _permissionRevision = 0;
     providers = null;
     agents = [];
+    catalog = null;
+    catalogDetailed = false;
     sessionsLoading = false;
     sessionsError = null;
     catalogLoading = false;

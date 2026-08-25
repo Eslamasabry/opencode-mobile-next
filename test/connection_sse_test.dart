@@ -126,6 +126,10 @@ class _TestRepository extends SdkProductRepository {
 
   @override
   Future<List<PendingQuestion>> listQuestions() async => const [];
+
+  @override
+  Future<CatalogSnapshot> loadCatalog() async =>
+      const CatalogSnapshot(providers: [], models: [], agents: []);
 }
 
 Future<ProfileStore> _store() async {

@@ -17,14 +17,21 @@ class _FakeOpenCodeApi extends OpenCodeApi {
   Completer<void>? promptCompleter;
   int promptCalls = 0;
   final List<
-    ({String text, ModelRef? model, List<PromptAttachment> attachments})
+    ({
+      String text,
+      ModelRef? model,
+      String? variant,
+      List<PromptAttachment> attachments,
+    })
   >
   prompts = [];
   String? slashCommandName;
   String? slashArguments;
   ModelRef? slashModel;
+  String? slashVariant;
   bool failRename = false;
   bool failDelete = false;
+  List<FileDiff> diffs = const [];
 
   @override
   Future<List<MessageWithParts>> messages(String id) =>
@@ -34,15 +41,24 @@ class _FakeOpenCodeApi extends OpenCodeApi {
   Future<Session> session(String id) async => Session(id: id);
 
   @override
+  Future<List<FileDiff>> diff(String id) async => diffs;
+
+  @override
   Future<void> promptAsync(
     String sessionID, {
     required String text,
     ModelRef? model,
     String? agent,
+    String? variant,
     List<PromptAttachment> attachments = const [],
   }) {
     promptCalls += 1;
-    prompts.add((text: text, model: model, attachments: attachments));
+    prompts.add((
+      text: text,
+      model: model,
+      variant: variant,
+      attachments: attachments,
+    ));
     return promptCompleter?.future ?? Future.value();
   }
 
@@ -52,10 +68,12 @@ class _FakeOpenCodeApi extends OpenCodeApi {
     String command,
     String args, {
     ModelRef? model,
+    String? variant,
   }) async {
     slashCommandName = command;
     slashArguments = args;
     slashModel = model;
+    slashVariant = variant;
   }
 
   @override
@@ -149,6 +167,34 @@ void main() {
     });
 
     expect(info.errorText, 'The selected model is unavailable');
+  });
+
+  testWidgets('renders current OpenCode unified patches and server counts', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..diffs = [
+        FileDiff.fromJson({
+          'file': 'lib/main.dart',
+          'patch': '@@ -1 +1 @@\n-old line\n+new line',
+          'additions': 1,
+          'deletions': 1,
+          'status': 'modified',
+        }),
+      ];
+    await _pumpChat(tester, api);
+
+    await tester.tap(find.byTooltip('Changes'));
+    await tester.pumpAndSettle();
+    expect(find.text('+1'), findsOneWidget);
+    expect(find.text('-1'), findsOneWidget);
+
+    await tester.tap(find.text('main.dart'));
+    await tester.pumpAndSettle();
+    expect(find.text('@@ -1 +1 @@'), findsOneWidget);
+    expect(find.text('-old line'), findsOneWidget);
+    expect(find.text('+new line'), findsOneWidget);
+    expect(find.byTooltip('Copy patch'), findsOneWidget);
   });
 
   testWidgets('applies split text, reasoning, and tool input deltas', (
@@ -531,6 +577,7 @@ void main() {
         ], created: 2),
       ];
     final controller = await _pumpChat(tester, api);
+    controller.selectedVariant = 'fast';
 
     await tester.tap(find.byType(PopupMenuButton<String>));
     await tester.pumpAndSettle();
@@ -538,6 +585,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(api.prompts.single.text, 'Review this');
+    expect(api.prompts.single.variant, 'fast');
     expect(api.prompts.single.attachments.single.toJson(), {
       'type': 'file',
       'mime': 'image/png',
@@ -573,6 +621,7 @@ void main() {
       providerID: 'anthropic',
       modelID: 'claude-sonnet',
     );
+    controller.selectedVariant = 'high';
 
     await tester.tap(find.byType(PopupMenuButton<String>));
     await tester.pumpAndSettle();
@@ -595,6 +644,7 @@ void main() {
     expect(api.slashArguments, '--staged');
     expect(api.slashModel?.providerID, 'anthropic');
     expect(api.slashModel?.modelID, 'claude-sonnet');
+    expect(api.slashVariant, 'high');
   });
 
   testWidgets('session rename and delete failures preserve the session', (
