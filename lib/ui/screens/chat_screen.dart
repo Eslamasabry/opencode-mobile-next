@@ -12,6 +12,7 @@ import '../../state/connection.dart';
 import '../../voice/controller.dart';
 import '../../voice/voice_ui.dart';
 import '../widgets/markdown.dart';
+import '../widgets/pickers.dart';
 import '../widgets/tool_card.dart';
 
 const _maxAttachmentCount = 5;
@@ -1614,132 +1615,22 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                 ),
                               ),
                       ),
-                      SafeArea(
-                        top: false,
-                        child: Container(
-                          padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerHighest
-                                .withValues(alpha: .35),
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (_attachments.isNotEmpty)
-                                SizedBox(
-                                  height: 56,
-                                  child: ListView(
-                                    scrollDirection: Axis.horizontal,
-                                    children: [
-                                      for (final attachment in _attachments)
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            right: 6,
-                                          ),
-                                          child: _PendingAttachmentChip(
-                                            attachment: attachment,
-                                            onRemove: () => setState(
-                                              () => _attachments.remove(
-                                                attachment,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              if (_attachments.isNotEmpty)
-                                const SizedBox(height: 6),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  IconButton(
-                                    tooltip: 'Attach file',
-                                    onPressed: busy || _sending
-                                        ? null
-                                        : _pickAttachment,
-                                    icon: const Icon(Icons.attach_file_rounded),
-                                  ),
-                                  IconButton(
-                                    key: const Key('voice-input-button'),
-                                    tooltip: 'Local voice input',
-                                    constraints: const BoxConstraints(
-                                      minWidth: 48,
-                                      minHeight: 48,
-                                    ),
-                                    onPressed: busy || _sending
-                                        ? null
-                                        : _openVoice,
-                                    icon: _voiceOpening
-                                        ? const SizedBox.square(
-                                            dimension: 18,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                            ),
-                                          )
-                                        : const Icon(Icons.mic_none_rounded),
-                                  ),
-                                  Expanded(
-                                    child: TextField(
-                                      controller: _composer,
-                                      focusNode: _focus,
-                                      minLines: 1,
-                                      maxLines:
-                                          MediaQuery.sizeOf(context).height <
-                                              500
-                                          ? 3
-                                          : 6,
-                                      textCapitalization:
-                                          TextCapitalization.sentences,
-                                      decoration: InputDecoration(
-                                        hintText: _conn.selectedAgent.isNotEmpty
-                                            ? 'Message (${_conn.selectedAgent}${_conn.selectedModel != null ? ' · ${_conn.selectedModel!.modelID}' : ''})'
-                                            : 'Message',
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            22,
-                                          ),
-                                          borderSide: BorderSide.none,
-                                        ),
-                                        filled: true,
-                                        fillColor: theme.colorScheme.surface,
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                              horizontal: 16,
-                                              vertical: 9,
-                                            ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  busy
-                                      ? IconButton.filledTonal(
-                                          tooltip: 'Stop',
-                                          onPressed: _abort,
-                                          icon: Icon(
-                                            Icons.stop_rounded,
-                                            color: theme.colorScheme.error,
-                                          ),
-                                        )
-                                      : IconButton.filled(
-                                          tooltip: 'Send',
-                                          onPressed: _sending ? null : _send,
-                                          icon: _sending
-                                              ? const SizedBox.square(
-                                                  dimension: 18,
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                        strokeWidth: 2,
-                                                      ),
-                                                )
-                                              : const Icon(Icons.send_rounded),
-                                        ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
+                      _ChatComposer(
+                        controller: _composer,
+                        focusNode: _focus,
+                        attachments: _attachments,
+                        busy: busy,
+                        sending: _sending,
+                        voiceOpening: _voiceOpening,
+                        selectedAgent: _conn.selectedAgent,
+                        selectedModel: _conn.selectedModel,
+                        onAttach: _pickAttachment,
+                        onVoice: _openVoice,
+                        onSend: _send,
+                        onStop: _abort,
+                        onChooseModel: () => showModelPicker(context),
+                        onRemoveAttachment: (attachment) =>
+                            setState(() => _attachments.remove(attachment)),
                       ),
                     ],
                   ),
@@ -1759,6 +1650,348 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _composer.dispose();
     _focus.dispose();
     super.dispose();
+  }
+}
+
+class _ChatComposer extends StatelessWidget {
+  const _ChatComposer({
+    required this.controller,
+    required this.focusNode,
+    required this.attachments,
+    required this.busy,
+    required this.sending,
+    required this.voiceOpening,
+    required this.selectedAgent,
+    required this.selectedModel,
+    required this.onAttach,
+    required this.onVoice,
+    required this.onSend,
+    required this.onStop,
+    required this.onChooseModel,
+    required this.onRemoveAttachment,
+  });
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final List<PromptAttachment> attachments;
+  final bool busy;
+  final bool sending;
+  final bool voiceOpening;
+  final String selectedAgent;
+  final ModelRef? selectedModel;
+  final VoidCallback onAttach;
+  final VoidCallback onVoice;
+  final VoidCallback onSend;
+  final VoidCallback onStop;
+  final VoidCallback onChooseModel;
+  final ValueChanged<PromptAttachment> onRemoveAttachment;
+
+  bool get _hasPrompt =>
+      controller.text.trim().isNotEmpty || attachments.isNotEmpty;
+
+  @override
+  Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final compact = media.size.height - media.viewInsets.bottom < 520;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final disableAnimations = media.disableAnimations;
+
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
+        child: ListenableBuilder(
+          listenable: Listenable.merge([focusNode, controller]),
+          builder: (context, _) => AnimatedContainer(
+            key: const Key('chat-composer-surface'),
+            duration: disableAnimations
+                ? Duration.zero
+                : const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(compact ? 20 : 24),
+              border: Border.all(
+                color: focusNode.hasFocus
+                    ? scheme.primary.withValues(alpha: .8)
+                    : scheme.outlineVariant.withValues(alpha: .85),
+                width: focusNode.hasFocus ? 1.4 : 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: scheme.surfaceContainerLowest.withValues(alpha: .5),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (attachments.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+                    child: SizedBox(
+                      height: 56,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: attachments.length,
+                        separatorBuilder: (_, _) => const SizedBox(width: 6),
+                        itemBuilder: (context, index) {
+                          final attachment = attachments[index];
+                          return _PendingAttachmentChip(
+                            attachment: attachment,
+                            onRemove: () => onRemoveAttachment(attachment),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                if (compact)
+                  _compactComposer(context)
+                else
+                  _standardComposer(context),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _standardComposer(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _ComposerField(
+          controller: controller,
+          focusNode: focusNode,
+          maxLines: 6,
+          contentPadding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+        ),
+        Divider(
+          height: 1,
+          indent: 14,
+          endIndent: 14,
+          color: scheme.outlineVariant.withValues(alpha: .55),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 7, 8, 8),
+          child: Row(
+            children: [
+              _ComposerAction(
+                tooltip: 'Attach file',
+                onPressed: busy || sending ? null : onAttach,
+                icon: const Icon(Icons.attach_file_rounded),
+              ),
+              const SizedBox(width: 2),
+              _ComposerAction(
+                key: const Key('voice-input-button'),
+                tooltip: 'Local voice input',
+                onPressed: busy || sending ? null : onVoice,
+                icon: voiceOpening
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.mic_none_rounded),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    key: const Key('composer-model-context'),
+                    onPressed: onChooseModel,
+                    icon: const Icon(Icons.tune_rounded, size: 17),
+                    label: Text(
+                      _contextLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    style: TextButton.styleFrom(
+                      foregroundColor: scheme.onSurfaceVariant,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              _ComposerSubmit(
+                busy: busy,
+                sending: sending,
+                enabled: _hasPrompt,
+                onSend: onSend,
+                onStop: onStop,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _compactComposer(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          _ComposerAction(
+            tooltip: 'Attach file',
+            onPressed: busy || sending ? null : onAttach,
+            icon: const Icon(Icons.attach_file_rounded),
+          ),
+          _ComposerAction(
+            key: const Key('voice-input-button'),
+            tooltip: 'Local voice input',
+            onPressed: busy || sending ? null : onVoice,
+            icon: voiceOpening
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.mic_none_rounded),
+          ),
+          Expanded(
+            child: _ComposerField(
+              controller: controller,
+              focusNode: focusNode,
+              maxLines: 3,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 11,
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          _ComposerSubmit(
+            busy: busy,
+            sending: sending,
+            enabled: _hasPrompt,
+            onSend: onSend,
+            onStop: onStop,
+          ),
+        ],
+      ),
+    );
+  }
+
+  String get _contextLabel {
+    final parts = <String>[];
+    if (selectedAgent.isNotEmpty) parts.add(selectedAgent);
+    final model = selectedModel?.modelID;
+    if (model != null && model.isNotEmpty) parts.add(model);
+    return parts.isEmpty ? 'Choose model' : parts.join(' · ');
+  }
+}
+
+class _ComposerField extends StatelessWidget {
+  const _ComposerField({
+    required this.controller,
+    required this.focusNode,
+    required this.maxLines,
+    required this.contentPadding,
+  });
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final int maxLines;
+  final EdgeInsets contentPadding;
+
+  @override
+  Widget build(BuildContext context) => TextField(
+    key: const Key('chat-composer-field'),
+    controller: controller,
+    focusNode: focusNode,
+    minLines: 1,
+    maxLines: maxLines,
+    textCapitalization: TextCapitalization.sentences,
+    decoration: InputDecoration(
+      hintText: 'Ask OpenCode…',
+      filled: false,
+      border: InputBorder.none,
+      enabledBorder: InputBorder.none,
+      focusedBorder: InputBorder.none,
+      contentPadding: contentPadding,
+    ),
+  );
+}
+
+class _ComposerAction extends StatelessWidget {
+  const _ComposerAction({
+    super.key,
+    required this.tooltip,
+    required this.onPressed,
+    required this.icon,
+  });
+
+  final String tooltip;
+  final VoidCallback? onPressed;
+  final Widget icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return IconButton(
+      tooltip: tooltip,
+      onPressed: onPressed,
+      style: IconButton.styleFrom(
+        backgroundColor: scheme.surfaceContainerHigh,
+        foregroundColor: scheme.onSurfaceVariant,
+        disabledBackgroundColor: scheme.surfaceContainerHigh.withValues(
+          alpha: .45,
+        ),
+      ),
+      icon: icon,
+    );
+  }
+}
+
+class _ComposerSubmit extends StatelessWidget {
+  const _ComposerSubmit({
+    required this.busy,
+    required this.sending,
+    required this.enabled,
+    required this.onSend,
+    required this.onStop,
+  });
+
+  final bool busy;
+  final bool sending;
+  final bool enabled;
+  final VoidCallback onSend;
+  final VoidCallback onStop;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    if (busy) {
+      return IconButton.filledTonal(
+        key: const Key('chat-send-button'),
+        tooltip: 'Stop',
+        onPressed: onStop,
+        style: IconButton.styleFrom(
+          foregroundColor: scheme.error,
+          backgroundColor: scheme.errorContainer.withValues(alpha: .55),
+        ),
+        icon: const Icon(Icons.stop_rounded),
+      );
+    }
+    return IconButton.filled(
+      key: const Key('chat-send-button'),
+      tooltip: 'Send',
+      onPressed: sending || !enabled ? null : onSend,
+      icon: sending
+          ? const SizedBox.square(
+              dimension: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.arrow_upward_rounded),
+    );
   }
 }
 

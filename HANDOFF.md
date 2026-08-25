@@ -2,9 +2,19 @@
 
 Last updated: 2026-08-25 (Asia/Dubai)
 
-## Current release
+## Current GitHub APK
 
 - Branch: `master`
+- App version: `1.0.15+16`
+- Git tag: `v1.0.15+16`
+- APK: <https://github.com/Eslamasabry/oc_app/releases/download/v1.0.15%2B16/app-release.apk>
+- APK SHA-256: `dd9a1be5f038626713e65d45d50232b283226e6704bc797dd92a98d8f2e91a95`
+- Shorebird status: built with Shorebird Flutter `3.47.1`, but no `1.0.15+16` Shorebird release was published
+
+The version was advanced so the existing `1.0.14+15` OTA patches cannot replace the overhauled model selector and chat composer. The APK was installed on the Android simulator, restarted twice, and confirmed to retain the new selector. Flutter analysis was clean and all 183 tests passed.
+
+## Previous Shorebird baseline
+
 - Implementation commit: `4b17f40` (`Enforce reliable local Termux model`)
 - App version: `1.0.14+15`
 - Shorebird release ID: `787919`
@@ -12,7 +22,7 @@ Last updated: 2026-08-25 (Asia/Dubai)
 - Shorebird Stable Patch 2: `615694`
 - Baseline APK: <https://github.com/Eslamasabry/oc_app/releases/download/v1.0.14%2B15/app-release.apk>
 
-Patch 2 is the current fix. An installed `1.0.14+15` downloads it on launch and activates it on the following full restart. Native Android changes still require a new APK.
+Patch 2 remains the current fix for `1.0.14+15`. An installed `1.0.14+15` downloads it on launch and activates it on the following full restart. Native Android changes still require a new APK.
 
 ## Chat issue and fix
 

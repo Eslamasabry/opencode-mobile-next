@@ -288,9 +288,19 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byTooltip('Send'), findsOneWidget);
+    final send = find.byTooltip('Send');
+    expect(send, findsOneWidget);
     expect(find.byTooltip('Attach file'), findsOneWidget);
     expect(find.byKey(const Key('voice-input-button')), findsOneWidget);
+    expect(find.byKey(const Key('chat-composer-surface')), findsOneWidget);
+    final sendButton = find.byKey(const Key('chat-send-button'));
+    expect(tester.widget<IconButton>(sendButton).onPressed, isNull);
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      'Review this',
+    );
+    await tester.pump();
+    expect(tester.widget<IconButton>(sendButton).onPressed, isNotNull);
     expect(tester.takeException(), isNull);
   });
 

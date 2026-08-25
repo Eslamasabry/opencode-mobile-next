@@ -100,7 +100,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           IconButton(
             tooltip: 'Model / agent',
             icon: const Icon(Icons.tune_rounded),
-            onPressed: () => showModelPicker(context, ref),
+            onPressed: () => showModelPicker(context),
           ),
           Badge(
             isLabelVisible: pending > 0,

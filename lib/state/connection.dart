@@ -1475,6 +1475,8 @@ class ConnectionController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> refreshCatalog() => _loadCatalog();
+
   int _beginGeneration() {
     _generation += 1;
     connectionRevision = _generation;

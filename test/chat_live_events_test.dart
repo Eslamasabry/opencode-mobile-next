@@ -307,6 +307,7 @@ void main() {
     final controller = await _pumpChat(tester, api);
 
     await tester.enterText(find.byType(TextField), 'hello server');
+    await tester.pump();
     await tester.tap(find.byTooltip('Send'));
     await tester.pump();
     expect(find.text('hello server'), findsOneWidget);
@@ -346,9 +347,11 @@ void main() {
       final controller = await _pumpChat(tester, api);
 
       await tester.enterText(find.byType(TextField), 'first prompt');
+      await tester.pump();
       await tester.tap(find.byTooltip('Send'));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), 'second prompt');
+      await tester.pump();
       await tester.tap(find.byTooltip('Send'));
       await tester.pumpAndSettle();
 
@@ -414,6 +417,7 @@ void main() {
       await _pumpChat(tester, api);
 
       await tester.enterText(find.byType(TextField), 'try once');
+      await tester.pump();
       await tester.tap(find.byTooltip('Send'));
       await tester.tap(find.byTooltip('Send'));
       await tester.pump();
@@ -439,6 +443,7 @@ void main() {
     final controller = await _pumpChat(tester, api);
 
     await tester.enterText(find.byType(TextField), 'hello');
+    await tester.pump();
     await tester.tap(find.byTooltip('Send'));
     await _pumpEvent(tester);
 
