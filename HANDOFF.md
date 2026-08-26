@@ -52,7 +52,9 @@ connect and post-idle health checks. Future guided setups retain the same wake
 lock until OpenCode stops or exits, instead of releasing it as soon as setup
 returns. Remote profiles are unaffected, and Termux bridge failures remain
 non-blocking. Shorebird's compatibility verification passed without native or
-asset overrides. Flutter analysis was clean; all 204 tests passed.
+asset overrides. Flutter analysis was clean; all 204 tests passed. The simulator
+downloaded Patch 2, activated `patches/2/dlc.vmcode` after a cold restart, kept
+the foreground service active, and showed the Termux partial wake lock held.
 
 ## Background connection behavior
 
