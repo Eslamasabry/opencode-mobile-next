@@ -13,18 +13,21 @@ import 'workspace_screen.dart';
 
 /// Main mobile product shell for a connected OpenCode server.
 class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, this.initialTab = 0});
+
+  final int initialTab;
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  int _tab = 0;
+  late int _tab;
 
   @override
   void initState() {
     super.initState();
+    _tab = widget.initialTab.clamp(0, 3);
     final conn = ref.read(connProvider);
     conn.addListener(_onConnChanged);
     // If the SSE stream cannot connect at all, fall back to polling.

@@ -293,16 +293,42 @@ void main() {
     expect(find.byTooltip('Attach file'), findsOneWidget);
     expect(find.byKey(const Key('voice-input-button')), findsOneWidget);
     expect(find.byKey(const Key('chat-composer-surface')), findsOneWidget);
-    expect(find.byKey(const Key('compact-workbench-menu')), findsOneWidget);
+    expect(find.byKey(const Key('command-launcher-button')), findsOneWidget);
     expect(find.byKey(const Key('chat-workbench')), findsNothing);
     final sendButton = find.byKey(const Key('chat-send-button'));
     expect(tester.widget<IconButton>(sendButton).onPressed, isNull);
     await tester.enterText(
       find.byKey(const Key('chat-composer-field')),
-      'Review this',
+      '/mod',
     );
     await tester.pump();
+    expect(find.byKey(const Key('inline-command-suggestions')), findsNothing);
     expect(tester.widget<IconButton>(sendButton).onPressed, isNotNull);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('compact composer shows one slash result when height allows', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(640, 520));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: _scaledApp(const ChatScreen(sessionID: 's1'), bottomInset: 96),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      '/mod',
+    );
+    await tester.pump();
+
+    expect(find.byKey(const Key('inline-command-suggestions')), findsOneWidget);
+    expect(find.byKey(const Key('inline-command-models')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

@@ -36,8 +36,9 @@ class LibraryScreen extends StatelessWidget {
         const SectionLabel('Discover'),
         _DestinationTile(
           icon: Icons.electric_bolt_outlined,
-          title: 'Commands',
-          subtitle: 'Find and run commands in a session',
+          title: 'Server commands',
+          subtitle:
+              'Configured commands, MCP prompts, and slash-capable skills',
           onTap: () => _open(context, CommandsScreen(controller: controller)),
         ),
         _DestinationTile(
@@ -1119,7 +1120,7 @@ class _CommandsScreenState extends State<CommandsScreen> {
           (command.description ?? '').toLowerCase().contains(query);
     }).toList();
     return Scaffold(
-      appBar: AppBar(title: const Text('Commands')),
+      appBar: AppBar(title: const Text('Server commands')),
       body: _commands == null && _error == null
           ? const LoadingList()
           : _error != null && _commands == null
@@ -1130,7 +1131,7 @@ class _CommandsScreenState extends State<CommandsScreen> {
                   padding: const EdgeInsets.all(12),
                   child: TextField(
                     decoration: const InputDecoration(
-                      hintText: 'Search commands',
+                      hintText: 'Search server commands',
                       prefixIcon: Icon(Icons.search_rounded),
                       border: OutlineInputBorder(),
                       isDense: true,
@@ -1144,7 +1145,7 @@ class _CommandsScreenState extends State<CommandsScreen> {
                           onRefresh: _load,
                           child: const ProductEmptyState(
                             icon: Icons.electric_bolt_outlined,
-                            title: 'No commands found',
+                            title: 'No server commands found',
                             message:
                                 'Commands from your project and skills appear here.',
                           ),

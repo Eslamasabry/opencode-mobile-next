@@ -16,6 +16,11 @@ import '../widgets/file_preview.dart';
 import '../widgets/markdown.dart';
 import '../widgets/pickers.dart';
 import '../widgets/tool_card.dart';
+import 'files_screen.dart';
+import 'home_screen.dart';
+import 'library_screen.dart';
+import 'settings_screen.dart';
+import 'terminal_screen.dart';
 
 const _maxAttachmentCount = 5;
 const _maxAttachmentBytes = 10 * 1024 * 1024;
@@ -332,29 +337,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool _voiceOpening = false;
   String? _localShareUrl;
   String? _promptError;
-  _WorkbenchTab? _workbenchTab;
-  List<CommandInfo>? _workbenchCommands;
-  Object? _workbenchCommandsError;
-  bool _workbenchCommandsLoading = false;
-  List<FileDiff>? _workbenchDiffs;
-  List<Todo>? _workbenchTodos;
-  Object? _workbenchReviewError;
-  bool _workbenchReviewLoading = false;
+  List<CommandInfo>? _serverCommands;
+  Object? _serverCommandsError;
+  bool _serverCommandsLoading = false;
+  Future<void>? _serverCommandsRequest;
 
   String? get _shareUrl =>
       _conn.sessionsById[widget.sessionID]?.shareUrl ?? _localShareUrl;
-
-  CatalogModel? get _selectedCatalogModel {
-    final selected = _conn.selectedModel;
-    if (selected == null) return null;
-    for (final model in _conn.catalog?.models ?? const <CatalogModel>[]) {
-      if (model.providerID == selected.providerID &&
-          model.id == selected.modelID) {
-        return model;
-      }
-    }
-    return null;
-  }
 
   @override
   void initState() {
@@ -365,6 +354,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _dataRefreshRevision = _conn.dataRefreshRevision;
     _conn.addListener(_onConnectionChanged);
     _load();
+    unawaited(_loadServerCommands());
     _sub = _conn.events.listen(_onEvent);
     _schedulePermissionDialog();
     final injectedVoice = widget.voiceController;
@@ -892,6 +882,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (_sending || (_composer.text.trim().isEmpty && _attachments.isEmpty)) {
       return;
     }
+    if (_attachments.isEmpty &&
+        _composer.text.trimLeft().startsWith('/') &&
+        _serverCommands == null) {
+      await _loadServerCommands();
+      if (!mounted) return;
+    }
+    final typedCommand = _typedChatCommand(_composer.text.trim());
+    if (_attachments.isEmpty && typedCommand != null) {
+      await _submitTypedCommand(typedCommand);
+      return;
+    }
     setState(() => _sending = true);
     final actionApi = await _conn.prepareActionTransport();
     if (!mounted) return;
@@ -985,6 +986,63 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Send failed: $e')));
+    }
+  }
+
+  ({_ChatCommand command, String arguments})? _typedChatCommand(String text) {
+    final match = RegExp(r'^/(\S+)(?:\s+(.*))?$').firstMatch(text);
+    if (match == null) return null;
+    final name = match.group(1)!.toLowerCase();
+    for (final command in _chatCommands) {
+      if (command.matches(name)) {
+        return (command: command, arguments: match.group(2)?.trim() ?? '');
+      }
+    }
+    return null;
+  }
+
+  Future<void> _submitTypedCommand(
+    ({_ChatCommand command, String arguments}) typed,
+  ) async {
+    final command = typed.command;
+    if (!command.enabled) {
+      _showActionError('/${command.slash} is not available right now.');
+      return;
+    }
+    if (command.serverCommand == null) {
+      _composer.clear();
+      await _runMobileCommand(command.action!);
+      return;
+    }
+    setState(() => _sending = true);
+    final actionApi = await _conn.prepareActionTransport();
+    if (!mounted) return;
+    if (actionApi == null) {
+      setState(() => _sending = false);
+      _showActionError(
+        _conn.connectionError ?? 'OpenCode is reconnecting. Try again shortly.',
+      );
+      return;
+    }
+    final original = _composer.text;
+    try {
+      await actionApi.slashCommand(
+        widget.sessionID,
+        command.serverCommand!.name,
+        typed.arguments,
+        model: _conn.selectedModel,
+        variant: _conn.selectedVariant.isEmpty ? null : _conn.selectedVariant,
+      );
+      if (!mounted) return;
+      _composer.clear();
+      _focus.requestFocus();
+      setState(() => _sending = false);
+    } catch (error) {
+      if (!mounted) return;
+      _composer.text = original;
+      _composer.selection = TextSelection.collapsed(offset: original.length);
+      setState(() => _sending = false);
+      _showActionError('Command failed: $error');
     }
   }
 
@@ -1441,120 +1499,483 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _slashCommandDialog({CommandInfo? initialCommand}) async {
-    final result = await showDialog<({String command, String arguments})>(
-      context: context,
-      builder: (_) => _SlashCommandDialog(initialCommand: initialCommand),
-    );
-    if (result == null) return;
-    final c = result.command.trim().replaceFirst('/', '');
-    if (c.isEmpty) return;
-    try {
-      await _conn.api!.slashCommand(
-        widget.sessionID,
-        c,
-        result.arguments.trim(),
-        model: _conn.selectedModel,
-        variant: _conn.selectedVariant.isEmpty ? null : _conn.selectedVariant,
-      );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed: $e')));
+  Future<void> _loadServerCommands() {
+    final existing = _serverCommandsRequest;
+    if (existing != null) return existing;
+    late final Future<void> request;
+    request = _performLoadServerCommands().whenComplete(() {
+      if (identical(_serverCommandsRequest, request)) {
+        _serverCommandsRequest = null;
       }
-    }
+    });
+    _serverCommandsRequest = request;
+    return request;
   }
 
-  void _selectWorkbenchTab(_WorkbenchTab tab) {
-    final opening = _workbenchTab != tab;
-    setState(() => _workbenchTab = opening ? tab : null);
-    if (!opening) return;
-    if (tab == _WorkbenchTab.commands) {
-      unawaited(_loadWorkbenchCommands());
-    } else if (tab == _WorkbenchTab.review) {
-      unawaited(_loadWorkbenchReview());
-    }
-  }
-
-  Future<void> _loadWorkbenchCommands() async {
-    if (_workbenchCommandsLoading) return;
+  Future<void> _performLoadServerCommands() async {
     final repository = _conn.repository;
     if (repository == null) {
       if (mounted) {
         setState(() {
-          _workbenchCommands = const [];
-          _workbenchCommandsError =
-              'OpenCode commands are unavailable offline.';
+          _serverCommands = const [];
+          _serverCommandsError = 'OpenCode commands are unavailable offline.';
         });
       }
       return;
     }
     setState(() {
-      _workbenchCommandsLoading = true;
-      _workbenchCommandsError = null;
+      _serverCommandsLoading = true;
+      _serverCommandsError = null;
     });
     try {
       final commands = [...await repository.listCommands()];
       if (!mounted) return;
       commands.sort((a, b) => a.name.compareTo(b.name));
-      setState(() => _workbenchCommands = commands);
+      setState(() => _serverCommands = commands);
     } catch (error) {
-      if (mounted) setState(() => _workbenchCommandsError = error);
+      if (mounted) setState(() => _serverCommandsError = error);
     } finally {
-      if (mounted) setState(() => _workbenchCommandsLoading = false);
+      if (mounted) setState(() => _serverCommandsLoading = false);
     }
   }
 
-  Future<void> _loadWorkbenchReview() async {
-    if (_workbenchReviewLoading) return;
-    final api = _conn.api;
-    if (api == null) {
-      if (mounted) {
-        setState(() {
-          _workbenchDiffs = const [];
-          _workbenchTodos = const [];
-          _workbenchReviewError = 'Review data is unavailable offline.';
-        });
-      }
+  List<_ChatCommand> get _chatCommands {
+    final session = _conn.sessionsById[widget.sessionID];
+    final hasUserMessage = _messages.any(
+      (message) =>
+          message.info.role == 'user' && !message.info.id.startsWith('local-'),
+    );
+    final builtins = <_ChatCommand>[
+      _ChatCommand.mobile(
+        slash: 'new',
+        aliases: const ['clear'],
+        title: 'New session',
+        description: 'Start a clean session in this workspace',
+        group: 'Navigate',
+        action: _ChatCommandAction.newSession,
+      ),
+      _ChatCommand.mobile(
+        slash: 'sessions',
+        aliases: const ['resume', 'continue'],
+        title: 'Sessions',
+        description: 'Open recent and active sessions',
+        group: 'Navigate',
+        action: _ChatCommandAction.sessions,
+      ),
+      _ChatCommand.mobile(
+        slash: 'workspaces',
+        aliases: const ['workspace'],
+        title: 'Projects and workspaces',
+        description: 'Switch project, directory, or worktree',
+        group: 'Navigate',
+        action: _ChatCommandAction.workspaces,
+      ),
+      _ChatCommand.mobile(
+        slash: 'editor',
+        aliases: const ['open'],
+        title: 'Files',
+        description: 'Browse, preview, download, and attach project files',
+        group: 'Navigate',
+        action: _ChatCommandAction.files,
+      ),
+      _ChatCommand.mobile(
+        slash: 'terminal',
+        title: 'Terminal',
+        description: 'Open persistent workspace terminals',
+        group: 'Navigate',
+        action: _ChatCommandAction.terminal,
+      ),
+      _ChatCommand.mobile(
+        slash: 'models',
+        aliases: const ['model', 'mo'],
+        title: 'Model',
+        description: 'Choose a server model by provider and capability',
+        group: 'Model and agent',
+        action: _ChatCommandAction.model,
+      ),
+      _ChatCommand.mobile(
+        slash: 'agents',
+        aliases: const ['agent'],
+        title: 'Agent',
+        description: 'Choose the active OpenCode agent',
+        group: 'Model and agent',
+        action: _ChatCommandAction.model,
+      ),
+      _ChatCommand.mobile(
+        slash: 'variants',
+        title: 'Thinking mode',
+        description: 'Choose the current model variant or reasoning effort',
+        group: 'Model and agent',
+        action: _ChatCommandAction.model,
+      ),
+      _ChatCommand.mobile(
+        slash: 'mcps',
+        aliases: const ['mcp'],
+        title: 'MCP servers',
+        description: 'Inspect MCP status, authentication, and resources',
+        group: 'OpenCode',
+        action: _ChatCommandAction.integrations,
+      ),
+      _ChatCommand.mobile(
+        slash: 'connect',
+        title: 'Connect provider',
+        description: 'Manage provider and integration authentication',
+        group: 'OpenCode',
+        action: _ChatCommandAction.integrations,
+      ),
+      _ChatCommand.mobile(
+        slash: 'skills',
+        title: 'Skills',
+        description: 'Browse project and global skills',
+        group: 'OpenCode',
+        action: _ChatCommandAction.skills,
+      ),
+      _ChatCommand.mobile(
+        slash: 'status',
+        aliases: const ['debug'],
+        title: 'Server status',
+        description: 'Connection health, server version, and live mode',
+        group: 'OpenCode',
+        action: _ChatCommandAction.status,
+      ),
+      _ChatCommand.mobile(
+        slash: 'diff',
+        title: 'Session changes',
+        description: 'Review the actual diff for this session',
+        group: 'Current session',
+        action: _ChatCommandAction.diff,
+      ),
+      _ChatCommand.mobile(
+        slash: 'share',
+        title: _shareUrl == null ? 'Share session' : 'Copy share link',
+        description: 'Create or copy a public session link',
+        group: 'Current session',
+        action: _ChatCommandAction.share,
+      ),
+      _ChatCommand.mobile(
+        slash: 'unshare',
+        title: 'Stop sharing',
+        description: 'Disable the current public session link',
+        group: 'Current session',
+        action: _ChatCommandAction.unshare,
+        enabled: _shareUrl != null,
+      ),
+      _ChatCommand.mobile(
+        slash: 'rename',
+        title: 'Rename session',
+        description: 'Change the title shown in the session list',
+        group: 'Current session',
+        action: _ChatCommandAction.rename,
+      ),
+      _ChatCommand.mobile(
+        slash: 'fork',
+        title: 'Fork session',
+        description: 'Continue this conversation in a new session',
+        group: 'Current session',
+        action: _ChatCommandAction.fork,
+        enabled: hasUserMessage,
+      ),
+      _ChatCommand.mobile(
+        slash: 'compact',
+        aliases: const ['summarize'],
+        title: 'Compact context',
+        description: 'Summarize the session using the selected model',
+        group: 'Current session',
+        action: _ChatCommandAction.compact,
+        enabled: hasUserMessage,
+      ),
+      _ChatCommand.mobile(
+        slash: 'undo',
+        title: 'Revert last prompt',
+        description: 'Roll back messages and file changes after the prompt',
+        group: 'Current session',
+        action: _ChatCommandAction.undo,
+        enabled: hasUserMessage && session?.reverted != true,
+      ),
+      _ChatCommand.mobile(
+        slash: 'redo',
+        title: 'Restore reverted prompt',
+        description: 'Restore the currently reverted session state',
+        group: 'Current session',
+        action: _ChatCommandAction.redo,
+        enabled: session?.reverted == true,
+      ),
+      _ChatCommand.mobile(
+        slash: 'copy',
+        title: 'Copy transcript',
+        description: 'Copy the rendered conversation as Markdown',
+        group: 'Current session',
+        action: _ChatCommandAction.copy,
+      ),
+      _ChatCommand.mobile(
+        slash: 'export',
+        title: 'Export transcript',
+        description: 'Save the conversation as a Markdown file',
+        group: 'Current session',
+        action: _ChatCommandAction.export,
+      ),
+      _ChatCommand.mobile(
+        slash: 'help',
+        title: 'Command map',
+        description: 'Search mobile actions and server-provided commands',
+        group: 'OpenCode',
+        action: _ChatCommandAction.help,
+      ),
+    ];
+    final dynamic = [
+      for (final command in _serverCommands ?? const <CommandInfo>[])
+        _ChatCommand.server(command),
+    ];
+    return [...builtins, ...dynamic];
+  }
+
+  Future<void> _openCommandLauncher() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: false,
+      constraints: const BoxConstraints(maxWidth: 720),
+      builder: (sheetContext) => _CommandLauncherSheet(
+        commands: () => _chatCommands,
+        loading: () => _serverCommandsLoading,
+        error: () => _serverCommandsError,
+        onRefresh: _loadServerCommands,
+        onSelected: (command) {
+          Navigator.pop(sheetContext);
+          _selectChatCommand(command);
+        },
+      ),
+    );
+  }
+
+  void _selectChatCommand(_ChatCommand command) {
+    if (!command.enabled) return;
+    if (command.serverCommand case final serverCommand?) {
+      _composer.value = TextEditingValue(
+        text: '/${serverCommand.name} ',
+        selection: TextSelection.collapsed(
+          offset: serverCommand.name.length + 2,
+        ),
+      );
+      _focus.requestFocus();
       return;
     }
-    setState(() {
-      _workbenchReviewLoading = true;
-      _workbenchReviewError = null;
-    });
+    if (_composer.text.trimLeft().startsWith('/')) _composer.clear();
+    unawaited(_runMobileCommand(command.action!));
+  }
+
+  Future<void> _runMobileCommand(_ChatCommandAction action) async {
     try {
-      final results = await Future.wait<Object>([
-        api.diff(widget.sessionID),
-        api.todos(widget.sessionID),
-      ]);
-      if (!mounted) return;
-      setState(() {
-        _workbenchDiffs = results[0] as List<FileDiff>;
-        _workbenchTodos = results[1] as List<Todo>;
-      });
+      await _executeMobileCommand(action);
     } catch (error) {
-      if (mounted) setState(() => _workbenchReviewError = error);
-    } finally {
-      if (mounted) setState(() => _workbenchReviewLoading = false);
+      if (mounted) _showActionError(error);
     }
   }
 
-  int get _artifactCount {
-    final identities = <String>{};
-    for (final message in _messages) {
-      for (final part in message.parts) {
-        if (part.type == 'file') {
-          identities.add(
-            part.url ?? part.filename ?? '${message.info.id}:file',
+  Future<void> _executeMobileCommand(_ChatCommandAction action) async {
+    switch (action) {
+      case _ChatCommandAction.newSession:
+        final session = await _conn.api?.createSession();
+        if (session != null && mounted) {
+          await _conn.refreshSessions();
+          if (mounted) {
+            Navigator.of(context).pushReplacementNamed('/chat/${session.id}');
+          }
+        }
+        return;
+      case _ChatCommandAction.sessions:
+      case _ChatCommandAction.workspaces:
+        if (mounted) {
+          await Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const HomeScreen(initialTab: 0),
+            ),
           );
         }
-        for (final file in part.toolState.outputFiles) {
-          identities.add(file.identity);
+        return;
+      case _ChatCommandAction.files:
+        if (mounted) {
+          await Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => FilesScreen(controller: _conn),
+            ),
+          );
+        }
+        return;
+      case _ChatCommandAction.terminal:
+        if (mounted) {
+          await Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => TerminalScreen(controller: _conn),
+            ),
+          );
+        }
+        return;
+      case _ChatCommandAction.model:
+        if (mounted) await showModelPicker(context);
+        return;
+      case _ChatCommandAction.integrations:
+        if (mounted) {
+          await Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => IntegrationsScreen(controller: _conn),
+            ),
+          );
+        }
+        return;
+      case _ChatCommandAction.skills:
+        if (mounted) {
+          await Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => SkillsScreen(controller: _conn),
+            ),
+          );
+        }
+        return;
+      case _ChatCommandAction.status:
+        if (mounted) {
+          await Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => SettingsScreen(controller: _conn),
+            ),
+          );
+        }
+        return;
+      case _ChatCommandAction.diff:
+        _showDiff();
+        return;
+      case _ChatCommandAction.share:
+        if (_shareUrl == null) {
+          await _share();
+        } else {
+          await Clipboard.setData(ClipboardData(text: _shareUrl!));
+          if (mounted) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('Share link copied')));
+          }
+        }
+        return;
+      case _ChatCommandAction.unshare:
+        await _stopSharing();
+        return;
+      case _ChatCommandAction.rename:
+        await _renameCurrentSession();
+        return;
+      case _ChatCommandAction.fork:
+        await _fork();
+        return;
+      case _ChatCommandAction.compact:
+        await _compact();
+        return;
+      case _ChatCommandAction.undo:
+        await _revertLast();
+        return;
+      case _ChatCommandAction.redo:
+        await _restore();
+        return;
+      case _ChatCommandAction.copy:
+        await _copyTranscript();
+        return;
+      case _ChatCommandAction.export:
+        await _exportTranscript();
+        return;
+      case _ChatCommandAction.help:
+        await _openCommandLauncher();
+        return;
+    }
+  }
+
+  Future<void> _renameCurrentSession() async {
+    final current = _conn.sessionsById[widget.sessionID]?.title ?? '';
+    final controller = TextEditingController(text: current);
+    final title = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Rename session'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(labelText: 'Title'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('Rename'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (title == null || title.isEmpty) return;
+    try {
+      await _conn.api?.renameSession(widget.sessionID, title);
+      await _conn.refreshSessions();
+    } catch (error) {
+      if (mounted) _showActionError(error);
+    }
+  }
+
+  String _transcriptMarkdown() {
+    final title = _conn.sessionsById[widget.sessionID]?.title;
+    final out = StringBuffer(
+      '# ${title?.isNotEmpty == true ? title : 'OpenCode session'}\n',
+    );
+    for (final message in _messages) {
+      if (message.info.id.startsWith('local-')) continue;
+      out.write(
+        '\n## ${message.info.role == 'assistant' ? 'Assistant' : 'User'}\n\n',
+      );
+      for (final part in message.parts) {
+        if (part.type == 'text' && part.text.trim().isNotEmpty) {
+          out.write('${part.text.trim()}\n\n');
+        } else if (part.type == 'reasoning' && part.text.trim().isNotEmpty) {
+          out.write(
+            '<details><summary>Reasoning</summary>\n\n${part.text.trim()}\n\n</details>\n\n',
+          );
+        } else if (part.type == 'file') {
+          out.write('- Attachment: ${part.filename ?? part.url ?? 'file'}\n');
+        } else if (part.type == 'tool') {
+          out.write('### Tool: ${part.toolName ?? 'tool'}\n\n');
+          final output = part.toolState.output?.trim();
+          if (output?.isNotEmpty == true) {
+            out.write('```text\n$output\n```\n\n');
+          }
         }
       }
+      if (message.info.errorText case final error?) {
+        out.write('> Error: $error\n');
+      }
     }
-    return identities.length;
+    return out.toString().trimRight();
+  }
+
+  Future<void> _copyTranscript() async {
+    await Clipboard.setData(ClipboardData(text: _transcriptMarkdown()));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Transcript copied as Markdown')),
+      );
+    }
+  }
+
+  Future<void> _exportTranscript() async {
+    final path = await FilePicker.saveFile(
+      dialogTitle: 'Export session transcript',
+      fileName:
+          'opencode-${widget.sessionID.substring(0, widget.sessionID.length.clamp(0, 8))}.md',
+      bytes: Uint8List.fromList(utf8.encode(_transcriptMarkdown())),
+    );
+    if (mounted && path != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Transcript saved')));
+    }
   }
 
   void _showTodos() {
@@ -1694,7 +2115,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           PopupMenuButton<String>(
             onSelected: (v) async {
               if (v == 'shell') await _runShellDialog();
-              if (v == 'slash') await _slashCommandDialog();
+              if (v == 'slash') await _openCommandLauncher();
               if (v == 'share') await _share();
               if (v == 'unshare') await _stopSharing();
               if (v == 'fork') await _fork();
@@ -1733,7 +2154,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 value: 'shell',
                 child: Text('Run shell command'),
               ),
-              const PopupMenuItem(value: 'slash', child: Text('Run command')),
+              const PopupMenuItem(value: 'slash', child: Text('Commands')),
               const PopupMenuItem(
                 value: 'reload',
                 child: Text('Reload messages'),
@@ -1828,45 +2249,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         ),
                         _ChatComposer(
                           compact: bodyConstraints.maxHeight < 520,
+                          allowInlineCommands: bodyConstraints.maxHeight >= 300,
                           controller: _composer,
                           focusNode: _focus,
-                          workbench: _ChatWorkbench(
-                            selected: _workbenchTab,
-                            onSelect: _selectWorkbenchTab,
-                            selectedAgent: _conn.selectedAgent,
-                            selectedModel: _conn.selectedModel,
-                            selectedVariant: _conn.selectedVariant,
-                            catalogModel: _selectedCatalogModel,
-                            attachmentCount: _attachments.length,
-                            commands: _workbenchCommands,
-                            commandsLoading: _workbenchCommandsLoading,
-                            commandsError: _workbenchCommandsError,
-                            diffs: _workbenchDiffs,
-                            todos: _workbenchTodos,
-                            reviewLoading: _workbenchReviewLoading,
-                            reviewError: _workbenchReviewError,
-                            permissionCount: _conn
-                                .permissionsForSession(widget.sessionID)
-                                .length,
-                            artifactCount: _artifactCount,
-                            shared: shareUrl != null,
-                            reverted: session?.reverted == true,
-                            onChooseModel: () => showModelPicker(context),
-                            onCommand: (command) =>
-                                _slashCommandDialog(initialCommand: command),
-                            onManualCommand: _slashCommandDialog,
-                            onShell: _runShellDialog,
-                            onShowDiff: _showDiff,
-                            onShowTodos: _showTodos,
-                            onRetry: _retryLast,
-                            onFork: _fork,
-                            onCompact: _compact,
-                            onShare: shareUrl == null ? _share : _stopSharing,
-                            onRevert: session?.reverted == true
-                                ? _restore
-                                : _revertLast,
-                            onReload: _load,
-                          ),
+                          commands: _chatCommands,
+                          onSelectCommand: _selectChatCommand,
+                          onOpenCommands: _openCommandLauncher,
                           attachments: _attachments,
                           busy: busy,
                           sending: _sending,
@@ -1904,112 +2292,426 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 }
 
-enum _WorkbenchTab { context, commands, run, review, session }
+enum _ChatCommandAction {
+  newSession,
+  sessions,
+  workspaces,
+  files,
+  terminal,
+  model,
+  integrations,
+  skills,
+  status,
+  diff,
+  share,
+  unshare,
+  rename,
+  fork,
+  compact,
+  undo,
+  redo,
+  copy,
+  export,
+  help,
+}
 
-class _ChatWorkbench extends StatelessWidget {
-  const _ChatWorkbench({
-    required this.selected,
-    required this.onSelect,
-    required this.selectedAgent,
-    required this.selectedModel,
-    required this.selectedVariant,
-    required this.catalogModel,
-    required this.attachmentCount,
-    required this.commands,
-    required this.commandsLoading,
-    required this.commandsError,
-    required this.diffs,
-    required this.todos,
-    required this.reviewLoading,
-    required this.reviewError,
-    required this.permissionCount,
-    required this.artifactCount,
-    required this.shared,
-    required this.reverted,
-    required this.onChooseModel,
-    required this.onCommand,
-    required this.onManualCommand,
-    required this.onShell,
-    required this.onShowDiff,
-    required this.onShowTodos,
-    required this.onRetry,
-    required this.onFork,
-    required this.onCompact,
-    required this.onShare,
-    required this.onRevert,
-    required this.onReload,
+class _ChatCommand {
+  const _ChatCommand._({
+    required this.slash,
+    required this.aliases,
+    required this.title,
+    required this.description,
+    required this.group,
+    required this.enabled,
+    this.action,
+    this.serverCommand,
   });
 
-  final _WorkbenchTab? selected;
-  final ValueChanged<_WorkbenchTab> onSelect;
-  final String selectedAgent;
-  final ModelRef? selectedModel;
-  final String selectedVariant;
-  final CatalogModel? catalogModel;
-  final int attachmentCount;
-  final List<CommandInfo>? commands;
-  final bool commandsLoading;
-  final Object? commandsError;
-  final List<FileDiff>? diffs;
-  final List<Todo>? todos;
-  final bool reviewLoading;
-  final Object? reviewError;
-  final int permissionCount;
-  final int artifactCount;
-  final bool shared;
-  final bool reverted;
-  final VoidCallback onChooseModel;
-  final ValueChanged<CommandInfo> onCommand;
-  final VoidCallback onManualCommand;
-  final VoidCallback onShell;
-  final VoidCallback onShowDiff;
-  final VoidCallback onShowTodos;
-  final VoidCallback onRetry;
-  final VoidCallback onFork;
-  final VoidCallback onCompact;
-  final VoidCallback onShare;
-  final VoidCallback onRevert;
-  final VoidCallback onReload;
+  factory _ChatCommand.mobile({
+    required String slash,
+    List<String> aliases = const [],
+    required String title,
+    required String description,
+    required String group,
+    required _ChatCommandAction action,
+    bool enabled = true,
+  }) => _ChatCommand._(
+    slash: slash,
+    aliases: aliases,
+    title: title,
+    description: description,
+    group: group,
+    enabled: enabled,
+    action: action,
+  );
+
+  factory _ChatCommand.server(CommandInfo command) => _ChatCommand._(
+    slash: command.name,
+    aliases: const [],
+    title: command.name,
+    description:
+        command.description ?? command.agent ?? 'OpenCode server command',
+    group: 'Server commands',
+    enabled: true,
+    serverCommand: command,
+  );
+
+  final String slash;
+  final List<String> aliases;
+  final String title;
+  final String description;
+  final String group;
+  final bool enabled;
+  final _ChatCommandAction? action;
+  final CommandInfo? serverCommand;
+
+  bool matches(String name) =>
+      slash.toLowerCase() == name ||
+      aliases.any((alias) => alias.toLowerCase() == name);
+
+  bool matchesQuery(String query) {
+    final normalized = query.trim().toLowerCase().replaceFirst('/', '');
+    if (normalized.isEmpty) return true;
+    return slash.toLowerCase().contains(normalized) ||
+        aliases.any((alias) => alias.toLowerCase().contains(normalized)) ||
+        title.toLowerCase().contains(normalized) ||
+        description.toLowerCase().contains(normalized);
+  }
+
+  int scoreFor(String query) {
+    final normalized = query.trim().toLowerCase().replaceFirst('/', '');
+    if (normalized.isEmpty) return 0;
+    final command = slash.toLowerCase();
+    final normalizedAliases = aliases.map((alias) => alias.toLowerCase());
+    if (command == normalized) return 0;
+    if (command.startsWith(normalized)) return 1;
+    if (normalizedAliases.any((alias) => alias == normalized)) return 2;
+    if (normalizedAliases.any((alias) => alias.startsWith(normalized))) {
+      return 3;
+    }
+    if (title.toLowerCase().startsWith(normalized)) return 4;
+    if (command.contains(normalized)) return 5;
+    if (title.toLowerCase().contains(normalized)) return 6;
+    return 7;
+  }
+}
+
+class _CommandLauncherSheet extends StatefulWidget {
+  const _CommandLauncherSheet({
+    required this.commands,
+    required this.loading,
+    required this.error,
+    required this.onRefresh,
+    required this.onSelected,
+  });
+
+  final List<_ChatCommand> Function() commands;
+  final bool Function() loading;
+  final Object? Function() error;
+  final Future<void> Function() onRefresh;
+  final ValueChanged<_ChatCommand> onSelected;
+
+  @override
+  State<_CommandLauncherSheet> createState() => _CommandLauncherSheetState();
+}
+
+class _CommandLauncherSheetState extends State<_CommandLauncherSheet> {
+  final _search = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.loading()) _refresh();
+  }
+
+  Future<void> _refresh() async {
+    await widget.onRefresh();
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final compact =
-        MediaQuery.sizeOf(context).height -
-            MediaQuery.viewInsetsOf(context).bottom <
-        520;
-    return Column(
-      key: const Key('chat-workbench'),
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          height: compact ? 40 : 44,
-          child: Row(
-            key: const Key('chat-workbench-tabs'),
-            children: [
-              for (final tab in _WorkbenchTab.values)
-                Expanded(
-                  child: _WorkbenchTabButton(
-                    tab: tab,
-                    selected: selected == tab,
-                    compact: compact,
-                    onPressed: () => onSelect(tab),
+    final visible = widget
+        .commands()
+        .where((command) => command.matchesQuery(_search.text))
+        .toList();
+    if (_search.text.trim().isNotEmpty) {
+      visible.sort((a, b) {
+        final score = a
+            .scoreFor(_search.text)
+            .compareTo(b.scoreFor(_search.text));
+        return score != 0 ? score : a.slash.compareTo(b.slash);
+      });
+    }
+    final groups = <String, List<_ChatCommand>>{};
+    for (final command in visible) {
+      groups.putIfAbsent(command.group, () => []).add(command);
+    }
+    return DraggableScrollableSheet(
+      expand: false,
+      minChildSize: .58,
+      initialChildSize: .86,
+      maxChildSize: .96,
+      snap: true,
+      snapSizes: const [.86, .96],
+      builder: (context, scrollController) => Material(
+        color: theme.colorScheme.surfaceContainerLow,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 14, 10, 10),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'OpenCode commands',
+                          style: theme.textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Mobile actions and commands from this server',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                  IconButton(
+                    tooltip: 'Close commands',
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: TextField(
+                key: const Key('command-launcher-search'),
+                controller: _search,
+                autofocus: true,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  hintText: 'Type a command or action',
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  suffixIcon: _search.text.isEmpty
+                      ? null
+                      : IconButton(
+                          tooltip: 'Clear search',
+                          onPressed: () {
+                            _search.clear();
+                            setState(() {});
+                          },
+                          icon: const Icon(Icons.close_rounded),
+                        ),
+                  border: const OutlineInputBorder(),
+                  isDense: true,
                 ),
-            ],
-          ),
+              ),
+            ),
+            const Divider(height: 1),
+            if (widget.loading()) const LinearProgressIndicator(minHeight: 2),
+            if (widget.error() != null)
+              ListTile(
+                dense: true,
+                title: const Text('Server commands could not be refreshed'),
+                subtitle: Text('${widget.error()}'),
+                trailing: IconButton(
+                  tooltip: 'Retry server commands',
+                  onPressed: _refresh,
+                  icon: const Icon(Icons.refresh_rounded),
+                ),
+              ),
+            Expanded(
+              child: visible.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No matching commands',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    )
+                  : ListView(
+                      key: const Key('command-launcher-list'),
+                      controller: scrollController,
+                      padding: const EdgeInsets.only(bottom: 24),
+                      children: [
+                        for (final group in groups.entries) ...[
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 18, 16, 6),
+                            child: Text(
+                              group.key,
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          for (final command in group.value)
+                            _CommandRow(
+                              command: command,
+                              onSelected: widget.onSelected,
+                            ),
+                        ],
+                      ],
+                    ),
+            ),
+          ],
         ),
-        if (selected case final tab?) ...[
-          Divider(
-            height: 1,
-            color: theme.colorScheme.outlineVariant.withValues(alpha: .45),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+}
+
+class _CommandRow extends StatelessWidget {
+  const _CommandRow({required this.command, required this.onSelected});
+
+  final _ChatCommand command;
+  final ValueChanged<_ChatCommand> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ListTile(
+      key: Key(
+        'command-${command.serverCommand == null ? 'mobile' : 'server'}-${command.slash}',
+      ),
+      enabled: command.enabled,
+      dense: true,
+      minTileHeight: 58,
+      title: Row(
+        children: [
+          Text(
+            '/${command.slash}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.w600,
+            ),
           ),
-          ConstrainedBox(
-            key: const Key('chat-workbench-panel'),
-            constraints: BoxConstraints(maxHeight: compact ? 150 : 210),
-            child: _panel(context, tab),
+          if (command.aliases.isNotEmpty) ...[
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                command.aliases.map((alias) => '/$alias').join('  '),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ),
+          ] else
+            const Spacer(),
+          Text(
+            command.serverCommand == null ? 'mobile' : 'server',
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
+      ),
+      subtitle: Text(
+        command.description,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+      onTap: () => onSelected(command),
+    );
+  }
+}
+
+class _InlineCommandSuggestions extends StatelessWidget {
+  const _InlineCommandSuggestions({
+    required this.commands,
+    required this.query,
+    required this.compact,
+    required this.onSelected,
+    required this.onShowAll,
+  });
+
+  final List<_ChatCommand> commands;
+  final String query;
+  final bool compact;
+  final ValueChanged<_ChatCommand> onSelected;
+  final VoidCallback onShowAll;
+
+  @override
+  Widget build(BuildContext context) {
+    final matches = commands
+        .where((command) => command.enabled && command.matchesQuery(query))
+        .toList();
+    matches.sort((a, b) {
+      final score = a.scoreFor(query).compareTo(b.scoreFor(query));
+      return score != 0 ? score : a.slash.compareTo(b.slash);
+    });
+    final limit = compact ? 1 : 5;
+    final visible = matches.take(limit).toList();
+    if (visible.isEmpty) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    return Column(
+      key: const Key('inline-command-suggestions'),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final command in visible)
+          InkWell(
+            key: Key('inline-command-${command.slash}'),
+            onTap: () => onSelected(command),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                14,
+                compact ? 6 : 8,
+                12,
+                compact ? 6 : 8,
+              ),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: compact ? 92 : 112,
+                    child: Text(
+                      '/${command.slash}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontFamily: 'monospace',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      compact ? command.title : command.description,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        if (!compact && matches.length > limit)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              onPressed: onShowAll,
+              child: const Text('Show all commands'),
+            ),
+          ),
         Divider(
           height: 1,
           color: theme.colorScheme.outlineVariant.withValues(alpha: .55),
@@ -2017,590 +2719,17 @@ class _ChatWorkbench extends StatelessWidget {
       ],
     );
   }
-
-  Widget _panel(BuildContext context, _WorkbenchTab tab) => switch (tab) {
-    _WorkbenchTab.context => _contextPanel(context),
-    _WorkbenchTab.commands => _commandsPanel(context),
-    _WorkbenchTab.run => _runPanel(context),
-    _WorkbenchTab.review => _reviewPanel(context),
-    _WorkbenchTab.session => _sessionPanel(context),
-  };
-
-  Widget _contextPanel(BuildContext context) {
-    final theme = Theme.of(context);
-    final model = selectedModel;
-    final modelName = model == null
-        ? 'No model selected'
-        : '${model.providerID}/${model.modelID}';
-    final details = <String>[
-      if (selectedAgent.isNotEmpty) selectedAgent,
-      if (selectedVariant.isNotEmpty) selectedVariant,
-      if (catalogModel?.reasoning == true) 'reasoning',
-      if ((catalogModel?.contextLimit ?? 0) > 0)
-        '${_compactNumber(catalogModel!.contextLimit)} context',
-      if (attachmentCount > 0) '$attachmentCount attached',
-    ];
-    return InkWell(
-      key: const Key('workbench-context-model'),
-      onTap: onChooseModel,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
-        child: Row(
-          children: [
-            Icon(Icons.tune_rounded, size: 19, color: theme.hintColor),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    modelName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  if (details.isNotEmpty)
-                    Text(
-                      details.join(' · '),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            TextButton(onPressed: onChooseModel, child: const Text('Change')),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _commandsPanel(BuildContext context) {
-    final theme = Theme.of(context);
-    if (commandsLoading && commands == null) {
-      return const Center(child: CircularProgressIndicator(strokeWidth: 2));
-    }
-    if (commandsError != null && commands?.isNotEmpty != true) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Text(
-            '$commandsError',
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      );
-    }
-    final items = commands ?? const <CommandInfo>[];
-    if (items.isEmpty) {
-      return Center(
-        child: Text(
-          'No commands exposed by this OpenCode server.',
-          style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
-        ),
-      );
-    }
-    return ListView.separated(
-      key: const Key('workbench-command-list'),
-      shrinkWrap: true,
-      padding: EdgeInsets.zero,
-      itemCount: items.length,
-      separatorBuilder: (_, _) => Divider(
-        height: 1,
-        indent: 42,
-        color: theme.dividerColor.withValues(alpha: .25),
-      ),
-      itemBuilder: (context, index) {
-        final command = items[index];
-        return InkWell(
-          onTap: () => onCommand(command),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-            child: Row(
-              children: [
-                Text(
-                  '/${command.name}',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontFamily: 'monospace',
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    command.description ?? command.agent ?? '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-                const Icon(Icons.chevron_right_rounded, size: 17),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _runPanel(BuildContext context) {
-    final theme = Theme.of(context);
-    return Row(
-      children: [
-        Expanded(
-          child: _WorkbenchAction(
-            icon: Icons.terminal_rounded,
-            title: 'Shell',
-            subtitle: 'Run in this workspace',
-            onPressed: onShell,
-          ),
-        ),
-        SizedBox(
-          height: 58,
-          child: VerticalDivider(
-            width: 1,
-            color: theme.dividerColor.withValues(alpha: .3),
-          ),
-        ),
-        Expanded(
-          child: _WorkbenchAction(
-            icon: Icons.electric_bolt_outlined,
-            title: 'Command',
-            subtitle: 'Run any OpenCode command',
-            onPressed: onManualCommand,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _reviewPanel(BuildContext context) {
-    final theme = Theme.of(context);
-    if (reviewLoading && diffs == null && todos == null) {
-      return const Center(child: CircularProgressIndicator(strokeWidth: 2));
-    }
-    if (reviewError != null && diffs == null && todos == null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Text(
-            '$reviewError',
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      );
-    }
-    final files = diffs ?? const <FileDiff>[];
-    final tasks = todos ?? const <Todo>[];
-    final done = tasks.where((todo) => todo.done).length;
-    return ListView(
-      key: const Key('workbench-review'),
-      shrinkWrap: true,
-      padding: EdgeInsets.zero,
-      children: [
-        SizedBox(
-          height: 58,
-          child: Row(
-            children: [
-              Expanded(
-                child: _WorkbenchMetric(
-                  value: '${files.length}',
-                  label: 'Files',
-                  onPressed: onShowDiff,
-                ),
-              ),
-              const VerticalDivider(width: 1, indent: 10, endIndent: 10),
-              Expanded(
-                child: _WorkbenchMetric(
-                  value: '$done/${tasks.length}',
-                  label: 'Todos',
-                  onPressed: onShowTodos,
-                ),
-              ),
-              const VerticalDivider(width: 1, indent: 10, endIndent: 10),
-              Expanded(
-                child: _WorkbenchMetric(
-                  value: '$permissionCount',
-                  label: 'Requests',
-                ),
-              ),
-              const VerticalDivider(width: 1, indent: 10, endIndent: 10),
-              Expanded(
-                child: _WorkbenchMetric(
-                  value: '$artifactCount',
-                  label: 'Artifacts',
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (files.isEmpty)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 9, 14, 12),
-            child: Text(
-              'No changed files in this session.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          )
-        else
-          for (final file in files.take(3))
-            InkWell(
-              onTap: onShowDiff,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 8, 12, 8),
-                child: Row(
-                  children: [
-                    const Icon(Icons.description_rounded, size: 16),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _basename(file.file),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ),
-                    if ((file.additions ?? 0) > 0)
-                      Text(
-                        '+${file.additions}',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: Colors.green.shade400,
-                        ),
-                      ),
-                    if ((file.deletions ?? 0) > 0) ...[
-                      const SizedBox(width: 6),
-                      Text(
-                        '-${file.deletions}',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.error,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-        if (files.length > 3)
-          TextButton(
-            onPressed: onShowDiff,
-            child: Text('Open all ${files.length} changed files'),
-          ),
-      ],
-    );
-  }
-
-  Widget _sessionPanel(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: Wrap(
-        spacing: 2,
-        runSpacing: 2,
-        children: [
-          TextButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh_rounded, size: 17),
-            label: const Text('Retry'),
-          ),
-          TextButton.icon(
-            onPressed: onFork,
-            icon: const Icon(Icons.copy_rounded, size: 17),
-            label: const Text('Fork'),
-          ),
-          TextButton.icon(
-            onPressed: onCompact,
-            icon: const Icon(Icons.archive_outlined, size: 17),
-            label: const Text('Compact'),
-          ),
-          TextButton.icon(
-            onPressed: onShare,
-            icon: Icon(
-              shared ? Icons.link_off_rounded : Icons.link_rounded,
-              size: 17,
-            ),
-            label: Text(shared ? 'Unshare' : 'Share'),
-          ),
-          TextButton.icon(
-            onPressed: onRevert,
-            icon: const Icon(Icons.sync_problem_rounded, size: 17),
-            label: Text(reverted ? 'Restore' : 'Revert'),
-          ),
-          TextButton.icon(
-            onPressed: onReload,
-            icon: const Icon(Icons.sync_rounded, size: 17),
-            label: const Text('Reload'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static String _compactNumber(int value) {
-    if (value >= 1000000) return '${(value / 1000000).toStringAsFixed(1)}M';
-    if (value >= 1000) return '${(value / 1000).round()}k';
-    return '$value';
-  }
-
-  static String _basename(String path) {
-    final normalized = path.replaceAll('\\', '/');
-    final parts = normalized
-        .split('/')
-        .where((part) => part.isNotEmpty)
-        .toList();
-    return parts.isEmpty ? path : parts.last;
-  }
-}
-
-class _WorkbenchTabButton extends StatelessWidget {
-  const _WorkbenchTabButton({
-    required this.tab,
-    required this.selected,
-    required this.compact,
-    required this.onPressed,
-  });
-
-  final _WorkbenchTab tab;
-  final bool selected;
-  final bool compact;
-  final VoidCallback onPressed;
-
-  String get _label => switch (tab) {
-    _WorkbenchTab.context => 'Context',
-    _WorkbenchTab.commands => 'Commands',
-    _WorkbenchTab.run => 'Run',
-    _WorkbenchTab.review => 'Review',
-    _WorkbenchTab.session => 'Session',
-  };
-
-  IconData get _icon => switch (tab) {
-    _WorkbenchTab.context => Icons.tune_rounded,
-    _WorkbenchTab.commands => Icons.electric_bolt_outlined,
-    _WorkbenchTab.run => Icons.terminal_rounded,
-    _WorkbenchTab.review => Icons.difference_outlined,
-    _WorkbenchTab.session => Icons.more_horiz_rounded,
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final foreground = selected
-        ? theme.colorScheme.primary
-        : theme.colorScheme.onSurfaceVariant;
-    return Semantics(
-      selected: selected,
-      button: true,
-      label: '$_label workbench tab',
-      child: InkWell(
-        key: Key('workbench-tab-${tab.name}'),
-        onTap: onPressed,
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: selected
-                    ? theme.colorScheme.primary
-                    : Colors.transparent,
-                width: 2,
-              ),
-            ),
-          ),
-          alignment: Alignment.center,
-          child: compact
-              ? Icon(_icon, size: 17, color: foreground)
-              : Text(
-                  _label,
-                  maxLines: 1,
-                  overflow: TextOverflow.fade,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: foreground,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                    fontSize: tab == _WorkbenchTab.commands ? 10 : null,
-                  ),
-                ),
-        ),
-      ),
-    );
-  }
-}
-
-class _WorkbenchAction extends StatelessWidget {
-  const _WorkbenchAction({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onPressed,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onPressed,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        child: Row(
-          children: [
-            Icon(icon, size: 19, color: theme.colorScheme.primary),
-            const SizedBox(width: 9),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _WorkbenchMetric extends StatelessWidget {
-  const _WorkbenchMetric({
-    required this.value,
-    required this.label,
-    this.onPressed,
-  });
-
-  final String value;
-  final String label;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onPressed,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            value,
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontSize: 9,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SlashCommandDialog extends StatefulWidget {
-  const _SlashCommandDialog({this.initialCommand});
-
-  final CommandInfo? initialCommand;
-
-  @override
-  State<_SlashCommandDialog> createState() => _SlashCommandDialogState();
-}
-
-class _SlashCommandDialogState extends State<_SlashCommandDialog> {
-  late final TextEditingController _command = TextEditingController(
-    text: widget.initialCommand?.name ?? '',
-  );
-  final TextEditingController _arguments = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(
-        widget.initialCommand == null
-            ? 'Run OpenCode command'
-            : 'Run /${widget.initialCommand!.name}',
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _command,
-            autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'Command',
-              hintText: 'compact / review / init',
-            ),
-          ),
-          TextField(
-            controller: _arguments,
-            decoration: const InputDecoration(labelText: 'Arguments'),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, (
-            command: _command.text,
-            arguments: _arguments.text,
-          )),
-          child: const Text('Run'),
-        ),
-      ],
-    );
-  }
-
-  @override
-  void dispose() {
-    _command.dispose();
-    _arguments.dispose();
-    super.dispose();
-  }
 }
 
 class _ChatComposer extends StatelessWidget {
   const _ChatComposer({
     required this.compact,
+    required this.allowInlineCommands,
     required this.controller,
     required this.focusNode,
-    required this.workbench,
+    required this.commands,
+    required this.onSelectCommand,
+    required this.onOpenCommands,
     required this.attachments,
     required this.busy,
     required this.sending,
@@ -2617,9 +2746,12 @@ class _ChatComposer extends StatelessWidget {
   });
 
   final bool compact;
+  final bool allowInlineCommands;
   final TextEditingController controller;
   final FocusNode focusNode;
-  final _ChatWorkbench workbench;
+  final List<_ChatCommand> commands;
+  final ValueChanged<_ChatCommand> onSelectCommand;
+  final VoidCallback onOpenCommands;
   final List<PromptAttachment> attachments;
   final bool busy;
   final bool sending;
@@ -2677,7 +2809,14 @@ class _ChatComposer extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (!compact) workbench,
+                if (allowInlineCommands && _slashQuery != null)
+                  _InlineCommandSuggestions(
+                    commands: commands,
+                    query: _slashQuery!,
+                    compact: compact,
+                    onSelected: onSelectCommand,
+                    onShowAll: onOpenCommands,
+                  ),
                 if (attachments.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
@@ -2730,6 +2869,13 @@ class _ChatComposer extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(8, 7, 8, 8),
           child: Row(
             children: [
+              _ComposerAction(
+                key: const Key('command-launcher-button'),
+                tooltip: 'Commands',
+                onPressed: onOpenCommands,
+                icon: const Icon(Icons.electric_bolt_outlined),
+              ),
+              const SizedBox(width: 2),
               _ComposerAction(
                 tooltip: 'Attach file',
                 onPressed: busy || sending ? null : onAttach,
@@ -2788,7 +2934,12 @@ class _ChatComposer extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          _CompactWorkbenchMenu(workbench: workbench),
+          _ComposerAction(
+            key: const Key('command-launcher-button'),
+            tooltip: 'Commands',
+            onPressed: onOpenCommands,
+            icon: const Icon(Icons.electric_bolt_outlined),
+          ),
           _ComposerAction(
             key: const Key('composer-model-context'),
             tooltip: _contextLabel,
@@ -2843,70 +2994,10 @@ class _ChatComposer extends StatelessWidget {
     if (selectedVariant.isNotEmpty) parts.add(selectedVariant);
     return parts.isEmpty ? 'Choose model' : parts.join(' · ');
   }
-}
 
-enum _CompactWorkbenchAction { context, command, shell, review, todos, retry }
-
-class _CompactWorkbenchMenu extends StatelessWidget {
-  const _CompactWorkbenchMenu({required this.workbench});
-
-  final _ChatWorkbench workbench;
-
-  @override
-  Widget build(BuildContext context) {
-    return PopupMenuButton<_CompactWorkbenchAction>(
-      key: const Key('compact-workbench-menu'),
-      tooltip: 'Workbench',
-      icon: const Icon(Icons.more_horiz_rounded),
-      onSelected: (action) {
-        switch (action) {
-          case _CompactWorkbenchAction.context:
-            workbench.onChooseModel();
-            return;
-          case _CompactWorkbenchAction.command:
-            workbench.onManualCommand();
-            return;
-          case _CompactWorkbenchAction.shell:
-            workbench.onShell();
-            return;
-          case _CompactWorkbenchAction.review:
-            workbench.onShowDiff();
-            return;
-          case _CompactWorkbenchAction.todos:
-            workbench.onShowTodos();
-            return;
-          case _CompactWorkbenchAction.retry:
-            workbench.onRetry();
-            return;
-        }
-      },
-      itemBuilder: (_) => const [
-        PopupMenuItem(
-          value: _CompactWorkbenchAction.context,
-          child: Text('Model and context'),
-        ),
-        PopupMenuItem(
-          value: _CompactWorkbenchAction.command,
-          child: Text('OpenCode command'),
-        ),
-        PopupMenuItem(
-          value: _CompactWorkbenchAction.shell,
-          child: Text('Run shell command'),
-        ),
-        PopupMenuItem(
-          value: _CompactWorkbenchAction.review,
-          child: Text('Review changes'),
-        ),
-        PopupMenuItem(
-          value: _CompactWorkbenchAction.todos,
-          child: Text('Todos'),
-        ),
-        PopupMenuItem(
-          value: _CompactWorkbenchAction.retry,
-          child: Text('Retry prompt'),
-        ),
-      ],
-    );
+  String? get _slashQuery {
+    final match = RegExp(r'^/(\S*)$').firstMatch(controller.text.trimLeft());
+    return match?.group(1);
   }
 }
 

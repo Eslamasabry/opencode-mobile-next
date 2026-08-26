@@ -760,7 +760,7 @@ void main() {
     expect(find.text('Second answer paragraph.'), findsOneWidget);
   });
 
-  testWidgets('workbench review loads live session data in one surface', (
+  testWidgets('command launcher maps diff to the native session viewer', (
     tester,
   ) async {
     final api = _FakeOpenCodeApi()
@@ -773,19 +773,23 @@ void main() {
       ];
 
     await _pumpChat(tester, api);
-    await tester.tap(find.byKey(const Key('workbench-tab-review')));
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'diff',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('command-mobile-diff')));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('chat-composer-surface')), findsOneWidget);
-    expect(find.byKey(const Key('chat-workbench-panel')), findsOneWidget);
-    expect(find.byKey(const Key('workbench-review')), findsOneWidget);
     expect(find.text('chat.dart'), findsOneWidget);
-    expect(find.text('1/2'), findsOneWidget);
     expect(find.text('+7'), findsOneWidget);
     expect(find.text('-2'), findsOneWidget);
   });
 
-  testWidgets('workbench commands come from the connected OpenCode server', (
+  testWidgets('launcher combines mobile actions with server commands', (
     tester,
   ) async {
     final api = _FakeOpenCodeApi();
@@ -803,22 +807,52 @@ void main() {
     ]);
 
     await _pumpChat(tester, api, repository: repository);
-    await tester.tap(find.byKey(const Key('workbench-tab-commands')));
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
     await tester.pumpAndSettle();
 
-    expect(find.text('/review'), findsOneWidget);
-    expect(find.text('/init'), findsOneWidget);
-    await tester.tap(find.text('/review'));
-    await tester.pumpAndSettle();
-    final commandField = tester.widget<TextField>(
-      find.byWidgetPredicate(
-        (widget) =>
-            widget is TextField && widget.decoration?.labelText == 'Command',
-      ),
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'models',
     );
-    expect(commandField.controller?.text, 'review');
-    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await tester.pump();
+    expect(find.text('/models'), findsOneWidget);
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'review',
+    );
+    await tester.pump();
+    expect(find.text('/review'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('command-server-review')));
     await tester.pumpAndSettle();
+    final composer = tester.widget<TextField>(
+      find.byKey(const Key('chat-composer-field')),
+    );
+    expect(composer.controller?.text, '/review ');
+  });
+
+  testWidgets('typing slash opens filtered inline command suggestions', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi();
+    final repository = _FakeProductRepository(const [
+      CommandInfo(
+        name: 'review',
+        description: 'Review current changes',
+        subtask: false,
+      ),
+    ]);
+
+    await _pumpChat(tester, api, repository: repository);
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      '/rev',
+    );
+    await tester.pump();
+
+    expect(find.byKey(const Key('inline-command-suggestions')), findsOneWidget);
+    expect(find.byKey(const Key('inline-command-review')), findsOneWidget);
+    expect(find.text('/models'), findsNothing);
   });
 
   testWidgets('removes individual parts and complete messages', (tester) async {
@@ -1186,30 +1220,31 @@ void main() {
     });
   });
 
-  testWidgets('manual slash command passes the selected model', (tester) async {
+  testWidgets('typed server command passes arguments and selected model', (
+    tester,
+  ) async {
     final api = _FakeOpenCodeApi();
-    final controller = await _pumpChat(tester, api);
+    final repository = _FakeProductRepository(const [
+      CommandInfo(
+        name: 'review',
+        description: 'Review current changes',
+        subtask: false,
+      ),
+    ]);
+    final controller = await _pumpChat(tester, api, repository: repository);
     controller.selectedModel = ModelRef(
       providerID: 'anthropic',
       modelID: 'claude-sonnet',
     );
     controller.selectedVariant = 'high';
+    await tester.pumpAndSettle();
 
-    await tester.tap(find.byType(PopupMenuButton<String>));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Run command'));
-    await tester.pumpAndSettle();
-    final commandField = find.byWidgetPredicate(
-      (widget) =>
-          widget is TextField && widget.decoration?.labelText == 'Command',
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      '/review --staged',
     );
-    final argumentsField = find.byWidgetPredicate(
-      (widget) =>
-          widget is TextField && widget.decoration?.labelText == 'Arguments',
-    );
-    await tester.enterText(commandField, '/review');
-    await tester.enterText(argumentsField, '--staged');
-    await tester.tap(find.widgetWithText(FilledButton, 'Run'));
+    await tester.pump();
+    await tester.tap(find.byTooltip('Send'));
     await tester.pumpAndSettle();
 
     expect(api.slashCommandName, 'review');
