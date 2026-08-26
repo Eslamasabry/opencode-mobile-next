@@ -29,7 +29,7 @@ installed on `emulator-5554`, and verified as version code 20/version name
 Flutter/render failure. The GitHub-downloaded asset matched the local tested APK
 byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 
-## Shorebird chat-timeline, update-notice, server-updater, and workbench patches for `1.0.19+20`
+## Shorebird chat-timeline, update-notice, server-updater, and command-launcher patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`
 - Stable Patch 1 ID: `619842`
@@ -41,6 +41,10 @@ byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 - Stable Patch 4 ID: `619952`
 - Integrated-workbench commit: `346766ccbaee517688d360892ab83eb690e84274`
 - Shorebird-safe icon commit: `8f9a558`
+- Stable Patch 5 ID: `619985`
+- Command-launcher commit: `e75034368674581f93ff53969ec9a7db27fc3e8a`
+- OpenCode reference revision: `c2eacd72afc4a4984564c393e15ab30011057269`
+- Command/feature map: [`docs/opencode-command-feature-map.md`](docs/opencode-command-feature-map.md)
 
 Patch 1 extends the tool-run boundary across adjacent assistant message records.
 For example, an edit emitted in one OpenCode assistant record and a shell command
@@ -111,6 +115,31 @@ downloaded the 1,595,003-byte x86_64 Patch 4 and activated
 `patches/4/dlc.vmcode` after a cold restart. The Pixel 6 simulator then rendered the
 five tabs, server-provided `/init` and `/review` command rows, and the content-sized
 Review panel without a Flutter/render failure.
+
+Patch 5 supersedes Patch 4's generic five-tab workbench. The composer now has one
+compact Commands action that opens a searchable, flat OpenCode command launcher.
+It maps the current upstream TUI and web-client registries instead of presenting
+`/init` and `/review` as the complete command surface. Mobile-native actions and
+live server commands are visibly labelled; server commands continue to come from
+OpenCode's command endpoint, including configured commands, MCP prompts, and slash
+skills. Typing `/` in the composer shows the same relevance-ranked suggestions,
+and selecting a server command inserts it for argument editing before submission.
+
+The implemented native map includes session/workspace/file/terminal navigation,
+model/agent/variant selection, MCP/connect/skills/status, diff, sharing, rename,
+fork, compact, undo/redo, transcript copy/export, and help. The source-backed map
+also records the remaining upstream gaps rather than silently inventing substitutes:
+timeline, timestamps, thinking visibility, full prompt editor, move, experimental
+warp, themes, organization switching, and TUI-only diagnostics.
+
+Final-tree Flutter analysis was clean and all 223 tests passed. Shorebird's dry run
+reported no compatibility issues and Patch 5 was published without native- or
+asset-diff overrides. The exact public GitHub APK (version code 20/version name
+1.0.19) downloaded the 1,605,747-byte x86_64 Patch 5 and activated
+`patches/5/dlc.vmcode` after a cold restart. On `emulator-5554`, the active patch
+showed the live server `/review` result first for an exact search and `/diff` as a
+separate mobile-native action; Android logs contained no Flutter, RenderFlex,
+overflow, or fatal-exception failure.
 
 ## Shorebird generated-artifact patch for `1.0.18+19`
 
