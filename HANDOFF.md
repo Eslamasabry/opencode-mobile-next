@@ -29,6 +29,41 @@ installed on `emulator-5554`, and verified as version code 20/version name
 Flutter/render failure. The GitHub-downloaded asset matched the local tested APK
 byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 
+## Shorebird chat-timeline and update-notice patches for `1.0.19+20`
+
+- Shorebird release ID: `792729`
+- Stable Patch 1 ID: `619842`
+- Tool-timeline commit: `4a00bd59b7e390b1f078a1fca9c761e9db9ccac8`
+- Stable Patch 2 ID: `619851`
+- Update-notice commit: `95eb0061806857afe47561c4cfc5cf21ee103f2f`
+
+Patch 1 extends the tool-run boundary across adjacent assistant message records.
+For example, an edit emitted in one OpenCode assistant record and a shell command
+emitted in the next now share one growing tool-call card. User or assistant text,
+reasoning, file content, or an assistant error ends the run. The transformation is
+presentation-only, so stored conversations are not rewritten and old chats receive
+the same grouping.
+
+Patch 2 adds an app-level, lifecycle-aware Shorebird update notice. When a future
+patch is available, the app shows a persistent `Receiving Shorebird update…`
+snackbar while `ShorebirdUpdater.update()` downloads it, followed by
+`Shorebird update ready — restart to apply.` It also checks after resume, throttles
+checks for 15 minutes, coalesces concurrent checks, and silently ignores unsupported
+or offline checks. Shorebird's automatic updater remains enabled as a fallback. If
+the automatic updater finishes before Dart observes the download, the app shows only
+the truthful ready-to-restart notice rather than simulating progress.
+
+The update UI cannot announce its own Patch 2 download because that Dart code is not
+active until Patch 2 launches. Existing `1.0.19+20` installs download Patch 2 on one
+launch and activate it after the next full restart; subsequent patches can show the
+new receiving and ready notices.
+
+Flutter analysis was clean and all 215 tests passed, including deterministic widget
+coverage for the downloading and restart-ready snackbar states. Both Shorebird
+patches passed compatibility checks without native or asset overrides. The Pixel 6
+simulator downloaded Patch 2 (1,470,780-byte x86_64 patch) and activated
+`patches/2/dlc.vmcode` after a cold restart; no Flutter fatal error was logged.
+
 ## Shorebird generated-artifact patch for `1.0.18+19`
 
 - Shorebird release ID: `789571`
