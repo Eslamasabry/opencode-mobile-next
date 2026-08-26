@@ -1,6 +1,6 @@
 # oc_app handoff
 
-Last updated: 2026-08-25 (Asia/Dubai)
+Last updated: 2026-08-26 (Asia/Dubai)
 
 ## Current GitHub APK
 
@@ -36,6 +36,23 @@ tables; JSON is indented; recognized source files use selectable,
 language-labelled code blocks. No native- or asset-diff override was used.
 The simulator downloaded Patch 1 on first launch and activated
 `patches/1/dlc.vmcode` after a cold restart; no Flutter fatal error was logged.
+
+## Shorebird idle-recovery patch for `1.0.18+19`
+
+- Shorebird release ID: `789571`
+- Stable Patch 2 ID: `618271`
+- Patch commit: `9da3b96`
+
+Foreground sends now wait for the shared wake-time reconciliation instead of
+capturing a stale API transport. Keep-live resumes health-check the retained
+transport, rebuild it when stale, and coalesce concurrent resume/send signals.
+
+For the managed loopback server, the app refreshes Termux's wake lock before
+connect and post-idle health checks. Future guided setups retain the same wake
+lock until OpenCode stops or exits, instead of releasing it as soon as setup
+returns. Remote profiles are unaffected, and Termux bridge failures remain
+non-blocking. Shorebird's compatibility verification passed without native or
+asset overrides. Flutter analysis was clean; all 204 tests passed.
 
 ## Background connection behavior
 
