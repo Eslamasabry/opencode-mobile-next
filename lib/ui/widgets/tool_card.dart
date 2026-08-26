@@ -1093,7 +1093,7 @@ class _TodoRow extends StatelessWidget {
                 ? Icons.check_circle_outline_rounded
                 : active
                 ? Icons.hourglass_top_rounded
-                : Icons.circle_outlined,
+                : Icons.checklist_rounded,
             size: 17,
             color: done ? Colors.green.shade500 : theme.hintColor,
           ),
