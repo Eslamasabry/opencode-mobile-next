@@ -196,7 +196,13 @@ class ToolOutputFile {
   ].join('|');
 }
 
-List<ToolOutputFile> _toolOutputFiles(dynamic output, dynamic attachments) {
+List<ToolOutputFile> _toolOutputFiles({
+  required dynamic output,
+  required dynamic attachments,
+  required Map<String, dynamic> input,
+  required Map<String, dynamic>? metadata,
+  required String? toolName,
+}) {
   final files = <ToolOutputFile>[];
   final locations = <String>{};
 
@@ -218,37 +224,15 @@ List<ToolOutputFile> _toolOutputFiles(dynamic output, dynamic attachments) {
     files.add(file);
   }
 
-  bool looksLikeFile(String value) {
-    final lower = value.split('?').first.toLowerCase();
-    if (lower.startsWith('data:')) return true;
-    final slash = lower.lastIndexOf('/');
-    final dot = lower.lastIndexOf('.');
-    return dot > slash && dot < lower.length - 1;
-  }
-
-  void scan(dynamic value, [int depth = 0]) {
+  void scanExplicitFiles(
+    dynamic value, {
+    bool allowBareUrl = false,
+    int depth = 0,
+  }) {
     if (value == null || depth > 6 || files.length >= 8) return;
-    if (value is String) {
-      final trimmed = value.trim();
-      if ((trimmed.startsWith('{') && trimmed.endsWith('}')) ||
-          (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
-        try {
-          scan(jsonDecode(trimmed), depth + 1);
-          return;
-        } catch (_) {}
-      }
-      if (looksLikeFile(trimmed)) {
-        if (trimmed.startsWith('data:') || trimmed.startsWith('http')) {
-          add(url: trimmed);
-        } else {
-          add(path: trimmed);
-        }
-      }
-      return;
-    }
     if (value is List) {
       for (final item in value) {
-        scan(item, depth + 1);
+        scanExplicitFiles(item, allowBareUrl: allowBareUrl, depth: depth + 1);
       }
       return;
     }
@@ -266,8 +250,13 @@ List<ToolOutputFile> _toolOutputFiles(dynamic output, dynamic attachments) {
       final filename = (map['filename'] ?? map['name'])?.toString();
       final path = rawPath?.toString();
       final url = rawUrl?.toString();
-      if ((path != null && (hasExplicitFilePath || looksLikeFile(path))) ||
-          (url != null && looksLikeFile(url)) ||
+      final hasFileSignal =
+          hasExplicitFilePath ||
+          mime?.trim().isNotEmpty == true ||
+          filename?.trim().isNotEmpty == true ||
+          (allowBareUrl && url?.trim().isNotEmpty == true);
+      if ((path?.trim().isNotEmpty == true && hasExplicitFilePath) ||
+          (url?.trim().isNotEmpty == true && hasFileSignal) ||
           mime?.trim().isNotEmpty == true) {
         if (url?.startsWith('file://') == true && path == null) {
           add(
@@ -280,13 +269,45 @@ List<ToolOutputFile> _toolOutputFiles(dynamic output, dynamic attachments) {
         }
       }
       for (final item in map.values) {
-        scan(item, depth + 1);
+        scanExplicitFiles(item, allowBareUrl: allowBareUrl, depth: depth + 1);
       }
     }
   }
 
-  scan(attachments);
-  scan(output);
+  dynamic decodedOutput = output;
+  if (output is String) {
+    final trimmed = output.trim();
+    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+        (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+      try {
+        decodedOutput = jsonDecode(trimmed);
+      } catch (_) {}
+    }
+  }
+  scanExplicitFiles(attachments, allowBareUrl: true);
+  scanExplicitFiles(decodedOutput);
+
+  final normalizedTool = toolName?.toLowerCase();
+  if (normalizedTool == 'read' && files.isNotEmpty) {
+    final sourcePath = input['filePath']?.toString();
+    if (sourcePath?.trim().isNotEmpty == true) {
+      final sourceName = sourcePath!.replaceAll('\\', '/').split('/').last;
+      for (var index = 0; index < files.length; index += 1) {
+        final file = files[index];
+        files[index] = ToolOutputFile(
+          path: file.path,
+          url: file.url,
+          mimeType: file.mimeType,
+          filename: file.filename ?? sourceName,
+        );
+      }
+    }
+  }
+  final outputPath = metadata?['outputPath']?.toString();
+  if ((normalizedTool == 'bash' || normalizedTool == 'shell') &&
+      outputPath?.trim().isNotEmpty == true) {
+    add(path: outputPath, filename: outputPath!.split('/').last);
+  }
   return List.unmodifiable(files);
 }
 
@@ -294,16 +315,20 @@ List<ToolOutputFile> _toolOutputFiles(dynamic output, dynamic attachments) {
 class ToolState {
   final String status; // pending | running | completed | error
   final String? title;
+  final Map<String, dynamic> input;
   final String? inputJson;
   final String? output;
+  final dynamic outputValue;
   final Map<String, dynamic>? metadata;
   final List<ToolOutputFile> outputFiles;
 
   ToolState({
     required this.status,
     this.title,
+    this.input = const {},
     this.inputJson,
     this.output,
+    this.outputValue,
     this.metadata,
     this.outputFiles = const [],
   });
@@ -321,7 +346,7 @@ class ToolState {
     }
   }
 
-  factory ToolState.fromJson(dynamic v) {
+  factory ToolState.fromJson(dynamic v, {String? toolName}) {
     if (v is! Map<String, dynamic>) {
       return ToolState(status: 'pending');
     }
@@ -330,22 +355,40 @@ class ToolState {
       'running' || 'pending' || 'completed' || 'error' => rawStatus,
       _ => 'running',
     };
-    final meta = v['metadata'] is Map<String, dynamic>
-        ? v['metadata'] as Map<String, dynamic>
+    final rawInput = v['input'];
+    final structuredInput = rawInput is Map
+        ? Map<String, dynamic>.from(rawInput)
+        : const <String, dynamic>{};
+    final meta = v['metadata'] is Map
+        ? Map<String, dynamic>.from(v['metadata'] as Map)
         : null;
-    final input = status == 'pending' ? _pretty(v['raw']) : _pretty(v['input']);
-    final output = switch (status) {
-      'completed' => _pretty(v['output']),
-      'error' => _pretty(v['error']),
+    final inputText = status == 'pending'
+        ? _pretty(v['raw'])
+        : _pretty(rawInput);
+    final structuredOutput = switch (status) {
+      'completed' => v['output'],
+      'error' => v['error'],
+      _ => null,
+    };
+    final outputText = switch (status) {
+      'completed' || 'error' => _pretty(structuredOutput),
       _ => '',
     };
     return ToolState(
       status: status,
       title: v['title']?.toString(),
-      inputJson: input,
-      output: output,
+      input: structuredInput,
+      inputJson: inputText,
+      output: outputText,
+      outputValue: structuredOutput,
       metadata: meta,
-      outputFiles: _toolOutputFiles(v['output'], v['attachments']),
+      outputFiles: _toolOutputFiles(
+        output: v['output'],
+        attachments: v['attachments'],
+        input: structuredInput,
+        metadata: meta,
+        toolName: toolName,
+      ),
     );
   }
 }
@@ -394,7 +437,10 @@ class Part {
       messageID: j['messageID']?.toString(),
       callID: j['callID']?.toString(),
       toolName: j['tool']?.toString(),
-      toolState: ToolState.fromJson(j['state']),
+      toolState: ToolState.fromJson(
+        j['state'],
+        toolName: j['tool']?.toString(),
+      ),
       mime: j['mime']?.toString(),
       filename: j['filename']?.toString(),
       url: j['url']?.toString(),

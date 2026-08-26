@@ -2457,6 +2457,256 @@ class __TypingIndicatorState extends State<_TypingIndicator>
   }
 }
 
+const _contextToolNames = {'read', 'list', 'glob', 'grep'};
+
+bool _canGroupContextTool(Part part) {
+  final tool = part.toolName?.trim().toLowerCase();
+  return part.type == 'tool' &&
+      tool != null &&
+      _contextToolNames.contains(tool) &&
+      part.toolState.status != 'error' &&
+      part.toolState.outputFiles.isEmpty;
+}
+
+class _AssistantPartRun {
+  const _AssistantPartRun(this.parts, {this.grouped = false});
+
+  final List<Part> parts;
+  final bool grouped;
+}
+
+List<_AssistantPartRun> _groupAssistantParts(List<Part> parts) {
+  final runs = <_AssistantPartRun>[];
+  var index = 0;
+  while (index < parts.length) {
+    final current = parts[index];
+    if (!_canGroupContextTool(current)) {
+      runs.add(_AssistantPartRun([current]));
+      index += 1;
+      continue;
+    }
+
+    final contextParts = <Part>[current];
+    var next = index + 1;
+    while (next < parts.length && _canGroupContextTool(parts[next])) {
+      contextParts.add(parts[next]);
+      next += 1;
+    }
+    if (contextParts.length == 1) {
+      runs.add(_AssistantPartRun(contextParts));
+    } else {
+      runs.add(_AssistantPartRun(contextParts, grouped: true));
+    }
+    index = next;
+  }
+  return runs;
+}
+
+String _contextToolSummary(List<Part> parts) {
+  final counts = <String, int>{};
+  for (final part in parts) {
+    final name = part.toolName!.trim().toLowerCase();
+    counts[name] = (counts[name] ?? 0) + 1;
+  }
+  String countLabel(String name, String singular, String plural) {
+    final count = counts[name] ?? 0;
+    return count == 0 ? '' : '$count ${count == 1 ? singular : plural}';
+  }
+
+  final searchCount = (counts['glob'] ?? 0) + (counts['grep'] ?? 0);
+  return [
+    countLabel('read', 'read', 'reads'),
+    if (searchCount > 0)
+      '$searchCount ${searchCount == 1 ? 'search' : 'searches'}',
+    countLabel('list', 'list', 'lists'),
+  ].where((label) => label.isNotEmpty).join(' · ');
+}
+
+class _ContextToolGroup extends StatefulWidget {
+  const _ContextToolGroup({
+    super.key,
+    required this.parts,
+    required this.filePreviewLoader,
+    required this.onAttachFile,
+    required this.onDownloadFile,
+  });
+
+  final List<Part> parts;
+  final ToolOutputFileLoader filePreviewLoader;
+  final ToolOutputFileAction onAttachFile;
+  final ToolOutputFileAction onDownloadFile;
+
+  @override
+  State<_ContextToolGroup> createState() => _ContextToolGroupState();
+}
+
+class _ContextToolGroupState extends State<_ContextToolGroup> {
+  bool _expanded = false;
+
+  bool get _running => widget.parts.any(
+    (part) =>
+        part.toolState.status == 'pending' ||
+        part.toolState.status == 'running',
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final summary = _contextToolSummary(widget.parts);
+    final title = _running ? 'Exploring' : 'Explored';
+    return Container(
+      key: const Key('context-tool-group'),
+      margin: const EdgeInsets.symmetric(vertical: 3),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: .28),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: .35)),
+      ),
+      child: Column(
+        children: [
+          Semantics(
+            button: true,
+            expanded: _expanded,
+            label: '$title, ${widget.parts.length} tools',
+            child: InkWell(
+              key: const Key('context-tool-group-header'),
+              onTap: () => setState(() => _expanded = !_expanded),
+              borderRadius: BorderRadius.circular(8),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 48),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 7, 8, 7),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.search_rounded,
+                        size: 16,
+                        color: theme.hintColor,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        title,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 7),
+                      Expanded(
+                        child: Text(
+                          summary,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      if (_running && !reduceMotion)
+                        SizedBox.square(
+                          dimension: 12,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 1.6,
+                            color: theme.colorScheme.primary,
+                          ),
+                        )
+                      else
+                        Icon(
+                          _running
+                              ? Icons.hourglass_top_rounded
+                              : Icons.check_circle_outline_rounded,
+                          size: 14,
+                          color: _running
+                              ? theme.colorScheme.primary
+                              : Colors.green.shade400,
+                        ),
+                      const SizedBox(width: 4),
+                      AnimatedRotation(
+                        turns: _expanded ? .5 : 0,
+                        duration: reduceMotion
+                            ? Duration.zero
+                            : const Duration(milliseconds: 150),
+                        child: Icon(
+                          Icons.expand_more_rounded,
+                          size: 16,
+                          color: theme.hintColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          if (_expanded)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 7),
+              child: Column(
+                children: [
+                  for (final part in widget.parts)
+                    ToolCard(
+                      key: ValueKey(part.id ?? part.callID),
+                      toolName: part.toolName!,
+                      state: part.toolState,
+                      filePreviewLoader: widget.filePreviewLoader,
+                      onAttachFile: widget.onAttachFile,
+                      onDownloadFile: widget.onDownloadFile,
+                    ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AssistantMessagePart extends StatelessWidget {
+  const _AssistantMessagePart({
+    required this.part,
+    required this.filePreviewLoader,
+    required this.onAttachFile,
+    required this.onDownloadFile,
+  });
+
+  final Part part;
+  final ToolOutputFileLoader filePreviewLoader;
+  final ToolOutputFileAction onAttachFile;
+  final ToolOutputFileAction onDownloadFile;
+
+  @override
+  Widget build(BuildContext context) {
+    if (part.type == 'text') {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 4),
+        child: MarkdownText(part.text),
+      );
+    }
+    if (part.type == 'reasoning') return _Reasoning(text: part.text);
+    if (part.type == 'tool') {
+      return ToolCard(
+        key: ValueKey(part.id ?? part.callID),
+        toolName: part.toolName ?? 'tool',
+        state: part.toolState,
+        filePreviewLoader: filePreviewLoader,
+        onAttachFile: onAttachFile,
+        onDownloadFile: onDownloadFile,
+      );
+    }
+    if (part.type == 'file') {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Chip(
+          avatar: const Icon(Icons.attach_file_rounded, size: 16),
+          label: Text(part.filename ?? 'Attachment'),
+        ),
+      );
+    }
+    return const SizedBox.shrink();
+  }
+}
+
 class _MessageView extends StatelessWidget {
   final MessageWithParts m;
   final ToolOutputFileLoader filePreviewLoader;
@@ -2474,6 +2724,9 @@ class _MessageView extends StatelessWidget {
     final theme = Theme.of(context);
     final isUser = m.info.role == 'user';
     final visibleParts = m.parts.where((p) => p.isRenderable).toList();
+    final assistantRuns = isUser
+        ? const <_AssistantPartRun>[]
+        : _groupAssistantParts(visibleParts);
 
     final meta = <String>[
       if (!isUser && m.info.modelID != null)
@@ -2509,32 +2762,23 @@ class _MessageView extends StatelessWidget {
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      for (final p in visibleParts)
-                        if (p.type == 'text')
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: MarkdownText(p.text),
-                          )
-                        else if (p.type == 'reasoning')
-                          _Reasoning(text: p.text)
-                        else if (p.type == 'tool')
-                          ToolCard(
-                            toolName: p.toolName ?? 'tool',
-                            state: p.toolState,
+                      for (final run in assistantRuns)
+                        if (run.grouped)
+                          _ContextToolGroup(
+                            key: ValueKey(
+                              'context:${run.parts.first.id ?? run.parts.first.callID}',
+                            ),
+                            parts: run.parts,
                             filePreviewLoader: filePreviewLoader,
                             onAttachFile: onAttachFile,
                             onDownloadFile: onDownloadFile,
                           )
-                        else if (p.type == 'file')
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 6),
-                            child: Chip(
-                              avatar: const Icon(
-                                Icons.attach_file_rounded,
-                                size: 16,
-                              ),
-                              label: Text(p.filename ?? 'Attachment'),
-                            ),
+                        else
+                          _AssistantMessagePart(
+                            part: run.parts.single,
+                            filePreviewLoader: filePreviewLoader,
+                            onAttachFile: onAttachFile,
+                            onDownloadFile: onDownloadFile,
                           ),
                     ],
                   ),

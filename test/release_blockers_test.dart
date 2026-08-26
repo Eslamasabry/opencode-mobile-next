@@ -318,7 +318,7 @@ void main() {
               state: ToolState(
                 status: 'running',
                 title: 'Run tests',
-                inputJson: '{"command":"flutter test"}',
+                input: const {'command': 'flutter test'},
               ),
             ),
           ),
@@ -327,11 +327,12 @@ void main() {
     );
     final target = find.byType(InkWell).first;
     expect(tester.getSize(target).height, greaterThanOrEqualTo(48));
-    expect(find.bySemanticsLabel(RegExp('Run tests, running')), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('Shell, running')), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsNothing);
     await tester.tap(target);
     await tester.pump();
-    expect(find.text('INPUT'), findsOneWidget);
+    expect(find.text(r'$ flutter test'), findsOneWidget);
+    expect(find.text('INPUT'), findsNothing);
     semantics.dispose();
   });
 

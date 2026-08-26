@@ -407,6 +407,67 @@ void main() {
     expect(find.textContaining('| File | Status |'), findsOneWidget);
   });
 
+  testWidgets('groups only consecutive OpenCode context tools', (tester) async {
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('assistant-tools', 'assistant', [
+          Part(
+            id: 'read-1',
+            messageID: 'assistant-tools',
+            type: 'tool',
+            toolName: 'read',
+            toolState: ToolState.fromJson(const {
+              'status': 'completed',
+              'input': {'filePath': '/workspace/lib/main.dart'},
+              'output': '<content>\n1: void main() {}\n</content>',
+            }, toolName: 'read'),
+          ),
+          Part(
+            id: 'grep-1',
+            messageID: 'assistant-tools',
+            type: 'tool',
+            toolName: 'grep',
+            toolState: ToolState.fromJson(const {
+              'status': 'completed',
+              'input': {'pattern': 'main', 'path': '/workspace/lib'},
+              'output': 'lib/main.dart:1:void main() {}',
+              'metadata': {'matches': 1},
+            }, toolName: 'grep'),
+          ),
+          Part(
+            id: 'shell-1',
+            messageID: 'assistant-tools',
+            type: 'tool',
+            toolName: 'bash',
+            toolState: ToolState.fromJson(const {
+              'status': 'completed',
+              'input': {'command': 'flutter test'},
+              'output': 'All tests passed.',
+              'metadata': {'exit': 0},
+            }, toolName: 'bash'),
+          ),
+        ]),
+      ];
+
+    await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('context-tool-group')), findsOneWidget);
+    expect(find.text('Explored'), findsOneWidget);
+    expect(find.text('1 read · 1 search'), findsOneWidget);
+    expect(find.text('Shell'), findsOneWidget);
+    expect(find.text('Read'), findsNothing);
+    expect(find.text('Search text'), findsNothing);
+
+    final header = find.byKey(const Key('context-tool-group-header'));
+    expect(tester.getSize(header).height, greaterThanOrEqualTo(48));
+    await tester.tap(header);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Read'), findsOneWidget);
+    expect(find.text('Search text'), findsOneWidget);
+  });
+
   testWidgets('applies split text, reasoning, and tool input deltas', (
     tester,
   ) async {
