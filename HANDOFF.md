@@ -56,6 +56,47 @@ asset overrides. Flutter analysis was clean; all 204 tests passed. The simulator
 downloaded Patch 2, activated `patches/2/dlc.vmcode` after a cold restart, kept
 the foreground service active, and showed the Termux partial wake lock held.
 
+## Shorebird OpenCode tool-rendering patch for `1.0.18+19`
+
+- Shorebird release ID: `789571`
+- Stable Patch 3 ID: `619804`
+- Contract renderer commit: `f7ed30e`
+- Shorebird asset-safe follow-up: `d60eb4f`
+- OpenCode reference revision: `c5ef753d2869982183f64bf1ec6c92b7c4149c59`
+
+Tool parts now retain OpenCode's structured `state.input`, `state.output`, and
+`state.metadata` instead of flattening the contract before rendering. The chat
+has exact presentations for `read`, `list`, `glob`, `grep`, `bash`/`shell`,
+`edit`, `write`, `patch`/`apply_patch`, `webfetch`, `websearch`, `task`,
+`todowrite`, `question`, `lsp`, and `skill`, with a structured fallback for MCP
+and plugin tools. Shell metadata and ANSI control sequences are removed from
+the visible transcript, edits and patches render as bounded two-axis diffs, and
+Markdown/code/JSON output continues through the shared smart-text renderer.
+
+Artifact discovery is deliberately contract-based: explicit `filePath` values,
+OpenCode attachments, and shell `metadata.outputPath` become previewable files;
+ordinary prose, path-like strings, and web-result URLs do not. Read-tool image
+attachments inherit the requested filename, so existing generated images keep
+their inline preview, open, download, attach-back, and comment workflow.
+
+Consecutive OpenCode context tools (`read`, `list`, `glob`, and `grep`) collapse
+into one compact `Exploring`/`Explored` row with read/search/list counts. Text,
+reasoning, shell commands, mutations, errors, and file-bearing tools break the
+group and remain directly visible. This follows OpenCode's own context grouping
+contract while keeping mobile horizontal space for the path/command subtitle.
+
+Flutter analysis was clean and all 212 tests passed. The first patch attempt was
+safely cancelled when Shorebird detected one new Material icon glyph; the glyph
+was replaced with one already shipped in the APK and Patch 3 then passed the
+compatibility gate without native or asset overrides. The exact GitHub release
+APK matched SHA-256
+`41190803397f5c481d7e12c919221b5441f7651de9a27bef645ba6c928c44896`.
+The Pixel 6 simulator downloaded Patch 3, activated
+`patches/3/dlc.vmcode` after a cold restart, connected to the real local
+Termux/OpenCode server, and rendered an existing shell tool as
+`Shell · wake-check · exit 0`; expanding it showed the command and output with
+no generic sections, layout failure, or Flutter fatal error.
+
 ## Background connection behavior
 
 Settings now offers `Keep coding session live`. It starts an Android `dataSync`
