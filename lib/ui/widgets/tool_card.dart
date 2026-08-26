@@ -243,6 +243,7 @@ class _ToolContract {
 class ToolCard extends StatefulWidget {
   final String toolName;
   final ToolState state;
+  final bool embedded;
   final ToolOutputFileLoader? filePreviewLoader;
   final ToolOutputFileAction? onAttachFile;
   final ToolOutputFileAction? onDownloadFile;
@@ -250,6 +251,7 @@ class ToolCard extends StatefulWidget {
     super.key,
     required this.toolName,
     required this.state,
+    this.embedded = false,
     this.filePreviewLoader,
     this.onAttachFile,
     this.onDownloadFile,
@@ -372,12 +374,21 @@ class _ToolCardState extends State<ToolCard> {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 3),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: .35),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: .4)),
-      ),
+      key: widget.embedded ? const Key('embedded-tool-row') : null,
+      margin: widget.embedded
+          ? EdgeInsets.zero
+          : const EdgeInsets.symmetric(vertical: 3),
+      decoration: widget.embedded
+          ? null
+          : BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: .35,
+              ),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: theme.dividerColor.withValues(alpha: .4),
+              ),
+            ),
       child: Column(
         children: [
           Semantics(
@@ -388,7 +399,9 @@ class _ToolCardState extends State<ToolCard> {
               onTap: hasBody
                   ? () => setState(() => _expanded = !_expanded)
                   : null,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: widget.embedded
+                  ? BorderRadius.zero
+                  : BorderRadius.circular(8),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(minHeight: 48),
                 child: Padding(

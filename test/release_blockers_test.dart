@@ -293,6 +293,8 @@ void main() {
     expect(find.byTooltip('Attach file'), findsOneWidget);
     expect(find.byKey(const Key('voice-input-button')), findsOneWidget);
     expect(find.byKey(const Key('chat-composer-surface')), findsOneWidget);
+    expect(find.byKey(const Key('compact-workbench-menu')), findsOneWidget);
+    expect(find.byKey(const Key('chat-workbench')), findsNothing);
     final sendButton = find.byKey(const Key('chat-send-button'));
     expect(tester.widget<IconButton>(sendButton).onPressed, isNull);
     await tester.enterText(

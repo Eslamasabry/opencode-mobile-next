@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/models.dart';
+import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../../voice/controller.dart';
 import '../../voice/voice_ui.dart';
@@ -331,9 +332,29 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool _voiceOpening = false;
   String? _localShareUrl;
   String? _promptError;
+  _WorkbenchTab? _workbenchTab;
+  List<CommandInfo>? _workbenchCommands;
+  Object? _workbenchCommandsError;
+  bool _workbenchCommandsLoading = false;
+  List<FileDiff>? _workbenchDiffs;
+  List<Todo>? _workbenchTodos;
+  Object? _workbenchReviewError;
+  bool _workbenchReviewLoading = false;
 
   String? get _shareUrl =>
       _conn.sessionsById[widget.sessionID]?.shareUrl ?? _localShareUrl;
+
+  CatalogModel? get _selectedCatalogModel {
+    final selected = _conn.selectedModel;
+    if (selected == null) return null;
+    for (final model in _conn.catalog?.models ?? const <CatalogModel>[]) {
+      if (model.providerID == selected.providerID &&
+          model.id == selected.modelID) {
+        return model;
+      }
+    }
+    return null;
+  }
 
   @override
   void initState() {
@@ -1420,50 +1441,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _slashCommandDialog() async {
-    final cmdCtrl = TextEditingController();
-    final argCtrl = TextEditingController();
-    final ok = await showDialog<bool>(
+  Future<void> _slashCommandDialog({CommandInfo? initialCommand}) async {
+    final result = await showDialog<({String command, String arguments})>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Run slash command'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: cmdCtrl,
-              autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'Command',
-                hintText: 'compact / review / init',
-              ),
-            ),
-            TextField(
-              controller: argCtrl,
-              decoration: const InputDecoration(labelText: 'Arguments'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Run'),
-          ),
-        ],
-      ),
+      builder: (_) => _SlashCommandDialog(initialCommand: initialCommand),
     );
-    if (ok != true) return;
-    final c = cmdCtrl.text.trim().replaceFirst('/', '');
+    if (result == null) return;
+    final c = result.command.trim().replaceFirst('/', '');
     if (c.isEmpty) return;
     try {
       await _conn.api!.slashCommand(
         widget.sessionID,
         c,
-        argCtrl.text.trim(),
+        result.arguments.trim(),
         model: _conn.selectedModel,
         variant: _conn.selectedVariant.isEmpty ? null : _conn.selectedVariant,
       );
@@ -1474,6 +1464,97 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         ).showSnackBar(SnackBar(content: Text('Failed: $e')));
       }
     }
+  }
+
+  void _selectWorkbenchTab(_WorkbenchTab tab) {
+    final opening = _workbenchTab != tab;
+    setState(() => _workbenchTab = opening ? tab : null);
+    if (!opening) return;
+    if (tab == _WorkbenchTab.commands) {
+      unawaited(_loadWorkbenchCommands());
+    } else if (tab == _WorkbenchTab.review) {
+      unawaited(_loadWorkbenchReview());
+    }
+  }
+
+  Future<void> _loadWorkbenchCommands() async {
+    if (_workbenchCommandsLoading) return;
+    final repository = _conn.repository;
+    if (repository == null) {
+      if (mounted) {
+        setState(() {
+          _workbenchCommands = const [];
+          _workbenchCommandsError =
+              'OpenCode commands are unavailable offline.';
+        });
+      }
+      return;
+    }
+    setState(() {
+      _workbenchCommandsLoading = true;
+      _workbenchCommandsError = null;
+    });
+    try {
+      final commands = [...await repository.listCommands()];
+      if (!mounted) return;
+      commands.sort((a, b) => a.name.compareTo(b.name));
+      setState(() => _workbenchCommands = commands);
+    } catch (error) {
+      if (mounted) setState(() => _workbenchCommandsError = error);
+    } finally {
+      if (mounted) setState(() => _workbenchCommandsLoading = false);
+    }
+  }
+
+  Future<void> _loadWorkbenchReview() async {
+    if (_workbenchReviewLoading) return;
+    final api = _conn.api;
+    if (api == null) {
+      if (mounted) {
+        setState(() {
+          _workbenchDiffs = const [];
+          _workbenchTodos = const [];
+          _workbenchReviewError = 'Review data is unavailable offline.';
+        });
+      }
+      return;
+    }
+    setState(() {
+      _workbenchReviewLoading = true;
+      _workbenchReviewError = null;
+    });
+    try {
+      final results = await Future.wait<Object>([
+        api.diff(widget.sessionID),
+        api.todos(widget.sessionID),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _workbenchDiffs = results[0] as List<FileDiff>;
+        _workbenchTodos = results[1] as List<Todo>;
+      });
+    } catch (error) {
+      if (mounted) setState(() => _workbenchReviewError = error);
+    } finally {
+      if (mounted) setState(() => _workbenchReviewLoading = false);
+    }
+  }
+
+  int get _artifactCount {
+    final identities = <String>{};
+    for (final message in _messages) {
+      for (final part in message.parts) {
+        if (part.type == 'file') {
+          identities.add(
+            part.url ?? part.filename ?? '${message.info.id}:file',
+          );
+        }
+        for (final file in part.toolState.outputFiles) {
+          identities.add(file.identity);
+        }
+      }
+    }
+    return identities.length;
   }
 
   void _showTodos() {
@@ -1691,74 +1772,118 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       ],
                     ),
                   )
-                : Column(
-                    children: [
-                      Expanded(
-                        child: _messages.isEmpty
-                            ? Center(
-                                child: Text(
-                                  'Ask opencode to do something…',
-                                  style: TextStyle(color: theme.hintColor),
-                                ),
-                              )
-                            : NotificationListener<ScrollNotification>(
-                                onNotification: (_) => false,
-                                child: Align(
-                                  alignment: Alignment.topCenter,
-                                  child: ListView.builder(
-                                    reverse: true,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 10,
+                : LayoutBuilder(
+                    builder: (context, bodyConstraints) => Column(
+                      children: [
+                        Expanded(
+                          child: _messages.isEmpty
+                              ? Center(
+                                  child: Text(
+                                    'Ask opencode to do something…',
+                                    style: TextStyle(color: theme.hintColor),
+                                  ),
+                                )
+                              : NotificationListener<ScrollNotification>(
+                                  onNotification: (_) => false,
+                                  child: Align(
+                                    alignment: Alignment.topCenter,
+                                    child: ListView.builder(
+                                      reverse: true,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 10,
+                                      ),
+                                      itemCount:
+                                          _messages.length + (busy ? 1 : 0),
+                                      itemBuilder: (context, i) {
+                                        final index = _messages.length - 1 - i;
+                                        if (index < 0) {
+                                          return _TypingIndicator();
+                                        }
+                                        final m = _messages[index];
+                                        final meta = _messageMeta(
+                                          _messages,
+                                          index,
+                                        );
+                                        final parts = displayParts[index];
+                                        if (parts.isEmpty &&
+                                            meta.isEmpty &&
+                                            m.info.errorText == null) {
+                                          return const SizedBox.shrink();
+                                        }
+                                        return _MessageView(
+                                          m: m,
+                                          meta: meta,
+                                          parts: parts,
+                                          filePreviewLoader:
+                                              _loadToolOutputFile,
+                                          onAttachFile: _attachToolOutputFile,
+                                          onDownloadFile:
+                                              _downloadToolOutputFile,
+                                        );
+                                      },
                                     ),
-                                    itemCount:
-                                        _messages.length + (busy ? 1 : 0),
-                                    itemBuilder: (context, i) {
-                                      final index = _messages.length - 1 - i;
-                                      if (index < 0) return _TypingIndicator();
-                                      final m = _messages[index];
-                                      final meta = _messageMeta(
-                                        _messages,
-                                        index,
-                                      );
-                                      final parts = displayParts[index];
-                                      if (parts.isEmpty &&
-                                          meta.isEmpty &&
-                                          m.info.errorText == null) {
-                                        return const SizedBox.shrink();
-                                      }
-                                      return _MessageView(
-                                        m: m,
-                                        meta: meta,
-                                        parts: parts,
-                                        filePreviewLoader: _loadToolOutputFile,
-                                        onAttachFile: _attachToolOutputFile,
-                                        onDownloadFile: _downloadToolOutputFile,
-                                      );
-                                    },
                                   ),
                                 ),
-                              ),
-                      ),
-                      _ChatComposer(
-                        controller: _composer,
-                        focusNode: _focus,
-                        attachments: _attachments,
-                        busy: busy,
-                        sending: _sending,
-                        voiceOpening: _voiceOpening,
-                        selectedAgent: _conn.selectedAgent,
-                        selectedModel: _conn.selectedModel,
-                        selectedVariant: _conn.selectedVariant,
-                        onAttach: _pickAttachment,
-                        onVoice: _openVoice,
-                        onSend: _send,
-                        onStop: _abort,
-                        onChooseModel: () => showModelPicker(context),
-                        onRemoveAttachment: (attachment) =>
-                            setState(() => _attachments.remove(attachment)),
-                      ),
-                    ],
+                        ),
+                        _ChatComposer(
+                          compact: bodyConstraints.maxHeight < 520,
+                          controller: _composer,
+                          focusNode: _focus,
+                          workbench: _ChatWorkbench(
+                            selected: _workbenchTab,
+                            onSelect: _selectWorkbenchTab,
+                            selectedAgent: _conn.selectedAgent,
+                            selectedModel: _conn.selectedModel,
+                            selectedVariant: _conn.selectedVariant,
+                            catalogModel: _selectedCatalogModel,
+                            attachmentCount: _attachments.length,
+                            commands: _workbenchCommands,
+                            commandsLoading: _workbenchCommandsLoading,
+                            commandsError: _workbenchCommandsError,
+                            diffs: _workbenchDiffs,
+                            todos: _workbenchTodos,
+                            reviewLoading: _workbenchReviewLoading,
+                            reviewError: _workbenchReviewError,
+                            permissionCount: _conn
+                                .permissionsForSession(widget.sessionID)
+                                .length,
+                            artifactCount: _artifactCount,
+                            shared: shareUrl != null,
+                            reverted: session?.reverted == true,
+                            onChooseModel: () => showModelPicker(context),
+                            onCommand: (command) =>
+                                _slashCommandDialog(initialCommand: command),
+                            onManualCommand: _slashCommandDialog,
+                            onShell: _runShellDialog,
+                            onShowDiff: _showDiff,
+                            onShowTodos: _showTodos,
+                            onRetry: _retryLast,
+                            onFork: _fork,
+                            onCompact: _compact,
+                            onShare: shareUrl == null ? _share : _stopSharing,
+                            onRevert: session?.reverted == true
+                                ? _restore
+                                : _revertLast,
+                            onReload: _load,
+                          ),
+                          attachments: _attachments,
+                          busy: busy,
+                          sending: _sending,
+                          voiceOpening: _voiceOpening,
+                          selectedAgent: _conn.selectedAgent,
+                          selectedModel: _conn.selectedModel,
+                          selectedVariant: _conn.selectedVariant,
+                          onAttach: _pickAttachment,
+                          onVoice: _openVoice,
+                          onSend: _send,
+                          onStop: _abort,
+                          onChooseModel: () => showModelPicker(context),
+                          onRemoveAttachment: (attachment) =>
+                              setState(() => _attachments.remove(attachment)),
+                        ),
+                      ],
+                    ),
                   ),
           ),
         ],
@@ -1779,10 +1904,703 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 }
 
+enum _WorkbenchTab { context, commands, run, review, session }
+
+class _ChatWorkbench extends StatelessWidget {
+  const _ChatWorkbench({
+    required this.selected,
+    required this.onSelect,
+    required this.selectedAgent,
+    required this.selectedModel,
+    required this.selectedVariant,
+    required this.catalogModel,
+    required this.attachmentCount,
+    required this.commands,
+    required this.commandsLoading,
+    required this.commandsError,
+    required this.diffs,
+    required this.todos,
+    required this.reviewLoading,
+    required this.reviewError,
+    required this.permissionCount,
+    required this.artifactCount,
+    required this.shared,
+    required this.reverted,
+    required this.onChooseModel,
+    required this.onCommand,
+    required this.onManualCommand,
+    required this.onShell,
+    required this.onShowDiff,
+    required this.onShowTodos,
+    required this.onRetry,
+    required this.onFork,
+    required this.onCompact,
+    required this.onShare,
+    required this.onRevert,
+    required this.onReload,
+  });
+
+  final _WorkbenchTab? selected;
+  final ValueChanged<_WorkbenchTab> onSelect;
+  final String selectedAgent;
+  final ModelRef? selectedModel;
+  final String selectedVariant;
+  final CatalogModel? catalogModel;
+  final int attachmentCount;
+  final List<CommandInfo>? commands;
+  final bool commandsLoading;
+  final Object? commandsError;
+  final List<FileDiff>? diffs;
+  final List<Todo>? todos;
+  final bool reviewLoading;
+  final Object? reviewError;
+  final int permissionCount;
+  final int artifactCount;
+  final bool shared;
+  final bool reverted;
+  final VoidCallback onChooseModel;
+  final ValueChanged<CommandInfo> onCommand;
+  final VoidCallback onManualCommand;
+  final VoidCallback onShell;
+  final VoidCallback onShowDiff;
+  final VoidCallback onShowTodos;
+  final VoidCallback onRetry;
+  final VoidCallback onFork;
+  final VoidCallback onCompact;
+  final VoidCallback onShare;
+  final VoidCallback onRevert;
+  final VoidCallback onReload;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final compact =
+        MediaQuery.sizeOf(context).height -
+            MediaQuery.viewInsetsOf(context).bottom <
+        520;
+    return Column(
+      key: const Key('chat-workbench'),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: compact ? 40 : 44,
+          child: Row(
+            key: const Key('chat-workbench-tabs'),
+            children: [
+              for (final tab in _WorkbenchTab.values)
+                Expanded(
+                  child: _WorkbenchTabButton(
+                    tab: tab,
+                    selected: selected == tab,
+                    compact: compact,
+                    onPressed: () => onSelect(tab),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        if (selected case final tab?) ...[
+          Divider(
+            height: 1,
+            color: theme.colorScheme.outlineVariant.withValues(alpha: .45),
+          ),
+          ConstrainedBox(
+            key: const Key('chat-workbench-panel'),
+            constraints: BoxConstraints(maxHeight: compact ? 150 : 210),
+            child: _panel(context, tab),
+          ),
+        ],
+        Divider(
+          height: 1,
+          color: theme.colorScheme.outlineVariant.withValues(alpha: .55),
+        ),
+      ],
+    );
+  }
+
+  Widget _panel(BuildContext context, _WorkbenchTab tab) => switch (tab) {
+    _WorkbenchTab.context => _contextPanel(context),
+    _WorkbenchTab.commands => _commandsPanel(context),
+    _WorkbenchTab.run => _runPanel(context),
+    _WorkbenchTab.review => _reviewPanel(context),
+    _WorkbenchTab.session => _sessionPanel(context),
+  };
+
+  Widget _contextPanel(BuildContext context) {
+    final theme = Theme.of(context);
+    final model = selectedModel;
+    final modelName = model == null
+        ? 'No model selected'
+        : '${model.providerID}/${model.modelID}';
+    final details = <String>[
+      if (selectedAgent.isNotEmpty) selectedAgent,
+      if (selectedVariant.isNotEmpty) selectedVariant,
+      if (catalogModel?.reasoning == true) 'reasoning',
+      if ((catalogModel?.contextLimit ?? 0) > 0)
+        '${_compactNumber(catalogModel!.contextLimit)} context',
+      if (attachmentCount > 0) '$attachmentCount attached',
+    ];
+    return InkWell(
+      key: const Key('workbench-context-model'),
+      onTap: onChooseModel,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+        child: Row(
+          children: [
+            Icon(Icons.tune_rounded, size: 19, color: theme.hintColor),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    modelName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (details.isNotEmpty)
+                    Text(
+                      details.join(' · '),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            TextButton(onPressed: onChooseModel, child: const Text('Change')),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _commandsPanel(BuildContext context) {
+    final theme = Theme.of(context);
+    if (commandsLoading && commands == null) {
+      return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+    }
+    if (commandsError != null && commands?.isNotEmpty != true) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Text(
+            '$commandsError',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      );
+    }
+    final items = commands ?? const <CommandInfo>[];
+    if (items.isEmpty) {
+      return Center(
+        child: Text(
+          'No commands exposed by this OpenCode server.',
+          style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+        ),
+      );
+    }
+    return ListView.separated(
+      key: const Key('workbench-command-list'),
+      shrinkWrap: true,
+      padding: EdgeInsets.zero,
+      itemCount: items.length,
+      separatorBuilder: (_, _) => Divider(
+        height: 1,
+        indent: 42,
+        color: theme.dividerColor.withValues(alpha: .25),
+      ),
+      itemBuilder: (context, index) {
+        final command = items[index];
+        return InkWell(
+          onTap: () => onCommand(command),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+            child: Row(
+              children: [
+                Text(
+                  '/${command.name}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontFamily: 'monospace',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    command.description ?? command.agent ?? '',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded, size: 17),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _runPanel(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Expanded(
+          child: _WorkbenchAction(
+            icon: Icons.terminal_rounded,
+            title: 'Shell',
+            subtitle: 'Run in this workspace',
+            onPressed: onShell,
+          ),
+        ),
+        SizedBox(
+          height: 58,
+          child: VerticalDivider(
+            width: 1,
+            color: theme.dividerColor.withValues(alpha: .3),
+          ),
+        ),
+        Expanded(
+          child: _WorkbenchAction(
+            icon: Icons.electric_bolt_outlined,
+            title: 'Command',
+            subtitle: 'Run any OpenCode command',
+            onPressed: onManualCommand,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _reviewPanel(BuildContext context) {
+    final theme = Theme.of(context);
+    if (reviewLoading && diffs == null && todos == null) {
+      return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+    }
+    if (reviewError != null && diffs == null && todos == null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Text(
+            '$reviewError',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      );
+    }
+    final files = diffs ?? const <FileDiff>[];
+    final tasks = todos ?? const <Todo>[];
+    final done = tasks.where((todo) => todo.done).length;
+    return ListView(
+      key: const Key('workbench-review'),
+      shrinkWrap: true,
+      padding: EdgeInsets.zero,
+      children: [
+        SizedBox(
+          height: 58,
+          child: Row(
+            children: [
+              Expanded(
+                child: _WorkbenchMetric(
+                  value: '${files.length}',
+                  label: 'Files',
+                  onPressed: onShowDiff,
+                ),
+              ),
+              const VerticalDivider(width: 1, indent: 10, endIndent: 10),
+              Expanded(
+                child: _WorkbenchMetric(
+                  value: '$done/${tasks.length}',
+                  label: 'Todos',
+                  onPressed: onShowTodos,
+                ),
+              ),
+              const VerticalDivider(width: 1, indent: 10, endIndent: 10),
+              Expanded(
+                child: _WorkbenchMetric(
+                  value: '$permissionCount',
+                  label: 'Requests',
+                ),
+              ),
+              const VerticalDivider(width: 1, indent: 10, endIndent: 10),
+              Expanded(
+                child: _WorkbenchMetric(
+                  value: '$artifactCount',
+                  label: 'Artifacts',
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (files.isEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 9, 14, 12),
+            child: Text(
+              'No changed files in this session.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          )
+        else
+          for (final file in files.take(3))
+            InkWell(
+              onTap: onShowDiff,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 8, 12, 8),
+                child: Row(
+                  children: [
+                    const Icon(Icons.description_rounded, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _basename(file.file),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ),
+                    if ((file.additions ?? 0) > 0)
+                      Text(
+                        '+${file.additions}',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: Colors.green.shade400,
+                        ),
+                      ),
+                    if ((file.deletions ?? 0) > 0) ...[
+                      const SizedBox(width: 6),
+                      Text(
+                        '-${file.deletions}',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.error,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+        if (files.length > 3)
+          TextButton(
+            onPressed: onShowDiff,
+            child: Text('Open all ${files.length} changed files'),
+          ),
+      ],
+    );
+  }
+
+  Widget _sessionPanel(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: Wrap(
+        spacing: 2,
+        runSpacing: 2,
+        children: [
+          TextButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh_rounded, size: 17),
+            label: const Text('Retry'),
+          ),
+          TextButton.icon(
+            onPressed: onFork,
+            icon: const Icon(Icons.call_split_rounded, size: 17),
+            label: const Text('Fork'),
+          ),
+          TextButton.icon(
+            onPressed: onCompact,
+            icon: const Icon(Icons.compress_rounded, size: 17),
+            label: const Text('Compact'),
+          ),
+          TextButton.icon(
+            onPressed: onShare,
+            icon: Icon(
+              shared ? Icons.link_off_rounded : Icons.share_outlined,
+              size: 17,
+            ),
+            label: Text(shared ? 'Unshare' : 'Share'),
+          ),
+          TextButton.icon(
+            onPressed: onRevert,
+            icon: const Icon(Icons.restore_rounded, size: 17),
+            label: Text(reverted ? 'Restore' : 'Revert'),
+          ),
+          TextButton.icon(
+            onPressed: onReload,
+            icon: const Icon(Icons.sync_rounded, size: 17),
+            label: const Text('Reload'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _compactNumber(int value) {
+    if (value >= 1000000) return '${(value / 1000000).toStringAsFixed(1)}M';
+    if (value >= 1000) return '${(value / 1000).round()}k';
+    return '$value';
+  }
+
+  static String _basename(String path) {
+    final normalized = path.replaceAll('\\', '/');
+    final parts = normalized
+        .split('/')
+        .where((part) => part.isNotEmpty)
+        .toList();
+    return parts.isEmpty ? path : parts.last;
+  }
+}
+
+class _WorkbenchTabButton extends StatelessWidget {
+  const _WorkbenchTabButton({
+    required this.tab,
+    required this.selected,
+    required this.compact,
+    required this.onPressed,
+  });
+
+  final _WorkbenchTab tab;
+  final bool selected;
+  final bool compact;
+  final VoidCallback onPressed;
+
+  String get _label => switch (tab) {
+    _WorkbenchTab.context => 'Context',
+    _WorkbenchTab.commands => 'Commands',
+    _WorkbenchTab.run => 'Run',
+    _WorkbenchTab.review => 'Review',
+    _WorkbenchTab.session => 'Session',
+  };
+
+  IconData get _icon => switch (tab) {
+    _WorkbenchTab.context => Icons.tune_rounded,
+    _WorkbenchTab.commands => Icons.electric_bolt_outlined,
+    _WorkbenchTab.run => Icons.terminal_rounded,
+    _WorkbenchTab.review => Icons.difference_outlined,
+    _WorkbenchTab.session => Icons.more_horiz_rounded,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final foreground = selected
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurfaceVariant;
+    return Semantics(
+      selected: selected,
+      button: true,
+      label: '$_label workbench tab',
+      child: InkWell(
+        key: Key('workbench-tab-${tab.name}'),
+        onTap: onPressed,
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: selected
+                    ? theme.colorScheme.primary
+                    : Colors.transparent,
+                width: 2,
+              ),
+            ),
+          ),
+          alignment: Alignment.center,
+          child: compact
+              ? Icon(_icon, size: 17, color: foreground)
+              : Text(
+                  _label,
+                  maxLines: 1,
+                  overflow: TextOverflow.fade,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: foreground,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    fontSize: tab == _WorkbenchTab.commands ? 10 : null,
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WorkbenchAction extends StatelessWidget {
+  const _WorkbenchAction({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onPressed,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon, size: 19, color: theme.colorScheme.primary),
+            const SizedBox(width: 9),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WorkbenchMetric extends StatelessWidget {
+  const _WorkbenchMetric({
+    required this.value,
+    required this.label,
+    this.onPressed,
+  });
+
+  final String value;
+  final String label;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onPressed,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            value,
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: 9,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SlashCommandDialog extends StatefulWidget {
+  const _SlashCommandDialog({this.initialCommand});
+
+  final CommandInfo? initialCommand;
+
+  @override
+  State<_SlashCommandDialog> createState() => _SlashCommandDialogState();
+}
+
+class _SlashCommandDialogState extends State<_SlashCommandDialog> {
+  late final TextEditingController _command = TextEditingController(
+    text: widget.initialCommand?.name ?? '',
+  );
+  final TextEditingController _arguments = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(
+        widget.initialCommand == null
+            ? 'Run OpenCode command'
+            : 'Run /${widget.initialCommand!.name}',
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _command,
+            autofocus: true,
+            decoration: const InputDecoration(
+              labelText: 'Command',
+              hintText: 'compact / review / init',
+            ),
+          ),
+          TextField(
+            controller: _arguments,
+            decoration: const InputDecoration(labelText: 'Arguments'),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, (
+            command: _command.text,
+            arguments: _arguments.text,
+          )),
+          child: const Text('Run'),
+        ),
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    _command.dispose();
+    _arguments.dispose();
+    super.dispose();
+  }
+}
+
 class _ChatComposer extends StatelessWidget {
   const _ChatComposer({
+    required this.compact,
     required this.controller,
     required this.focusNode,
+    required this.workbench,
     required this.attachments,
     required this.busy,
     required this.sending,
@@ -1798,8 +2616,10 @@ class _ChatComposer extends StatelessWidget {
     required this.onRemoveAttachment,
   });
 
+  final bool compact;
   final TextEditingController controller;
   final FocusNode focusNode;
+  final _ChatWorkbench workbench;
   final List<PromptAttachment> attachments;
   final bool busy;
   final bool sending;
@@ -1820,7 +2640,6 @@ class _ChatComposer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
-    final compact = media.size.height - media.viewInsets.bottom < 520;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final disableAnimations = media.disableAnimations;
@@ -1858,6 +2677,7 @@ class _ChatComposer extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (!compact) workbench,
                 if (attachments.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
@@ -1968,6 +2788,7 @@ class _ChatComposer extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          _CompactWorkbenchMenu(workbench: workbench),
           _ComposerAction(
             key: const Key('composer-model-context'),
             tooltip: _contextLabel,
@@ -2021,6 +2842,71 @@ class _ChatComposer extends StatelessWidget {
     if (model != null && model.isNotEmpty) parts.add(model);
     if (selectedVariant.isNotEmpty) parts.add(selectedVariant);
     return parts.isEmpty ? 'Choose model' : parts.join(' · ');
+  }
+}
+
+enum _CompactWorkbenchAction { context, command, shell, review, todos, retry }
+
+class _CompactWorkbenchMenu extends StatelessWidget {
+  const _CompactWorkbenchMenu({required this.workbench});
+
+  final _ChatWorkbench workbench;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<_CompactWorkbenchAction>(
+      key: const Key('compact-workbench-menu'),
+      tooltip: 'Workbench',
+      icon: const Icon(Icons.more_horiz_rounded),
+      onSelected: (action) {
+        switch (action) {
+          case _CompactWorkbenchAction.context:
+            workbench.onChooseModel();
+            return;
+          case _CompactWorkbenchAction.command:
+            workbench.onManualCommand();
+            return;
+          case _CompactWorkbenchAction.shell:
+            workbench.onShell();
+            return;
+          case _CompactWorkbenchAction.review:
+            workbench.onShowDiff();
+            return;
+          case _CompactWorkbenchAction.todos:
+            workbench.onShowTodos();
+            return;
+          case _CompactWorkbenchAction.retry:
+            workbench.onRetry();
+            return;
+        }
+      },
+      itemBuilder: (_) => const [
+        PopupMenuItem(
+          value: _CompactWorkbenchAction.context,
+          child: Text('Model and context'),
+        ),
+        PopupMenuItem(
+          value: _CompactWorkbenchAction.command,
+          child: Text('OpenCode command'),
+        ),
+        PopupMenuItem(
+          value: _CompactWorkbenchAction.shell,
+          child: Text('Run shell command'),
+        ),
+        PopupMenuItem(
+          value: _CompactWorkbenchAction.review,
+          child: Text('Review changes'),
+        ),
+        PopupMenuItem(
+          value: _CompactWorkbenchAction.todos,
+          child: Text('Todos'),
+        ),
+        PopupMenuItem(
+          value: _CompactWorkbenchAction.retry,
+          child: Text('Retry prompt'),
+        ),
+      ],
+    );
   }
 }
 
@@ -2476,45 +3362,81 @@ bool _isToolPart(Part part) => part.type == 'tool';
 
 List<List<Part>> _timelineDisplayParts(List<MessageWithParts> messages) {
   final display = List.generate(messages.length, (_) => <Part>[]);
-  final pendingTools = <Part>[];
+  final pendingParts = <Part>[];
+  String? pendingType;
   int? pendingOwner;
 
-  void flushTools() {
+  void flushPending() {
     if (pendingOwner case final owner?) {
-      display[owner].addAll(pendingTools);
+      if (pendingType == 'text' || pendingType == 'reasoning') {
+        display[owner].add(_mergeTextParts(pendingParts));
+      } else {
+        display[owner].addAll(pendingParts);
+      }
     }
-    pendingTools.clear();
+    pendingParts.clear();
+    pendingType = null;
     pendingOwner = null;
+  }
+
+  void appendPart(int owner, Part part) {
+    final mergeable =
+        part.type == 'tool' || part.type == 'text' || part.type == 'reasoning';
+    if (!mergeable) {
+      flushPending();
+      display[owner].add(part);
+      return;
+    }
+    if (pendingType != null && pendingType != part.type) flushPending();
+    pendingType ??= part.type;
+    pendingOwner ??= owner;
+    pendingParts.add(part);
   }
 
   for (var index = 0; index < messages.length; index += 1) {
     final message = messages[index];
     final parts = message.parts.where((part) => part.isRenderable);
     if (message.info.role != 'assistant') {
-      flushTools();
+      flushPending();
       display[index].addAll(parts);
       continue;
     }
 
-    if (message.info.errorText != null && parts.isEmpty) flushTools();
+    if (message.info.errorText != null && parts.isEmpty) flushPending();
     for (final part in parts) {
-      if (_isToolPart(part)) {
-        pendingOwner ??= index;
-        pendingTools.add(part);
-      } else {
-        flushTools();
-        display[index].add(part);
-      }
+      appendPart(index, part);
     }
-    if (message.info.errorText != null) flushTools();
+    if (message.info.errorText != null) flushPending();
 
     final nextIsAssistant =
         index + 1 < messages.length &&
         messages[index + 1].info.role == 'assistant';
-    if (!nextIsAssistant) flushTools();
+    if (!nextIsAssistant) flushPending();
   }
-  flushTools();
+  flushPending();
   return display;
+}
+
+Part _mergeTextParts(List<Part> parts) {
+  assert(parts.isNotEmpty);
+  if (parts.length == 1) return parts.single;
+  final first = parts.first;
+  final buffer = StringBuffer();
+  for (final part in parts) {
+    if (part.text.trim().isEmpty) continue;
+    if (buffer.isNotEmpty &&
+        !buffer.toString().endsWith('\n') &&
+        !part.text.startsWith('\n')) {
+      buffer.write('\n\n');
+    }
+    buffer.write(part.text);
+  }
+  return Part(
+    id: first.id,
+    messageID: first.messageID,
+    type: first.type,
+    text: buffer.toString(),
+  );
 }
 
 class _AssistantPartRun {
@@ -2530,8 +3452,19 @@ List<_AssistantPartRun> _groupAssistantParts(List<Part> parts) {
   while (index < parts.length) {
     final current = parts[index];
     if (!_isToolPart(current)) {
-      runs.add(_AssistantPartRun([current]));
-      index += 1;
+      if (current.type != 'text' && current.type != 'reasoning') {
+        runs.add(_AssistantPartRun([current]));
+        index += 1;
+        continue;
+      }
+      final textParts = <Part>[current];
+      var next = index + 1;
+      while (next < parts.length && parts[next].type == current.type) {
+        textParts.add(parts[next]);
+        next += 1;
+      }
+      runs.add(_AssistantPartRun([_mergeTextParts(textParts)]));
+      index = next;
       continue;
     }
 
@@ -2754,21 +3687,32 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
             ),
           ),
           if (_expanded)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 0, 8, 7),
-              child: Column(
-                children: [
-                  for (final part in widget.parts)
-                    ToolCard(
-                      key: ValueKey(part.id ?? part.callID),
-                      toolName: part.toolName!,
-                      state: part.toolState,
-                      filePreviewLoader: widget.filePreviewLoader,
-                      onAttachFile: widget.onAttachFile,
-                      onDownloadFile: widget.onDownloadFile,
+            Column(
+              children: [
+                Divider(
+                  height: 1,
+                  color: theme.dividerColor.withValues(alpha: .35),
+                ),
+                for (var index = 0; index < widget.parts.length; index++) ...[
+                  if (index > 0)
+                    Divider(
+                      height: 1,
+                      indent: 34,
+                      color: theme.dividerColor.withValues(alpha: .28),
                     ),
+                  ToolCard(
+                    key: ValueKey(
+                      widget.parts[index].id ?? widget.parts[index].callID,
+                    ),
+                    toolName: widget.parts[index].toolName!,
+                    state: widget.parts[index].toolState,
+                    embedded: true,
+                    filePreviewLoader: widget.filePreviewLoader,
+                    onAttachFile: widget.onAttachFile,
+                    onDownloadFile: widget.onDownloadFile,
+                  ),
                 ],
-              ),
+              ],
             ),
         ],
       ),
@@ -2793,6 +3737,7 @@ class _AssistantMessagePart extends StatelessWidget {
   Widget build(BuildContext context) {
     if (part.type == 'text') {
       return Padding(
+        key: const Key('assistant-text-block'),
         padding: const EdgeInsets.only(bottom: 4),
         child: MarkdownText(part.text),
       );
@@ -3111,69 +4056,87 @@ class _ReasoningState extends State<_Reasoning> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      decoration: BoxDecoration(
-        border: Border(
-          left: BorderSide(
-            color: theme.colorScheme.secondary.withValues(alpha: .5),
-            width: 2,
+    final textStyle = theme.textTheme.bodySmall!.copyWith(
+      fontStyle: FontStyle.italic,
+      color: theme.hintColor,
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final painter = TextPainter(
+          text: TextSpan(text: widget.text, style: textStyle),
+          textDirection: Directionality.of(context),
+        )..layout(maxWidth: constraints.maxWidth - 14);
+        final short = painter.computeLineMetrics().length < 2;
+        return Container(
+          key: const Key('assistant-reasoning-block'),
+          margin: const EdgeInsets.only(bottom: 6),
+          decoration: BoxDecoration(
+            border: Border(
+              left: BorderSide(
+                color: theme.colorScheme.secondary.withValues(alpha: .5),
+                width: 2,
+              ),
+            ),
           ),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Semantics(
-            button: true,
-            expanded: _open,
-            excludeSemantics: true,
-            label: _open
-                ? 'Collapse reasoning details'
-                : 'Expand reasoning details',
-            child: InkWell(
-              key: const Key('reasoning-toggle'),
-              onTap: () => setState(() => _open = !_open),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 48),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 4, 4, 4),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.psychology_alt_outlined,
-                        size: 13,
-                        color: theme.hintColor,
-                      ),
-                      const SizedBox(width: 5),
-                      Flexible(
-                        child: Text(
-                          _open ? 'reasoning' : 'reasoning (tap to expand)',
-                          style: theme.textTheme.labelSmall!.copyWith(
-                            color: theme.hintColor,
+          child: short
+              ? KeyedSubtree(
+                  key: const Key('reasoning-inline'),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 5, 4, 5),
+                    child: Text(widget.text, style: textStyle),
+                  ),
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Semantics(
+                      button: true,
+                      expanded: _open,
+                      excludeSemantics: true,
+                      label: _open
+                          ? 'Collapse reasoning details'
+                          : 'Expand reasoning details',
+                      child: InkWell(
+                        key: const Key('reasoning-toggle'),
+                        onTap: () => setState(() => _open = !_open),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 48),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(8, 4, 4, 4),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.psychology_alt_outlined,
+                                  size: 13,
+                                  color: theme.hintColor,
+                                ),
+                                const SizedBox(width: 5),
+                                Flexible(
+                                  child: Text(
+                                    _open
+                                        ? 'reasoning'
+                                        : 'reasoning (tap to expand)',
+                                    style: theme.textTheme.labelSmall!.copyWith(
+                                      color: theme.hintColor,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    if (_open)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 4, 4, 4),
+                        child: Text(widget.text, style: textStyle),
+                      ),
+                  ],
                 ),
-              ),
-            ),
-          ),
-          if (_open)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 4, 4, 4),
-              child: Text(
-                widget.text,
-                style: theme.textTheme.bodySmall!.copyWith(
-                  fontStyle: FontStyle.italic,
-                  color: theme.hintColor,
-                ),
-              ),
-            ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

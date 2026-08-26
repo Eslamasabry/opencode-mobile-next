@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
+import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
@@ -32,6 +33,7 @@ class _FakeOpenCodeApi extends OpenCodeApi {
   bool failRename = false;
   bool failDelete = false;
   List<FileDiff> diffs = const [];
+  List<Todo> todoItems = const [];
   final Map<String, FileContent> fileContents = {};
   final List<String> fileContentRequests = [];
 
@@ -44,6 +46,9 @@ class _FakeOpenCodeApi extends OpenCodeApi {
 
   @override
   Future<List<FileDiff>> diff(String id) async => diffs;
+
+  @override
+  Future<List<Todo>> todos(String id) async => todoItems;
 
   @override
   Future<FileContent> fileContent(String path) async {
@@ -95,6 +100,18 @@ class _FakeOpenCodeApi extends OpenCodeApi {
   Future<void> deleteSession(String id) async {
     if (failDelete) throw StateError('delete failed');
   }
+}
+
+class _FakeProductRepository implements ProductRepository {
+  _FakeProductRepository(this.commands);
+
+  final List<CommandInfo> commands;
+
+  @override
+  Future<List<CommandInfo>> listCommands() async => commands;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 Future<ConnectionController> _controller(_FakeOpenCodeApi api) async {
@@ -159,9 +176,11 @@ Map<String, dynamic> _partJson({
 
 Future<ConnectionController> _pumpChat(
   WidgetTester tester,
-  _FakeOpenCodeApi api,
-) async {
+  _FakeOpenCodeApi api, {
+  ProductRepository? repository,
+}) async {
   final controller = await _controller(api);
+  controller.repository = repository;
   addTearDown(controller.dispose);
   await tester.pumpWidget(
     ProviderScope(
@@ -513,6 +532,16 @@ void main() {
     expect(find.text('Search text'), findsOneWidget);
     expect(find.text('Shell'), findsOneWidget);
     expect(find.text('Edit'), findsNothing);
+
+    for (final row in tester.widgetList<Container>(
+      find.byKey(const Key('embedded-tool-row')),
+    )) {
+      expect(
+        row.decoration,
+        isNull,
+        reason: 'Grouped tool rows must not render nested cards.',
+      );
+    }
   });
 
   testWidgets('keeps a tool chain growing across assistant records', (
@@ -679,30 +708,117 @@ void main() {
     await _pumpEvent(tester);
 
     expect(find.text('Hello'), findsOneWidget);
-    final reasoningToggle = find.byKey(const Key('reasoning-toggle'));
-    expect(tester.getSize(reasoningToggle).height, greaterThanOrEqualTo(48));
-    expect(find.bySemanticsLabel('Expand reasoning details'), findsOneWidget);
-    await tester.tap(reasoningToggle);
-    await _pumpEvent(tester);
+    expect(find.byKey(const Key('reasoning-inline')), findsOneWidget);
+    expect(find.byKey(const Key('reasoning-toggle')), findsNothing);
     expect(find.text('why this works'), findsOneWidget);
-    expect(find.bySemanticsLabel('Collapse reasoning details'), findsOneWidget);
-    final reasoningTextNode = tester.getSemantics(find.text('why this works'));
-    for (
-      var ancestor = reasoningTextNode.parent;
-      ancestor != null;
-      ancestor = ancestor.parent
-    ) {
-      expect(
-        ancestor.flagsCollection.isButton,
-        isFalse,
-        reason:
-            'Expanded reasoning text must remain readable outside the button',
-      );
-    }
     await tester.tap(find.text('search'));
     await _pumpEvent(tester);
     expect(find.textContaining('"query": "chat"'), findsOneWidget);
     semantics.dispose();
+  });
+
+  testWidgets('merges consecutive reasoning and assistant text blocks', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('assistant-reasoning-1', 'assistant', [
+          Part(
+            id: 'reasoning-a',
+            messageID: 'assistant-reasoning-1',
+            type: 'reasoning',
+            text: 'First reasoning fragment with enough detail to wrap.',
+          ),
+        ]),
+        _message('assistant-reasoning-2', 'assistant', [
+          Part(
+            id: 'reasoning-b',
+            messageID: 'assistant-reasoning-2',
+            type: 'reasoning',
+            text: 'Second reasoning fragment continues the same thought.',
+          ),
+        ], created: 2),
+        _message('assistant-text-1', 'assistant', [
+          Part(type: 'text', text: 'First answer paragraph.'),
+        ], created: 3),
+        _message('assistant-text-2', 'assistant', [
+          Part(type: 'text', text: 'Second answer paragraph.'),
+        ], created: 4),
+      ];
+
+    await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('assistant-reasoning-block')), findsOneWidget);
+    expect(find.byKey(const Key('assistant-text-block')), findsOneWidget);
+    expect(find.byKey(const Key('reasoning-toggle')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('reasoning-toggle')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('First reasoning fragment'), findsOneWidget);
+    expect(find.textContaining('Second reasoning fragment'), findsOneWidget);
+    expect(find.text('First answer paragraph.'), findsOneWidget);
+    expect(find.text('Second answer paragraph.'), findsOneWidget);
+  });
+
+  testWidgets('workbench review loads live session data in one surface', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..diffs = [
+        FileDiff(file: '/workspace/lib/chat.dart', additions: 7, deletions: 2),
+      ]
+      ..todoItems = [
+        Todo(content: 'Flatten groups', status: 'completed'),
+        Todo(content: 'Verify review', status: 'pending'),
+      ];
+
+    await _pumpChat(tester, api);
+    await tester.tap(find.byKey(const Key('workbench-tab-review')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('chat-composer-surface')), findsOneWidget);
+    expect(find.byKey(const Key('chat-workbench-panel')), findsOneWidget);
+    expect(find.byKey(const Key('workbench-review')), findsOneWidget);
+    expect(find.text('chat.dart'), findsOneWidget);
+    expect(find.text('1/2'), findsOneWidget);
+    expect(find.text('+7'), findsOneWidget);
+    expect(find.text('-2'), findsOneWidget);
+  });
+
+  testWidgets('workbench commands come from the connected OpenCode server', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi();
+    final repository = _FakeProductRepository(const [
+      CommandInfo(
+        name: 'review',
+        description: 'Review current changes',
+        subtask: false,
+      ),
+      CommandInfo(
+        name: 'init',
+        description: 'Create project guidance',
+        subtask: false,
+      ),
+    ]);
+
+    await _pumpChat(tester, api, repository: repository);
+    await tester.tap(find.byKey(const Key('workbench-tab-commands')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('/review'), findsOneWidget);
+    expect(find.text('/init'), findsOneWidget);
+    await tester.tap(find.text('/review'));
+    await tester.pumpAndSettle();
+    final commandField = tester.widget<TextField>(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is TextField && widget.decoration?.labelText == 'Command',
+      ),
+    );
+    expect(commandField.controller?.text, 'review');
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await tester.pumpAndSettle();
   });
 
   testWidgets('removes individual parts and complete messages', (tester) async {
