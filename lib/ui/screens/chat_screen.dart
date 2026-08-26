@@ -1716,8 +1716,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                       final index = _messages.length - 1 - i;
                                       if (index < 0) return _TypingIndicator();
                                       final m = _messages[index];
+                                      final meta = _messageMeta(
+                                        _messages,
+                                        index,
+                                      );
                                       return _MessageView(
                                         m: m,
+                                        meta: meta,
                                         filePreviewLoader: _loadToolOutputFile,
                                         onAttachFile: _attachToolOutputFile,
                                         onDownloadFile: _downloadToolOutputFile,
@@ -2459,14 +2464,7 @@ class __TypingIndicatorState extends State<_TypingIndicator>
 
 const _contextToolNames = {'read', 'list', 'glob', 'grep'};
 
-bool _canGroupContextTool(Part part) {
-  final tool = part.toolName?.trim().toLowerCase();
-  return part.type == 'tool' &&
-      tool != null &&
-      _contextToolNames.contains(tool) &&
-      part.toolState.status != 'error' &&
-      part.toolState.outputFiles.isEmpty;
-}
+bool _isToolPart(Part part) => part.type == 'tool';
 
 class _AssistantPartRun {
   const _AssistantPartRun(this.parts, {this.grouped = false});
@@ -2480,22 +2478,22 @@ List<_AssistantPartRun> _groupAssistantParts(List<Part> parts) {
   var index = 0;
   while (index < parts.length) {
     final current = parts[index];
-    if (!_canGroupContextTool(current)) {
+    if (!_isToolPart(current)) {
       runs.add(_AssistantPartRun([current]));
       index += 1;
       continue;
     }
 
-    final contextParts = <Part>[current];
+    final toolParts = <Part>[current];
     var next = index + 1;
-    while (next < parts.length && _canGroupContextTool(parts[next])) {
-      contextParts.add(parts[next]);
+    while (next < parts.length && _isToolPart(parts[next])) {
+      toolParts.add(parts[next]);
       next += 1;
     }
-    if (contextParts.length == 1) {
-      runs.add(_AssistantPartRun(contextParts));
+    if (toolParts.length == 1) {
+      runs.add(_AssistantPartRun(toolParts));
     } else {
-      runs.add(_AssistantPartRun(contextParts, grouped: true));
+      runs.add(_AssistantPartRun(toolParts, grouped: true));
     }
     index = next;
   }
@@ -2522,8 +2520,36 @@ String _contextToolSummary(List<Part> parts) {
   ].where((label) => label.isNotEmpty).join(' · ');
 }
 
-class _ContextToolGroup extends StatefulWidget {
-  const _ContextToolGroup({
+String _toolRunSummary(List<Part> parts) {
+  final allContext = parts.every(
+    (part) => _contextToolNames.contains(part.toolName?.trim().toLowerCase()),
+  );
+  if (allContext) return _contextToolSummary(parts);
+
+  final labels = <String>[];
+  for (final part in parts) {
+    final name = part.toolName?.trim().toLowerCase() ?? 'tool';
+    final label = switch (name) {
+      'bash' || 'shell' => 'shell',
+      'read' => 'read',
+      'list' => 'list',
+      'glob' || 'grep' => 'search',
+      'edit' => 'edit',
+      'write' => 'write',
+      'patch' || 'apply_patch' => 'patch',
+      'task' => 'agent',
+      'todowrite' || 'todo' => 'tasks',
+      'webfetch' || 'websearch' => 'web',
+      _ => name,
+    };
+    if (!labels.contains(label)) labels.add(label);
+  }
+  final kinds = labels.take(3).join(' · ');
+  return '${parts.length} calls${kinds.isEmpty ? '' : ' · $kinds'}';
+}
+
+class _ToolCallGroup extends StatefulWidget {
+  const _ToolCallGroup({
     super.key,
     required this.parts,
     required this.filePreviewLoader,
@@ -2537,11 +2563,36 @@ class _ContextToolGroup extends StatefulWidget {
   final ToolOutputFileAction onDownloadFile;
 
   @override
-  State<_ContextToolGroup> createState() => _ContextToolGroupState();
+  State<_ToolCallGroup> createState() => _ToolCallGroupState();
 }
 
-class _ContextToolGroupState extends State<_ContextToolGroup> {
-  bool _expanded = false;
+class _ToolCallGroupState extends State<_ToolCallGroup> {
+  late bool _expanded;
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded = _shouldOpen(widget.parts);
+  }
+
+  @override
+  void didUpdateWidget(covariant _ToolCallGroup oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if ((!_expanded &&
+            widget.parts.length > oldWidget.parts.length &&
+            _running) ||
+        _shouldOpen(widget.parts)) {
+      _expanded = true;
+    }
+  }
+
+  bool _shouldOpen(List<Part> parts) => parts.any(
+    (part) =>
+        part.toolState.status == 'pending' ||
+        part.toolState.status == 'running' ||
+        part.toolState.status == 'error' ||
+        part.toolState.outputFiles.isNotEmpty,
+  );
 
   bool get _running => widget.parts.any(
     (part) =>
@@ -2549,14 +2600,22 @@ class _ContextToolGroupState extends State<_ContextToolGroup> {
         part.toolState.status == 'running',
   );
 
+  bool get _failed =>
+      widget.parts.any((part) => part.toolState.status == 'error');
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final summary = _contextToolSummary(widget.parts);
-    final title = _running ? 'Exploring' : 'Explored';
+    final summary = _toolRunSummary(widget.parts);
+    final allContext = widget.parts.every(
+      (part) => _contextToolNames.contains(part.toolName?.trim().toLowerCase()),
+    );
+    final title = allContext
+        ? (_running ? 'Exploring' : 'Explored')
+        : (_running ? 'Running tools' : 'Tools');
     return Container(
-      key: const Key('context-tool-group'),
+      key: const Key('tool-call-group'),
       margin: const EdgeInsets.symmetric(vertical: 3),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: .28),
@@ -2570,7 +2629,7 @@ class _ContextToolGroupState extends State<_ContextToolGroup> {
             expanded: _expanded,
             label: '$title, ${widget.parts.length} tools',
             child: InkWell(
-              key: const Key('context-tool-group-header'),
+              key: const Key('tool-call-group-header'),
               onTap: () => setState(() => _expanded = !_expanded),
               borderRadius: BorderRadius.circular(8),
               child: ConstrainedBox(
@@ -2613,11 +2672,15 @@ class _ContextToolGroupState extends State<_ContextToolGroup> {
                         )
                       else
                         Icon(
-                          _running
+                          _failed
+                              ? Icons.error_outline_rounded
+                              : _running
                               ? Icons.hourglass_top_rounded
                               : Icons.check_circle_outline_rounded,
                           size: 14,
-                          color: _running
+                          color: _failed
+                              ? theme.colorScheme.error
+                              : _running
                               ? theme.colorScheme.primary
                               : Colors.green.shade400,
                         ),
@@ -2709,11 +2772,13 @@ class _AssistantMessagePart extends StatelessWidget {
 
 class _MessageView extends StatelessWidget {
   final MessageWithParts m;
+  final _MessageMeta meta;
   final ToolOutputFileLoader filePreviewLoader;
   final ToolOutputFileAction onAttachFile;
   final ToolOutputFileAction onDownloadFile;
   const _MessageView({
     required this.m,
+    required this.meta,
     required this.filePreviewLoader,
     required this.onAttachFile,
     required this.onDownloadFile,
@@ -2728,11 +2793,10 @@ class _MessageView extends StatelessWidget {
         ? const <_AssistantPartRun>[]
         : _groupAssistantParts(visibleParts);
 
-    final meta = <String>[
-      if (!isUser && m.info.modelID != null)
-        '${m.info.providerID}/${m.info.modelID}',
-      if (m.info.tokens.total > 0) '${_fmtTokens(m.info.tokens.total)} tok',
-      if (m.info.cost > 0) '\$${m.info.cost.toStringAsFixed(4)}',
+    final metaParts = <String>[
+      ?meta.modelLabel,
+      if (meta.turnTokens case final tokens?) '${_fmtTokens(tokens)} tok',
+      if (meta.turnCost case final cost?) '\$${cost.toStringAsFixed(4)}',
     ];
 
     return Padding(
@@ -2764,9 +2828,9 @@ class _MessageView extends StatelessWidget {
                     children: [
                       for (final run in assistantRuns)
                         if (run.grouped)
-                          _ContextToolGroup(
+                          _ToolCallGroup(
                             key: ValueKey(
-                              'context:${run.parts.first.id ?? run.parts.first.callID}',
+                              'tools:${run.parts.first.id ?? run.parts.first.callID}',
                             ),
                             parts: run.parts,
                             filePreviewLoader: filePreviewLoader,
@@ -2783,11 +2847,11 @@ class _MessageView extends StatelessWidget {
                     ],
                   ),
           ),
-          if (meta.isNotEmpty)
+          if (metaParts.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 3, left: 6, right: 6),
               child: Text(
-                meta.join('  ·  '),
+                metaParts.join('  ·  '),
                 style: theme.textTheme.labelSmall!.copyWith(
                   color: theme.hintColor,
                   fontSize: 10,
@@ -2814,6 +2878,57 @@ class _MessageView extends StatelessWidget {
     if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}k';
     return '$n';
   }
+}
+
+class _MessageMeta {
+  const _MessageMeta({this.modelLabel, this.turnTokens, this.turnCost});
+
+  final String? modelLabel;
+  final int? turnTokens;
+  final double? turnCost;
+}
+
+String? _modelLabel(MessageInfo info) {
+  final provider = info.providerID?.trim();
+  final model = info.modelID?.trim();
+  if (model?.isNotEmpty != true) return null;
+  return provider?.isNotEmpty == true ? '$provider/$model' : model;
+}
+
+_MessageMeta _messageMeta(List<MessageWithParts> messages, int index) {
+  final current = messages[index];
+  if (current.info.role != 'assistant') return const _MessageMeta();
+
+  final currentModel = _modelLabel(current.info);
+  String? previousModel;
+  for (var previous = index - 1; previous >= 0; previous -= 1) {
+    final info = messages[previous].info;
+    if (info.role != 'assistant') continue;
+    previousModel = _modelLabel(info);
+    break;
+  }
+  final modelChanged = currentModel != null && currentModel != previousModel;
+
+  final endsAssistantRun =
+      index == messages.length - 1 ||
+      messages[index + 1].info.role != 'assistant';
+  if (!endsAssistantRun) {
+    return _MessageMeta(modelLabel: modelChanged ? currentModel : null);
+  }
+
+  var turnTokens = 0;
+  var turnCost = 0.0;
+  for (var runIndex = index; runIndex >= 0; runIndex -= 1) {
+    final info = messages[runIndex].info;
+    if (info.role != 'assistant') break;
+    turnTokens += info.tokens.total;
+    turnCost += info.cost;
+  }
+  return _MessageMeta(
+    modelLabel: modelChanged ? currentModel : null,
+    turnTokens: turnTokens > 0 ? turnTokens : null,
+    turnCost: turnCost > 0 ? turnCost : null,
+  );
 }
 
 class _UserMessageContent extends StatelessWidget {

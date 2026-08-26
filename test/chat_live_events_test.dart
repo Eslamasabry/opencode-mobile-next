@@ -117,11 +117,19 @@ MessageWithParts _message(
   String role,
   List<Part> parts, {
   int created = 1,
+  String? providerID,
+  String? modelID,
+  Tokens? tokens,
+  double cost = 0,
 }) => MessageWithParts(
   info: MessageInfo(
     id: id,
     sessionID: 'session-1',
     role: role,
+    providerID: providerID,
+    modelID: modelID,
+    tokens: tokens,
+    cost: cost,
     time: MsgTime(created: created, completed: created + 1),
   ),
   parts: parts,
@@ -407,7 +415,9 @@ void main() {
     expect(find.textContaining('| File | Status |'), findsOneWidget);
   });
 
-  testWidgets('groups only consecutive OpenCode context tools', (tester) async {
+  testWidgets('groups a tool chain until assistant text appears', (
+    tester,
+  ) async {
     final api = _FakeOpenCodeApi()
       ..messagesHandler = (_) async => [
         _message('assistant-tools', 'assistant', [
@@ -446,26 +456,133 @@ void main() {
               'metadata': {'exit': 0},
             }, toolName: 'bash'),
           ),
+          Part(
+            id: 'text-boundary',
+            messageID: 'assistant-tools',
+            type: 'text',
+            text: 'Tool chain finished.',
+          ),
+          Part(
+            id: 'edit-1',
+            messageID: 'assistant-tools',
+            type: 'tool',
+            toolName: 'edit',
+            toolState: ToolState.fromJson(const {
+              'status': 'completed',
+              'input': {
+                'filePath': '/workspace/lib/main.dart',
+                'oldString': 'old',
+                'newString': 'new',
+              },
+              'output': 'done',
+            }, toolName: 'edit'),
+          ),
+          Part(
+            id: 'write-1',
+            messageID: 'assistant-tools',
+            type: 'tool',
+            toolName: 'write',
+            toolState: ToolState.fromJson(const {
+              'status': 'completed',
+              'input': {'filePath': '/workspace/notes.md', 'content': '# Done'},
+              'output': 'done',
+            }, toolName: 'write'),
+          ),
         ]),
       ];
 
     await _pumpChat(tester, api);
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('context-tool-group')), findsOneWidget);
-    expect(find.text('Explored'), findsOneWidget);
-    expect(find.text('1 read · 1 search'), findsOneWidget);
-    expect(find.text('Shell'), findsOneWidget);
+    expect(find.byKey(const Key('tool-call-group')), findsNWidgets(2));
+    expect(find.text('Tools'), findsNWidgets(2));
+    expect(find.text('3 calls · read · search · shell'), findsOneWidget);
+    expect(find.text('2 calls · edit · write'), findsOneWidget);
+    expect(find.text('Tool chain finished.'), findsOneWidget);
+    expect(find.text('Shell'), findsNothing);
     expect(find.text('Read'), findsNothing);
     expect(find.text('Search text'), findsNothing);
+    expect(find.text('Edit'), findsNothing);
 
-    final header = find.byKey(const Key('context-tool-group-header'));
-    expect(tester.getSize(header).height, greaterThanOrEqualTo(48));
-    await tester.tap(header);
+    final headers = find.byKey(const Key('tool-call-group-header'));
+    expect(tester.getSize(headers.first).height, greaterThanOrEqualTo(48));
+    await tester.tap(headers.first);
     await tester.pumpAndSettle();
 
     expect(find.text('Read'), findsOneWidget);
     expect(find.text('Search text'), findsOneWidget);
+    expect(find.text('Shell'), findsOneWidget);
+    expect(find.text('Edit'), findsNothing);
+  });
+
+  testWidgets('shows model changes and aggregates usage once per turn', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('user-1', 'user', [
+          Part(type: 'text', text: 'Inspect this'),
+        ], created: 1),
+        _message(
+          'assistant-1',
+          'assistant',
+          [Part(type: 'text', text: 'First internal step')],
+          created: 2,
+          providerID: 'provider',
+          modelID: 'model-a',
+          tokens: Tokens(input: 70, output: 30),
+        ),
+        _message(
+          'assistant-2',
+          'assistant',
+          [Part(type: 'text', text: 'Second internal step')],
+          created: 3,
+          providerID: 'provider',
+          modelID: 'model-a',
+          tokens: Tokens(input: 150, output: 50),
+        ),
+        _message(
+          'assistant-3',
+          'assistant',
+          [Part(type: 'text', text: 'Model switched here')],
+          created: 4,
+          providerID: 'provider',
+          modelID: 'model-b',
+          tokens: Tokens(input: 40, output: 10),
+        ),
+        _message('user-2', 'user', [
+          Part(type: 'text', text: 'Continue'),
+        ], created: 5),
+        _message(
+          'assistant-4',
+          'assistant',
+          [Part(type: 'text', text: 'Same model, next turn')],
+          created: 6,
+          providerID: 'provider',
+          modelID: 'model-b',
+          tokens: Tokens(input: 60, output: 15),
+        ),
+      ];
+
+    await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('provider/model-a'), findsOneWidget);
+    expect(find.textContaining('provider/model-b'), findsOneWidget);
+    expect(find.textContaining('350 tok'), findsOneWidget);
+    expect(find.textContaining('75 tok'), findsOneWidget);
+    Finder usageSegment(String value) => find.byWidgetPredicate((widget) {
+      if (widget is! Text || widget.data == null) return false;
+      return widget.data!
+          .split(RegExp(r'\s+·\s+'))
+          .map((segment) => segment.trim())
+          .contains(value);
+    });
+    expect(usageSegment('100 tok'), findsNothing);
+    expect(usageSegment('200 tok'), findsNothing);
+    expect(usageSegment('50 tok'), findsNothing);
   });
 
   testWidgets('applies split text, reasoning, and tool input deltas', (
