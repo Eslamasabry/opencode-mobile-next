@@ -1578,6 +1578,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final busy = _conn.busySessions.contains(widget.sessionID);
+    final displayParts = _timelineDisplayParts(_messages);
 
     final session = _conn.sessionsById[widget.sessionID];
     final title = session?.title;
@@ -1720,9 +1721,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                         _messages,
                                         index,
                                       );
+                                      final parts = displayParts[index];
+                                      if (parts.isEmpty &&
+                                          meta.isEmpty &&
+                                          m.info.errorText == null) {
+                                        return const SizedBox.shrink();
+                                      }
                                       return _MessageView(
                                         m: m,
                                         meta: meta,
+                                        parts: parts,
                                         filePreviewLoader: _loadToolOutputFile,
                                         onAttachFile: _attachToolOutputFile,
                                         onDownloadFile: _downloadToolOutputFile,
@@ -2466,6 +2474,49 @@ const _contextToolNames = {'read', 'list', 'glob', 'grep'};
 
 bool _isToolPart(Part part) => part.type == 'tool';
 
+List<List<Part>> _timelineDisplayParts(List<MessageWithParts> messages) {
+  final display = List.generate(messages.length, (_) => <Part>[]);
+  final pendingTools = <Part>[];
+  int? pendingOwner;
+
+  void flushTools() {
+    if (pendingOwner case final owner?) {
+      display[owner].addAll(pendingTools);
+    }
+    pendingTools.clear();
+    pendingOwner = null;
+  }
+
+  for (var index = 0; index < messages.length; index += 1) {
+    final message = messages[index];
+    final parts = message.parts.where((part) => part.isRenderable);
+    if (message.info.role != 'assistant') {
+      flushTools();
+      display[index].addAll(parts);
+      continue;
+    }
+
+    if (message.info.errorText != null && parts.isEmpty) flushTools();
+    for (final part in parts) {
+      if (_isToolPart(part)) {
+        pendingOwner ??= index;
+        pendingTools.add(part);
+      } else {
+        flushTools();
+        display[index].add(part);
+      }
+    }
+    if (message.info.errorText != null) flushTools();
+
+    final nextIsAssistant =
+        index + 1 < messages.length &&
+        messages[index + 1].info.role == 'assistant';
+    if (!nextIsAssistant) flushTools();
+  }
+  flushTools();
+  return display;
+}
+
 class _AssistantPartRun {
   const _AssistantPartRun(this.parts, {this.grouped = false});
 
@@ -2773,12 +2824,14 @@ class _AssistantMessagePart extends StatelessWidget {
 class _MessageView extends StatelessWidget {
   final MessageWithParts m;
   final _MessageMeta meta;
+  final List<Part> parts;
   final ToolOutputFileLoader filePreviewLoader;
   final ToolOutputFileAction onAttachFile;
   final ToolOutputFileAction onDownloadFile;
   const _MessageView({
     required this.m,
     required this.meta,
+    required this.parts,
     required this.filePreviewLoader,
     required this.onAttachFile,
     required this.onDownloadFile,
@@ -2788,7 +2841,7 @@ class _MessageView extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isUser = m.info.role == 'user';
-    final visibleParts = m.parts.where((p) => p.isRenderable).toList();
+    final visibleParts = parts.where((p) => p.isRenderable).toList();
     final assistantRuns = isUser
         ? const <_AssistantPartRun>[]
         : _groupAssistantParts(visibleParts);
@@ -2886,6 +2939,9 @@ class _MessageMeta {
   final String? modelLabel;
   final int? turnTokens;
   final double? turnCost;
+
+  bool get isEmpty =>
+      modelLabel == null && turnTokens == null && turnCost == null;
 }
 
 String? _modelLabel(MessageInfo info) {

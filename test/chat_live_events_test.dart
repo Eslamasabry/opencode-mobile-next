@@ -515,6 +515,59 @@ void main() {
     expect(find.text('Edit'), findsNothing);
   });
 
+  testWidgets('keeps a tool chain growing across assistant records', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('assistant-edit', 'assistant', [
+          Part(
+            id: 'edit-across-message',
+            messageID: 'assistant-edit',
+            type: 'tool',
+            toolName: 'edit',
+            toolState: ToolState.fromJson(const {
+              'status': 'completed',
+              'input': {
+                'filePath': '/workspace/lib/main.dart',
+                'oldString': 'old',
+                'newString': 'new',
+              },
+              'output': 'done',
+            }, toolName: 'edit'),
+          ),
+        ], created: 1),
+        _message('assistant-shell', 'assistant', [
+          Part(
+            id: 'shell-across-message',
+            messageID: 'assistant-shell',
+            type: 'tool',
+            toolName: 'bash',
+            toolState: ToolState.fromJson(const {
+              'status': 'completed',
+              'input': {'command': 'flutter test'},
+              'output': 'All tests passed.',
+              'metadata': {'exit': 0},
+            }, toolName: 'bash'),
+          ),
+        ], created: 2),
+      ];
+
+    await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('tool-call-group')), findsOneWidget);
+    expect(find.text('2 calls · edit · shell'), findsOneWidget);
+    expect(find.text('Edit'), findsNothing);
+    expect(find.text('Shell'), findsNothing);
+
+    await tester.tap(find.byKey(const Key('tool-call-group-header')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Edit'), findsOneWidget);
+    expect(find.text('Shell'), findsOneWidget);
+  });
+
   testWidgets('shows model changes and aggregates usage once per turn', (
     tester,
   ) async {
