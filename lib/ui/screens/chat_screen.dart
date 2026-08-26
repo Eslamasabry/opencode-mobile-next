@@ -2319,25 +2319,25 @@ class _ChatWorkbench extends StatelessWidget {
           ),
           TextButton.icon(
             onPressed: onFork,
-            icon: const Icon(Icons.call_split_rounded, size: 17),
+            icon: const Icon(Icons.copy_rounded, size: 17),
             label: const Text('Fork'),
           ),
           TextButton.icon(
             onPressed: onCompact,
-            icon: const Icon(Icons.compress_rounded, size: 17),
+            icon: const Icon(Icons.archive_outlined, size: 17),
             label: const Text('Compact'),
           ),
           TextButton.icon(
             onPressed: onShare,
             icon: Icon(
-              shared ? Icons.link_off_rounded : Icons.share_outlined,
+              shared ? Icons.link_off_rounded : Icons.link_rounded,
               size: 17,
             ),
             label: Text(shared ? 'Unshare' : 'Share'),
           ),
           TextButton.icon(
             onPressed: onRevert,
-            icon: const Icon(Icons.restore_rounded, size: 17),
+            icon: const Icon(Icons.sync_problem_rounded, size: 17),
             label: Text(reverted ? 'Restore' : 'Revert'),
           ),
           TextButton.icon(
