@@ -1,21 +1,33 @@
 # oc_app handoff
 
-Last updated: 2026-08-26 (Asia/Dubai)
+Last updated: 2026-08-27 (Asia/Dubai)
 
 ## Current GitHub APK
 
 - Branch: `master`
-- App version: `1.0.18+19`
-- Git tag: `v1.0.18+19`
-- APK: <https://github.com/Eslamasabry/oc_app/releases/download/v1.0.18%2B19/app-release.apk>
-- APK SHA-256: `41190803397f5c481d7e12c919221b5441f7651de9a27bef645ba6c928c44896`
-- Shorebird release ID: `789571`
+- App version: `1.0.19+20`
+- Git tag: `v1.0.19+20`
+- Release commit: `efed66192ed4ee0f70d95c4b28d137e0e3a071ed`
+- Release: <https://github.com/Eslamasabry/oc_app/releases/tag/v1.0.19%2B20>
+- APK: <https://github.com/Eslamasabry/oc_app/releases/download/v1.0.19%2B20/app-release.apk>
+- APK SHA-256: `c94c305d1ad329e1126065890fd3d0e4ffe92ddf26f7f12584532885f1164887`
+- APK size: `158719165` bytes
+- Shorebird release ID: `792729`
 
 This APK includes the OpenCode-driven model/mode/agent picker, repaired diff viewer,
 in-app image/file previews, wake-time UI reconciliation, and the opt-in Android
-foreground service for live background coding sessions. It was installed on the
-Android simulator and verified as version code 19/version name `1.0.18`. Flutter
-analysis was clean and all 199 tests passed.
+foreground service for live background coding sessions. It also groups consecutive
+tool calls into a growing timeline run until reasoning, assistant text, or a file
+part begins. Model metadata is displayed only initially or when the model changes;
+token and cost usage is aggregated once at the end of each assistant run. These
+rules are derived from stored OpenCode parts at render time, so they apply to old
+chats without a migration.
+
+The exact GitHub asset was registered through Shorebird with Flutter `3.47.1`,
+installed on `emulator-5554`, and verified as version code 20/version name
+`1.0.19`. An existing real chat rendered without repeated model metadata or a
+Flutter/render failure. The GitHub-downloaded asset matched the local tested APK
+byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 
 ## Shorebird generated-artifact patch for `1.0.18+19`
 
@@ -178,6 +190,7 @@ git status --short --branch
 git log -3 --oneline --decorate
 /home/eslam/.shorebird/bin/shorebird patches list --release-version=1.0.16+17
 /home/eslam/.shorebird/bin/shorebird patches list --release-version=1.0.18+19
+/home/eslam/.shorebird/bin/shorebird patches list --release-version=1.0.19+20
 /home/eslam/.config/shorebird/bin/shorebird patches list --release-version=1.0.14+15
 adb devices -l
 ```
