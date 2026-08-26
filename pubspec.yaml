@@ -21,6 +21,7 @@ dependencies:
   record: 6.2.1
   sherpa_onnx: 1.13.6
   shared_preferences: ^2.3.3
+  shorebird_code_push: 2.0.7
   url_launcher: ^6.3.1
   uuid: ^4.5.1
   xterm: ^4.0.0

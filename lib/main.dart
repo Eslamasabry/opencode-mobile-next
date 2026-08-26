@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'state/connection.dart';
+import 'update/shorebird_update_notice.dart';
 import 'ui/app_theme.dart';
 import 'ui/screens/guide_screen.dart';
 import 'ui/screens/about_screen.dart';
@@ -29,7 +30,9 @@ Future<void> main() async {
 }
 
 class OcApp extends ConsumerStatefulWidget {
-  const OcApp({super.key});
+  const OcApp({super.key, this.updateService});
+
+  final AppUpdateService? updateService;
 
   @override
   ConsumerState<OcApp> createState() => _OcAppState();
@@ -37,11 +40,14 @@ class OcApp extends ConsumerStatefulWidget {
 
 class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
   late final ConnectionController _controller;
+  late final AppUpdateService _updateService;
+  final _messengerKey = GlobalKey<ScaffoldMessengerState>();
 
   @override
   void initState() {
     super.initState();
     _controller = ref.read(connProvider);
+    _updateService = widget.updateService ?? ShorebirdAppUpdateService();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_controller.restoreBackgroundLiveMode());
@@ -65,6 +71,12 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      scaffoldMessengerKey: _messengerKey,
+      builder: (context, child) => ShorebirdUpdateNotice(
+        service: _updateService,
+        messengerKey: _messengerKey,
+        child: child ?? const SizedBox.shrink(),
+      ),
       title: 'OpenCode',
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.dark,
