@@ -16,6 +16,7 @@ void main() {
       'diagnostics.sh': TermuxBridge.diagnosticsScript(),
       'snapshot.sh': TermuxBridge.setupSnapshotScript(),
       'status.sh': TermuxBridge.statusScript(),
+      'wake-lock.sh': TermuxBridge.ensureWakeLockScript,
       'unlock.sh': TermuxBridge.unlockCommand,
       'stop.sh': TermuxBridge.stopScript(port: 4096),
     };
@@ -131,7 +132,7 @@ message=This belongs to the terminal
     expect(packageWork, greaterThan(claim));
   });
 
-  test('setup wake lock is released on every exit and explicit stop', () {
+  test('server owns the setup wake lock until it stops or exits', () {
     final manager = TermuxBridge.managerScriptForTesting();
     final cleanup = manager.substring(
       manager.indexOf('cleanup_setup() {'),
@@ -143,10 +144,22 @@ message=This belongs to the terminal
       cleanup.indexOf('termux-wake-unlock'),
       greaterThan(cleanup.indexOf('if [ "\${SETUP_SUCCEEDED:-0}" != 1 ]')),
     );
+    expect(cleanup, contains('if [ "\${SERVER_STARTED:-0}" = 1 ]'));
+    expect(manager, contains(r'"$manager" server-exited "$port" "$$" "$code"'));
+    expect(manager, contains('server_exited() {'));
+    expect(manager, contains("server-exited) shift; server_exited \"\$@\" ;;"));
     expect(manager, contains("stop() {"));
     expect(
       manager.split('termux-wake-unlock').length - 1,
-      greaterThanOrEqualTo(2),
+      greaterThanOrEqualTo(4),
+    );
+  });
+
+  test('wake lock refresh script is safe to invoke repeatedly', () {
+    expect(TermuxBridge.ensureWakeLockScript, contains('termux-wake-lock'));
+    expect(
+      TermuxBridge.ensureWakeLockScript,
+      contains('opencode-server-wake-lock-held'),
     );
   });
 

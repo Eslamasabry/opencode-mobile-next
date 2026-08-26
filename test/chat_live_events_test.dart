@@ -103,6 +103,15 @@ Future<ConnectionController> _controller(_FakeOpenCodeApi api) async {
   return ConnectionController(ProfileStore(prefs: prefs))..api = api;
 }
 
+class _DelayedActionController extends ConnectionController {
+  _DelayedActionController(super.store, this.readyApi);
+
+  final Completer<OpenCodeApi?> readyApi;
+
+  @override
+  Future<OpenCodeApi?> prepareActionTransport() => readyApi.future;
+}
+
 MessageWithParts _message(
   String id,
   String role,
@@ -232,6 +241,54 @@ void main() {
 
     expect(find.text('Completed while backgrounded'), findsOneWidget);
     expect(find.text('Before background'), findsNothing);
+  });
+
+  testWidgets('send waits for the wake-time replacement transport', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final retainedApi = _FakeOpenCodeApi();
+    final replacementApi = _FakeOpenCodeApi();
+    final readyApi = Completer<OpenCodeApi?>();
+    final controller = _DelayedActionController(
+      ProfileStore(prefs: prefs),
+      readyApi,
+    )..api = retainedApi;
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: const MaterialApp(home: ChatScreen(sessionID: 'session-1')),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      'send after wake',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('chat-send-button')));
+    await tester.pump();
+
+    expect(retainedApi.promptCalls, 0);
+    expect(replacementApi.promptCalls, 0);
+    expect(
+      tester
+          .widget<IconButton>(find.byKey(const Key('chat-send-button')))
+          .onPressed,
+      isNull,
+    );
+
+    readyApi.complete(replacementApi);
+    await tester.pumpAndSettle();
+
+    expect(retainedApi.promptCalls, 0);
+    expect(replacementApi.promptCalls, 1);
+    expect(replacementApi.prompts.single.text, 'send after wake');
   });
 
   testWidgets('renders a generated image from a tool output filePath', (

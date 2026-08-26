@@ -9,6 +9,7 @@ import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
+import 'package:opencode_mobile/background/live_background.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,10 +24,17 @@ class _ControlledApi extends OpenCodeApi {
   Completer<List<Session>>? sessionsResult;
   Object? sessionsFailure;
   int sessionsCalls = 0;
+  int healthCalls = 0;
+  Object? healthFailure;
   bool closed = false;
 
   @override
-  Future<Health> health() => healthResult.future;
+  Future<Health> health() {
+    healthCalls += 1;
+    final failure = healthFailure;
+    if (failure != null) return Future.error(failure);
+    return healthResult.future;
+  }
 
   @override
   Future<List<Session>> sessions() {
@@ -631,6 +639,159 @@ void main() {
     expect(controller.sessionsById, isEmpty);
     expect(controller.sessionsError, contains('new location unavailable'));
     expect(controller.locationError, isNotNull);
+    controller.dispose();
+  });
+
+  testWidgets(
+    'keep-live wake reconciliation is shared with foreground actions',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({
+        BackgroundLiveController.preferenceKey: true,
+      });
+      final store = ProfileStore(prefs: await SharedPreferences.getInstance());
+      final backgroundLive = BackgroundLiveController(
+        preferences: store.prefs,
+        invoke: (method, [arguments]) async => const {
+          'enabled': true,
+          'active': true,
+          'notificationGranted': true,
+          'batteryOptimizationIgnored': false,
+        },
+      );
+      final apis = <_ControlledApi>[];
+      final streams = <_FakeEventStream>[];
+      var wakeLockCalls = 0;
+      final controller = ConnectionController(
+        store,
+        backgroundLive: backgroundLive,
+        localWakeLockEnsurer: () async => wakeLockCalls += 1,
+        apiFactory: (profile) {
+          final api = _ControlledApi(profile.id);
+          apis.add(api);
+          return api;
+        },
+        repositoryFactory: _repositoryFactory,
+        eventStreamFactory: _streamFactory(streams),
+      );
+
+      final connect = controller.connect(_profile('server'));
+      await tester.pump();
+      apis.single.healthResult.complete(Health(healthy: true, version: '1'));
+      await connect;
+      await tester.pump();
+      expect(wakeLockCalls, 1);
+      final api = apis.single;
+      final healthCallsBeforeWake = api.healthCalls;
+
+      controller.suspendForLifecycle();
+      expect(controller.lifecycleSuspended, isFalse);
+
+      final resume = controller.resumeFromLifecycle();
+      final actionApi = controller.prepareActionTransport();
+      await resume;
+      expect(await actionApi, same(api));
+      expect(api.healthCalls, healthCallsBeforeWake + 1);
+      expect(wakeLockCalls, 2);
+
+      expect(await controller.prepareActionTransport(), same(api));
+      expect(api.healthCalls, healthCallsBeforeWake + 1);
+      controller.dispose();
+    },
+  );
+
+  testWidgets('stale keep-live transport is rebuilt before an action', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      BackgroundLiveController.preferenceKey: true,
+    });
+    final store = ProfileStore(prefs: await SharedPreferences.getInstance());
+    final backgroundLive = BackgroundLiveController(
+      preferences: store.prefs,
+      invoke: (method, [arguments]) async => const {
+        'enabled': true,
+        'active': true,
+        'notificationGranted': true,
+        'batteryOptimizationIgnored': false,
+      },
+    );
+    final apis = <_ControlledApi>[];
+    final streams = <_FakeEventStream>[];
+    var wakeLockCalls = 0;
+    final controller = ConnectionController(
+      store,
+      backgroundLive: backgroundLive,
+      localWakeLockEnsurer: () async => wakeLockCalls += 1,
+      apiFactory: (profile) {
+        final api = _ControlledApi('${profile.id}-${apis.length}');
+        apis.add(api);
+        return api;
+      },
+      repositoryFactory: _repositoryFactory,
+      eventStreamFactory: _streamFactory(streams),
+    );
+
+    final connect = controller.connect(_profile('server'));
+    await tester.pump();
+    apis.single.healthResult.complete(Health(healthy: true, version: '1'));
+    await connect;
+    await tester.pump();
+
+    final staleApi = apis.single
+      ..healthFailure = ApiException('stale transport');
+    controller.suspendForLifecycle();
+    final actionApi = controller.prepareActionTransport();
+    await tester.pump();
+
+    expect(apis, hasLength(2));
+    expect(staleApi.closed, isTrue);
+    apis.last.healthResult.complete(Health(healthy: true, version: '2'));
+    expect(await actionApi, same(apis.last));
+    expect(controller.version, '2');
+    expect(wakeLockCalls, 3);
+    controller.dispose();
+  });
+
+  testWidgets('keep-live wake lock is limited to loopback profiles', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      BackgroundLiveController.preferenceKey: true,
+    });
+    final store = ProfileStore(prefs: await SharedPreferences.getInstance());
+    final backgroundLive = BackgroundLiveController(
+      preferences: store.prefs,
+      invoke: (method, [arguments]) async => const {
+        'enabled': true,
+        'active': true,
+        'notificationGranted': true,
+        'batteryOptimizationIgnored': false,
+      },
+    );
+    final api = _ControlledApi('remote');
+    var wakeLockCalls = 0;
+    final controller = ConnectionController(
+      store,
+      backgroundLive: backgroundLive,
+      localWakeLockEnsurer: () async => wakeLockCalls += 1,
+      apiFactory: (_) => api,
+      repositoryFactory: _repositoryFactory,
+      eventStreamFactory: _streamFactory([]),
+    );
+    final profile = ServerProfile(
+      id: 'remote',
+      name: 'remote',
+      baseUrl: 'https://opencode.example.test',
+    );
+
+    final connect = controller.connect(profile);
+    await tester.pump();
+    api.healthResult.complete(Health(healthy: true, version: '1'));
+    await connect;
+
+    controller.suspendForLifecycle();
+    await controller.resumeFromLifecycle();
+    expect(wakeLockCalls, 0);
     controller.dispose();
   });
 

@@ -868,10 +868,25 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _send() async {
     await _voice?.cancel();
+    if (_sending || (_composer.text.trim().isEmpty && _attachments.isEmpty)) {
+      return;
+    }
+    setState(() => _sending = true);
+    final actionApi = await _conn.prepareActionTransport();
+    if (!mounted) return;
+    if (actionApi == null) {
+      setState(() => _sending = false);
+      final detail = _conn.connectionError;
+      _showActionError(
+        detail == null || detail.isEmpty
+            ? 'OpenCode is reconnecting. Try again when the server is online.'
+            : detail,
+      );
+      return;
+    }
     final text = _composer.text.trim();
-    if (_sending ||
-        (text.isEmpty && _attachments.isEmpty) ||
-        _conn.api == null) {
+    if (text.isEmpty && _attachments.isEmpty) {
+      setState(() => _sending = false);
       return;
     }
     final attachments = List<PromptAttachment>.from(_attachments);
@@ -888,7 +903,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     // Optimistic user bubble.
     setState(() {
-      _sending = true;
       _promptError = null;
       _pendingSends.add(pending);
       _messages.add(
@@ -914,7 +928,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       _attachments.clear();
     });
     try {
-      await _conn.api!.promptAsync(
+      await actionApi.promptAsync(
         widget.sessionID,
         text: text,
         model: _conn.selectedModel,

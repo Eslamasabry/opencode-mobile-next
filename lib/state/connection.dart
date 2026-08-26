@@ -10,6 +10,7 @@ import '../api/opencode_api.dart';
 import '../api/product_repository.dart';
 import '../api/sse.dart';
 import '../background/live_background.dart';
+import '../termux/bridge.dart';
 import 'profiles.dart';
 
 Map<String, dynamic> _catalogMap(Object? value) =>
@@ -102,6 +103,7 @@ final connProvider = Provider<ConnectionController>(
 
 typedef OpenCodeApiFactory = OpenCodeApi Function(ServerProfile profile);
 typedef ProductRepositoryFactory = ProductRepository Function(OpenCodeApi api);
+typedef LocalWakeLockEnsurer = Future<void> Function();
 typedef EventStreamFactory =
     EventStream Function({
       required OpenCodeApi api,
@@ -117,6 +119,7 @@ class ConnectionController extends ChangeNotifier {
   final OpenCodeApiFactory _apiFactory;
   final ProductRepositoryFactory _repositoryFactory;
   final EventStreamFactory _eventStreamFactory;
+  final LocalWakeLockEnsurer _localWakeLockEnsurer;
 
   OpenCodeApi? api;
   ProductRepository? repository;
@@ -192,6 +195,7 @@ class ConnectionController extends ChangeNotifier {
   int _permissionHydrationGeneration = 0;
   bool _disposed = false;
   bool _lifecycleSuspended = false;
+  bool _lifecycleWasBackgrounded = false;
   Future<void>? _lifecycleResume;
 
   /// True only while the app intentionally has its transport retired in the
@@ -214,9 +218,12 @@ class ConnectionController extends ChangeNotifier {
     ProductRepositoryFactory? repositoryFactory,
     EventStreamFactory? eventStreamFactory,
     BackgroundLiveController? backgroundLive,
+    LocalWakeLockEnsurer? localWakeLockEnsurer,
   }) : _apiFactory = apiFactory ?? _createApi,
        _repositoryFactory = repositoryFactory ?? _createRepository,
        _eventStreamFactory = eventStreamFactory ?? _createEventStream,
+       _localWakeLockEnsurer =
+           localWakeLockEnsurer ?? TermuxBridge.ensureWakeLock,
        backgroundLive =
            backgroundLive ??
            BackgroundLiveController(preferences: store.prefs) {
@@ -231,7 +238,30 @@ class ConnectionController extends ChangeNotifier {
   Future<void> restoreBackgroundLiveMode() => backgroundLive.restore();
 
   void _backgroundLiveChanged() {
+    if (keepLiveInBackground) {
+      unawaited(_ensureLocalServerWakeLock());
+    }
     if (!_disposed) notifyListeners();
+  }
+
+  Future<void> _ensureLocalServerWakeLock() async {
+    if (_disposed || !keepLiveInBackground) return;
+    final profile = _connectedProfile;
+    if (profile == null || !_isLoopbackUrl(profile.baseUrl)) return;
+    try {
+      await _localWakeLockEnsurer();
+    } catch (_) {
+      // The profile may point at a developer server rather than managed
+      // Termux. Transport recovery must continue even when the bridge is not
+      // installed or Android has revoked its command permission.
+    }
+  }
+
+  static bool _isLoopbackUrl(String value) {
+    final uri = Uri.tryParse(value);
+    if (uri == null) return false;
+    final host = uri.host.toLowerCase();
+    return host == '127.0.0.1' || host == 'localhost' || host == '::1';
   }
 
   static OpenCodeApi _createApi(ServerProfile profile) => OpenCodeApi(
@@ -268,6 +298,7 @@ class ConnectionController extends ChangeNotifier {
 
   Future<void> connect(ServerProfile profile) async {
     _lifecycleSuspended = false;
+    _lifecycleWasBackgrounded = false;
     _lifecycleResume = null;
     final validationError = validateServerProfileUrl(
       profile.baseUrl,
@@ -313,6 +344,7 @@ class ConnectionController extends ChangeNotifier {
     if (!_isCurrent(generation, currentApi)) return;
 
     try {
+      await _ensureLocalServerWakeLock();
       final health = await currentApi.health();
       if (!_isCurrent(generation, currentApi)) return;
       if (!health.healthy) {
@@ -575,6 +607,7 @@ class ConnectionController extends ChangeNotifier {
     bool silent = false,
   }) async {
     _lifecycleSuspended = false;
+    _lifecycleWasBackgrounded = false;
     _lifecycleResume = null;
     final generation = _beginGeneration();
     _retireTransport();
@@ -1490,8 +1523,10 @@ class ConnectionController extends ChangeNotifier {
   /// Stops all network work while the application is backgrounded without
   /// clearing the selected profile, location, or already-rendered data.
   void suspendForLifecycle() {
+    if (_disposed) return;
+    _lifecycleWasBackgrounded = true;
     if (keepLiveInBackground) return;
-    if (_disposed || _lifecycleSuspended) return;
+    if (_lifecycleSuspended) return;
     _lifecycleSuspended = true;
     // A resume already in flight is invalidated by the generation change
     // below. Detach it so a later resume can create a fresh transport.
@@ -1510,29 +1545,69 @@ class ConnectionController extends ChangeNotifier {
     final inFlight = _lifecycleResume;
     if (inFlight != null) return inFlight;
     if (!_lifecycleSuspended) {
-      if (keepLiveInBackground) return _reconcileAfterBackground();
+      if (keepLiveInBackground && _lifecycleWasBackgrounded) {
+        _lifecycleWasBackgrounded = false;
+        return _trackLifecycleResume(_reconcileAfterBackground());
+      }
       return Future.value();
     }
     _lifecycleSuspended = false;
+    _lifecycleWasBackgrounded = false;
     final profile = _connectedProfile;
     if (profile == null) return Future.value();
-    final resumed = _resumeLifecycleTransport(
-      profile,
-      directory: directory,
-      workspace: workspace,
+    return _trackLifecycleResume(
+      _resumeLifecycleTransport(
+        profile,
+        directory: directory,
+        workspace: workspace,
+      ),
     );
+  }
+
+  Future<void> _trackLifecycleResume(Future<void> operation) {
     late final Future<void> tracked;
-    tracked = resumed.whenComplete(() {
+    tracked = operation.whenComplete(() {
       if (identical(_lifecycleResume, tracked)) _lifecycleResume = null;
     });
     _lifecycleResume = tracked;
     return tracked;
   }
 
+  /// Waits until wake-time transport and catalog reconciliation completes,
+  /// then returns the API instance that foreground actions should use.
+  ///
+  /// Chat and other retained screens must not capture [api] before this
+  /// future completes because a stale background transport may be replaced.
+  Future<OpenCodeApi?> prepareActionTransport() async {
+    await resumeFromLifecycle();
+    if (_disposed || _lifecycleSuspended) return null;
+    return api;
+  }
+
   Future<void> _reconcileAfterBackground() async {
     final currentApi = api;
     if (currentApi == null) return;
     final generation = _generation;
+    try {
+      await _ensureLocalServerWakeLock();
+      if (!_isCurrent(generation, currentApi)) return;
+      final health = await currentApi.health();
+      if (!_isCurrent(generation, currentApi)) return;
+      if (!health.healthy) {
+        throw ApiException('Server health check reported unhealthy');
+      }
+      version = health.version ?? version ?? '';
+    } catch (_) {
+      if (!_isCurrent(generation, currentApi)) return;
+      final profile = _connectedProfile;
+      if (profile == null) return;
+      await _resumeLifecycleTransport(
+        profile,
+        directory: directory,
+        workspace: workspace,
+      );
+      return;
+    }
     _markDataRefreshReady(generation, currentApi);
     notifyListeners();
     await Future.wait([
@@ -1549,6 +1624,7 @@ class ConnectionController extends ChangeNotifier {
     String? workspace,
   }) async {
     final generation = _beginGeneration();
+    _retireTransport();
     final currentApi = _apiFactory(profile)
       ..setLocation(directory: directory, workspace: workspace);
     final currentRepository = _repositoryFactory(currentApi)
@@ -1560,6 +1636,8 @@ class ConnectionController extends ChangeNotifier {
     notifyListeners();
     enablePollingFallback();
     try {
+      await _ensureLocalServerWakeLock();
+      if (!_isCurrent(generation, currentApi)) return;
       final health = await currentApi.health();
       if (!_isCurrent(generation, currentApi)) return;
       if (!health.healthy) {

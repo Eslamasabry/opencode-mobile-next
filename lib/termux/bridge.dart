@@ -63,6 +63,17 @@ class TermuxBridge {
     }
   }
 
+  /// Keeps the managed on-device OpenCode server able to reach providers
+  /// while Android is idle. The manager releases this lock when the server is
+  /// stopped or exits; repeated acquisitions are safe in Termux.
+  static Future<void> ensureWakeLock() async {
+    await run(ensureWakeLockScript, timeout: const Duration(seconds: 10));
+  }
+
+  static const ensureWakeLockScript =
+      "termux-wake-lock >/dev/null 2>&1 || true; "
+      "echo opencode-server-wake-lock-held";
+
   static Future<TermuxSetupStatus> status() async {
     final result = await run(statusScript());
     return TermuxSetupStatus.parse(result.stdout);
@@ -494,7 +505,9 @@ proot-distro login opencode-ubuntu -- env \
   OPENCODE_SERVER_PASSWORD="$(cat "$password_file")" \
   opencode serve --hostname 127.0.0.1 --port "$port" \
   2>&1 | "$manager" write-log server
-exit "${PIPESTATUS[0]}"
+code="${PIPESTATUS[0]}"
+"$manager" server-exited "$port" "$$" "$code" >/dev/null 2>&1 || true
+exit "$code"
 OC_SERVER_RUNNER
   chmod 700 "$tmp"
   mv "$tmp" "$SERVER_RUNNER"
@@ -721,8 +734,8 @@ cleanup_setup() {
     if [ "${SERVER_STARTED:-0}" = 1 ]; then
       stop_server "$CURRENT_PORT"
     fi
+    termux-wake-unlock >/dev/null 2>&1 || true
   fi
-  termux-wake-unlock >/dev/null 2>&1 || true
 }
 
 ubuntu_rootfs_exists() {
@@ -1008,6 +1021,8 @@ status() {
     pid=$(cat "$SERVER_PID" 2>/dev/null || true)
     if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null || ! server_process "$pid" "$(read_state_value port)"; then
       write_state failed 'The local OpenCode server stopped unexpectedly' "$(read_state_value port)"
+      rm -f "$SERVER_PID" "$SERVER_LOG_ACTIVE"
+      termux-wake-unlock >/dev/null 2>&1 || true
     fi
   fi
   case "$phase" in
@@ -1020,6 +1035,18 @@ status() {
       ;;
   esac
   cat "$STATE"
+}
+
+server_exited() {
+  local port="${1:-4096}"
+  local runner_pid="${2:-}"
+  local code="${3:-1}"
+  local current_pid
+  current_pid=$(cat "$SERVER_PID" 2>/dev/null || true)
+  [ -n "$runner_pid" ] && [ "$current_pid" = "$runner_pid" ] || return 0
+  rm -f "$SERVER_PID" "$SERVER_LOG_ACTIVE"
+  write_state failed "OpenCode server exited (code $code)" "$port"
+  termux-wake-unlock >/dev/null 2>&1 || true
 }
 
 diagnostics() {
@@ -1056,6 +1083,7 @@ case "${1:-status}" in
   status) status ;;
   diagnostics) diagnostics ;;
   stop) shift; stop "$@" ;;
+  server-exited) shift; server_exited "$@" ;;
   rotate-log) shift; rotate_log "$@" ;;
   write-log) shift; write_log "$@" ;;
   *) echo "usage: $0 {setup|status|diagnostics|stop}" >&2; exit 64 ;;
