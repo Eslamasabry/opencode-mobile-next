@@ -5,7 +5,16 @@ class TermuxBridge {
 
   static const termuxHome = '/data/data/com.termux/files/home';
   static const _managerPath = '$termuxHome/.oc/manager.sh';
-  static const defaultOpenCodeVersion = '1.18.21';
+  static const managedServerPort = 4096;
+  static const managedServerUrl = 'http://127.0.0.1:$managedServerPort';
+  static const defaultOpenCodeVersion = 'latest';
+
+  static bool managesServerUrl(String? value) {
+    final uri = value == null ? null : Uri.tryParse(value);
+    if (uri == null || uri.scheme != 'http') return false;
+    final port = uri.hasPort ? uri.port : 80;
+    return uri.host == '127.0.0.1' && port == managedServerPort;
+  }
 
   static Future<TermuxCapabilities> capabilities() async {
     final raw = await _channel.invokeMapMethod<String, dynamic>(
@@ -911,7 +920,7 @@ install_ubuntu_base() {
 
 setup() {
   CURRENT_PORT="${1:-4096}"
-  local requested_version="${2:-1.18.21}"
+  local requested_version="${2:-latest}"
   local dispatcher_pid="${3:-}"
   local dispatcher_start="${4:-}"
   SETUP_SUCCEEDED=0
@@ -965,6 +974,9 @@ OC_PROOT_SETUP
   local installed_version
   installed_version=$(proot-distro login "$PROOT_NAME" -- opencode --version 2>/dev/null | tr -d '\r\n')
   [ -n "$installed_version" ] || fail_setup 'OpenCode installed but did not report a version' "$CURRENT_PORT"
+  write_state refreshing_models 'Refreshing the OpenCode model catalog' "$CURRENT_PORT" proot "$installed_version"
+  proot-distro login "$PROOT_NAME" -- opencode models --refresh >/dev/null ||
+    fail_setup 'OpenCode updated, but its model catalog could not be refreshed' "$CURRENT_PORT"
   [ -s "$PASSWORD_FILE" ] || fail_setup 'The local server password is missing' "$CURRENT_PORT"
   local password
   password=$(cat "$PASSWORD_FILE")
@@ -1026,7 +1038,7 @@ status() {
     fi
   fi
   case "$phase" in
-    queued|preparing|installing_dependencies|installing_ubuntu|installing_opencode|starting_server)
+    queued|preparing|installing_dependencies|installing_ubuntu|installing_opencode|refreshing_models|starting_server)
       local manager_pid
       manager_pid=$(cat "$MANAGER_PID" 2>/dev/null || true)
       if [ -z "$manager_pid" ] || ! kill -0 "$manager_pid" 2>/dev/null || ! setup_process "$manager_pid"; then

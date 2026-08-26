@@ -131,6 +131,7 @@ void main() {
     final connection = _LocalConnectionController(store);
     addTearDown(connection.dispose);
     var launched = false;
+    var launchCalls = 0;
     var stopCalls = 0;
 
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -179,6 +180,7 @@ __OC_SETUP_OUTPUT__
           }
           if (script.contains('manager_tmp=')) {
             launched = true;
+            launchCalls++;
             return _commandResult(stdout: 'manager-started:123');
           }
           if (script.contains('exec "') && script.contains(' status')) {
@@ -232,6 +234,32 @@ pid=
     expect(find.text('Continue to app'), findsOneWidget);
     expect(find.text('Stop local server'), findsOneWidget);
     expect(find.textContaining('Version 1.18.21'), findsOneWidget);
+
+    await tester.ensureVisible(
+      find.byKey(const Key('update-managed-opencode')),
+    );
+    connection.busySessions.add('busy-session');
+    await tester.tap(find.byKey(const Key('update-managed-opencode')));
+    await tester.pump();
+    expect(
+      find.text('Stop active generation before updating OpenCode.'),
+      findsOneWidget,
+    );
+    expect(launchCalls, 1);
+    connection.busySessions.clear();
+
+    await tester.tap(find.byKey(const Key('update-managed-opencode')));
+    await tester.pumpAndSettle();
+    expect(find.text('Update managed OpenCode?'), findsOneWidget);
+    expect(
+      find.textContaining('latest stable OpenCode release'),
+      findsOneWidget,
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Update'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(launchCalls, 2);
+    expect(find.text('OpenCode is running on this phone.'), findsOneWidget);
 
     await tester.ensureVisible(find.text('Stop local server'));
     await tester.tap(find.text('Stop local server'));

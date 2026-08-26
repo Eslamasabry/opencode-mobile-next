@@ -102,17 +102,26 @@ message=This belongs to the terminal
     expect(script, contains(r'rm -f "$OC_DIR/server-log.active"'));
   });
 
-  test('default setup pins the validated OpenCode release', () {
+  test('default setup tracks the latest stable OpenCode release', () {
     final script = TermuxBridge.installAndServeScript(
       port: 4096,
       password: 'test-password',
     );
     final manager = TermuxBridge.managerScriptForTesting();
 
-    expect(TermuxBridge.defaultOpenCodeVersion, '1.18.21');
-    expect(script, contains("setup '4096' '1.18.21'"));
-    expect(manager, contains(r'local requested_version="${2:-1.18.21}"'));
+    expect(TermuxBridge.defaultOpenCodeVersion, 'latest');
+    expect(script, contains("setup '4096' 'latest'"));
+    expect(manager, contains(r'local requested_version="${2:-latest}"'));
     expect(manager, contains('"opencode-ai@\$OC_REQUESTED_VERSION"'));
+    expect(manager, contains('opencode models --refresh'));
+    expect(manager, contains('refreshing_models'));
+  });
+
+  test('managed server URL detection is narrow', () {
+    expect(TermuxBridge.managesServerUrl('http://127.0.0.1:4096'), isTrue);
+    expect(TermuxBridge.managesServerUrl('http://localhost:4096'), isFalse);
+    expect(TermuxBridge.managesServerUrl('http://127.0.0.1:4747'), isFalse);
+    expect(TermuxBridge.managesServerUrl('https://127.0.0.1:4096'), isFalse);
   });
 
   test('live snapshot converts manager errors into a failed status', () {

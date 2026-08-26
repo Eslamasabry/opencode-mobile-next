@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../api/models.dart';
 import '../../state/connection.dart';
+import '../../termux/bridge.dart';
 import '../../voice/notices.dart';
 import '../widgets/product_states.dart';
 import '../widgets/pickers.dart';
@@ -57,10 +59,24 @@ class _SettingsScreenState extends State<SettingsScreen>
     }
   }
 
+  Future<void> _copyRemoteUpdateCommands() async {
+    await Clipboard.setData(
+      const ClipboardData(text: 'opencode upgrade\nopencode models --refresh'),
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Server update commands copied'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = widget.controller;
     final profile = controller.profile;
+    final managedLocally = TermuxBridge.managesServerUrl(profile?.baseUrl);
     return Scaffold(
       appBar: AppBar(title: const Text('Settings and server')),
       body: ListView(
@@ -119,6 +135,26 @@ class _SettingsScreenState extends State<SettingsScreen>
             subtitle: const Text('Add, edit, or switch OpenCode servers'),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => Navigator.of(context).pushNamed('/servers'),
+          ),
+          ListTile(
+            key: const Key('server-updates-tile'),
+            leading: const Icon(Icons.system_update_alt_rounded),
+            title: Text(
+              managedLocally
+                  ? 'Update managed OpenCode'
+                  : 'Server updates are managed externally',
+            ),
+            subtitle: Text(
+              managedLocally
+                  ? 'Install the latest stable server, refresh models, restart safely, and reconnect.'
+                  : 'Copy the official upgrade and model-refresh commands to run on the server host.',
+            ),
+            trailing: Icon(
+              managedLocally ? Icons.chevron_right_rounded : Icons.copy_rounded,
+            ),
+            onTap: managedLocally
+                ? () => Navigator.of(context).pushNamed('/termux-setup')
+                : _copyRemoteUpdateCommands,
           ),
           const SectionLabel('Background connection'),
           SwitchListTile(
@@ -211,13 +247,6 @@ class _SettingsScreenState extends State<SettingsScreen>
             subtitle: Text(
               'Workspace and worktree switching is available from the Workspace tab. '
               'Availability depends on the connected server.',
-            ),
-          ),
-          const ListTile(
-            leading: Icon(Icons.system_update_alt_rounded),
-            title: Text('Server upgrades'),
-            subtitle: Text(
-              'Remote upgrades are not offered from mobile. Upgrade the server from its host environment.',
             ),
           ),
           const SectionLabel('About'),

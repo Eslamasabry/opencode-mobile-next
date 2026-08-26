@@ -30,8 +30,8 @@ enum _Phase {
 
 class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
     with WidgetsBindingObserver {
-  static const port = 4096;
-  static const localUrl = 'http://127.0.0.1:$port';
+  static const port = TermuxBridge.managedServerPort;
+  static const localUrl = TermuxBridge.managedServerUrl;
 
   _Phase _phase = _Phase.checking;
   TermuxSetupStatus? _status;
@@ -293,6 +293,44 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _confirmUpdate() async {
+    final connection = ref.read(connProvider);
+    if (connection.busySessions.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Stop active generation before updating OpenCode.'),
+        ),
+      );
+      return;
+    }
+    final currentVersion = _status?.version.trim();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Update managed OpenCode?'),
+        content: Text(
+          [
+            if (currentVersion?.isNotEmpty == true)
+              'Installed version: $currentVersion.',
+            'The app will install the latest stable OpenCode release, refresh its model catalog, restart only the managed local server, and reconnect this profile.',
+            'The server will be briefly unavailable. Active generation should be stopped first.',
+          ].join('\n\n'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Update'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) await _installAndStart();
   }
 
   Future<bool> _recoverPersistedSetupAfterTimeout() async {
@@ -690,7 +728,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
               const SizedBox(height: 8),
               _stepTile(
                 n: 3,
-                title: 'Install OpenCode & start server',
+                title: 'Install or update OpenCode',
                 state: switch (_phase) {
                   _Phase.installing => _StepState.running,
                   _Phase.connected => _StepState.done,
@@ -780,6 +818,12 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                             onPressed: _busy ? null : _continueToApp,
                             icon: const Icon(Icons.arrow_forward_rounded),
                             label: const Text('Continue to app'),
+                          ),
+                          OutlinedButton.icon(
+                            key: const Key('update-managed-opencode'),
+                            onPressed: _busy ? null : _confirmUpdate,
+                            icon: const Icon(Icons.system_update_alt_rounded),
+                            label: const Text('Update OpenCode'),
                           ),
                           OutlinedButton.icon(
                             onPressed: _busy ? null : _stopServer,
