@@ -29,13 +29,15 @@ installed on `emulator-5554`, and verified as version code 20/version name
 Flutter/render failure. The GitHub-downloaded asset matched the local tested APK
 byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 
-## Shorebird chat-timeline and update-notice patches for `1.0.19+20`
+## Shorebird chat-timeline, update-notice, and server-updater patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`
 - Stable Patch 1 ID: `619842`
 - Tool-timeline commit: `4a00bd59b7e390b1f078a1fca9c761e9db9ccac8`
 - Stable Patch 2 ID: `619851`
 - Update-notice commit: `95eb0061806857afe47561c4cfc5cf21ee103f2f`
+- Stable Patch 3 ID: `619917`
+- Managed-server updater commit: `36bbdb6ab58cd56c00e9cce6c3d5a9f1c42ad63c`
 
 Patch 1 extends the tool-run boundary across adjacent assistant message records.
 For example, an edit emitted in one OpenCode assistant record and a shell command
@@ -58,11 +60,29 @@ active until Patch 2 launches. Existing `1.0.19+20` installs download Patch 2 on
 launch and activate it after the next full restart; subsequent patches can show the
 new receiving and ready notices.
 
+Patch 3 adds an in-app update path for the OpenCode server owned by this app at
+`http://127.0.0.1:4096`. Settings opens the existing guided Termux manager, which
+installs the latest stable `opencode-ai`, refreshes the server-provided model catalog,
+restarts only the managed process, and reconnects the profile. It refuses to begin
+while a generation is active and keeps the running server alive until package and
+model work succeeds. Arbitrary remote servers are deliberately not administered by
+the app; their Settings action copies `opencode upgrade` and
+`opencode models --refresh` for the operator to run on the host.
+
 Flutter analysis was clean and all 215 tests passed, including deterministic widget
-coverage for the downloading and restart-ready snackbar states. Both Shorebird
-patches passed compatibility checks without native or asset overrides. The Pixel 6
+coverage for the downloading and restart-ready snackbar states. Patches 1 and 2
+passed compatibility checks without native or asset overrides. The Pixel 6
 simulator downloaded Patch 2 (1,470,780-byte x86_64 patch) and activated
 `patches/2/dlc.vmcode` after a cold restart; no Flutter fatal error was logged.
+
+For Patch 3, Flutter analysis remained clean, all 218 tests passed, the generated
+Termux manager passed Bash syntax validation, and the release APK built with the
+Shorebird-pinned Flutter `3.47.1`. Shorebird's own dry run reported no compatibility
+issues and the patch was published without native- or asset-diff bypasses. The exact
+GitHub APK was restored on `emulator-5554` without clearing its data, downloaded the
+1,482,350-byte x86_64 Patch 3, and activated `patches/3/dlc.vmcode` after a cold
+restart. The updater Settings tile, setup screen, installed-version copy, and update
+confirmation were then verified from the active patch with no Flutter/render failure.
 
 ## Shorebird generated-artifact patch for `1.0.18+19`
 
