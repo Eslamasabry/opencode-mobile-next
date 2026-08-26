@@ -29,7 +29,7 @@ installed on `emulator-5554`, and verified as version code 20/version name
 Flutter/render failure. The GitHub-downloaded asset matched the local tested APK
 byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 
-## Shorebird chat-timeline, update-notice, and server-updater patches for `1.0.19+20`
+## Shorebird chat-timeline, update-notice, server-updater, and workbench patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`
 - Stable Patch 1 ID: `619842`
@@ -38,6 +38,9 @@ byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 - Update-notice commit: `95eb0061806857afe47561c4cfc5cf21ee103f2f`
 - Stable Patch 3 ID: `619917`
 - Managed-server updater commit: `36bbdb6ab58cd56c00e9cce6c3d5a9f1c42ad63c`
+- Stable Patch 4 ID: `619952`
+- Integrated-workbench commit: `346766ccbaee517688d360892ab83eb690e84274`
+- Shorebird-safe icon commit: `8f9a558`
 
 Patch 1 extends the tool-run boundary across adjacent assistant message records.
 For example, an edit emitted in one OpenCode assistant record and a shell command
@@ -83,6 +86,31 @@ GitHub APK was restored on `emulator-5554` without clearing its data, downloaded
 1,482,350-byte x86_64 Patch 3, and activated `patches/3/dlc.vmcode` after a cold
 restart. The updater Settings tile, setup screen, installed-version copy, and update
 confirmation were then verified from the active patch with no Flutter/render failure.
+
+Patch 4 replaces the crowded chat overflow workflow with one integrated composer
+workbench. Its `Context`, `Commands`, `Run`, `Review`, and `Session` tabs swap one
+bounded panel above the input without creating stacked card surfaces. Commands are
+loaded from the connected OpenCode server rather than hardcoded; Review loads the
+session diff, todos, pending requests, and generated-artifact count on demand. At
+keyboard-constrained heights the tabs become a compact Workbench menu so model,
+attachment, voice, input, and send controls remain reachable at 640x320 with 2x text.
+
+Tool chains now have one outer group surface. Expanded tool calls are flat rows with
+dividers, not bordered cards nested inside the group. Consecutive reasoning parts and
+consecutive user-facing assistant text parts merge across adjacent assistant records
+until the content type changes. Reasoning that renders on one line is shown directly;
+longer reasoning retains the accessible 48dp expand control. Tools, reasoning, text,
+files, user messages, and errors remain truthful run boundaries, and the transformation
+continues to apply to old chats without rewriting stored messages.
+
+Final-tree Flutter analysis was clean and all 221 tests passed. Shorebird's dry run
+reported no compatibility issues. The four Material glyphs initially unique to the
+new workbench were replaced with glyphs already shipped in the tree-shaken release
+font before publication. The exact GitHub APK (version code 20/version name 1.0.19)
+downloaded the 1,595,003-byte x86_64 Patch 4 and activated
+`patches/4/dlc.vmcode` after a cold restart. The Pixel 6 simulator then rendered the
+five tabs, server-provided `/init` and `/review` command rows, and the content-sized
+Review panel without a Flutter/render failure.
 
 ## Shorebird generated-artifact patch for `1.0.18+19`
 
