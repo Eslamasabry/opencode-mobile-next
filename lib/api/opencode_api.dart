@@ -127,12 +127,30 @@ class OpenCodeApi {
 
   Future<List<Session>> sessions() async {
     try {
-      final r = await _dio.get('/session', queryParameters: _query());
-      return (r.data as List)
-          .whereType<Map<String, dynamic>>()
-          .map(Session.fromJson)
+      final response = await sdkClient.getSessionApi().sessionList(
+        directory: _directory,
+        workspace: _workspace,
+      );
+      return (response.data ?? const [])
+          .map((session) => Session.fromJson(session.toJson()))
           .toList();
+    } on sdk.OpenCodeApiException catch (e) {
+      _failGenerated(e, 'List sessions');
     } on DioException catch (e) {
+      final raw = e.response?.data;
+      if (_wasSuccessfulResponse(e) && raw is List) {
+        try {
+          return raw
+              .whereType<Map>()
+              .map(
+                (session) =>
+                    Session.fromJson(Map<String, dynamic>.from(session)),
+              )
+              .toList();
+        } catch (_) {
+          // Fall through to the existing product-facing transport error.
+        }
+      }
       _fail(e, 'List sessions');
     }
   }
@@ -197,18 +215,54 @@ class OpenCodeApi {
 
   Future<Session> session(String id) async {
     try {
-      final r = await _dio.get('/session/$id', queryParameters: _query());
-      return Session.fromJson(Map<String, dynamic>.from(r.data as Map));
+      final response = await sdkClient.getSessionApi().sessionGet(
+        sessionID: id,
+        directory: _directory,
+        workspace: _workspace,
+      );
+      final session = response.data;
+      if (session == null) {
+        throw ApiException('Get session failed: server returned no session');
+      }
+      return Session.fromJson(session.toJson());
+    } on sdk.OpenCodeApiException catch (e) {
+      _failGenerated(e, 'Get session');
     } on DioException catch (e) {
+      final raw = e.response?.data;
+      if (_wasSuccessfulResponse(e) && raw is Map) {
+        try {
+          return Session.fromJson(Map<String, dynamic>.from(raw));
+        } catch (_) {
+          // Fall through to the existing product-facing transport error.
+        }
+      }
       _fail(e, 'Get session');
     }
   }
 
   /// Returns {sessionID: "idle"|"busy"|"retry"}.
   Future<Map<String, String>> sessionStatuses() async {
-    final r = await _dio.get('/session/status', queryParameters: _query());
+    try {
+      final response = await sdkClient.getSessionApi().sessionStatus(
+        directory: _directory,
+        workspace: _workspace,
+      );
+      return _sessionStatusesFromJson({
+        for (final entry in (response.data ?? const {}).entries)
+          entry.key: entry.value.toJson(),
+      });
+    } on sdk.OpenCodeApiException catch (e) {
+      _failGenerated(e, 'Get session status');
+    } on DioException catch (e) {
+      if (_wasSuccessfulResponse(e) && e.response?.data is Map) {
+        return _sessionStatusesFromJson(e.response?.data);
+      }
+      _fail(e, 'Get session status');
+    }
+  }
+
+  Map<String, String> _sessionStatusesFromJson(Object? data) {
     final out = <String, String>{};
-    final data = r.data;
     if (data is Map) {
       data.forEach((k, v) {
         out[k.toString()] = v is Map
@@ -220,8 +274,33 @@ class OpenCodeApi {
   }
 
   Future<List<MessageWithParts>> messages(String id) async {
-    final r = await _dio.get('/session/$id/message', queryParameters: _query());
-    return (r.data as List).map(_bundleFromJson).toList();
+    try {
+      final response = await sdkClient.getSessionApi().sessionMessages(
+        sessionID: id,
+        directory: _directory,
+        workspace: _workspace,
+      );
+      return (response.data ?? const [])
+          .map(
+            (bundle) => _bundleFromJson({
+              'info': bundle.info.toJson(),
+              'parts': bundle.parts.map((part) => part.toJson()).toList(),
+            }),
+          )
+          .toList();
+    } on sdk.OpenCodeApiException catch (e) {
+      _failGenerated(e, 'Get session messages');
+    } on DioException catch (e) {
+      final raw = e.response?.data;
+      if (_wasSuccessfulResponse(e) && raw is List) {
+        try {
+          return raw.map(_bundleFromJson).toList();
+        } catch (_) {
+          // Fall through to the existing product-facing transport error.
+        }
+      }
+      _fail(e, 'Get session messages');
+    }
   }
 
   MessageWithParts _bundleFromJson(dynamic raw) {

@@ -288,6 +288,17 @@ and delete all wait for the post-wake replacement API. Final-tree Flutter
 analysis is clean and all 281 tests pass serially. The generated SDK audit now
 counts 51 directly used operations. Traycer remains explicitly deferred.
 
+The session read side now uses generated `session.list`, `session.get`,
+`session.status`, and `session.messages`. Loose metadata returned by older
+OpenCode servers still falls back to the app's tolerant parser. Message info and
+parts pass through the SDK's lossless raw-union wrappers, so custom tools,
+plugins, structured input/output, metadata, and future part fields are not
+flattened or discarded before the existing renderer sees them. Exact loopback
+coverage proves location queries, loose metadata, busy/retry statuses, declared
+errors, and nested plugin-specific tool data. Final-tree Flutter analysis is
+clean and all 283 tests pass serially. The generated SDK audit now counts 55
+directly used operations. Traycer remains explicitly deferred.
+
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`
