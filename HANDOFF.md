@@ -55,6 +55,8 @@ byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 - Provider-inventory recovery: `7b6db9b3a9128416432927f058b90f4946473b17`
 - Stable Patch 11 ID: `620824`
 - Provider runtime-auth synchronization: `421567626d39755b0bdac802f36fa0dbe3348667`
+- Stable Patch 12 ID: `620848`
+- Pre-existing provider runtime refresh: `b48222c686a99afcf796a254982931d717f29bc1`
 - OpenCode reference revision: `c2eacd72afc4a4984564c393e15ab30011057269`
 - Command/feature map: [`docs/opencode-command-feature-map.md`](docs/opencode-command-feature-map.md)
 
@@ -278,6 +280,24 @@ the generation with HTTP 429 because the user's current subscription does not in
 GLM-5.3-Highspeed. That remaining restriction is provider-plan entitlement, not a
 model-picker or provider-ID mismatch. Flutter analysis was clean, all 234 tests
 passed, Shorebird's dry run reported no issue, and Patch 11 was published to Stable
+without native or asset overrides.
+
+Patch 12 fixes the remaining upgrade-path gap found by testing the user's actual
+mobile session rather than a CLI-created session. The app chat was scoped to
+directory `/` and selected `zhipuai-coding-plan/glm-5.2`; earlier live verification
+had exercised `/root` with the `zai-coding-plan` alias. Patch 11 refreshed a location
+only when a key was newly submitted, so a credential connected before that patch did
+not invalidate the already cached `/` provider runtime.
+
+The connection controller now detects existing connected integrations and performs a
+one-time provider-runtime refresh for the server default and for each selected
+directory/workspace. The migration marker is scoped by server profile and location,
+is written only after success, preserves immediate SSE startup, and never repeats on
+ordinary reconnects. Older or temporarily unavailable servers remain connectable and
+can retry later. After manually refreshing the exact `/` instance on the phone, a
+real prompt through `zhipuai-coding-plan/glm-5.2` completed with `finish=stop`, no
+error, and `PHONE_SLASH_ZHIPU_52_OK`. All 234 tests passed, Flutter analysis was
+clean, Shorebird's dry run reported no issue, and Patch 12 was published to Stable
 without native or asset overrides.
 
 On the Ubuntu workstation, `z node_modules/opencode-ai` failed because zoxide had no
