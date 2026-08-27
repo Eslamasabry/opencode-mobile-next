@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/models.dart';
+import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 
@@ -127,6 +128,12 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final selected = widget.controller.selectedModel;
+    final selectedProviderName = selected == null
+        ? null
+        : presentedProviderName(
+            selected.providerID,
+            widget.controller.catalog?.providers ?? const [],
+          );
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 14, 12, 12),
       child: Row(
@@ -151,7 +158,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
                   selected == null
                       ? 'Choose how new prompts run'
                       : [
-                          '${selected.providerID}/${selected.modelID}',
+                          '$selectedProviderName · ${selected.modelID}',
                           if (widget.controller.selectedVariant.isNotEmpty)
                             widget.controller.selectedVariant,
                         ].join(' · '),
@@ -217,25 +224,34 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
       );
     }
     final normalized = _query.trim().toLowerCase();
-    final providerNames = {
-      for (final provider in catalog.providers) provider.id: provider.name,
-    };
-    final models = catalog.models.where((model) {
-      final matchesProvider = _provider == '*' || model.providerID == _provider;
-      final matchesQuery =
-          normalized.isEmpty ||
-          model.name.toLowerCase().contains(normalized) ||
-          model.id.toLowerCase().contains(normalized) ||
-          model.providerID.toLowerCase().contains(normalized);
-      final matchesIntent = switch (_intent) {
-        _ModelIntent.all || _ModelIntent.context => true,
-        _ModelIntent.fast => model.variants.any(
-          (variant) => !variant.disabled && variant.isFast,
-        ),
-        _ModelIntent.reasoning => model.reasoning,
-      };
-      return matchesProvider && matchesQuery && matchesIntent;
-    }).toList();
+    final providers = presentProviders(catalog.providers);
+    final models =
+        presentModels(
+          catalog.models,
+          selected: widget.controller.selectedModel,
+        ).where((model) {
+          final presentation = presentProvider(model.providerID);
+          final providerName = presentedProviderName(
+            model.providerID,
+            catalog.providers,
+          );
+          final matchesProvider =
+              _provider == '*' || presentation.groupID == _provider;
+          final matchesQuery =
+              normalized.isEmpty ||
+              model.name.toLowerCase().contains(normalized) ||
+              model.id.toLowerCase().contains(normalized) ||
+              model.providerID.toLowerCase().contains(normalized) ||
+              providerName.toLowerCase().contains(normalized);
+          final matchesIntent = switch (_intent) {
+            _ModelIntent.all || _ModelIntent.context => true,
+            _ModelIntent.fast => model.variants.any(
+              (variant) => !variant.disabled && variant.isFast,
+            ),
+            _ModelIntent.reasoning => model.reasoning,
+          };
+          return matchesProvider && matchesQuery && matchesIntent;
+        }).toList();
     if (_intent == _ModelIntent.context) {
       models.sort((a, b) => b.contextLimit.compareTo(a.contextLimit));
     }
@@ -274,7 +290,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
           ),
         ),
         const SizedBox(height: 12),
-        _providerPicker(catalog),
+        _providerPicker(providers),
         const SizedBox(height: 12),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -309,7 +325,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
             _modelRow(
               context,
               model,
-              providerNames[model.providerID] ?? model.providerID,
+              presentedProviderName(model.providerID, catalog.providers),
             ),
             const Divider(height: 1),
           ],
@@ -352,10 +368,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
     );
   }
 
-  Widget _providerPicker(CatalogSnapshot catalog) {
-    final providers = catalog.providers
-        .where((provider) => provider.enabled)
-        .toList();
+  Widget _providerPicker(List<PresentedProvider> providers) {
     return DropdownButtonFormField<String>(
       key: const Key('model-picker-provider'),
       isExpanded: true,
@@ -424,7 +437,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
               ),
               subtitle: Text(
                 [
-                  '${model.providerID}/${model.id}',
+                  '$providerName · ${model.id}',
                   if (model.contextLimit > 0)
                     '${_number(model.contextLimit)} context',
                   if (model.outputLimit > 0)

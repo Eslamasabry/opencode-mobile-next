@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../api/models.dart';
+import '../../api/provider_presentation.dart';
 import '../../state/connection.dart';
 import '../../termux/bridge.dart';
 import '../../voice/notices.dart';
@@ -220,7 +221,7 @@ class _SettingsScreenState extends State<SettingsScreen>
               controller.selectedModel == null
                   ? 'Server default'
                   : [
-                      '${controller.selectedModel!.providerID}/${controller.selectedModel!.modelID}',
+                      '${presentedProviderName(controller.selectedModel!.providerID, controller.catalog?.providers ?? const [])} · ${controller.selectedModel!.modelID}',
                       if (controller.selectedVariant.isNotEmpty)
                         controller.selectedVariant,
                     ].join(' · '),

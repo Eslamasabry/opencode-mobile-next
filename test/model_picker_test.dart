@@ -50,6 +50,16 @@ Future<_RefreshCountingController> _controller() async {
       providers: [
         CatalogProvider(id: 'opencode', name: 'OpenCode Zen', enabled: true),
         CatalogProvider(id: 'local', name: 'Local models', enabled: true),
+        CatalogProvider(
+          id: 'zai-coding-plan',
+          name: 'Z.AI Coding Plan',
+          enabled: true,
+        ),
+        CatalogProvider(
+          id: 'zhipuai-coding-plan',
+          name: 'Zhipu AI Coding Plan',
+          enabled: true,
+        ),
       ],
       models: [
         CatalogModel(
@@ -105,6 +115,32 @@ Future<_RefreshCountingController> _controller() async {
           reasoning: false,
           attachments: false,
           tools: false,
+          variants: [],
+        ),
+        CatalogModel(
+          id: 'glm-5.2',
+          providerID: 'zai-coding-plan',
+          name: 'GLM-5.2',
+          enabled: true,
+          status: 'active',
+          contextLimit: 1000000,
+          outputLimit: 131072,
+          reasoning: true,
+          attachments: false,
+          tools: true,
+          variants: [],
+        ),
+        CatalogModel(
+          id: 'glm-5.2',
+          providerID: 'zhipuai-coding-plan',
+          name: 'GLM-5.2',
+          enabled: true,
+          status: 'active',
+          contextLimit: 1000000,
+          outputLimit: 131072,
+          reasoning: true,
+          attachments: false,
+          tools: true,
           variants: [],
         ),
       ],
@@ -215,6 +251,30 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(controller.selectedVariant, 'fast');
+  });
+
+  testWidgets('OpenCode Z.AI aliases render as one provider and model', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(411, 891));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(controller));
+
+    await tester.tap(find.text('Choose model'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('model-picker-provider')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Z.AI Coding Plan'), findsOneWidget);
+    expect(find.text('Zhipu AI Coding Plan'), findsNothing);
+    await tester.tap(find.text('Z.AI Coding Plan'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('GLM-5.2'), findsOneWidget);
+    expect(find.textContaining('Z.AI Coding Plan · glm-5.2'), findsOneWidget);
+    expect(find.textContaining('zhipuai-coding-plan/glm-5.2'), findsNothing);
   });
 
   testWidgets('model selector remains usable at 320dp with 2x text', (

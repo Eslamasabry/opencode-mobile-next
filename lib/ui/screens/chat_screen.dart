@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/models.dart';
+import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../../voice/controller.dart';
@@ -4021,7 +4022,9 @@ String? _modelLabel(MessageInfo info) {
   final provider = info.providerID?.trim();
   final model = info.modelID?.trim();
   if (model?.isNotEmpty != true) return null;
-  return provider?.isNotEmpty == true ? '$provider/$model' : model;
+  return provider?.isNotEmpty == true
+      ? presentedModelLabel(provider!, model!)
+      : model;
 }
 
 _MessageMeta _messageMeta(List<MessageWithParts> messages, int index) {

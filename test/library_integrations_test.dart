@@ -128,6 +128,35 @@ void main() {
     },
   );
 
+  testWidgets('provider connection aliases render as one branded service', (
+    tester,
+  ) async {
+    final repository = _IntegrationsRepository()
+      ..integrations = const [
+        IntegrationInfo(
+          id: 'zai-coding-plan',
+          name: 'Z.AI Coding Plan',
+          methods: [IntegrationMethodInfo(type: 'key', label: 'API key')],
+          connectionCount: 1,
+        ),
+        IntegrationInfo(
+          id: 'zhipuai-coding-plan',
+          name: 'Zhipu AI Coding Plan',
+          methods: [IntegrationMethodInfo(type: 'key', label: 'API key')],
+          connectionCount: 1,
+        ),
+      ];
+    final controller = await _controller(repository);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Z.AI Coding Plan'), findsOneWidget);
+    expect(find.text('Zhipu AI Coding Plan'), findsNothing);
+    expect(find.text('Connected\n(server-managed)'), findsOneWidget);
+  });
+
   testWidgets('MCP resources remain available when integrations fail', (
     tester,
   ) async {

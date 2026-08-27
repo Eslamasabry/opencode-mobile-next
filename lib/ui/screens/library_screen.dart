@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../api/models.dart' show ModelRef;
+import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
@@ -599,24 +600,24 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
                 ),
               )
             else
-              for (final integration in _integrations!)
+              for (final presented in presentIntegrations(_integrations!))
                 ListTile(
                   leading: const Icon(Icons.link_rounded),
-                  title: Text(integration.name),
-                  subtitle: Text(_integrationSubtitle(integration)),
-                  trailing: integration.connectionCount > 0
+                  title: Text(presented.name),
+                  subtitle: Text(_integrationSubtitle(presented.integration)),
+                  trailing: presented.connected
                       ? const Text(
                           'Connected\n(server-managed)',
                           textAlign: TextAlign.end,
                         )
                       : TextButton(
                           onPressed:
-                              integration.methods.any(
+                              presented.integration.methods.any(
                                 (method) =>
                                     method.type == 'key' ||
                                     method.type == 'oauth',
                               )
-                              ? () => _connectIntegration(integration)
+                              ? () => _connectIntegration(presented.integration)
                               : null,
                           child: const Text('Connect'),
                         ),
