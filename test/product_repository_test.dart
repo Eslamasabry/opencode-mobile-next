@@ -238,6 +238,58 @@ void main() {
   });
 
   test(
+    'VCS diff scopes use generated API modes and preserve patches',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        final modes = <String?>[];
+        server.listen((request) async {
+          modes.add(request.uri.queryParameters['mode']);
+          expect(request.uri.path, '/vcs/diff');
+          expect(request.uri.queryParameters['directory'], '/work/acme');
+          expect(request.uri.queryParameters['workspace'], 'workspace-1');
+          expect(request.uri.queryParameters['context'], '3');
+          request.response.headers.contentType = ContentType.json;
+          request.response.write(
+            jsonEncode([
+              {
+                'file': 'lib/main.dart',
+                'patch': '@@ -1 +1 @@\n-old\n+new',
+                'additions': 1,
+                'deletions': 1,
+                'status': 'modified',
+              },
+            ]),
+          );
+          await request.response.close();
+        });
+
+        try {
+          final api = OpenCodeApi(
+            baseUrl: 'http://${server.address.host}:${server.port}',
+          );
+          final repository = SdkProductRepository(api.sdkClient)
+            ..setLocation(directory: '/work/acme', workspace: 'workspace-1');
+
+          final working = await repository.listVcsDiffs(
+            VcsDiffMode.workingTree,
+          );
+          final branch = await repository.listVcsDiffs(VcsDiffMode.branch);
+
+          expect(modes, ['git', 'branch']);
+          expect(working.single.file, 'lib/main.dart');
+          expect(working.single.patch, contains('+new'));
+          expect(working.single.counts, (added: 1, removed: 1));
+          expect(working.single.status, 'modified');
+          expect(branch.single.file, 'lib/main.dart');
+        } finally {
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
+
+  test(
     'provider key connection synchronizes runtime auth and refreshes instances',
     () async {
       await HttpOverrides.runZoned(() async {

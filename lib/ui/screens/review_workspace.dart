@@ -7,14 +7,20 @@ typedef ReviewDiffLoader = Future<List<FileDiff>> Function();
 
 enum ReviewDiffMode { unified, split }
 
+enum ReviewDiffScope { session, workingTree, branch }
+
 class ReviewWorkspace extends StatefulWidget {
   const ReviewWorkspace({
     super.key,
     required this.loadDiffs,
     required this.sessionID,
+    this.loadWorkingTreeDiffs,
+    this.loadBranchDiffs,
   });
 
   final ReviewDiffLoader loadDiffs;
+  final ReviewDiffLoader? loadWorkingTreeDiffs;
+  final ReviewDiffLoader? loadBranchDiffs;
   final String sessionID;
 
   @override
@@ -28,12 +34,15 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
   int? _selectionStart;
   int? _selectionEnd;
   ReviewDiffMode _mode = ReviewDiffMode.unified;
+  late ReviewDiffScope _scope;
+  int _loadGeneration = 0;
   final ScrollController _vertical = ScrollController();
   final ScrollController _horizontal = ScrollController();
 
   @override
   void initState() {
     super.initState();
+    _scope = ReviewDiffScope.session;
     _load();
   }
 
@@ -45,21 +54,46 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
   }
 
   Future<void> _load() async {
+    final generation = ++_loadGeneration;
     setState(() {
       _error = null;
       _diffs = null;
     });
     try {
-      final diffs = await widget.loadDiffs();
-      if (!mounted) return;
+      final diffs = await _loaderFor(_scope)();
+      if (!mounted || generation != _loadGeneration) return;
       setState(() {
         _diffs = diffs;
         if (_selectedFile >= diffs.length) _selectedFile = 0;
         _clearSelection();
       });
     } catch (error) {
-      if (mounted) setState(() => _error = error);
+      if (mounted && generation == _loadGeneration) {
+        setState(() => _error = error);
+      }
     }
+  }
+
+  ReviewDiffLoader _loaderFor(ReviewDiffScope scope) => switch (scope) {
+    ReviewDiffScope.session => widget.loadDiffs,
+    ReviewDiffScope.workingTree => widget.loadWorkingTreeDiffs!,
+    ReviewDiffScope.branch => widget.loadBranchDiffs!,
+  };
+
+  List<ReviewDiffScope> get _availableScopes => [
+    ReviewDiffScope.session,
+    if (widget.loadWorkingTreeDiffs != null) ReviewDiffScope.workingTree,
+    if (widget.loadBranchDiffs != null) ReviewDiffScope.branch,
+  ];
+
+  void _selectScope(ReviewDiffScope scope) {
+    if (_scope == scope) return;
+    setState(() {
+      _scope = scope;
+      _selectedFile = 0;
+      _clearSelection();
+    });
+    _load();
   }
 
   void _clearSelection() {
@@ -122,6 +156,21 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
   }
 
   Widget _body(BuildContext context) {
+    final content = _reviewContent(context);
+    if (_availableScopes.length == 1) return content;
+    return Column(
+      children: [
+        _ReviewScopePicker(
+          scopes: _availableScopes,
+          selected: _scope,
+          onSelected: _selectScope,
+        ),
+        Expanded(child: content),
+      ],
+    );
+  }
+
+  Widget _reviewContent(BuildContext context) {
     if (_diffs == null) {
       return _error == null
           ? const _ReviewLoadingState()
@@ -359,6 +408,52 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
       curve: Curves.easeOutCubic,
     );
   }
+}
+
+class _ReviewScopePicker extends StatelessWidget {
+  const _ReviewScopePicker({
+    required this.scopes,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final List<ReviewDiffScope> scopes;
+  final ReviewDiffScope selected;
+  final ValueChanged<ReviewDiffScope> onSelected;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+    child: SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: SegmentedButton<ReviewDiffScope>(
+        key: const Key('review-scope-picker'),
+        showSelectedIcon: false,
+        segments: [
+          for (final scope in scopes)
+            ButtonSegment(
+              value: scope,
+              label: Text(_scopeLabel(scope)),
+              tooltip: _scopeDescription(scope),
+            ),
+        ],
+        selected: {selected},
+        onSelectionChanged: (value) => onSelected(value.single),
+      ),
+    ),
+  );
+
+  static String _scopeLabel(ReviewDiffScope scope) => switch (scope) {
+    ReviewDiffScope.session => 'Session',
+    ReviewDiffScope.workingTree => 'Working tree',
+    ReviewDiffScope.branch => 'Branch',
+  };
+
+  static String _scopeDescription(ReviewDiffScope scope) => switch (scope) {
+    ReviewDiffScope.session => 'Changes attributed to this OpenCode session',
+    ReviewDiffScope.workingTree => 'Current uncommitted Git changes',
+    ReviewDiffScope.branch => 'Changes against the default branch',
+  };
 }
 
 class _ReviewSummary extends StatelessWidget {

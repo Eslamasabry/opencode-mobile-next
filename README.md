@@ -20,7 +20,8 @@ is also bundled under **Settings > Privacy and data use**.
 - Rich rendering: markdown, fenced code blocks w/ copy, reasoning blocks,
   tool-call cards with expandable input/output
 - Permission requests surfaced as dialogs (allow once / always / reject)
-- Session todos panel, file-change diff viewer (+/- counts per file)
+- Session todos and a full Review workspace with session, working-tree, and
+  branch diff scopes, unified/split modes, line selection, and prompt comments
 - Run shell commands and slash commands in the session
 - Model & agent picker persisted per server
 - Project file browser with fuzzy name search + content viewer

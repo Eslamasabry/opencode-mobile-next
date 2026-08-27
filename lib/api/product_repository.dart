@@ -4,6 +4,17 @@ import 'dart:io';
 
 import 'package:opencode_sdk/opencode_sdk.dart' as sdk;
 
+import 'models.dart';
+
+enum VcsDiffMode { workingTree, branch }
+
+extension on VcsDiffMode {
+  String get wireValue => switch (this) {
+    VcsDiffMode.workingTree => 'git',
+    VcsDiffMode.branch => 'branch',
+  };
+}
+
 class WorkspaceProject {
   final String id;
   final String name;
@@ -348,6 +359,7 @@ abstract class ProductRepository {
   });
   Future<void> removeTerminal(String id);
   Future<TerminalChannel> connectTerminal(String id);
+  Future<List<FileDiff>> listVcsDiffs(VcsDiffMode mode);
   Future<CatalogSnapshot> loadCatalog();
   Future<List<McpServerInfo>> listMcpServers();
   Future<List<McpResourceInfo>> listMcpResources();
@@ -401,6 +413,32 @@ class SdkProductRepository
     _workspace = workspace;
     _locationRevision++;
   }
+
+  @override
+  Future<List<FileDiff>> listVcsDiffs(VcsDiffMode mode) => _guard(
+    mode == VcsDiffMode.workingTree
+        ? 'Could not load working tree changes'
+        : 'Could not load branch changes',
+    () async {
+      final response = await _client.getInstanceApi().vcsDiff(
+        mode: mode.wireValue,
+        directory: _directory,
+        workspace: _workspace,
+        context: 3,
+      );
+      return (response.data ?? const [])
+          .map(
+            (diff) => FileDiff(
+              file: diff.file,
+              patch: diff.patch_,
+              additions: diff.additions.toInt(),
+              deletions: diff.deletions.toInt(),
+              status: diff.status?.value.toString(),
+            ),
+          )
+          .toList();
+    },
+  );
 
   @override
   Future<List<WorkspaceProject>> listProjects() =>

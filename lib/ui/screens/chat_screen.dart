@@ -1984,6 +1984,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             }
             return api.diff(widget.sessionID);
           },
+          loadWorkingTreeDiffs: () async {
+            final repository = _conn.repository;
+            if (repository == null) {
+              throw StateError('OpenCode is reconnecting.');
+            }
+            return repository.listVcsDiffs(VcsDiffMode.workingTree);
+          },
+          loadBranchDiffs: () async {
+            final repository = _conn.repository;
+            if (repository == null) {
+              throw StateError('OpenCode is reconnecting.');
+            }
+            return repository.listVcsDiffs(VcsDiffMode.branch);
+          },
         ),
       ),
     );

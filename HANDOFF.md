@@ -73,6 +73,27 @@ sites, followed by implementation of the highest-impact hidden or incomplete
 coding workflow. Signing and store publication remain deferred until that
 product-completeness audit is worked down.
 
+That API audit is now recorded in
+[`docs/opencode-sdk-coverage.md`](docs/opencode-sdk-coverage.md). The generated
+Dart SDK exposes 188 HTTP operations across 32 groups; the app directly used 30
+before this audit and also retained several handwritten compatibility routes.
+The first gap repaired is Review truth. The existing session diff remains the
+safe default, while adjacent Working tree and Branch scopes now use the generated
+`vcs.diff` API with the contract's exact `git` and `branch` modes. All scopes
+reuse the same flat file tabs, unified/split renderer, line selection, copy,
+question, and grounded-comment workflow.
+
+Flutter analysis is clean and all 241 tests pass serially. The generated VCS
+mapping has a real loopback HTTP contract test covering location, mode, context,
+patch, counts, and status. A test-signed release APK built in 189.1 seconds,
+installed on a cold-booted Pixel 6 emulator, and launched as the resumed Android
+activity with no Flutter, RenderFlex, overflow, or fatal-exception log. The
+throwaway signing material was removed and the APK must not be distributed.
+Live VCS response evidence is still missing: the emulator has no OpenCode server,
+and the user's Tailscale-visible phone refused Termux SSH on port 8022 during the
+check. Do not claim the live `/vcs/diff` endpoint until one of those server paths
+is reachable.
+
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`

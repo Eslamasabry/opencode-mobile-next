@@ -7,6 +7,8 @@ import 'package:opencode_mobile/ui/screens/review_workspace.dart';
 Future<void> _pumpReview(
   WidgetTester tester,
   Future<List<FileDiff>> Function() loader, {
+  Future<List<FileDiff>> Function()? workingTreeLoader,
+  Future<List<FileDiff>> Function()? branchLoader,
   Size size = const Size(800, 700),
   double textScale = 1,
 }) async {
@@ -23,7 +25,12 @@ Future<void> _pumpReview(
         ).copyWith(textScaler: TextScaler.linear(textScale)),
         child: child!,
       ),
-      home: ReviewWorkspace(loadDiffs: loader, sessionID: 'session-1'),
+      home: ReviewWorkspace(
+        loadDiffs: loader,
+        loadWorkingTreeDiffs: workingTreeLoader,
+        loadBranchDiffs: branchLoader,
+        sessionID: 'session-1',
+      ),
     ),
   );
   await tester.pumpAndSettle();
@@ -106,6 +113,69 @@ void main() {
 
     expect(find.byKey(const Key('review-line-1')), findsOneWidget);
     expect(find.byKey(const Key('review-line-1000')), findsNothing);
+  });
+
+  testWidgets('switches among VCS working tree, branch, and session scopes', (
+    tester,
+  ) async {
+    var sessionLoads = 0;
+    var workingTreeLoads = 0;
+    var branchLoads = 0;
+    await _pumpReview(
+      tester,
+      () async {
+        sessionLoads++;
+        return [
+          FileDiff(
+            file: 'session.txt',
+            patch: '@@ -0,0 +1 @@\n+session change',
+            additions: 1,
+            deletions: 0,
+          ),
+        ];
+      },
+      workingTreeLoader: () async {
+        workingTreeLoads++;
+        return [
+          FileDiff(
+            file: 'working.txt',
+            patch: '@@ -0,0 +1 @@\n+working change',
+            additions: 1,
+            deletions: 0,
+          ),
+        ];
+      },
+      branchLoader: () async {
+        branchLoads++;
+        return [
+          FileDiff(
+            file: 'branch.txt',
+            patch: '@@ -0,0 +1 @@\n+branch change',
+            additions: 1,
+            deletions: 0,
+          ),
+        ];
+      },
+    );
+
+    expect(find.byKey(const Key('review-scope-picker')), findsOneWidget);
+    expect(find.text('+session change'), findsOneWidget);
+    expect(sessionLoads, 1);
+
+    await tester.tap(find.text('Working tree'));
+    await tester.pumpAndSettle();
+    expect(find.text('+working change'), findsOneWidget);
+    expect(workingTreeLoads, 1);
+
+    await tester.tap(find.text('Branch'));
+    await tester.pumpAndSettle();
+    expect(find.text('+branch change'), findsOneWidget);
+    expect(branchLoads, 1);
+
+    await tester.tap(find.text('Session'));
+    await tester.pumpAndSettle();
+    expect(find.text('+session change'), findsOneWidget);
+    expect(sessionLoads, 2);
   });
 
   testWidgets('keeps review controls reachable at compact high text scale', (
