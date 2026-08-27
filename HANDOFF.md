@@ -47,6 +47,8 @@ byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 - Review/focus/catalog/updater commit: `bf4f7912b725b369dbdd04e5a86826984334ec4a`
 - Stable Patch 7 ID: `620648`
 - Provider-catalog authority fix: `c13d1f42c41e26fcf0c7dd265b1007dbf2a8780b`
+- Stable Patch 8 ID: `620696`
+- Connected-provider contract fix: `58b321a7eae755ed1641b269a58325169b696ea6`
 - OpenCode reference revision: `c2eacd72afc4a4984564c393e15ab30011057269`
 - Command/feature map: [`docs/opencode-command-feature-map.md`](docs/opencode-command-feature-map.md)
 
@@ -195,6 +197,22 @@ simulator has no user Z.AI credential. Its saved Android snapshot also entered a
 framework/binder-starvation state during activation verification; a no-snapshot cold
 boot resolved package discovery but remained too slow for trustworthy Patch 7 runtime
 activation evidence. Use the user's configured server for the final provider call.
+
+Patch 8 corrects the remaining source-of-truth mistake found against the live Ubuntu
+server. OpenCode's documented `/provider` route returns `all`, `connected`, and each
+provider's model map; experimental `/api/provider` and `/api/model` only describe the
+providers and models active in the current location and can legitimately contain Zen
+alone. The app now filters `/provider` to its ordered `connected` IDs, uses those model
+maps as the picker authority, and applies v2 capability metadata only as enrichment for
+matching rows. Older OpenCode servers retain the `/config/providers` fallback.
+
+The live Coding Plan credential completed a read-only request through
+`zai-coding-plan/glm-5.2` and returned the exact expected marker. The refreshed
+OpenCode `1.18.23` server on port 4747 then reported 11 connected providers through
+`/provider`, including `zai-coding-plan` with seven models. No credential was copied
+into this repository or the mobile app. Flutter analysis was clean, all 232 tests
+passed, Shorebird's dry run reported no issue, and Patch 8 was published stable without
+native or asset overrides.
 
 On the Ubuntu workstation, `z node_modules/opencode-ai` failed because zoxide had no
 matching history entry. The direct package path is `/home/eslam/node_modules/opencode-ai`;
