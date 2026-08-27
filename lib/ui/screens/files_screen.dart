@@ -167,20 +167,17 @@ class _FilesScreenState extends State<FilesScreen> {
 
   Future<void> _load(String path) async {
     path = _relativePath(path);
-    final api = widget.controller.api;
     final generation = ++_requestGeneration;
-    if (api == null) {
-      setState(() {
-        _loading = false;
-        _error = 'The server is not connected.';
-      });
-      return;
-    }
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
+      final api = await widget.controller.prepareActionTransport();
+      if (!mounted || generation != _requestGeneration) return;
+      if (api == null) {
+        throw StateError('The server is not connected.');
+      }
       final nodes = await api.listFiles(path);
       if (!mounted || generation != _requestGeneration) return;
       setState(() {
@@ -213,14 +210,17 @@ class _FilesScreenState extends State<FilesScreen> {
       return;
     }
     _searchOriginPath ??= _path;
-    final api = widget.controller.api;
     final generation = ++_requestGeneration;
-    if (api == null) return;
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
+      final api = await widget.controller.prepareActionTransport();
+      if (!mounted || generation != _requestGeneration) return;
+      if (api == null) {
+        throw StateError('The server is not connected.');
+      }
       final results = await api.findFile(q.trim());
       if (!mounted || generation != _requestGeneration) return;
       setState(() {
@@ -250,17 +250,18 @@ class _FilesScreenState extends State<FilesScreen> {
       });
       return;
     }
-    final repository = _repository;
     final generation = ++_requestGeneration;
-    if (repository == null) {
-      setState(() => _error = 'The server is not connected.');
-      return;
-    }
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
+      await widget.controller.prepareActionTransport();
+      if (!mounted || generation != _requestGeneration) return;
+      final repository = widget.controller.repository;
+      if (repository == null) {
+        throw StateError('The server is not connected.');
+      }
       final results = await repository.findWorkspaceSymbols(value);
       if (!mounted || generation != _requestGeneration) return;
       setState(() => _symbols = results);
@@ -630,7 +631,10 @@ class __FileViewerState extends State<_FileViewer> {
       _error = null;
     });
     try {
-      final c = await widget.controller.api!.fileContent(widget.path);
+      final api = await widget.controller.prepareActionTransport();
+      if (!mounted || generation != _generation) return;
+      if (api == null) throw StateError('The server is not connected.');
+      final c = await api.fileContent(widget.path);
       if (mounted && generation == _generation) setState(() => _content = c);
     } catch (e) {
       if (mounted && generation == _generation) setState(() => _error = '$e');

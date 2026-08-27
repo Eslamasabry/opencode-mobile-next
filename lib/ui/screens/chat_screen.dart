@@ -2371,7 +2371,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<FilePreviewData> _loadToolOutputFile(ToolOutputFile file) async {
     final path = file.path;
-    final api = _conn.api;
+    final api = await _conn.prepareActionTransport();
     if (path == null || path.isEmpty || api == null) {
       return FilePreviewData(
         name: file.displayName,

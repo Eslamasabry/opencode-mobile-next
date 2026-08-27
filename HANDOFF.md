@@ -332,6 +332,21 @@ final tree has clean Flutter analysis and all 291 tests pass serially. The
 generated SDK audit now counts 65 directly used operations. Traycer remains
 explicitly deferred.
 
+The active Files surface now uses generated `file.list`, `file.read`,
+`find.files`, and `find.text` contracts with the selected directory/workspace.
+Binary type, base64 encoding, and MIME metadata survive the mapping so image and
+file previews remain viewable, downloadable, and attachable. Successful legacy
+responses still accept nodes without newly required fields, raw text bodies,
+line-array content, and loose search matches. File browsing, filename search,
+symbol search, direct file viewing, and chat tool-output previews all wait for
+the post-wake transport before reading, preventing a retained screen from using
+the API being replaced after Android idle. Exact loopback tests prove methods,
+paths, queries, strict and loose mappings, binary bytes, and generated error
+identity; a widget regression proves a tool image loads only through the
+replacement wake transport. Final-tree Flutter analysis is clean and all 295
+tests pass serially. The generated SDK audit now counts 69 directly used
+operations. Traycer remains explicitly deferred.
+
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`

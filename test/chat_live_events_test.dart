@@ -354,19 +354,20 @@ Future<ConnectionController> _pumpChat(
   WidgetTester tester,
   _FakeOpenCodeApi api, {
   ProductRepository? repository,
+  ConnectionController? controller,
 }) async {
-  final controller = await _controller(api);
-  controller.repository = repository;
-  addTearDown(controller.dispose);
+  final activeController = controller ?? await _controller(api);
+  activeController.repository = repository;
+  addTearDown(activeController.dispose);
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [connProvider.overrideWithValue(controller)],
+      overrides: [connProvider.overrideWithValue(activeController)],
       child: const MaterialApp(home: ChatScreen(sessionID: 'session-1')),
     ),
   );
   await tester.pump();
   await tester.pump();
-  return controller;
+  return activeController;
 }
 
 Future<void> _pumpEvent(WidgetTester tester) async {
@@ -726,6 +727,55 @@ void main() {
       api.prompts.single.attachments.single.url,
       startsWith('data:image/png;base64,'),
     );
+  });
+
+  testWidgets('tool output previews wait for the wake-time transport', (
+    tester,
+  ) async {
+    const path = '/tmp/opencode/shots/after-wake.png';
+    final retainedApi = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('assistant-after-wake', 'assistant', [
+          Part(
+            id: 'tool-after-wake',
+            messageID: 'assistant-after-wake',
+            type: 'tool',
+            toolName: 'browser screenshot',
+            toolState: ToolState.fromJson({
+              'status': 'completed',
+              'title': 'Capture after wake',
+              'input': const <String, dynamic>{},
+              'output': {'filePath': path},
+            }),
+          ),
+        ]),
+      ];
+    final replacementApi = _FakeOpenCodeApi()
+      ..fileContents[path] = const FileContent(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2ZKgAAAAASUVORK5CYII=',
+        type: 'binary',
+        encoding: 'base64',
+        mimeType: 'image/png',
+      );
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final readyApi = Completer<OpenCodeApi?>();
+    final controller = _DelayedActionController(
+      ProfileStore(prefs: prefs),
+      readyApi,
+    )..api = retainedApi;
+
+    await _pumpChat(tester, retainedApi, controller: controller);
+
+    expect(retainedApi.fileContentRequests, isEmpty);
+    expect(replacementApi.fileContentRequests, isEmpty);
+
+    readyApi.complete(replacementApi);
+    await tester.pumpAndSettle();
+
+    expect(retainedApi.fileContentRequests, isEmpty);
+    expect(replacementApi.fileContentRequests, [path]);
+    expect(find.byKey(const Key('tool-output-image')), findsOneWidget);
   });
 
   testWidgets('opens non-image tool files in the shared preview', (

@@ -865,66 +865,155 @@ class OpenCodeApi {
 
   Future<List<FileNode>> listFiles(String path) async {
     try {
-      final r = await _dio.get(
-        '/file',
-        queryParameters: _query({'path': path}),
+      final response = await sdkClient.getFileApi().fileList(
+        path: path,
+        directory: _directory,
+        workspace: _workspace,
       );
-      final nodes = (r.data as List)
-          .whereType<Map<String, dynamic>>()
-          .map(FileNode.fromJson)
-          .toList();
-      nodes.sort((a, b) {
-        if (a.isDir != b.isDir) return a.isDir ? -1 : 1;
-        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-      });
-      return nodes;
-    } on DioException catch (e) {
-      _fail(e, 'List files');
+      return _sortFileNodes(
+        (response.data ?? const [])
+            .map(
+              (node) => FileNode(
+                name: node.name,
+                path: node.path,
+                isDir: node.type == sdk.FileNodeTypeEnum.directory,
+              ),
+            )
+            .toList(),
+      );
+    } on sdk.OpenCodeApiException catch (error) {
+      _failGenerated(error, 'List files');
+    } on DioException catch (error) {
+      final raw = error.response?.data;
+      if (_wasSuccessfulResponse(error) && raw is List) {
+        try {
+          return _sortFileNodes(
+            raw
+                .whereType<Map>()
+                .map(
+                  (node) => FileNode.fromJson(Map<String, dynamic>.from(node)),
+                )
+                .toList(),
+          );
+        } catch (_) {
+          // Preserve the existing product error when a successful old-server
+          // response is not understandable even by the tolerant parser.
+        }
+      }
+      _fail(error, 'List files');
     }
+  }
+
+  List<FileNode> _sortFileNodes(List<FileNode> nodes) {
+    nodes.sort((a, b) {
+      if (a.isDir != b.isDir) return a.isDir ? -1 : 1;
+      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    });
+    return nodes;
   }
 
   Future<FileContent> fileContent(String path) async {
     try {
-      final r = await _dio.get(
-        '/file/content',
-        queryParameters: _query({'path': path}),
-        options: Options(responseType: ResponseType.plain),
+      final response = await sdkClient.getFileApi().fileRead(
+        path: path,
+        directory: _directory,
+        workspace: _workspace,
       );
-      final text = r.data?.toString() ?? '';
-      Map<String, dynamic>? parsed;
-      try {
-        parsed = jsonDecode(text) as Map<String, dynamic>;
-      } catch (_) {
-        parsed = null;
+      final content = response.data;
+      if (content == null) {
+        throw ApiException('Read file failed: server returned no content');
       }
-      if (parsed != null &&
-          (parsed['content'] is String || parsed['content'] is List)) {
-        return FileContent.fromJson(parsed);
+      return FileContent(
+        content.content,
+        type: content.type == sdk.FileContentTypeEnum.binary
+            ? 'binary'
+            : 'text',
+        encoding: content.encoding == sdk.FileContentEncodingEnum.base64
+            ? 'base64'
+            : null,
+        mimeType: content.mimeType,
+      );
+    } on sdk.OpenCodeApiException catch (error) {
+      _failGenerated(error, 'Read file');
+    } on DioException catch (error) {
+      if (_wasSuccessfulResponse(error)) {
+        return _fileContentFromLooseResponse(error.response?.data);
       }
-      // Server returned the raw file body
-      return FileContent(text);
-    } on DioException catch (e) {
-      _fail(e, 'Read file');
+      _fail(error, 'Read file');
     }
   }
 
+  FileContent _fileContentFromLooseResponse(Object? raw) {
+    if (raw is Map) {
+      return FileContent.fromJson(Map<String, dynamic>.from(raw));
+    }
+    final text = raw?.toString() ?? '';
+    try {
+      final parsed = jsonDecode(text);
+      if (parsed is Map &&
+          (parsed['content'] is String || parsed['content'] is List)) {
+        return FileContent.fromJson(Map<String, dynamic>.from(parsed));
+      }
+    } catch (_) {
+      // A plain string is the legacy raw-file response, not malformed JSON.
+    }
+    return FileContent(text);
+  }
+
   Future<List<String>> findFile(String query) async {
-    final r = await _dio.get(
-      '/find/file',
-      queryParameters: _query({'query': query, 'limit': 50}),
-    );
-    return (r.data as List? ?? const []).map((e) => e.toString()).toList();
+    try {
+      final response = await sdkClient.getFileApi().findFiles(
+        query: query,
+        directory: _directory,
+        workspace: _workspace,
+        limit: 50,
+      );
+      return response.data ?? const [];
+    } on sdk.OpenCodeApiException catch (error) {
+      _failGenerated(error, 'Find files');
+    } on DioException catch (error) {
+      final raw = error.response?.data;
+      if (_wasSuccessfulResponse(error) && raw is List) {
+        return raw.map((value) => value.toString()).toList();
+      }
+      _fail(error, 'Find files');
+    }
   }
 
   Future<List<FindMatch>> findText(String pattern) async {
-    final r = await _dio.get(
-      '/find',
-      queryParameters: _query({'pattern': pattern}),
-    );
-    return (r.data as List)
-        .whereType<Map<String, dynamic>>()
-        .map(FindMatch.fromJson)
-        .toList();
+    try {
+      final response = await sdkClient.getFileApi().findText(
+        pattern: pattern,
+        directory: _directory,
+        workspace: _workspace,
+      );
+      return (response.data ?? const [])
+          .map(
+            (match) => FindMatch(
+              path: match.path.text,
+              lineNumber: match.lineNumber,
+              snippet: match.lines.text.trimRight(),
+            ),
+          )
+          .toList();
+    } on sdk.OpenCodeApiException catch (error) {
+      _failGenerated(error, 'Find text');
+    } on DioException catch (error) {
+      final raw = error.response?.data;
+      if (_wasSuccessfulResponse(error) && raw is List) {
+        try {
+          return raw
+              .whereType<Map>()
+              .map(
+                (match) => FindMatch.fromJson(Map<String, dynamic>.from(match)),
+              )
+              .toList();
+        } catch (_) {
+          // Fall through to the product-facing transport error.
+        }
+      }
+      _fail(error, 'Find text');
+    }
   }
 }
 

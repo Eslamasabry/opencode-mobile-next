@@ -9,7 +9,7 @@ Authoritative inputs:
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app
-currently calls **65 generated operations directly**. It also uses a set of
+currently calls **69 generated operations directly**. It also uses a set of
 older or compatibility routes through `OpenCodeApi` and raw `Dio`; those are
 listed separately so a working feature is not incorrectly labelled missing.
 
@@ -29,7 +29,7 @@ Legend:
 | Event | - | `eventSubscribe` through the shared `/event` SSE transport | Generated event transport is unused |
 | Events v2 | - | Some v2-shaped events are reduced from the legacy stream | `v2EventSubscribe` |
 | Experimental | `experimentalResourceList`, Console org list/switch | - | capabilities, console state, background sessions, global session list, tool IDs/list, worktree create/list/remove/reset |
-| File | `findSymbols` | list, read, filename search, text search | status |
+| File | list, read, filename search, text search, `findSymbols` | - | status |
 | Filesystem v2 | - | - | `v2FsFind`, `v2FsList`, `v2FsRead` |
 | Global | - | health | config get/update, dispose, event, upgrade |
 | Instance | `instanceDispose`, `vcsDiff`, `vcsGet`, `vcsStatus`, `lspStatus`, `formatterStatus` | - | agents, skills, command list, path, VCS raw diff/apply |
@@ -111,6 +111,14 @@ Legend:
    old-server fallback. Successful loose envelopes remain supported, declared
    request identities remain available for race-safe resolution, and all reply
    actions wait for wake-time transport reconciliation before sending.
+   File listing, file reads, filename search, and text search now use the
+   generated location-scoped contracts as well. Binary type, base64 encoding,
+   and MIME metadata survive the generated mapping so tool images and shared
+   previews remain downloadable and attachable. Successful old-server nodes,
+   raw text bodies, line-array content, and loose search matches retain their
+   tolerant compatibility path. File browsing, search, symbols, direct file
+   viewing, and chat tool-output previews wait for wake-time transport
+   reconciliation before reading.
 6. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
    worktree lifecycle are deliberately not the current implementation lane.
 
