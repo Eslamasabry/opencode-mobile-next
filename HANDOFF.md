@@ -53,6 +53,8 @@ byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 - Connected-integration reconciliation: `f9eb7b7f03da074da2e609021b3a70b3d14cd934`
 - Stable Patch 10 ID: `620789`
 - Provider-inventory recovery: `7b6db9b3a9128416432927f058b90f4946473b17`
+- Stable Patch 11 ID: `620824`
+- Provider runtime-auth synchronization: `421567626d39755b0bdac802f36fa0dbe3348667`
 - OpenCode reference revision: `c2eacd72afc4a4984564c393e15ab30011057269`
 - Command/feature map: [`docs/opencode-command-feature-map.md`](docs/opencode-command-feature-map.md)
 
@@ -252,6 +254,31 @@ remain hidden. The regression reproduces the phone payload, including Zen-only
 variant recovery. Flutter analysis was clean, all 233 tests passed, Shorebird's dry
 run reported no issue, and Patch 10 was published to Stable without native or asset
 overrides. Runtime activation on the personal phone is the remaining gate.
+
+Patch 11 closes that runtime gate. Live phone testing showed that OpenCode `1.18.23`
+stores a key submitted through `/api/integration/{id}/connect/key` in its new
+integration database, while session prompts still read the legacy `/auth/{providerID}`
+store. The model picker could therefore show a correctly connected Z.AI provider even
+though chat returned `ProviderModelNotFoundError`. OpenCode also caches provider
+inventories per instance, so writing legacy auth alone did not refresh an already
+loaded `/root` session.
+
+The app now synchronizes key credentials to both OpenCode stores and then disposes
+only the selected location instance plus the server-default instance, matching
+OpenCode's own compatibility client. It never logs or persists another copy of the
+key. A transport regression verifies the exact integration, auth, selected-instance,
+and default-instance request sequence and location scoping.
+
+After the same auth synchronization and instance refresh were applied on the user's
+Termux server, a real `/root` prompt completed through
+`zai-coding-plan/glm-5.2` with `finish=stop`, no error, and the exact
+`PHONE_ZAI_ROOT_OK` marker. The previously failing
+`zai-coding-plan/glm-5.3-highspeed` pair then resolved correctly too; Z.AI rejected
+the generation with HTTP 429 because the user's current subscription does not include
+GLM-5.3-Highspeed. That remaining restriction is provider-plan entitlement, not a
+model-picker or provider-ID mismatch. Flutter analysis was clean, all 234 tests
+passed, Shorebird's dry run reported no issue, and Patch 11 was published to Stable
+without native or asset overrides.
 
 On the Ubuntu workstation, `z node_modules/opencode-ai` failed because zoxide had no
 matching history entry. The direct package path is `/home/eslam/node_modules/opencode-ai`;
