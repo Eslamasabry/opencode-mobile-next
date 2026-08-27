@@ -37,6 +37,48 @@ void main() {
     );
   });
 
+  test('provider list keeps only connected providers in connection order', () {
+    final response = ProvidersResponse.fromJson({
+      'all': [
+        {
+          'id': 'opencode',
+          'name': 'OpenCode Zen',
+          'models': {'big-pickle': <String, Object?>{}},
+        },
+        {
+          'id': 'zai-coding-plan',
+          'name': 'Z.AI Coding Plan',
+          'models': {
+            'glm-5.2': {
+              'variants': {
+                'max': {'reasoningEffort': 'max'},
+              },
+            },
+          },
+        },
+        {
+          'id': 'unconnected',
+          'name': 'Unconnected',
+          'models': {'hidden-model': <String, Object?>{}},
+        },
+      ],
+      'connected': ['zai-coding-plan', 'opencode'],
+      'default': {
+        'unconnected': 'hidden-model',
+        'opencode': 'big-pickle',
+        'zai-coding-plan': 'glm-5.2',
+      },
+    });
+
+    expect(response.providers.map((provider) => provider.id), [
+      'zai-coding-plan',
+      'opencode',
+    ]);
+    expect(response.providers.first.modelIDs, ['glm-5.2']);
+    expect(response.defaultProviderID, 'zai-coding-plan');
+    expect(response.defaultModelID, 'glm-5.2');
+  });
+
   test('prompt request serializes OpenCode file parts', () {
     final body = promptRequestBody(
       text: 'Review this',

@@ -727,7 +727,7 @@ void main() {
   });
 
   testWidgets(
-    'current catalog prunes a model retained by the legacy fallback',
+    'connected catalog prunes a model exposed only by the active v2 surface',
     (tester) async {
       final api = _V2Api(
         providersResult: ProvidersResponse(
@@ -735,7 +735,7 @@ void main() {
             ProviderInfo(
               id: 'opencode',
               name: 'OpenCode Zen',
-              modelIDs: const ['current-model', 'ox-alpha'],
+              modelIDs: const ['current-model'],
             ),
           ],
           defaultProviderID: 'opencode',
@@ -748,6 +748,19 @@ void main() {
           CatalogProvider(id: 'opencode', name: 'OpenCode Zen', enabled: true),
         ],
         models: const [
+          CatalogModel(
+            id: 'ox-alpha',
+            providerID: 'opencode',
+            name: 'Ox Alpha',
+            enabled: true,
+            status: 'active',
+            contextLimit: 1000000,
+            outputLimit: 131072,
+            reasoning: true,
+            attachments: true,
+            tools: true,
+            variants: [],
+          ),
           CatalogModel(
             id: 'current-model',
             providerID: 'opencode',
@@ -801,7 +814,7 @@ void main() {
     },
   );
 
-  testWidgets('current catalog keeps a newly connected Z.AI provider', (
+  testWidgets('connected catalog keeps Z.AI when active v2 only shows Zen', (
     tester,
   ) async {
     final api = _V2Api(
@@ -812,6 +825,11 @@ void main() {
             name: 'OpenCode Zen',
             modelIDs: const ['nemotron'],
           ),
+          ProviderInfo(
+            id: 'zai-coding-plan',
+            name: 'Z.AI Coding Plan',
+            modelIDs: const ['glm-5.2'],
+          ),
         ],
         defaultProviderID: 'opencode',
         defaultModelID: 'nemotron',
@@ -821,11 +839,6 @@ void main() {
     final detailed = CatalogSnapshot(
       providers: const [
         CatalogProvider(id: 'opencode', name: 'OpenCode Zen', enabled: true),
-        CatalogProvider(
-          id: 'zai-coding-plan',
-          name: 'Z.AI Coding Plan',
-          enabled: true,
-        ),
       ],
       models: const [
         CatalogModel(
@@ -836,19 +849,6 @@ void main() {
           status: 'active',
           contextLimit: 262144,
           outputLimit: 262144,
-          reasoning: true,
-          attachments: false,
-          tools: true,
-          variants: [],
-        ),
-        CatalogModel(
-          id: 'glm-5.2',
-          providerID: 'zai-coding-plan',
-          name: 'GLM-5.2',
-          enabled: true,
-          status: 'active',
-          contextLimit: 1000000,
-          outputLimit: 131072,
           reasoning: true,
           attachments: false,
           tools: true,

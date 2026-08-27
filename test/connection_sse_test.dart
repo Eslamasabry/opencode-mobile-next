@@ -809,9 +809,15 @@ void main() {
           request.response.write(
             'data: ${jsonEncode({'type': 'server.connected'})}\n\n',
           );
-        } else if (request.uri.path == '/config/providers') {
+        } else if (request.uri.path == '/provider') {
           request.response.headers.contentType = ContentType.json;
-          request.response.write(jsonEncode({'providers': <Object>[]}));
+          request.response.write(
+            jsonEncode({
+              'all': <Object>[],
+              'connected': <Object>[],
+              'default': <String, Object>{},
+            }),
+          );
         } else if (request.uri.path == '/agent') {
           request.response.headers.contentType = ContentType.json;
           request.response.write('[]');

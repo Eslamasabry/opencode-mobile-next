@@ -559,9 +559,21 @@ class ProvidersResponse {
 
   factory ProvidersResponse.fromJson(Map<String, dynamic> j) {
     final providers = <ProviderInfo>[];
-    final rawList = (j['providers'] as List?) ?? const [];
+    final connected = (j['connected'] as List? ?? const [])
+        .map((value) => value.toString())
+        .where((value) => value.isNotEmpty)
+        .toList();
+    final rawList =
+        (j['all'] as List?) ?? (j['providers'] as List?) ?? const [];
+    final rawByID = <String, Map<String, dynamic>>{};
     for (final p in rawList) {
       if (p is! Map<String, dynamic>) continue;
+      rawByID[p['id'].toString()] = p;
+    }
+    final providerMaps = connected.isEmpty
+        ? rawByID.values
+        : connected.map((id) => rawByID[id]).whereType<Map<String, dynamic>>();
+    for (final p in providerMaps) {
       final id = p['id'].toString();
       final name = (p['name'] ?? id).toString();
       final models = <String>[];
@@ -593,9 +605,16 @@ class ProvidersResponse {
     String? defM;
     final d = j['default'];
     if (d is Map<String, dynamic> && d.isNotEmpty) {
-      final first = d.entries.first;
-      defP = first.key;
-      defM = first.value.toString();
+      final defaults = connected.isEmpty
+          ? d.entries
+          : connected
+                .map((id) => MapEntry(id, d[id]))
+                .where((e) => e.value != null);
+      if (defaults.isNotEmpty) {
+        final first = defaults.first;
+        defP = first.key;
+        defM = first.value.toString();
+      }
     } else if (d is String) {
       // some versions send "provider/model"
       final parts = d.split('/');

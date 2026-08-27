@@ -437,24 +437,26 @@ class ConnectionController extends ChangeNotifier {
       final nextCatalog = detailedCatalog == null
           ? fallbackCatalog
           : CatalogSnapshot(
-              // The current catalog reflects v2 integration connections as
-              // soon as they are added. The legacy config endpoint can lag
-              // behind it, so it is only a fallback and never a filter.
-              providers: detailedCatalog.providers.isEmpty
-                  ? fallbackCatalog.providers
-                  : detailedCatalog.providers,
-              models: detailedCatalog.models.isEmpty
-                  ? fallbackCatalog.models
+              // provider.list is the OpenCode source of truth for connected
+              // providers and their available models. The experimental v2
+              // surface only reports providers/models active in the current
+              // location, so it may legitimately contain only Zen. Use v2 to
+              // enrich matching rows, never to hide connected providers.
+              providers: fallbackCatalog.providers.isEmpty
+                  ? detailedCatalog.providers
+                  : fallbackCatalog.providers,
+              models: fallbackCatalog.models.isEmpty
+                  ? detailedCatalog.models
                   : [
-                      for (final model in detailedCatalog.models)
+                      for (final model in fallbackCatalog.models)
                         _mergeCatalogModel(
-                          model,
-                          fallbackCatalog.models.firstWhere(
-                            (base) =>
-                                base.providerID == model.providerID &&
-                                base.id == model.id,
+                          detailedCatalog.models.firstWhere(
+                            (detailed) =>
+                                detailed.providerID == model.providerID &&
+                                detailed.id == model.id,
                             orElse: () => model,
                           ),
+                          model,
                         ),
                     ],
               agents: detailedCatalog.agents.isEmpty
