@@ -249,6 +249,19 @@ mapping. Final-tree Flutter analysis is clean and all 274 tests pass serially.
 The generated SDK audit now counts 47 directly used operations. Traycer remains
 explicitly deferred.
 
+Server-provided slash commands now use generated `session.command`, preserving
+their exact arguments, `provider/model` route, selected thinking variant,
+directory, and workspace. Declared server failures retain product-facing HTTP
+and OpenCode error details. Shell execution deliberately remains on its bounded
+compatibility request because the generated `SessionShellRequest` omits
+`variant`; replacing it would silently discard High, Max, Fast, or any other
+server-provided thinking mode. A loopback transport regression proves both the
+generated command payload and the retained shell variant. Redundant handwritten
+prompt and command body builders were removed after their stronger end-to-end
+wire tests replaced them. Final-tree Flutter analysis is clean and all 274 tests
+pass serially. The generated SDK audit now counts 48 directly used operations.
+Traycer remains explicitly deferred.
+
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`

@@ -240,6 +240,9 @@ class OpenCodeApi {
     String? variant,
   }) async {
     try {
+      // The generated SessionShellRequest currently omits OpenCode's thinking
+      // variant. Keep this compatibility request until that wire field exists
+      // in the generated contract; silently dropping it changes execution.
       await _dio.post(
         '/session/$sessionID/shell',
         data: shellRequestBody(
@@ -263,11 +266,19 @@ class OpenCodeApi {
     String? variant,
   }) async {
     try {
-      await _dio.post(
-        '/session/$sessionID/command',
-        data: commandRequestBody(command, args, model: model, variant: variant),
-        queryParameters: _query(),
+      await sdkClient.getSessionApi().sessionCommand(
+        sessionID: sessionID,
+        directory: _directory,
+        workspace: _workspace,
+        sessionCommandRequest: sdk.SessionCommandRequest(
+          arguments: args,
+          command: command,
+          model: model?.wireName,
+          variant: variant,
+        ),
       );
+    } on sdk.OpenCodeApiException catch (e) {
+      _failGenerated(e, 'Run /command');
     } on DioException catch (e) {
       _fail(e, 'Run /command');
     }

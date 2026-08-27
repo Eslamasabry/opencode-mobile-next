@@ -84,31 +84,6 @@ void main() {
     expect(response.defaultModelID, 'glm-5.2');
   });
 
-  test('prompt request serializes OpenCode file parts', () {
-    final body = promptRequestBody(
-      text: 'Review this',
-      variant: 'fast',
-      attachments: const [
-        PromptAttachment(
-          mime: 'text/plain',
-          filename: 'notes.txt',
-          url: 'data:text/plain;base64,bm90ZXM=',
-        ),
-      ],
-    );
-
-    expect(body['parts'], [
-      {'type': 'text', 'text': 'Review this'},
-      {
-        'type': 'file',
-        'mime': 'text/plain',
-        'filename': 'notes.txt',
-        'url': 'data:text/plain;base64,bm90ZXM=',
-      },
-    ]);
-    expect(body['variant'], 'fast');
-  });
-
   test('project reference uses the upstream directory file-part contract', () {
     final attachment = PromptAttachment.reference(
       name: 'docs',
@@ -132,20 +107,6 @@ void main() {
 
     expect(attachment.url, 'file:///C:/Shared%20Docs/platform');
     expect(attachment.isDirectoryReference, isTrue);
-  });
-
-  test('command request serializes model as generated contract string', () {
-    final body = commandRequestBody(
-      'review',
-      '--staged',
-      model: ModelRef(providerID: 'anthropic', modelID: 'claude-sonnet'),
-    );
-
-    expect(body, {
-      'command': 'review',
-      'arguments': '--staged',
-      'model': 'anthropic/claude-sonnet',
-    });
   });
 
   test('shell request serializes the selected thinking variant', () {

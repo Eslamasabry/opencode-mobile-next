@@ -519,24 +519,6 @@ class PromptAttachment {
   };
 }
 
-Map<String, dynamic> promptRequestBody({
-  required String text,
-  ModelRef? model,
-  String? agent,
-  String? variant,
-  String? messageID,
-  List<PromptAttachment> attachments = const [],
-}) => {
-  'messageID': ?messageID,
-  'model': ?model?.toJson(),
-  'agent': ?agent,
-  'variant': ?variant,
-  'parts': [
-    {'type': 'text', 'text': text},
-    ...attachments.map((attachment) => attachment.toJson()),
-  ],
-};
-
 Map<String, dynamic> shellRequestBody(
   String command, {
   String agent = 'build',
@@ -547,18 +529,6 @@ Map<String, dynamic> shellRequestBody(
   'model': ?model?.toJson(),
   'variant': ?variant,
   'command': command,
-};
-
-Map<String, dynamic> commandRequestBody(
-  String command,
-  String args, {
-  ModelRef? model,
-  String? variant,
-}) => {
-  'command': command,
-  'arguments': args,
-  'model': ?model?.wireName,
-  'variant': ?variant,
 };
 
 // ---------------- Providers / agents ----------------
