@@ -376,6 +376,29 @@ and post-save reconnect failure. Final-tree Flutter analysis is clean and all
 307 tests pass serially. The generated SDK audit now counts 73 directly used
 operations. Traycer remains explicitly deferred.
 
+The next native baseline now has one authoritative Shorebird update owner.
+`shorebird.yaml` disables the engine's automatic launch updater while the
+existing app-level notice continues to check and download on startup/resume.
+This removes a real race where `ShorebirdUpdater.update()` returned the benign
+`UPDATE_IN_PROGRESS` result from the parallel engine thread and the UI announced
+`restart to apply` before the patch was staged. A failed update now removes the
+progress snackbar and never shows the ready notice; a release contract prevents
+the second updater from being re-enabled.
+
+This was reproduced and verified on the running Pixel 6 emulator with an exact
+branch release-mode build signed by the known Android debug certificate for
+simulation only. Before the fix, Shorebird rejected the deliberately mismatched
+`1.0.19+20` test binary by hash while the UI still claimed ready. After the fix,
+the engine logged `auto_update disabled`, the app-owned updater surfaced the
+hash rejection internally, and the visible UI contained neither Receiving nor
+restart-ready text. The same build connected through `adb reverse` to local
+OpenCode `1.18.23`, opened Workspace -> More -> MCP and integrations -> Add MCP
+server, rendered the project-scoped native form, and rejected an `ftp://` URL
+inline without persisting it. Device logs contained no fatal exception,
+RenderFlex, or overflow. The temporary server and reverse mapping were stopped,
+the ignored signing file was removed, and this APK must not be distributed.
+Flutter analysis is clean and all 309 tests pass serially.
+
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`

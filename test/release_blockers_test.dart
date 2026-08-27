@@ -210,6 +210,18 @@ void main() {
     expect(themed, contains('@drawable/ic_launcher_monochrome'));
   });
 
+  test('Shorebird updates have one app-controlled owner', () {
+    final shorebird = File('shorebird.yaml').readAsStringSync();
+    final main = File('lib/main.dart').readAsStringSync();
+
+    expect(
+      shorebird,
+      contains(RegExp(r'^auto_update: false$', multiLine: true)),
+    );
+    expect(main, contains('ShorebirdUpdateNotice('));
+    expect(main, contains('ShorebirdAppUpdateService()'));
+  });
+
   test('privacy policy is bundled and names sensitive product surfaces', () {
     final pubspec = File('pubspec.yaml').readAsStringSync();
     final policy = File('PRIVACY.md').readAsStringSync();

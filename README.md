@@ -67,6 +67,12 @@ Pull requests and pushes to `master` run the pinned Flutter analysis and test
 gate in GitHub Actions, plus Android `lintRelease` and a test-signed release APK
 compile. The CI key is generated per job and its artifact is never distributed.
 
+`shorebird.yaml` disables the engine's automatic updater because the app already
+owns checks, downloads, progress, and resume-time retries through
+`ShorebirdUpdateNotice`. Do not enable both owners: `ShorebirdUpdater.update()`
+can validly return while the automatic updater is still working, which would let
+the UI announce restart readiness before a patch is actually staged.
+
 ### Signing identity decision gate
 
 **Do not publish a store release yet.** The current
