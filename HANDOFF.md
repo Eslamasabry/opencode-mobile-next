@@ -314,6 +314,28 @@ model membership and metadata still come from OpenCode. All 236 tests passed,
 Flutter analysis was clean, Shorebird's dry run reported no issue, and Patch 13 was
 published to Stable without native or asset overrides.
 
+Patch 14 corrects an unsafe assumption in that presentation. OpenCode treats the
+four IDs as one GLM provider family for shared transforms, but they are distinct
+backend routes: `zai` uses `api.z.ai`, `zhipuai` uses `open.bigmodel.cn`, and each
+Coding Plan ID uses the corresponding domain's separate `/api/coding/paas/v4`
+endpoint. Their credentials, connected state, model catalogs, and entitlements can
+therefore differ even when model IDs overlap.
+
+The picker still offers one compact Z.AI product-family filter, but duplicate model
+IDs now remain independently selectable as `Global` and `China` routes. Selected
+model headers, settings, assistant model-change metadata, and Provider Connections
+show the route explicitly. Provider Connections no longer merges connected state or
+chooses one alias's authentication method for the other. The exact OpenCode provider
+ID remains the transport value, and a regression selects the China row and verifies
+`zhipuai-coding-plan` reaches controller state.
+
+Flutter analysis was clean, all 236 tests passed, and a clean release-mode launch on
+the `Pixel_6` simulator reached the no-server state without a Flutter fatal error.
+Shorebird's direct dry run reported no issue and Patch 14 (`621033`) was published to
+Stable without native or asset overrides. The repository helper itself remains
+fail-closed because the immutable full-release tag predates the already-live
+Patch-2 `shorebird_code_push` dependency; the guard was not weakened.
+
 On the Ubuntu workstation, `z node_modules/opencode-ai` failed because zoxide had no
 matching history entry. The direct package path is `/home/eslam/node_modules/opencode-ai`;
 running `cd /home/eslam/node_modules/opencode-ai && node postinstall.mjs` repaired the
