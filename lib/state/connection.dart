@@ -1688,6 +1688,16 @@ class ConnectionController extends ChangeNotifier {
     return api;
   }
 
+  /// Returns the product repository paired with the wake-reconciled API.
+  ///
+  /// Retained screens must resolve this after [prepareActionTransport]
+  /// completes because lifecycle recovery can replace both objects together.
+  Future<ProductRepository?> prepareActionRepository() async {
+    await prepareActionTransport();
+    if (_disposed || _lifecycleSuspended) return null;
+    return repository;
+  }
+
   Future<OpenCodeApi> _requireActionTransport() async {
     final actionApi = await prepareActionTransport();
     if (actionApi != null) return actionApi;

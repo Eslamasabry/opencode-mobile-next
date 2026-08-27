@@ -756,7 +756,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       _error = null;
     });
     try {
-      final msgs = await _conn.api!.messages(widget.sessionID);
+      final api = _conn.api;
+      if (api == null) throw StateError('OpenCode is reconnecting.');
+      final msgs = await api.messages(widget.sessionID);
       msgs.sort(
         (a, b) =>
             (a.info.time?.created ?? 0).compareTo(b.info.time?.created ?? 0),
@@ -1260,7 +1262,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
     if (confirmed != true) return;
     try {
-      final url = await _conn.repository?.shareSession(widget.sessionID);
+      final repository = await _requireActionRepository();
+      final url = await repository.shareSession(widget.sessionID);
       if (url == null) throw StateError('No share link was returned');
       if (mounted) {
         setState(() => _localShareUrl = url);
@@ -1290,7 +1293,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _stopSharing() async {
     try {
-      await _conn.repository?.unshareSession(widget.sessionID);
+      final repository = await _requireActionRepository();
+      await repository.unshareSession(widget.sessionID);
       if (!mounted) return;
       setState(() => _localShareUrl = null);
       await _conn.refreshSessions();
@@ -1306,13 +1310,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _fork() async {
     try {
-      final id = await _conn.repository?.forkSession(widget.sessionID);
-      if (id == null) throw StateError('The session could not be forked');
+      final repository = await _requireActionRepository();
+      final id = await repository.forkSession(widget.sessionID);
       await _conn.refreshSessions();
       if (mounted) Navigator.of(context).pushReplacementNamed('/chat/$id');
     } catch (error) {
       if (mounted) _showActionError(error);
     }
+  }
+
+  Future<ProductRepository> _requireActionRepository() async {
+    final repository = await _conn.prepareActionRepository();
+    if (repository != null) return repository;
+    throw StateError(
+      _conn.connectionError ?? 'OpenCode is reconnecting. Try again shortly.',
+    );
   }
 
   Future<void> _openTimeline({bool forkMode = false}) async {
@@ -1420,11 +1432,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       );
     }
     try {
-      final id = await _conn.repository?.forkSession(
+      final repository = await _requireActionRepository();
+      final id = await repository.forkSession(
         widget.sessionID,
         messageID: message.info.id,
       );
-      if (id == null) throw StateError('The session could not be forked');
       await _conn.refreshSessions();
       if (!mounted) return;
       await Navigator.of(context).pushReplacement(
@@ -1448,7 +1460,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       return;
     }
     try {
-      await _conn.repository?.compactSession(
+      final repository = await _requireActionRepository();
+      await repository.compactSession(
         widget.sessionID,
         providerID: model.providerID,
         modelID: model.modelID,
@@ -1494,7 +1507,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
     if (confirmed != true) return;
     try {
-      await _conn.repository?.revertSession(widget.sessionID, target.info.id);
+      final repository = await _requireActionRepository();
+      await repository.revertSession(widget.sessionID, target.info.id);
       await _load();
     } catch (error) {
       if (mounted) _showActionError(error);
@@ -1503,7 +1517,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _restore() async {
     try {
-      await _conn.repository?.restoreSession(widget.sessionID);
+      final repository = await _requireActionRepository();
+      await repository.restoreSession(widget.sessionID);
       await _load();
     } catch (error) {
       if (mounted) _showActionError(error);
@@ -1553,7 +1568,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       );
     }
     try {
-      await _conn.api!.promptAsync(
+      final api = await _conn.prepareActionTransport();
+      if (api == null) throw StateError('OpenCode is reconnecting.');
+      await api.promptAsync(
         widget.sessionID,
         text: text,
         model: _conn.selectedModel,
@@ -1675,7 +1692,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
     if (cmd == null || cmd.isEmpty) return;
     try {
-      await _conn.api!.shell(
+      final api = await _conn.prepareActionTransport();
+      if (api == null) throw StateError('OpenCode is reconnecting.');
+      await api.shell(
         widget.sessionID,
         command: cmd,
         agent: _conn.selectedAgent.isNotEmpty ? _conn.selectedAgent : 'build',
@@ -1705,21 +1724,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _performLoadServerCommands() async {
-    final repository = _conn.repository;
-    if (repository == null) {
-      if (mounted) {
-        setState(() {
-          _serverCommands = const [];
-          _serverCommandsError = 'OpenCode commands are unavailable offline.';
-        });
-      }
-      return;
-    }
     setState(() {
       _serverCommandsLoading = true;
       _serverCommandsError = null;
     });
     try {
+      final repository = await _conn.prepareActionRepository();
+      if (repository == null) {
+        throw StateError('OpenCode commands are unavailable offline.');
+      }
       final commands = [...await repository.listCommands()];
       if (!mounted) return;
       commands.sort((a, b) => a.name.compareTo(b.name));
@@ -2328,21 +2341,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         builder: (_) => ReviewWorkspace(
           sessionID: widget.sessionID,
           loadDiffs: () async {
-            final api = _conn.api;
+            final api = await _conn.prepareActionTransport();
             if (api == null) {
               throw StateError('OpenCode is reconnecting.');
             }
             return api.diff(widget.sessionID);
           },
           loadWorkingTreeDiffs: () async {
-            final repository = _conn.repository;
+            final repository = await _conn.prepareActionRepository();
             if (repository == null) {
               throw StateError('OpenCode is reconnecting.');
             }
             return repository.listVcsDiffs(VcsDiffMode.workingTree);
           },
           loadBranchDiffs: () async {
-            final repository = _conn.repository;
+            final repository = await _conn.prepareActionRepository();
             if (repository == null) {
               throw StateError('OpenCode is reconnecting.');
             }
@@ -5281,7 +5294,9 @@ class _TodosSheetState extends State<_TodosSheet> {
 
   Future<void> _fetch() async {
     try {
-      final t = await widget.conn.api!.todos(widget.sessionID);
+      final api = await widget.conn.prepareActionTransport();
+      if (api == null) throw StateError('OpenCode is reconnecting.');
+      final t = await api.todos(widget.sessionID);
       if (mounted) setState(() => _todos = t);
     } catch (e) {
       if (mounted) setState(() => _error = '$e');
@@ -5380,7 +5395,9 @@ class _DiffSheetState extends State<_DiffSheet> {
 
   Future<void> _fetch() async {
     try {
-      final d = await widget.conn.api!.diff(widget.sessionID);
+      final api = await widget.conn.prepareActionTransport();
+      if (api == null) throw StateError('OpenCode is reconnecting.');
+      final d = await api.diff(widget.sessionID);
       if (mounted) setState(() => _diffs = d);
     } catch (e) {
       if (mounted) setState(() => _error = '$e');

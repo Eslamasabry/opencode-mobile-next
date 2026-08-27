@@ -95,7 +95,8 @@ class _TerminalScreenState extends State<TerminalScreen> {
 
   Future<void> _load() async {
     final generation = ++_loadGeneration;
-    final repository = _repository;
+    final repository = await widget.controller.prepareActionRepository();
+    if (!mounted || generation != _loadGeneration) return;
     if (repository == null) {
       setState(() => _error = 'The server is not connected.');
       return;
@@ -114,10 +115,15 @@ class _TerminalScreenState extends State<TerminalScreen> {
   }
 
   Future<void> _create() async {
-    final repository = _repository;
-    if (repository == null || _creating) return;
-    final revision = _revisionOf(repository);
+    if (_creating) return;
     setState(() => _creating = true);
+    final repository = await widget.controller.prepareActionRepository();
+    if (!mounted) return;
+    if (repository == null) {
+      setState(() => _creating = false);
+      return;
+    }
+    final revision = _revisionOf(repository);
     try {
       final process = await repository.createTerminal(
         title: 'Terminal ${(_processes?.length ?? 0) + 1}',
@@ -158,9 +164,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
   }
 
   Future<void> _rename(TerminalProcess process) async {
-    final repository = _repository;
-    if (repository == null) return;
-    final revision = _revisionOf(repository);
+    final locationRevision = widget.controller.locationRevision;
     var editedTitle = process.title;
     final title = await showDialog<String>(
       context: context,
@@ -185,9 +189,16 @@ class _TerminalScreenState extends State<TerminalScreen> {
       ),
     );
     if (title?.isNotEmpty != true ||
-        !_isCurrentLocation(repository, revision)) {
+        locationRevision != widget.controller.locationRevision) {
       return;
     }
+    final repository = await widget.controller.prepareActionRepository();
+    if (!mounted ||
+        repository == null ||
+        locationRevision != widget.controller.locationRevision) {
+      return;
+    }
+    final revision = _revisionOf(repository);
     try {
       await repository.renameTerminal(process.id, title!);
       if (!_isCurrentLocation(repository, revision)) return;
@@ -200,9 +211,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
   }
 
   Future<void> _remove(TerminalProcess process) async {
-    final repository = _repository;
-    if (repository == null) return;
-    final revision = _revisionOf(repository);
+    final locationRevision = widget.controller.locationRevision;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -227,7 +236,17 @@ class _TerminalScreenState extends State<TerminalScreen> {
         ],
       ),
     );
-    if (confirmed != true || !_isCurrentLocation(repository, revision)) return;
+    if (confirmed != true ||
+        locationRevision != widget.controller.locationRevision) {
+      return;
+    }
+    final repository = await widget.controller.prepareActionRepository();
+    if (!mounted ||
+        repository == null ||
+        locationRevision != widget.controller.locationRevision) {
+      return;
+    }
+    final revision = _revisionOf(repository);
     try {
       await repository.removeTerminal(process.id);
       if (!_isCurrentLocation(repository, revision)) return;

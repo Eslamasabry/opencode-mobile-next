@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
@@ -30,6 +32,7 @@ class _IntegrationsRepository implements ProductRepository {
   int oauthCompleteCalls = 0;
   int oauthCancelCalls = 0;
   int providerRefreshCalls = 0;
+  int mcpConnectCalls = 0;
   String? oauthCompletionCode;
 
   @override
@@ -56,6 +59,11 @@ class _IntegrationsRepository implements ProductRepository {
   @override
   Future<String> startMcpAuthentication(String name) async =>
       mcpAuthorizationUrl;
+
+  @override
+  Future<void> connectMcp(String name) async {
+    mcpConnectCalls += 1;
+  }
 
   @override
   Future<IntegrationAuthLaunch> startIntegrationOAuth(
@@ -96,6 +104,25 @@ class _IntegrationsRepository implements ProductRepository {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _SwitchingRepositoryController extends ConnectionController {
+  _SwitchingRepositoryController(
+    super.store,
+    this.initialRepository,
+    this.readyRepository,
+  );
+
+  final ProductRepository initialRepository;
+  final Completer<ProductRepository?> readyRepository;
+  int actionRepositoryCalls = 0;
+
+  @override
+  Future<ProductRepository?> prepareActionRepository() {
+    actionRepositoryCalls += 1;
+    if (actionRepositoryCalls == 1) return Future.value(initialRepository);
+    return readyRepository.future;
+  }
 }
 
 Future<ConnectionController> _controller(ProductRepository repository) async {
@@ -263,6 +290,46 @@ void main() {
 
     expect(find.text('Open authorization page?'), findsNothing);
     expect(find.textContaining('unsafe authorization link'), findsOneWidget);
+  });
+
+  testWidgets('MCP actions wait for the wake-time replacement repository', (
+    tester,
+  ) async {
+    final retainedRepository = _IntegrationsRepository()
+      ..servers = const [
+        McpServerInfo(name: 'remote-tools', status: 'disabled'),
+      ];
+    final replacementRepository = _IntegrationsRepository()
+      ..servers = const [
+        McpServerInfo(name: 'remote-tools', status: 'connected'),
+      ];
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+    final readyRepository = Completer<ProductRepository?>();
+    final controller =
+        _SwitchingRepositoryController(
+            ProfileStore(prefs: preferences),
+            retainedRepository,
+            readyRepository,
+          )
+          ..repository = retainedRepository
+          ..status = StreamStatus.connected;
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Connect').first);
+    await tester.pump();
+
+    expect(retainedRepository.mcpConnectCalls, 0);
+    expect(replacementRepository.mcpConnectCalls, 0);
+
+    readyRepository.complete(replacementRepository);
+    await tester.pumpAndSettle();
+
+    expect(retainedRepository.mcpConnectCalls, 0);
+    expect(replacementRepository.mcpConnectCalls, 1);
+    expect(find.text('Connected and tools are available'), findsOneWidget);
   });
 
   testWidgets(

@@ -305,6 +305,16 @@ class _DelayedActionController extends ConnectionController {
   Future<OpenCodeApi?> prepareActionTransport() => readyApi.future;
 }
 
+class _DelayedRepositoryController extends ConnectionController {
+  _DelayedRepositoryController(super.store, this.readyRepository);
+
+  final Completer<ProductRepository?> readyRepository;
+
+  @override
+  Future<ProductRepository?> prepareActionRepository() =>
+      readyRepository.future;
+}
+
 MessageWithParts _message(
   String id,
   String role,
@@ -1629,6 +1639,53 @@ void main() {
     );
     expect(composer.controller?.text, 'Review this design');
     expect(find.byTooltip('Remove attachment design.png'), findsOneWidget);
+  });
+
+  testWidgets('session repository actions wait for the wake-time replacement', (
+    tester,
+  ) async {
+    final prompt = _message('user-after-wake', 'user', [
+      Part(
+        id: 'text-after-wake',
+        messageID: 'user-after-wake',
+        type: 'text',
+        text: 'Fork after wake',
+      ),
+    ]);
+    final api = _FakeOpenCodeApi()..messagesHandler = (_) async => [prompt];
+    final retainedRepository = _FakeProductRepository(const []);
+    final replacementRepository = _FakeProductRepository(const []);
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final readyRepository = Completer<ProductRepository?>();
+    final controller = _DelayedRepositoryController(
+      ProfileStore(prefs: prefs),
+      readyRepository,
+    )..api = api;
+
+    await _pumpChat(
+      tester,
+      api,
+      repository: retainedRepository,
+      controller: controller,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Timeline'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('timeline-fork-user-after-wake')));
+    await tester.pump();
+
+    expect(retainedRepository.forkCalls, 0);
+    expect(replacementRepository.forkCalls, 0);
+
+    readyRepository.complete(replacementRepository);
+    await tester.pumpAndSettle();
+
+    expect(retainedRepository.forkCalls, 0);
+    expect(replacementRepository.forkCalls, 1);
+    expect(replacementRepository.forkMessageID, 'user-after-wake');
   });
 
   testWidgets('/fork lists prompts and forks the selected message point', (

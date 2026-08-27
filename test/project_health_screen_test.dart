@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
@@ -39,6 +41,9 @@ class _HealthRepository implements ProductRepository {
     FormatterHealth(name: 'dart format', extensions: ['.dart'], enabled: true),
   ];
   Object? versionControlError;
+  int versionControlCalls = 0;
+  int languageServiceCalls = 0;
+  int formatterCalls = 0;
 
   @override
   void setLocation({String? directory, String? workspace}) {}
@@ -59,16 +64,22 @@ class _HealthRepository implements ProductRepository {
 
   @override
   Future<VersionControlHealth> loadVersionControlHealth() async {
+    versionControlCalls += 1;
     if (versionControlError case final error?) throw error;
     return versionControl;
   }
 
   @override
-  Future<List<LanguageServiceHealth>> listLanguageServices() async =>
-      languageServices;
+  Future<List<LanguageServiceHealth>> listLanguageServices() async {
+    languageServiceCalls += 1;
+    return languageServices;
+  }
 
   @override
-  Future<List<FormatterHealth>> listFormatters() async => formatters;
+  Future<List<FormatterHealth>> listFormatters() async {
+    formatterCalls += 1;
+    return formatters;
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -133,6 +144,42 @@ void main() {
     );
     expect(find.text('Dart analysis server'), findsOneWidget);
     expect(find.text('No formatters configured'), findsOneWidget);
+  });
+
+  testWidgets('project health waits for the wake-time repository', (
+    tester,
+  ) async {
+    final retainedRepository = _HealthRepository();
+    final replacementRepository = _HealthRepository()
+      ..versionControl = const VersionControlHealth(
+        branch: 'feature/after-wake',
+        changes: [],
+      );
+    final readyRepository = Completer<ProductRepository?>();
+
+    await tester.pumpWidget(
+      _app(
+        ProjectHealthScreen(
+          repository: retainedRepository,
+          repositoryResolver: () => readyRepository.future,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(retainedRepository.versionControlCalls, 0);
+    expect(replacementRepository.versionControlCalls, 0);
+
+    readyRepository.complete(replacementRepository);
+    await tester.pumpAndSettle();
+
+    expect(retainedRepository.versionControlCalls, 0);
+    expect(retainedRepository.languageServiceCalls, 0);
+    expect(retainedRepository.formatterCalls, 0);
+    expect(replacementRepository.versionControlCalls, 1);
+    expect(replacementRepository.languageServiceCalls, 1);
+    expect(replacementRepository.formatterCalls, 1);
+    expect(find.text('feature/after-wake'), findsOneWidget);
   });
 
   testWidgets('workspace exposes project health without compact overflow', (

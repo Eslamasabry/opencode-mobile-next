@@ -44,13 +44,14 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   Future<void> _checkHealth() async {
-    final api = widget.controller.api;
-    if (api == null || _checking) return;
+    if (_checking) return;
     setState(() {
       _checking = true;
       _healthError = null;
     });
     try {
+      final api = await widget.controller.prepareActionTransport();
+      if (api == null) throw StateError('OpenCode is reconnecting.');
       final health = await api.health();
       if (mounted) setState(() => _health = health);
     } catch (error) {

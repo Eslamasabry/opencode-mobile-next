@@ -94,7 +94,8 @@ class _SessionDestinationSheetState extends State<_SessionDestinationSheet> {
   }
 
   Future<void> _load() async {
-    final repository = widget.controller.repository;
+    final repository = await widget.controller.prepareActionRepository();
+    if (!mounted) return;
     if (repository == null) {
       setState(() => _error = StateError('OpenCode is reconnecting.'));
       return;
@@ -462,7 +463,8 @@ class _ConsoleOrganizationSheetState extends State<_ConsoleOrganizationSheet> {
   }
 
   Future<void> _load() async {
-    final repository = widget.controller.repository;
+    final repository = await widget.controller.prepareActionRepository();
+    if (!mounted) return;
     if (repository == null) {
       setState(() => _error = StateError('OpenCode is reconnecting.'));
       return;

@@ -347,6 +347,21 @@ replacement wake transport. Final-tree Flutter analysis is clean and all 295
 tests pass serially. The generated SDK audit now counts 69 directly used
 operations. Traycer remains explicitly deferred.
 
+Wake safety now covers the full retained foreground action surface, not only
+chat send/stop and file reads. `ConnectionController` resolves the product
+repository paired with the post-wake API, and chat share/unshare, fork,
+compact, revert/restore, retry, shell, Review, and Todos use it. Library MCP,
+provider OAuth/key actions, commands, Skills, and References; workspace session
+actions and destination discovery; project/Settings health; and terminal
+list/create/rename/remove also wait for reconciliation. Existing transcript
+data can render immediately during wake, while new requests cannot escape
+through the repository being retired. Terminal dialogs additionally retain
+their location revision so an actual workspace switch still fails closed.
+Replacement-repository widget regressions cover a session fork, an MCP connect,
+and all three project-health requests. Final-tree Flutter analysis is clean and
+all 298 tests pass serially. The generated SDK audit remains at 69 directly used
+operations. Traycer remains explicitly deferred.
+
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`

@@ -141,7 +141,11 @@ class _CatalogScreenState extends State<CatalogScreen> {
     final generation = ++_loadGeneration;
     setState(() => _error = null);
     try {
-      final value = await widget.controller.repository?.loadCatalog();
+      final repository = await widget.controller.prepareActionRepository();
+      if (repository == null) {
+        throw StateError('OpenCode is reconnecting.');
+      }
+      final value = await repository.loadCatalog();
       if (mounted && generation == _loadGeneration) {
         setState(() => _catalog = value);
       }
@@ -464,8 +468,17 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   }
 
   Future<void> _load() async {
-    final repository = widget.controller.repository;
-    if (repository == null) return;
+    final repository = await widget.controller.prepareActionRepository();
+    if (!mounted) return;
+    if (repository == null) {
+      const message = 'OpenCode is reconnecting. Try again shortly.';
+      setState(() {
+        _serverError = message;
+        _resourceError = message;
+        _integrationError = message;
+      });
+      return;
+    }
     await Future.wait([
       _loadServers(repository),
       _loadResources(repository),
@@ -519,10 +532,10 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   }
 
   Future<void> _action(McpServerInfo server) async {
-    final repository = widget.controller.repository;
-    if (repository == null || _busy.contains(server.name)) return;
+    if (_busy.contains(server.name)) return;
     setState(() => _busy.add(server.name));
     try {
+      final repository = await _requireActionRepository();
       switch (server.status) {
         case 'connected':
           await repository.disconnectMcp(server.name);
@@ -560,6 +573,38 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     }
   }
 
+  Future<ProductRepository> _requireActionRepository() async {
+    final repository = await widget.controller.prepareActionRepository();
+    if (repository != null) return repository;
+    throw const ProductException(
+      'OpenCode is reconnecting. Try again shortly.',
+    );
+  }
+
+  Future<void> _retryServers() async {
+    try {
+      await _loadServers(await _requireActionRepository());
+    } catch (error) {
+      if (mounted) setState(() => _serverError = error.toString());
+    }
+  }
+
+  Future<void> _retryIntegrations() async {
+    try {
+      await _loadIntegrations(await _requireActionRepository());
+    } catch (error) {
+      if (mounted) setState(() => _integrationError = error.toString());
+    }
+  }
+
+  Future<void> _retryResources() async {
+    try {
+      await _loadResources(await _requireActionRepository());
+    } catch (error) {
+      if (mounted) setState(() => _resourceError = error.toString());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -572,10 +617,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
           children: [
             const SectionLabel('MCP servers'),
             if (_serverError != null)
-              _SectionLoadError(
-                message: _serverError!,
-                onRetry: () => _loadServers(widget.controller.repository!),
-              )
+              _SectionLoadError(message: _serverError!, onRetry: _retryServers)
             else if (_servers == null)
               const _SectionLoading(label: 'Loading MCP servers')
             else if (_servers!.isEmpty)
@@ -621,7 +663,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
             if (_integrationError != null)
               _SectionLoadError(
                 message: _integrationError!,
-                onRetry: () => _loadIntegrations(widget.controller.repository!),
+                onRetry: _retryIntegrations,
               )
             else if (_integrations == null)
               const _SectionLoading(label: 'Loading provider connections')
@@ -660,7 +702,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
             if (_resourceError != null)
               _SectionLoadError(
                 message: _resourceError!,
-                onRetry: () => _loadResources(widget.controller.repository!),
+                onRetry: _retryResources,
               )
             else if (_resources == null)
               const _SectionLoading(label: 'Loading available resources')
@@ -830,10 +872,8 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     key.dispose();
     if (value?.isNotEmpty != true) return;
     await _runIntegrationAction(integration.id, () async {
-      await widget.controller.repository!.connectIntegrationKey(
-        integration.id,
-        value!,
-      );
+      final repository = await _requireActionRepository();
+      await repository.connectIntegrationKey(integration.id, value!);
       await Future.wait([_load(), widget.controller.refreshCatalog()]);
     });
   }
@@ -846,7 +886,8 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     final inputs = await _oauthInputs(method);
     if (inputs == null) return;
     await _runIntegrationAction(integration.id, () async {
-      final launch = await widget.controller.repository!.startIntegrationOAuth(
+      final repository = await _requireActionRepository();
+      final launch = await repository.startIntegrationOAuth(
         integration.id,
         method.id!,
         inputs: inputs,
@@ -879,10 +920,10 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
 
   Future<void> _checkOAuth() async {
     final pending = _pendingOAuth;
-    final repository = widget.controller.repository;
-    if (pending == null || repository == null || _checkingOAuth) return;
+    if (pending == null || _checkingOAuth) return;
     setState(() => _checkingOAuth = true);
     try {
+      final repository = await _requireActionRepository();
       final status = await repository.integrationOAuthStatus(
         pending.launch.attemptID,
       );
@@ -914,11 +955,12 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     if (code == null || !mounted || _pendingOAuth != pending) return;
     setState(() => _checkingOAuth = true);
     try {
-      await widget.controller.repository!.completeIntegrationOAuth(
+      final repository = await _requireActionRepository();
+      await repository.completeIntegrationOAuth(
         pending.launch.attemptID,
         code: code,
       );
-      final status = await widget.controller.repository!.integrationOAuthStatus(
+      final status = await repository.integrationOAuthStatus(
         pending.launch.attemptID,
       );
       if (!mounted || _pendingOAuth != pending) return;
@@ -935,7 +977,8 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   }
 
   Future<void> _finishOAuth(_PendingIntegrationOAuth pending) async {
-    await widget.controller.repository!.refreshProviderRuntime();
+    final repository = await _requireActionRepository();
+    await repository.refreshProviderRuntime();
     await Future.wait([_load(), widget.controller.refreshCatalog()]);
     if (!mounted || _pendingOAuth != pending) return;
     setState(() => _pendingOAuth = null);
@@ -948,9 +991,8 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     final pending = _pendingOAuth;
     if (pending == null) return;
     try {
-      await widget.controller.repository!.cancelIntegrationOAuth(
-        pending.launch.attemptID,
-      );
+      final repository = await _requireActionRepository();
+      await repository.cancelIntegrationOAuth(pending.launch.attemptID);
     } catch (error) {
       if (showError && mounted) _showError(error);
     } finally {
@@ -1403,7 +1445,11 @@ class _CommandsScreenState extends State<CommandsScreen> {
   Future<void> _load() async {
     setState(() => _error = null);
     try {
-      final commands = await widget.controller.repository?.listCommands();
+      final repository = await widget.controller.prepareActionRepository();
+      if (repository == null) {
+        throw StateError('OpenCode is reconnecting.');
+      }
+      final commands = await repository.listCommands();
       if (mounted) setState(() => _commands = commands);
     } catch (error) {
       if (mounted) setState(() => _error = error.toString());
@@ -1546,7 +1592,9 @@ class _CommandsScreenState extends State<CommandsScreen> {
     arguments.dispose();
     if (confirmed != true) return;
     try {
-      await widget.controller.api?.slashCommand(
+      final api = await widget.controller.prepareActionTransport();
+      if (api == null) throw StateError('OpenCode is reconnecting.');
+      await api.slashCommand(
         sessionID,
         command.name,
         argumentText,
@@ -1584,7 +1632,11 @@ class _SkillsScreenState extends State<SkillsScreen> {
   Future<void> _load() async {
     setState(() => _error = null);
     try {
-      final skills = await widget.controller.repository?.listSkills();
+      final repository = await widget.controller.prepareActionRepository();
+      if (repository == null) {
+        throw StateError('OpenCode is reconnecting.');
+      }
+      final skills = await repository.listSkills();
       if (mounted) setState(() => _skills = skills);
     } catch (error) {
       if (mounted) setState(() => _error = error.toString());
@@ -1706,7 +1758,11 @@ class _ReferencesScreenState extends State<ReferencesScreen> {
   Future<void> _load() async {
     setState(() => _error = null);
     try {
-      final references = await widget.controller.repository?.listReferences();
+      final repository = await widget.controller.prepareActionRepository();
+      if (repository == null) {
+        throw StateError('OpenCode is reconnecting.');
+      }
+      final references = await repository.listReferences();
       if (mounted) setState(() => _references = references);
     } catch (error) {
       if (mounted) setState(() => _error = error.toString());

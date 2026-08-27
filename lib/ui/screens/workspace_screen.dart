@@ -29,8 +29,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   int _loadGeneration = 0;
   int _dataRefreshRevision = 0;
 
-  ProductRepository? get _repository => widget.controller.repository;
-
   @override
   void initState() {
     super.initState();
@@ -51,7 +49,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
   Future<void> _load() async {
     final generation = ++_loadGeneration;
-    final repository = _repository;
+    final repository = await widget.controller.prepareActionRepository();
+    if (!mounted || generation != _loadGeneration) return;
     if (repository == null) {
       setState(() => _projectError = 'The server is not connected.');
       return;
@@ -87,7 +86,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   }
 
   Future<void> _loadWorkspaces() async {
-    final repository = _repository;
+    final repository = await widget.controller.prepareActionRepository();
+    if (!mounted) return;
     if (repository == null) return;
     try {
       final workspaces = await repository.listWorkspaces();
@@ -148,7 +148,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   }
 
   Future<void> _createSession() async {
-    if (widget.controller.api == null || _creating) return;
+    if (_creating) return;
     setState(() => _creating = true);
     try {
       final session = await widget.controller.createSession();
@@ -383,12 +383,16 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     Navigator.of(context).pushNamed('/chat/${session.id}');
   }
 
-  void _openProjectHealth() {
-    final repository = _repository;
+  Future<void> _openProjectHealth() async {
+    final repository = await widget.controller.prepareActionRepository();
+    if (!mounted) return;
     if (repository == null) return;
-    Navigator.of(context).push(
+    await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => ProjectHealthScreen(repository: repository),
+        builder: (_) => ProjectHealthScreen(
+          repository: repository,
+          repositoryResolver: widget.controller.prepareActionRepository,
+        ),
       ),
     );
   }
@@ -401,19 +405,23 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           break;
         case 'share':
           if (!await _confirmShare(session)) return;
-          final url = await _repository?.shareSession(session.id);
-          if (url != null) {
-            await Clipboard.setData(ClipboardData(text: url));
-            if (mounted) _showMessage('Share link copied');
+          final shareRepository = await _requireActionRepository();
+          final url = await shareRepository.shareSession(session.id);
+          if (url == null || url.isEmpty) {
+            throw StateError('No share link was returned.');
           }
+          await Clipboard.setData(ClipboardData(text: url));
+          if (mounted) _showMessage('Share link copied');
           break;
         case 'unshare':
-          await _repository?.unshareSession(session.id);
+          final unshareRepository = await _requireActionRepository();
+          await unshareRepository.unshareSession(session.id);
           if (mounted) _showMessage('Session is no longer shared');
           break;
         case 'archive':
           if (!await _confirmArchive(session)) return;
-          await _repository?.archiveSession(session.id);
+          final archiveRepository = await _requireActionRepository();
+          await archiveRepository.archiveSession(session.id);
           break;
         case 'delete':
           if (!await _confirmDelete(session)) return;
@@ -424,6 +432,12 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     } catch (error) {
       if (mounted) _showError(error.toString());
     }
+  }
+
+  Future<ProductRepository> _requireActionRepository() async {
+    final repository = await widget.controller.prepareActionRepository();
+    if (repository != null) return repository;
+    throw StateError('OpenCode is reconnecting. Try again shortly.');
   }
 
   Future<void> _rename(Session session) async {

@@ -7,8 +7,13 @@ import '../widgets/product_states.dart';
 
 class ProjectHealthScreen extends StatefulWidget {
   final ProductRepository repository;
+  final Future<ProductRepository?> Function()? repositoryResolver;
 
-  const ProjectHealthScreen({super.key, required this.repository});
+  const ProjectHealthScreen({
+    super.key,
+    required this.repository,
+    this.repositoryResolver,
+  });
 
   @override
   State<ProjectHealthScreen> createState() => _ProjectHealthScreenState();
@@ -38,19 +43,37 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
       _languageServicesError = null;
       _formattersError = null;
     });
+    final repository = await _resolveRepository();
+    if (!mounted || generation != _generation) return;
+    if (repository == null) {
+      const message = 'OpenCode is reconnecting. Try again shortly.';
+      setState(() {
+        _versionControlError = message;
+        _languageServicesError = message;
+        _formattersError = message;
+        _refreshing = false;
+      });
+      return;
+    }
     await Future.wait([
-      _loadVersionControl(generation),
-      _loadLanguageServices(generation),
-      _loadFormatters(generation),
+      _loadVersionControl(repository, generation),
+      _loadLanguageServices(repository, generation),
+      _loadFormatters(repository, generation),
     ]);
     if (mounted && generation == _generation) {
       setState(() => _refreshing = false);
     }
   }
 
-  Future<void> _loadVersionControl(int generation) async {
+  Future<ProductRepository?> _resolveRepository() async =>
+      widget.repositoryResolver?.call() ?? widget.repository;
+
+  Future<void> _loadVersionControl(
+    ProductRepository repository,
+    int generation,
+  ) async {
     try {
-      final value = await widget.repository.loadVersionControlHealth();
+      final value = await repository.loadVersionControlHealth();
       if (mounted && generation == _generation) {
         setState(() => _versionControl = value);
       }
@@ -61,9 +84,12 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
     }
   }
 
-  Future<void> _loadLanguageServices(int generation) async {
+  Future<void> _loadLanguageServices(
+    ProductRepository repository,
+    int generation,
+  ) async {
     try {
-      final value = await widget.repository.listLanguageServices();
+      final value = await repository.listLanguageServices();
       if (mounted && generation == _generation) {
         setState(() => _languageServices = value);
       }
@@ -74,9 +100,12 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
     }
   }
 
-  Future<void> _loadFormatters(int generation) async {
+  Future<void> _loadFormatters(
+    ProductRepository repository,
+    int generation,
+  ) async {
     try {
-      final value = await widget.repository.listFormatters();
+      final value = await repository.listFormatters();
       if (mounted && generation == _generation) {
         setState(() => _formatters = value);
       }

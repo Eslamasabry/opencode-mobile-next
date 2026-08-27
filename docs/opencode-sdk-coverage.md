@@ -119,6 +119,14 @@ Legend:
    tolerant compatibility path. File browsing, search, symbols, direct file
    viewing, and chat tool-output previews wait for wake-time transport
    reconciliation before reading.
+   Wake reconciliation now resolves the generated API and its paired product
+   repository atomically for every retained foreground action. This covers
+   session share/unshare, fork, compact, revert/restore, retry and shell;
+   Review, Todos, server commands, Skills and References; MCP and provider
+   integration actions; workspace session actions and destination discovery;
+   project health, settings health, and terminal mutations. A screen may keep
+   already-rendered data while Android wakes, but it cannot send a new request
+   through the repository being retired.
 6. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
    worktree lifecycle are deliberately not the current implementation lane.
 
