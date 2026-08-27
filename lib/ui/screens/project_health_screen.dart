@@ -230,7 +230,9 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
         ListTile(
           leading: Icon(Icons.code_off_rounded),
           title: Text('No active language services'),
-          subtitle: Text('Open a supported source file to start its server.'),
+          subtitle: Text(
+            'OpenCode activates them while it inspects supported source files during coding.',
+          ),
         ),
       ];
     }

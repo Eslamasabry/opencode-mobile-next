@@ -146,6 +146,22 @@ void main() {
     expect(find.text('No formatters configured'), findsOneWidget);
   });
 
+  testWidgets('empty language status explains OpenCode activation truth', (
+    tester,
+  ) async {
+    final repository = _HealthRepository()..languageServices = const [];
+
+    await tester.pumpWidget(_app(ProjectHealthScreen(repository: repository)));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No active language services'), findsOneWidget);
+    expect(
+      find.textContaining('OpenCode activates them while it inspects'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Open a supported source file'), findsNothing);
+  });
+
   testWidgets('project health waits for the wake-time repository', (
     tester,
   ) async {

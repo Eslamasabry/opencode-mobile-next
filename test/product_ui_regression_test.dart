@@ -654,6 +654,37 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('symbol search debounces typing and explains empty results', (
+    tester,
+  ) async {
+    final api = _TestApi(files: (_) async => const []);
+    final repository = _SymbolRepository();
+    final controller = await _controller(api: api, repository: repository);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: FilesScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Symbols'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'MissingSymbol');
+    await tester.pump(const Duration(milliseconds: 349));
+    expect(repository.queries, isEmpty);
+    await tester.pump(const Duration(milliseconds: 1));
+    await tester.pumpAndSettle();
+
+    expect(repository.queries, ['MissingSymbol']);
+    expect(find.text('No symbols found'), findsOneWidget);
+    expect(
+      find.textContaining('do not support workspace-wide symbol search'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('unavailable symbol search leaves file browsing intact', (
     tester,
   ) async {

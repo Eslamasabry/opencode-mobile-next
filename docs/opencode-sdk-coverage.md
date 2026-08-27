@@ -70,6 +70,12 @@ Legend:
    independently so one unavailable endpoint does not hide valid server truth.
    Files now has adjacent Files and Symbols tabs; generated LSP symbol results
    open the referenced source file at its exact one-based line and highlight it.
+   Symbol queries debounce as users type, and a successful empty response states
+   that some language services do not support workspace-wide symbol search
+   instead of presenting a blank surface. Live OpenCode `1.18.23` returned this
+   empty result for Dart even while its Dart service was connected; its separate
+   document-symbol debugger did return file-local Dart symbols, so the mobile UI
+   does not invent a fallback result.
    Skill details now use the same smart preview path as project files, including
    formatted Markdown tables, fenced code, selection, and an explicit raw view.
    Project references are actionable from their native screen and preserve

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -30,6 +32,7 @@ class _FilesScreenState extends State<FilesScreen> {
   int? _selectedLine;
   String? _searchOriginPath;
   final _search = TextEditingController();
+  Timer? _symbolSearchDebounce;
   ProductRepository? _repository;
   int _locationRevision = -1;
   int _controllerLocationRevision = -1;
@@ -138,6 +141,8 @@ class _FilesScreenState extends State<FilesScreen> {
 
   void _selectSurface(_FileSurface surface) {
     if (_surface == surface) return;
+    _symbolSearchDebounce?.cancel();
+    _symbolSearchDebounce = null;
     _requestGeneration++;
     _search.clear();
     _searchOriginPath = null;
@@ -150,6 +155,8 @@ class _FilesScreenState extends State<FilesScreen> {
   }
 
   void _clearSearch() {
+    _symbolSearchDebounce?.cancel();
+    _symbolSearchDebounce = null;
     _search.clear();
     if (_surface == _FileSurface.symbols) {
       _requestGeneration++;
@@ -241,6 +248,8 @@ class _FilesScreenState extends State<FilesScreen> {
   }
 
   Future<void> _searchSymbols(String query) async {
+    _symbolSearchDebounce?.cancel();
+    _symbolSearchDebounce = null;
     final value = query.trim();
     if (value.isEmpty) {
       setState(() {
@@ -273,6 +282,35 @@ class _FilesScreenState extends State<FilesScreen> {
         setState(() => _loading = false);
       }
     }
+  }
+
+  void _scheduleSymbolSearch(String query) {
+    _symbolSearchDebounce?.cancel();
+    _symbolSearchDebounce = null;
+    final value = query.trim();
+    _requestGeneration++;
+    if (value.isEmpty) {
+      setState(() {
+        _symbols = null;
+        _loading = false;
+        _error = null;
+      });
+      return;
+    }
+    setState(() {
+      _symbols = null;
+      _loading = true;
+      _error = null;
+    });
+    _symbolSearchDebounce = Timer(const Duration(milliseconds: 350), () {
+      _symbolSearchDebounce = null;
+      if (!mounted ||
+          _surface != _FileSurface.symbols ||
+          _search.text.trim() != value) {
+        return;
+      }
+      _searchSymbols(value);
+    });
   }
 
   void _openFile(FileNode node, {int? initialLine}) {
@@ -364,6 +402,9 @@ class _FilesScreenState extends State<FilesScreen> {
             onSubmitted: _surface == _FileSurface.symbols
                 ? _searchSymbols
                 : _searchFiles,
+            onChanged: _surface == _FileSurface.symbols
+                ? _scheduleSymbolSearch
+                : null,
             textInputAction: TextInputAction.search,
           ),
         ),
@@ -518,7 +559,8 @@ class _FilesScreenState extends State<FilesScreen> {
         child: const ProductEmptyState(
           icon: Icons.search_off_rounded,
           title: 'No symbols found',
-          message: 'Try a different name or check language service status.',
+          message:
+              'Try a different name. Some language services do not support workspace-wide symbol search.',
         ),
       );
     }
@@ -587,6 +629,7 @@ class _FilesScreenState extends State<FilesScreen> {
 
   @override
   void dispose() {
+    _symbolSearchDebounce?.cancel();
     widget.controller.removeListener(_controllerChanged);
     _search.removeListener(_searchChanged);
     _search.dispose();

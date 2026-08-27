@@ -128,11 +128,14 @@ flat sequence of sections and rows, not nested cards. Each API has an independen
 loading/error/empty state, so an older server missing one endpoint does not erase
 the other results.
 
-Flutter analysis remains clean and all 248 tests pass serially. New coverage
-checks exact location-scoped HTTP paths and response mapping, partial endpoint
-failure, workspace discoverability, absence of nested cards, and 320dp rendering
-at 2x text scale. Live status responses still need a reachable OpenCode project;
-do not claim live-server verification from the contract and widget tests alone.
+New coverage checks exact location-scoped HTTP paths and response mapping,
+partial endpoint failure, workspace discoverability, absence of nested cards,
+and 320dp rendering at 2x text scale. Live status is now proven against local
+OpenCode `1.18.23`: Project health rendered the exact
+`production/android-release-hardening` branch and `master` default, clean and
+changed working-tree states, one connected Dart language service, and the live
+5/27 formatter count. The release-mode Pixel 6 build logged no fatal exception,
+RenderFlex, overflow, OOM, or ANR.
 
 Workspace symbol navigation is now implemented without adding a separate nested
 surface. The Files screen has adjacent Files and Symbols tabs above one contextual
@@ -142,12 +145,18 @@ at the exact source line with line numbers and a highlighted target. Switching
 back to Files preserves ordinary browsing, and an older server missing symbol
 search shows a scoped error without breaking its file list.
 
-Flutter analysis is clean and all 250 tests pass serially. Contract coverage
-verifies file-URI normalization and zero-based LSP position conversion; widget
-coverage verifies exact-line opening, accessibility-scale layout at 320dp, and
-the old-server fallback. The generated SDK audit now counts 39 direct operations.
-Live symbol results remain unverified until a reachable OpenCode project exposes
-an active language server.
+Contract coverage verifies file-URI normalization and zero-based LSP position
+conversion; widget coverage verifies exact-line opening, accessibility-scale
+layout at 320dp, and the old-server fallback. The generated SDK audit counts 39
+direct operations. Live OpenCode `1.18.23` activated its configured Dart service
+after a disposable read-only coding session, but `/find/symbol` still returned no
+workspace results even though OpenCode's document-symbol debugger returned the
+file's Dart symbols. Mobile symbol search now debounces typing automatically and
+shows a truthful zero-result explanation that some language services do not
+support workspace-wide search instead of leaving a blank surface. A positive
+live workspace-symbol result remains unverified; the disposable session and
+probe were removed. Final-tree Flutter analysis is clean and all 312 tests pass
+serially.
 
 The last plain skill-content surface now uses the shared smart file preview.
 Opening a skill renders its Markdown headings, tables, inline code, fenced code,
