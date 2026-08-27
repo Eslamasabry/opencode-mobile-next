@@ -155,6 +155,35 @@ void main() {
     expect(launch, isNot(contains('@android:color/white')));
   });
 
+  test('Android launcher supports adaptive, round, and themed icons', () {
+    final manifest = File(
+      'android/app/src/main/AndroidManifest.xml',
+    ).readAsStringSync();
+    final adaptive = File(
+      'android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml',
+    ).readAsStringSync();
+    final themed = File(
+      'android/app/src/main/res/mipmap-anydpi-v33/ic_launcher.xml',
+    ).readAsStringSync();
+
+    expect(manifest, contains('android:roundIcon="@mipmap/ic_launcher"'));
+    expect(adaptive, contains('<adaptive-icon'));
+    expect(adaptive, contains('@drawable/ic_launcher_foreground'));
+    expect(themed, contains('@drawable/ic_launcher_monochrome'));
+  });
+
+  test('privacy policy is bundled and names sensitive product surfaces', () {
+    final pubspec = File('pubspec.yaml').readAsStringSync();
+    final policy = File('PRIVACY.md').readAsStringSync();
+
+    expect(pubspec, contains('    - PRIVACY.md'));
+    expect(policy, contains('## Microphone and local voice input'));
+    expect(policy, contains('## Files, terminal access, and Termux'));
+    expect(policy, contains('## Background mode and updates'));
+    expect(policy, contains('AI provider'));
+    expect(policy, contains('Shorebird'));
+  });
+
   test('Android release builds require the production signing lineage', () {
     final appGradle = File('android/app/build.gradle.kts').readAsStringSync();
     final gradleProperties = File(
@@ -178,7 +207,9 @@ void main() {
     expect(settings, contains('version "9.3.2"'));
     expect(
       settings,
-      contains('id("org.jetbrains.kotlin.android") version "2.4.0" apply false'),
+      contains(
+        'id("org.jetbrains.kotlin.android") version "2.4.0" apply false',
+      ),
     );
     expect(appGradle, isNot(contains('id("kotlin-android")')));
     expect(appGradle, contains('compilerOptions'));
@@ -398,10 +429,16 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('bundled open source notices render in app', (tester) async {
+  testWidgets('bundled privacy policy and open source notices render in app', (
+    tester,
+  ) async {
     await tester.pumpWidget(const MaterialApp(home: AboutScreen()));
     await tester.pumpAndSettle();
     expect(find.text('About and open source notices'), findsOneWidget);
+    expect(find.text('Privacy Policy'), findsOneWidget);
+    expect(find.text('Where your data goes'), findsOneWidget);
+    await tester.tap(find.text('Open source'));
+    await tester.pumpAndSettle();
     expect(find.text('Third-Party Notices'), findsOneWidget);
     expect(find.text('sherpa-onnx'), findsWidgets);
   });

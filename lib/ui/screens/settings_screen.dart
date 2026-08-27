@@ -252,6 +252,15 @@ class _SettingsScreenState extends State<SettingsScreen>
           ),
           const SectionLabel('About'),
           ListTile(
+            leading: const Icon(Icons.privacy_tip_outlined),
+            title: const Text('Privacy and data use'),
+            subtitle: const Text(
+              'Servers, providers, voice, files, Termux, and updates',
+            ),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => Navigator.of(context).pushNamed('/about'),
+          ),
+          ListTile(
             leading: const Icon(Icons.policy_outlined),
             title: const Text('Voice licenses and provenance'),
             subtitle: const Text(

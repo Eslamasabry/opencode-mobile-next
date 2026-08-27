@@ -6,8 +6,12 @@ readonly EXIT_USAGE=64
 readonly RELEASE_BRANCH="master"
 readonly SHOREBIRD_FLUTTER_VERSION="3.47.1"
 readonly AAB_PATH="build/app/outputs/bundle/release/app-release.aab"
+readonly LEGACY_DEBUG_CERT_SHA256="1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C"
 
 UPSTREAM_REMOTE=""
+RELEASE_KEYSTORE=""
+RELEASE_KEY_ALIAS=""
+EXPECTED_CERT_SHA256=""
 
 usage() {
   cat >&2 <<'EOF'
@@ -21,6 +25,25 @@ EOF
 fail() {
   echo "ERROR: $*" >&2
   exit 1
+}
+
+read_property() {
+  local property_name="$1"
+  local properties_file="$2"
+  sed -n "s/^[[:space:]]*${property_name}[[:space:]]*=[[:space:]]*//p" "$properties_file" | tail -n 1
+}
+
+normalize_fingerprint() {
+  tr -d ':[:space:]' <<<"$1" | tr '[:lower:]' '[:upper:]'
+}
+
+assert_private_file() {
+  local path="$1"
+  local description="$2"
+  local permissions
+  permissions="$(stat -c '%a' "$path")" || fail "Cannot inspect permissions for $description."
+  (( (8#$permissions & 8#077) == 0 )) ||
+    fail "$description must not be readable or writable by group or other users (found mode $permissions)."
 }
 
 if (( $# < 1 || $# > 2 )); then
@@ -118,6 +141,9 @@ assert_store_signing_ready() {
 
   [[ -f "$properties_file" ]] ||
     fail "Store release is blocked: $properties_file is missing. Complete the documented signing migration first."
+  [[ ! -L "$properties_file" ]] ||
+    fail "Store release is blocked: $properties_file must be a regular file, not a symbolic link."
+  assert_private_file "$properties_file" "$properties_file"
   local property_name
   for property_name in storeFile storePassword keyAlias keyPassword; do
     grep -Eq "^[[:space:]]*${property_name}[[:space:]]*=[[:space:]]*[^[:space:]].*$" "$properties_file" ||
@@ -129,17 +155,56 @@ assert_store_signing_ready() {
   [[ "${RELEASE_CERT_SHA256//:/}" =~ ^[0-9A-Fa-f]{64}$ ]] ||
     fail "RELEASE_CERT_SHA256 must be a 32-byte SHA-256 fingerprint, with or without colons."
   command -v keytool >/dev/null 2>&1 || fail "Required command is not available: keytool"
+
+  local configured_store_file configured_alias repository_root resolved_store_file
+  configured_store_file="$(read_property storeFile "$properties_file")"
+  configured_alias="$(read_property keyAlias "$properties_file")"
+  [[ "$configured_store_file" == /* ]] ||
+    fail "Store release is blocked: storeFile must be an absolute path outside the repository."
+  [[ -f "$configured_store_file" && ! -L "$configured_store_file" ]] ||
+    fail "Store release is blocked: storeFile does not identify a regular, non-symlink keystore."
+  resolved_store_file="$(realpath -e "$configured_store_file")" ||
+    fail "Store release is blocked: storeFile cannot be resolved."
+  repository_root="$(pwd -P)"
+  case "$resolved_store_file" in
+    "$repository_root" | "$repository_root"/*)
+      fail "Store release is blocked: the keystore must live outside the repository."
+      ;;
+  esac
+  assert_private_file "$resolved_store_file" "The release keystore"
+
+  RELEASE_KEYSTORE="$resolved_store_file"
+  RELEASE_KEY_ALIAS="$configured_alias"
+  EXPECTED_CERT_SHA256="$(normalize_fingerprint "$RELEASE_CERT_SHA256")"
+  [[ "$EXPECTED_CERT_SHA256" != "$LEGACY_DEBUG_CERT_SHA256" ]] ||
+    fail "Store release is blocked: RELEASE_CERT_SHA256 is the legacy Android debug certificate."
+
+  local store_password certificate_output actual_fingerprint
+  store_password="$(read_property storePassword "$properties_file")"
+  certificate_output="$(
+    OC_RELEASE_STORE_PASSWORD="$store_password" keytool \
+      -J-Duser.language=en \
+      -list -v \
+      -keystore "$RELEASE_KEYSTORE" \
+      -alias "$RELEASE_KEY_ALIAS" \
+      -storepass:env OC_RELEASE_STORE_PASSWORD
+  )" || fail "Unable to read the configured release keystore and alias."
+  unset store_password
+  [[ "$certificate_output" != *"CN=Android Debug"* ]] ||
+    fail "Store release is blocked: the configured alias contains an Android debug certificate."
+  actual_fingerprint="$(sed -n 's/^[[:space:]]*SHA256:[[:space:]]*//p' <<<"$certificate_output" | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')"
+  [[ -n "$actual_fingerprint" && "$actual_fingerprint" == "$EXPECTED_CERT_SHA256" ]] ||
+    fail "Configured release keystore certificate does not match RELEASE_CERT_SHA256."
 }
 
 assert_aab_certificate() {
   [[ -f "$AAB_PATH" ]] || fail "Shorebird dry-run did not create the expected AAB: $AAB_PATH"
 
-  local certificate_output actual_fingerprint expected_fingerprint
+  local certificate_output actual_fingerprint
   certificate_output="$(keytool -printcert -jarfile "$AAB_PATH")" ||
     fail "Unable to read the signing certificate from $AAB_PATH."
   actual_fingerprint="$(sed -n 's/^[[:space:]]*SHA256:[[:space:]]*//p' <<<"$certificate_output" | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')"
-  expected_fingerprint="$(tr -d ':[:space:]' <<<"$RELEASE_CERT_SHA256" | tr '[:lower:]' '[:upper:]')"
-  [[ -n "$actual_fingerprint" && "$actual_fingerprint" == "$expected_fingerprint" ]] ||
+  [[ -n "$actual_fingerprint" && "$actual_fingerprint" == "$EXPECTED_CERT_SHA256" ]] ||
     fail "AAB signing certificate does not match RELEASE_CERT_SHA256."
 }
 
@@ -191,7 +256,7 @@ fi
 echo "==> Analyzing Dart code"
 flutter analyze
 echo "==> Running Flutter tests"
-flutter test
+flutter test --concurrency=1
 
 if [[ "$MODE" == "release" ]]; then
   release_args=(

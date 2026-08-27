@@ -6,6 +6,9 @@ app drives Termux itself, so you never manage a terminal by hand. Ships with
 **Shorebird code push** so Dart-side fixes reach devices without a Play Store
 round-trip.
 
+The app's data handling is documented in the [privacy policy](PRIVACY.md), which
+is also bundled under **Settings > Privacy and data use**.
+
 ## Features
 
 - Server profiles with basic-auth (`OPENCODE_SERVER_PASSWORD`), stored in the Android Keystore
@@ -55,6 +58,10 @@ a clean `master` synchronized with its same-named tracked upstream (normally
 and a Shorebird dry-run. It uploads nothing unless `--publish` is supplied
 explicitly.
 
+Pull requests and pushes to `master` run the pinned Flutter analysis and test
+gate in GitHub Actions, plus Android `lintRelease` and a test-signed release APK
+compile. The CI key is generated per job and its artifact is never distributed.
+
 ### Signing identity decision gate
 
 **Do not publish a store release yet.** The current
@@ -69,7 +76,10 @@ enroll in Play App Signing, move key material and passwords outside version
 control, and populate `android/key.properties`. Do not commit a keystore or the
 populated properties file; both are ignored under `android/`. Export
 `RELEASE_CERT_SHA256` as the expected upload certificate fingerprint before
-running the helper. The helper checks the AAB's actual certificate after its
+running the helper. The properties file and keystore must be private to the
+current OS user, the keystore must be a regular file outside the repository, and
+its alias must already match `RELEASE_CERT_SHA256`. The helper rejects Android
+debug certificates, then checks the generated AAB certificate again after its
 dry-run and before any upload.
 
 Also decide how to handle existing debug-signed sideload installs: Android

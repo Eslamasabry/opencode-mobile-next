@@ -37,6 +37,7 @@ dev_dependencies:
 flutter:
   assets:
     - shorebird.yaml
+    - PRIVACY.md
     - THIRD_PARTY_NOTICES.md
     - LICENSES/
   uses-material-design: true

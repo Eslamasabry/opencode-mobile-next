@@ -1,0 +1,76 @@
+name: Android quality gate
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Java 17
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up pinned Flutter
+        uses: subosito/flutter-action@fd55f4c5af5b953cc57a2be44cb082c8f6635e8e # v2.21.0
+        with:
+          flutter-version: 3.47.1
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test --concurrency=1
+
+      - name: Create isolated CI signing identity
+        env:
+          CI_KEYSTORE: ${{ runner.temp }}/opencode-ci-release.jks
+        run: |
+          keytool -genkeypair -noprompt \
+            -keystore "$CI_KEYSTORE" \
+            -storepass ci-not-for-distribution \
+            -keypass ci-not-for-distribution \
+            -alias ci-release \
+            -keyalg RSA \
+            -keysize 3072 \
+            -validity 1 \
+            -dname "CN=CI Build, O=OpenCode Mobile"
+          chmod 600 "$CI_KEYSTORE"
+          printf '%s\n' \
+            "storeFile=$CI_KEYSTORE" \
+            'storePassword=ci-not-for-distribution' \
+            'keyAlias=ci-release' \
+            'keyPassword=ci-not-for-distribution' \
+            > android/key.properties
+          chmod 600 android/key.properties
+
+      - name: Run Android release lint
+        run: ./android/gradlew -p android :app:lintRelease --no-daemon
+
+      - name: Compile test-signed release APK
+        run: flutter build apk --release
+
+      - name: Verify release artifact exists
+        run: test -s build/app/outputs/flutter-apk/app-release.apk
+

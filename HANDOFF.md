@@ -58,6 +58,21 @@ users transition, populate ignored `android/key.properties`, export the expected
 certificate fingerprint, then cut a new full Shorebird release. These native
 and dependency changes cannot ship as a patch to `1.0.19+20`.
 
+The branch also has a bounded production-guardrail follow-up: a bundled,
+user-facing privacy policy; adaptive, round, and Android 13 themed launcher
+resources; a pinned GitHub Actions analysis/test/lint/release-compile gate; and
+pre-build verification that the release keystore is private, outside the
+repository, non-debug, and matches the expected certificate. Flutter analysis
+is clean, all 239 tests pass serially, the release-script safety harness passes,
+and Android release resources compile.
+
+The owner explicitly corrected the next priority: do not lead with Play/store
+work while core product journeys remain incomplete. The next lane is an
+authoritative comparison of every generated Dart OpenCode API against app call
+sites, followed by implementation of the highest-impact hidden or incomplete
+coding workflow. Signing and store publication remain deferred until that
+product-completeness audit is worked down.
+
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`
