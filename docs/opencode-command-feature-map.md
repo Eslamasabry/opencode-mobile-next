@@ -37,8 +37,8 @@ The mobile launcher combines these sources. Client actions are explicitly mapped
 | `/unshare` | — | Disable share link | Native |
 | `/undo` | — | Revert the previous prompt and changes | Native |
 | `/redo` | — | Restore reverted state | Native |
-| `/timestamps` | `/toggle-timestamps` | Toggle message timestamps | Gap: needs a persisted transcript display preference |
-| `/thinking` | `/toggle-thinking` | Expand or collapse reasoning | Partial: short reasoning is inline and long reasoning is collapsible; a global preference is not yet exposed |
+| `/timestamps` | `/toggle-timestamps` | Toggle message timestamps | Native: app-wide persisted timestamps for visible transcript entries |
+| `/thinking` | `/toggle-thinking` | Expand or collapse reasoning | Native: app-wide persisted long-reasoning state; reasoning under two lines remains inline |
 | `/copy` | — | Copy transcript | Native Markdown transcript export to clipboard |
 | `/export` | — | Export transcript | Native Markdown document save |
 | `/editor` | — | Edit the prompt in an external terminal editor | Adapted: opens the mobile project file browser; a full-screen prompt editor remains a gap |
@@ -86,7 +86,6 @@ Selecting a dynamic command inserts it into the composer so arguments can be edi
 
 ## Next command parity work
 
-1. Add persisted transcript controls for `/thinking` and `/timestamps`.
-2. Add full-screen prompt editing for `/editor` without conflating it with project files.
-3. Add server contracts and UI for `/move`, exact `/warp`, and multi-organization `/org`.
-4. Decide whether mobile theme selection is valuable before exposing `/themes`; do not mirror terminal themes mechanically.
+1. Add full-screen prompt editing for `/editor` without conflating it with project files.
+2. Add server contracts and UI for `/move`, exact `/warp`, and multi-organization `/org`.
+3. Decide whether mobile theme selection is valuable before exposing `/themes`; do not mirror terminal themes mechanically.

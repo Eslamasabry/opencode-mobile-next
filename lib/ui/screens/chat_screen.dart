@@ -1261,6 +1261,34 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _jumpToMessage(selection.message.info.id);
   }
 
+  Future<void> _toggleReasoningDisplay() async {
+    final expanded = !_conn.transcriptReasoningExpanded;
+    await _conn.setTranscriptReasoningExpanded(expanded);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          expanded
+              ? 'Reasoning expanded in the transcript'
+              : 'Long reasoning collapsed in the transcript',
+        ),
+      ),
+    );
+  }
+
+  Future<void> _toggleTimestampDisplay() async {
+    final visible = !_conn.transcriptTimestampsVisible;
+    await _conn.setTranscriptTimestampsVisible(visible);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          visible ? 'Message timestamps shown' : 'Message timestamps hidden',
+        ),
+      ),
+    );
+  }
+
   void _jumpToMessage(String messageID) {
     final chronologicalIndex = _messages.indexWhere(
       (message) => message.info.id == messageID,
@@ -1793,6 +1821,26 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         enabled: hasUserMessage,
       ),
       _ChatCommand.mobile(
+        slash: 'thinking',
+        aliases: const ['toggle-thinking'],
+        title: _conn.transcriptReasoningExpanded
+            ? 'Collapse reasoning'
+            : 'Expand reasoning',
+        description: 'Toggle long reasoning details across the transcript',
+        group: 'Transcript display',
+        action: _ChatCommandAction.thinking,
+      ),
+      _ChatCommand.mobile(
+        slash: 'timestamps',
+        aliases: const ['toggle-timestamps'],
+        title: _conn.transcriptTimestampsVisible
+            ? 'Hide timestamps'
+            : 'Show timestamps',
+        description: 'Toggle creation times beside transcript entries',
+        group: 'Transcript display',
+        action: _ChatCommandAction.timestamps,
+      ),
+      _ChatCommand.mobile(
         slash: 'undo',
         title: 'Revert last prompt',
         description: 'Roll back messages and file changes after the prompt',
@@ -1991,6 +2039,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         return;
       case _ChatCommandAction.compact:
         await _compact();
+        return;
+      case _ChatCommandAction.thinking:
+        await _toggleReasoningDisplay();
+        return;
+      case _ChatCommandAction.timestamps:
+        await _toggleTimestampDisplay();
         return;
       case _ChatCommandAction.undo:
         await _revertLast();
@@ -2289,27 +2343,54 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               if (value == 'timeline') unawaited(_openTimeline());
               if (value == 'changes') _showDiff();
               if (value == 'todos') _showTodos();
+              if (value == 'thinking') {
+                unawaited(_runMobileCommand(_ChatCommandAction.thinking));
+              }
+              if (value == 'timestamps') {
+                unawaited(_runMobileCommand(_ChatCommandAction.timestamps));
+              }
             },
-            itemBuilder: (_) => const [
-              PopupMenuItem(
+            itemBuilder: (_) => [
+              const PopupMenuItem(
                 value: 'timeline',
                 child: _SessionViewMenuItem(
                   icon: Icons.view_timeline_outlined,
                   label: 'Timeline',
                 ),
               ),
-              PopupMenuItem(
+              const PopupMenuItem(
                 value: 'changes',
                 child: _SessionViewMenuItem(
                   icon: Icons.difference_outlined,
                   label: 'Changes',
                 ),
               ),
-              PopupMenuItem(
+              const PopupMenuItem(
                 value: 'todos',
                 child: _SessionViewMenuItem(
                   icon: Icons.checklist_rounded,
                   label: 'Todos',
+                ),
+              ),
+              const PopupMenuDivider(),
+              CheckedPopupMenuItem(
+                key: const ValueKey('session-view-thinking'),
+                value: 'thinking',
+                checked: _conn.transcriptReasoningExpanded,
+                child: Text(
+                  _conn.transcriptReasoningExpanded
+                      ? 'Collapse reasoning'
+                      : 'Expand reasoning',
+                ),
+              ),
+              CheckedPopupMenuItem(
+                key: const ValueKey('session-view-timestamps'),
+                value: 'timestamps',
+                checked: _conn.transcriptTimestampsVisible,
+                child: Text(
+                  _conn.transcriptTimestampsVisible
+                      ? 'Hide timestamps'
+                      : 'Show timestamps',
                 ),
               ),
             ],
@@ -2461,6 +2542,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                             m: m,
                                             meta: meta,
                                             parts: parts,
+                                            reasoningExpanded: _conn
+                                                .transcriptReasoningExpanded,
+                                            showTimestamp: _conn
+                                                .transcriptTimestampsVisible,
                                             highlighted:
                                                 _highlightedMessageID ==
                                                 m.info.id,
@@ -2773,6 +2858,8 @@ enum _ChatCommandAction {
   timeline,
   fork,
   compact,
+  thinking,
+  timestamps,
   undo,
   redo,
   copy,
@@ -4296,12 +4383,14 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
 class _AssistantMessagePart extends StatelessWidget {
   const _AssistantMessagePart({
     required this.part,
+    required this.reasoningExpanded,
     required this.filePreviewLoader,
     required this.onAttachFile,
     required this.onDownloadFile,
   });
 
   final Part part;
+  final bool reasoningExpanded;
   final ToolOutputFileLoader filePreviewLoader;
   final ToolOutputFileAction onAttachFile;
   final ToolOutputFileAction onDownloadFile;
@@ -4315,7 +4404,9 @@ class _AssistantMessagePart extends StatelessWidget {
         child: MarkdownText(part.text),
       );
     }
-    if (part.type == 'reasoning') return _Reasoning(text: part.text);
+    if (part.type == 'reasoning') {
+      return _Reasoning(text: part.text, expanded: reasoningExpanded);
+    }
     if (part.type == 'tool') {
       return ToolCard(
         key: ValueKey(part.id ?? part.callID),
@@ -4343,6 +4434,8 @@ class _MessageView extends StatelessWidget {
   final MessageWithParts m;
   final _MessageMeta meta;
   final List<Part> parts;
+  final bool reasoningExpanded;
+  final bool showTimestamp;
   final bool highlighted;
   final ToolOutputFileLoader filePreviewLoader;
   final ToolOutputFileAction onAttachFile;
@@ -4352,6 +4445,8 @@ class _MessageView extends StatelessWidget {
     required this.m,
     required this.meta,
     required this.parts,
+    required this.reasoningExpanded,
+    required this.showTimestamp,
     this.highlighted = false,
     required this.filePreviewLoader,
     required this.onAttachFile,
@@ -4366,8 +4461,10 @@ class _MessageView extends StatelessWidget {
     final assistantRuns = isUser
         ? const <_AssistantPartRun>[]
         : _groupAssistantParts(visibleParts);
+    final createdAt = m.info.time?.created;
 
     final metaParts = <String>[
+      if (showTimestamp && createdAt != null) _fmtSessionTime(createdAt),
       ?meta.modelLabel,
       if (meta.turnTokens case final tokens?) '${_fmtTokens(tokens)} tok',
       if (meta.turnCost case final cost?) '\$${cost.toStringAsFixed(4)}',
@@ -4422,6 +4519,7 @@ class _MessageView extends StatelessWidget {
                         else
                           _AssistantMessagePart(
                             part: run.parts.single,
+                            reasoningExpanded: reasoningExpanded,
                             filePreviewLoader: filePreviewLoader,
                             onAttachFile: onAttachFile,
                             onDownloadFile: onDownloadFile,
@@ -4433,6 +4531,7 @@ class _MessageView extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 3, left: 6, right: 6),
               child: Text(
+                key: ValueKey('message-meta-${m.info.id}'),
                 metaParts.join('  ·  '),
                 style: theme.textTheme.labelSmall!.copyWith(
                   color: theme.hintColor,
@@ -4648,14 +4747,29 @@ class _AttachmentPart extends StatelessWidget {
 
 class _Reasoning extends StatefulWidget {
   final String text;
-  const _Reasoning({required this.text});
+  final bool expanded;
+  const _Reasoning({required this.text, required this.expanded});
 
   @override
   State<_Reasoning> createState() => _ReasoningState();
 }
 
 class _ReasoningState extends State<_Reasoning> {
-  bool _open = false;
+  late bool _open;
+
+  @override
+  void initState() {
+    super.initState();
+    _open = widget.expanded;
+  }
+
+  @override
+  void didUpdateWidget(covariant _Reasoning oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.expanded != widget.expanded) {
+      _open = widget.expanded;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

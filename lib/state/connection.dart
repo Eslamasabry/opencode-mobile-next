@@ -175,6 +175,8 @@ class ConnectionController extends ChangeNotifier {
   ModelRef? selectedModel;
   String selectedAgent = '';
   String selectedVariant = '';
+  bool transcriptReasoningExpanded = false;
+  bool transcriptTimestampsVisible = false;
 
   Map<String, Session> sessionsById = {};
   Set<String> busySessions = {};
@@ -227,6 +229,8 @@ class ConnectionController extends ChangeNotifier {
        backgroundLive =
            backgroundLive ??
            BackgroundLiveController(preferences: store.prefs) {
+    transcriptReasoningExpanded = store.transcriptReasoningExpanded;
+    transcriptTimestampsVisible = store.transcriptTimestampsVisible;
     this.backgroundLive.addListener(_backgroundLiveChanged);
   }
 
@@ -236,6 +240,20 @@ class ConnectionController extends ChangeNotifier {
       backgroundLive.setEnabled(enabled);
 
   Future<void> restoreBackgroundLiveMode() => backgroundLive.restore();
+
+  Future<void> setTranscriptReasoningExpanded(bool expanded) async {
+    await store.setTranscriptReasoningExpanded(expanded);
+    if (_disposed) return;
+    transcriptReasoningExpanded = expanded;
+    notifyListeners();
+  }
+
+  Future<void> setTranscriptTimestampsVisible(bool visible) async {
+    await store.setTranscriptTimestampsVisible(visible);
+    if (_disposed) return;
+    transcriptTimestampsVisible = visible;
+    notifyListeners();
+  }
 
   void _backgroundLiveChanged() {
     if (keepLiveInBackground) {

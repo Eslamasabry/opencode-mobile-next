@@ -1,5 +1,6 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -58,5 +59,30 @@ void main() {
 
     await store.setVariant('server-1', '');
     expect(store.variantFor('server-1'), isEmpty);
+  });
+
+  test('persists app-wide transcript display preferences', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final store = ProfileStore(prefs: prefs);
+
+    expect(store.transcriptReasoningExpanded, isFalse);
+    expect(store.transcriptTimestampsVisible, isFalse);
+
+    await store.setTranscriptReasoningExpanded(true);
+    await store.setTranscriptTimestampsVisible(true);
+
+    final restored = ProfileStore(prefs: prefs);
+    expect(restored.transcriptReasoningExpanded, isTrue);
+    expect(restored.transcriptTimestampsVisible, isTrue);
+    final restoredController = ConnectionController(restored);
+    expect(restoredController.transcriptReasoningExpanded, isTrue);
+    expect(restoredController.transcriptTimestampsVisible, isTrue);
+    restoredController.dispose();
+
+    await restored.setTranscriptReasoningExpanded(false);
+    await restored.setTranscriptTimestampsVisible(false);
+    expect(store.transcriptReasoningExpanded, isFalse);
+    expect(store.transcriptTimestampsVisible, isFalse);
   });
 }

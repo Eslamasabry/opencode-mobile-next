@@ -87,6 +87,8 @@ class ProfileStore {
   static const _modelExplicitKey = 'oc.modelExplicit.'; // + profileId
   static const _agentKey = 'oc.agent.'; // + profileId
   static const _variantKey = 'oc.variant.'; // + profileId
+  static const _transcriptReasoningKey = 'oc.transcript.reasoningExpanded';
+  static const _transcriptTimestampsKey = 'oc.transcript.timestampsVisible';
   static const _providerRuntimeRefreshVersion = 'v1';
 
   final SharedPreferences prefs;
@@ -297,4 +299,24 @@ class ProfileStore {
 
   Future<void> setAgent(String profileId, String agent) =>
       prefs.setString('$_agentKey$profileId', agent);
+
+  // ----- app-wide transcript display -----
+
+  bool get transcriptReasoningExpanded =>
+      prefs.getBool(_transcriptReasoningKey) ?? false;
+
+  bool get transcriptTimestampsVisible =>
+      prefs.getBool(_transcriptTimestampsKey) ?? false;
+
+  Future<void> setTranscriptReasoningExpanded(bool expanded) async {
+    if (!await prefs.setBool(_transcriptReasoningKey, expanded)) {
+      throw StateError('Could not save the reasoning display preference');
+    }
+  }
+
+  Future<void> setTranscriptTimestampsVisible(bool visible) async {
+    if (!await prefs.setBool(_transcriptTimestampsKey, visible)) {
+      throw StateError('Could not save the timestamp display preference');
+    }
+  }
 }

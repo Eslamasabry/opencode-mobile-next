@@ -851,6 +851,78 @@ void main() {
     expect(find.text('Second answer paragraph.'), findsOneWidget);
   });
 
+  testWidgets('transcript controls update old messages and persist state', (
+    tester,
+  ) async {
+    const reasoning =
+        'This is a deliberately long reasoning explanation that spans several lines on a phone and starts collapsed.';
+    final created = DateTime.now().millisecondsSinceEpoch;
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('user-display', 'user', [
+          Part(
+            id: 'user-display-text',
+            messageID: 'user-display',
+            type: 'text',
+            text: 'Explain the implementation',
+          ),
+        ], created: created),
+        _message('assistant-display', 'assistant', [
+          Part(
+            id: 'assistant-display-reasoning',
+            messageID: 'assistant-display',
+            type: 'reasoning',
+            text: reasoning,
+          ),
+          Part(
+            id: 'assistant-display-text',
+            messageID: 'assistant-display',
+            type: 'text',
+            text: 'Here is the implementation.',
+          ),
+        ], created: created + 1),
+      ];
+
+    final controller = await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+    expect(find.text(reasoning), findsNothing);
+    expect(find.byKey(const Key('message-meta-user-display')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'thinking',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('command-mobile-thinking')));
+    await tester.pumpAndSettle();
+
+    expect(controller.transcriptReasoningExpanded, isTrue);
+    expect(find.text(reasoning), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    expect(find.text('Collapse reasoning'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('session-view-timestamps')));
+    await tester.pumpAndSettle();
+
+    expect(controller.transcriptTimestampsVisible, isTrue);
+    expect(find.byKey(const Key('message-meta-user-display')), findsOneWidget);
+    expect(
+      find.byKey(const Key('message-meta-assistant-display')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('session-view-thinking')));
+    await tester.pumpAndSettle();
+
+    expect(controller.transcriptReasoningExpanded, isFalse);
+    expect(find.text(reasoning), findsNothing);
+  });
+
   testWidgets('command launcher maps diff to the native session viewer', (
     tester,
   ) async {
@@ -1081,6 +1153,16 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    final timestamps = find.byKey(const Key('session-view-timestamps'));
+    await tester.ensureVisible(timestamps);
+    await tester.pumpAndSettle();
+    await tester.tap(timestamps);
+    await tester.pumpAndSettle();
+    expect(controller.transcriptTimestampsVisible, isTrue);
+    expect(tester.takeException(), isNull);
 
     await tester.tap(find.byTooltip('Session views'));
     await tester.pumpAndSettle();

@@ -186,6 +186,21 @@ deferred. Final-tree Flutter analysis is clean and all 261 tests pass serially;
 coverage includes indexed long-chat jumps, prompt/file restoration, the exact
 generated fork request, and the 320dp accessibility layout.
 
+Transcript display parity is now native rather than slash-only. Session views
+groups checked Expand reasoning and Show timestamps actions with Timeline,
+Changes, and Todos; `/thinking`, `/toggle-thinking`, `/timestamps`, and
+`/toggle-timestamps` call the same handlers. Both preferences persist app-wide
+through `ProfileStore` and update retained chats through `ConnectionController`.
+No chat migration is involved: timestamps come from stored OpenCode message
+creation times, while the existing reasoning parts expand or collapse in place.
+Reasoning shorter than two rendered lines remains visible regardless of the
+global long-reasoning setting, and individual long blocks remain tappable.
+
+Final-tree Flutter analysis is clean and all 263 tests pass serially. Coverage
+includes preference restoration, old-chat live updates through both the command
+launcher and native Session views, timestamp metadata, and global reasoning
+collapse. Traycer remains deferred.
+
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`
