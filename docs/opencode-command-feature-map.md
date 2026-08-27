@@ -54,6 +54,11 @@ The OpenCode web client registers a smaller, context-sensitive set. Mobile accep
 - `/model`, `/agent`, `/workspace`, `/open`, `/terminal`, and `/mcp`
 - `/new`, `/share`, `/unshare`, `/undo`, `/redo`, `/compact`, `/fork`, and `/export`
 
+Mobile also registers `/references` with `/reference` and `/refs` aliases. It
+opens the server-backed reference list and adds the selected item to the active
+prompt using the same `@name` directory-part contract as the upstream TUI and
+web composer.
+
 ## Dynamic server commands
 
 These must always be loaded from the connected OpenCode server:

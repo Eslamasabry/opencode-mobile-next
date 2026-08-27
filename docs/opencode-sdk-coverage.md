@@ -46,7 +46,7 @@ Legend:
 | Providers v2 | - | raw `/api/provider` catalog parser | provider get/list generated models are unused |
 | PTY | create, list, update, remove, connect token | WebSocket connect uses the guarded ticket | get, shells, direct connect, and all duplicate v2 PTY operations |
 | Question | list, reply, reject | - | - |
-| Reference | `v2ReferenceList` | - | References are display-only; they cannot yet be attached to a prompt from their screen |
+| Reference | `v2ReferenceList` | - | References can be copied standalone or added to the active composer as OpenCode directory parts |
 | Session | fork, revert, unrevert, share, unshare, summarize, update | list/create/get/delete/rename/status/messages/prompt/shell/command/abort/init/todos/diff and permission fallback | children, delete/update part, delete/get one message, synchronous prompt |
 | Session questions v2 | - | list/reply/reject through compatibility routes | Generated v2 methods are unused |
 | Sessions v2 | - | - | active, compact, context, create/get/list/message/prompt/history/events/wait/interrupt, model/agent switch, staged revert operations |
@@ -72,6 +72,8 @@ Legend:
    open the referenced source file at its exact one-based line and highlight it.
    Skill details now use the same smart preview path as project files, including
    formatted Markdown tables, fenced code, selection, and an explicit raw view.
+   Project references are actionable from their native screen and preserve
+   OpenCode's `@name` plus `file://` directory-part prompt contract.
 4. **Transport modernization:** migrate compatibility routes to generated v2
    APIs only where current and older OpenCode contracts can be reconciled
    without losing sessions, events, or provider inventory.

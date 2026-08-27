@@ -472,6 +472,8 @@ class ModelRef {
 }
 
 class PromptAttachment {
+  static const directoryReferenceMime = 'application/x-directory';
+
   final String mime;
   final String filename;
   final String url;
@@ -481,6 +483,24 @@ class PromptAttachment {
     required this.filename,
     required this.url,
   });
+
+  factory PromptAttachment.reference({
+    required String name,
+    required String path,
+  }) => PromptAttachment(
+    mime: directoryReferenceMime,
+    filename: name,
+    url: _referenceUrl(path),
+  );
+
+  bool get isDirectoryReference =>
+      mime == directoryReferenceMime && Uri.tryParse(url)?.scheme == 'file';
+
+  static String _referenceUrl(String path) {
+    final windows =
+        RegExp(r'^[A-Za-z]:[\\/]').hasMatch(path) || path.startsWith(r'\\');
+    return Uri.file(path, windows: windows).toString();
+  }
 
   Map<String, dynamic> toJson() => {
     'type': 'file',

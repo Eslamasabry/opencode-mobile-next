@@ -151,6 +151,23 @@ rendered/raw transition and a 320dp phone at 2x text scale. Final-tree Flutter
 analysis is clean and all 252 tests pass serially. Traycer remains explicitly
 deferred.
 
+Project references are no longer display-only. The mobile command launcher now
+exposes `/references` with `/reference` and `/refs` aliases. Selecting an item
+adds the visible `@name` mention and OpenCode's exact directory file part
+(`application/x-directory` plus a canonical `file://` URL) to the current
+composer. Pending and sent references render as references rather than broken
+downloadable attachments. The standalone Library screen copies the exact
+mention. This is grounded in the upstream TUI and web composer contract; no
+reference names or paths are hardcoded.
+
+Reference URL encoding also detects Windows drive and UNC paths returned by a
+remote server instead of applying the Android phone's path rules.
+
+Final-tree Flutter analysis is clean and all 256 tests pass serially. Coverage
+includes the exact serialized directory-part contract, standalone copy behavior,
+remote Windows path encoding, and the full command-launcher to composer to Send
+interaction.
+
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`

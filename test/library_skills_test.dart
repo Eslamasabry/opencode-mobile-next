@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
@@ -114,4 +115,60 @@ flutter analyze
     expect(find.text('Mobile skill'), findsOneWidget);
     expect(find.text('Raw'), findsOneWidget);
   });
+
+  testWidgets('standalone references copy their exact OpenCode mention', (
+    tester,
+  ) async {
+    String? copiedText;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copiedText = (call.arguments as Map)['text'] as String?;
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    final controller = await _controller(
+      const _ReferencesRepository([
+        ReferenceInfo(
+          name: 'platform-docs',
+          path: '/references/platform',
+          description: 'Platform guidance',
+        ),
+      ]),
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(home: ReferencesScreen(controller: controller)),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('reference-platform-docs')));
+    await tester.pumpAndSettle();
+
+    expect(copiedText, '@platform-docs');
+    expect(find.text('@platform-docs copied'), findsOneWidget);
+  });
+}
+
+class _ReferencesRepository implements ProductRepository {
+  const _ReferencesRepository(this.references);
+
+  final List<ReferenceInfo> references;
+
+  @override
+  Future<List<ReferenceInfo>> listReferences() async => references;
+
+  @override
+  void setLocation({String? directory, String? workspace}) {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

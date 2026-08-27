@@ -28,6 +28,7 @@ is also bundled under **Settings > Privacy and data use**.
   source-line navigation from language-server symbols
 - Project health for branch changes, language services, and formatters
 - Smart skill previews with rendered Markdown tables, code blocks, and raw mode
+- Server-backed project references that can be copied or added to an active prompt
 
 ## Requirements
 

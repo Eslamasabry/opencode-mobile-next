@@ -109,6 +109,31 @@ void main() {
     expect(body['variant'], 'fast');
   });
 
+  test('project reference uses the upstream directory file-part contract', () {
+    final attachment = PromptAttachment.reference(
+      name: 'docs',
+      path: '/workspace/../shared-docs',
+    );
+
+    expect(attachment.isDirectoryReference, isTrue);
+    expect(attachment.toJson(), {
+      'type': 'file',
+      'mime': 'application/x-directory',
+      'filename': 'docs',
+      'url': 'file:///shared-docs',
+    });
+  });
+
+  test('project reference preserves a remote Windows server path', () {
+    final attachment = PromptAttachment.reference(
+      name: 'platform-docs',
+      path: r'C:\Shared Docs\platform',
+    );
+
+    expect(attachment.url, 'file:///C:/Shared%20Docs/platform');
+    expect(attachment.isDirectoryReference, isTrue);
+  });
+
   test('command request serializes model as generated contract string', () {
     final body = commandRequestBody(
       'review',

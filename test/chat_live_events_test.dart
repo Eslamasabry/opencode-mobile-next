@@ -103,12 +103,16 @@ class _FakeOpenCodeApi extends OpenCodeApi {
 }
 
 class _FakeProductRepository implements ProductRepository {
-  _FakeProductRepository(this.commands);
+  _FakeProductRepository(this.commands, {this.references = const []});
 
   final List<CommandInfo> commands;
+  final List<ReferenceInfo> references;
 
   @override
   Future<List<CommandInfo>> listCommands() async => commands;
+
+  @override
+  Future<List<ReferenceInfo>> listReferences() async => references;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -897,6 +901,60 @@ void main() {
     );
     expect(composer.controller?.text, '/review ');
   });
+
+  testWidgets(
+    'project reference screen adds an upstream directory prompt part',
+    (tester) async {
+      final api = _FakeOpenCodeApi();
+      final repository = _FakeProductRepository(
+        const [],
+        references: const [
+          ReferenceInfo(
+            name: 'docs',
+            path: '/workspace/../shared-docs',
+            description: 'Shared engineering documentation',
+          ),
+        ],
+      );
+
+      await _pumpChat(tester, api, repository: repository);
+      await tester.tap(find.byKey(const Key('command-launcher-button')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('command-launcher-search')),
+        'references',
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('command-mobile-references')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('Shared engineering documentation'),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const Key('reference-docs')));
+      await tester.pumpAndSettle();
+
+      final composer = tester.widget<TextField>(
+        find.byKey(const Key('chat-composer-field')),
+      );
+      expect(composer.controller?.text, '@docs');
+      expect(find.bySemanticsLabel('Reference @docs'), findsOneWidget);
+      expect(find.byTooltip('Remove reference @docs'), findsOneWidget);
+      expect(find.bySemanticsLabel('Preview attachment docs'), findsNothing);
+
+      await tester.tap(find.byTooltip('Send'));
+      await tester.pumpAndSettle();
+
+      expect(api.prompts.single.text, '@docs');
+      expect(api.prompts.single.attachments.single.toJson(), {
+        'type': 'file',
+        'mime': 'application/x-directory',
+        'filename': 'docs',
+        'url': 'file:///shared-docs',
+      });
+    },
+  );
 
   testWidgets('typing slash opens filtered inline command suggestions', (
     tester,

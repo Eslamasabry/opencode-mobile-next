@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../api/models.dart' show ModelRef;
@@ -1680,7 +1681,13 @@ class _SkillsScreenState extends State<SkillsScreen> {
 
 class ReferencesScreen extends StatefulWidget {
   final ConnectionController controller;
-  const ReferencesScreen({super.key, required this.controller});
+  final ValueChanged<ReferenceInfo>? onSelected;
+
+  const ReferencesScreen({
+    super.key,
+    required this.controller,
+    this.onSelected,
+  });
 
   @override
   State<ReferencesScreen> createState() => _ReferencesScreenState();
@@ -1731,6 +1738,7 @@ class _ReferencesScreenState extends State<ReferencesScreen> {
               itemBuilder: (context, index) {
                 final reference = _references![index];
                 return ListTile(
+                  key: ValueKey('reference-${reference.name}'),
                   leading: const Icon(Icons.bookmark_outline_rounded),
                   title: Text(reference.name),
                   subtitle: Text(
@@ -1741,9 +1749,32 @@ class _ReferencesScreenState extends State<ReferencesScreen> {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 12),
                   ),
+                  trailing: Icon(
+                    widget.onSelected == null
+                        ? Icons.copy_rounded
+                        : Icons.add_comment_outlined,
+                  ),
+                  onTap: () => _useReference(reference),
                 );
               },
             ),
           ),
   );
+
+  Future<void> _useReference(ReferenceInfo reference) async {
+    final onSelected = widget.onSelected;
+    if (onSelected != null) {
+      onSelected(reference);
+      if (mounted) Navigator.of(context).pop();
+      return;
+    }
+    await Clipboard.setData(ClipboardData(text: '@${reference.name}'));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('@${reference.name} copied'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
 }

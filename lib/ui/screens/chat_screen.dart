@@ -1617,6 +1617,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         action: _ChatCommandAction.skills,
       ),
       _ChatCommand.mobile(
+        slash: 'references',
+        aliases: const ['reference', 'refs'],
+        title: 'Project references',
+        description: 'Add an OpenCode project reference to this prompt',
+        group: 'OpenCode',
+        action: _ChatCommandAction.references,
+      ),
+      _ChatCommand.mobile(
         slash: 'status',
         aliases: const ['debug'],
         title: 'Server status',
@@ -1819,6 +1827,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           );
         }
         return;
+      case _ChatCommandAction.references:
+        if (mounted) {
+          await Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => ReferencesScreen(
+                controller: _conn,
+                onSelected: _attachReference,
+              ),
+            ),
+          );
+        }
+        return;
       case _ChatCommandAction.status:
         if (mounted) {
           await Navigator.of(context).push(
@@ -1871,6 +1891,34 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         await _openCommandLauncher();
         return;
     }
+  }
+
+  void _attachReference(ReferenceInfo reference) {
+    final attachment = PromptAttachment.reference(
+      name: reference.name,
+      path: reference.path,
+    );
+    if (_attachments.any(
+      (candidate) =>
+          candidate.isDirectoryReference && candidate.url == attachment.url,
+    )) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('@${reference.name} is already in the prompt')),
+      );
+      _focus.requestFocus();
+      return;
+    }
+    final current = _composer.text.trimRight();
+    final mention = '@${reference.name}';
+    final text = current.isEmpty ? mention : '$current $mention';
+    setState(() {
+      _attachments.add(attachment);
+      _composer.value = TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      );
+    });
+    _focus.requestFocus();
   }
 
   Future<void> _renameCurrentSession() async {
@@ -2337,6 +2385,7 @@ enum _ChatCommandAction {
   model,
   integrations,
   skills,
+  references,
   status,
   diff,
   share,
@@ -3155,6 +3204,10 @@ class _PendingAttachmentChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final reference = attachment.isDirectoryReference;
+    final removeLabel = reference
+        ? 'Remove reference @${attachment.filename}'
+        : 'Remove attachment ${attachment.filename}';
     void openPreview() => showFilePreviewSheet(
       context,
       FilePreviewData.fromDataUrl(
@@ -3174,14 +3227,18 @@ class _PendingAttachmentChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Semantics(
-            button: true,
+            button: !reference,
             excludeSemantics: true,
-            label: 'Preview attachment ${attachment.filename}',
-            onTap: openPreview,
+            label: reference
+                ? 'Reference @${attachment.filename}'
+                : 'Preview attachment ${attachment.filename}',
+            onTap: reference ? null : openPreview,
             child: Tooltip(
-              message: 'Preview ${attachment.filename}',
+              message: reference
+                  ? 'Project reference @${attachment.filename}'
+                  : 'Preview ${attachment.filename}',
               child: InkWell(
-                onTap: openPreview,
+                onTap: reference ? null : openPreview,
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(minHeight: 48),
                   child: Padding(
@@ -3189,18 +3246,27 @@ class _PendingAttachmentChip extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.attach_file_rounded, size: 16),
+                        Icon(
+                          reference
+                              ? Icons.bookmark_outline_rounded
+                              : Icons.attach_file_rounded,
+                          size: 16,
+                        ),
                         const SizedBox(width: 6),
                         ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 180),
                           child: Text(
-                            attachment.filename,
+                            reference
+                                ? '@${attachment.filename}'
+                                : attachment.filename,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        const Icon(Icons.visibility_outlined, size: 16),
+                        if (!reference) ...[
+                          const SizedBox(width: 8),
+                          const Icon(Icons.visibility_outlined, size: 16),
+                        ],
                       ],
                     ),
                   ),
@@ -3211,11 +3277,11 @@ class _PendingAttachmentChip extends StatelessWidget {
           Semantics(
             container: true,
             excludeSemantics: true,
-            label: 'Remove attachment ${attachment.filename}',
+            label: removeLabel,
             button: true,
             onTap: onRemove,
             child: IconButton(
-              tooltip: 'Remove attachment ${attachment.filename}',
+              tooltip: removeLabel,
               constraints: const BoxConstraints.tightFor(width: 48, height: 48),
               onPressed: onRemove,
               icon: const Icon(Icons.close_rounded, size: 18),
@@ -4101,9 +4167,14 @@ class _AttachmentPart extends StatelessWidget {
     return _filename.substring(dot + 1).toUpperCase();
   }
 
+  bool get _isReference =>
+      part.mime == PromptAttachment.directoryReferenceMime &&
+      Uri.tryParse(part.url ?? '')?.scheme == 'file';
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final reference = _isReference;
     void openPreview() => showFilePreviewSheet(
       context,
       FilePreviewData.fromDataUrl(
@@ -4114,15 +4185,19 @@ class _AttachmentPart extends StatelessWidget {
     );
 
     return Semantics(
-      button: true,
+      button: !reference,
       excludeSemantics: true,
-      label: 'Preview attachment $_filename',
-      onTap: openPreview,
+      label: reference
+          ? 'Reference @$_filename'
+          : 'Preview attachment $_filename',
+      onTap: reference ? null : openPreview,
       child: Tooltip(
-        message: 'Preview attachment',
+        message: reference
+            ? 'Project reference @$_filename'
+            : 'Preview attachment',
         child: InkWell(
           borderRadius: BorderRadius.circular(10),
-          onTap: openPreview,
+          onTap: reference ? null : openPreview,
           child: Container(
             margin: const EdgeInsets.only(bottom: 4),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
@@ -4136,7 +4211,12 @@ class _AttachmentPart extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.attach_file_rounded, size: 17),
+                Icon(
+                  reference
+                      ? Icons.bookmark_outline_rounded
+                      : Icons.attach_file_rounded,
+                  size: 17,
+                ),
                 const SizedBox(width: 7),
                 Flexible(
                   child: Column(
@@ -4144,7 +4224,7 @@ class _AttachmentPart extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _filename,
+                        reference ? '@$_filename' : _filename,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodySmall?.copyWith(
@@ -4152,7 +4232,9 @@ class _AttachmentPart extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '$_type · prompt attachment',
+                        reference
+                            ? 'Project reference'
+                            : '$_type · prompt attachment',
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -4160,8 +4242,10 @@ class _AttachmentPart extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                const Icon(Icons.visibility_outlined, size: 15),
+                if (!reference) ...[
+                  const SizedBox(width: 8),
+                  const Icon(Icons.visibility_outlined, size: 15),
+                ],
               ],
             ),
           ),
