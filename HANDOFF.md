@@ -399,6 +399,23 @@ RenderFlex, or overflow. The temporary server and reverse mapping were stopped,
 the ignored signing file was removed, and this APK must not be distributed.
 Flutter analysis is clean and all 309 tests pass serially.
 
+Live background/wake reconciliation is now proven against OpenCode `1.18.23`
+without spending provider tokens. With the app on Workspace, Android forced
+deep idle and killed the process; a disposable session created and renamed
+while idle appeared immediately after wake without manual refresh. In a second
+run, the app stayed on that session's chat screen with PID `8628`, retained the
+same PID while backgrounded, missed a server-side model-free shell event, then
+showed its completed tool call and `wake-shell-proof` output immediately after
+resume. Both paths had no fatal exception, RenderFlex, overflow, connection
+refusal, or endpoint-unavailable log. The probe session was deleted afterward.
+
+`tool/smoke_test.dart` now makes this server evidence stronger and safer. It
+accepts explicit directory/workspace scope, verifies health, session lifecycle,
+provider/agent catalogs, a model-free shell plus hydrated output, files/search,
+and SSE, and deletes its disposable session from `finally` even when a check
+throws. The hardened tool passed every check against the same OpenCode `1.18.23`
+instance and analyzed cleanly.
+
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`

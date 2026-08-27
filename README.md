@@ -266,11 +266,13 @@ instance (no emulator needed):
 
 ```bash
 opencode serve --port 4123 &
-dart run tool/smoke_test.dart http://127.0.0.1:4123    # API surface + SSE
+dart run tool/smoke_test.dart http://127.0.0.1:4123 /server/project
+# API + SSE + model-free shell; creates and always deletes one test session
 dart run tool/prompt_test.dart http://127.0.0.1:4123   # full streamed prompt (needs model auth)
 ```
 
-Verified passing against opencode 1.18.21.
+The smoke test accepts optional server-side directory and workspace arguments.
+It was verified passing against OpenCode 1.18.23 on 2026-08-28.
 
 ## Architecture
 
