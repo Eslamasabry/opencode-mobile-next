@@ -5333,6 +5333,20 @@ class _TodosSheetState extends State<_TodosSheet> {
                                 color: t.done ? theme.hintColor : null,
                               ),
                             ),
+                            subtitle:
+                                t.status == 'pending' && t.priority == null
+                                ? null
+                                : Text(
+                                    [
+                                      if (t.status != 'pending')
+                                        t.status.replaceAll('_', ' '),
+                                      if (t.priority != null)
+                                        '${t.priority} priority',
+                                    ].join(' · '),
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.hintColor,
+                                    ),
+                                  ),
                             onChanged: null,
                           ),
                       ],

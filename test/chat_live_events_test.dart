@@ -1200,6 +1200,28 @@ void main() {
     expect(find.text('-2'), findsOneWidget);
   });
 
+  testWidgets('session todo view shows server status and priority', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..todoItems = [
+        Todo(
+          content: 'Verify production release',
+          status: 'in_progress',
+          priority: 'high',
+        ),
+      ];
+
+    await _pumpChat(tester, api);
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Todos'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Verify production release'), findsOneWidget);
+    expect(find.text('in progress · high priority'), findsOneWidget);
+  });
+
   testWidgets('launcher combines mobile actions with server commands', (
     tester,
   ) async {

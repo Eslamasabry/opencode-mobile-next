@@ -419,19 +419,81 @@ class OpenCodeApi {
   }
 
   Future<List<Todo>> todos(String id) async {
-    final r = await _dio.get('/session/$id/todo', queryParameters: _query());
-    return (r.data as List)
-        .whereType<Map<String, dynamic>>()
-        .map(Todo.fromJson)
-        .toList();
+    try {
+      final response = await sdkClient.getSessionApi().sessionTodo(
+        sessionID: id,
+        directory: _directory,
+        workspace: _workspace,
+      );
+      return (response.data ?? const [])
+          .map(
+            (todo) => Todo(
+              content: todo.content,
+              status: todo.status,
+              priority: todo.priority,
+            ),
+          )
+          .toList();
+    } on sdk.OpenCodeApiException catch (e) {
+      _failGenerated(e, 'Get session todos');
+    } on DioException catch (e) {
+      final raw = e.response?.data;
+      if (_wasSuccessfulResponse(e) && raw is List) {
+        try {
+          return raw
+              .whereType<Map>()
+              .map((todo) => Todo.fromJson(Map<String, dynamic>.from(todo)))
+              .toList();
+        } catch (_) {
+          // Preserve the existing product error if even the tolerant parser
+          // cannot understand a successful response from an older server.
+        }
+      }
+      _fail(e, 'Get session todos');
+    }
   }
 
   Future<List<FileDiff>> diff(String id) async {
-    final r = await _dio.get('/session/$id/diff', queryParameters: _query());
-    return (r.data as List)
-        .whereType<Map>()
-        .map((value) => FileDiff.fromJson(Map<String, dynamic>.from(value)))
-        .toList();
+    try {
+      final response = await sdkClient.getSessionApi().sessionDiff(
+        sessionID: id,
+        directory: _directory,
+        workspace: _workspace,
+      );
+      return (response.data ?? const [])
+          .map(
+            (diff) => FileDiff(
+              file: diff.file ?? '',
+              patch: diff.patch_,
+              additions: diff.additions.toInt(),
+              deletions: diff.deletions.toInt(),
+              status:
+                  diff.status ==
+                      sdk.SnapshotFileDiffStatusEnum.unknownDefaultOpenApi
+                  ? null
+                  : diff.status?.value.toString(),
+            ),
+          )
+          .toList();
+    } on sdk.OpenCodeApiException catch (e) {
+      _failGenerated(e, 'Get session diff');
+    } on DioException catch (e) {
+      final raw = e.response?.data;
+      if (_wasSuccessfulResponse(e) && raw is List) {
+        try {
+          return raw
+              .whereType<Map>()
+              .map(
+                (value) => FileDiff.fromJson(Map<String, dynamic>.from(value)),
+              )
+              .toList();
+        } catch (_) {
+          // Preserve the existing product error if even the tolerant parser
+          // cannot understand a successful response from an older server.
+        }
+      }
+      _fail(e, 'Get session diff');
+    }
   }
 
   Future<List<PermissionRequest>> pendingPermissions() async {

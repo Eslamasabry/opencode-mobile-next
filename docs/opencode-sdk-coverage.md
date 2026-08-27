@@ -9,7 +9,7 @@ Authoritative inputs:
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app
-currently calls **55 generated operations directly**. It also uses a set of
+currently calls **57 generated operations directly**. It also uses a set of
 older or compatibility routes through `OpenCodeApi` and raw `Dio`; those are
 listed separately so a working feature is not incorrectly labelled missing.
 
@@ -47,7 +47,7 @@ Legend:
 | PTY | create, list, update, remove, connect token | WebSocket connect uses the guarded ticket | get, shells, direct connect, and all duplicate v2 PTY operations |
 | Question | list, reply, reject | - | - |
 | Reference | `v2ReferenceList` | - | References can be copied standalone or added to the active composer as OpenCode directory parts |
-| Session | list, create, get, delete, update/rename, status, messages, fork, revert, unrevert, share, unshare, summarize, async prompt including synthetic location reminder, command, abort | shell/todos/diff and permission fallback | init endpoint, children, delete/update part, delete/get one message, synchronous prompt |
+| Session | list, create, get, delete, update/rename, status, messages, todos, diff, fork, revert, unrevert, share, unshare, summarize, async prompt including synthetic location reminder, command, abort | shell and permission fallback | init endpoint, children, delete/update part, delete/get one message, synchronous prompt |
 | Session questions v2 | - | list/reply/reject through compatibility routes | Generated v2 methods are unused |
 | Sessions v2 | - | - | active, compact, context, create/get/list/message/prompt/history/events/wait/interrupt, model/agent switch, staged revert operations |
 | Skills | `v2SkillList` | - | Skill content uses the shared Markdown/code-aware preview with rendered and raw modes |
@@ -102,6 +102,10 @@ Legend:
    as well. Session metadata retains loose older-server fallback, while the
    generated raw unions preserve full message and tool/plugin part JSON before
    the existing renderer parses it.
+   Session todos and diffs now use their generated location-scoped paths too.
+   The app retains todo priority and typed diff counts/status, while successful
+   responses from older servers that omit required generated fields fall back
+   to the tolerant parser so legacy todo and before/after diff data is not lost.
 6. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
    worktree lifecycle are deliberately not the current implementation lane.
 

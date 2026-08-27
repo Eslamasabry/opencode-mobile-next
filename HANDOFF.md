@@ -299,6 +299,19 @@ errors, and nested plugin-specific tool data. Final-tree Flutter analysis is
 clean and all 283 tests pass serially. The generated SDK audit now counts 55
 directly used operations. Traycer remains explicitly deferred.
 
+Session Todos and Diff now use generated `session.todo` and `session.diff` with
+the selected directory/workspace instead of duplicate handwritten requests.
+Typed todo priority and diff patch/count/status data are preserved in the app;
+unknown future diff statuses do not leak the SDK's internal fallback enum label.
+If an older server returns a successful but looser todo or diff payload, the app
+falls back only for that deserialization failure and retains missing-priority
+todos plus legacy before/after diff content. Todo rows now show non-pending state
+and server priority without adding a nested card. Exact loopback coverage proves
+paths, location queries, strict mapping, loose successful responses, and declared
+OpenCode errors. Final-tree Flutter analysis is clean and all 287 tests pass
+serially. The generated SDK audit now counts 57 directly used operations. Traycer
+remains explicitly deferred.
+
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`

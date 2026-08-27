@@ -742,11 +742,14 @@ class FindMatch {
 class Todo {
   final String content;
   final String status;
-  Todo({required this.content, required this.status});
+  final String? priority;
+
+  Todo({required this.content, required this.status, this.priority});
 
   factory Todo.fromJson(Map<String, dynamic> j) => Todo(
     content: (j['content'] ?? '').toString(),
     status: (j['status'] ?? 'pending').toString(),
+    priority: j['priority']?.toString(),
   );
 
   bool get done => status == 'completed';
