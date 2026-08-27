@@ -1073,50 +1073,79 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _pickAttachment() async {
     try {
-      if (_attachments.length >= _maxAttachmentCount) {
-        throw StateError('You can attach up to $_maxAttachmentCount files.');
+      final attachment = await _chooseAttachment(_attachments);
+      if (attachment != null && mounted) {
+        setState(() => _attachments.add(attachment));
       }
-      final currentBytes = _attachments.fold<int>(
-        0,
-        (total, attachment) => total + _attachmentByteLength(attachment),
-      );
-      if (currentBytes >= _maxAggregateAttachmentBytes) {
-        throw StateError('Attachments must total no more than 20 MB.');
-      }
-      final file = await FilePicker.pickFile(dialogTitle: 'Attach to prompt');
-      if (file == null) return;
-      final size = await file.length();
-      if (size > _maxAttachmentBytes) {
-        throw StateError('Each attachment must be 10 MB or smaller.');
-      }
-      if (size > 0 && currentBytes + size > _maxAggregateAttachmentBytes) {
-        throw StateError('Attachments must total no more than 20 MB.');
-      }
-      final remainingAggregateBytes =
-          _maxAggregateAttachmentBytes - currentBytes;
-      final readLimit = remainingAggregateBytes < _maxAttachmentBytes
-          ? remainingAggregateBytes
-          : _maxAttachmentBytes;
-      final bytes = await readAttachmentBytesWithinLimit(
-        file,
-        maxBytes: readLimit,
-      );
-      if (bytes == null && readLimit < _maxAttachmentBytes) {
-        throw StateError('Attachments must total no more than 20 MB.');
-      }
-      if (bytes == null) {
-        throw StateError('Each attachment must be 10 MB or smaller.');
-      }
-      final mime = _mimeForFilename(file.name);
-      final attachment = PromptAttachment(
-        mime: mime,
-        filename: file.name,
-        url: 'data:$mime;base64,${base64Encode(bytes)}',
-      );
-      if (mounted) setState(() => _attachments.add(attachment));
     } catch (error) {
       if (mounted) _showActionError(error);
     }
+  }
+
+  Future<PromptAttachment?> _chooseAttachment(
+    List<PromptAttachment> current,
+  ) async {
+    if (current.length >= _maxAttachmentCount) {
+      throw StateError('You can attach up to $_maxAttachmentCount files.');
+    }
+    final currentBytes = current.fold<int>(
+      0,
+      (total, attachment) => total + _attachmentByteLength(attachment),
+    );
+    if (currentBytes >= _maxAggregateAttachmentBytes) {
+      throw StateError('Attachments must total no more than 20 MB.');
+    }
+    final file = await FilePicker.pickFile(dialogTitle: 'Attach to prompt');
+    if (file == null) return null;
+    final size = await file.length();
+    if (size > _maxAttachmentBytes) {
+      throw StateError('Each attachment must be 10 MB or smaller.');
+    }
+    if (size > 0 && currentBytes + size > _maxAggregateAttachmentBytes) {
+      throw StateError('Attachments must total no more than 20 MB.');
+    }
+    final remainingAggregateBytes = _maxAggregateAttachmentBytes - currentBytes;
+    final readLimit = remainingAggregateBytes < _maxAttachmentBytes
+        ? remainingAggregateBytes
+        : _maxAttachmentBytes;
+    final bytes = await readAttachmentBytesWithinLimit(
+      file,
+      maxBytes: readLimit,
+    );
+    if (bytes == null && readLimit < _maxAttachmentBytes) {
+      throw StateError('Attachments must total no more than 20 MB.');
+    }
+    if (bytes == null) {
+      throw StateError('Each attachment must be 10 MB or smaller.');
+    }
+    final mime = _mimeForFilename(file.name);
+    final attachment = PromptAttachment(
+      mime: mime,
+      filename: file.name,
+      url: 'data:$mime;base64,${base64Encode(bytes)}',
+    );
+    return attachment;
+  }
+
+  Future<void> _openPromptEditor() async {
+    final result = await Navigator.of(context).push<_PromptEditorResult>(
+      MaterialPageRoute<_PromptEditorResult>(
+        fullscreenDialog: true,
+        builder: (_) => _PromptEditorScreen(
+          initialValue: _composer.value,
+          initialAttachments: _attachments,
+          chooseAttachment: _chooseAttachment,
+        ),
+      ),
+    );
+    if (!mounted || result == null) return;
+    _composer.value = result.value;
+    setState(() {
+      _attachments
+        ..clear()
+        ..addAll(result.attachments);
+    });
+    _focus.requestFocus();
   }
 
   int _attachmentByteLength(PromptAttachment attachment) {
@@ -1691,8 +1720,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       ),
       _ChatCommand.mobile(
         slash: 'editor',
+        title: 'Prompt editor',
+        description: 'Edit the current prompt in a focused full-screen view',
+        group: 'Compose',
+        action: _ChatCommandAction.promptEditor,
+      ),
+      _ChatCommand.mobile(
+        slash: 'files',
         aliases: const ['open'],
-        title: 'Files',
+        title: 'Project files',
         description: 'Browse, preview, download, and attach project files',
         group: 'Navigate',
         action: _ChatCommandAction.files,
@@ -1958,6 +1994,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             ),
           );
         }
+        return;
+      case _ChatCommandAction.promptEditor:
+        await _openPromptEditor();
         return;
       case _ChatCommandAction.terminal:
         if (mounted) {
@@ -2569,6 +2608,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                             commands: _chatCommands,
                             onSelectCommand: _selectChatCommand,
                             onOpenCommands: _openCommandLauncher,
+                            onOpenEditor: _openPromptEditor,
                             attachments: _attachments,
                             busy: busy,
                             sending: _sending,
@@ -2845,6 +2885,7 @@ enum _ChatCommandAction {
   sessions,
   workspaces,
   files,
+  promptEditor,
   terminal,
   model,
   integrations,
@@ -3273,6 +3314,211 @@ class _InlineCommandSuggestions extends StatelessWidget {
   }
 }
 
+typedef _AttachmentChooser =
+    Future<PromptAttachment?> Function(List<PromptAttachment> current);
+
+class _PromptEditorResult {
+  const _PromptEditorResult({required this.value, required this.attachments});
+
+  final TextEditingValue value;
+  final List<PromptAttachment> attachments;
+}
+
+class _PromptEditorScreen extends StatefulWidget {
+  const _PromptEditorScreen({
+    required this.initialValue,
+    required this.initialAttachments,
+    required this.chooseAttachment,
+  });
+
+  final TextEditingValue initialValue;
+  final List<PromptAttachment> initialAttachments;
+  final _AttachmentChooser chooseAttachment;
+
+  @override
+  State<_PromptEditorScreen> createState() => _PromptEditorScreenState();
+}
+
+class _PromptEditorScreenState extends State<_PromptEditorScreen> {
+  late final TextEditingController _controller;
+  late final List<PromptAttachment> _attachments;
+  bool _closing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController.fromValue(widget.initialValue);
+    _attachments = List<PromptAttachment>.from(widget.initialAttachments);
+  }
+
+  bool get _dirty =>
+      _controller.text != widget.initialValue.text ||
+      !_sameAttachments(_attachments, widget.initialAttachments);
+
+  bool _sameAttachments(
+    List<PromptAttachment> left,
+    List<PromptAttachment> right,
+  ) {
+    if (left.length != right.length) return false;
+    for (var index = 0; index < left.length; index += 1) {
+      final a = left[index];
+      final b = right[index];
+      if (a.mime != b.mime || a.filename != b.filename || a.url != b.url) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  Future<void> _addAttachment() async {
+    try {
+      final attachment = await widget.chooseAttachment(_attachments);
+      if (!mounted || attachment == null) return;
+      setState(() => _attachments.add(attachment));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.toString())));
+    }
+  }
+
+  void _save() {
+    Navigator.pop(
+      context,
+      _PromptEditorResult(
+        value: _controller.value,
+        attachments: List.unmodifiable(_attachments),
+      ),
+    );
+  }
+
+  Future<void> _cancel() async {
+    if (_closing) return;
+    if (!_dirty) {
+      Navigator.pop(context);
+      return;
+    }
+    _closing = true;
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Discard prompt changes?'),
+        content: const Text(
+          'Your original composer draft and attachments will stay unchanged.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Keep editing'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Discard'),
+          ),
+        ],
+      ),
+    );
+    _closing = false;
+    if (discard == true && mounted) Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) unawaited(_cancel());
+      },
+      child: Scaffold(
+        key: const Key('prompt-editor-screen'),
+        appBar: AppBar(
+          leading: IconButton(
+            tooltip: 'Close prompt editor',
+            onPressed: _cancel,
+            icon: const Icon(Icons.close_rounded),
+          ),
+          title: const Text('Prompt editor'),
+          actions: [
+            IconButton(
+              key: const Key('prompt-editor-attach'),
+              tooltip: _attachments.length >= _maxAttachmentCount
+                  ? 'Attachment limit reached'
+                  : 'Attach file',
+              onPressed: _attachments.length >= _maxAttachmentCount
+                  ? null
+                  : _addAttachment,
+              icon: const Icon(Icons.attach_file_rounded),
+            ),
+            TextButton(
+              key: const Key('prompt-editor-done'),
+              onPressed: _save,
+              child: const Text('Done'),
+            ),
+            const SizedBox(width: 4),
+          ],
+        ),
+        body: SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              if (_attachments.isNotEmpty)
+                SizedBox(
+                  height: 64,
+                  child: ListView.separated(
+                    key: const Key('prompt-editor-attachments'),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _attachments.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 6),
+                    itemBuilder: (context, index) {
+                      final attachment = _attachments[index];
+                      return _PendingAttachmentChip(
+                        attachment: attachment,
+                        onRemove: () =>
+                            setState(() => _attachments.removeAt(index)),
+                      );
+                    },
+                  ),
+                ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                  child: TextField(
+                    key: const Key('prompt-editor-field'),
+                    controller: _controller,
+                    autofocus: true,
+                    expands: true,
+                    minLines: null,
+                    maxLines: null,
+                    keyboardType: TextInputType.multiline,
+                    textAlignVertical: TextAlignVertical.top,
+                    textCapitalization: TextCapitalization.sentences,
+                    decoration: const InputDecoration(
+                      hintText: 'Write your OpenCode prompt…',
+                      alignLabelWithHint: true,
+                      contentPadding: EdgeInsets.all(16),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+}
+
 class _ChatComposer extends StatelessWidget {
   const _ChatComposer({
     required this.compact,
@@ -3282,6 +3528,7 @@ class _ChatComposer extends StatelessWidget {
     required this.commands,
     required this.onSelectCommand,
     required this.onOpenCommands,
+    required this.onOpenEditor,
     required this.attachments,
     required this.busy,
     required this.sending,
@@ -3304,6 +3551,7 @@ class _ChatComposer extends StatelessWidget {
   final List<_ChatCommand> commands;
   final ValueChanged<_ChatCommand> onSelectCommand;
   final VoidCallback onOpenCommands;
+  final VoidCallback onOpenEditor;
   final List<PromptAttachment> attachments;
   final bool busy;
   final bool sending;
@@ -3408,6 +3656,7 @@ class _ChatComposer extends StatelessWidget {
         _ComposerField(
           controller: controller,
           focusNode: focusNode,
+          onOpenEditor: onOpenEditor,
           maxLines: 6,
           contentPadding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
         ),
@@ -3518,6 +3767,7 @@ class _ChatComposer extends StatelessWidget {
             child: _ComposerField(
               controller: controller,
               focusNode: focusNode,
+              onOpenEditor: onOpenEditor,
               maxLines: 3,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 10,
@@ -3557,12 +3807,14 @@ class _ComposerField extends StatelessWidget {
   const _ComposerField({
     required this.controller,
     required this.focusNode,
+    required this.onOpenEditor,
     required this.maxLines,
     required this.contentPadding,
   });
 
   final TextEditingController controller;
   final FocusNode focusNode;
+  final VoidCallback onOpenEditor;
   final int maxLines;
   final EdgeInsets contentPadding;
 
@@ -3576,6 +3828,12 @@ class _ComposerField extends StatelessWidget {
     textCapitalization: TextCapitalization.sentences,
     decoration: InputDecoration(
       hintText: 'Ask OpenCode…',
+      suffixIcon: IconButton(
+        key: const Key('prompt-editor-button'),
+        tooltip: 'Open full-screen prompt editor',
+        onPressed: onOpenEditor,
+        icon: const Icon(Icons.open_in_full_rounded, size: 19),
+      ),
       filled: false,
       border: InputBorder.none,
       enabledBorder: InputBorder.none,

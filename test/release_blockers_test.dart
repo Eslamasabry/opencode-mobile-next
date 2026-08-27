@@ -397,6 +397,32 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('full-screen prompt editor fits a 320dp phone at 2x text', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(320, 640));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: _scaledApp(const ChatScreen(sessionID: 's1'), bottomInset: 180),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('prompt-editor-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('prompt-editor-screen')), findsOneWidget);
+    expect(find.byKey(const Key('prompt-editor-field')), findsOneWidget);
+    expect(find.byKey(const Key('prompt-editor-attach')), findsOneWidget);
+    final done = find.byKey(const Key('prompt-editor-done'));
+    expect(done, findsOneWidget);
+    expect(tester.getSize(done).height, greaterThanOrEqualTo(48));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('tool expansion has 48dp target and reduced-motion semantics', (
     tester,
   ) async {

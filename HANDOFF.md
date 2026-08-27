@@ -201,6 +201,22 @@ includes preference restoration, old-chat live updates through both the command
 launcher and native Session views, timestamp metadata, and global reasoning
 collapse. Traycer remains deferred.
 
+`/editor` now matches the upstream prompt-editing intent instead of opening the
+project file browser. It opens a focused full-screen multiline editor initialized
+with the exact composer `TextEditingValue`, so both the draft and cursor/range
+selection survive the round trip. Existing attachments remain visible and
+previewable; they can be removed or extended through the same bounded file picker
+and aggregate-size rules as the compact composer. Done returns changes without
+sending, while back/close protects dirty text or attachments with an explicit
+discard choice. The composer also exposes a direct expand action.
+
+Project browsing is now the distinct `/files` action with `/open` as the web-client
+alias. Command-search coverage ensures `/open` cannot drift back to the prompt
+editor. Final-tree Flutter analysis is clean and all 265 tests pass serially,
+including selection and attachment round trips, cancel/discard behavior,
+no-auto-send behavior, and a 320dp/2x-text keyboard-inset layout. Traycer remains
+deferred.
+
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`

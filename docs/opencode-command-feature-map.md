@@ -41,7 +41,7 @@ The mobile launcher combines these sources. Client actions are explicitly mapped
 | `/thinking` | `/toggle-thinking` | Expand or collapse reasoning | Native: app-wide persisted long-reasoning state; reasoning under two lines remains inline |
 | `/copy` | — | Copy transcript | Native Markdown transcript export to clipboard |
 | `/export` | — | Export transcript | Native Markdown document save |
-| `/editor` | — | Edit the prompt in an external terminal editor | Adapted: opens the mobile project file browser; a full-screen prompt editor remains a gap |
+| `/editor` | — | Edit the prompt in an external terminal editor | Native: focused full-screen prompt editor with selection and attachment preservation |
 | `/skills` | — | Browse skills and insert one | Native skill browser; slash-capable skills also arrive dynamically from the server |
 | `/warp` | — | Change experimental workspace for the session | Adapted through the workspace screen; exact session warp API is a gap |
 | `/move` | — | Move a session to another project directory | Gap: server and mobile repository need a move-session contract |
@@ -54,7 +54,10 @@ The OpenCode web client registers a smaller, context-sensitive set. Mobile accep
 - `/model`, `/agent`, `/workspace`, `/open`, `/terminal`, and `/mcp`
 - `/new`, `/share`, `/unshare`, `/undo`, `/redo`, `/compact`, `/fork`, and `/export`
 
-Mobile also registers `/references` with `/reference` and `/refs` aliases. It
+Mobile also registers `/files` with the web client's `/open` alias and
+`/references` with `/reference` and `/refs` aliases. `/files` opens project
+browsing while `/editor` edits the active draft; these are intentionally
+separate. The reference action
 opens the server-backed reference list and adds the selected item to the active
 prompt using the same `@name` directory-part contract as the upstream TUI and
 web composer.
@@ -86,6 +89,5 @@ Selecting a dynamic command inserts it into the composer so arguments can be edi
 
 ## Next command parity work
 
-1. Add full-screen prompt editing for `/editor` without conflating it with project files.
-2. Add server contracts and UI for `/move`, exact `/warp`, and multi-organization `/org`.
-3. Decide whether mobile theme selection is valuable before exposing `/themes`; do not mirror terminal themes mechanically.
+1. Add server contracts and UI for `/move`, exact `/warp`, and multi-organization `/org`.
+2. Decide whether mobile theme selection is valuable before exposing `/themes`; do not mirror terminal themes mechanically.

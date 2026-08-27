@@ -981,6 +981,13 @@ void main() {
     expect(find.text('/models'), findsOneWidget);
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
+      'open',
+    );
+    await tester.pump();
+    expect(find.text('/files'), findsOneWidget);
+    expect(find.text('/editor'), findsNothing);
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
       'review',
     );
     await tester.pump();
@@ -991,6 +998,112 @@ void main() {
       find.byKey(const Key('chat-composer-field')),
     );
     expect(composer.controller?.text, '/review ');
+  });
+
+  testWidgets('prompt editor preserves selection, attachments, and cancel', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi();
+    final controller = await _controller(api);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: const MaterialApp(
+          home: ChatScreen(
+            sessionID: 'session-1',
+            initialAttachments: [
+              PromptAttachment(
+                mime: 'text/plain',
+                filename: 'notes.txt',
+                url: 'data:text/plain;base64,bm90ZXM=',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final composerFinder = find.byKey(const Key('chat-composer-field'));
+    final composer = tester.widget<TextField>(composerFinder).controller!;
+    composer.value = const TextEditingValue(
+      text: 'Original prompt draft',
+      selection: TextSelection(baseOffset: 2, extentOffset: 10),
+    );
+    await tester.pump();
+
+    expect(find.byKey(const Key('prompt-editor-button')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'editor',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('command-mobile-editor')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('prompt-editor-screen')), findsOneWidget);
+    final editor = tester
+        .widget<TextField>(find.byKey(const Key('prompt-editor-field')))
+        .controller!;
+    expect(editor.text, 'Original prompt draft');
+    expect(
+      editor.selection,
+      const TextSelection(baseOffset: 2, extentOffset: 10),
+    );
+    editor.selection = const TextSelection.collapsed(offset: 4);
+    await tester.tap(find.byTooltip('Close prompt editor'));
+    await tester.pumpAndSettle();
+    expect(find.text('Discard prompt changes?'), findsNothing);
+    expect(
+      composer.selection,
+      const TextSelection(baseOffset: 2, extentOffset: 10),
+    );
+
+    await tester.tap(find.byKey(const Key('prompt-editor-button')));
+    await tester.pumpAndSettle();
+    final discardEditor = tester
+        .widget<TextField>(find.byKey(const Key('prompt-editor-field')))
+        .controller!;
+    discardEditor.value = const TextEditingValue(
+      text: 'Discarded edit',
+      selection: TextSelection.collapsed(offset: 5),
+    );
+    await tester.tap(find.byTooltip('Remove attachment notes.txt'));
+    await tester.pump();
+    await tester.tap(find.byTooltip('Close prompt editor'));
+    await tester.pumpAndSettle();
+    expect(find.text('Discard prompt changes?'), findsOneWidget);
+    await tester.tap(find.text('Keep editing'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('prompt-editor-screen')), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Close prompt editor'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Discard'));
+    await tester.pumpAndSettle();
+    expect(composer.text, 'Original prompt draft');
+    expect(find.byTooltip('Remove attachment notes.txt'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('prompt-editor-button')));
+    await tester.pumpAndSettle();
+    final savedEditor = tester
+        .widget<TextField>(find.byKey(const Key('prompt-editor-field')))
+        .controller!;
+    savedEditor.value = const TextEditingValue(
+      text: 'Final edited prompt',
+      selection: TextSelection.collapsed(offset: 7),
+    );
+    await tester.tap(find.byTooltip('Remove attachment notes.txt'));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('prompt-editor-done')));
+    await tester.pumpAndSettle();
+
+    expect(composer.text, 'Final edited prompt');
+    expect(composer.selection, const TextSelection.collapsed(offset: 7));
+    expect(find.byTooltip('Remove attachment notes.txt'), findsNothing);
+    expect(api.promptCalls, 0);
   });
 
   testWidgets('timeline searches old messages and jumps to a stable anchor', (
