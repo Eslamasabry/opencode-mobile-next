@@ -142,6 +142,15 @@ the old-server fallback. The generated SDK audit now counts 39 direct operations
 Live symbol results remain unverified until a reachable OpenCode project exposes
 an active language server.
 
+The last plain skill-content surface now uses the shared smart file preview.
+Opening a skill renders its Markdown headings, tables, inline code, fenced code,
+lists, and links while retaining one explicit Raw mode for exact source inspection.
+The skill sheet remains a single flat content surface; it does not introduce a
+nested card or a second scrolling container. Focused widget coverage verifies the
+rendered/raw transition and a 320dp phone at 2x text scale. Final-tree Flutter
+analysis is clean and all 252 tests pass serially. Traycer remains explicitly
+deferred.
+
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`

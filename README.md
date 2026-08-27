@@ -27,6 +27,7 @@ is also bundled under **Settings > Privacy and data use**.
 - Project file browser with adjacent file/symbol search, smart previews, and
   source-line navigation from language-server symbols
 - Project health for branch changes, language services, and formatters
+- Smart skill previews with rendered Markdown tables, code blocks, and raw mode
 
 ## Requirements
 

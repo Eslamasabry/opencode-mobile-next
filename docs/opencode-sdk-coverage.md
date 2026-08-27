@@ -50,7 +50,7 @@ Legend:
 | Session | fork, revert, unrevert, share, unshare, summarize, update | list/create/get/delete/rename/status/messages/prompt/shell/command/abort/init/todos/diff and permission fallback | children, delete/update part, delete/get one message, synchronous prompt |
 | Session questions v2 | - | list/reply/reject through compatibility routes | Generated v2 methods are unused |
 | Sessions v2 | - | - | active, compact, context, create/get/list/message/prompt/history/events/wait/interrupt, model/agent switch, staged revert operations |
-| Skills | `v2SkillList` | - | Skill content is exposed, but its screen still uses plain text rather than the shared Markdown renderer |
+| Skills | `v2SkillList` | - | Skill content uses the shared Markdown/code-aware preview with rendered and raw modes |
 | Sync | - | - | history, replay, start, steal |
 | TUI control | - | - | append/clear/submit prompt, command execution, next-control flow, publish, select session, help/models/sessions/themes/toast |
 | Workspace | `experimentalWorkspaceList` | - | adapter list, create, remove, status, sync list, warp |
@@ -70,6 +70,8 @@ Legend:
    independently so one unavailable endpoint does not hide valid server truth.
    Files now has adjacent Files and Symbols tabs; generated LSP symbol results
    open the referenced source file at its exact one-based line and highlight it.
+   Skill details now use the same smart preview path as project files, including
+   formatted Markdown tables, fenced code, selection, and an explicit raw view.
 4. **Transport modernization:** migrate compatibility routes to generated v2
    APIs only where current and older OpenCode contracts can be reconciled
    without losing sessions, events, or provider inventory.

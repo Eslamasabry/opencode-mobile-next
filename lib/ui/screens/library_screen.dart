@@ -7,6 +7,7 @@ import '../../api/models.dart' show ModelRef;
 import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
+import '../widgets/file_preview.dart';
 import '../widgets/product_states.dart';
 import '../widgets/pickers.dart';
 import 'requests_screen.dart';
@@ -1660,9 +1661,13 @@ class _SkillsScreenState extends State<SkillsScreen> {
               ),
               const Divider(height: 1),
               Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: SelectableText(skill.content),
+                child: FilePreviewBody(
+                  key: const Key('skill-content-preview'),
+                  data: FilePreviewData(
+                    name: 'SKILL.md',
+                    mimeType: 'text/markdown',
+                    text: skill.content,
+                  ),
                 ),
               ),
             ],
