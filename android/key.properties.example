@@ -1,0 +1,6 @@
+# Copy this file to android/key.properties. Never commit the populated copy.
+# Keep the keystore itself outside the repository and back it up securely.
+storeFile=/absolute/path/to/opencode-upload-keystore.jks
+storePassword=replace-with-a-strong-secret
+keyAlias=upload
+keyPassword=replace-with-a-strong-secret

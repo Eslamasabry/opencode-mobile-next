@@ -155,6 +155,40 @@ void main() {
     expect(launch, isNot(contains('@android:color/white')));
   });
 
+  test('Android release builds require the production signing lineage', () {
+    final appGradle = File('android/app/build.gradle.kts').readAsStringSync();
+    final gradleProperties = File(
+      'android/gradle.properties',
+    ).readAsStringSync();
+    final settings = File('android/settings.gradle.kts').readAsStringSync();
+    final wrapper = File(
+      'android/gradle/wrapper/gradle-wrapper.properties',
+    ).readAsStringSync();
+    final example = File('android/key.properties.example').readAsStringSync();
+
+    expect(appGradle, contains('create("release")'));
+    expect(
+      appGradle,
+      contains('signingConfig = signingConfigs.getByName("release")'),
+    );
+    expect(
+      appGradle,
+      isNot(contains('signingConfig = signingConfigs.getByName("debug")')),
+    );
+    expect(settings, contains('version "9.3.2"'));
+    expect(
+      settings,
+      contains('id("org.jetbrains.kotlin.android") version "2.4.0" apply false'),
+    );
+    expect(appGradle, isNot(contains('id("kotlin-android")')));
+    expect(appGradle, contains('compilerOptions'));
+    expect(gradleProperties, contains('android.builtInKotlin=true'));
+    expect(gradleProperties, contains('android.newDsl=false'));
+    expect(wrapper, contains('gradle-9.5.0-all.zip'));
+    expect(example, contains('storeFile=/absolute/path/'));
+    expect(example, contains('keyAlias=upload'));
+  });
+
   testWidgets('markdown blocks custom schemes and confirms HTTP with host', (
     tester,
   ) async {

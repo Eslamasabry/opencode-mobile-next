@@ -15,7 +15,7 @@ void main() {
     final audio = File('lib/voice/audio.dart').readAsStringSync();
 
     expect(pubspec, contains('sherpa_onnx: 1.13.6'));
-    expect(pubspec, contains('record: 6.2.1'));
+    expect(pubspec, contains('record: 7.1.1'));
     expect(manifest, contains('android.permission.RECORD_AUDIO'));
     expect(manifest, contains('android.permission.POST_NOTIFICATIONS'));
     expect(

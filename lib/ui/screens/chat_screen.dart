@@ -37,17 +37,7 @@ Future<Uint8List?> readAttachmentBytesWithinLimit(
     throw ArgumentError.value(maxBytes, 'maxBytes', 'must not be negative');
   }
 
-  final inMemoryBytes = file.bytes;
-  if (inMemoryBytes != null) {
-    return inMemoryBytes.length <= maxBytes ? inMemoryBytes : null;
-  }
-
-  final stream =
-      file.readStream ??
-      (file.path == null ? null : file.xFile.openRead(0, maxBytes + 1));
-  if (stream == null) {
-    throw StateError('The selected file could not be read.');
-  }
+  final stream = file.readAsByteStream();
 
   // Retain at most the allowed payload plus one byte. The extra byte detects a
   // file that grew after the picker reported its metadata without allowing an
@@ -1086,15 +1076,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (currentBytes >= _maxAggregateAttachmentBytes) {
         throw StateError('Attachments must total no more than 20 MB.');
       }
-      final result = await FilePicker.pickFiles(
-        dialogTitle: 'Attach to prompt',
-        allowMultiple: false,
-        withData: false,
-        withReadStream: true,
-      );
-      if (result == null || result.files.isEmpty) return;
-      final file = result.files.single;
-      final size = file.size;
+      final file = await FilePicker.pickFile(dialogTitle: 'Attach to prompt');
+      if (file == null) return;
+      final size = await file.length();
       if (size > _maxAttachmentBytes) {
         throw StateError('Each attachment must be 10 MB or smaller.');
       }

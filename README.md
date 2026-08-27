@@ -55,21 +55,22 @@ a clean `master` synchronized with its same-named tracked upstream (normally
 and a Shorebird dry-run. It uploads nothing unless `--publish` is supplied
 explicitly.
 
-### Signing migration blocker
+### Signing identity decision gate
 
 **Do not publish a store release yet.** The current
-[`android/app/build.gradle.kts`](android/app/build.gradle.kts) signs release
-builds with Flutter's debug key. `./scripts/release.sh release` intentionally
-stops at this gate before analysis, building, or upload.
+[`android/app/build.gradle.kts`](android/app/build.gradle.kts) has a dedicated
+`release` signing configuration and no debug-key fallback. It reads the ignored
+`android/key.properties`; use [`android/key.properties.example`](android/key.properties.example)
+as the schema. `./scripts/release.sh release` intentionally stops unless the
+complete signing identity and expected certificate are supplied.
 
 Before the first store release, choose and protect a production upload key,
 enroll in Play App Signing, move key material and passwords outside version
-control, create an explicit Gradle `release` signing configuration backed by a
-complete local `android/key.properties`, and replace the debug release signing
-configuration. Do not commit a keystore or `key.properties`; both are already
-ignored under `android/`. Export `RELEASE_CERT_SHA256` as the expected upload
-certificate fingerprint before running the helper. The helper checks the AAB's
-actual certificate after its dry-run and before any upload.
+control, and populate `android/key.properties`. Do not commit a keystore or the
+populated properties file; both are ignored under `android/`. Export
+`RELEASE_CERT_SHA256` as the expected upload certificate fingerprint before
+running the helper. The helper checks the AAB's actual certificate after its
+dry-run and before any upload.
 
 Also decide how to handle existing debug-signed sideload installs: Android
 cannot upgrade them in place to an APK signed by a different key, so those users
@@ -179,7 +180,7 @@ cannot switch between the Play and GitHub channels in place unless those app
 certificates were intentionally made identical; switching requires uninstalling
 the existing app and loses its local data. Verify the upload-key fingerprint for
 GitHub artifacts and the Play app-signing fingerprint for Play artifacts. The
-current debug-signing blocker applies to both production channels.
+current signing-identity decision gate applies to both production channels.
 
 ## Connecting to opencode
 
