@@ -19,6 +19,7 @@ import '../widgets/tool_card.dart';
 import 'files_screen.dart';
 import 'home_screen.dart';
 import 'library_screen.dart';
+import 'review_workspace.dart';
 import 'settings_screen.dart';
 import 'terminal_screen.dart';
 
@@ -1986,12 +1987,36 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
-  void _showDiff() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (_) => _DiffSheet(conn: _conn, sessionID: widget.sessionID),
+  Future<void> _showDiff() async {
+    final prompt = await Navigator.of(context).push<String>(
+      MaterialPageRoute<String>(
+        builder: (_) => ReviewWorkspace(
+          sessionID: widget.sessionID,
+          loadDiffs: () async {
+            final api = _conn.api;
+            if (api == null) {
+              throw StateError('OpenCode is reconnecting.');
+            }
+            return api.diff(widget.sessionID);
+          },
+        ),
+      ),
+    );
+    if (!mounted || prompt == null || prompt.trim().isEmpty) return;
+    final current = _composer.text.trimRight();
+    final text = current.isEmpty ? prompt : '$current\n\n$prompt';
+    setState(() {
+      _composer.value = TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      );
+    });
+    _focus.requestFocus();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Review comment added to the prompt'),
+        duration: Duration(seconds: 2),
+      ),
     );
   }
 
@@ -2194,84 +2219,96 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     ),
                   )
                 : LayoutBuilder(
-                    builder: (context, bodyConstraints) => Column(
-                      children: [
-                        Expanded(
-                          child: _messages.isEmpty
-                              ? Center(
-                                  child: Text(
-                                    'Ask opencode to do something…',
-                                    style: TextStyle(color: theme.hintColor),
-                                  ),
-                                )
-                              : NotificationListener<ScrollNotification>(
-                                  onNotification: (_) => false,
-                                  child: Align(
-                                    alignment: Alignment.topCenter,
-                                    child: ListView.builder(
-                                      reverse: true,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 10,
+                    builder: (context, bodyConstraints) {
+                      // Keyboard insets reduce [bodyConstraints] but do not
+                      // change the device's layout class. Deriving compact
+                      // mode from those shrinking constraints replaces the
+                      // focused TextField and immediately dismisses Android's
+                      // keyboard. Keep one composer structure for the lifetime
+                      // of the focus interaction instead.
+                      final compactComposer =
+                          MediaQuery.sizeOf(context).height < 520;
+                      return Column(
+                        children: [
+                          Expanded(
+                            child: _messages.isEmpty
+                                ? Center(
+                                    child: Text(
+                                      'Ask opencode to do something…',
+                                      style: TextStyle(color: theme.hintColor),
+                                    ),
+                                  )
+                                : NotificationListener<ScrollNotification>(
+                                    onNotification: (_) => false,
+                                    child: Align(
+                                      alignment: Alignment.topCenter,
+                                      child: ListView.builder(
+                                        reverse: true,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 10,
+                                        ),
+                                        itemCount:
+                                            _messages.length + (busy ? 1 : 0),
+                                        itemBuilder: (context, i) {
+                                          final index =
+                                              _messages.length - 1 - i;
+                                          if (index < 0) {
+                                            return _TypingIndicator();
+                                          }
+                                          final m = _messages[index];
+                                          final meta = _messageMeta(
+                                            _messages,
+                                            index,
+                                          );
+                                          final parts = displayParts[index];
+                                          if (parts.isEmpty &&
+                                              meta.isEmpty &&
+                                              m.info.errorText == null) {
+                                            return const SizedBox.shrink();
+                                          }
+                                          return _MessageView(
+                                            m: m,
+                                            meta: meta,
+                                            parts: parts,
+                                            filePreviewLoader:
+                                                _loadToolOutputFile,
+                                            onAttachFile: _attachToolOutputFile,
+                                            onDownloadFile:
+                                                _downloadToolOutputFile,
+                                          );
+                                        },
                                       ),
-                                      itemCount:
-                                          _messages.length + (busy ? 1 : 0),
-                                      itemBuilder: (context, i) {
-                                        final index = _messages.length - 1 - i;
-                                        if (index < 0) {
-                                          return _TypingIndicator();
-                                        }
-                                        final m = _messages[index];
-                                        final meta = _messageMeta(
-                                          _messages,
-                                          index,
-                                        );
-                                        final parts = displayParts[index];
-                                        if (parts.isEmpty &&
-                                            meta.isEmpty &&
-                                            m.info.errorText == null) {
-                                          return const SizedBox.shrink();
-                                        }
-                                        return _MessageView(
-                                          m: m,
-                                          meta: meta,
-                                          parts: parts,
-                                          filePreviewLoader:
-                                              _loadToolOutputFile,
-                                          onAttachFile: _attachToolOutputFile,
-                                          onDownloadFile:
-                                              _downloadToolOutputFile,
-                                        );
-                                      },
                                     ),
                                   ),
-                                ),
-                        ),
-                        _ChatComposer(
-                          compact: bodyConstraints.maxHeight < 520,
-                          allowInlineCommands: bodyConstraints.maxHeight >= 300,
-                          controller: _composer,
-                          focusNode: _focus,
-                          commands: _chatCommands,
-                          onSelectCommand: _selectChatCommand,
-                          onOpenCommands: _openCommandLauncher,
-                          attachments: _attachments,
-                          busy: busy,
-                          sending: _sending,
-                          voiceOpening: _voiceOpening,
-                          selectedAgent: _conn.selectedAgent,
-                          selectedModel: _conn.selectedModel,
-                          selectedVariant: _conn.selectedVariant,
-                          onAttach: _pickAttachment,
-                          onVoice: _openVoice,
-                          onSend: _send,
-                          onStop: _abort,
-                          onChooseModel: () => showModelPicker(context),
-                          onRemoveAttachment: (attachment) =>
-                              setState(() => _attachments.remove(attachment)),
-                        ),
-                      ],
-                    ),
+                          ),
+                          _ChatComposer(
+                            compact: compactComposer,
+                            allowInlineCommands:
+                                bodyConstraints.maxHeight >= 300,
+                            controller: _composer,
+                            focusNode: _focus,
+                            commands: _chatCommands,
+                            onSelectCommand: _selectChatCommand,
+                            onOpenCommands: _openCommandLauncher,
+                            attachments: _attachments,
+                            busy: busy,
+                            sending: _sending,
+                            voiceOpening: _voiceOpening,
+                            selectedAgent: _conn.selectedAgent,
+                            selectedModel: _conn.selectedModel,
+                            selectedVariant: _conn.selectedVariant,
+                            onAttach: _pickAttachment,
+                            onVoice: _openVoice,
+                            onSend: _send,
+                            onStop: _abort,
+                            onChooseModel: () => showModelPicker(context),
+                            onRemoveAttachment: (attachment) =>
+                                setState(() => _attachments.remove(attachment)),
+                          ),
+                        ],
+                      );
+                    },
                   ),
           ),
         ],

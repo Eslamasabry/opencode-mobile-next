@@ -9,10 +9,21 @@ import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/widgets/pickers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-Future<ConnectionController> _controller() async {
+class _RefreshCountingController extends ConnectionController {
+  _RefreshCountingController(super.store);
+
+  int refreshCalls = 0;
+
+  @override
+  Future<void> refreshCatalog() async {
+    refreshCalls++;
+  }
+}
+
+Future<_RefreshCountingController> _controller() async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
-  return ConnectionController(ProfileStore(prefs: prefs))
+  return _RefreshCountingController(ProfileStore(prefs: prefs))
     ..providers = ProvidersResponse(
       providers: [
         ProviderInfo(
@@ -151,6 +162,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Model, mode & agent'), findsOneWidget);
+    expect(controller.refreshCalls, 1);
+    expect(find.byKey(const Key('model-picker-refresh')), findsOneWidget);
     expect(find.byKey(const Key('model-picker-search')), findsOneWidget);
     expect(find.textContaining('131,072 context'), findsOneWidget);
 
@@ -192,6 +205,8 @@ void main() {
     expect(find.text('Nemotron Ultra'), findsNothing);
 
     await tester.tap(find.text('Nemotron Lightning'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('fast · low effort'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('fast · low effort'));
     await tester.ensureVisible(find.text('Use model and mode'));

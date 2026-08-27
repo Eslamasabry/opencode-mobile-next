@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -6,6 +8,14 @@ import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 
 Future<void> showModelPicker(BuildContext context) {
+  final controller = ProviderScope.containerOf(
+    context,
+    listen: false,
+  ).read(connProvider);
+  // Catalog membership is server-owned and can change while the app remains
+  // connected. Refresh on every open so removed models are not retained until
+  // a reconnect or lifecycle wake.
+  unawaited(controller.refreshCatalog());
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -154,6 +164,20 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
               ],
             ),
           ),
+          if (widget.onClose != null)
+            IconButton(
+              key: const Key('model-picker-refresh'),
+              tooltip: 'Refresh models',
+              onPressed: widget.controller.catalogLoading
+                  ? null
+                  : widget.controller.refreshCatalog,
+              icon: widget.controller.catalogLoading
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.refresh_rounded),
+            ),
           if (widget.onClose != null)
             IconButton(
               tooltip: 'Close model selector',

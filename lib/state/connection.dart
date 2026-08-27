@@ -434,16 +434,42 @@ class ConnectionController extends ChangeNotifier {
             ),
         ],
       );
+      bool providerAvailable(String providerID) =>
+          nextProviders.providers.any((provider) => provider.id == providerID);
+      bool modelAvailable(String providerID, String modelID) =>
+          nextProviders.providers.any(
+            (provider) =>
+                provider.id == providerID &&
+                provider.modelIDs.contains(modelID),
+          );
+      bool agentAvailable(String agentID) =>
+          nextAgents.any((agent) => agent.name == agentID);
+      final detailedProviders = detailedCatalog?.providers
+          .where((provider) => providerAvailable(provider.id))
+          .toList();
+      final detailedModels = detailedCatalog?.models
+          .where((model) => modelAvailable(model.providerID, model.id))
+          .toList();
+      final detailedAgents = detailedCatalog?.agents
+          .where((agent) => agentAvailable(agent.id))
+          .toList();
       final nextCatalog = detailedCatalog == null
           ? fallbackCatalog
           : CatalogSnapshot(
-              providers: detailedCatalog.providers.isEmpty
+              providers: detailedProviders!.isEmpty
                   ? fallbackCatalog.providers
-                  : detailedCatalog.providers,
-              models: detailedCatalog.models.isEmpty
+                  : [
+                      ...detailedProviders,
+                      for (final base in fallbackCatalog.providers)
+                        if (!detailedProviders.any(
+                          (provider) => provider.id == base.id,
+                        ))
+                          base,
+                    ],
+              models: detailedModels!.isEmpty
                   ? fallbackCatalog.models
                   : [
-                      for (final model in detailedCatalog.models)
+                      for (final model in detailedModels)
                         _mergeCatalogModel(
                           model,
                           fallbackCatalog.models.firstWhere(
@@ -454,16 +480,21 @@ class ConnectionController extends ChangeNotifier {
                           ),
                         ),
                       for (final base in fallbackCatalog.models)
-                        if (!detailedCatalog.models.any(
+                        if (!detailedModels.any(
                           (model) =>
                               model.providerID == base.providerID &&
                               model.id == base.id,
                         ))
                           base,
                     ],
-              agents: detailedCatalog.agents.isEmpty
+              agents: detailedAgents!.isEmpty
                   ? fallbackCatalog.agents
-                  : detailedCatalog.agents,
+                  : [
+                      ...detailedAgents,
+                      for (final base in fallbackCatalog.agents)
+                        if (!detailedAgents.any((agent) => agent.id == base.id))
+                          base,
+                    ],
             );
       final profileID = _connectedProfile?.id;
       var nextModel = selectedModel;
@@ -542,7 +573,7 @@ class ConnectionController extends ChangeNotifier {
       agents = nextAgents;
       catalog = nextCatalog;
       catalogDetailed =
-          detailedCatalog?.models.isNotEmpty == true ||
+          detailedModels?.isNotEmpty == true ||
           nextProviders.providers.any(
             (provider) => provider.modelData.isNotEmpty,
           );

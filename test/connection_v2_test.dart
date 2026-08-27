@@ -115,9 +115,10 @@ class _V2Api extends OpenCodeApi {
 }
 
 class _QuestionRepository implements ProductRepository {
-  _QuestionRepository({this.legacyUnavailable = true});
+  _QuestionRepository({this.legacyUnavailable = true, this.catalog});
 
   final bool legacyUnavailable;
+  final CatalogSnapshot? catalog;
   List<PendingQuestion> questions = const [];
   Completer<List<PendingQuestion>>? questionsCompleter;
   Object? answerError;
@@ -149,6 +150,10 @@ class _QuestionRepository implements ProductRepository {
     if (rejectError case final error?) throw error;
     rejects.add(id);
   }
+
+  @override
+  Future<CatalogSnapshot> loadCatalog() async =>
+      catalog ?? (throw StateError('detailed catalog unavailable'));
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -718,6 +723,91 @@ void main() {
     expect(controller.selectedAgent, 'build');
     expect(store.modelFor('server'), ('provider-1', 'model-1'));
     expect(store.agentFor('server'), 'build');
+    controller.dispose();
+  });
+
+  testWidgets('catalog prunes models no longer advertised by OpenCode', (
+    tester,
+  ) async {
+    final api = _V2Api(
+      providersResult: ProvidersResponse(
+        providers: [
+          ProviderInfo(
+            id: 'opencode',
+            name: 'OpenCode Zen',
+            modelIDs: const ['current-model'],
+          ),
+        ],
+        defaultProviderID: 'opencode',
+        defaultModelID: 'current-model',
+      ),
+      agentsResult: [AgentInfo(name: 'build')],
+    );
+    final detailed = CatalogSnapshot(
+      providers: const [
+        CatalogProvider(id: 'opencode', name: 'OpenCode Zen', enabled: true),
+      ],
+      models: const [
+        CatalogModel(
+          id: 'current-model',
+          providerID: 'opencode',
+          name: 'Current model',
+          enabled: true,
+          status: 'active',
+          contextLimit: 128000,
+          outputLimit: 16000,
+          reasoning: true,
+          attachments: true,
+          tools: true,
+          variants: [],
+        ),
+        CatalogModel(
+          id: 'ox-alpha',
+          providerID: 'opencode',
+          name: 'Ox Alpha',
+          enabled: true,
+          status: 'alpha',
+          contextLimit: 200000,
+          outputLimit: 32000,
+          reasoning: true,
+          attachments: true,
+          tools: true,
+          variants: [],
+        ),
+      ],
+      agents: const [CatalogAgent(id: 'build', mode: 'primary', hidden: false)],
+    );
+    final controller = ConnectionController(
+      await _store({'oc.model.server': 'opencode|ox-alpha'}),
+      apiFactory: (_) => api,
+      repositoryFactory: (_) =>
+          _QuestionRepository(legacyUnavailable: false, catalog: detailed),
+      eventStreamFactory:
+          ({required api, required onEvent, required onStatus, onError}) =>
+              _FakeEventStream(
+                api: api,
+                onEvent: onEvent,
+                onStatus: onStatus,
+                onError: onError,
+              ),
+    );
+    addTearDown(controller.dispose);
+
+    await controller.connect(
+      ServerProfile(
+        id: 'server',
+        name: 'Server',
+        baseUrl: 'http://127.0.0.1:1',
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(controller.catalog?.models.map((model) => model.id), [
+      'current-model',
+    ]);
+    expect(controller.selectedModel?.modelID, 'current-model');
+    expect(controller.catalogDetailed, isTrue);
     controller.dispose();
   });
 

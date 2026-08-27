@@ -768,6 +768,14 @@ cleanup_app_owned_partial_install() {
   fi
 }
 
+cleanup_legacy_npm_cache() {
+  ubuntu_usable || return 0
+  # Older installer revisions used npm's persistent cache. A failed download
+  # can leave hundreds of MiB of corrupt entries there, then make the storage
+  # preflight fail before the next repair attempt can start.
+  proot-distro login "$PROOT_NAME" -- npm cache clean --force >/dev/null 2>&1 || true
+}
+
 require_setup_space() {
   local required_kib="$FRESH_SETUP_REQUIRED_KIB"
   if ubuntu_usable; then
@@ -937,6 +945,7 @@ setup() {
   printf '\n[oc] setup started at %s\n' "$(date -Iseconds 2>/dev/null || date)"
 
   cleanup_app_owned_partial_install
+  cleanup_legacy_npm_cache
   require_setup_space
 
   prepare_termux_dependencies
@@ -956,12 +965,22 @@ if ! command -v npm >/dev/null 2>&1 || ! command -v curl >/dev/null 2>&1; then
 fi
 export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--dns-result-order=ipv4first"
 install_opencode() {
-  npm install -g \
+  local npm_cache
+  local install_code
+  npm_cache=$(mktemp -d /tmp/opencode-mobile-npm.XXXXXX)
+  if npm install -g \
+    --cache "$npm_cache" \
     --fetch-retries=5 \
     --fetch-retry-mintimeout=10000 \
     --fetch-retry-maxtimeout=60000 \
     --fetch-timeout=300000 \
-    "opencode-ai@$OC_REQUESTED_VERSION"
+    "opencode-ai@$OC_REQUESTED_VERSION"; then
+    install_code=0
+  else
+    install_code=$?
+  fi
+  rm -rf -- "$npm_cache"
+  return "$install_code"
 }
 install_opencode || {
   printf '[oc] npm download failed; retrying in 10 seconds\n'

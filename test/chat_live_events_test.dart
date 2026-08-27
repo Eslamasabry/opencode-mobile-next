@@ -235,12 +235,55 @@ void main() {
     expect(find.text('+1'), findsOneWidget);
     expect(find.text('-1'), findsOneWidget);
 
-    await tester.tap(find.text('main.dart'));
-    await tester.pumpAndSettle();
     expect(find.text('@@ -1 +1 @@'), findsOneWidget);
     expect(find.text('-old line'), findsOneWidget);
     expect(find.text('+new line'), findsOneWidget);
-    expect(find.byTooltip('Copy patch'), findsOneWidget);
+    expect(find.text('Copy patch'), findsOneWidget);
+    expect(find.byKey(const Key('review-mode-split')), findsOneWidget);
+  });
+
+  testWidgets('adds a selected diff comment back to the chat composer', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..diffs = [
+        FileDiff.fromJson({
+          'file': 'lib/client.dart',
+          'patch': '@@ -8,2 +8,2 @@\n-old request\n+new request',
+          'additions': 1,
+          'deletions': 1,
+          'status': 'modified',
+        }),
+      ];
+    await _pumpChat(tester, api);
+
+    await tester.tap(find.byTooltip('Changes'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('review-line-2')));
+    await tester.pump();
+    expect(find.byKey(const Key('review-selection-bar')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('review-comment-action')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('review-comment-field')),
+      'Keep the retry behavior explicit.',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('review-add-to-prompt')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('review-workspace')), findsNothing);
+    final composer = tester.widget<TextField>(
+      find.byKey(const Key('chat-composer-field')),
+    );
+    expect(composer.controller?.text, contains('Review `lib/client.dart`'));
+    expect(composer.controller?.text, contains('new line 8'));
+    expect(
+      composer.controller?.text,
+      contains('Keep the retry behavior explicit.'),
+    );
+    expect(composer.controller?.text, contains('+new request'));
   });
 
   testWidgets('foreground data refresh rehydrates messages missed while away', (
@@ -268,6 +311,31 @@ void main() {
 
     expect(find.text('Completed while backgrounded'), findsOneWidget);
     expect(find.text('Before background'), findsNothing);
+  });
+
+  testWidgets('composer keeps focus when the Android keyboard opens', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetViewInsets);
+
+    await _pumpChat(tester, _FakeOpenCodeApi());
+    final fieldFinder = find.byKey(const Key('chat-composer-field'));
+    await tester.tap(fieldFinder);
+    await tester.pump();
+    final before = tester.widget<TextField>(fieldFinder);
+    expect(before.focusNode?.hasFocus, isTrue);
+
+    tester.view.viewInsets = const FakeViewPadding(bottom: 400);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    final after = tester.widget<TextField>(fieldFinder);
+    expect(after.focusNode, same(before.focusNode));
+    expect(after.focusNode?.hasFocus, isTrue);
   });
 
   testWidgets('send waits for the wake-time replacement transport', (
@@ -783,7 +851,7 @@ void main() {
     await tester.tap(find.byKey(const Key('command-mobile-diff')));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('chat-composer-surface')), findsOneWidget);
+    expect(find.byKey(const Key('review-workspace')), findsOneWidget);
     expect(find.text('chat.dart'), findsOneWidget);
     expect(find.text('+7'), findsOneWidget);
     expect(find.text('-2'), findsOneWidget);

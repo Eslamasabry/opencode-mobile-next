@@ -113,6 +113,19 @@ message=This belongs to the terminal
     expect(script, contains("setup '4096' 'latest'"));
     expect(manager, contains(r'local requested_version="${2:-latest}"'));
     expect(manager, contains('"opencode-ai@\$OC_REQUESTED_VERSION"'));
+    expect(
+      manager,
+      contains(r'npm_cache=$(mktemp -d /tmp/opencode-mobile-npm.XXXXXX)'),
+    );
+    expect(manager, contains(r'--cache "$npm_cache"'));
+    expect(manager, contains(r'rm -rf -- "$npm_cache"'));
+    expect(manager, contains('cleanup_legacy_npm_cache'));
+    expect(
+      manager,
+      contains(
+        r'proot-distro login "$PROOT_NAME" -- npm cache clean --force',
+      ),
+    );
     expect(manager, contains('opencode models --refresh'));
     expect(manager, contains('refreshing_models'));
   });
