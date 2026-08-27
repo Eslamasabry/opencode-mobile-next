@@ -75,6 +75,11 @@ void main() {
       'opencode',
     ]);
     expect(response.providers.first.modelIDs, ['glm-5.2']);
+    expect(response.availableProviders.map((provider) => provider.id), [
+      'opencode',
+      'zai-coding-plan',
+      'unconnected',
+    ]);
     expect(response.defaultProviderID, 'zai-coding-plan');
     expect(response.defaultModelID, 'glm-5.2');
   });

@@ -549,13 +549,15 @@ class ProviderInfo {
 
 class ProvidersResponse {
   final List<ProviderInfo> providers;
+  final List<ProviderInfo> availableProviders;
   final String? defaultProviderID;
   final String? defaultModelID;
   ProvidersResponse({
     required this.providers,
+    List<ProviderInfo>? availableProviders,
     this.defaultProviderID,
     this.defaultModelID,
-  });
+  }) : availableProviders = availableProviders ?? providers;
 
   factory ProvidersResponse.fromJson(Map<String, dynamic> j) {
     final providers = <ProviderInfo>[];
@@ -570,10 +572,7 @@ class ProvidersResponse {
       if (p is! Map<String, dynamic>) continue;
       rawByID[p['id'].toString()] = p;
     }
-    final providerMaps = connected.isEmpty
-        ? rawByID.values
-        : connected.map((id) => rawByID[id]).whereType<Map<String, dynamic>>();
-    for (final p in providerMaps) {
+    ProviderInfo parseProvider(Map<String, dynamic> p) {
       final id = p['id'].toString();
       final name = (p['name'] ?? id).toString();
       final models = <String>[];
@@ -592,15 +591,23 @@ class ProvidersResponse {
           if (!hidden) models.add(entry.key);
         }
       }
-      providers.add(
-        ProviderInfo(
-          id: id,
-          name: name,
-          modelIDs: models,
-          modelData: modelData,
-        ),
+      return ProviderInfo(
+        id: id,
+        name: name,
+        modelIDs: models,
+        modelData: modelData,
       );
     }
+
+    final availableProviders = rawByID.values.map(parseProvider).toList();
+    final availableByID = {
+      for (final provider in availableProviders) provider.id: provider,
+    };
+    providers.addAll(
+      connected.isEmpty
+          ? availableProviders
+          : connected.map((id) => availableByID[id]).whereType<ProviderInfo>(),
+    );
     String? defP;
     String? defM;
     final d = j['default'];
@@ -625,6 +632,7 @@ class ProvidersResponse {
     }
     return ProvidersResponse(
       providers: providers,
+      availableProviders: availableProviders,
       defaultProviderID: defP,
       defaultModelID: defM,
     );

@@ -914,32 +914,21 @@ void main() {
   });
 
   testWidgets(
-    'connected integration recovers configured Z.AI missing from provider list',
+    'connected integration recovers Z.AI from phone provider all payload',
     (tester) async {
       final api = _V2Api(
-        providersResult: ProvidersResponse(
-          providers: [
-            ProviderInfo(
-              id: 'opencode',
-              name: 'OpenCode Zen',
-              modelIDs: const ['nemotron'],
-            ),
-          ],
-          defaultProviderID: 'opencode',
-          defaultModelID: 'nemotron',
-        ),
-        configuredProvidersResult: ProvidersResponse(
-          providers: [
-            ProviderInfo(
-              id: 'opencode',
-              name: 'OpenCode Zen',
-              modelIDs: const ['nemotron'],
-            ),
-            ProviderInfo(
-              id: 'zai-coding-plan',
-              name: 'Z.AI Coding Plan',
-              modelIDs: const ['glm-5.2'],
-              modelData: const {
+        providersResult: ProvidersResponse.fromJson({
+          'connected': ['opencode'],
+          'all': [
+            {
+              'id': 'opencode',
+              'name': 'OpenCode Zen',
+              'models': {'nemotron': <String, Object?>{}},
+            },
+            {
+              'id': 'zai-coding-plan',
+              'name': 'Z.AI Coding Plan',
+              'models': {
                 'glm-5.2': {
                   'name': 'GLM-5.2',
                   'capabilities': {'reasoning': true, 'toolcall': true},
@@ -950,9 +939,19 @@ void main() {
                   },
                 },
               },
-            ),
+            },
           ],
-        ),
+          'default': {'opencode': 'nemotron'},
+        }),
+        configuredProvidersResult: ProvidersResponse.fromJson({
+          'providers': [
+            {
+              'id': 'opencode',
+              'name': 'OpenCode Zen',
+              'models': {'nemotron': <String, Object?>{}},
+            },
+          ],
+        }),
         agentsResult: [AgentInfo(name: 'build')],
       );
       final detailed = CatalogSnapshot(

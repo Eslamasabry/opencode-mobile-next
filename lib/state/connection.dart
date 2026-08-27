@@ -442,12 +442,15 @@ class ConnectionController extends ChangeNotifier {
       )) {
         return;
       }
-      if (configuredProviders != null && integrations.isNotEmpty) {
+      if (integrations.isNotEmpty) {
         final present = {
           for (final provider in nextProviders.providers) provider.id,
         };
-        final configuredByID = {
-          for (final provider in configuredProviders.providers)
+        final recoverableByID = {
+          if (configuredProviders != null)
+            for (final provider in configuredProviders.availableProviders)
+              provider.id: provider,
+          for (final provider in nextProviders.availableProviders)
             provider.id: provider,
         };
         final connectedIntegrationIDs = integrations
@@ -456,12 +459,13 @@ class ConnectionController extends ChangeNotifier {
         final recovered = <ProviderInfo>[];
         for (final id in connectedIntegrationIDs) {
           if (present.contains(id)) continue;
-          final provider = configuredByID[id];
+          final provider = recoverableByID[id];
           if (provider != null) recovered.add(provider);
         }
         if (recovered.isNotEmpty) {
           nextProviders = ProvidersResponse(
             providers: [...nextProviders.providers, ...recovered],
+            availableProviders: nextProviders.availableProviders,
             defaultProviderID: nextProviders.defaultProviderID,
             defaultModelID: nextProviders.defaultModelID,
           );
