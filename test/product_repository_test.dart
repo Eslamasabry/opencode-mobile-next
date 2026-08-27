@@ -677,6 +677,54 @@ void main() {
     }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
   });
 
+  test('fork session sends the selected OpenCode message point', () async {
+    await HttpOverrides.runZoned(() async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      String? body;
+      Uri? uri;
+      server.listen((request) async {
+        uri = request.uri;
+        body = await utf8.decoder.bind(request).join();
+        request.response.headers.contentType = ContentType.json;
+        request.response.write(
+          jsonEncode({
+            'id': 'forked-session',
+            'slug': 'forked-session',
+            'projectID': 'project-1',
+            'directory': '/work/acme',
+            'title': 'Forked session',
+            'version': '1',
+            'time': {'created': 1, 'updated': 1},
+          }),
+        );
+        await request.response.close();
+      });
+
+      try {
+        final api = OpenCodeApi(
+          baseUrl: 'http://${server.address.host}:${server.port}',
+        );
+        final repository = SdkProductRepository(api.sdkClient)
+          ..setLocation(directory: '/work/acme', workspace: 'phone');
+
+        final id = await repository.forkSession(
+          'session-1',
+          messageID: 'message-7',
+        );
+
+        expect(id, 'forked-session');
+        expect(uri?.path, '/session/session-1/fork');
+        expect(uri?.queryParameters, {
+          'directory': '/work/acme',
+          'workspace': 'phone',
+        });
+        expect(jsonDecode(body!), {'messageID': 'message-7'});
+      } finally {
+        await server.close(force: true);
+      }
+    }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+  });
+
   test(
     'terminal connection requests a guarded ticket before WebSocket',
     () async {

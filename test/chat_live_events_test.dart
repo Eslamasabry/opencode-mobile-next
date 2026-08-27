@@ -38,6 +38,12 @@ class _FakeOpenCodeApi extends OpenCodeApi {
   final List<String> fileContentRequests = [];
 
   @override
+  Future<List<Session>> sessions() async => const [];
+
+  @override
+  Future<Map<String, String>> sessionStatuses() async => const {};
+
+  @override
   Future<List<MessageWithParts>> messages(String id) =>
       messagesHandler?.call(id) ?? Future.value([]);
 
@@ -107,12 +113,21 @@ class _FakeProductRepository implements ProductRepository {
 
   final List<CommandInfo> commands;
   final List<ReferenceInfo> references;
+  String? forkMessageID;
+  int forkCalls = 0;
 
   @override
   Future<List<CommandInfo>> listCommands() async => commands;
 
   @override
   Future<List<ReferenceInfo>> listReferences() async => references;
+
+  @override
+  Future<String> forkSession(String id, {String? messageID}) async {
+    forkCalls += 1;
+    forkMessageID = messageID;
+    return 'forked-session';
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -234,7 +249,9 @@ void main() {
       ];
     await _pumpChat(tester, api);
 
-    await tester.tap(find.byTooltip('Changes'));
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Changes'));
     await tester.pumpAndSettle();
     expect(find.text('+1'), findsOneWidget);
     expect(find.text('-1'), findsOneWidget);
@@ -261,7 +278,9 @@ void main() {
       ];
     await _pumpChat(tester, api);
 
-    await tester.tap(find.byTooltip('Changes'));
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Changes'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('review-line-2')));
     await tester.pump();
@@ -902,6 +921,177 @@ void main() {
     expect(composer.controller?.text, '/review ');
   });
 
+  testWidgets('timeline searches old messages and jumps to a stable anchor', (
+    tester,
+  ) async {
+    final messages = <MessageWithParts>[];
+    for (var index = 0; index < 30; index += 1) {
+      messages.add(
+        _message('user-$index', 'user', [
+          Part(
+            id: 'part-$index',
+            messageID: 'user-$index',
+            type: 'text',
+            text: index == 0 ? 'oldest anchor prompt' : 'prompt $index',
+          ),
+        ], created: index + 1),
+      );
+    }
+    final api = _FakeOpenCodeApi()..messagesHandler = (_) async => messages;
+
+    await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Timeline'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('timeline-search')),
+      'oldest anchor',
+    );
+    await tester.pump();
+    expect(find.byKey(const Key('timeline-row-user-0')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('timeline-row-user-0')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('oldest anchor prompt'), findsOneWidget);
+    expect(
+      find.byKey(const Key('message-highlight-user-0-true')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('fork from prompt restores text and file in the new composer', (
+    tester,
+  ) async {
+    final prompt = _message('user-restore', 'user', [
+      Part(
+        id: 'text-restore',
+        messageID: 'user-restore',
+        type: 'text',
+        text: 'Review this design',
+      ),
+      Part(
+        id: 'file-restore',
+        messageID: 'user-restore',
+        type: 'file',
+        filename: 'design.png',
+        mime: 'image/png',
+        url: 'data:image/png;base64,iVBORw0KGgo=',
+      ),
+    ]);
+    final api = _FakeOpenCodeApi()..messagesHandler = (_) async => [prompt];
+    final repository = _FakeProductRepository(const []);
+
+    await _pumpChat(tester, api, repository: repository);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Timeline'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('timeline-fork-user-restore')));
+    await tester.pumpAndSettle();
+
+    expect(repository.forkCalls, 1);
+    expect(repository.forkMessageID, 'user-restore');
+    final composer = tester.widget<TextField>(
+      find.byKey(const Key('chat-composer-field')),
+    );
+    expect(composer.controller?.text, 'Review this design');
+    expect(find.byTooltip('Remove attachment design.png'), findsOneWidget);
+  });
+
+  testWidgets('/fork lists prompts and forks the selected message point', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('user-fork-command', 'user', [
+          Part(
+            id: 'fork-command-text',
+            messageID: 'user-fork-command',
+            type: 'text',
+            text: 'Try another implementation',
+          ),
+        ]),
+        _message('assistant-fork-command', 'assistant', [
+          Part(
+            id: 'assistant-command-text',
+            messageID: 'assistant-fork-command',
+            type: 'text',
+            text: 'Current implementation',
+          ),
+        ]),
+      ];
+    final repository = _FakeProductRepository(const []);
+
+    await _pumpChat(tester, api, repository: repository);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'fork',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('command-mobile-fork')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Fork from prompt'), findsOneWidget);
+    expect(
+      find.byKey(const Key('timeline-row-assistant-fork-command')),
+      findsNothing,
+    );
+    await tester.tap(find.byKey(const Key('timeline-row-user-fork-command')));
+    await tester.pumpAndSettle();
+
+    expect(repository.forkMessageID, 'user-fork-command');
+    final composer = tester.widget<TextField>(
+      find.byKey(const Key('chat-composer-field')),
+    );
+    expect(composer.controller?.text, 'Try another implementation');
+  });
+
+  testWidgets('timeline remains usable at 320dp with 2x text', (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('user-narrow', 'user', [
+          Part(
+            id: 'part-narrow',
+            messageID: 'user-narrow',
+            type: 'text',
+            text: 'A long prompt that must remain reachable on a narrow phone',
+          ),
+        ]),
+      ];
+    final controller = await _controller(api);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: MediaQuery(
+          data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+          child: const MaterialApp(home: ChatScreen(sessionID: 'session-1')),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Timeline'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('timeline-search')), findsOneWidget);
+    expect(find.byKey(const Key('timeline-row-user-narrow')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'project reference screen adds an upstream directory prompt part',
     (tester) async {
@@ -1311,7 +1501,7 @@ void main() {
     final controller = await _pumpChat(tester, api);
     controller.selectedVariant = 'fast';
 
-    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.tap(find.byType(PopupMenuButton<String>).last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Retry last prompt'));
     await tester.pumpAndSettle();
@@ -1332,7 +1522,7 @@ void main() {
       }),
     );
     await _pumpEvent(tester);
-    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.tap(find.byType(PopupMenuButton<String>).last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Retry last prompt'));
     await tester.pumpAndSettle();

@@ -31,8 +31,8 @@ The mobile launcher combines these sources. Client actions are explicitly mapped
 | `/exit` | `/quit`, `/q` | Exit the terminal process | Intentionally omitted: Android owns app lifecycle |
 | `/share` | — | Share or copy session link | Native |
 | `/rename` | — | Rename session | Native |
-| `/timeline` | — | Jump to a message | Gap: needs stable mobile scroll anchors and a message picker |
-| `/fork` | — | Fork from the timeline | Native at session level; message-level fork remains a gap |
+| `/timeline` | — | Jump to a message | Native: searchable all-message picker with stable indexed anchors |
+| `/fork` | — | Fork from the timeline | Native: choose a user prompt, fork at its message ID, and restore its text and files for editing |
 | `/compact` | `/summarize` | Compact session context | Native, using the selected server model |
 | `/unshare` | — | Disable share link | Native |
 | `/undo` | — | Revert the previous prompt and changes | Native |
@@ -86,8 +86,7 @@ Selecting a dynamic command inserts it into the composer so arguments can be edi
 
 ## Next command parity work
 
-1. Add message anchors and `/timeline`, including fork-from-message.
-2. Add persisted transcript controls for `/thinking` and `/timestamps`.
-3. Add full-screen prompt editing for `/editor` without conflating it with project files.
-4. Add server contracts and UI for `/move`, exact `/warp`, and multi-organization `/org`.
-5. Decide whether mobile theme selection is valuable before exposing `/themes`; do not mirror terminal themes mechanically.
+1. Add persisted transcript controls for `/thinking` and `/timestamps`.
+2. Add full-screen prompt editing for `/editor` without conflating it with project files.
+3. Add server contracts and UI for `/move`, exact `/warp`, and multi-organization `/org`.
+4. Decide whether mobile theme selection is valuable before exposing `/themes`; do not mirror terminal themes mechanically.

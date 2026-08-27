@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import '../../api/models.dart';
 import '../../api/provider_presentation.dart';
@@ -273,12 +274,14 @@ class SessionsTab extends StatelessWidget {
 class ChatScreen extends StatefulWidget {
   final String sessionID;
   final VoiceComposerController? voiceController;
+  final String initialText;
   final List<PromptAttachment> initialAttachments;
 
   const ChatScreen({
     super.key,
     required this.sessionID,
     this.voiceController,
+    this.initialText = '',
     this.initialAttachments = const [],
   });
 
@@ -310,6 +313,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Object? _error;
   final _composer = TextEditingController();
   final _focus = FocusNode();
+  final _messageScroll = ItemScrollController();
   final List<PromptAttachment> _attachments = [];
   final List<_PendingSend> _pendingSends = [];
   final Map<String, int> _messageVersions = {};
@@ -333,6 +337,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Object? _serverCommandsError;
   bool _serverCommandsLoading = false;
   Future<void>? _serverCommandsRequest;
+  String? _highlightedMessageID;
+  Timer? _highlightTimer;
 
   String? get _shareUrl =>
       _conn.sessionsById[widget.sessionID]?.shareUrl ?? _localShareUrl;
@@ -341,6 +347,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _composer.text = widget.initialText;
     _attachments.addAll(widget.initialAttachments);
     _conn = _readConn();
     _dataRefreshRevision = _conn.dataRefreshRevision;
@@ -1235,6 +1242,104 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _openTimeline({bool forkMode = false}) async {
+    if (_messages.isEmpty) return;
+    final selection = await showModalBottomSheet<_TimelineSelection>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: false,
+      constraints: const BoxConstraints(maxWidth: 720),
+      builder: (context) =>
+          _TimelineSheet(messages: _messages, forkMode: forkMode),
+    );
+    if (!mounted || selection == null) return;
+    if (selection.fork) {
+      await _forkFromMessage(selection.message);
+      return;
+    }
+    _jumpToMessage(selection.message.info.id);
+  }
+
+  void _jumpToMessage(String messageID) {
+    final chronologicalIndex = _messages.indexWhere(
+      (message) => message.info.id == messageID,
+    );
+    if (chronologicalIndex < 0) {
+      _showActionError('That message is no longer in this session.');
+      return;
+    }
+    final listIndex = _messages.length - 1 - chronologicalIndex;
+    _highlightTimer?.cancel();
+    setState(() => _highlightedMessageID = messageID);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_messageScroll.isAttached) return;
+      _messageScroll.scrollTo(
+        index: listIndex,
+        alignment: .5,
+        duration: const Duration(milliseconds: 360),
+        curve: Curves.easeOutCubic,
+      );
+    });
+    _highlightTimer = Timer(const Duration(seconds: 2), () {
+      if (mounted && _highlightedMessageID == messageID) {
+        setState(() => _highlightedMessageID = null);
+      }
+    });
+  }
+
+  Future<void> _forkFromMessage(MessageWithParts message) async {
+    if (message.info.role != 'user') return;
+    final text = message.parts
+        .where((part) => part.type == 'text' && !part.synthetic)
+        .map((part) => part.text)
+        .join();
+    final attachments = <PromptAttachment>[];
+    for (final part in message.parts.where(
+      (part) => part.type == 'file' && !part.synthetic,
+    )) {
+      final url = part.url;
+      if (url == null || url.isEmpty) {
+        _showActionError(
+          'This prompt cannot be restored because an attachment is unavailable.',
+        );
+        return;
+      }
+      final filename = part.filename?.trim().isNotEmpty == true
+          ? part.filename!
+          : 'attachment';
+      attachments.add(
+        PromptAttachment(
+          mime: part.mime?.trim().isNotEmpty == true
+              ? part.mime!
+              : _mimeForFilename(filename),
+          filename: filename,
+          url: url,
+        ),
+      );
+    }
+    try {
+      final id = await _conn.repository?.forkSession(
+        widget.sessionID,
+        messageID: message.info.id,
+      );
+      if (id == null) throw StateError('The session could not be forked');
+      await _conn.refreshSessions();
+      if (!mounted) return;
+      await Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (_) => ChatScreen(
+            sessionID: id,
+            initialText: text,
+            initialAttachments: attachments,
+          ),
+        ),
+      );
+    } catch (error) {
+      if (mounted) _showActionError(error);
+    }
+  }
+
   Future<void> _compact() async {
     final model = _conn.selectedModel;
     if (model == null) {
@@ -1662,9 +1767,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         action: _ChatCommandAction.rename,
       ),
       _ChatCommand.mobile(
+        slash: 'timeline',
+        aliases: const ['messages'],
+        title: 'Message timeline',
+        description: 'Find a message, jump to it, or fork from a prompt',
+        group: 'Current session',
+        action: _ChatCommandAction.timeline,
+        enabled: _messages.isNotEmpty,
+      ),
+      _ChatCommand.mobile(
         slash: 'fork',
-        title: 'Fork session',
-        description: 'Continue this conversation in a new session',
+        title: 'Fork from prompt',
+        description: 'Choose a prompt and continue it in a new session',
         group: 'Current session',
         action: _ChatCommandAction.fork,
         enabled: hasUserMessage,
@@ -1869,8 +1983,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       case _ChatCommandAction.rename:
         await _renameCurrentSession();
         return;
+      case _ChatCommandAction.timeline:
+        await _openTimeline();
+        return;
       case _ChatCommandAction.fork:
-        await _fork();
+        await _openTimeline(forkMode: true);
         return;
       case _ChatCommandAction.compact:
         await _compact();
@@ -2165,15 +2282,37 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
-          IconButton(
-            tooltip: 'Changes',
-            icon: const Icon(Icons.difference_outlined),
-            onPressed: _showDiff,
-          ),
-          IconButton(
-            tooltip: 'Todos',
-            icon: const Icon(Icons.checklist_rounded),
-            onPressed: _showTodos,
+          PopupMenuButton<String>(
+            tooltip: 'Session views',
+            icon: const Icon(Icons.view_agenda_outlined),
+            onSelected: (value) {
+              if (value == 'timeline') unawaited(_openTimeline());
+              if (value == 'changes') _showDiff();
+              if (value == 'todos') _showTodos();
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'timeline',
+                child: _SessionViewMenuItem(
+                  icon: Icons.view_timeline_outlined,
+                  label: 'Timeline',
+                ),
+              ),
+              PopupMenuItem(
+                value: 'changes',
+                child: _SessionViewMenuItem(
+                  icon: Icons.difference_outlined,
+                  label: 'Changes',
+                ),
+              ),
+              PopupMenuItem(
+                value: 'todos',
+                child: _SessionViewMenuItem(
+                  icon: Icons.checklist_rounded,
+                  label: 'Todos',
+                ),
+              ),
+            ],
           ),
           if (busy)
             IconButton(
@@ -2289,8 +2428,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                     onNotification: (_) => false,
                                     child: Align(
                                       alignment: Alignment.topCenter,
-                                      child: ListView.builder(
+                                      child: ScrollablePositionedList.builder(
                                         reverse: true,
+                                        itemScrollController: _messageScroll,
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 12,
                                           vertical: 10,
@@ -2315,9 +2455,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                             return const SizedBox.shrink();
                                           }
                                           return _MessageView(
+                                            key: ValueKey(
+                                              'message-${m.info.id}',
+                                            ),
                                             m: m,
                                             meta: meta,
                                             parts: parts,
+                                            highlighted:
+                                                _highlightedMessageID ==
+                                                m.info.id,
                                             filePreviewLoader:
                                                 _loadToolOutputFile,
                                             onAttachFile: _attachToolOutputFile,
@@ -2368,11 +2514,244 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _conn.removeListener(_onConnectionChanged);
     _sub.cancel();
+    _highlightTimer?.cancel();
     unawaited(_voice?.cancel());
     if (widget.voiceController == null) _voice?.dispose();
     _composer.dispose();
     _focus.dispose();
     super.dispose();
+  }
+}
+
+class _TimelineSelection {
+  const _TimelineSelection({required this.message, required this.fork});
+
+  final MessageWithParts message;
+  final bool fork;
+}
+
+class _SessionViewMenuItem extends StatelessWidget {
+  const _SessionViewMenuItem({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Icon(icon, size: 20),
+      const SizedBox(width: 12),
+      Flexible(
+        child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+      ),
+    ],
+  );
+}
+
+class _TimelineSheet extends StatefulWidget {
+  const _TimelineSheet({required this.messages, required this.forkMode});
+
+  final List<MessageWithParts> messages;
+  final bool forkMode;
+
+  @override
+  State<_TimelineSheet> createState() => _TimelineSheetState();
+}
+
+class _TimelineSheetState extends State<_TimelineSheet> {
+  final _search = TextEditingController();
+
+  String _preview(MessageWithParts message) {
+    final text = message.parts
+        .where((part) => part.type == 'text' && !part.synthetic)
+        .map((part) => part.text.trim())
+        .where((text) => text.isNotEmpty)
+        .join(' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    if (text.isNotEmpty) return text;
+
+    final files = message.parts
+        .where((part) => part.type == 'file' && !part.synthetic)
+        .map((part) => part.filename?.trim())
+        .whereType<String>()
+        .where((name) => name.isNotEmpty)
+        .toList();
+    if (files.isNotEmpty) return files.join(', ');
+
+    final tools = message.parts
+        .where((part) => part.type == 'tool')
+        .map((part) => part.toolName?.trim())
+        .whereType<String>()
+        .where((name) => name.isNotEmpty)
+        .toList();
+    if (tools.isNotEmpty) return 'Tools: ${tools.join(', ')}';
+
+    final reasoning = message.parts
+        .where((part) => part.type == 'reasoning')
+        .map((part) => part.text.trim())
+        .firstWhere((text) => text.isNotEmpty, orElse: () => '');
+    return reasoning.isNotEmpty ? reasoning : 'Message';
+  }
+
+  bool _isForkable(MessageWithParts message) =>
+      message.info.role == 'user' &&
+      !message.info.id.startsWith('local-') &&
+      message.parts.any((part) => part.type == 'text' && !part.synthetic);
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final largeText = MediaQuery.textScalerOf(context).scale(1) >= 1.5;
+    final query = _search.text.trim().toLowerCase();
+    final visible = widget.messages.reversed.where((message) {
+      if (widget.forkMode && !_isForkable(message)) return false;
+      if (query.isEmpty) return true;
+      final role = message.info.role == 'user'
+          ? 'you user'
+          : 'opencode assistant';
+      return '$role ${_preview(message)}'.toLowerCase().contains(query);
+    }).toList();
+
+    return DraggableScrollableSheet(
+      expand: false,
+      minChildSize: .5,
+      initialChildSize: largeText ? .96 : .82,
+      maxChildSize: .96,
+      snap: true,
+      snapSizes: const [.82, .96],
+      builder: (context, scrollController) => Material(
+        color: theme.colorScheme.surfaceContainerLow,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 14, 10, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.forkMode
+                              ? 'Fork from prompt'
+                              : 'Message timeline',
+                          style: theme.textTheme.titleLarge,
+                        ),
+                        if (!largeText) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            widget.forkMode
+                                ? 'Choose a prompt to restore it in a new session.'
+                                : 'Jump anywhere. Fork restores a prompt for editing.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Close timeline',
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+              child: TextField(
+                key: const ValueKey('timeline-search'),
+                controller: _search,
+                onChanged: (_) => setState(() {}),
+                textInputAction: TextInputAction.search,
+                decoration: const InputDecoration(
+                  hintText: 'Search messages',
+                  prefixIcon: Icon(Icons.search_rounded),
+                  isDense: true,
+                ),
+              ),
+            ),
+            Expanded(
+              child: visible.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No matching messages',
+                        style: TextStyle(color: theme.hintColor),
+                      ),
+                    )
+                  : ListView.separated(
+                      controller: scrollController,
+                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 20),
+                      itemCount: visible.length,
+                      separatorBuilder: (_, _) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final message = visible[index];
+                        final isUser = message.info.role == 'user';
+                        final created = message.info.time?.created;
+                        final footer = [
+                          isUser ? 'You' : 'OpenCode',
+                          if (created != null) _fmtSessionTime(created),
+                        ].join('  ·  ');
+                        return ListTile(
+                          key: ValueKey('timeline-row-${message.info.id}'),
+                          minVerticalPadding: 10,
+                          leading: Icon(
+                            isUser
+                                ? Icons.person_outline_rounded
+                                : Icons.auto_awesome_outlined,
+                            size: 20,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          title: Text(
+                            _preview(message),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(footer),
+                          trailing: _isForkable(message)
+                              ? widget.forkMode
+                                    ? const Icon(Icons.call_split_rounded)
+                                    : IconButton(
+                                        key: ValueKey(
+                                          'timeline-fork-${message.info.id}',
+                                        ),
+                                        tooltip: 'Fork from this prompt',
+                                        onPressed: () => Navigator.pop(
+                                          context,
+                                          _TimelineSelection(
+                                            message: message,
+                                            fork: true,
+                                          ),
+                                        ),
+                                        icon: const Icon(
+                                          Icons.call_split_rounded,
+                                        ),
+                                      )
+                              : null,
+                          onTap: () => Navigator.pop(
+                            context,
+                            _TimelineSelection(
+                              message: message,
+                              fork: widget.forkMode,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -2391,6 +2770,7 @@ enum _ChatCommandAction {
   share,
   unshare,
   rename,
+  timeline,
   fork,
   compact,
   undo,
@@ -3963,13 +4343,16 @@ class _MessageView extends StatelessWidget {
   final MessageWithParts m;
   final _MessageMeta meta;
   final List<Part> parts;
+  final bool highlighted;
   final ToolOutputFileLoader filePreviewLoader;
   final ToolOutputFileAction onAttachFile;
   final ToolOutputFileAction onDownloadFile;
   const _MessageView({
+    super.key,
     required this.m,
     required this.meta,
     required this.parts,
+    this.highlighted = false,
     required this.filePreviewLoader,
     required this.onAttachFile,
     required this.onDownloadFile,
@@ -3990,8 +4373,16 @@ class _MessageView extends StatelessWidget {
       if (meta.turnCost case final cost?) '\$${cost.toStringAsFixed(4)}',
     ];
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+    return AnimatedContainer(
+      key: ValueKey('message-highlight-${m.info.id}-$highlighted'),
+      duration: const Duration(milliseconds: 180),
+      padding: const EdgeInsets.fromLTRB(6, 4, 6, 10),
+      decoration: BoxDecoration(
+        color: highlighted
+            ? theme.colorScheme.primaryContainer.withValues(alpha: .24)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Column(
         crossAxisAlignment: isUser
             ? CrossAxisAlignment.end

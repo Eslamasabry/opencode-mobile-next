@@ -168,6 +168,24 @@ includes the exact serialized directory-part contract, standalone copy behavior,
 remote Windows path encoding, and the full command-launcher to composer to Send
 interaction.
 
+Long chats now have a mobile-native message timeline. The app bar groups Timeline,
+Changes, and Todos under one Session views control to preserve horizontal space;
+`/timeline` opens the same searchable flat list. Selecting any user or assistant
+message uses a stable indexed anchor and briefly highlights the destination, even
+when mixed-height Markdown, tool groups, diffs, and images make pixel-offset math
+unreliable. The sheet expands automatically for accessibility-scale text and is
+covered at 320dp with a 2x text scale.
+
+`/fork` now mirrors OpenCode's upstream UI rather than forking only the complete
+session. It lists canonical user prompts, sends the selected `messageID` through
+the generated fork API, then restores that prompt's text and file parts into the
+new session composer for editing or resending. The general timeline also exposes
+the same fork action beside eligible user prompts. The legacy whole-session fork
+remains available in the session overflow menu. Traycer remains explicitly
+deferred. Final-tree Flutter analysis is clean and all 261 tests pass serially;
+coverage includes indexed long-chat jumps, prompt/file restoration, the exact
+generated fork request, and the 320dp accessibility layout.
+
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`

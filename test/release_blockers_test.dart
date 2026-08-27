@@ -280,7 +280,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.tap(find.byType(PopupMenuButton<String>).last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Share session'));
     await tester.pumpAndSettle();

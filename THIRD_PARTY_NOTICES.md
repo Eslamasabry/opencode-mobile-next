@@ -36,6 +36,18 @@ The license file distributed in the 6.2.1 pub package carries the notice
 "Copyright 2022 openapi4j authors. All rights reserved." It is reproduced
 verbatim in the license file referenced above.
 
+## scrollable_positioned_list
+
+- Component: `scrollable_positioned_list` Flutter package
+- Version: 0.3.8
+- Project: https://github.com/google/flutter.widgets/tree/master/packages/scrollable_positioned_list
+- Copyright: 2018 the Dart project authors, Inc.
+- License: BSD 3-Clause; see
+  `LICENSES/BSD-3-Clause-scrollable-positioned-list.txt`
+
+This package supplies stable indexed scrolling for long, mixed-height message
+timelines.
+
 ## OpenAI Whisper and converted ONNX model files
 
 The downloadable INT8 ONNX files are conversions of multilingual OpenAI
