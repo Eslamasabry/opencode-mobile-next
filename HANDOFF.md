@@ -274,6 +274,20 @@ server-command catalog. Final-tree Flutter analysis is clean and all 278 tests
 pass serially. The generated SDK audit now counts 49 directly used operations.
 Traycer remains explicitly deferred.
 
+Session creation, rename, and deletion now use one wake-safe mutation path
+instead of capturing whichever API object a retained screen happened to hold.
+The underlying calls use generated `session.create`, `session.update`, and
+`session.delete`, with directory/workspace scoping and product-facing declared
+errors. Successful but looser session responses from older OpenCode servers are
+still accepted, avoiding a false failure after a mutation already committed.
+The Chats list now confirms permanent deletion just like Workspace; cancellation
+does not call the server, and failed mutations leave the session visible.
+Transport tests cover exact methods, paths, queries, bodies, loose success
+responses, and declared failures. A controller regression proves create, rename,
+and delete all wait for the post-wake replacement API. Final-tree Flutter
+analysis is clean and all 281 tests pass serially. The generated SDK audit now
+counts 51 directly used operations. Traycer remains explicitly deferred.
+
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`

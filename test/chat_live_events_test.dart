@@ -34,6 +34,9 @@ class _FakeOpenCodeApi extends OpenCodeApi {
   Object? abortError;
   bool failRename = false;
   bool failDelete = false;
+  int createCalls = 0;
+  final List<({String id, String title})> renameCalls = [];
+  final List<String> deleteCalls = [];
   List<FileDiff> diffs = const [];
   List<Todo> todoItems = const [];
   final Map<String, FileContent> fileContents = {};
@@ -51,6 +54,12 @@ class _FakeOpenCodeApi extends OpenCodeApi {
 
   @override
   Future<Session> session(String id) async => Session(id: id);
+
+  @override
+  Future<Session> createSession() async {
+    createCalls += 1;
+    return Session(id: 'session-created');
+  }
 
   @override
   Future<List<FileDiff>> diff(String id) async => diffs;
@@ -108,11 +117,13 @@ class _FakeOpenCodeApi extends OpenCodeApi {
 
   @override
   Future<void> renameSession(String id, String title) async {
+    renameCalls.add((id: id, title: title));
     if (failRename) throw StateError('rename failed');
   }
 
   @override
   Future<void> deleteSession(String id) async {
+    deleteCalls.add(id);
     if (failDelete) throw StateError('delete failed');
   }
 }
@@ -611,6 +622,40 @@ void main() {
       findsOneWidget,
     );
   });
+
+  test(
+    'session mutations wait for the wake-time replacement transport',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final retainedApi = _FakeOpenCodeApi();
+      final replacementApi = _FakeOpenCodeApi();
+      final readyApi = Completer<OpenCodeApi?>();
+      final controller = _DelayedActionController(
+        ProfileStore(prefs: prefs),
+        readyApi,
+      )..api = retainedApi;
+      addTearDown(controller.dispose);
+
+      final create = controller.createSession();
+      final rename = controller.renameSession('session-1', 'Renamed');
+      final delete = controller.deleteSession('session-2');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(retainedApi.createCalls, 0);
+      expect(retainedApi.renameCalls, isEmpty);
+      expect(retainedApi.deleteCalls, isEmpty);
+
+      readyApi.complete(replacementApi);
+      final created = await create;
+      await Future.wait([rename, delete]);
+
+      expect(created.id, 'session-created');
+      expect(replacementApi.createCalls, 1);
+      expect(replacementApi.renameCalls, [(id: 'session-1', title: 'Renamed')]);
+      expect(replacementApi.deleteCalls, ['session-2']);
+    },
+  );
 
   testWidgets('renders a generated image from a tool output filePath', (
     tester,
@@ -2116,6 +2161,10 @@ void main() {
     await tester.tap(find.byType(PopupMenuButton<String>));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Delete'));
+    await tester.pumpAndSettle();
+    expect(find.text('Delete chat?'), findsOneWidget);
+    expect(controller.sessionsById, contains('session-1'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
     await tester.pumpAndSettle();
     expect(find.textContaining('Could not delete chat:'), findsOneWidget);
     expect(controller.sessionsById, contains('session-1'));

@@ -1676,6 +1676,25 @@ class ConnectionController extends ChangeNotifier {
     return api;
   }
 
+  Future<OpenCodeApi> _requireActionTransport() async {
+    final actionApi = await prepareActionTransport();
+    if (actionApi != null) return actionApi;
+    throw ApiException(
+      connectionError ?? 'OpenCode is reconnecting. Try again shortly.',
+    );
+  }
+
+  Future<Session> createSession() async =>
+      (await _requireActionTransport()).createSession();
+
+  Future<void> renameSession(String sessionID, String title) async {
+    await (await _requireActionTransport()).renameSession(sessionID, title);
+  }
+
+  Future<void> deleteSession(String sessionID) async {
+    await (await _requireActionTransport()).deleteSession(sessionID);
+  }
+
   Future<void> _reconcileAfterBackground() async {
     final currentApi = api;
     if (currentApi == null) return;

@@ -95,6 +95,11 @@ class OpenCodeApi {
     );
   }
 
+  bool _wasSuccessfulResponse(DioException error) {
+    final status = error.response?.statusCode;
+    return status != null && status >= 200 && status < 300;
+  }
+
   /// Opens the long-lived `/event` SSE stream.
   Future<Response<ResponseBody>> openEventStream({CancelToken? cancelToken}) {
     return _dio.get<ResponseBody>(
@@ -134,25 +139,61 @@ class OpenCodeApi {
 
   Future<Session> createSession() async {
     try {
-      final r = await _dio.post(
-        '/session',
-        data: {},
-        queryParameters: _query(),
+      final response = await sdkClient.getSessionApi().sessionCreate(
+        directory: _directory,
+        workspace: _workspace,
+        sessionCreateRequest: sdk.SessionCreateRequest(),
       );
-      return Session.fromJson(Map<String, dynamic>.from(r.data as Map));
+      final session = response.data;
+      if (session == null) {
+        throw ApiException('Create session failed: server returned no session');
+      }
+      return Session.fromJson(session.toJson());
+    } on sdk.OpenCodeApiException catch (e) {
+      _failGenerated(e, 'Create session');
     } on DioException catch (e) {
+      final raw = e.response?.data;
+      if (_wasSuccessfulResponse(e) && raw is Map) {
+        try {
+          return Session.fromJson(Map<String, dynamic>.from(raw));
+        } catch (_) {
+          // Fall through to the existing product-facing transport error.
+        }
+      }
       _fail(e, 'Create session');
     }
   }
 
-  Future<void> deleteSession(String id) =>
-      _dio.delete('/session/$id', queryParameters: _query());
+  Future<void> deleteSession(String id) async {
+    try {
+      await sdkClient.getSessionApi().sessionDelete(
+        sessionID: id,
+        directory: _directory,
+        workspace: _workspace,
+      );
+    } on sdk.OpenCodeApiException catch (e) {
+      _failGenerated(e, 'Delete session');
+    } on DioException catch (e) {
+      if (_wasSuccessfulResponse(e)) return;
+      _fail(e, 'Delete session');
+    }
+  }
 
-  Future<void> renameSession(String id, String title) => _dio.patch(
-    '/session/$id',
-    data: {'title': title},
-    queryParameters: _query(),
-  );
+  Future<void> renameSession(String id, String title) async {
+    try {
+      await sdkClient.getSessionApi().sessionUpdate(
+        sessionID: id,
+        directory: _directory,
+        workspace: _workspace,
+        sessionUpdateRequest: sdk.SessionUpdateRequest(title: title),
+      );
+    } on sdk.OpenCodeApiException catch (e) {
+      _failGenerated(e, 'Rename session');
+    } on DioException catch (e) {
+      if (_wasSuccessfulResponse(e)) return;
+      _fail(e, 'Rename session');
+    }
+  }
 
   Future<Session> session(String id) async {
     try {

@@ -148,11 +148,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   }
 
   Future<void> _createSession() async {
-    final api = widget.controller.api;
-    if (api == null || _creating) return;
+    if (widget.controller.api == null || _creating) return;
     setState(() => _creating = true);
     try {
-      final session = await api.createSession();
+      final session = await widget.controller.createSession();
       if (!mounted) return;
       await Navigator.of(context).pushNamed('/chat/${session.id}');
       await widget.controller.refreshSessions();
@@ -418,7 +417,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           break;
         case 'delete':
           if (!await _confirmDelete(session)) return;
-          await widget.controller.api?.deleteSession(session.id);
+          await widget.controller.deleteSession(session.id);
           break;
       }
       await widget.controller.refreshSessions();
@@ -452,7 +451,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     );
     controller.dispose();
     if (title?.isNotEmpty == true) {
-      await widget.controller.api?.renameSession(session.id, title!);
+      await widget.controller.renameSession(session.id, title!);
     }
   }
 

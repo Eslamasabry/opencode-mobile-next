@@ -106,7 +106,7 @@ class SessionsTab extends StatelessWidget {
 
   Future<void> _newChat(BuildContext context) async {
     try {
-      final session = await controller.api!.createSession();
+      final session = await controller.createSession();
       if (!context.mounted) return;
       Navigator.of(context).pushNamed('/chat/${session.id}');
     } catch (e) {
@@ -241,9 +241,35 @@ class SessionsTab extends StatelessWidget {
       ),
     );
     if (title != null && title.isNotEmpty) {
-      await controller.api!.renameSession(s.id, title);
+      await controller.renameSession(s.id, title);
       await controller.refreshSessions();
     }
+  }
+
+  Future<bool> _confirmDelete(BuildContext context, Session session) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Delete chat?'),
+            content: Text(
+              '“${session.title?.isNotEmpty == true ? session.title : 'Untitled chat'}” and its history will be permanently removed.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   Future<void> _sessionAction(
@@ -255,7 +281,8 @@ class SessionsTab extends StatelessWidget {
       if (action == 'rename') {
         await _rename(context, session);
       } else if (action == 'delete') {
-        await controller.api!.deleteSession(session.id);
+        if (!await _confirmDelete(context, session)) return;
+        await controller.deleteSession(session.id);
         await controller.refreshSessions();
       }
     } catch (error) {
@@ -2008,8 +2035,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _executeMobileCommand(_ChatCommandAction action) async {
     switch (action) {
       case _ChatCommandAction.newSession:
-        final session = await _conn.api?.createSession();
-        if (session != null && mounted) {
+        final session = await _conn.createSession();
+        if (mounted) {
           await _conn.refreshSessions();
           if (mounted) {
             Navigator.of(context).pushReplacementNamed('/chat/${session.id}');
@@ -2223,7 +2250,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     controller.dispose();
     if (title == null || title.isEmpty) return;
     try {
-      await _conn.api?.renameSession(widget.sessionID, title);
+      await _conn.renameSession(widget.sessionID, title);
       await _conn.refreshSessions();
     } catch (error) {
       if (mounted) _showActionError(error);
