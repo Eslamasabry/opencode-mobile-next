@@ -7,6 +7,7 @@ import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
+import 'project_health_screen.dart';
 
 class WorkspaceScreen extends StatefulWidget {
   final ConnectionController controller;
@@ -284,6 +285,17 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           ),
                         ),
                       ),
+                    const SectionLabel('Coding'),
+                    ListTile(
+                      key: const ValueKey('project-health-entry'),
+                      leading: const Icon(Icons.monitor_heart_outlined),
+                      title: const Text('Project health'),
+                      subtitle: const Text(
+                        'Branch, changed files, language services, and formatters',
+                      ),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: _openProjectHealth,
+                    ),
                     if (active.isNotEmpty)
                       SectionLabel(
                         'Active',
@@ -370,6 +382,16 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
   void _openSession(Session session) {
     Navigator.of(context).pushNamed('/chat/${session.id}');
+  }
+
+  void _openProjectHealth() {
+    final repository = _repository;
+    if (repository == null) return;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ProjectHealthScreen(repository: repository),
+      ),
+    );
   }
 
   Future<void> _sessionAction(String action, Session session) async {

@@ -49,6 +49,63 @@ class WorkspaceInfo {
   });
 }
 
+class VersionControlHealth {
+  final String? branch;
+  final String? defaultBranch;
+  final List<VersionControlFile> changes;
+
+  const VersionControlHealth({
+    this.branch,
+    this.defaultBranch,
+    required this.changes,
+  });
+
+  int get additions => changes.fold(0, (total, file) => total + file.additions);
+  int get deletions => changes.fold(0, (total, file) => total + file.deletions);
+}
+
+class VersionControlFile {
+  final String path;
+  final String status;
+  final int additions;
+  final int deletions;
+
+  const VersionControlFile({
+    required this.path,
+    required this.status,
+    required this.additions,
+    required this.deletions,
+  });
+}
+
+class LanguageServiceHealth {
+  final String id;
+  final String name;
+  final String root;
+  final String status;
+
+  const LanguageServiceHealth({
+    required this.id,
+    required this.name,
+    required this.root,
+    required this.status,
+  });
+
+  bool get connected => status == 'connected';
+}
+
+class FormatterHealth {
+  final String name;
+  final List<String> extensions;
+  final bool enabled;
+
+  const FormatterHealth({
+    required this.name,
+    required this.extensions,
+    required this.enabled,
+  });
+}
+
 class TerminalProcess {
   final String id;
   final String title;
@@ -374,6 +431,9 @@ abstract class ProductRepository {
   void setLocation({String? directory, String? workspace});
   Future<List<WorkspaceProject>> listProjects();
   Future<List<WorkspaceInfo>> listWorkspaces();
+  Future<VersionControlHealth> loadVersionControlHealth();
+  Future<List<LanguageServiceHealth>> listLanguageServices();
+  Future<List<FormatterHealth>> listFormatters();
   Future<List<TerminalProcess>> listTerminals();
   Future<TerminalProcess> createTerminal({String? title});
   Future<void> renameTerminal(String id, String title);
@@ -508,6 +568,74 @@ class SdkProductRepository
                 type: workspace.type,
                 branch: workspace.branch,
                 directory: workspace.directory,
+              ),
+            )
+            .toList();
+      });
+
+  @override
+  Future<VersionControlHealth> loadVersionControlHealth() =>
+      _guard('Could not load version control status', () async {
+        final responses = await Future.wait([
+          _client.getInstanceApi().vcsGet(
+            directory: _directory,
+            workspace: _workspace,
+          ),
+          _client.getInstanceApi().vcsStatus(
+            directory: _directory,
+            workspace: _workspace,
+          ),
+        ]);
+        final info = responses[0].data as sdk.VcsInfo?;
+        final status = responses[1].data as List<sdk.VcsFileStatus>?;
+        return VersionControlHealth(
+          branch: info?.branch,
+          defaultBranch: info?.defaultBranch,
+          changes: (status ?? const [])
+              .map(
+                (file) => VersionControlFile(
+                  path: file.file,
+                  status: file.status.value.toString(),
+                  additions: file.additions.toInt(),
+                  deletions: file.deletions.toInt(),
+                ),
+              )
+              .toList(),
+        );
+      });
+
+  @override
+  Future<List<LanguageServiceHealth>> listLanguageServices() =>
+      _guard('Could not load language server status', () async {
+        final response = await _client.getInstanceApi().lspStatus(
+          directory: _directory,
+          workspace: _workspace,
+        );
+        return (response.data ?? const [])
+            .map(
+              (service) => LanguageServiceHealth(
+                id: service.id,
+                name: service.name,
+                root: service.root,
+                status: service.status.value.toString(),
+              ),
+            )
+            .toList();
+      });
+
+  @override
+  Future<List<FormatterHealth>> listFormatters() =>
+      _guard('Could not load formatter status', () async {
+        final response = await _client.getInstanceApi().formatterStatus(
+          directory: _directory,
+          workspace: _workspace,
+        );
+        return (response.data ?? const [])
+            .map(
+              (formatter) => FormatterHealth(
+                name: formatter.name,
+                extensions: formatter.extensions,
+                enabled: formatter.enabled,
               ),
             )
             .toList();

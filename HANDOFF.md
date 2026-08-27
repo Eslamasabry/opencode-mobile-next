@@ -112,6 +112,21 @@ tests pass serially, including loopback HTTP coverage for OAuth start/status/
 complete/cancel and widget coverage for automatic, code, cancel, and model-refresh
 flows.
 
+Project coding health is also no longer hidden in the generated SDK. Workspace
+now exposes one native Project health destination for the selected location. It
+shows the current/default branch, changed files and line counts, active/erroring
+language servers, and enabled/disabled formatters using generated `vcs.get`,
+`vcs.status`, `lsp.status`, and `formatter.status` calls. The presentation is a
+flat sequence of sections and rows, not nested cards. Each API has an independent
+loading/error/empty state, so an older server missing one endpoint does not erase
+the other results.
+
+Flutter analysis remains clean and all 248 tests pass serially. New coverage
+checks exact location-scoped HTTP paths and response mapping, partial endpoint
+failure, workspace discoverability, absence of nested cards, and 320dp rendering
+at 2x text scale. Live status responses still need a reachable OpenCode project;
+do not claim live-server verification from the contract and widget tests alone.
+
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`

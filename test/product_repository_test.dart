@@ -357,6 +357,102 @@ void main() {
   );
 
   test(
+    'project health uses generated VCS, LSP, and formatter contracts',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        final requests = <Uri>[];
+        server.listen((request) async {
+          requests.add(request.uri);
+          request.response.headers.contentType = ContentType.json;
+          switch (request.uri.path) {
+            case '/vcs':
+              request.response.write(
+                jsonEncode({
+                  'branch': 'feature/mobile',
+                  'default_branch': 'main',
+                }),
+              );
+            case '/vcs/status':
+              request.response.write(
+                jsonEncode([
+                  {
+                    'file': 'lib/main.dart',
+                    'additions': 7,
+                    'deletions': 2,
+                    'status': 'modified',
+                  },
+                ]),
+              );
+            case '/lsp':
+              request.response.write(
+                jsonEncode([
+                  {
+                    'id': 'dart',
+                    'name': 'Dart analysis server',
+                    'root': '/work/app',
+                    'status': 'connected',
+                  },
+                ]),
+              );
+            case '/formatter':
+              request.response.write(
+                jsonEncode([
+                  {
+                    'name': 'dart format',
+                    'extensions': ['.dart'],
+                    'enabled': true,
+                  },
+                ]),
+              );
+            default:
+              request.response.statusCode = HttpStatus.notFound;
+          }
+          await request.response.close();
+        });
+
+        try {
+          final api = OpenCodeApi(
+            baseUrl: 'http://${server.address.host}:${server.port}',
+          );
+          final repository = SdkProductRepository(api.sdkClient)
+            ..setLocation(directory: '/work/app', workspace: 'phone');
+
+          final vcs = await repository.loadVersionControlHealth();
+          final languageServices = await repository.listLanguageServices();
+          final formatters = await repository.listFormatters();
+
+          expect(vcs.branch, 'feature/mobile');
+          expect(vcs.defaultBranch, 'main');
+          expect(vcs.additions, 7);
+          expect(vcs.deletions, 2);
+          expect(vcs.changes.single.path, 'lib/main.dart');
+          expect(vcs.changes.single.status, 'modified');
+          expect(languageServices.single.name, 'Dart analysis server');
+          expect(languageServices.single.connected, isTrue);
+          expect(formatters.single.name, 'dart format');
+          expect(formatters.single.extensions, ['.dart']);
+          expect(formatters.single.enabled, isTrue);
+          expect(requests.map((uri) => uri.path).toSet(), {
+            '/vcs',
+            '/vcs/status',
+            '/lsp',
+            '/formatter',
+          });
+          for (final uri in requests) {
+            expect(uri.queryParameters, {
+              'directory': '/work/app',
+              'workspace': 'phone',
+            });
+          }
+        } finally {
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
+
+  test(
     'provider OAuth keeps and completes the server attempt contract',
     () async {
       await HttpOverrides.runZoned(() async {

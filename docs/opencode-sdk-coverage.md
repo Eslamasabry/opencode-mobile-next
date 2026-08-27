@@ -9,7 +9,7 @@ Authoritative inputs:
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app
-currently calls **34 generated operations directly**. It also uses a set of
+currently calls **38 generated operations directly**. It also uses a set of
 older or compatibility routes through `OpenCodeApi` and raw `Dio`; those are
 listed separately so a working feature is not incorrectly labelled missing.
 
@@ -32,7 +32,7 @@ Legend:
 | File | - | list, read, filename search, text search | status and symbol search |
 | Filesystem v2 | - | - | `v2FsFind`, `v2FsList`, `v2FsRead` |
 | Global | - | health | config get/update, dispose, event, upgrade |
-| Instance | `instanceDispose`, `vcsDiff` | - | agents, skills, command list, formatter status, LSP status, path, VCS info/status/raw diff/apply |
+| Instance | `instanceDispose`, `vcsDiff`, `vcsGet`, `vcsStatus`, `lspStatus`, `formatterStatus` | - | agents, skills, command list, path, VCS raw diff/apply |
 | Integrations | list, key connect, OAuth start, attempt status, complete, cancel | provider runtime refresh after confirmed completion | - |
 | MCP | status, connect, disconnect, auth start | - | add, auth authenticate/callback/remove |
 | Messages v2 | - | legacy session message list | `v2SessionMessages` |
@@ -65,8 +65,10 @@ Legend:
    automatic callbacks on resume or demand, accepts code-based completion,
    supports cancellation, and refreshes provider/model inventories only after
    the server confirms completion.
-3. **Coding health:** add VCS status/info, symbol search, LSP, and formatter
-   status to the project workspace instead of hiding them as diagnostics.
+3. **Coding health:** VCS status/info, LSP, and formatter status now share one
+   flat Project health surface in the selected workspace. Each section fails
+   independently so one unavailable endpoint does not hide valid server truth.
+   Workspace symbol search remains the next coding-navigation gap.
 4. **Transport modernization:** migrate compatibility routes to generated v2
    APIs only where current and older OpenCode contracts can be reconciled
    without losing sessions, events, or provider inventory.
