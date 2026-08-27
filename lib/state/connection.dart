@@ -1822,6 +1822,76 @@ class ConnectionController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> moveSessionToDirectory(
+    String sessionID, {
+    required String directory,
+    required bool moveChanges,
+  }) async {
+    await prepareActionTransport();
+    final currentRepository = repository;
+    if (currentRepository == null) {
+      throw StateError('OpenCode is reconnecting.');
+    }
+    await currentRepository.moveSession(
+      sessionID,
+      directory: directory,
+      moveChanges: moveChanges,
+    );
+    await selectLocation(directory: directory);
+    try {
+      await repository?.addSessionLocationReminder(sessionID, directory);
+    } catch (_) {
+      // The move itself succeeded. An older server may not support the
+      // synthetic no-reply reminder used by newer OpenCode clients.
+    }
+  }
+
+  Future<void> warpSessionToWorkspace(
+    String sessionID, {
+    required String directory,
+    required String? workspaceID,
+    required bool copyChanges,
+  }) async {
+    await prepareActionTransport();
+    final currentRepository = repository;
+    if (currentRepository == null) {
+      throw StateError('OpenCode is reconnecting.');
+    }
+    await currentRepository.warpSession(
+      sessionID,
+      workspaceID: workspaceID,
+      copyChanges: copyChanges,
+    );
+    await selectLocation(directory: directory, workspace: workspaceID);
+    try {
+      await repository?.addSessionLocationReminder(sessionID, directory);
+    } catch (_) {
+      // Keep a successful warp successful when only the contextual reminder
+      // is unavailable on an older server.
+    }
+  }
+
+  Future<void> switchConsoleOrganization(
+    ConsoleOrganization organization,
+  ) async {
+    await prepareActionTransport();
+    final currentRepository = repository;
+    if (currentRepository == null) {
+      throw StateError('OpenCode is reconnecting.');
+    }
+    await currentRepository.switchConsoleOrganization(organization);
+    final currentProfile = _connectedProfile;
+    if (currentProfile == null) {
+      await refreshCatalog();
+      return;
+    }
+    await _resumeLifecycleTransport(
+      currentProfile,
+      directory: directory,
+      workspace: workspace,
+    );
+  }
+
   // ---------------- Selection persistence ----------------
 
   Future<void> selectModel(ModelRef ref, {String? variant}) async {

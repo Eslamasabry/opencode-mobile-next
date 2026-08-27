@@ -143,6 +143,56 @@ class _TestRepository extends SdkProductRepository {
   Future<List<IntegrationInfo>> listIntegrations() async => const [];
 }
 
+class _DestinationCalls {
+  String? movedDirectory;
+  bool? movedChanges;
+  String? warpedWorkspaceID;
+  bool? copiedChanges;
+  ConsoleOrganization? organization;
+  final List<String> reminders = [];
+}
+
+class _DestinationTestRepository extends _TestRepository {
+  _DestinationTestRepository(super.api, this.calls);
+
+  final _DestinationCalls calls;
+
+  @override
+  Future<void> moveSession(
+    String sessionID, {
+    required String directory,
+    required bool moveChanges,
+  }) async {
+    calls.movedDirectory = directory;
+    calls.movedChanges = moveChanges;
+  }
+
+  @override
+  Future<void> warpSession(
+    String sessionID, {
+    required String? workspaceID,
+    required bool copyChanges,
+  }) async {
+    calls.warpedWorkspaceID = workspaceID;
+    calls.copiedChanges = copyChanges;
+  }
+
+  @override
+  Future<void> switchConsoleOrganization(
+    ConsoleOrganization organization,
+  ) async {
+    calls.organization = organization;
+  }
+
+  @override
+  Future<void> addSessionLocationReminder(
+    String sessionID,
+    String directory,
+  ) async {
+    calls.reminders.add(directory);
+  }
+}
+
 Future<ProfileStore> _store() async {
   SharedPreferences.setMockInitialValues({});
   return ProfileStore(prefs: await SharedPreferences.getInstance());
@@ -497,6 +547,81 @@ void main() {
     expect(controller.locationLoading, isTrue);
     await selection;
     expect(controller.locationLoading, isFalse);
+    controller.dispose();
+  });
+
+  testWidgets('move, warp, and org rebuild the authoritative transport', (
+    tester,
+  ) async {
+    final apis = <_ControlledApi>[];
+    final streams = <_FakeEventStream>[];
+    final repositories = <_DestinationTestRepository>[];
+    final calls = _DestinationCalls();
+    final controller = ConnectionController(
+      await _store(),
+      apiFactory: (profile) {
+        final api = _ControlledApi('${profile.id}-${apis.length}');
+        apis.add(api);
+        return api;
+      },
+      repositoryFactory: (api) {
+        final repository = _DestinationTestRepository(api, calls);
+        repositories.add(repository);
+        return repository;
+      },
+      eventStreamFactory: _streamFactory(streams),
+    );
+
+    final connect = controller.connect(_profile('server'));
+    await tester.pump();
+    apis.single.healthResult.complete(Health(healthy: true, version: '1'));
+    await connect;
+
+    await controller.moveSessionToDirectory(
+      'session-1',
+      directory: '/work/copy',
+      moveChanges: true,
+    );
+    expect(calls.movedDirectory, '/work/copy');
+    expect(calls.movedChanges, isTrue);
+    expect(controller.directory, '/work/copy');
+    expect(controller.workspace, isNull);
+    expect(repositories, hasLength(2));
+    expect(calls.reminders, ['/work/copy']);
+
+    await controller.warpSessionToWorkspace(
+      'session-1',
+      directory: '/remote/review',
+      workspaceID: 'workspace-2',
+      copyChanges: false,
+    );
+    expect(calls.warpedWorkspaceID, 'workspace-2');
+    expect(calls.copiedChanges, isFalse);
+    expect(controller.directory, '/remote/review');
+    expect(controller.workspace, 'workspace-2');
+    expect(repositories, hasLength(3));
+    expect(calls.reminders, ['/work/copy', '/remote/review']);
+
+    const organization = ConsoleOrganization(
+      accountID: 'account-1',
+      accountEmail: 'dev@example.com',
+      accountUrl: 'https://console.example.com',
+      orgID: 'org-2',
+      orgName: 'Review org',
+      active: false,
+    );
+    final switching = controller.switchConsoleOrganization(organization);
+    await tester.pump();
+    expect(apis, hasLength(4));
+    apis.last.healthResult.complete(Health(healthy: true, version: '2'));
+    await switching;
+
+    expect(calls.organization, organization);
+    expect(controller.version, '2');
+    expect(controller.directory, '/remote/review');
+    expect(controller.workspace, 'workspace-2');
+    expect(repositories, hasLength(4));
+    expect(streams, hasLength(4));
     controller.dispose();
   });
 

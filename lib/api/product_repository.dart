@@ -38,6 +38,7 @@ class WorkspaceInfo {
   final String type;
   final String? branch;
   final String? directory;
+  final String? status;
 
   const WorkspaceInfo({
     required this.id,
@@ -46,6 +47,32 @@ class WorkspaceInfo {
     required this.type,
     this.branch,
     this.directory,
+    this.status,
+  });
+}
+
+class ProjectDirectoryInfo {
+  final String directory;
+  final String? strategy;
+
+  const ProjectDirectoryInfo({required this.directory, this.strategy});
+}
+
+class ConsoleOrganization {
+  final String accountID;
+  final String accountEmail;
+  final String accountUrl;
+  final String orgID;
+  final String orgName;
+  final bool active;
+
+  const ConsoleOrganization({
+    required this.accountID,
+    required this.accountEmail,
+    required this.accountUrl,
+    required this.orgID,
+    required this.orgName,
+    required this.active,
   });
 }
 
@@ -447,6 +474,39 @@ abstract class ProductRepository {
   void setLocation({String? directory, String? workspace});
   Future<List<WorkspaceProject>> listProjects();
   Future<List<WorkspaceInfo>> listWorkspaces();
+  Future<List<ProjectDirectoryInfo>> listProjectDirectories(String projectID) =>
+      Future.error(
+        const ProductException(
+          'Project directory discovery is unavailable on this server',
+        ),
+      );
+  Future<void> moveSession(
+    String sessionID, {
+    required String directory,
+    required bool moveChanges,
+  }) => Future.error(
+    const ProductException('Moving sessions is unavailable on this server'),
+  );
+  Future<void> warpSession(
+    String sessionID, {
+    required String? workspaceID,
+    required bool copyChanges,
+  }) => Future.error(
+    const ProductException('Workspace warp is unavailable on this server'),
+  );
+  Future<List<ConsoleOrganization>> listConsoleOrganizations() => Future.error(
+    const ProductException(
+      'Organization switching is unavailable on this server',
+    ),
+  );
+  Future<void> switchConsoleOrganization(ConsoleOrganization organization) =>
+      Future.error(
+        const ProductException(
+          'Organization switching is unavailable on this server',
+        ),
+      );
+  Future<void> addSessionLocationReminder(String sessionID, String directory) =>
+      Future.value();
   Future<VersionControlHealth> loadVersionControlHealth();
   Future<List<LanguageServiceHealth>> listLanguageServices();
   Future<List<FormatterHealth>> listFormatters();
@@ -576,6 +636,24 @@ class SdkProductRepository
               directory: _directory,
               workspace: _workspace,
             );
+        List<sdk.WorkspaceEventConnectionStatus> statuses = const [];
+        try {
+          final statusResponse = await _client
+              .getWorkspaceApi()
+              .experimentalWorkspaceStatus(
+                directory: _directory,
+                workspace: _workspace,
+              );
+          statuses = statusResponse.data ?? const [];
+        } catch (_) {
+          // Workspace listing predates the status endpoint. Keep older servers
+          // useful and surface an unknown status instead of erasing the list.
+        }
+        final statusByID = <String, String>{};
+        for (final status in statuses) {
+          final id = status.workspaceID;
+          if (id != null) statusByID[id] = status.status.value.toString();
+        }
         return (response.data ?? const [])
             .map(
               (workspace) => WorkspaceInfo(
@@ -585,10 +663,131 @@ class SdkProductRepository
                 type: workspace.type,
                 branch: workspace.branch,
                 directory: workspace.directory,
+                status: statusByID[workspace.id],
               ),
             )
             .toList();
       });
+
+  @override
+  Future<List<ProjectDirectoryInfo>> listProjectDirectories(String projectID) =>
+      _guard('Could not load project directories', () async {
+        final response = await _client.getProjectApi().projectDirectories(
+          projectID: projectID,
+          directory: _directory,
+          workspace: _workspace,
+        );
+        return (response.data ?? const [])
+            .map(
+              (item) => ProjectDirectoryInfo(
+                directory: item.directory,
+                strategy: item.strategy,
+              ),
+            )
+            .toList();
+      });
+
+  @override
+  Future<void> moveSession(
+    String sessionID, {
+    required String directory,
+    required bool moveChanges,
+  }) => _guard('Could not move the session', () async {
+    await _client.getControlPlaneApi().experimentalControlPlaneMoveSession(
+      experimentalControlPlaneMoveSessionRequest:
+          sdk.ExperimentalControlPlaneMoveSessionRequest(
+            sessionID: sessionID,
+            destination: sdk.MoveSessionDestination(directory: directory),
+            moveChanges: moveChanges,
+          ),
+    );
+  });
+
+  @override
+  Future<void> warpSession(
+    String sessionID, {
+    required String? workspaceID,
+    required bool copyChanges,
+  }) => _guard('Could not warp the session', () async {
+    await _client.getWorkspaceApi().experimentalWorkspaceWarp(
+      directory: _directory,
+      workspace: _workspace,
+      experimentalWorkspaceWarpRequest: sdk.ExperimentalWorkspaceWarpRequest(
+        id: workspaceID,
+        sessionID: sessionID,
+        copyChanges: copyChanges,
+      ),
+    );
+  });
+
+  @override
+  Future<List<ConsoleOrganization>> listConsoleOrganizations() =>
+      _guard('Could not load organizations', () async {
+        final response = await _client
+            .getExperimentalApi()
+            .experimentalConsoleListOrgs(
+              directory: _directory,
+              workspace: _workspace,
+            );
+        return (response.data?.orgs ?? const [])
+            .map(
+              (item) => ConsoleOrganization(
+                accountID: item.accountID,
+                accountEmail: item.accountEmail,
+                accountUrl: item.accountUrl,
+                orgID: item.orgID,
+                orgName: item.orgName,
+                active: item.active,
+              ),
+            )
+            .toList();
+      });
+
+  @override
+  Future<void> switchConsoleOrganization(ConsoleOrganization organization) =>
+      _guard('Could not switch organization', () async {
+        final response = await _client
+            .getExperimentalApi()
+            .experimentalConsoleSwitchOrg(
+              directory: _directory,
+              workspace: _workspace,
+              experimentalConsoleSwitchOrgRequest:
+                  sdk.ExperimentalConsoleSwitchOrgRequest(
+                    accountID: organization.accountID,
+                    orgID: organization.orgID,
+                  ),
+            );
+        if (response.data != true) {
+          throw const ProductException('The server did not confirm the switch');
+        }
+        await _client.getInstanceApi().instanceDispose(
+          directory: _directory,
+          workspace: _workspace,
+        );
+      });
+
+  @override
+  Future<void> addSessionLocationReminder(
+    String sessionID,
+    String directory,
+  ) => _guard('Could not update the session location context', () async {
+    await _client.getSessionApi().sessionPromptAsync(
+      sessionID: sessionID,
+      directory: _directory,
+      workspace: _workspace,
+      sessionPromptAsyncRequest: sdk.SessionPromptAsyncRequest(
+        noReply: true,
+        parts: [
+          sdk.OpencodeSdkRawUnion085({
+            'type': 'text',
+            'text':
+                '<system-reminder>The user has changed the current working directory to "$directory". This is still the same project but at a possibly new location; take this into account when working with any files from now on.</system-reminder>',
+            'synthetic': true,
+          }),
+        ],
+      ),
+    );
+  });
 
   @override
   Future<VersionControlHealth> loadVersionControlHealth() =>

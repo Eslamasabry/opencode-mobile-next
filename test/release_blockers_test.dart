@@ -13,6 +13,7 @@ import 'package:opencode_mobile/ui/screens/about_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
 import 'package:opencode_mobile/ui/screens/requests_screen.dart';
+import 'package:opencode_mobile/ui/screens/session_destination_sheet.dart';
 import 'package:opencode_mobile/ui/widgets/markdown.dart';
 import 'package:opencode_mobile/ui/widgets/tool_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -78,6 +79,43 @@ class _ReleaseRepository implements ProductRepository {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _DestinationReleaseRepository extends _ReleaseRepository {
+  @override
+  Future<List<WorkspaceProject>> listProjects() async => const [
+    WorkspaceProject(
+      id: 'project-1',
+      name: 'Acme',
+      directory: '/work/acme',
+      worktrees: ['/work/acme-copy'],
+      updatedAt: 1,
+    ),
+  ];
+
+  @override
+  Future<List<ProjectDirectoryInfo>> listProjectDirectories(
+    String projectID,
+  ) async => const [
+    ProjectDirectoryInfo(directory: '/work/acme'),
+    ProjectDirectoryInfo(directory: '/work/acme-copy'),
+  ];
+
+  @override
+  Future<VersionControlHealth> loadVersionControlHealth() async =>
+      const VersionControlHealth(changes: []);
+
+  @override
+  Future<List<ConsoleOrganization>> listConsoleOrganizations() async => const [
+    ConsoleOrganization(
+      accountID: 'account-1',
+      accountEmail: 'dev@example.com',
+      accountUrl: 'https://console.example.com',
+      orgID: 'org-1',
+      orgName: 'Acme engineering',
+      active: true,
+    ),
+  ];
 }
 
 Future<ConnectionController> _controller({
@@ -421,6 +459,87 @@ void main() {
     expect(done, findsOneWidget);
     expect(tester.getSize(done).height, greaterThanOrEqualTo(48));
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('session destination controls fit a 320dp phone at 2x text', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final controller = await _controller(
+      repository: _DestinationReleaseRepository(),
+    );
+    controller
+      ..directory = '/work/acme'
+      ..sessionsById['session-1'] = Session(
+        id: 'session-1',
+        projectID: 'project-1',
+        directory: '/work/acme',
+      );
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      _scaledApp(
+        Builder(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FilledButton(
+                    key: const Key('open-session-destinations'),
+                    onPressed: () => showSessionDestinationSheet(
+                      context,
+                      controller: controller,
+                      sessionID: 'session-1',
+                      mode: SessionDestinationMode.move,
+                    ),
+                    child: const Text('Move'),
+                  ),
+                  FilledButton(
+                    key: const Key('open-console-organizations'),
+                    onPressed: () => showConsoleOrganizationSheet(
+                      context,
+                      controller: controller,
+                    ),
+                    child: const Text('Org'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('open-session-destinations')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('move-session-sheet')), findsOneWidget);
+    expect(find.text('Move session'), findsOneWidget);
+    expect(
+      find.byKey(const Key('move-destination-/work/acme-copy')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+    expect(
+      tester.getSize(find.byTooltip('Close')).height,
+      greaterThanOrEqualTo(48),
+    );
+
+    await tester.tap(find.byTooltip('Close'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('open-console-organizations')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('console-organization-sheet')), findsOneWidget);
+    expect(find.text('Acme engineering'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    expect(
+      tester.getSize(find.byTooltip('Close')).height,
+      greaterThanOrEqualTo(48),
+    );
   });
 
   testWidgets('tool expansion has 48dp target and reduced-motion semantics', (

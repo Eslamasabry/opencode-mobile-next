@@ -173,6 +173,23 @@ void main() {
     expect(content.bytes(), [0, 1, 2, 255]);
   });
 
+  test('session parsing retains project and workspace ownership', () {
+    final session = Session.fromJson({
+      'id': 'session-1',
+      'title': 'Mobile work',
+      'projectID': 'project-1',
+      'workspaceID': 'workspace-1',
+      'directory': '/work/acme/packages/app',
+      'path': 'packages/app',
+      'time': {'created': 1, 'updated': 2},
+    });
+
+    expect(session.projectID, 'project-1');
+    expect(session.workspaceID, 'workspace-1');
+    expect(session.directory, '/work/acme/packages/app');
+    expect(session.path, 'packages/app');
+  });
+
   test('current OpenCode diff shape preserves patch and server counts', () {
     final diff = FileDiff.fromJson({
       'file': 'lib/main.dart',
@@ -606,6 +623,185 @@ void main() {
       }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
     },
   );
+
+  test(
+    'session destinations and Console orgs use exact generated contracts',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        final requests = <({String method, Uri uri, String body})>[];
+        server.listen((request) async {
+          final body = await utf8.decoder.bind(request).join();
+          requests.add((method: request.method, uri: request.uri, body: body));
+          request.response.headers.contentType = ContentType.json;
+          switch (request.uri.path) {
+            case '/project/project-1/directories':
+              request.response.write(
+                jsonEncode([
+                  {'directory': '/work/acme'},
+                  {'directory': '/work/acme-copy', 'strategy': 'git_worktree'},
+                ]),
+              );
+            case '/experimental/control-plane/move-session':
+            case '/experimental/workspace/warp':
+            case '/session/session-1/prompt_async':
+              request.response.statusCode = HttpStatus.noContent;
+            case '/experimental/console/orgs':
+              request.response.write(
+                jsonEncode({
+                  'orgs': [
+                    {
+                      'accountID': 'account-1',
+                      'accountEmail': 'dev@example.com',
+                      'accountUrl': 'https://console.example.com',
+                      'orgID': 'org-1',
+                      'orgName': 'Acme',
+                      'active': false,
+                    },
+                  ],
+                }),
+              );
+            case '/experimental/console/switch':
+            case '/instance/dispose':
+              request.response.write('true');
+            default:
+              request.response.statusCode = HttpStatus.notFound;
+          }
+          await request.response.close();
+        });
+
+        try {
+          final api = OpenCodeApi(
+            baseUrl: 'http://${server.address.host}:${server.port}',
+          );
+          final repository = SdkProductRepository(api.sdkClient)
+            ..setLocation(directory: '/work/acme', workspace: 'workspace-1');
+
+          final directories = await repository.listProjectDirectories(
+            'project-1',
+          );
+          await repository.moveSession(
+            'session-1',
+            directory: '/work/acme-copy',
+            moveChanges: true,
+          );
+          await repository.warpSession(
+            'session-1',
+            workspaceID: 'workspace-2',
+            copyChanges: false,
+          );
+          final organizations = await repository.listConsoleOrganizations();
+          await repository.switchConsoleOrganization(organizations.single);
+          await repository.addSessionLocationReminder(
+            'session-1',
+            '/work/acme-copy',
+          );
+
+          expect(directories.map((item) => item.directory), [
+            '/work/acme',
+            '/work/acme-copy',
+          ]);
+          expect(directories.last.strategy, 'git_worktree');
+          expect(organizations.single.orgName, 'Acme');
+          expect(requests.map((request) => request.uri.path), [
+            '/project/project-1/directories',
+            '/experimental/control-plane/move-session',
+            '/experimental/workspace/warp',
+            '/experimental/console/orgs',
+            '/experimental/console/switch',
+            '/instance/dispose',
+            '/session/session-1/prompt_async',
+          ]);
+          expect(jsonDecode(requests[1].body), {
+            'sessionID': 'session-1',
+            'destination': {'directory': '/work/acme-copy'},
+            'moveChanges': true,
+          });
+          expect(requests[1].uri.queryParameters, isEmpty);
+          expect(jsonDecode(requests[2].body), {
+            'id': 'workspace-2',
+            'sessionID': 'session-1',
+            'copyChanges': false,
+          });
+          expect(requests[2].uri.queryParameters, {
+            'directory': '/work/acme',
+            'workspace': 'workspace-1',
+          });
+          expect(jsonDecode(requests[4].body), {
+            'accountID': 'account-1',
+            'orgID': 'org-1',
+          });
+          expect(requests[4].uri.queryParameters, {
+            'directory': '/work/acme',
+            'workspace': 'workspace-1',
+          });
+          expect(requests[5].uri.queryParameters, {
+            'directory': '/work/acme',
+            'workspace': 'workspace-1',
+          });
+          expect(jsonDecode(requests[6].body), {
+            'noReply': true,
+            'parts': [
+              {
+                'type': 'text',
+                'text': contains('/work/acme-copy'),
+                'synthetic': true,
+              },
+            ],
+          });
+        } finally {
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
+
+  test('workspace listing survives an older server without status', () async {
+    await HttpOverrides.runZoned(() async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final paths = <String>[];
+      server.listen((request) async {
+        paths.add(request.uri.path);
+        request.response.headers.contentType = ContentType.json;
+        if (request.uri.path == '/experimental/workspace') {
+          request.response.write(
+            jsonEncode([
+              {
+                'id': 'workspace-1',
+                'type': 'cloud',
+                'name': 'Remote workspace',
+                'projectID': 'project-1',
+                'timeUsed': 1,
+              },
+            ]),
+          );
+        } else {
+          request.response.statusCode = HttpStatus.notFound;
+          request.response.write(jsonEncode({'message': 'not found'}));
+        }
+        await request.response.close();
+      });
+
+      try {
+        final api = OpenCodeApi(
+          baseUrl: 'http://${server.address.host}:${server.port}',
+        );
+        final repository = SdkProductRepository(api.sdkClient)
+          ..setLocation(directory: '/work/acme');
+
+        final workspaces = await repository.listWorkspaces();
+
+        expect(paths, [
+          '/experimental/workspace',
+          '/experimental/workspace/status',
+        ]);
+        expect(workspaces.single.name, 'Remote workspace');
+        expect(workspaces.single.status, isNull);
+      } finally {
+        await server.close(force: true);
+      }
+    }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+  });
 
   test('catalog accepts the current v2 capability response shape', () async {
     await HttpOverrides.runZoned(() async {

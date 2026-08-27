@@ -9,7 +9,7 @@ Authoritative inputs:
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app
-currently calls **39 generated operations directly**. It also uses a set of
+currently calls **46 generated operations directly**. It also uses a set of
 older or compatibility routes through `OpenCodeApi` and raw `Dio`; those are
 listed separately so a working feature is not incorrectly labelled missing.
 
@@ -25,10 +25,10 @@ Legend:
 | Commands | `v2CommandList` | - | - |
 | Config | - | `configProviders` | `configGet`, `configUpdate` |
 | Control | `authSet` | - | `appLog`, `authRemove` |
-| Control plane | - | - | `experimentalControlPlaneMoveSession` |
+| Control plane | `experimentalControlPlaneMoveSession` | - | - |
 | Event | - | `eventSubscribe` through the shared `/event` SSE transport | Generated event transport is unused |
 | Events v2 | - | Some v2-shaped events are reduced from the legacy stream | `v2EventSubscribe` |
-| Experimental | `experimentalResourceList` | - | capabilities, console state/org list/org switch, background sessions, global session list, tool IDs/list, worktree create/list/remove/reset |
+| Experimental | `experimentalResourceList`, Console org list/switch | - | capabilities, console state, background sessions, global session list, tool IDs/list, worktree create/list/remove/reset |
 | File | `findSymbols` | list, read, filename search, text search | status |
 | Filesystem v2 | - | - | `v2FsFind`, `v2FsList`, `v2FsRead` |
 | Global | - | health | config get/update, dispose, event, upgrade |
@@ -40,20 +40,20 @@ Legend:
 | OpenCode HTTP v2 | - | raw `/api/agent` catalog parser | agent list, credential update/remove, health, location |
 | Permission | - | legacy list/reply | Generated legacy methods are unused |
 | Permissions v2 | - | request list and session reply through compatibility routes | saved permission list/remove, per-session create/get/list |
-| Project | `projectList` | - | current project, directories, Git init, update |
+| Project | `projectList`, `projectDirectories` | - | current project, Git init, update |
 | Project copy | - | - | generated name, create, refresh, remove |
 | Provider | - | provider list and configured-provider fallback | auth methods and OAuth authorize/callback |
 | Providers v2 | - | raw `/api/provider` catalog parser | provider get/list generated models are unused |
 | PTY | create, list, update, remove, connect token | WebSocket connect uses the guarded ticket | get, shells, direct connect, and all duplicate v2 PTY operations |
 | Question | list, reply, reject | - | - |
 | Reference | `v2ReferenceList` | - | References can be copied standalone or added to the active composer as OpenCode directory parts |
-| Session | fork, revert, unrevert, share, unshare, summarize, update | list/create/get/delete/rename/status/messages/prompt/shell/command/abort/init/todos/diff and permission fallback | children, delete/update part, delete/get one message, synchronous prompt |
+| Session | fork, revert, unrevert, share, unshare, summarize, update, async synthetic location reminder | list/create/get/delete/rename/status/messages/prompt/shell/command/abort/init/todos/diff and permission fallback | children, delete/update part, delete/get one message, synchronous prompt |
 | Session questions v2 | - | list/reply/reject through compatibility routes | Generated v2 methods are unused |
 | Sessions v2 | - | - | active, compact, context, create/get/list/message/prompt/history/events/wait/interrupt, model/agent switch, staged revert operations |
 | Skills | `v2SkillList` | - | Skill content uses the shared Markdown/code-aware preview with rendered and raw modes |
 | Sync | - | - | history, replay, start, steal |
 | TUI control | - | - | append/clear/submit prompt, command execution, next-control flow, publish, select session, help/models/sessions/themes/toast |
-| Workspace | `experimentalWorkspaceList` | - | adapter list, create, remove, status, sync list, warp |
+| Workspace | list, connection status, session warp | - | adapter list, create, remove, sync list |
 
 ## Product priorities derived from the audit
 
@@ -74,10 +74,17 @@ Legend:
    formatted Markdown tables, fenced code, selection, and an explicit raw view.
    Project references are actionable from their native screen and preserve
    OpenCode's `@name` plus `file://` directory-part prompt contract.
-4. **Transport modernization:** migrate compatibility routes to generated v2
+4. **Session location and organization parity:** `/move`, `/warp`, and `/org`
+   now use their generated contracts instead of redirecting to the generic
+   workspace screen. Move can transfer working changes, warp can copy them to
+   a connected workspace or return Local, and organization switching disposes
+   and rebuilds the location-scoped transport so providers and models reload.
+   Servers without workspace-status support retain their workspace list with
+   an unknown status rather than losing the entire surface.
+5. **Transport modernization:** migrate compatibility routes to generated v2
    APIs only where current and older OpenCode contracts can be reconciled
    without losing sessions, events, or provider inventory.
-5. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
+6. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
    worktree lifecycle are deliberately not the current implementation lane.
 
 ## Deliberate non-goals

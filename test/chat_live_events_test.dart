@@ -133,6 +133,143 @@ class _FakeProductRepository implements ProductRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class _DestinationRepository extends _FakeProductRepository {
+  _DestinationRepository({this.healthError = false}) : super(const []);
+
+  final bool healthError;
+
+  String? movedDirectory;
+  bool? movedChanges;
+  String? warpedWorkspaceID;
+  bool? copiedChanges;
+  ConsoleOrganization? switchedOrganization;
+  String? reminderDirectory;
+
+  @override
+  Future<List<WorkspaceProject>> listProjects() async => const [
+    WorkspaceProject(
+      id: 'project-1',
+      name: 'Acme',
+      directory: '/work/acme',
+      worktrees: ['/work/acme-copy'],
+      updatedAt: 1,
+    ),
+  ];
+
+  @override
+  Future<List<ProjectDirectoryInfo>> listProjectDirectories(
+    String projectID,
+  ) async => const [
+    ProjectDirectoryInfo(directory: '/work/acme'),
+    ProjectDirectoryInfo(
+      directory: '/work/acme-copy',
+      strategy: 'git_worktree',
+    ),
+  ];
+
+  @override
+  Future<List<WorkspaceInfo>> listWorkspaces() async => const [
+    WorkspaceInfo(
+      id: 'workspace-1',
+      projectID: 'project-1',
+      name: 'Current cloud',
+      type: 'cloud',
+      directory: '/remote/current',
+      status: 'connected',
+    ),
+    WorkspaceInfo(
+      id: 'workspace-2',
+      projectID: 'project-1',
+      name: 'Review cloud',
+      type: 'cloud',
+      directory: '/remote/review',
+      status: 'connected',
+    ),
+    WorkspaceInfo(
+      id: 'workspace-offline',
+      projectID: 'project-1',
+      name: 'Offline cloud',
+      type: 'cloud',
+      status: 'disconnected',
+    ),
+  ];
+
+  @override
+  Future<VersionControlHealth> loadVersionControlHealth() async {
+    if (healthError) throw StateError('VCS status unavailable');
+    return const VersionControlHealth(
+      branch: 'feature/mobile',
+      changes: [
+        VersionControlFile(
+          path: 'lib/main.dart',
+          status: 'modified',
+          additions: 1,
+          deletions: 1,
+        ),
+      ],
+    );
+  }
+
+  @override
+  Future<void> moveSession(
+    String sessionID, {
+    required String directory,
+    required bool moveChanges,
+  }) async {
+    movedDirectory = directory;
+    movedChanges = moveChanges;
+  }
+
+  @override
+  Future<void> warpSession(
+    String sessionID, {
+    required String? workspaceID,
+    required bool copyChanges,
+  }) async {
+    warpedWorkspaceID = workspaceID;
+    copiedChanges = copyChanges;
+  }
+
+  @override
+  Future<List<ConsoleOrganization>> listConsoleOrganizations() async => const [
+    ConsoleOrganization(
+      accountID: 'account-1',
+      accountEmail: 'dev@example.com',
+      accountUrl: 'https://console.example.com',
+      orgID: 'org-current',
+      orgName: 'Current org',
+      active: true,
+    ),
+    ConsoleOrganization(
+      accountID: 'account-1',
+      accountEmail: 'dev@example.com',
+      accountUrl: 'https://console.example.com',
+      orgID: 'org-next',
+      orgName: 'Next org',
+      active: false,
+    ),
+  ];
+
+  @override
+  Future<void> switchConsoleOrganization(
+    ConsoleOrganization organization,
+  ) async {
+    switchedOrganization = organization;
+  }
+
+  @override
+  Future<void> addSessionLocationReminder(
+    String sessionID,
+    String directory,
+  ) async {
+    reminderDirectory = directory;
+  }
+
+  @override
+  Future<CatalogSnapshot> loadCatalog() async =>
+      const CatalogSnapshot(providers: [], models: [], agents: []);
+}
+
 Future<ConnectionController> _controller(_FakeOpenCodeApi api) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
@@ -998,6 +1135,130 @@ void main() {
       find.byKey(const Key('chat-composer-field')),
     );
     expect(composer.controller?.text, '/review ');
+  });
+
+  testWidgets('move, warp, and org commands preserve their server semantics', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi();
+    final repository = _DestinationRepository();
+    final controller = await _controller(api);
+    controller
+      ..repository = repository
+      ..directory = '/work/acme'
+      ..workspace = 'workspace-1'
+      ..sessionsById['session-1'] = Session(
+        id: 'session-1',
+        title: 'Mobile work',
+        projectID: 'project-1',
+        workspaceID: 'workspace-1',
+        directory: '/work/acme',
+      );
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: const MaterialApp(home: ChatScreen(sessionID: 'session-1')),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    Future<void> openCommand(String command) async {
+      await tester.tap(find.byKey(const Key('command-launcher-button')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('command-launcher-search')),
+        command,
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(Key('command-mobile-$command')));
+      await tester.pumpAndSettle();
+    }
+
+    await openCommand('move');
+    expect(find.byKey(const Key('move-session-sheet')), findsOneWidget);
+    expect(find.text('Current'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('move-destination-/work/acme-copy')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('1 changed file is present.'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('session-destination-confirm')));
+    await tester.pumpAndSettle();
+    expect(repository.movedDirectory, '/work/acme-copy');
+    expect(repository.movedChanges, isTrue);
+    expect(repository.reminderDirectory, '/work/acme-copy');
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+
+    await openCommand('warp');
+    expect(find.byKey(const Key('warp-session-sheet')), findsOneWidget);
+    expect(find.text('Offline cloud'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('warp-destination-workspace-2')));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const Key('session-destination-without-changes')),
+    );
+    await tester.pumpAndSettle();
+    expect(repository.warpedWorkspaceID, 'workspace-2');
+    expect(repository.copiedChanges, isFalse);
+    expect(repository.reminderDirectory, '/remote/review');
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+
+    await openCommand('org');
+    expect(find.byKey(const Key('console-organization-sheet')), findsOneWidget);
+    expect(find.text('Current org'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('console-org-account-1-org-next')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('console-org-confirm')));
+    await tester.pumpAndSettle();
+    expect(repository.switchedOrganization?.orgID, 'org-next');
+  });
+
+  testWidgets('move fails closed when working changes cannot be inspected', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi();
+    final repository = _DestinationRepository(healthError: true);
+    final controller = await _controller(api);
+    controller
+      ..repository = repository
+      ..directory = '/work/acme'
+      ..sessionsById['session-1'] = Session(
+        id: 'session-1',
+        projectID: 'project-1',
+        directory: '/work/acme',
+      );
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: const MaterialApp(home: ChatScreen(sessionID: 'session-1')),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'move',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('command-mobile-move')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('move-destination-/work/acme-copy')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('could not inspect working changes'),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('session-destination-without-changes')),
+      findsNothing,
+    );
+    await tester.tap(find.byKey(const Key('session-destination-confirm')));
+    await tester.pumpAndSettle();
+    expect(repository.movedChanges, isFalse);
   });
 
   testWidgets('prompt editor preserves selection, attachments, and cancel', (

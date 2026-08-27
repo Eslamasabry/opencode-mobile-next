@@ -217,6 +217,26 @@ including selection and attachment round trips, cancel/discard behavior,
 no-auto-send behavior, and a 320dp/2x-text keyboard-inset layout. Traycer remains
 deferred.
 
+The remaining location and organization commands now use their actual generated
+OpenCode contracts. `/move` lists known directories for the session project and
+can transfer current working changes. `/warp` distinguishes connected
+experimental workspaces from the Local project and can copy changes during the
+warp. `/org`, `/orgs`, and `/switch-org` show organizations grouped by Console
+account, switch the selected account/org pair, dispose the old instance, and
+rebuild the location-scoped transport so provider and model catalogs reload.
+Each operation has its own loading, empty, error, current, and unavailable
+states; the surfaces are flat lists rather than nested cards.
+
+The app sends OpenCode's synthetic no-reply working-directory reminder after a
+successful move or warp, then rehydrates the existing chat on the replacement
+transport. Workspace listing remains compatible with servers that predate the
+status endpoint. Contract tests cover exact paths, queries, payloads, instance
+disposal, and reminder serialization; widget tests cover launcher mapping,
+change-transfer choices, transport replacement, and 320dp rendering at 2x text.
+Final-tree Flutter analysis is clean and all 272 tests pass serially. The
+generated SDK audit now counts 46 directly used operations. Traycer remains
+explicitly deferred.
+
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`

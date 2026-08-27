@@ -38,16 +38,22 @@ class SessionTime {
 class Session {
   final String id;
   final String? title;
+  final String? projectID;
+  final String? workspaceID;
   final String? parentID;
   final String? directory;
+  final String? path;
   final bool reverted;
   final String? shareUrl;
   final SessionTime? time;
   Session({
     required this.id,
     this.title,
+    this.projectID,
+    this.workspaceID,
     this.parentID,
     this.directory,
+    this.path,
     this.reverted = false,
     this.shareUrl,
     this.time,
@@ -56,8 +62,11 @@ class Session {
   factory Session.fromJson(Map<String, dynamic> j) => Session(
     id: j['id'] as String,
     title: j['title'] as String?,
+    projectID: j['projectID'] as String?,
+    workspaceID: j['workspaceID'] as String?,
     parentID: j['parentID'] as String?,
     directory: j['directory'] as String?,
+    path: j['path'] as String?,
     reverted: j['revert'] != null,
     shareUrl: j['share'] is Map ? (j['share'] as Map)['url']?.toString() : null,
     time: SessionTime.fromJson(j['time']),

@@ -23,7 +23,7 @@ The mobile launcher combines these sources. Client actions are explicitly mapped
 | `/mcps` | — | Toggle or inspect MCPs | Adapted: MCP and integrations screen |
 | `/variants` | — | Switch model variant | Native: model variants and reasoning effort |
 | `/connect` | — | Connect a provider | Adapted: provider and integration authentication |
-| `/org` | `/orgs`, `/switch-org` | Switch OpenCode Console organization when available | Gap: organization switching is not exposed by the current mobile API |
+| `/org` | `/orgs`, `/switch-org` | Switch OpenCode Console organization when available | Native: account-grouped organization picker, server switch, instance disposal, and provider/model reload |
 | `/status` | — | View runtime status | Adapted: server health, version, connection, and background mode |
 | `/debug` | — | View TUI debug information | Adapted: server status; TUI renderer diagnostics are irrelevant on Flutter |
 | `/themes` | — | Switch TUI theme | Gap: the mobile app currently has one designed dark theme |
@@ -43,8 +43,8 @@ The mobile launcher combines these sources. Client actions are explicitly mapped
 | `/export` | — | Export transcript | Native Markdown document save |
 | `/editor` | — | Edit the prompt in an external terminal editor | Native: focused full-screen prompt editor with selection and attachment preservation |
 | `/skills` | — | Browse skills and insert one | Native skill browser; slash-capable skills also arrive dynamically from the server |
-| `/warp` | — | Change experimental workspace for the session | Adapted through the workspace screen; exact session warp API is a gap |
-| `/move` | — | Move a session to another project directory | Gap: server and mobile repository need a move-session contract |
+| `/warp` | — | Change experimental workspace for the session | Native: choose Local or a connected workspace and optionally copy working changes |
+| `/move` | — | Move a session to another project directory | Native: choose a known project directory and optionally transfer working changes |
 | `/diff` | — | Open the system diff viewer plugin | Native session diff viewer |
 
 ## Web client slash commands
@@ -89,5 +89,5 @@ Selecting a dynamic command inserts it into the composer so arguments can be edi
 
 ## Next command parity work
 
-1. Add server contracts and UI for `/move`, exact `/warp`, and multi-organization `/org`.
-2. Decide whether mobile theme selection is valuable before exposing `/themes`; do not mirror terminal themes mechanically.
+1. Decide whether mobile theme selection is valuable before exposing `/themes`; do not mirror terminal themes mechanically.
+2. Continue the generated-SDK audit with transport modernization and the highest-impact remaining coding workflow; keep Traycer deferred.

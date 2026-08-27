@@ -22,6 +22,7 @@ import 'files_screen.dart';
 import 'home_screen.dart';
 import 'library_screen.dart';
 import 'review_workspace.dart';
+import 'session_destination_sheet.dart';
 import 'settings_screen.dart';
 import 'terminal_screen.dart';
 
@@ -1719,6 +1720,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         action: _ChatCommandAction.workspaces,
       ),
       _ChatCommand.mobile(
+        slash: 'move',
+        title: 'Move session',
+        description: 'Move this session to another project directory',
+        group: 'Current session',
+        action: _ChatCommandAction.move,
+      ),
+      _ChatCommand.mobile(
+        slash: 'warp',
+        title: 'Warp session',
+        description: 'Change this session’s experimental workspace',
+        group: 'Current session',
+        action: _ChatCommandAction.warp,
+      ),
+      _ChatCommand.mobile(
         slash: 'editor',
         title: 'Prompt editor',
         description: 'Edit the current prompt in a focused full-screen view',
@@ -1777,6 +1792,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         description: 'Manage provider and integration authentication',
         group: 'OpenCode',
         action: _ChatCommandAction.integrations,
+      ),
+      _ChatCommand.mobile(
+        slash: 'org',
+        aliases: const ['orgs', 'switch-org'],
+        title: 'Switch organization',
+        description: 'Change the active OpenCode Console organization',
+        group: 'OpenCode',
+        action: _ChatCommandAction.organization,
       ),
       _ChatCommand.mobile(
         slash: 'skills',
@@ -1934,6 +1957,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         error: () => _serverCommandsError,
         onRefresh: _loadServerCommands,
         onSelected: (command) {
+          FocusManager.instance.primaryFocus?.unfocus();
           Navigator.pop(sheetContext);
           _selectChatCommand(command);
         },
@@ -1995,6 +2019,26 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           );
         }
         return;
+      case _ChatCommandAction.move:
+        if (mounted) {
+          await showSessionDestinationSheet(
+            context,
+            controller: _conn,
+            sessionID: widget.sessionID,
+            mode: SessionDestinationMode.move,
+          );
+        }
+        return;
+      case _ChatCommandAction.warp:
+        if (mounted) {
+          await showSessionDestinationSheet(
+            context,
+            controller: _conn,
+            sessionID: widget.sessionID,
+            mode: SessionDestinationMode.warp,
+          );
+        }
+        return;
       case _ChatCommandAction.promptEditor:
         await _openPromptEditor();
         return;
@@ -2017,6 +2061,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               builder: (_) => IntegrationsScreen(controller: _conn),
             ),
           );
+        }
+        return;
+      case _ChatCommandAction.organization:
+        if (mounted) {
+          await showConsoleOrganizationSheet(context, controller: _conn);
         }
         return;
       case _ChatCommandAction.skills:
@@ -2884,11 +2933,14 @@ enum _ChatCommandAction {
   newSession,
   sessions,
   workspaces,
+  move,
+  warp,
   files,
   promptEditor,
   terminal,
   model,
   integrations,
+  organization,
   skills,
   references,
   status,
