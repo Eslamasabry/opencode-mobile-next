@@ -1,23 +1,42 @@
 import 'models.dart';
 import 'product_repository.dart';
 
-/// User-facing identity for provider IDs that OpenCode exposes as compatibility
-/// aliases. Wire IDs stay untouched; this layer only removes duplicate choices
-/// and legacy branding from the UI.
+/// User-facing identity for closely related provider IDs exposed by OpenCode.
+/// Wire IDs stay untouched; the UI shares a product-family filter while keeping
+/// each regional backend route explicit and independently selectable.
 class ProviderPresentation {
-  const ProviderPresentation({required this.groupID, required this.name});
+  const ProviderPresentation({
+    required this.groupID,
+    required this.name,
+    this.route,
+  });
 
   final String groupID;
   final String name;
+  final String? route;
 }
 
 ProviderPresentation presentProvider(String providerID, [String? serverName]) {
   return switch (providerID.toLowerCase()) {
-    'zai' ||
-    'zhipuai' => const ProviderPresentation(groupID: 'zai', name: 'Z.AI'),
-    'zai-coding-plan' || 'zhipuai-coding-plan' => const ProviderPresentation(
+    'zai' => const ProviderPresentation(
+      groupID: 'zai',
+      name: 'Z.AI',
+      route: 'Global',
+    ),
+    'zhipuai' => const ProviderPresentation(
+      groupID: 'zai',
+      name: 'Z.AI',
+      route: 'China',
+    ),
+    'zai-coding-plan' => const ProviderPresentation(
       groupID: 'zai-coding-plan',
       name: 'Z.AI Coding Plan',
+      route: 'Global',
+    ),
+    'zhipuai-coding-plan' => const ProviderPresentation(
+      groupID: 'zai-coding-plan',
+      name: 'Z.AI Coding Plan',
+      route: 'China',
     ),
     _ => ProviderPresentation(
       groupID: providerID,
@@ -36,8 +55,15 @@ bool isConsolidatedProviderAlias(String providerID) =>
 
 String presentedModelLabel(String providerID, String modelID) =>
     isConsolidatedProviderAlias(providerID)
-    ? '${presentProvider(providerID).name} · $modelID'
+    ? '${presentedProviderRouteName(providerID)} · $modelID'
     : '$providerID/$modelID';
+
+String presentedProviderRouteName(String providerID, [String? serverName]) {
+  final presentation = presentProvider(providerID, serverName);
+  return presentation.route == null
+      ? presentation.name
+      : '${presentation.name} · ${presentation.route}';
+}
 
 int _aliasPriority(String providerID) => switch (providerID.toLowerCase()) {
   'zai' || 'zai-coding-plan' => 0,
@@ -81,29 +107,25 @@ List<CatalogModel> presentModels(
   Iterable<CatalogModel> models, {
   ModelRef? selected,
 }) {
-  final result = <String, CatalogModel>{};
+  final groups = <String, List<CatalogModel>>{};
   for (final model in models) {
     final groupID = presentProvider(model.providerID).groupID;
     final key = '$groupID\u0000${model.id}';
-    final current = result[key];
-    if (current == null) {
-      result[key] = model;
-      continue;
-    }
-    final candidateSelected =
-        selected?.providerID == model.providerID &&
-        selected?.modelID == model.id;
-    final currentSelected =
-        selected?.providerID == current.providerID &&
-        selected?.modelID == current.id;
-    if (candidateSelected ||
-        (!currentSelected &&
-            _aliasPriority(model.providerID) <
-                _aliasPriority(current.providerID))) {
-      result[key] = model;
-    }
+    groups.putIfAbsent(key, () => []).add(model);
   }
-  return result.values.toList();
+  for (final entries in groups.values) {
+    entries.sort((a, b) {
+      final aSelected =
+          selected?.providerID == a.providerID && selected?.modelID == a.id;
+      final bSelected =
+          selected?.providerID == b.providerID && selected?.modelID == b.id;
+      if (aSelected != bSelected) return aSelected ? -1 : 1;
+      return _aliasPriority(
+        a.providerID,
+      ).compareTo(_aliasPriority(b.providerID));
+    });
+  }
+  return [for (final entries in groups.values) ...entries];
 }
 
 String presentedProviderName(
@@ -111,10 +133,10 @@ String presentedProviderName(
   Iterable<CatalogProvider> providers,
 ) {
   final match = providers.where((provider) => provider.id == providerID);
-  return presentProvider(
+  return presentedProviderRouteName(
     providerID,
     match.isEmpty ? null : match.first.name,
-  ).name;
+  );
 }
 
 class PresentedIntegration {
@@ -138,22 +160,22 @@ List<PresentedIntegration> presentIntegrations(
     groups.putIfAbsent(groupID, () => []).add(integration);
   }
   return [
-    for (final entries in groups.values) _presentIntegrationGroup(entries),
+    for (final entries in groups.values) ..._presentIntegrationGroup(entries),
   ];
 }
 
-PresentedIntegration _presentIntegrationGroup(List<IntegrationInfo> entries) {
+List<PresentedIntegration> _presentIntegrationGroup(
+  List<IntegrationInfo> entries,
+) {
   entries.sort((a, b) {
-    final byMethods = (b.methods.isNotEmpty ? 1 : 0).compareTo(
-      a.methods.isNotEmpty ? 1 : 0,
-    );
-    if (byMethods != 0) return byMethods;
     return _aliasPriority(a.id).compareTo(_aliasPriority(b.id));
   });
-  final integration = entries.first;
-  return PresentedIntegration(
-    integration: integration,
-    name: presentProvider(integration.id, integration.name).name,
-    connected: entries.any((entry) => entry.connectionCount > 0),
-  );
+  return [
+    for (final integration in entries)
+      PresentedIntegration(
+        integration: integration,
+        name: presentedProviderRouteName(integration.id, integration.name),
+        connected: integration.connectionCount > 0,
+      ),
+  ];
 }

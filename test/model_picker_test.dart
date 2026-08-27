@@ -253,7 +253,7 @@ void main() {
     expect(controller.selectedVariant, 'fast');
   });
 
-  testWidgets('OpenCode Z.AI aliases render as one provider and model', (
+  testWidgets('Z.AI aliases share a filter but retain exact backend routes', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(411, 891));
@@ -272,9 +272,27 @@ void main() {
     await tester.tap(find.text('Z.AI Coding Plan'));
     await tester.pumpAndSettle();
 
-    expect(find.text('GLM-5.2'), findsOneWidget);
-    expect(find.textContaining('Z.AI Coding Plan · glm-5.2'), findsOneWidget);
-    expect(find.textContaining('zhipuai-coding-plan/glm-5.2'), findsNothing);
+    expect(find.text('GLM-5.2'), findsNWidgets(2));
+    expect(
+      find.textContaining('Z.AI Coding Plan · Global · glm-5.2'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('Z.AI Coding Plan · China · glm-5.2'),
+      findsOneWidget,
+    );
+
+    await tester.tap(
+      find.byKey(const Key('model-option-zhipuai-coding-plan-glm-5.2')),
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Use model and mode'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Use model and mode'));
+    await tester.pumpAndSettle();
+
+    expect(controller.selectedModel?.providerID, 'zhipuai-coding-plan');
+    expect(controller.selectedModel?.modelID, 'glm-5.2');
   });
 
   testWidgets('model selector remains usable at 320dp with 2x text', (

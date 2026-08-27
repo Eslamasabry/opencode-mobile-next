@@ -128,7 +128,7 @@ void main() {
     },
   );
 
-  testWidgets('provider connection aliases render as one branded service', (
+  testWidgets('provider aliases retain separate regional connection states', (
     tester,
   ) async {
     final repository = _IntegrationsRepository()
@@ -137,7 +137,7 @@ void main() {
           id: 'zai-coding-plan',
           name: 'Z.AI Coding Plan',
           methods: [IntegrationMethodInfo(type: 'key', label: 'API key')],
-          connectionCount: 1,
+          connectionCount: 0,
         ),
         IntegrationInfo(
           id: 'zhipuai-coding-plan',
@@ -152,9 +152,11 @@ void main() {
     await tester.pumpWidget(_app(controller));
     await tester.pumpAndSettle();
 
-    expect(find.text('Z.AI Coding Plan'), findsOneWidget);
+    expect(find.text('Z.AI Coding Plan · Global'), findsOneWidget);
+    expect(find.text('Z.AI Coding Plan · China'), findsOneWidget);
     expect(find.text('Zhipu AI Coding Plan'), findsNothing);
     expect(find.text('Connected\n(server-managed)'), findsOneWidget);
+    expect(find.text('Connect'), findsOneWidget);
   });
 
   testWidgets('MCP resources remain available when integrations fail', (
