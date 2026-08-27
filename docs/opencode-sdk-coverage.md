@@ -9,7 +9,7 @@ Authoritative inputs:
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app
-currently calls **46 generated operations directly**. It also uses a set of
+currently calls **47 generated operations directly**. It also uses a set of
 older or compatibility routes through `OpenCodeApi` and raw `Dio`; those are
 listed separately so a working feature is not incorrectly labelled missing.
 
@@ -47,7 +47,7 @@ Legend:
 | PTY | create, list, update, remove, connect token | WebSocket connect uses the guarded ticket | get, shells, direct connect, and all duplicate v2 PTY operations |
 | Question | list, reply, reject | - | - |
 | Reference | `v2ReferenceList` | - | References can be copied standalone or added to the active composer as OpenCode directory parts |
-| Session | fork, revert, unrevert, share, unshare, summarize, update, async synthetic location reminder | list/create/get/delete/rename/status/messages/prompt/shell/command/abort/init/todos/diff and permission fallback | children, delete/update part, delete/get one message, synchronous prompt |
+| Session | fork, revert, unrevert, share, unshare, summarize, update, async prompt including synthetic location reminder | list/create/get/delete/rename/status/messages/shell/command/abort/init/todos/diff and permission fallback | children, delete/update part, delete/get one message, synchronous prompt |
 | Session questions v2 | - | list/reply/reject through compatibility routes | Generated v2 methods are unused |
 | Sessions v2 | - | - | active, compact, context, create/get/list/message/prompt/history/events/wait/interrupt, model/agent switch, staged revert operations |
 | Skills | `v2SkillList` | - | Skill content uses the shared Markdown/code-aware preview with rendered and raw modes |
@@ -83,7 +83,10 @@ Legend:
    an unknown status rather than losing the entire surface.
 5. **Transport modernization:** migrate compatibility routes to generated v2
    APIs only where current and older OpenCode contracts can be reconciled
-   without losing sessions, events, or provider inventory.
+   without losing sessions, events, or provider inventory. The highest-volume
+   async prompt path now uses `session.prompt_async` directly while preserving
+   the exact model, variant, agent, text, file, reference, and location wire
+   fields plus product-facing server errors.
 6. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
    worktree lifecycle are deliberately not the current implementation lane.
 

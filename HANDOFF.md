@@ -237,6 +237,18 @@ Final-tree Flutter analysis is clean and all 272 tests pass serially. The
 generated SDK audit now counts 46 directly used operations. Traycer remains
 explicitly deferred.
 
+The ordinary chat send path now uses the generated `session.prompt_async`
+transport rather than duplicating that endpoint through handwritten Dio. The
+wire contract remains unchanged: selected provider/model, agent, thinking
+variant, text, uploaded files, OpenCode directory references, directory, and
+workspace are all preserved. Declared generated errors are translated back to
+the app's product-facing `ApiException` without losing HTTP status, error tag,
+request ID, or server detail; undeclared transport failures retain the existing
+Dio fallback. Exact loopback coverage guards both the full request and error
+mapping. Final-tree Flutter analysis is clean and all 274 tests pass serially.
+The generated SDK audit now counts 47 directly used operations. Traycer remains
+explicitly deferred.
+
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`

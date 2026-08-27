@@ -82,6 +82,19 @@ class OpenCodeApi {
     );
   }
 
+  Never _failGenerated(sdk.OpenCodeApiException e, String what) {
+    final body = e.rawPayload?.toString();
+    final error = e.rawPayload is Map
+        ? Map<String, dynamic>.from(e.rawPayload! as Map)
+        : null;
+    throw ApiException(
+      '$what failed (HTTP ${e.statusCode})${body != null ? ': $body' : ''}',
+      statusCode: e.statusCode,
+      errorTag: error?['_tag']?.toString(),
+      requestID: error?['requestID']?.toString(),
+    );
+  }
+
   /// Opens the long-lived `/event` SSE stream.
   Future<Response<ResponseBody>> openEventStream({CancelToken? cancelToken}) {
     return _dio.get<ResponseBody>(
@@ -191,17 +204,29 @@ class OpenCodeApi {
     List<PromptAttachment> attachments = const [],
   }) async {
     try {
-      await _dio.post(
-        '/session/$sessionID/prompt_async',
-        data: promptRequestBody(
-          text: text,
-          model: model,
+      await sdkClient.getSessionApi().sessionPromptAsync(
+        sessionID: sessionID,
+        directory: _directory,
+        workspace: _workspace,
+        sessionPromptAsyncRequest: sdk.SessionPromptAsyncRequest(
+          model: model == null
+              ? null
+              : sdk.SessionPromptAsyncRequestModel(
+                  providerID: model.providerID,
+                  modelID: model.modelID,
+                ),
           agent: agent,
           variant: variant,
-          attachments: attachments,
+          parts: [
+            sdk.OpencodeSdkRawUnion085({'type': 'text', 'text': text}),
+            ...attachments.map(
+              (attachment) => sdk.OpencodeSdkRawUnion085(attachment.toJson()),
+            ),
+          ],
         ),
-        queryParameters: _query(),
       );
+    } on sdk.OpenCodeApiException catch (e) {
+      _failGenerated(e, 'Send prompt');
     } on DioException catch (e) {
       _fail(e, 'Send prompt');
     }
