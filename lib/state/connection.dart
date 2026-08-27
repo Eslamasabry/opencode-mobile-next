@@ -1205,16 +1205,18 @@ class ConnectionController extends ChangeNotifier {
   }
 
   Future<void> answerPermission(String requestID, String response) async {
-    final permission = permissions[requestID];
-    final currentApi = api;
-    final generation = _generation;
+    var permission = permissions[requestID];
     if (permission == null) {
       if (_resolvedPermissionIDs.contains(requestID)) return;
       throw StateError('Permission request $requestID is no longer pending');
     }
-    if (currentApi == null) {
-      throw StateError('Not connected to OpenCode');
+    final currentApi = await _requireActionTransport();
+    permission = permissions[requestID];
+    if (permission == null) {
+      if (_resolvedPermissionIDs.contains(requestID)) return;
+      throw StateError('Permission request $requestID is no longer pending');
     }
+    final generation = _generation;
     try {
       final legacyIdentity = _legacyPermissionIdentities[requestID];
       final v2SessionID = _v2PermissionSessions[requestID];
@@ -1374,10 +1376,15 @@ class ConnectionController extends ChangeNotifier {
     String requestID,
     List<List<String>> answers,
   ) async {
-    final current = repository;
+    await prepareActionTransport();
     final currentApi = api;
+    final current = repository;
     final generation = _generation;
     if (current == null) throw StateError('Not connected to OpenCode');
+    if (!questions.containsKey(requestID)) {
+      if (_resolvedQuestionIDs.contains(requestID)) return;
+      throw StateError('Question request $requestID is no longer pending');
+    }
     final v2SessionID = _v2QuestionSessions[requestID];
     try {
       if (v2SessionID != null) {
@@ -1399,10 +1406,15 @@ class ConnectionController extends ChangeNotifier {
   }
 
   Future<void> rejectQuestion(String requestID) async {
-    final current = repository;
+    await prepareActionTransport();
     final currentApi = api;
+    final current = repository;
     final generation = _generation;
     if (current == null) throw StateError('Not connected to OpenCode');
+    if (!questions.containsKey(requestID)) {
+      if (_resolvedQuestionIDs.contains(requestID)) return;
+      throw StateError('Question request $requestID is no longer pending');
+    }
     final v2SessionID = _v2QuestionSessions[requestID];
     try {
       if (v2SessionID != null) {

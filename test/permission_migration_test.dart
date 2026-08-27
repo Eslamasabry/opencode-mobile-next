@@ -168,6 +168,40 @@ void main() {
     );
   });
 
+  test('successful loose legacy permission data remains compatible', () async {
+    await HttpOverrides.runZoned(() async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      server.listen((request) async {
+        request.response.headers.contentType = ContentType.json;
+        request.response.write(
+          jsonEncode([
+            {
+              'id': 'permission-loose',
+              'sessionID': 'session-1',
+              'permission': 'edit',
+              'patterns': ['lib/main.dart'],
+            },
+          ]),
+        );
+        await request.response.close();
+      });
+
+      final api = OpenCodeApi(
+        baseUrl: 'http://${server.address.host}:${server.port}',
+      );
+      try {
+        final pending = await api.pendingPermissions();
+        expect(pending.single.id, 'permission-loose');
+        expect(pending.single.permission, 'edit');
+        expect(pending.single.metadata, isEmpty);
+        expect(pending.single.always, isEmpty);
+      } finally {
+        api.close();
+        await server.close(force: true);
+      }
+    }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+  });
+
   test(
     'permission API falls back only for an unavailable current endpoint',
     () async {

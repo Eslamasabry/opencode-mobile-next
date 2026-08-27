@@ -498,15 +498,31 @@ class OpenCodeApi {
 
   Future<List<PermissionRequest>> pendingPermissions() async {
     try {
-      final response = await _dio.get('/permission', queryParameters: _query());
-      return (response.data as List? ?? const [])
-          .whereType<Map>()
-          .map(
-            (item) =>
-                PermissionRequest.fromJson(Map<String, dynamic>.from(item)),
-          )
+      final response = await sdkClient.getPermissionApi().permissionList(
+        directory: _directory,
+        workspace: _workspace,
+      );
+      return (response.data ?? const [])
+          .map((item) => PermissionRequest.fromJson(item.toJson()))
           .toList();
+    } on sdk.OpenCodeApiException catch (error) {
+      _failGenerated(error, 'List pending permissions');
     } on DioException catch (error) {
+      final raw = error.response?.data;
+      if (_wasSuccessfulResponse(error) && raw is List) {
+        try {
+          return raw
+              .whereType<Map>()
+              .map(
+                (item) =>
+                    PermissionRequest.fromJson(Map<String, dynamic>.from(item)),
+              )
+              .toList();
+        } catch (_) {
+          // Older servers can return successful permission objects that omit
+          // fields required by the generated contract.
+        }
+      }
       _fail(error, 'List pending permissions');
     }
   }
@@ -517,29 +533,78 @@ class OpenCodeApi {
   /// result in `{location, data}` and uses the V2 permission field names.
   Future<List<PermissionRequest>> pendingPermissionsV2() async {
     try {
-      final response = await _dio.get(
-        '/api/permission/request',
-        queryParameters: _v2LocationQuery(),
-      );
-      return _v2EnvelopeData(response.data, 'permission')
+      final response = await sdkClient
+          .getPermissionsApi()
+          .v2PermissionRequestList(
+            locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
+            locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
+          );
+      final payload = response.data;
+      if (payload == null) {
+        throw ApiException('Malformed V2 permission request envelope');
+      }
+      _validateV2Location(payload.location, 'permission');
+      return payload.data
           .map(
-            (item) => PermissionRequest.fromJson({
-              'id': item['id'],
-              'sessionID': item['sessionID'],
-              'permission': item['action'],
-              'patterns': item['resources'],
-              'metadata': item['metadata'],
-              'always': item['save'],
-              if (item['source'] is Map) 'tool': item['source'],
-            }),
+            (item) => PermissionRequest(
+              id: item.id,
+              sessionID: item.sessionID,
+              permission: item.action,
+              patterns: item.resources,
+              metadata: item.metadata is Map
+                  ? Map<String, dynamic>.from(item.metadata! as Map)
+                  : const {},
+              always: item.save ?? const [],
+              tool: item.source_ == null
+                  ? null
+                  : PermissionTool(
+                      messageID: item.source_!.messageID,
+                      callID: item.source_!.callID,
+                    ),
+            ),
           )
           .where(
             (permission) =>
                 permission.id.isNotEmpty && permission.sessionID.isNotEmpty,
           )
           .toList();
+    } on sdk.OpenCodeApiException catch (error) {
+      _failGenerated(error, 'List V2 pending permissions');
     } on DioException catch (error) {
+      final raw = error.response?.data;
+      if (_wasSuccessfulResponse(error)) {
+        return _permissionsFromLooseV2Envelope(raw);
+      }
       _fail(error, 'List V2 pending permissions');
+    }
+  }
+
+  List<PermissionRequest> _permissionsFromLooseV2Envelope(dynamic raw) {
+    return _v2EnvelopeData(raw, 'permission')
+        .map(
+          (item) => PermissionRequest.fromJson({
+            'id': item['id'],
+            'sessionID': item['sessionID'],
+            'permission': item['action'],
+            'patterns': item['resources'],
+            'metadata': item['metadata'],
+            'always': item['save'],
+            if (item['source'] is Map) 'tool': item['source'],
+          }),
+        )
+        .where(
+          (permission) =>
+              permission.id.isNotEmpty && permission.sessionID.isNotEmpty,
+        )
+        .toList();
+  }
+
+  void _validateV2Location(sdk.LocationInfo location, String kind) {
+    final locationMatches =
+        (_directory == null || location.directory == _directory) &&
+        (_workspace == null || location.workspaceID == _workspace);
+    if (!locationMatches) {
+      throw ApiException('Mismatched V2 $kind request location');
     }
   }
 
@@ -547,20 +612,28 @@ class OpenCodeApi {
   /// envelope. The app's repository model owns question parsing.
   Future<List<Map<String, dynamic>>> pendingQuestionsV2() async {
     try {
-      final response = await _dio.get(
-        '/api/question/request',
-        queryParameters: _v2LocationQuery(),
-      );
-      return _v2EnvelopeData(response.data, 'question');
+      final response = await sdkClient
+          .getSessionQuestionsApi()
+          .v2QuestionRequestList(
+            locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
+            locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
+          );
+      final payload = response.data;
+      if (payload == null) {
+        throw ApiException('Malformed V2 question request envelope');
+      }
+      _validateV2Location(payload.location, 'question');
+      return payload.data.map((question) => question.toJson()).toList();
+    } on sdk.OpenCodeApiException catch (error) {
+      _failGenerated(error, 'List V2 pending questions');
     } on DioException catch (error) {
+      final raw = error.response?.data;
+      if (_wasSuccessfulResponse(error)) {
+        return _v2EnvelopeData(raw, 'question');
+      }
       _fail(error, 'List V2 pending questions');
     }
   }
-
-  Map<String, dynamic> _v2LocationQuery() => {
-    if (_directory != null) 'location[directory]': _directory,
-    if (_workspace != null) 'location[workspace]': _workspace,
-  };
 
   List<Map<String, dynamic>> _v2EnvelopeData(dynamic raw, String kind) {
     if (raw is! Map) {
@@ -571,11 +644,12 @@ class OpenCodeApi {
       throw ApiException('Malformed V2 $kind request location');
     }
     final responseLocation = Map<String, dynamic>.from(location);
+    final responseWorkspace =
+        responseLocation['workspaceID'] ?? responseLocation['workspace'];
     final locationMatches =
         (_directory == null ||
             responseLocation['directory']?.toString() == _directory) &&
-        (_workspace == null ||
-            responseLocation['workspace']?.toString() == _workspace);
+        (_workspace == null || responseWorkspace?.toString() == _workspace);
     if (!locationMatches) {
       throw ApiException('Mismatched V2 $kind request location');
     }
@@ -595,45 +669,95 @@ class OpenCodeApi {
     String? legacySessionID,
     String? legacyPermissionID,
   }) async {
-    if (reply != 'once' && reply != 'always' && reply != 'reject') {
-      throw ArgumentError.value(reply, 'reply', 'must match the API contract');
-    }
-    final encodedID = Uri.encodeComponent(requestID);
+    final replyValue = switch (reply) {
+      'once' => sdk.PermissionReplyRequestReplyEnum.once,
+      'always' => sdk.PermissionReplyRequestReplyEnum.always,
+      'reject' => sdk.PermissionReplyRequestReplyEnum.reject,
+      _ => throw ArgumentError.value(
+        reply,
+        'reply',
+        'must match the API contract',
+      ),
+    };
     try {
-      await _dio.post(
-        '/permission/$encodedID/reply',
-        data: {'reply': reply},
-        queryParameters: _query(),
+      await sdkClient.getPermissionApi().permissionReply(
+        requestID: requestID,
+        directory: _directory,
+        workspace: _workspace,
+        permissionReplyRequest: sdk.PermissionReplyRequest(reply: replyValue),
+      );
+    } on sdk.OpenCodeApiException catch (error) {
+      if (!_canUseLegacyPermissionReply(
+        status: error.statusCode,
+        payload: error.rawPayload,
+        legacySessionID: legacySessionID,
+        legacyPermissionID: legacyPermissionID,
+      )) {
+        _failGenerated(error, 'Reply to permission');
+      }
+      await _respondLegacyPermission(
+        legacySessionID!,
+        legacyPermissionID!,
+        reply,
       );
     } on DioException catch (error) {
-      final status = error.response?.statusCode;
-      final responseData = error.response?.data;
-      final errorBody = responseData is Map
-          ? Map<String, dynamic>.from(responseData)
-          : null;
-      final permissionNotFoundError =
-          status == 404 &&
-          errorBody?['_tag']?.toString() == 'PermissionNotFoundError';
-      final canUseLegacy =
-          !permissionNotFoundError &&
-          (status == 404 || status == 405) &&
-          legacySessionID != null &&
-          legacySessionID.isNotEmpty &&
-          legacyPermissionID != null &&
-          legacyPermissionID.isNotEmpty;
-      if (!canUseLegacy) _fail(error, 'Reply to permission');
-
-      final encodedSessionID = Uri.encodeComponent(legacySessionID);
-      final encodedPermissionID = Uri.encodeComponent(legacyPermissionID);
-      try {
-        await _dio.post(
-          '/session/$encodedSessionID/permissions/$encodedPermissionID',
-          data: {'response': reply},
-          queryParameters: _query(),
-        );
-      } on DioException catch (legacyError) {
-        _fail(legacyError, 'Reply to permission');
+      if (!_canUseLegacyPermissionReply(
+        status: error.response?.statusCode,
+        payload: error.response?.data,
+        legacySessionID: legacySessionID,
+        legacyPermissionID: legacyPermissionID,
+      )) {
+        _fail(error, 'Reply to permission');
       }
+      await _respondLegacyPermission(
+        legacySessionID!,
+        legacyPermissionID!,
+        reply,
+      );
+    }
+  }
+
+  bool _canUseLegacyPermissionReply({
+    required int? status,
+    required Object? payload,
+    required String? legacySessionID,
+    required String? legacyPermissionID,
+  }) {
+    final body = payload is Map ? Map<String, dynamic>.from(payload) : null;
+    final permissionNotFoundError =
+        status == 404 && body?['_tag']?.toString() == 'PermissionNotFoundError';
+    return !permissionNotFoundError &&
+        (status == 404 || status == 405) &&
+        legacySessionID?.isNotEmpty == true &&
+        legacyPermissionID?.isNotEmpty == true;
+  }
+
+  Future<void> _respondLegacyPermission(
+    String sessionID,
+    String permissionID,
+    String reply,
+  ) async {
+    final responseValue = switch (reply) {
+      'once' => sdk.PermissionRespondRequestResponseEnum.once,
+      'always' => sdk.PermissionRespondRequestResponseEnum.always,
+      'reject' => sdk.PermissionRespondRequestResponseEnum.reject,
+      _ => throw StateError('Validated permission reply became invalid'),
+    };
+    try {
+      // ignore: deprecated_member_use
+      await sdkClient.getSessionApi().permissionRespond(
+        sessionID: sessionID,
+        permissionID: permissionID,
+        directory: _directory,
+        workspace: _workspace,
+        permissionRespondRequest: sdk.PermissionRespondRequest(
+          response: responseValue,
+        ),
+      );
+    } on sdk.OpenCodeApiException catch (error) {
+      _failGenerated(error, 'Reply to permission');
+    } on DioException catch (error) {
+      _fail(error, 'Reply to permission');
     }
   }
 
@@ -642,16 +766,26 @@ class OpenCodeApi {
     String requestID,
     String reply,
   ) async {
-    if (reply != 'once' && reply != 'always' && reply != 'reject') {
-      throw ArgumentError.value(reply, 'reply', 'must match the API contract');
-    }
-    final encodedSessionID = Uri.encodeComponent(sessionID);
-    final encodedRequestID = Uri.encodeComponent(requestID);
+    final replyValue = switch (reply) {
+      'once' => sdk.PermissionV2Reply.once,
+      'always' => sdk.PermissionV2Reply.always,
+      'reject' => sdk.PermissionV2Reply.reject,
+      _ => throw ArgumentError.value(
+        reply,
+        'reply',
+        'must match the API contract',
+      ),
+    };
     try {
-      await _dio.post(
-        '/api/session/$encodedSessionID/permission/$encodedRequestID/reply',
-        data: {'reply': reply},
+      await sdkClient.getPermissionsApi().v2SessionPermissionReply(
+        sessionID: sessionID,
+        requestID: requestID,
+        v2SessionPermissionReplyRequest: sdk.V2SessionPermissionReplyRequest(
+          reply: replyValue,
+        ),
       );
+    } on sdk.OpenCodeApiException catch (error) {
+      _failGenerated(error, 'Reply to permission');
     } on DioException catch (error) {
       _fail(error, 'Reply to permission');
     }
@@ -662,25 +796,27 @@ class OpenCodeApi {
     String requestID,
     List<List<String>> answers,
   ) async {
-    final encodedSessionID = Uri.encodeComponent(sessionID);
-    final encodedRequestID = Uri.encodeComponent(requestID);
     try {
-      await _dio.post(
-        '/api/session/$encodedSessionID/question/$encodedRequestID/reply',
-        data: {'answers': answers},
+      await sdkClient.getSessionQuestionsApi().v2SessionQuestionReply(
+        sessionID: sessionID,
+        requestID: requestID,
+        questionV2Reply: sdk.QuestionV2Reply(answers: answers),
       );
+    } on sdk.OpenCodeApiException catch (error) {
+      _failGenerated(error, 'Reply to question');
     } on DioException catch (error) {
       _fail(error, 'Reply to question');
     }
   }
 
   Future<void> rejectQuestionV2(String sessionID, String requestID) async {
-    final encodedSessionID = Uri.encodeComponent(sessionID);
-    final encodedRequestID = Uri.encodeComponent(requestID);
     try {
-      await _dio.post(
-        '/api/session/$encodedSessionID/question/$encodedRequestID/reject',
+      await sdkClient.getSessionQuestionsApi().v2SessionQuestionReject(
+        sessionID: sessionID,
+        requestID: requestID,
       );
+    } on sdk.OpenCodeApiException catch (error) {
+      _failGenerated(error, 'Reject question');
     } on DioException catch (error) {
       _fail(error, 'Reject question');
     }

@@ -209,6 +209,27 @@ class _FailingProfileStore extends ProfileStore {
       Future.error(StateError('disk is read-only'));
 }
 
+class _DelayedRequestController extends ConnectionController {
+  _DelayedRequestController(
+    super.store, {
+    required this.ready,
+    required this.replacementApi,
+    required this.replacementRepository,
+  });
+
+  final Completer<void> ready;
+  final OpenCodeApi replacementApi;
+  final ProductRepository replacementRepository;
+
+  @override
+  Future<OpenCodeApi?> prepareActionTransport() async {
+    await ready.future;
+    api = replacementApi;
+    repository = replacementRepository;
+    return replacementApi;
+  }
+}
+
 Future<ProfileStore> _store([Map<String, Object> values = const {}]) async {
   SharedPreferences.setMockInitialValues(values);
   return ProfileStore(prefs: await SharedPreferences.getInstance());
@@ -265,7 +286,11 @@ void main() {
           case '/api/permission/request':
             request.response.write(
               jsonEncode({
-                'location': {'directory': '/work', 'workspace': 'workspace-1'},
+                'location': {
+                  'directory': '/work',
+                  'workspaceID': 'workspace-1',
+                  'project': {'id': 'project-1', 'directory': '/work'},
+                },
                 'data': [
                   {
                     'id': 'permission-1',
@@ -273,7 +298,11 @@ void main() {
                     'action': 'bash',
                     'resources': ['git status'],
                     'save': ['git *'],
-                    'source': {'messageID': 'message-1', 'callID': 'call-1'},
+                    'source': {
+                      'type': 'tool',
+                      'messageID': 'message-1',
+                      'callID': 'call-1',
+                    },
                   },
                 ],
               }),
@@ -282,7 +311,11 @@ void main() {
           case '/api/question/request':
             request.response.write(
               jsonEncode({
-                'location': {'directory': '/work', 'workspace': 'workspace-1'},
+                'location': {
+                  'directory': '/work',
+                  'workspaceID': 'workspace-1',
+                  'project': {'id': 'project-1', 'directory': '/work'},
+                },
                 'data': [_question('question-1', 'session-1')],
               }),
             );
@@ -338,6 +371,146 @@ void main() {
         expect(requests[4].body, isNull);
         api.close();
       } finally {
+        await server.close(force: true);
+      }
+    }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+  });
+
+  test('loose successful V2 request envelopes remain compatible', () async {
+    await HttpOverrides.runZoned(() async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      server.listen((request) async {
+        request.response.headers.contentType = ContentType.json;
+        if (request.uri.path == '/api/permission/request') {
+          request.response.write(
+            jsonEncode({
+              'location': {'directory': '/work', 'workspace': 'workspace-1'},
+              'data': [
+                {
+                  'id': 'permission-loose',
+                  'sessionID': 'session-1',
+                  'action': 'edit',
+                  'resources': ['lib/main.dart'],
+                  'source': {'messageID': 'message-1', 'callID': 'call-1'},
+                },
+              ],
+            }),
+          );
+        } else {
+          request.response.write(
+            jsonEncode({
+              'location': {'directory': '/work', 'workspace': 'workspace-1'},
+              'data': [_question('question-loose', 'session-1')],
+            }),
+          );
+        }
+        await request.response.close();
+      });
+
+      final api = OpenCodeApi(
+        baseUrl: 'http://${server.address.host}:${server.port}',
+      )..setLocation(directory: '/work', workspace: 'workspace-1');
+      try {
+        final permissions = await api.pendingPermissionsV2();
+        final questions = await api.pendingQuestionsV2();
+
+        expect(permissions.single.id, 'permission-loose');
+        expect(permissions.single.permission, 'edit');
+        expect(permissions.single.always, isEmpty);
+        expect(permissions.single.tool?.callID, 'call-1');
+        expect(questions.single['id'], 'question-loose');
+      } finally {
+        api.close();
+        await server.close(force: true);
+      }
+    }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+  });
+
+  test('generated V2 request errors retain OpenCode identity', () async {
+    await HttpOverrides.runZoned(() async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      server.listen((request) async {
+        await request.drain<void>();
+        final isList = request.method == 'GET';
+        final isPermission = request.uri.path.contains('permission');
+        request.response.statusCode = isList
+            ? HttpStatus.badRequest
+            : HttpStatus.notFound;
+        request.response.headers.contentType = ContentType.json;
+        request.response.write(
+          jsonEncode({
+            '_tag': isList
+                ? 'InvalidRequestError'
+                : isPermission
+                ? 'PermissionNotFoundError'
+                : 'QuestionNotFoundError',
+            'requestID': isList
+                ? 'request-list'
+                : isPermission
+                ? 'permission-1'
+                : 'question-1',
+            'message': 'request rejected',
+          }),
+        );
+        await request.response.close();
+      });
+
+      final api = OpenCodeApi(
+        baseUrl: 'http://${server.address.host}:${server.port}',
+      );
+      try {
+        for (final call in <Future<Object?> Function()>[
+          api.pendingPermissionsV2,
+          api.pendingQuestionsV2,
+        ]) {
+          await expectLater(
+            call(),
+            throwsA(
+              isA<ApiException>()
+                  .having((error) => error.statusCode, 'statusCode', 400)
+                  .having(
+                    (error) => error.errorTag,
+                    'errorTag',
+                    'InvalidRequestError',
+                  )
+                  .having(
+                    (error) => error.requestID,
+                    'requestID',
+                    'request-list',
+                  ),
+            ),
+          );
+        }
+
+        await expectLater(
+          api.respondPermissionV2('session-1', 'permission-1', 'once'),
+          throwsA(
+            isA<ApiException>().having(
+              (error) => error.isPermissionNotFound('permission-1'),
+              'permission identity',
+              isTrue,
+            ),
+          ),
+        );
+        for (final call in <Future<void> Function()>[
+          () => api.answerQuestionV2('session-1', 'question-1', const [
+            ['Yes'],
+          ]),
+          () => api.rejectQuestionV2('session-1', 'question-1'),
+        ]) {
+          await expectLater(
+            call(),
+            throwsA(
+              isA<ApiException>().having(
+                (error) => error.isQuestionNotFound('question-1'),
+                'question identity',
+                isTrue,
+              ),
+            ),
+          );
+        }
+      } finally {
+        api.close();
         await server.close(force: true);
       }
     }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
@@ -439,6 +612,63 @@ void main() {
       expect(controller.questions, isEmpty);
     },
   );
+
+  test('permission and question replies wait for wake transport', () async {
+    final retainedApi = _V2Api();
+    final replacementApi = _V2Api();
+    final retainedRepository = _QuestionRepository();
+    final replacementRepository = _QuestionRepository();
+    final ready = Completer<void>();
+    final controller =
+        _DelayedRequestController(
+            await _store(),
+            ready: ready,
+            replacementApi: replacementApi,
+            replacementRepository: replacementRepository,
+          )
+          ..api = retainedApi
+          ..repository = retainedRepository;
+    addTearDown(controller.dispose);
+    controller.handleEventForTesting(
+      EventEnvelope(
+        type: 'permission.v2.asked',
+        properties: const {
+          'id': 'permission-1',
+          'sessionID': 'session-1',
+          'action': 'bash',
+          'resources': ['git status'],
+        },
+      ),
+    );
+    for (final id in ['question-1', 'question-2']) {
+      controller.handleEventForTesting(
+        EventEnvelope(
+          type: 'question.v2.asked',
+          properties: _question(id, 'session-1'),
+        ),
+      );
+    }
+
+    final permission = controller.answerPermission('permission-1', 'once');
+    final answer = controller.answerQuestion('question-1', const [
+      ['Yes'],
+    ]);
+    final reject = controller.rejectQuestion('question-2');
+    await Future<void>.delayed(Duration.zero);
+
+    expect(retainedApi.permissionReplies, isEmpty);
+    expect(retainedApi.questionReplies, isEmpty);
+    expect(retainedApi.questionRejects, isEmpty);
+
+    ready.complete();
+    await Future.wait([permission, answer, reject]);
+
+    expect(replacementApi.permissionReplies, [
+      ('session-1', 'permission-1', 'once'),
+    ]);
+    expect(replacementApi.questionReplies.single.$2, 'question-1');
+    expect(replacementApi.questionRejects, [('session-1', 'question-2')]);
+  });
 
   test('partial V2 hydration failure preserves V2 reply provenance', () async {
     final api = _V2Api()

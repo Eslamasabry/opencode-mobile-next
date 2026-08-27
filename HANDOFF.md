@@ -312,6 +312,26 @@ OpenCode errors. Final-tree Flutter analysis is clean and all 287 tests pass
 serially. The generated SDK audit now counts 57 directly used operations. Traycer
 remains explicitly deferred.
 
+Pending permission and question flows now use generated legacy and V2 transports
+for both hydration and replies. This covers `permission.list`,
+`permission.reply`, the bounded deprecated `permission.respond` fallback,
+`v2.permission.request.list`, `v2.session.permission.reply`,
+`v2.question.request.list`, `v2.session.question.reply`, and
+`v2.session.question.reject`. Strict V2 location envelopes are verified before
+publishing requests; successful looser payloads from older servers retain their
+existing tolerant path. Declared request IDs and error tags still resolve
+permission/question reply races idempotently instead of leaving stale dialogs.
+
+Permission and question replies now wait for the lifecycle action transport, so
+a retained Requests or Chat surface cannot answer through the API/repository
+being replaced during Android wake reconciliation. Exact loopback tests cover
+strict and loose envelopes, location queries, bodies, unavailable-endpoint
+fallback, and generated OpenCode errors; controller coverage proves permission,
+answer, and rejection actions all use the replacement wake transport. The
+final tree has clean Flutter analysis and all 291 tests pass serially. The
+generated SDK audit now counts 65 directly used operations. Traycer remains
+explicitly deferred.
+
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`
