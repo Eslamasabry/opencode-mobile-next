@@ -482,11 +482,13 @@ class OpenCodeApi {
     } on DioException {
       // OpenCode versions predating provider.list expose the configured
       // catalog through this endpoint instead.
-      final r = await _dio.get('/config/providers', queryParameters: _query());
-      return ProvidersResponse.fromJson(
-        Map<String, dynamic>.from(r.data as Map),
-      );
+      return configuredProviders();
     }
+  }
+
+  Future<ProvidersResponse> configuredProviders() async {
+    final r = await _dio.get('/config/providers', queryParameters: _query());
+    return ProvidersResponse.fromJson(Map<String, dynamic>.from(r.data as Map));
   }
 
   Future<List<AgentInfo>> agents() async {

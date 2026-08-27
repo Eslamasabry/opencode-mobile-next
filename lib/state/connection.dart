@@ -395,10 +395,28 @@ class ConnectionController extends ChangeNotifier {
         }
       }
 
+      Future<ProvidersResponse?> loadConfiguredProviders() async {
+        try {
+          return await currentApi.configuredProviders();
+        } catch (_) {
+          return null;
+        }
+      }
+
+      Future<List<IntegrationInfo>> loadIntegrations() async {
+        if (currentRepository == null) return const [];
+        try {
+          return await currentRepository.listIntegrations();
+        } catch (_) {
+          return const [];
+        }
+      }
+
       final results = await Future.wait<Object?>([
         currentApi.providers(),
         currentApi.agents(),
         loadDetailedCatalog(),
+        loadIntegrations(),
       ]);
       if (!_isCurrentCatalogRefresh(
         generation,
@@ -407,9 +425,48 @@ class ConnectionController extends ChangeNotifier {
       )) {
         return;
       }
-      final nextProviders = results[0] as ProvidersResponse;
+      var nextProviders = results[0] as ProvidersResponse;
       final nextAgents = results[1] as List<AgentInfo>;
       final detailedCatalog = results[2] as CatalogSnapshot?;
+      final integrations = results[3] as List<IntegrationInfo>;
+      final hasConnectedIntegration = integrations.any(
+        (integration) => integration.connectionCount > 0,
+      );
+      final configuredProviders = hasConnectedIntegration
+          ? await loadConfiguredProviders()
+          : null;
+      if (!_isCurrentCatalogRefresh(
+        generation,
+        currentApi,
+        refreshGeneration,
+      )) {
+        return;
+      }
+      if (configuredProviders != null && integrations.isNotEmpty) {
+        final present = {
+          for (final provider in nextProviders.providers) provider.id,
+        };
+        final configuredByID = {
+          for (final provider in configuredProviders.providers)
+            provider.id: provider,
+        };
+        final connectedIntegrationIDs = integrations
+            .where((integration) => integration.connectionCount > 0)
+            .map((integration) => integration.id);
+        final recovered = <ProviderInfo>[];
+        for (final id in connectedIntegrationIDs) {
+          if (present.contains(id)) continue;
+          final provider = configuredByID[id];
+          if (provider != null) recovered.add(provider);
+        }
+        if (recovered.isNotEmpty) {
+          nextProviders = ProvidersResponse(
+            providers: [...nextProviders.providers, ...recovered],
+            defaultProviderID: nextProviders.defaultProviderID,
+            defaultModelID: nextProviders.defaultModelID,
+          );
+        }
+      }
       final fallbackCatalog = CatalogSnapshot(
         providers: [
           for (final provider in nextProviders.providers)

@@ -19,6 +19,7 @@ class _V2Api extends OpenCodeApi {
     this.permissions = const [],
     this.questions = const [],
     this.providersResult,
+    this.configuredProvidersResult,
     this.agentsResult = const [],
   }) : super(baseUrl: 'http://127.0.0.1:1');
 
@@ -32,6 +33,7 @@ class _V2Api extends OpenCodeApi {
   Object? rejectQuestionError;
   List<Session> sessionsResult = const [];
   final ProvidersResponse? providersResult;
+  final ProvidersResponse? configuredProvidersResult;
   final List<AgentInfo> agentsResult;
   Completer<List<Session>>? sessionsCompleter;
   Completer<Map<String, String>>? statusesCompleter;
@@ -80,6 +82,11 @@ class _V2Api extends OpenCodeApi {
       providersResult ?? ProvidersResponse(providers: const []);
 
   @override
+  Future<ProvidersResponse> configuredProviders() async =>
+      configuredProvidersResult ??
+      (throw ApiException('configured providers unavailable'));
+
+  @override
   Future<List<AgentInfo>> agents() async => agentsResult;
 
   @override
@@ -115,10 +122,15 @@ class _V2Api extends OpenCodeApi {
 }
 
 class _QuestionRepository implements ProductRepository {
-  _QuestionRepository({this.legacyUnavailable = true, this.catalog});
+  _QuestionRepository({
+    this.legacyUnavailable = true,
+    this.catalog,
+    this.integrations = const [],
+  });
 
   final bool legacyUnavailable;
   final CatalogSnapshot? catalog;
+  final List<IntegrationInfo> integrations;
   List<PendingQuestion> questions = const [];
   Completer<List<PendingQuestion>>? questionsCompleter;
   Object? answerError;
@@ -154,6 +166,9 @@ class _QuestionRepository implements ProductRepository {
   @override
   Future<CatalogSnapshot> loadCatalog() async =>
       catalog ?? (throw StateError('detailed catalog unavailable'));
+
+  @override
+  Future<List<IntegrationInfo>> listIntegrations() async => integrations;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -897,6 +912,126 @@ void main() {
     expect(controller.selectedModel?.modelID, 'glm-5.2');
     controller.dispose();
   });
+
+  testWidgets(
+    'connected integration recovers configured Z.AI missing from provider list',
+    (tester) async {
+      final api = _V2Api(
+        providersResult: ProvidersResponse(
+          providers: [
+            ProviderInfo(
+              id: 'opencode',
+              name: 'OpenCode Zen',
+              modelIDs: const ['nemotron'],
+            ),
+          ],
+          defaultProviderID: 'opencode',
+          defaultModelID: 'nemotron',
+        ),
+        configuredProvidersResult: ProvidersResponse(
+          providers: [
+            ProviderInfo(
+              id: 'opencode',
+              name: 'OpenCode Zen',
+              modelIDs: const ['nemotron'],
+            ),
+            ProviderInfo(
+              id: 'zai-coding-plan',
+              name: 'Z.AI Coding Plan',
+              modelIDs: const ['glm-5.2'],
+              modelData: const {
+                'glm-5.2': {
+                  'name': 'GLM-5.2',
+                  'capabilities': {'reasoning': true, 'toolcall': true},
+                  'limit': {'context': 1000000, 'output': 131072},
+                  'variants': {
+                    'high': {'reasoningEffort': 'high'},
+                    'max': {'reasoningEffort': 'max'},
+                  },
+                },
+              },
+            ),
+          ],
+        ),
+        agentsResult: [AgentInfo(name: 'build')],
+      );
+      final detailed = CatalogSnapshot(
+        providers: const [
+          CatalogProvider(id: 'opencode', name: 'OpenCode Zen', enabled: true),
+        ],
+        models: const [
+          CatalogModel(
+            id: 'nemotron',
+            providerID: 'opencode',
+            name: 'Nemotron',
+            enabled: true,
+            status: 'active',
+            contextLimit: 262144,
+            outputLimit: 262144,
+            reasoning: true,
+            attachments: false,
+            tools: true,
+            variants: [],
+          ),
+        ],
+        agents: const [
+          CatalogAgent(id: 'build', mode: 'primary', hidden: false),
+        ],
+      );
+      final controller = ConnectionController(
+        await _store({'oc.model.termux': 'zai-coding-plan|glm-5.2'}),
+        apiFactory: (_) => api,
+        repositoryFactory: (_) => _QuestionRepository(
+          legacyUnavailable: false,
+          catalog: detailed,
+          integrations: const [
+            IntegrationInfo(
+              id: 'zai-coding-plan',
+              name: 'Z.AI Coding Plan',
+              methods: [],
+              connectionCount: 1,
+            ),
+          ],
+        ),
+        eventStreamFactory:
+            ({required api, required onEvent, required onStatus, onError}) =>
+                _FakeEventStream(
+                  api: api,
+                  onEvent: onEvent,
+                  onStatus: onStatus,
+                  onError: onError,
+                ),
+      );
+      addTearDown(controller.dispose);
+
+      await controller.connect(
+        ServerProfile(
+          id: 'termux',
+          name: 'This device (Termux)',
+          baseUrl: 'http://127.0.0.1:4096',
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        controller.catalog?.providers.map((provider) => provider.id),
+        contains('zai-coding-plan'),
+      );
+      expect(
+        controller.catalog?.models.map(
+          (model) => '${model.providerID}/${model.id}',
+        ),
+        contains('zai-coding-plan/glm-5.2'),
+      );
+      final zai = controller.catalog!.models.firstWhere(
+        (model) => model.providerID == 'zai-coding-plan',
+      );
+      expect(zai.variants.map((variant) => variant.id), ['high', 'max']);
+      expect(controller.selectedModel?.providerID, 'zai-coding-plan');
+      controller.dispose();
+    },
+  );
 
   testWidgets('Termux profile keeps a valid model returned by OpenCode', (
     tester,
