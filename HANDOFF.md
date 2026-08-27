@@ -57,6 +57,8 @@ byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 - Provider runtime-auth synchronization: `421567626d39755b0bdac802f36fa0dbe3348667`
 - Stable Patch 12 ID: `620848`
 - Pre-existing provider runtime refresh: `b48222c686a99afcf796a254982931d717f29bc1`
+- Stable Patch 13 ID: `620935`
+- Provider alias consolidation: `59d2d194b9d915950381f7ca974845ee9a35c82c`
 - OpenCode reference revision: `c2eacd72afc4a4984564c393e15ab30011057269`
 - Command/feature map: [`docs/opencode-command-feature-map.md`](docs/opencode-command-feature-map.md)
 
@@ -299,6 +301,18 @@ real prompt through `zhipuai-coding-plan/glm-5.2` completed with `finish=stop`, 
 error, and `PHONE_SLASH_ZHIPU_52_OK`. All 234 tests passed, Flutter analysis was
 clean, Shorebird's dry run reported no issue, and Patch 12 was published to Stable
 without native or asset overrides.
+
+Patch 13 removes OpenCode's Z.AI compatibility aliases from user-facing model
+selection without changing server truth. `zai`/`zhipuai` and their Coding Plan
+variants now render as one branded provider group. Duplicate model IDs appear once,
+the picker preserves the currently selected exact provider route when deduplicating,
+and unique models remain selectable through the alias that actually exposes them.
+The same presentation is used by the picker header and rows, Settings, assistant
+model-change metadata, and Provider Connections. Generic providers keep their
+existing `provider/model` labels. No model IDs or capabilities are hardcoded; all
+model membership and metadata still come from OpenCode. All 236 tests passed,
+Flutter analysis was clean, Shorebird's dry run reported no issue, and Patch 13 was
+published to Stable without native or asset overrides.
 
 On the Ubuntu workstation, `z node_modules/opencode-ai` failed because zoxide had no
 matching history entry. The direct package path is `/home/eslam/node_modules/opencode-ai`;
