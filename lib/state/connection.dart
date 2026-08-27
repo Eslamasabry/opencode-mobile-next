@@ -367,6 +367,14 @@ class ConnectionController extends ChangeNotifier {
     selectedAgent = store.agentFor(profile.id);
     selectedVariant = store.variantFor(profile.id);
 
+    await _refreshPreexistingProviderRuntime(
+      generation: generation,
+      currentApi: currentApi,
+      currentRepository: currentRepository,
+      profile: profile,
+    );
+    if (!_isCurrent(generation, currentApi)) return;
+
     unawaited(_loadCatalog());
     _startEvents(generation, currentApi);
     _markDataRefreshReady(generation, currentApi);
@@ -1776,6 +1784,13 @@ class ConnectionController extends ChangeNotifier {
     notifyListeners();
     enablePollingFallback();
     _startEvents(generation, currentApi);
+    await _refreshPreexistingProviderRuntime(
+      generation: generation,
+      currentApi: currentApi,
+      currentRepository: currentRepository,
+      profile: profile,
+    );
+    if (!_isCurrent(generation, currentApi)) return;
     _markDataRefreshReady(generation, currentApi);
 
     await Future.wait<void>([
@@ -1832,6 +1847,38 @@ class ConnectionController extends ChangeNotifier {
   }
 
   Future<void> refreshCatalog() => _loadCatalog();
+
+  Future<void> _refreshPreexistingProviderRuntime({
+    required int generation,
+    required OpenCodeApi currentApi,
+    required ProductRepository currentRepository,
+    required ServerProfile profile,
+  }) async {
+    if (store.providerRuntimeWasRefreshed(
+      profile.id,
+      directory: directory,
+      workspace: workspace,
+    )) {
+      return;
+    }
+    try {
+      final integrations = await currentRepository.listIntegrations();
+      if (!_isCurrent(generation, currentApi)) return;
+      if (integrations.any((integration) => integration.connectionCount > 0)) {
+        await currentRepository.refreshProviderRuntime();
+        if (!_isCurrent(generation, currentApi)) return;
+      }
+      await store.markProviderRuntimeRefreshed(
+        profile.id,
+        directory: directory,
+        workspace: workspace,
+      );
+    } catch (_) {
+      // Older or temporarily unavailable servers must remain connectable. A
+      // failed migration is deliberately left unmarked so a later connection
+      // can retry it.
+    }
+  }
 
   int _beginGeneration() {
     _generation += 1;

@@ -356,6 +356,7 @@ abstract class ProductRepository {
   Future<String> startMcpAuthentication(String name);
   Future<List<IntegrationInfo>> listIntegrations();
   Future<void> connectIntegrationKey(String id, String key, {String? label});
+  Future<void> refreshProviderRuntime();
   Future<IntegrationAuthLaunch> startIntegrationOAuth(
     String id,
     String methodID, {
@@ -781,11 +782,16 @@ class SdkProductRepository
           providerID: id,
           auth: sdk.Auth({'type': 'api', 'key': key}),
         );
+        await refreshProviderRuntime();
+      });
 
+  @override
+  Future<void> refreshProviderRuntime() =>
+      _guard('Could not refresh the provider runtime', () async {
         // Provider inventories are cached per server instance. Match
         // OpenCode's own compatibility client: invalidate the selected
-        // location and the server-default location so the newly authenticated
-        // provider is immediately available to prompts.
+        // location and the server-default location so newly authenticated or
+        // pre-existing provider credentials are immediately available.
         await _client.getInstanceApi().instanceDispose(
           directory: _directory,
           workspace: _workspace,

@@ -136,6 +136,7 @@ class _QuestionRepository implements ProductRepository {
   Object? answerError;
   Object? rejectError;
   int listCalls = 0;
+  int runtimeRefreshCalls = 0;
   final List<String> answers = [];
   final List<String> rejects = [];
 
@@ -169,6 +170,11 @@ class _QuestionRepository implements ProductRepository {
 
   @override
   Future<List<IntegrationInfo>> listIntegrations() async => integrations;
+
+  @override
+  Future<void> refreshProviderRuntime() async {
+    runtimeRefreshCalls += 1;
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -977,21 +983,25 @@ void main() {
           CatalogAgent(id: 'build', mode: 'primary', hidden: false),
         ],
       );
+      final store = await _store({
+        'oc.model.termux': 'zai-coding-plan|glm-5.2',
+      });
+      final repository = _QuestionRepository(
+        legacyUnavailable: false,
+        catalog: detailed,
+        integrations: const [
+          IntegrationInfo(
+            id: 'zai-coding-plan',
+            name: 'Z.AI Coding Plan',
+            methods: [],
+            connectionCount: 1,
+          ),
+        ],
+      );
       final controller = ConnectionController(
-        await _store({'oc.model.termux': 'zai-coding-plan|glm-5.2'}),
+        store,
         apiFactory: (_) => api,
-        repositoryFactory: (_) => _QuestionRepository(
-          legacyUnavailable: false,
-          catalog: detailed,
-          integrations: const [
-            IntegrationInfo(
-              id: 'zai-coding-plan',
-              name: 'Z.AI Coding Plan',
-              methods: [],
-              connectionCount: 1,
-            ),
-          ],
-        ),
+        repositoryFactory: (_) => repository,
         eventStreamFactory:
             ({required api, required onEvent, required onStatus, onError}) =>
                 _FakeEventStream(
@@ -1028,6 +1038,24 @@ void main() {
       );
       expect(zai.variants.map((variant) => variant.id), ['high', 'max']);
       expect(controller.selectedModel?.providerID, 'zai-coding-plan');
+      expect(repository.runtimeRefreshCalls, 1);
+      expect(store.providerRuntimeWasRefreshed('termux'), isTrue);
+
+      await controller.selectLocation(directory: '/');
+      expect(repository.runtimeRefreshCalls, 2);
+      expect(
+        store.providerRuntimeWasRefreshed('termux', directory: '/'),
+        isTrue,
+      );
+
+      await controller.connect(
+        ServerProfile(
+          id: 'termux',
+          name: 'This device (Termux)',
+          baseUrl: 'http://127.0.0.1:4096',
+        ),
+      );
+      expect(repository.runtimeRefreshCalls, 2);
       controller.dispose();
     },
   );

@@ -87,6 +87,7 @@ class ProfileStore {
   static const _modelExplicitKey = 'oc.modelExplicit.'; // + profileId
   static const _agentKey = 'oc.agent.'; // + profileId
   static const _variantKey = 'oc.variant.'; // + profileId
+  static const _providerRuntimeRefreshVersion = 'v1';
 
   final SharedPreferences prefs;
   final FlutterSecureStorage secure;
@@ -208,6 +209,48 @@ class ProfileStore {
       if (p.id == id) return p;
     }
     return null;
+  }
+
+  String _providerRuntimeRefreshKey(
+    String profileId, {
+    String? directory,
+    String? workspace,
+  }) {
+    final location = Uri.encodeComponent(
+      '${directory ?? '<default>'}\n${workspace ?? '<default>'}',
+    );
+    return 'oc.providerRuntimeRefresh.$_providerRuntimeRefreshVersion.$profileId.$location';
+  }
+
+  bool providerRuntimeWasRefreshed(
+    String profileId, {
+    String? directory,
+    String? workspace,
+  }) =>
+      prefs.getBool(
+        _providerRuntimeRefreshKey(
+          profileId,
+          directory: directory,
+          workspace: workspace,
+        ),
+      ) ??
+      false;
+
+  Future<void> markProviderRuntimeRefreshed(
+    String profileId, {
+    String? directory,
+    String? workspace,
+  }) async {
+    if (!await prefs.setBool(
+      _providerRuntimeRefreshKey(
+        profileId,
+        directory: directory,
+        workspace: workspace,
+      ),
+      true,
+    )) {
+      throw StateError('Could not save the provider runtime migration');
+    }
   }
 
   // ----- per-profile model/agent selection -----
