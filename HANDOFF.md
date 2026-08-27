@@ -206,9 +206,10 @@ alone. The app now filters `/provider` to its ordered `connected` IDs, uses thos
 maps as the picker authority, and applies v2 capability metadata only as enrichment for
 matching rows. Older OpenCode servers retain the `/config/providers` fallback.
 
-The live Coding Plan credential completed a read-only request through
-`zai-coding-plan/glm-5.2` and returned the exact expected marker. The refreshed
-OpenCode `1.18.23` server on port 4747 then reported 11 connected providers through
+The live Coding Plan credential completed a direct read-only request through
+`zai-coding-plan/glm-5.2`. A second request attached through the same OpenCode server
+URL used by mobile (`http://127.0.0.1:4747`) returned the exact `ZAI_SERVER_OK` marker.
+The refreshed OpenCode `1.18.23` server also reported 11 connected providers through
 `/provider`, including `zai-coding-plan` with seven models. No credential was copied
 into this repository or the mobile app. Flutter analysis was clean, all 232 tests
 passed, Shorebird's dry run reported no issue, and Patch 8 was published stable without
