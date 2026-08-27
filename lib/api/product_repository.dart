@@ -223,10 +223,35 @@ class IntegrationMethodInfo {
 }
 
 class IntegrationAuthLaunch {
+  final String attemptID;
   final String url;
   final String instructions;
+  final IntegrationAuthMode mode;
+  final int? expiresAt;
 
-  const IntegrationAuthLaunch({required this.url, required this.instructions});
+  const IntegrationAuthLaunch({
+    required this.attemptID,
+    required this.url,
+    required this.instructions,
+    required this.mode,
+    this.expiresAt,
+  });
+}
+
+enum IntegrationAuthMode { auto, code }
+
+enum IntegrationAuthState { pending, complete, failed, expired }
+
+class IntegrationAuthStatus {
+  final IntegrationAuthState state;
+  final String? message;
+  final int? expiresAt;
+
+  const IntegrationAuthStatus({
+    required this.state,
+    this.message,
+    this.expiresAt,
+  });
 }
 
 class CommandInfo {
@@ -375,6 +400,9 @@ abstract class ProductRepository {
     Map<String, String> inputs,
     String? label,
   });
+  Future<IntegrationAuthStatus> integrationOAuthStatus(String attemptID);
+  Future<void> completeIntegrationOAuth(String attemptID, {String? code});
+  Future<void> cancelIntegrationOAuth(String attemptID);
   Future<List<CommandInfo>> listCommands();
   Future<List<SkillInfo>> listSkills();
   Future<List<ReferenceInfo>> listReferences();
@@ -862,10 +890,66 @@ class SdkProductRepository
       throw const ProductException('No authorization link was returned');
     }
     return IntegrationAuthLaunch(
+      attemptID: attempt.attemptID,
       url: attempt.url,
       instructions: attempt.instructions,
+      mode: attempt.mode == sdk.IntegrationAttemptModeEnum.code
+          ? IntegrationAuthMode.code
+          : IntegrationAuthMode.auto,
+      expiresAt: _finiteTimestamp(attempt.time.expires.toJson()),
     );
   });
+
+  @override
+  Future<IntegrationAuthStatus> integrationOAuthStatus(String attemptID) =>
+      _guard('Could not check provider authentication', () async {
+        final response = await _client
+            .getIntegrationsApi()
+            .v2IntegrationAttemptStatus(
+              attemptID: attemptID,
+              locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
+              locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
+            );
+        final data = response.data?.data.objectValue;
+        final value = data?['status']?.toString();
+        final state = switch (value) {
+          'pending' => IntegrationAuthState.pending,
+          'complete' => IntegrationAuthState.complete,
+          'failed' => IntegrationAuthState.failed,
+          'expired' => IntegrationAuthState.expired,
+          _ => throw const ProductException(
+            'Server returned an unknown authentication state',
+          ),
+        };
+        final time = _stringMap(data?['time']);
+        return IntegrationAuthStatus(
+          state: state,
+          message: data?['message']?.toString(),
+          expiresAt: _finiteTimestamp(time['expires']),
+        );
+      });
+
+  @override
+  Future<void> completeIntegrationOAuth(String attemptID, {String? code}) =>
+      _guard('Could not complete provider authentication', () async {
+        await _client.getIntegrationsApi().v2IntegrationAttemptComplete(
+          attemptID: attemptID,
+          locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
+          locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
+          v2IntegrationAttemptCompleteRequest:
+              sdk.V2IntegrationAttemptCompleteRequest(code: code),
+        );
+      });
+
+  @override
+  Future<void> cancelIntegrationOAuth(String attemptID) =>
+      _guard('Could not cancel provider authentication', () async {
+        await _client.getIntegrationsApi().v2IntegrationAttemptCancel(
+          attemptID: attemptID,
+          locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
+          locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
+        );
+      });
 
   @override
   Future<List<CommandInfo>> listCommands() =>
@@ -1076,6 +1160,11 @@ class SdkProductRepository
 
   static Map<String, dynamic> _stringMap(Object? value) =>
       value is Map ? Map<String, dynamic>.from(value) : const {};
+
+  static int? _finiteTimestamp(Object? value) {
+    if (value is num && value.isFinite) return value.toInt();
+    return null;
+  }
 
   static String _methodLabel(String type) => switch (type) {
     'key' => 'API key',

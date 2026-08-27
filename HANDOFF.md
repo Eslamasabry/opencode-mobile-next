@@ -1,6 +1,6 @@
 # oc_app handoff
 
-Last updated: 2026-08-27 (Asia/Dubai)
+Last updated: 2026-08-28 (Asia/Dubai)
 
 ## Current GitHub APK
 
@@ -93,6 +93,24 @@ Live VCS response evidence is still missing: the emulator has no OpenCode server
 and the user's Tailscale-visible phone refused Termux SSH on port 8022 during the
 check. Do not claim the live `/vcs/diff` endpoint until one of those server paths
 is reachable.
+
+The next audited gap repaired is provider OAuth completion. Mobile now preserves
+OpenCode's OAuth attempt ID, `auto`/`code` mode, instructions, and expiry instead
+of discarding them after opening the browser. Provider connections show one flat,
+visible pending row with Check or Enter code plus cancellation. On app resume,
+automatic attempts query the generated status endpoint; code attempts accept the
+returned code and call the generated completion endpoint. Failed and expired
+states remain truthful, and provider/model inventories refresh only after the
+server reports completion. Cancelling the browser confirmation also releases the
+server attempt.
+
+The owner explicitly deferred Traycer and the agent/task-tree lane. Do not add it
+now. The next product-completeness lane should stay within core OpenCode mobile
+workflows, beginning with coding health surfaces such as VCS status/info, symbol
+search, LSP status, and formatter status. Flutter analysis is clean and all 244
+tests pass serially, including loopback HTTP coverage for OAuth start/status/
+complete/cancel and widget coverage for automatic, code, cancel, and model-refresh
+flows.
 
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 

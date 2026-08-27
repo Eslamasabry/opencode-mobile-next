@@ -9,7 +9,7 @@ Authoritative inputs:
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app
-currently calls **31 generated operations directly**. It also uses a set of
+currently calls **34 generated operations directly**. It also uses a set of
 older or compatibility routes through `OpenCodeApi` and raw `Dio`; those are
 listed separately so a working feature is not incorrectly labelled missing.
 
@@ -33,7 +33,7 @@ Legend:
 | Filesystem v2 | - | - | `v2FsFind`, `v2FsList`, `v2FsRead` |
 | Global | - | health | config get/update, dispose, event, upgrade |
 | Instance | `instanceDispose`, `vcsDiff` | - | agents, skills, command list, formatter status, LSP status, path, VCS info/status/raw diff/apply |
-| Integrations | list, key connect, OAuth start | refresh on app resume | attempt get/status, complete, and cancel are not used; OAuth has no in-app completion state |
+| Integrations | list, key connect, OAuth start, attempt status, complete, cancel | provider runtime refresh after confirmed completion | - |
 | MCP | status, connect, disconnect, auth start | - | add, auth authenticate/callback/remove |
 | Messages v2 | - | legacy session message list | `v2SessionMessages` |
 | Models v2 | - | raw `/api/model` catalog parser | `v2ModelList` generated model is unused |
@@ -60,19 +60,18 @@ Legend:
 1. **Review truth:** use `vcsDiff(mode: git|branch)` alongside session diff so
    Review can show uncommitted work and the complete branch delta. This is now
    implemented as adjacent Session, Working tree, and Branch scopes.
-2. **Agent tree and task cockpit:** use `sessionChildren` plus parent/session
-   metadata so subagents and their artifacts are visible inside old and new
-   chats. This is the native, backend-aligned part of the Traycer concept.
-3. **Provider OAuth completion:** represent the attempt ID, poll status, complete
-   or cancel it, and show a truthful connected/error state after returning from
-   the browser.
-4. **Worktree lifecycle:** expose create/status/remove/reset with explicit
-   destructive confirmations and keep it connected to the agent tree.
-5. **Coding health:** add VCS status/info, symbol search, LSP, and formatter
+2. **Provider OAuth completion:** now implemented. The app retains the attempt
+   ID, mode, instructions, and expiry; it shows a visible pending row, checks
+   automatic callbacks on resume or demand, accepts code-based completion,
+   supports cancellation, and refreshes provider/model inventories only after
+   the server confirms completion.
+3. **Coding health:** add VCS status/info, symbol search, LSP, and formatter
    status to the project workspace instead of hiding them as diagnostics.
-6. **Transport modernization:** migrate compatibility routes to generated v2
+4. **Transport modernization:** migrate compatibility routes to generated v2
    APIs only where current and older OpenCode contracts can be reconciled
    without losing sessions, events, or provider inventory.
+5. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
+   worktree lifecycle are deliberately not the current implementation lane.
 
 ## Deliberate non-goals
 
@@ -81,4 +80,3 @@ its native navigation, pickers, prompts, and notifications. Global config
 mutation, sync takeover, raw patch apply, credential removal, and destructive
 worktree operations also stay hidden until they have precise confirmation,
 recovery, and version-compatibility contracts.
-

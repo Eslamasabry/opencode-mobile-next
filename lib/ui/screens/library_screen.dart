@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -402,7 +404,13 @@ class _CapabilityChip extends StatelessWidget {
 
 class IntegrationsScreen extends StatefulWidget {
   final ConnectionController controller;
-  const IntegrationsScreen({super.key, required this.controller});
+  final Future<bool> Function(Uri destination)? authorizationLauncher;
+
+  const IntegrationsScreen({
+    super.key,
+    required this.controller,
+    this.authorizationLauncher,
+  });
 
   @override
   State<IntegrationsScreen> createState() => _IntegrationsScreenState();
@@ -418,6 +426,9 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   String? _integrationError;
   final Set<String> _busy = {};
   bool _refreshOnResume = false;
+  _PendingIntegrationOAuth? _pendingOAuth;
+  bool _checkingOAuth = false;
+  bool _requestCodeOnResume = false;
   int _serverLoadGeneration = 0;
   int _resourceLoadGeneration = 0;
   int _integrationLoadGeneration = 0;
@@ -431,10 +442,22 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _refreshOnResume) {
+    if (state != AppLifecycleState.resumed) return;
+    final pending = _pendingOAuth;
+    if (pending != null) {
+      if (pending.launch.mode == IntegrationAuthMode.auto) {
+        unawaited(_checkOAuth());
+      } else if (_requestCodeOnResume) {
+        _requestCodeOnResume = false;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) unawaited(_enterOAuthCode());
+        });
+      }
+    }
+    if (_refreshOnResume) {
       _refreshOnResume = false;
-      _load();
-      widget.controller.refreshCatalog();
+      unawaited(_load());
+      unawaited(widget.controller.refreshCatalog());
     }
   }
 
@@ -584,6 +607,15 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
                         ),
                 ),
             const SectionLabel('Provider connections'),
+            if (_pendingOAuth case final pending?)
+              _PendingOAuthTile(
+                pending: pending,
+                checking: _checkingOAuth,
+                onContinue: pending.launch.mode == IntegrationAuthMode.code
+                    ? _enterOAuthCode
+                    : _checkOAuth,
+                onCancel: _cancelOAuth,
+              ),
             if (_integrationError != null)
               _SectionLoadError(
                 message: _integrationError!,
@@ -817,20 +849,122 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
         method.id!,
         inputs: inputs,
       );
-      final destination = parseAuthorizationUrl(launch.url);
-      if (!mounted || !await _confirmAuthorizationLaunch(destination)) return;
-      final opened = await launchUrl(
-        destination,
-        mode: LaunchMode.externalApplication,
-      );
-      if (!opened) throw const ProductException('Could not open OAuth');
-      _refreshOnResume = true;
-      if (launch.instructions.isNotEmpty && mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(launch.instructions)));
+      if (!mounted) return;
+      setState(() {
+        _pendingOAuth = _PendingIntegrationOAuth(
+          integrationID: integration.id,
+          integrationName: integration.name,
+          launch: launch,
+        );
+      });
+      try {
+        final destination = parseAuthorizationUrl(launch.url);
+        if (!await _confirmAuthorizationLaunch(destination)) {
+          await _cancelOAuth();
+          return;
+        }
+        final opened = widget.authorizationLauncher == null
+            ? await launchUrl(destination, mode: LaunchMode.externalApplication)
+            : await widget.authorizationLauncher!(destination);
+        if (!opened) throw const ProductException('Could not open OAuth');
+        _requestCodeOnResume = launch.mode == IntegrationAuthMode.code;
+      } catch (_) {
+        await _cancelOAuth(showError: false);
+        rethrow;
       }
     });
+  }
+
+  Future<void> _checkOAuth() async {
+    final pending = _pendingOAuth;
+    final repository = widget.controller.repository;
+    if (pending == null || repository == null || _checkingOAuth) return;
+    setState(() => _checkingOAuth = true);
+    try {
+      final status = await repository.integrationOAuthStatus(
+        pending.launch.attemptID,
+      );
+      if (!mounted || _pendingOAuth != pending) return;
+      if (status.state == IntegrationAuthState.complete) {
+        await _finishOAuth(pending);
+        return;
+      }
+      setState(() => _pendingOAuth = pending.copyWith(status: status));
+    } catch (error) {
+      if (mounted) _showError(error);
+    } finally {
+      if (mounted) setState(() => _checkingOAuth = false);
+    }
+  }
+
+  Future<void> _enterOAuthCode() async {
+    final pending = _pendingOAuth;
+    if (pending == null || pending.launch.mode != IntegrationAuthMode.code) {
+      return;
+    }
+    final code = await showDialog<String>(
+      context: context,
+      builder: (context) => _OAuthCodeDialog(
+        integrationName: pending.integrationName,
+        instructions: pending.launch.instructions,
+      ),
+    );
+    if (code == null || !mounted || _pendingOAuth != pending) return;
+    setState(() => _checkingOAuth = true);
+    try {
+      await widget.controller.repository!.completeIntegrationOAuth(
+        pending.launch.attemptID,
+        code: code,
+      );
+      final status = await widget.controller.repository!.integrationOAuthStatus(
+        pending.launch.attemptID,
+      );
+      if (!mounted || _pendingOAuth != pending) return;
+      if (status.state == IntegrationAuthState.complete) {
+        await _finishOAuth(pending);
+      } else {
+        setState(() => _pendingOAuth = pending.copyWith(status: status));
+      }
+    } catch (error) {
+      if (mounted) _showError(error);
+    } finally {
+      if (mounted) setState(() => _checkingOAuth = false);
+    }
+  }
+
+  Future<void> _finishOAuth(_PendingIntegrationOAuth pending) async {
+    await widget.controller.repository!.refreshProviderRuntime();
+    await Future.wait([_load(), widget.controller.refreshCatalog()]);
+    if (!mounted || _pendingOAuth != pending) return;
+    setState(() => _pendingOAuth = null);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${pending.integrationName} is connected')),
+    );
+  }
+
+  Future<void> _cancelOAuth({bool showError = true}) async {
+    final pending = _pendingOAuth;
+    if (pending == null) return;
+    try {
+      await widget.controller.repository!.cancelIntegrationOAuth(
+        pending.launch.attemptID,
+      );
+    } catch (error) {
+      if (showError && mounted) _showError(error);
+    } finally {
+      if (mounted && _pendingOAuth == pending) {
+        setState(() {
+          _pendingOAuth = null;
+          _requestCodeOnResume = false;
+        });
+      }
+    }
+  }
+
+  void _showError(Object error) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(error.toString())));
   }
 
   Future<Map<String, String>?> _oauthInputs(
@@ -868,6 +1002,167 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     _resourceLoadGeneration++;
     _integrationLoadGeneration++;
     WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+}
+
+class _PendingIntegrationOAuth {
+  final String integrationID;
+  final String integrationName;
+  final IntegrationAuthLaunch launch;
+  final IntegrationAuthStatus? status;
+
+  const _PendingIntegrationOAuth({
+    required this.integrationID,
+    required this.integrationName,
+    required this.launch,
+    this.status,
+  });
+
+  _PendingIntegrationOAuth copyWith({required IntegrationAuthStatus status}) =>
+      _PendingIntegrationOAuth(
+        integrationID: integrationID,
+        integrationName: integrationName,
+        launch: launch,
+        status: status,
+      );
+}
+
+class _PendingOAuthTile extends StatelessWidget {
+  final _PendingIntegrationOAuth pending;
+  final bool checking;
+  final Future<void> Function() onContinue;
+  final Future<void> Function() onCancel;
+
+  const _PendingOAuthTile({
+    required this.pending,
+    required this.checking,
+    required this.onContinue,
+    required this.onCancel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final state = pending.status?.state ?? IntegrationAuthState.pending;
+    final terminal =
+        state == IntegrationAuthState.failed ||
+        state == IntegrationAuthState.expired;
+    final message = switch (state) {
+      IntegrationAuthState.failed =>
+        pending.status?.message ?? 'Authentication failed',
+      IntegrationAuthState.expired => 'Authentication attempt expired',
+      IntegrationAuthState.complete => 'Authentication complete',
+      IntegrationAuthState.pending =>
+        pending.launch.instructions.trim().isEmpty
+            ? pending.launch.mode == IntegrationAuthMode.code
+                  ? 'Return from the browser and enter the authorization code.'
+                  : 'Finish authentication in the browser, then check its status.'
+            : pending.launch.instructions.trim(),
+    };
+    final actionLabel = terminal
+        ? 'Dismiss'
+        : pending.launch.mode == IntegrationAuthMode.code
+        ? 'Enter code'
+        : 'Check';
+
+    return ListTile(
+      key: const ValueKey('pending-provider-oauth'),
+      leading: checking
+          ? const SizedBox.square(
+              dimension: 22,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : Icon(terminal ? Icons.error_outline_rounded : Icons.login_rounded),
+      title: Text('Connecting ${pending.integrationName}'),
+      subtitle: Text(message, maxLines: 3, overflow: TextOverflow.ellipsis),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextButton(
+            onPressed: checking
+                ? null
+                : terminal
+                ? onCancel
+                : onContinue,
+            child: Text(actionLabel),
+          ),
+          if (!terminal)
+            PopupMenuButton<void>(
+              tooltip: 'Authentication options',
+              itemBuilder: (context) => [
+                PopupMenuItem<void>(
+                  onTap: onCancel,
+                  child: const ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.close_rounded),
+                    title: Text('Cancel attempt'),
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OAuthCodeDialog extends StatefulWidget {
+  final String integrationName;
+  final String instructions;
+
+  const _OAuthCodeDialog({
+    required this.integrationName,
+    required this.instructions,
+  });
+
+  @override
+  State<_OAuthCodeDialog> createState() => _OAuthCodeDialogState();
+}
+
+class _OAuthCodeDialogState extends State<_OAuthCodeDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: Text('Finish ${widget.integrationName}'),
+    content: SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (widget.instructions.trim().isNotEmpty) ...[
+            Text(widget.instructions.trim()),
+            const SizedBox(height: 16),
+          ],
+          TextField(
+            key: const ValueKey('oauth-completion-code'),
+            controller: _controller,
+            autofocus: true,
+            autocorrect: false,
+            enableSuggestions: false,
+            decoration: const InputDecoration(labelText: 'Authorization code'),
+            onSubmitted: (_) => _complete(),
+          ),
+        ],
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Not yet'),
+      ),
+      FilledButton(onPressed: _complete, child: const Text('Complete')),
+    ],
+  );
+
+  void _complete() {
+    final value = _controller.text.trim();
+    if (value.isNotEmpty) Navigator.pop(context, value);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
     super.dispose();
   }
 }

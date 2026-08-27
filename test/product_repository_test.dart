@@ -356,6 +356,109 @@ void main() {
     },
   );
 
+  test(
+    'provider OAuth keeps and completes the server attempt contract',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        final requests = <({String method, Uri uri, String body})>[];
+        server.listen((request) async {
+          final body = await utf8.decoder.bind(request).join();
+          requests.add((method: request.method, uri: request.uri, body: body));
+          request.response.headers.contentType = ContentType.json;
+          final location = {
+            'directory': '/root',
+            'workspaceID': 'phone',
+            'project': {'id': 'project-1', 'directory': '/root'},
+          };
+          if (request.method == 'POST' &&
+              request.uri.path == '/api/integration/cloud/connect/oauth') {
+            request.response.write(
+              jsonEncode({
+                'location': location,
+                'data': {
+                  'attemptID': 'attempt-1',
+                  'url': 'https://auth.example.com/authorize',
+                  'instructions': 'Paste the returned code',
+                  'mode': 'code',
+                  'time': {'created': 100, 'expires': 999},
+                },
+              }),
+            );
+          } else if (request.method == 'GET') {
+            request.response.write(
+              jsonEncode({
+                'location': location,
+                'data': {
+                  'status': 'complete',
+                  'time': {'created': 100, 'expires': 999},
+                },
+              }),
+            );
+          } else {
+            request.response.statusCode = HttpStatus.noContent;
+          }
+          await request.response.close();
+        });
+
+        try {
+          final api = OpenCodeApi(
+            baseUrl: 'http://${server.address.host}:${server.port}',
+          );
+          final repository = SdkProductRepository(api.sdkClient)
+            ..setLocation(directory: '/root', workspace: 'phone');
+
+          final launch = await repository.startIntegrationOAuth(
+            'cloud',
+            'oauth-1',
+            inputs: const {'tenant': 'acme'},
+            label: 'Work',
+          );
+          final status = await repository.integrationOAuthStatus(
+            launch.attemptID,
+          );
+          await repository.completeIntegrationOAuth(
+            launch.attemptID,
+            code: 'returned-code',
+          );
+          await repository.cancelIntegrationOAuth(launch.attemptID);
+
+          expect(launch.attemptID, 'attempt-1');
+          expect(launch.mode, IntegrationAuthMode.code);
+          expect(launch.expiresAt, 999);
+          expect(status.state, IntegrationAuthState.complete);
+          expect(status.expiresAt, 999);
+          expect(requests.map((request) => request.method), [
+            'POST',
+            'GET',
+            'POST',
+            'DELETE',
+          ]);
+          expect(requests.map((request) => request.uri.path), [
+            '/api/integration/cloud/connect/oauth',
+            '/api/integration/attempt/attempt-1',
+            '/api/integration/attempt/attempt-1/complete',
+            '/api/integration/attempt/attempt-1',
+          ]);
+          expect(jsonDecode(requests[0].body), {
+            'methodID': 'oauth-1',
+            'inputs': {'tenant': 'acme'},
+            'label': 'Work',
+          });
+          expect(jsonDecode(requests[2].body), {'code': 'returned-code'});
+          for (final request in requests) {
+            expect(request.uri.queryParameters, {
+              'location[directory]': '/root',
+              'location[workspace]': 'phone',
+            });
+          }
+        } finally {
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
+
   test('catalog accepts the current v2 capability response shape', () async {
     await HttpOverrides.runZoned(() async {
       final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);

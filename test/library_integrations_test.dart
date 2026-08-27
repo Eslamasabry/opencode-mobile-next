@@ -16,11 +16,21 @@ class _IntegrationsRepository implements ProductRepository {
   Object? integrationError;
   String mcpAuthorizationUrl = 'https://mcp-auth.example.com/authorize';
   IntegrationAuthLaunch oauthLaunch = const IntegrationAuthLaunch(
+    attemptID: 'attempt-1',
     url: 'https://provider-auth.example.com/authorize',
     instructions: '',
+    mode: IntegrationAuthMode.auto,
+  );
+  IntegrationAuthStatus oauthStatus = const IntegrationAuthStatus(
+    state: IntegrationAuthState.pending,
   );
   Map<String, String>? oauthInputs;
   int oauthCalls = 0;
+  int oauthStatusCalls = 0;
+  int oauthCompleteCalls = 0;
+  int oauthCancelCalls = 0;
+  int providerRefreshCalls = 0;
+  String? oauthCompletionCode;
 
   @override
   void setLocation({String? directory, String? workspace}) {}
@@ -60,6 +70,31 @@ class _IntegrationsRepository implements ProductRepository {
   }
 
   @override
+  Future<IntegrationAuthStatus> integrationOAuthStatus(String attemptID) async {
+    oauthStatusCalls++;
+    return oauthStatus;
+  }
+
+  @override
+  Future<void> completeIntegrationOAuth(
+    String attemptID, {
+    String? code,
+  }) async {
+    oauthCompleteCalls++;
+    oauthCompletionCode = code;
+  }
+
+  @override
+  Future<void> cancelIntegrationOAuth(String attemptID) async {
+    oauthCancelCalls++;
+  }
+
+  @override
+  Future<void> refreshProviderRuntime() async {
+    providerRefreshCalls++;
+  }
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -71,8 +106,15 @@ Future<ConnectionController> _controller(ProductRepository repository) async {
     ..status = StreamStatus.connected;
 }
 
-Widget _app(ConnectionController controller) =>
-    MaterialApp(home: IntegrationsScreen(controller: controller));
+Widget _app(
+  ConnectionController controller, {
+  Future<bool> Function(Uri destination)? authorizationLauncher,
+}) => MaterialApp(
+  home: IntegrationsScreen(
+    controller: controller,
+    authorizationLauncher: authorizationLauncher,
+  ),
+);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -280,6 +322,11 @@ void main() {
 
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
+      expect(repository.oauthCancelCalls, 1);
+      expect(
+        find.byKey(const ValueKey('pending-provider-oauth')),
+        findsNothing,
+      );
     },
   );
 
@@ -387,6 +434,110 @@ void main() {
 
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
+      expect(repository.oauthCancelCalls, 1);
     },
   );
+
+  testWidgets(
+    'automatic OAuth stays visible and checks server attempt status',
+    (tester) async {
+      final repository = _IntegrationsRepository()
+        ..integrations = const [
+          IntegrationInfo(
+            id: 'cloud',
+            name: 'Cloud Provider',
+            methods: [
+              IntegrationMethodInfo(
+                type: 'oauth',
+                id: 'oauth-1',
+                label: 'Cloud OAuth',
+              ),
+            ],
+            connectionCount: 0,
+          ),
+        ];
+
+      await tester.pumpWidget(
+        _app(
+          await _controller(repository),
+          authorizationLauncher: (_) async => true,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Connect'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Open browser'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('pending-provider-oauth')),
+        findsOneWidget,
+      );
+      expect(find.text('Connecting Cloud Provider'), findsOneWidget);
+      await tester.tap(find.text('Check'));
+      await tester.pumpAndSettle();
+
+      expect(repository.oauthStatusCalls, 1);
+      expect(
+        find.byKey(const ValueKey('pending-provider-oauth')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('code OAuth completes, refreshes models, and clears its state', (
+    tester,
+  ) async {
+    final repository = _IntegrationsRepository()
+      ..integrations = const [
+        IntegrationInfo(
+          id: 'cloud',
+          name: 'Cloud Provider',
+          methods: [
+            IntegrationMethodInfo(
+              type: 'oauth',
+              id: 'oauth-1',
+              label: 'Cloud OAuth',
+            ),
+          ],
+          connectionCount: 0,
+        ),
+      ]
+      ..oauthLaunch = const IntegrationAuthLaunch(
+        attemptID: 'attempt-code',
+        url: 'https://provider-auth.example.com/authorize',
+        instructions: 'Paste the browser code',
+        mode: IntegrationAuthMode.code,
+      )
+      ..oauthStatus = const IntegrationAuthStatus(
+        state: IntegrationAuthState.complete,
+      );
+
+    await tester.pumpWidget(
+      _app(
+        await _controller(repository),
+        authorizationLauncher: (_) async => true,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Connect'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Open browser'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Enter code'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('oauth-completion-code')),
+      'returned-code',
+    );
+    await tester.tap(find.text('Complete'));
+    await tester.pumpAndSettle();
+
+    expect(repository.oauthCompleteCalls, 1);
+    expect(repository.oauthCompletionCode, 'returned-code');
+    expect(repository.oauthStatusCalls, 1);
+    expect(repository.providerRefreshCalls, 1);
+    expect(find.byKey(const ValueKey('pending-provider-oauth')), findsNothing);
+    expect(find.text('Cloud Provider is connected'), findsOneWidget);
+  });
 }
