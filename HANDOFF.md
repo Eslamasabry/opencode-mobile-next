@@ -45,6 +45,8 @@ byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 - Command-launcher commit: `e75034368674581f93ff53969ec9a7db27fc3e8a`
 - Stable Patch 6 ID: `620296`
 - Review/focus/catalog/updater commit: `bf4f7912b725b369dbdd04e5a86826984334ec4a`
+- Stable Patch 7 ID: `620648`
+- Provider-catalog authority fix: `c13d1f42c41e26fcf0c7dd265b1007dbf2a8780b`
 - OpenCode reference revision: `c2eacd72afc4a4984564c393e15ab30011057269`
 - Command/feature map: [`docs/opencode-command-feature-map.md`](docs/opencode-command-feature-map.md)
 
@@ -176,6 +178,23 @@ downloaded the 1,661,180-byte x86_64 Patch 6 and activated
 empty state, a prompt that remained focused with the keyboard shown after four seconds,
 and the refreshed model picker. The next native maintenance release should upgrade
 Gradle to at least 9.1, AGP to at least 9.0.1, and Kotlin to at least 2.3.20.
+
+Patch 7 fixes newly connected providers being hidden when OpenCode's legacy
+`/config/providers` response lags behind the current v2 provider/model catalog. When
+the detailed v2 catalog is available it is now authoritative; the legacy list is only
+a fallback. Catalog refreshes also run after provider API-key/OAuth connection and on
+the corresponding OpenCode SSE update events. The regression case reproduces the
+reported state exactly: legacy data exposes only Zen while the current catalog exposes
+`zai-coding-plan/glm-5.2`; both providers remain visible and the Z.AI selection is
+preserved. The current catalog still removes truly stale entries such as `ox-alpha`.
+
+Flutter analysis was clean and all 231 tests passed. Shorebird's dry run reported no
+compatibility issue and Patch 7 was published to the stable track without native or
+asset overrides. A real Z.AI completion was not claimed because the isolated Pixel 6
+simulator has no user Z.AI credential. Its saved Android snapshot also entered a
+framework/binder-starvation state during activation verification; a no-snapshot cold
+boot resolved package discovery but remained too slow for trustworthy Patch 7 runtime
+activation evidence. Use the user's configured server for the final provider call.
 
 On the Ubuntu workstation, `z node_modules/opencode-ai` failed because zoxide had no
 matching history entry. The direct package path is `/home/eslam/node_modules/opencode-ai`;
