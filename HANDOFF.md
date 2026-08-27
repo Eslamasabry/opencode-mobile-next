@@ -49,6 +49,8 @@ byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 - Provider-catalog authority fix: `c13d1f42c41e26fcf0c7dd265b1007dbf2a8780b`
 - Stable Patch 8 ID: `620696`
 - Connected-provider contract fix: `58b321a7eae755ed1641b269a58325169b696ea6`
+- Stable Patch 9 ID: `620735`
+- Connected-integration reconciliation: `f9eb7b7f03da074da2e609021b3a70b3d14cd934`
 - OpenCode reference revision: `c2eacd72afc4a4984564c393e15ab30011057269`
 - Command/feature map: [`docs/opencode-command-feature-map.md`](docs/opencode-command-feature-map.md)
 
@@ -214,6 +216,24 @@ The refreshed OpenCode `1.18.23` server also reported 11 connected providers thr
 into this repository or the mobile app. Flutter analysis was clean, all 232 tests
 passed, Shorebird's dry run reported no issue, and Patch 8 was published stable without
 native or asset overrides.
+
+Patch 9 targets the user's actual personal-phone topology: OpenCode Mobile and the
+OpenCode server both run on Android, with the server in Termux at
+`http://127.0.0.1:4096`. OpenCode can report a provider connection through
+`/api/integration` while temporarily omitting that provider from `/provider`. When
+that exact mismatch occurs, the app now recovers only the integration-confirmed
+provider IDs from `/config/providers`, including their model maps and thinking
+variants. It does not expose unrelated configured or available providers and does
+not hardcode Z.AI or model names.
+
+The regression test reproduces the phone report: `/provider` contains Zen alone,
+the integration API reports a connected `zai-coding-plan`, and the configured model
+map contains `glm-5.2` with `high` and `max` variants. The selector recovers that
+provider, model, variants, and selection. Flutter analysis was clean, all 233 tests
+passed, and Shorebird's dry run found no compatibility issue. Patch 9 was published
+to Stable without native or asset overrides. Phone runtime activation remains to be
+verified by the user because the phone's ADB, SSH, and OpenCode ports were not
+remotely reachable; the workstation server was not treated as phone evidence.
 
 On the Ubuntu workstation, `z node_modules/opencode-ai` failed because zoxide had no
 matching history entry. The direct package path is `/home/eslam/node_modules/opencode-ai`;
