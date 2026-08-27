@@ -276,6 +276,94 @@ class McpServerInfo {
   const McpServerInfo({required this.name, required this.status, this.error});
 }
 
+enum McpServerKind { remote, local }
+
+enum McpConfigScope { project, global }
+
+class McpServerDraft {
+  final String name;
+  final McpServerKind kind;
+  final String? url;
+  final List<String> command;
+  final String? cwd;
+  final Map<String, String> headers;
+  final Map<String, String> environment;
+  final bool detectOAuth;
+  final int? timeoutMs;
+
+  const McpServerDraft({
+    required this.name,
+    required this.kind,
+    this.url,
+    this.command = const [],
+    this.cwd,
+    this.headers = const {},
+    this.environment = const {},
+    this.detectOAuth = true,
+    this.timeoutMs,
+  });
+
+  String get normalizedName => name.trim();
+
+  Map<String, Object?> toConfigJson() {
+    final serverName = normalizedName;
+    if (serverName.isEmpty || serverName.contains(RegExp(r'[\r\n]'))) {
+      throw const ProductException('Enter a valid MCP server name');
+    }
+    final timeout = timeoutMs;
+    if (timeout != null && timeout <= 0) {
+      throw const ProductException('MCP timeout must be greater than zero');
+    }
+    switch (kind) {
+      case McpServerKind.remote:
+        final value = url?.trim() ?? '';
+        final uri = Uri.tryParse(value);
+        if (uri == null ||
+            !uri.hasScheme ||
+            !uri.hasAuthority ||
+            (uri.scheme != 'https' && uri.scheme != 'http') ||
+            uri.userInfo.isNotEmpty) {
+          throw const ProductException(
+            'Enter an HTTP or HTTPS MCP server URL without credentials',
+          );
+        }
+        _validatePairs(headers, 'HTTP header');
+        return {
+          'type': 'remote',
+          'url': uri.toString(),
+          if (headers.isNotEmpty) 'headers': Map.of(headers),
+          if (!detectOAuth) 'oauth': false,
+          'timeout': ?timeout,
+        };
+      case McpServerKind.local:
+        final parts = command.map((part) => part.trim()).toList();
+        if (parts.isEmpty || parts.any((part) => part.isEmpty)) {
+          throw const ProductException(
+            'Enter the local command and each argument on its own line',
+          );
+        }
+        _validatePairs(environment, 'environment variable');
+        return {
+          'type': 'local',
+          'command': parts,
+          if (cwd?.trim().isNotEmpty == true) 'cwd': cwd!.trim(),
+          if (environment.isNotEmpty) 'environment': Map.of(environment),
+          'timeout': ?timeout,
+        };
+    }
+  }
+
+  static void _validatePairs(Map<String, String> values, String label) {
+    for (final entry in values.entries) {
+      if (entry.key.trim().isEmpty ||
+          entry.key.contains(RegExp(r'[\r\n=]')) ||
+          entry.value.contains(RegExp(r'[\r\n]'))) {
+        throw ProductException('Enter a valid $label name and value');
+      }
+    }
+  }
+}
+
 class McpResourceInfo {
   final String name;
   final String server;
@@ -528,6 +616,14 @@ abstract class ProductRepository {
   Future<void> connectMcp(String name);
   Future<void> disconnectMcp(String name);
   Future<String> startMcpAuthentication(String name);
+  Future<void> addMcpServer(
+    McpServerDraft draft, {
+    required McpConfigScope scope,
+  }) => Future.error(
+    const ProductException(
+      'Persistent MCP setup is unavailable on this server',
+    ),
+  );
   Future<List<IntegrationInfo>> listIntegrations();
   Future<void> connectIntegrationKey(String id, String key, {String? label});
   Future<void> refreshProviderRuntime();
@@ -1157,6 +1253,54 @@ class SdkProductRepository
         }
         return url;
       });
+
+  @override
+  Future<void> addMcpServer(
+    McpServerDraft draft, {
+    required McpConfigScope scope,
+  }) => _guard('Could not save the MCP server', () async {
+    final name = draft.normalizedName;
+    final config = draft.toConfigJson();
+    final patch = sdk.Config(mcp: {name: sdk.OpencodeSdkRawUnion012(config)});
+
+    switch (scope) {
+      case McpConfigScope.project:
+        if (_directory?.trim().isNotEmpty != true) {
+          throw const ProductException(
+            'Select a project before adding a project MCP server',
+          );
+        }
+        final current = await _client.getConfigApi().configGet(
+          directory: _directory,
+          workspace: _workspace,
+        );
+        _requireUniqueMcpName(current.data, name, 'current project');
+        await _client.getConfigApi().configUpdate(
+          directory: _directory,
+          workspace: _workspace,
+          config: patch,
+        );
+      case McpConfigScope.global:
+        final current = await _client.getGlobalApi().globalConfigGet();
+        _requireUniqueMcpName(current.data, name, 'global configuration');
+        await _client.getGlobalApi().globalConfigUpdate(config: patch);
+    }
+  });
+
+  static void _requireUniqueMcpName(
+    sdk.Config? config,
+    String name,
+    String scope,
+  ) {
+    if (config == null) {
+      throw ProductException('Could not verify the existing $scope');
+    }
+    if (config.mcp?.containsKey(name) == true) {
+      throw ProductException(
+        'An MCP server named "$name" already exists in the $scope',
+      );
+    }
+  }
 
   @override
   Future<List<IntegrationInfo>> listIntegrations() =>

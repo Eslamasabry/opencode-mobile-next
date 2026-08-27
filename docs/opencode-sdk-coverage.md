@@ -9,7 +9,7 @@ Authoritative inputs:
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app
-currently calls **69 generated operations directly**. It also uses a set of
+currently calls **73 generated operations directly**. It also uses a set of
 older or compatibility routes through `OpenCodeApi` and raw `Dio`; those are
 listed separately so a working feature is not incorrectly labelled missing.
 
@@ -23,7 +23,7 @@ Legend:
 | API | Generated | Compatibility | Hidden or incomplete |
 |---|---|---|---|
 | Commands | `v2CommandList` | - | - |
-| Config | - | `configProviders` | `configGet`, `configUpdate` |
+| Config | `configGet`, `configUpdate` | `configProviders` | - |
 | Control | `authSet` | - | `appLog`, `authRemove` |
 | Control plane | `experimentalControlPlaneMoveSession` | - | - |
 | Event | - | `eventSubscribe` through the shared `/event` SSE transport | Generated event transport is unused |
@@ -31,7 +31,7 @@ Legend:
 | Experimental | `experimentalResourceList`, Console org list/switch | - | capabilities, console state, background sessions, global session list, tool IDs/list, worktree create/list/remove/reset |
 | File | list, read, filename search, text search, `findSymbols` | - | status |
 | Filesystem v2 | - | - | `v2FsFind`, `v2FsList`, `v2FsRead` |
-| Global | - | health | config get/update, dispose, event, upgrade |
+| Global | `globalConfigGet`, `globalConfigUpdate` | health | dispose, event, upgrade |
 | Instance | `instanceDispose`, `vcsDiff`, `vcsGet`, `vcsStatus`, `lspStatus`, `formatterStatus` | - | agents, skills, command list, path, VCS raw diff/apply |
 | Integrations | list, key connect, OAuth start, attempt status, complete, cancel | provider runtime refresh after confirmed completion | - |
 | MCP | status, connect, disconnect, auth start | - | add, auth authenticate/callback/remove |
@@ -127,13 +127,21 @@ Legend:
    project health, settings health, and terminal mutations. A screen may keep
    already-rendered data while Android wakes, but it cannot send a new request
    through the repository being retired.
-6. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
+6. **Persistent MCP setup:** the Library now has a native remote/local MCP form
+   that writes either the selected project's config or the server-wide config.
+   It validates URLs, commands, headers, environment variables, and timeouts;
+   rejects duplicate names before patching; then rebuilds the location transport
+   because OpenCode invalidates the configured instance. The runtime-only
+   `mcp.add` endpoint remains hidden because its state does not survive a server
+   restart. A saved config is never offered for duplicate submission when the
+   subsequent app reconnect fails.
+7. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
    worktree lifecycle are deliberately not the current implementation lane.
 
 ## Deliberate non-goals
 
 The TUI control API should not be mirrored button-for-button. Mobile should own
-its native navigation, pickers, prompts, and notifications. Global config
-mutation, sync takeover, raw patch apply, credential removal, and destructive
-worktree operations also stay hidden until they have precise confirmation,
-recovery, and version-compatibility contracts.
+its native navigation, pickers, prompts, and notifications. Arbitrary global
+config mutation, sync takeover, raw patch apply, credential removal, and
+destructive worktree operations also stay hidden until they have precise
+confirmation, recovery, and version-compatibility contracts.

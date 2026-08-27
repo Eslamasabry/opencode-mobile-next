@@ -1698,6 +1698,20 @@ class ConnectionController extends ChangeNotifier {
     return repository;
   }
 
+  /// Rebuilds the selected location after a configuration patch invalidates
+  /// the OpenCode instance that served it.
+  Future<void> reloadAfterConfigurationChange() async {
+    final currentProfile = _connectedProfile;
+    if (currentProfile == null) {
+      throw StateError('OpenCode is not connected.');
+    }
+    await _resumeLifecycleTransport(
+      currentProfile,
+      directory: directory,
+      workspace: workspace,
+    );
+  }
+
   Future<OpenCodeApi> _requireActionTransport() async {
     final actionApi = await prepareActionTransport();
     if (actionApi != null) return actionApi;

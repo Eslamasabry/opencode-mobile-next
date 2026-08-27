@@ -11,6 +11,7 @@ import '../../state/connection.dart';
 import '../widgets/file_preview.dart';
 import '../widgets/product_states.dart';
 import '../widgets/pickers.dart';
+import 'mcp_setup_screen.dart';
 import 'requests_screen.dart';
 import 'settings_screen.dart';
 
@@ -573,6 +574,20 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     }
   }
 
+  Future<void> _openMcpSetup() async {
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => McpSetupScreen(controller: widget.controller),
+      ),
+    );
+    if (!mounted || saved != true) return;
+    await _load();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('MCP server saved in OpenCode')),
+    );
+  }
+
   Future<ProductRepository> _requireActionRepository() async {
     final repository = await widget.controller.prepareActionRepository();
     if (repository != null) return repository;
@@ -608,7 +623,17 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('MCP and integrations')),
+      appBar: AppBar(
+        title: const Text('MCP and integrations'),
+        actions: [
+          IconButton(
+            key: const ValueKey('add-mcp-server'),
+            tooltip: 'Add MCP server',
+            onPressed: _openMcpSetup,
+            icon: const Icon(Icons.add_rounded),
+          ),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -621,11 +646,15 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
             else if (_servers == null)
               const _SectionLoading(label: 'Loading MCP servers')
             else if (_servers!.isEmpty)
-              const ListTile(
-                leading: Icon(Icons.hub_outlined),
-                title: Text('No MCP servers configured'),
-                subtitle: Text(
-                  'Add MCP servers in your OpenCode configuration.',
+              ListTile(
+                leading: const Icon(Icons.hub_outlined),
+                title: const Text('No MCP servers configured'),
+                subtitle: const Text(
+                  'Save one for this project or every project on the server.',
+                ),
+                trailing: TextButton(
+                  onPressed: _openMcpSetup,
+                  child: const Text('Add'),
                 ),
               )
             else

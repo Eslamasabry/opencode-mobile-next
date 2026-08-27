@@ -7,6 +7,7 @@ import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/library_screen.dart';
+import 'package:opencode_mobile/ui/screens/mcp_setup_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _IntegrationsRepository implements ProductRepository {
@@ -196,6 +197,22 @@ void main() {
       expect(find.text('Could not load this section'), findsOneWidget);
     },
   );
+
+  testWidgets('empty MCP state opens persistent native setup', (tester) async {
+    final controller = await _controller(_IntegrationsRepository());
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No MCP servers configured'), findsOneWidget);
+    expect(find.byKey(const ValueKey('add-mcp-server')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('add-mcp-server')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(McpSetupScreen), findsOneWidget);
+    expect(find.text('Persisted configuration'), findsOneWidget);
+  });
 
   testWidgets('provider aliases retain separate regional connection states', (
     tester,

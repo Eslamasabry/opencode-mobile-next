@@ -240,6 +240,202 @@ void main() {
     }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
   });
 
+  test('project MCP setup persists one exact config patch', () async {
+    await HttpOverrides.runZoned(() async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final requests = <({String method, Uri uri, Object? body})>[];
+      server.listen((request) async {
+        final text = await utf8.decoder.bind(request).join();
+        final body = text.isEmpty ? null : jsonDecode(text);
+        requests.add((method: request.method, uri: request.uri, body: body));
+        request.response.headers.contentType = ContentType.json;
+        request.response.write(
+          request.method == 'GET' ? jsonEncode({'mcp': {}}) : jsonEncode(body),
+        );
+        await request.response.close();
+      });
+
+      final api = OpenCodeApi(
+        baseUrl: 'http://${server.address.host}:${server.port}',
+      );
+      final repository = SdkProductRepository(api.sdkClient)
+        ..setLocation(directory: '/work/mobile', workspace: 'workspace-1');
+      try {
+        await repository.addMcpServer(
+          const McpServerDraft(
+            name: 'remote-docs',
+            kind: McpServerKind.remote,
+            url: 'https://mcp.example.com/rpc',
+            headers: {'Authorization': 'Bearer test-token'},
+            detectOAuth: false,
+            timeoutMs: 12000,
+          ),
+          scope: McpConfigScope.project,
+        );
+
+        expect(requests.map((request) => request.method), ['GET', 'PATCH']);
+        expect(requests.map((request) => request.uri.path), [
+          '/config',
+          '/config',
+        ]);
+        for (final request in requests) {
+          expect(request.uri.queryParameters, {
+            'directory': '/work/mobile',
+            'workspace': 'workspace-1',
+          });
+        }
+        expect(requests.last.body, {
+          'mcp': {
+            'remote-docs': {
+              'type': 'remote',
+              'url': 'https://mcp.example.com/rpc',
+              'headers': {'Authorization': 'Bearer test-token'},
+              'oauth': false,
+              'timeout': 12000,
+            },
+          },
+        });
+      } finally {
+        api.close();
+        await server.close(force: true);
+      }
+    }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+  });
+
+  test('global MCP setup persists local command configuration', () async {
+    await HttpOverrides.runZoned(() async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final requests = <({String method, Uri uri, Object? body})>[];
+      server.listen((request) async {
+        final text = await utf8.decoder.bind(request).join();
+        final body = text.isEmpty ? null : jsonDecode(text);
+        requests.add((method: request.method, uri: request.uri, body: body));
+        request.response.headers.contentType = ContentType.json;
+        request.response.write(
+          request.method == 'GET' ? jsonEncode({'mcp': {}}) : jsonEncode(body),
+        );
+        await request.response.close();
+      });
+
+      final api = OpenCodeApi(
+        baseUrl: 'http://${server.address.host}:${server.port}',
+      );
+      final repository = SdkProductRepository(api.sdkClient);
+      try {
+        await repository.addMcpServer(
+          const McpServerDraft(
+            name: 'local-tools',
+            kind: McpServerKind.local,
+            command: ['npx', '-y', '@example/mcp-server'],
+            cwd: '/work/mobile',
+            environment: {'LOG_LEVEL': 'warn'},
+            timeoutMs: 9000,
+          ),
+          scope: McpConfigScope.global,
+        );
+
+        expect(requests.map((request) => request.method), ['GET', 'PATCH']);
+        expect(requests.map((request) => request.uri.path), [
+          '/global/config',
+          '/global/config',
+        ]);
+        expect(requests.every((request) => !request.uri.hasQuery), isTrue);
+        expect(requests.last.body, {
+          'mcp': {
+            'local-tools': {
+              'type': 'local',
+              'command': ['npx', '-y', '@example/mcp-server'],
+              'cwd': '/work/mobile',
+              'environment': {'LOG_LEVEL': 'warn'},
+              'timeout': 9000,
+            },
+          },
+        });
+      } finally {
+        api.close();
+        await server.close(force: true);
+      }
+    }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+  });
+
+  test(
+    'persistent MCP setup rejects duplicate names before patching',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        var requestCount = 0;
+        server.listen((request) async {
+          requestCount += 1;
+          request.response.headers.contentType = ContentType.json;
+          request.response.write(
+            jsonEncode({
+              'mcp': {
+                'existing': {
+                  'type': 'remote',
+                  'url': 'https://existing.example.com/mcp',
+                },
+              },
+            }),
+          );
+          await request.response.close();
+        });
+
+        final api = OpenCodeApi(
+          baseUrl: 'http://${server.address.host}:${server.port}',
+        );
+        final repository = SdkProductRepository(api.sdkClient);
+        try {
+          await expectLater(
+            repository.addMcpServer(
+              const McpServerDraft(
+                name: 'existing',
+                kind: McpServerKind.remote,
+                url: 'https://replacement.example.com/mcp',
+              ),
+              scope: McpConfigScope.global,
+            ),
+            throwsA(
+              isA<ProductException>().having(
+                (error) => error.message,
+                'message',
+                contains('already exists'),
+              ),
+            ),
+          );
+          expect(requestCount, 1);
+        } finally {
+          api.close();
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
+
+  test('MCP drafts fail closed on unsafe transport data', () {
+    for (final draft in [
+      const McpServerDraft(
+        name: 'remote',
+        kind: McpServerKind.remote,
+        url: 'ftp://mcp.example.com',
+      ),
+      const McpServerDraft(
+        name: 'header',
+        kind: McpServerKind.remote,
+        url: 'https://mcp.example.com',
+        headers: {'Authorization\nInjected': 'secret'},
+      ),
+      const McpServerDraft(name: 'local', kind: McpServerKind.local),
+      const McpServerDraft(
+        name: 'timeout',
+        kind: McpServerKind.local,
+        command: ['server'],
+        timeoutMs: 0,
+      ),
+    ]) {
+      expect(draft.toConfigJson, throwsA(isA<ProductException>()));
+    }
+  });
+
   test(
     'VCS diff scopes use generated API modes and preserve patches',
     () async {

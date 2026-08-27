@@ -362,6 +362,20 @@ and all three project-health requests. Final-tree Flutter analysis is clean and
 all 298 tests pass serially. The generated SDK audit remains at 69 directly used
 operations. Traycer remains explicitly deferred.
 
+Library now includes a native persistent MCP setup flow for remote URLs and
+server-local commands. Users explicitly choose the current project or all
+projects; the form validates transport fields and writes through generated
+`configGet`/`configUpdate` or `globalConfigGet`/`globalConfigUpdate` contracts.
+Duplicate names fail before a patch, and a successful patch rebuilds the
+location transport because OpenCode invalidates the configured instance. If
+that reconnect fails, the UI truthfully reports that configuration was saved,
+disables editing, and offers Close instead of risking a duplicate submission.
+Focused coverage includes exact loopback methods, paths, queries, payloads,
+unsafe input, duplicate prevention, Library entry, compact 320dp/2x-text layout,
+and post-save reconnect failure. Final-tree Flutter analysis is clean and all
+307 tests pass serially. The generated SDK audit now counts 73 directly used
+operations. Traycer remains explicitly deferred.
+
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`
