@@ -433,6 +433,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     if (state == AppLifecycleState.resumed && _refreshOnResume) {
       _refreshOnResume = false;
       _load();
+      widget.controller.refreshCatalog();
     }
   }
 
@@ -798,7 +799,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
         integration.id,
         value!,
       );
-      await _load();
+      await Future.wait([_load(), widget.controller.refreshCatalog()]);
     });
   }
 

@@ -726,7 +726,82 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('catalog prunes models no longer advertised by OpenCode', (
+  testWidgets(
+    'current catalog prunes a model retained by the legacy fallback',
+    (tester) async {
+      final api = _V2Api(
+        providersResult: ProvidersResponse(
+          providers: [
+            ProviderInfo(
+              id: 'opencode',
+              name: 'OpenCode Zen',
+              modelIDs: const ['current-model', 'ox-alpha'],
+            ),
+          ],
+          defaultProviderID: 'opencode',
+          defaultModelID: 'current-model',
+        ),
+        agentsResult: [AgentInfo(name: 'build')],
+      );
+      final detailed = CatalogSnapshot(
+        providers: const [
+          CatalogProvider(id: 'opencode', name: 'OpenCode Zen', enabled: true),
+        ],
+        models: const [
+          CatalogModel(
+            id: 'current-model',
+            providerID: 'opencode',
+            name: 'Current model',
+            enabled: true,
+            status: 'active',
+            contextLimit: 128000,
+            outputLimit: 16000,
+            reasoning: true,
+            attachments: true,
+            tools: true,
+            variants: [],
+          ),
+        ],
+        agents: const [
+          CatalogAgent(id: 'build', mode: 'primary', hidden: false),
+        ],
+      );
+      final controller = ConnectionController(
+        await _store({'oc.model.server': 'opencode|ox-alpha'}),
+        apiFactory: (_) => api,
+        repositoryFactory: (_) =>
+            _QuestionRepository(legacyUnavailable: false, catalog: detailed),
+        eventStreamFactory:
+            ({required api, required onEvent, required onStatus, onError}) =>
+                _FakeEventStream(
+                  api: api,
+                  onEvent: onEvent,
+                  onStatus: onStatus,
+                  onError: onError,
+                ),
+      );
+      addTearDown(controller.dispose);
+
+      await controller.connect(
+        ServerProfile(
+          id: 'server',
+          name: 'Server',
+          baseUrl: 'http://127.0.0.1:1',
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(controller.catalog?.models.map((model) => model.id), [
+        'current-model',
+      ]);
+      expect(controller.selectedModel?.modelID, 'current-model');
+      expect(controller.catalogDetailed, isTrue);
+      controller.dispose();
+    },
+  );
+
+  testWidgets('current catalog keeps a newly connected Z.AI provider', (
     tester,
   ) async {
     final api = _V2Api(
@@ -735,42 +810,47 @@ void main() {
           ProviderInfo(
             id: 'opencode',
             name: 'OpenCode Zen',
-            modelIDs: const ['current-model'],
+            modelIDs: const ['nemotron'],
           ),
         ],
         defaultProviderID: 'opencode',
-        defaultModelID: 'current-model',
+        defaultModelID: 'nemotron',
       ),
       agentsResult: [AgentInfo(name: 'build')],
     );
     final detailed = CatalogSnapshot(
       providers: const [
         CatalogProvider(id: 'opencode', name: 'OpenCode Zen', enabled: true),
+        CatalogProvider(
+          id: 'zai-coding-plan',
+          name: 'Z.AI Coding Plan',
+          enabled: true,
+        ),
       ],
       models: const [
         CatalogModel(
-          id: 'current-model',
+          id: 'nemotron',
           providerID: 'opencode',
-          name: 'Current model',
+          name: 'Nemotron',
           enabled: true,
           status: 'active',
-          contextLimit: 128000,
-          outputLimit: 16000,
+          contextLimit: 262144,
+          outputLimit: 262144,
           reasoning: true,
-          attachments: true,
+          attachments: false,
           tools: true,
           variants: [],
         ),
         CatalogModel(
-          id: 'ox-alpha',
-          providerID: 'opencode',
-          name: 'Ox Alpha',
+          id: 'glm-5.2',
+          providerID: 'zai-coding-plan',
+          name: 'GLM-5.2',
           enabled: true,
-          status: 'alpha',
-          contextLimit: 200000,
-          outputLimit: 32000,
+          status: 'active',
+          contextLimit: 1000000,
+          outputLimit: 131072,
           reasoning: true,
-          attachments: true,
+          attachments: false,
           tools: true,
           variants: [],
         ),
@@ -778,7 +858,7 @@ void main() {
       agents: const [CatalogAgent(id: 'build', mode: 'primary', hidden: false)],
     );
     final controller = ConnectionController(
-      await _store({'oc.model.server': 'opencode|ox-alpha'}),
+      await _store({'oc.model.server': 'zai-coding-plan|glm-5.2'}),
       apiFactory: (_) => api,
       repositoryFactory: (_) =>
           _QuestionRepository(legacyUnavailable: false, catalog: detailed),
@@ -803,11 +883,18 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    expect(controller.catalog?.models.map((model) => model.id), [
-      'current-model',
-    ]);
-    expect(controller.selectedModel?.modelID, 'current-model');
-    expect(controller.catalogDetailed, isTrue);
+    expect(
+      controller.catalog?.providers.map((provider) => provider.id),
+      contains('zai-coding-plan'),
+    );
+    expect(
+      controller.catalog?.models.map(
+        (model) => '${model.providerID}/${model.id}',
+      ),
+      contains('zai-coding-plan/glm-5.2'),
+    );
+    expect(controller.selectedModel?.providerID, 'zai-coding-plan');
+    expect(controller.selectedModel?.modelID, 'glm-5.2');
     controller.dispose();
   });
 

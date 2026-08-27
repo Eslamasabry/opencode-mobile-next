@@ -434,42 +434,19 @@ class ConnectionController extends ChangeNotifier {
             ),
         ],
       );
-      bool providerAvailable(String providerID) =>
-          nextProviders.providers.any((provider) => provider.id == providerID);
-      bool modelAvailable(String providerID, String modelID) =>
-          nextProviders.providers.any(
-            (provider) =>
-                provider.id == providerID &&
-                provider.modelIDs.contains(modelID),
-          );
-      bool agentAvailable(String agentID) =>
-          nextAgents.any((agent) => agent.name == agentID);
-      final detailedProviders = detailedCatalog?.providers
-          .where((provider) => providerAvailable(provider.id))
-          .toList();
-      final detailedModels = detailedCatalog?.models
-          .where((model) => modelAvailable(model.providerID, model.id))
-          .toList();
-      final detailedAgents = detailedCatalog?.agents
-          .where((agent) => agentAvailable(agent.id))
-          .toList();
       final nextCatalog = detailedCatalog == null
           ? fallbackCatalog
           : CatalogSnapshot(
-              providers: detailedProviders!.isEmpty
+              // The current catalog reflects v2 integration connections as
+              // soon as they are added. The legacy config endpoint can lag
+              // behind it, so it is only a fallback and never a filter.
+              providers: detailedCatalog.providers.isEmpty
                   ? fallbackCatalog.providers
-                  : [
-                      ...detailedProviders,
-                      for (final base in fallbackCatalog.providers)
-                        if (!detailedProviders.any(
-                          (provider) => provider.id == base.id,
-                        ))
-                          base,
-                    ],
-              models: detailedModels!.isEmpty
+                  : detailedCatalog.providers,
+              models: detailedCatalog.models.isEmpty
                   ? fallbackCatalog.models
                   : [
-                      for (final model in detailedModels)
+                      for (final model in detailedCatalog.models)
                         _mergeCatalogModel(
                           model,
                           fallbackCatalog.models.firstWhere(
@@ -479,31 +456,19 @@ class ConnectionController extends ChangeNotifier {
                             orElse: () => model,
                           ),
                         ),
-                      for (final base in fallbackCatalog.models)
-                        if (!detailedModels.any(
-                          (model) =>
-                              model.providerID == base.providerID &&
-                              model.id == base.id,
-                        ))
-                          base,
                     ],
-              agents: detailedAgents!.isEmpty
+              agents: detailedCatalog.agents.isEmpty
                   ? fallbackCatalog.agents
-                  : [
-                      ...detailedAgents,
-                      for (final base in fallbackCatalog.agents)
-                        if (!detailedAgents.any((agent) => agent.id == base.id))
-                          base,
-                    ],
+                  : detailedCatalog.agents,
             );
       final profileID = _connectedProfile?.id;
       var nextModel = selectedModel;
       bool validModel(ModelRef? model) =>
           model != null &&
-          nextProviders.providers.any(
-            (provider) =>
-                provider.id == model.providerID &&
-                provider.modelIDs.contains(model.modelID),
+          nextCatalog.models.any(
+            (candidate) =>
+                candidate.providerID == model.providerID &&
+                candidate.id == model.modelID,
           );
       if (!validModel(nextModel)) {
         final defaultModel = ModelRef(
@@ -512,14 +477,12 @@ class ConnectionController extends ChangeNotifier {
         );
         nextModel = validModel(defaultModel) ? defaultModel : null;
         if (nextModel == null) {
-          for (final provider in nextProviders.providers) {
-            if (provider.modelIDs.isNotEmpty) {
-              nextModel = ModelRef(
-                providerID: provider.id,
-                modelID: provider.modelIDs.first,
-              );
-              break;
-            }
+          for (final model in nextCatalog.models) {
+            nextModel = ModelRef(
+              providerID: model.providerID,
+              modelID: model.id,
+            );
+            break;
           }
         }
       }
@@ -573,7 +536,7 @@ class ConnectionController extends ChangeNotifier {
       agents = nextAgents;
       catalog = nextCatalog;
       catalogDetailed =
-          detailedModels?.isNotEmpty == true ||
+          detailedCatalog?.models.isNotEmpty == true ||
           nextProviders.providers.any(
             (provider) => provider.modelData.isNotEmpty,
           );
@@ -675,6 +638,15 @@ class ConnectionController extends ChangeNotifier {
           version = v;
           notifyListeners();
         }
+        break;
+
+      case 'integration.connection.updated':
+      case 'catalog.updated':
+      case 'agent.updated':
+      case 'config.updated':
+        // Provider credentials and catalog overlays can change without a
+        // reconnect. Refetch the current catalog just like upstream clients.
+        unawaited(_loadCatalog());
         break;
 
       case 'session.created':
