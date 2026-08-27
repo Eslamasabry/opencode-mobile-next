@@ -106,6 +106,22 @@ class FormatterHealth {
   });
 }
 
+class WorkspaceSymbol {
+  final String name;
+  final int kind;
+  final String path;
+  final int line;
+  final int column;
+
+  const WorkspaceSymbol({
+    required this.name,
+    required this.kind,
+    required this.path,
+    required this.line,
+    required this.column,
+  });
+}
+
 class TerminalProcess {
   final String id;
   final String title;
@@ -434,6 +450,7 @@ abstract class ProductRepository {
   Future<VersionControlHealth> loadVersionControlHealth();
   Future<List<LanguageServiceHealth>> listLanguageServices();
   Future<List<FormatterHealth>> listFormatters();
+  Future<List<WorkspaceSymbol>> findWorkspaceSymbols(String query);
   Future<List<TerminalProcess>> listTerminals();
   Future<TerminalProcess> createTerminal({String? title});
   Future<void> renameTerminal(String id, String title);
@@ -638,6 +655,28 @@ class SdkProductRepository
                 enabled: formatter.enabled,
               ),
             )
+            .toList();
+      });
+
+  @override
+  Future<List<WorkspaceSymbol>> findWorkspaceSymbols(String query) =>
+      _guard('Could not search workspace symbols', () async {
+        final response = await _client.getFileApi().findSymbols(
+          query: query,
+          directory: _directory,
+          workspace: _workspace,
+        );
+        return (response.data ?? const [])
+            .map(
+              (symbol) => WorkspaceSymbol(
+                name: symbol.name,
+                kind: symbol.kind,
+                path: _symbolPath(symbol.location.uri),
+                line: symbol.location.range.start.line + 1,
+                column: symbol.location.range.start.character + 1,
+              ),
+            )
+            .where((symbol) => symbol.path.isNotEmpty)
             .toList();
       });
 
@@ -1292,6 +1331,28 @@ class SdkProductRepository
   static int? _finiteTimestamp(Object? value) {
     if (value is num && value.isFinite) return value.toInt();
     return null;
+  }
+
+  String _symbolPath(String value) {
+    var path = value;
+    final uri = Uri.tryParse(value);
+    if (uri?.scheme == 'file') {
+      try {
+        path = uri!.toFilePath();
+      } on UnsupportedError {
+        path = Uri.decodeComponent(uri!.path);
+      }
+    }
+    final directory = _directory;
+    if (directory != null) {
+      final normalizedDirectory = directory.endsWith('/')
+          ? directory
+          : '$directory/';
+      if (path.startsWith(normalizedDirectory)) {
+        path = path.substring(normalizedDirectory.length);
+      }
+    }
+    return path.split('/').where((part) => part.isNotEmpty).join('/');
   }
 
   static String _methodLabel(String type) => switch (type) {

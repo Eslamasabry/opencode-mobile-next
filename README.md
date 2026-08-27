@@ -24,7 +24,9 @@ is also bundled under **Settings > Privacy and data use**.
   branch diff scopes, unified/split modes, line selection, and prompt comments
 - Run shell commands and slash commands in the session
 - Model & agent picker persisted per server
-- Project file browser with fuzzy name search + content viewer
+- Project file browser with adjacent file/symbol search, smart previews, and
+  source-line navigation from language-server symbols
+- Project health for branch changes, language services, and formatters
 
 ## Requirements
 

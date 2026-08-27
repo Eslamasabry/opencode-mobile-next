@@ -127,6 +127,21 @@ failure, workspace discoverability, absence of nested cards, and 320dp rendering
 at 2x text scale. Live status responses still need a reachable OpenCode project;
 do not claim live-server verification from the contract and widget tests alone.
 
+Workspace symbol navigation is now implemented without adding a separate nested
+surface. The Files screen has adjacent Files and Symbols tabs above one contextual
+search field. Symbols use the generated, location-scoped `/find/symbol` endpoint,
+show the LSP kind plus file/line/column, and open the existing smart file preview
+at the exact source line with line numbers and a highlighted target. Switching
+back to Files preserves ordinary browsing, and an older server missing symbol
+search shows a scoped error without breaking its file list.
+
+Flutter analysis is clean and all 250 tests pass serially. Contract coverage
+verifies file-URI normalization and zero-based LSP position conversion; widget
+coverage verifies exact-line opening, accessibility-scale layout at 320dp, and
+the old-server fallback. The generated SDK audit now counts 39 direct operations.
+Live symbol results remain unverified until a reachable OpenCode project exposes
+an active language server.
+
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`

@@ -81,6 +81,19 @@ class _LocationRepository
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class _SymbolRepository extends _LocationRepository {
+  final queries = <String>[];
+  List<WorkspaceSymbol> symbols = const [];
+  Object? symbolError;
+
+  @override
+  Future<List<WorkspaceSymbol>> findWorkspaceSymbols(String query) async {
+    queries.add(query);
+    if (symbolError case final error?) throw error;
+    return symbols;
+  }
+}
+
 class _MemoryChannel implements TerminalChannel {
   final controller = StreamController<String>();
   final writes = <String>[];
@@ -561,6 +574,122 @@ void main() {
     expect(find.byKey(const Key('file-preview-image')), findsOneWidget);
     expect(find.text('Pinch to zoom'), findsOneWidget);
     expect(find.byType(InteractiveViewer), findsOneWidget);
+  });
+
+  testWidgets('symbol search opens the exact source line in file preview', (
+    tester,
+  ) async {
+    final source = List.generate(
+      70,
+      (index) => index == 41
+          ? 'class ProjectHealthScreen extends StatefulWidget {'
+          : '// line ${index + 1}',
+    ).join('\n');
+    final api = _TestApi(
+      files: (_) async => const [],
+      contents: {
+        'lib/ui/project_health_screen.dart': FileContent(
+          source,
+          type: 'text',
+          mimeType: 'text/plain',
+        ),
+      },
+    );
+    final repository = _SymbolRepository()
+      ..symbols = const [
+        WorkspaceSymbol(
+          name: 'ProjectHealthScreen',
+          kind: 5,
+          path: 'lib/ui/project_health_screen.dart',
+          line: 42,
+          column: 7,
+        ),
+      ];
+    final controller = await _controller(api: api, repository: repository);
+    addTearDown(controller.dispose);
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(2)),
+            child: Scaffold(body: FilesScreen(controller: controller)),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Symbols'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'ProjectHealth');
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pumpAndSettle();
+
+    expect(repository.queries, ['ProjectHealth']);
+    expect(find.text('ProjectHealthScreen'), findsOneWidget);
+    expect(
+      find.textContaining('lib/ui/project_health_screen.dart:42:7'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('ProjectHealthScreen'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Line 42'), findsOneWidget);
+    expect(
+      find.byKey(const Key('file-preview-focused-source')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('file-preview-target-line')), findsOneWidget);
+    expect(
+      find.text('class ProjectHealthScreen extends StatefulWidget {'),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('unavailable symbol search leaves file browsing intact', (
+    tester,
+  ) async {
+    final api = _TestApi(
+      files: (_) async => [
+        FileNode(name: 'README.md', path: 'README.md', isDir: false),
+      ],
+    );
+    final repository = _SymbolRepository()
+      ..symbolError = const ProductException(
+        'Symbol search is unavailable on this server',
+      );
+    final controller = await _controller(api: api, repository: repository);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: FilesScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('README.md'), findsOneWidget);
+
+    await tester.tap(find.text('Symbols'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Missing');
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Symbol search is unavailable on this server'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Files'));
+    await tester.pumpAndSettle();
+    expect(find.text('README.md'), findsOneWidget);
   });
 
   testWidgets(

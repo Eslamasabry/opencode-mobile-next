@@ -9,6 +9,8 @@ import '../widgets/product_states.dart';
 
 /// Project file browser backed by `/file`, with name search (`/find/file`)
 /// and content viewer.
+enum _FileSurface { files, symbols }
+
 class FilesScreen extends StatefulWidget {
   final ConnectionController controller;
   const FilesScreen({super.key, required this.controller});
@@ -19,10 +21,13 @@ class FilesScreen extends StatefulWidget {
 
 class _FilesScreenState extends State<FilesScreen> {
   List<FileNode>? _entries;
+  List<WorkspaceSymbol>? _symbols;
+  _FileSurface _surface = _FileSurface.files;
   String _path = '';
   String? _error;
   bool _loading = false;
   String? _selectedPath;
+  int? _selectedLine;
   String? _searchOriginPath;
   final _search = TextEditingController();
   ProductRepository? _repository;
@@ -83,9 +88,18 @@ class _FilesScreenState extends State<FilesScreen> {
     }
     if (dataRefreshChanged && !controllerLocationChanged) {
       if (_search.text.trim().isNotEmpty) {
-        _searchFiles(_search.text);
-      } else {
+        if (_surface == _FileSurface.symbols) {
+          _searchSymbols(_search.text);
+        } else {
+          _searchFiles(_search.text);
+        }
+      } else if (_surface == _FileSurface.files) {
         _load(_path);
+      } else {
+        setState(() {
+          _symbols = null;
+          _error = null;
+        });
       }
       return;
     }
@@ -95,9 +109,15 @@ class _FilesScreenState extends State<FilesScreen> {
       _entries = null;
       _path = '';
       _selectedPath = null;
+      _selectedLine = null;
+      _symbols = null;
       _error = null;
     });
-    _load('');
+    if (_surface == _FileSurface.files) {
+      _load('');
+    } else {
+      setState(() => _loading = false);
+    }
   }
 
   int _revisionOf(ProductRepository? repository) => Object.hash(
@@ -114,6 +134,35 @@ class _FilesScreenState extends State<FilesScreen> {
     _searchOriginPath = null;
     _search.clear();
     _load(path);
+  }
+
+  void _selectSurface(_FileSurface surface) {
+    if (_surface == surface) return;
+    _requestGeneration++;
+    _search.clear();
+    _searchOriginPath = null;
+    setState(() {
+      _surface = surface;
+      _loading = false;
+      _error = null;
+      if (surface == _FileSurface.symbols) _symbols = null;
+    });
+  }
+
+  void _clearSearch() {
+    _search.clear();
+    if (_surface == _FileSurface.symbols) {
+      _requestGeneration++;
+      setState(() {
+        _symbols = null;
+        _loading = false;
+        _error = null;
+      });
+      return;
+    }
+    final origin = _searchOriginPath ?? _path;
+    _searchOriginPath = null;
+    _load(origin);
   }
 
   Future<void> _load(String path) async {
@@ -191,16 +240,68 @@ class _FilesScreenState extends State<FilesScreen> {
     }
   }
 
-  void _openFile(FileNode node) {
+  Future<void> _searchSymbols(String query) async {
+    final value = query.trim();
+    if (value.isEmpty) {
+      setState(() {
+        _symbols = null;
+        _loading = false;
+        _error = null;
+      });
+      return;
+    }
+    final repository = _repository;
+    final generation = ++_requestGeneration;
+    if (repository == null) {
+      setState(() => _error = 'The server is not connected.');
+      return;
+    }
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final results = await repository.findWorkspaceSymbols(value);
+      if (!mounted || generation != _requestGeneration) return;
+      setState(() => _symbols = results);
+    } catch (error) {
+      if (!mounted || generation != _requestGeneration) return;
+      setState(() => _error = error.toString());
+    } finally {
+      if (mounted && generation == _requestGeneration) {
+        setState(() => _loading = false);
+      }
+    }
+  }
+
+  void _openFile(FileNode node, {int? initialLine}) {
     final path = _relativePath(node.path);
     if (MediaQuery.sizeOf(context).width >= 900) {
-      setState(() => _selectedPath = path);
+      setState(() {
+        _selectedPath = path;
+        _selectedLine = initialLine;
+      });
       return;
     }
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) => _FileViewer(controller: widget.controller, path: path),
+      builder: (_) => _FileViewer(
+        controller: widget.controller,
+        path: path,
+        initialLine: initialLine,
+      ),
+    );
+  }
+
+  void _openSymbol(WorkspaceSymbol symbol) {
+    _openFile(
+      FileNode(
+        name: symbol.path.split('/').last,
+        path: symbol.path,
+        isDir: false,
+      ),
+      initialLine: symbol.line,
     );
   }
 
@@ -213,37 +314,59 @@ class _FilesScreenState extends State<FilesScreen> {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+          child: SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<_FileSurface>(
+              key: const ValueKey('file-surface-selector'),
+              segments: const [
+                ButtonSegment(value: _FileSurface.files, label: Text('Files')),
+                ButtonSegment(
+                  value: _FileSurface.symbols,
+                  label: Text('Symbols'),
+                ),
+              ],
+              selected: {_surface},
+              showSelectedIcon: false,
+              onSelectionChanged: (value) => _selectSurface(value.single),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
           child: TextField(
             controller: _search,
             decoration: InputDecoration(
               isDense: true,
               prefixIcon: const Icon(Icons.search_rounded, size: 20),
-              hintText: 'Find file by name…',
+              hintText: _surface == _FileSurface.symbols
+                  ? 'Find class, function, or variable…'
+                  : 'Find file by name…',
               suffixIcon: _search.text.isEmpty
                   ? null
                   : IconButton(
-                      tooltip: 'Clear file search',
-                      icon: const Icon(
+                      tooltip: _surface == _FileSurface.symbols
+                          ? 'Clear symbol search'
+                          : 'Clear file search',
+                      icon: Icon(
                         Icons.clear_rounded,
                         size: 18,
-                        semanticLabel: 'Clear file search',
+                        semanticLabel: _surface == _FileSurface.symbols
+                            ? 'Clear symbol search'
+                            : 'Clear file search',
                       ),
-                      onPressed: () {
-                        _search.clear();
-                        final origin = _searchOriginPath ?? _path;
-                        _searchOriginPath = null;
-                        _load(origin);
-                      },
+                      onPressed: _clearSearch,
                     ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            onSubmitted: _searchFiles,
+            onSubmitted: _surface == _FileSurface.symbols
+                ? _searchSymbols
+                : _searchFiles,
             textInputAction: TextInputAction.search,
           ),
         ),
-        if (_path.isNotEmpty)
+        if (_surface == _FileSurface.files && _path.isNotEmpty)
           SizedBox(
             height: 52,
             child: ListView(
@@ -285,9 +408,10 @@ class _FilesScreenState extends State<FilesScreen> {
                             ),
                           )
                         : _FileViewer(
-                            key: ValueKey(_selectedPath),
+                            key: ValueKey('$_selectedPath:$_selectedLine'),
                             controller: widget.controller,
                             path: _selectedPath!,
+                            initialLine: _selectedLine,
                             embedded: true,
                           ),
                   ),
@@ -301,6 +425,7 @@ class _FilesScreenState extends State<FilesScreen> {
   }
 
   Widget _fileList(ThemeData theme) {
+    if (_surface == _FileSurface.symbols) return _symbolList(theme);
     if (_loading && _entries == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -366,6 +491,99 @@ class _FilesScreenState extends State<FilesScreen> {
     );
   }
 
+  Widget _symbolList(ThemeData theme) {
+    if (_loading && _symbols == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_error != null) {
+      return RefreshIndicator(
+        onRefresh: () => _searchSymbols(_search.text),
+        child: ProductErrorState(
+          message: _error!,
+          onRetry: () => _searchSymbols(_search.text),
+        ),
+      );
+    }
+    if (_search.text.trim().isEmpty) {
+      return const ProductEmptyState(
+        icon: Icons.data_object_rounded,
+        title: 'Search workspace symbols',
+        message: 'Find classes, functions, methods, and variables by name.',
+      );
+    }
+    if (_symbols?.isEmpty == true) {
+      return RefreshIndicator(
+        onRefresh: () => _searchSymbols(_search.text),
+        child: const ProductEmptyState(
+          icon: Icons.search_off_rounded,
+          title: 'No symbols found',
+          message: 'Try a different name or check language service status.',
+        ),
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: () => _searchSymbols(_search.text),
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: _symbols?.length ?? 0,
+        itemBuilder: (context, index) {
+          final symbol = _symbols![index];
+          return ListTile(
+            key: ValueKey('workspace-symbol-${symbol.path}-${symbol.line}'),
+            minTileHeight: 58,
+            leading: Icon(
+              _symbolIcon(symbol.kind),
+              color: theme.colorScheme.primary,
+            ),
+            title: Text(
+              symbol.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            subtitle: Text(
+              '${_symbolKind(symbol.kind)} · ${symbol.path}:${symbol.line}:${symbol.column}',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => _openSymbol(symbol),
+          );
+        },
+      ),
+    );
+  }
+
+  static String _symbolKind(int kind) => switch (kind) {
+    1 => 'File',
+    2 => 'Module',
+    3 => 'Namespace',
+    4 => 'Package',
+    5 => 'Class',
+    6 => 'Method',
+    7 => 'Property',
+    8 => 'Field',
+    9 => 'Constructor',
+    10 => 'Enum',
+    11 => 'Interface',
+    12 => 'Function',
+    13 => 'Variable',
+    14 => 'Constant',
+    22 => 'Enum member',
+    23 => 'Struct',
+    24 => 'Event',
+    25 => 'Operator',
+    26 => 'Type parameter',
+    _ => 'Symbol',
+  };
+
+  static IconData _symbolIcon(int kind) => switch (kind) {
+    5 || 10 || 11 || 23 => Icons.category_outlined,
+    6 || 9 || 12 => Icons.functions_rounded,
+    7 || 8 || 13 || 14 => Icons.data_object_rounded,
+    1 || 2 || 3 || 4 => Icons.folder_copy_outlined,
+    _ => Icons.code_rounded,
+  };
+
   @override
   void dispose() {
     widget.controller.removeListener(_controllerChanged);
@@ -378,11 +596,13 @@ class _FilesScreenState extends State<FilesScreen> {
 class _FileViewer extends StatefulWidget {
   final ConnectionController controller;
   final String path;
+  final int? initialLine;
   final bool embedded;
   const _FileViewer({
     super.key,
     required this.controller,
     required this.path,
+    this.initialLine,
     this.embedded = false,
   });
 
@@ -486,7 +706,9 @@ class __FileViewerState extends State<_FileViewer> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
-                widget.path,
+                widget.initialLine == null
+                    ? widget.path
+                    : '${widget.path} · Line ${widget.initialLine}',
                 style: theme.textTheme.labelSmall!.copyWith(
                   color: theme.hintColor,
                   fontSize: 10,
@@ -504,7 +726,10 @@ class __FileViewerState extends State<_FileViewer> {
                         style: TextStyle(color: theme.colorScheme.error),
                       ),
                     )
-                  : FilePreviewBody(data: _previewData),
+                  : FilePreviewBody(
+                      data: _previewData,
+                      initialLine: widget.initialLine,
+                    ),
             ),
           ],
         ),

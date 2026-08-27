@@ -9,7 +9,7 @@ Authoritative inputs:
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app
-currently calls **38 generated operations directly**. It also uses a set of
+currently calls **39 generated operations directly**. It also uses a set of
 older or compatibility routes through `OpenCodeApi` and raw `Dio`; those are
 listed separately so a working feature is not incorrectly labelled missing.
 
@@ -29,7 +29,7 @@ Legend:
 | Event | - | `eventSubscribe` through the shared `/event` SSE transport | Generated event transport is unused |
 | Events v2 | - | Some v2-shaped events are reduced from the legacy stream | `v2EventSubscribe` |
 | Experimental | `experimentalResourceList` | - | capabilities, console state/org list/org switch, background sessions, global session list, tool IDs/list, worktree create/list/remove/reset |
-| File | - | list, read, filename search, text search | status and symbol search |
+| File | `findSymbols` | list, read, filename search, text search | status |
 | Filesystem v2 | - | - | `v2FsFind`, `v2FsList`, `v2FsRead` |
 | Global | - | health | config get/update, dispose, event, upgrade |
 | Instance | `instanceDispose`, `vcsDiff`, `vcsGet`, `vcsStatus`, `lspStatus`, `formatterStatus` | - | agents, skills, command list, path, VCS raw diff/apply |
@@ -65,10 +65,11 @@ Legend:
    automatic callbacks on resume or demand, accepts code-based completion,
    supports cancellation, and refreshes provider/model inventories only after
    the server confirms completion.
-3. **Coding health:** VCS status/info, LSP, and formatter status now share one
+3. **Coding health and navigation:** VCS status/info, LSP, and formatter status now share one
    flat Project health surface in the selected workspace. Each section fails
    independently so one unavailable endpoint does not hide valid server truth.
-   Workspace symbol search remains the next coding-navigation gap.
+   Files now has adjacent Files and Symbols tabs; generated LSP symbol results
+   open the referenced source file at its exact one-based line and highlight it.
 4. **Transport modernization:** migrate compatibility routes to generated v2
    APIs only where current and older OpenCode contracts can be reconciled
    without losing sessions, events, or provider inventory.

@@ -405,6 +405,23 @@ void main() {
                   },
                 ]),
               );
+            case '/find/symbol':
+              request.response.write(
+                jsonEncode([
+                  {
+                    'name': 'ProjectHealthScreen',
+                    'kind': 5,
+                    'location': {
+                      'uri':
+                          'file:///work/app/lib/ui/project_health_screen.dart',
+                      'range': {
+                        'start': {'line': 41, 'character': 3},
+                        'end': {'line': 41, 'character': 22},
+                      },
+                    },
+                  },
+                ]),
+              );
             default:
               request.response.statusCode = HttpStatus.notFound;
           }
@@ -421,6 +438,9 @@ void main() {
           final vcs = await repository.loadVersionControlHealth();
           final languageServices = await repository.listLanguageServices();
           final formatters = await repository.listFormatters();
+          final symbols = await repository.findWorkspaceSymbols(
+            'ProjectHealth',
+          );
 
           expect(vcs.branch, 'feature/mobile');
           expect(vcs.defaultBranch, 'main');
@@ -433,16 +453,23 @@ void main() {
           expect(formatters.single.name, 'dart format');
           expect(formatters.single.extensions, ['.dart']);
           expect(formatters.single.enabled, isTrue);
+          expect(symbols.single.name, 'ProjectHealthScreen');
+          expect(symbols.single.kind, 5);
+          expect(symbols.single.path, 'lib/ui/project_health_screen.dart');
+          expect(symbols.single.line, 42);
+          expect(symbols.single.column, 4);
           expect(requests.map((uri) => uri.path).toSet(), {
             '/vcs',
             '/vcs/status',
             '/lsp',
             '/formatter',
+            '/find/symbol',
           });
           for (final uri in requests) {
             expect(uri.queryParameters, {
               'directory': '/work/app',
               'workspace': 'phone',
+              if (uri.path == '/find/symbol') 'query': 'ProjectHealth',
             });
           }
         } finally {
