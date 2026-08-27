@@ -51,6 +51,8 @@ byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 - Connected-provider contract fix: `58b321a7eae755ed1641b269a58325169b696ea6`
 - Stable Patch 9 ID: `620735`
 - Connected-integration reconciliation: `f9eb7b7f03da074da2e609021b3a70b3d14cd934`
+- Stable Patch 10 ID: `620789`
+- Provider-inventory recovery: `7b6db9b3a9128416432927f058b90f4946473b17`
 - OpenCode reference revision: `c2eacd72afc4a4984564c393e15ab30011057269`
 - Command/feature map: [`docs/opencode-command-feature-map.md`](docs/opencode-command-feature-map.md)
 
@@ -234,6 +236,22 @@ passed, and Shorebird's dry run found no compatibility issue. Patch 9 was publis
 to Stable without native or asset overrides. Phone runtime activation remains to be
 verified by the user because the phone's ADB, SSH, and OpenCode ports were not
 remotely reachable; the workstation server was not treated as phone evidence.
+
+Patch 10 fixes the remaining ordering bug using direct read-only evidence from the
+user's phone over Tailscale/Termux SSH. Its OpenCode `1.18.23` server returned only
+`opencode` in `/provider.connected`, while `/provider.all` contained the complete
+`zai-coding-plan` model map and `/api/integration` reported that exact integration
+connected. `/config/providers` contained Zen alone. The parser had discarded the
+unlisted `/provider.all` rows before connected-integration reconciliation ran.
+
+The app now retains the full provider inventory internally while still exposing only
+OpenCode-connected or integration-confirmed providers. Exact connected integration
+IDs can recover their model maps from `/provider.all`; unrelated available providers
+remain hidden. The regression reproduces the phone payload, including Zen-only
+`/provider.connected` and `/config/providers`, and verifies Z.AI model and thinking
+variant recovery. Flutter analysis was clean, all 233 tests passed, Shorebird's dry
+run reported no issue, and Patch 10 was published to Stable without native or asset
+overrides. Runtime activation on the personal phone is the remaining gate.
 
 On the Ubuntu workstation, `z node_modules/opencode-ai` failed because zoxide had no
 matching history entry. The direct package path is `/home/eslam/node_modules/opencode-ai`;
