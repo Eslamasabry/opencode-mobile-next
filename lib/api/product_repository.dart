@@ -773,6 +773,24 @@ class SdkProductRepository
             label: label,
           ),
         );
+        // OpenCode 1.18.x keeps the new integration credential store and the
+        // provider runtime's legacy auth store separate. Chat execution still
+        // reads the latter, so keep both surfaces synchronized until upstream
+        // unifies them. Never log or otherwise expose [key].
+        await _client.getControlApi().authSet(
+          providerID: id,
+          auth: sdk.Auth({'type': 'api', 'key': key}),
+        );
+
+        // Provider inventories are cached per server instance. Match
+        // OpenCode's own compatibility client: invalidate the selected
+        // location and the server-default location so the newly authenticated
+        // provider is immediately available to prompts.
+        await _client.getInstanceApi().instanceDispose(
+          directory: _directory,
+          workspace: _workspace,
+        );
+        await _client.getInstanceApi().instanceDispose();
       });
 
   @override

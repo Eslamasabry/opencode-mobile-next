@@ -237,6 +237,73 @@ void main() {
     }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
   });
 
+  test(
+    'provider key connection synchronizes runtime auth and refreshes instances',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        final requests = <({String method, Uri uri, String body})>[];
+        server.listen((request) async {
+          final body = await utf8.decoder.bind(request).join();
+          requests.add((method: request.method, uri: request.uri, body: body));
+          request.response.headers.contentType = ContentType.json;
+          if (request.uri.path.startsWith('/api/integration/')) {
+            request.response.statusCode = HttpStatus.noContent;
+          } else {
+            request.response.write('true');
+          }
+          await request.response.close();
+        });
+
+        try {
+          final api = OpenCodeApi(
+            baseUrl: 'http://${server.address.host}:${server.port}',
+          );
+          final repository = SdkProductRepository(api.sdkClient)
+            ..setLocation(directory: '/root', workspace: 'phone');
+
+          await repository.connectIntegrationKey(
+            'zai-coding-plan',
+            'test-secret',
+            label: 'Coding plan',
+          );
+
+          expect(requests.map((request) => request.method), [
+            'POST',
+            'PUT',
+            'POST',
+            'POST',
+          ]);
+          expect(requests.map((request) => request.uri.path), [
+            '/api/integration/zai-coding-plan/connect/key',
+            '/auth/zai-coding-plan',
+            '/instance/dispose',
+            '/instance/dispose',
+          ]);
+          expect(jsonDecode(requests[0].body), {
+            'key': 'test-secret',
+            'label': 'Coding plan',
+          });
+          expect(jsonDecode(requests[1].body), {
+            'type': 'api',
+            'key': 'test-secret',
+          });
+          expect(requests[0].uri.queryParameters, {
+            'location[directory]': '/root',
+            'location[workspace]': 'phone',
+          });
+          expect(requests[2].uri.queryParameters, {
+            'directory': '/root',
+            'workspace': 'phone',
+          });
+          expect(requests[3].uri.queryParameters, isEmpty);
+        } finally {
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
+
   test('catalog accepts the current v2 capability response shape', () async {
     await HttpOverrides.runZoned(() async {
       final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
