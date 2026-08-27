@@ -284,22 +284,19 @@ class OpenCodeApi {
     }
   }
 
-  Future<void> abort(String sessionID) =>
-      _dio.post('/session/$sessionID/abort', queryParameters: _query());
-
-  Future<void> initProject(
-    String sessionID, {
-    required String messageID,
-    required ModelRef model,
-  }) => _dio.post(
-    '/session/$sessionID/init',
-    data: {
-      'messageID': messageID,
-      'providerID': model.providerID,
-      'modelID': model.modelID,
-    },
-    queryParameters: _query(),
-  );
+  Future<void> abort(String sessionID) async {
+    try {
+      await sdkClient.getSessionApi().sessionAbort(
+        sessionID: sessionID,
+        directory: _directory,
+        workspace: _workspace,
+      );
+    } on sdk.OpenCodeApiException catch (e) {
+      _failGenerated(e, 'Stop session');
+    } on DioException catch (e) {
+      _fail(e, 'Stop session');
+    }
+  }
 
   Future<List<Todo>> todos(String id) async {
     final r = await _dio.get('/session/$id/todo', queryParameters: _query());

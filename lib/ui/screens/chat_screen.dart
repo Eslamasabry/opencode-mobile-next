@@ -325,6 +325,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   int _loadGeneration = 0;
   int _dataRefreshRevision = 0;
   bool _sending = false;
+  bool _aborting = false;
   bool _permissionDialogScheduled = false;
   bool _permissionDismissScheduled = false;
   String? _activePermissionID;
@@ -1189,9 +1190,24 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _abort() async {
+    if (_aborting) return;
+    setState(() => _aborting = true);
+    final actionApi = await _conn.prepareActionTransport();
+    if (!mounted) return;
+    if (actionApi == null) {
+      setState(() => _aborting = false);
+      _showActionError(
+        _conn.connectionError ?? 'OpenCode is reconnecting. Try again shortly.',
+      );
+      return;
+    }
     try {
-      await _conn.api!.abort(widget.sessionID);
-    } catch (_) {}
+      await actionApi.abort(widget.sessionID);
+    } catch (error) {
+      if (mounted) _showActionError('Could not stop generation: $error');
+    } finally {
+      if (mounted) setState(() => _aborting = false);
+    }
   }
 
   Future<void> _share() async {
@@ -2490,7 +2506,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 Icons.stop_circle_outlined,
                 color: theme.colorScheme.error,
               ),
-              onPressed: _abort,
+              onPressed: _aborting ? null : _abort,
             ),
           PopupMenuButton<String>(
             onSelected: (v) async {

@@ -9,7 +9,7 @@ Authoritative inputs:
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app
-currently calls **48 generated operations directly**. It also uses a set of
+currently calls **49 generated operations directly**. It also uses a set of
 older or compatibility routes through `OpenCodeApi` and raw `Dio`; those are
 listed separately so a working feature is not incorrectly labelled missing.
 
@@ -47,7 +47,7 @@ Legend:
 | PTY | create, list, update, remove, connect token | WebSocket connect uses the guarded ticket | get, shells, direct connect, and all duplicate v2 PTY operations |
 | Question | list, reply, reject | - | - |
 | Reference | `v2ReferenceList` | - | References can be copied standalone or added to the active composer as OpenCode directory parts |
-| Session | fork, revert, unrevert, share, unshare, summarize, update, async prompt including synthetic location reminder, command | list/create/get/delete/rename/status/messages/shell/abort/init/todos/diff and permission fallback | children, delete/update part, delete/get one message, synchronous prompt |
+| Session | fork, revert, unrevert, share, unshare, summarize, update, async prompt including synthetic location reminder, command, abort | list/create/get/delete/rename/status/messages/shell/todos/diff and permission fallback | init endpoint, children, delete/update part, delete/get one message, synchronous prompt |
 | Session questions v2 | - | list/reply/reject through compatibility routes | Generated v2 methods are unused |
 | Sessions v2 | - | - | active, compact, context, create/get/list/message/prompt/history/events/wait/interrupt, model/agent switch, staged revert operations |
 | Skills | `v2SkillList` | - | Skill content uses the shared Markdown/code-aware preview with rendered and raw modes |
@@ -90,6 +90,10 @@ Legend:
    generated contract too. Shell remains handwritten because the generated
    `SessionShellRequest` omits the selected thinking variant; migrating it now
    would silently change execution.
+   Session abort now waits for the wake-reconciled transport and exposes
+   generated OpenCode failures instead of swallowing them. The unused direct
+   init wrapper was removed; `/init` remains available through the authoritative
+   server-command catalog.
 6. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
    worktree lifecycle are deliberately not the current implementation lane.
 

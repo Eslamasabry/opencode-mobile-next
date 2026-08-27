@@ -262,6 +262,18 @@ wire tests replaced them. Final-tree Flutter analysis is clean and all 274 tests
 pass serially. The generated SDK audit now counts 48 directly used operations.
 Traycer remains explicitly deferred.
 
+Stopping a generation is now a production-safe lifecycle action. It waits for
+the same wake-time transport reconciliation as sending, calls generated
+`session.abort` with the selected directory/workspace, ignores repeated taps
+while the first stop is pending, and shows a product-facing failure instead of
+silently swallowing it. Exact transport tests cover success and declared server
+errors; widget tests prove a stale retained API is not used after wake and a
+failed stop remains visible. The unused handwritten `initProject` wrapper was
+removed; the visible `/init` workflow continues through OpenCode's authoritative
+server-command catalog. Final-tree Flutter analysis is clean and all 278 tests
+pass serially. The generated SDK audit now counts 49 directly used operations.
+Traycer remains explicitly deferred.
+
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`

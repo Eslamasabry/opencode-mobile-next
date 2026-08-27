@@ -30,6 +30,8 @@ class _FakeOpenCodeApi extends OpenCodeApi {
   String? slashArguments;
   ModelRef? slashModel;
   String? slashVariant;
+  int abortCalls = 0;
+  Object? abortError;
   bool failRename = false;
   bool failDelete = false;
   List<FileDiff> diffs = const [];
@@ -95,6 +97,13 @@ class _FakeOpenCodeApi extends OpenCodeApi {
     slashArguments = args;
     slashModel = model;
     slashVariant = variant;
+  }
+
+  @override
+  Future<void> abort(String sessionID) async {
+    abortCalls += 1;
+    final error = abortError;
+    if (error != null) throw error;
   }
 
   @override
@@ -544,6 +553,63 @@ void main() {
     expect(retainedApi.promptCalls, 0);
     expect(replacementApi.promptCalls, 1);
     expect(replacementApi.prompts.single.text, 'send after wake');
+  });
+
+  testWidgets('stop waits for the wake-time replacement transport', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final retainedApi = _FakeOpenCodeApi();
+    final replacementApi = _FakeOpenCodeApi();
+    final readyApi = Completer<OpenCodeApi?>();
+    final controller = _DelayedActionController(
+      ProfileStore(prefs: prefs),
+      readyApi,
+    )..api = retainedApi;
+    controller.busySessions.add('session-1');
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: const MaterialApp(home: ChatScreen(sessionID: 'session-1')),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    await tester.tap(find.byKey(const Key('chat-send-button')));
+    await tester.pump();
+
+    expect(retainedApi.abortCalls, 0);
+    expect(replacementApi.abortCalls, 0);
+
+    readyApi.complete(replacementApi);
+    await tester.pumpAndSettle();
+
+    expect(retainedApi.abortCalls, 0);
+    expect(replacementApi.abortCalls, 1);
+  });
+
+  testWidgets('stop failure remains visible instead of being swallowed', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..abortError = ApiException('server refused to stop');
+    final controller = await _pumpChat(tester, api);
+    controller.busySessions.add('session-1');
+    controller.notifyListeners();
+    await tester.pump();
+
+    await tester.tap(find.byKey(const Key('chat-send-button')));
+    await tester.pumpAndSettle();
+
+    expect(api.abortCalls, 1);
+    expect(
+      find.textContaining('Could not stop generation: server refused to stop'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('renders a generated image from a tool output filePath', (
