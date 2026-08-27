@@ -83,16 +83,23 @@ safe default, while adjacent Working tree and Branch scopes now use the generate
 reuse the same flat file tabs, unified/split renderer, line selection, copy,
 question, and grounded-comment workflow.
 
-Flutter analysis is clean and all 241 tests pass serially. The generated VCS
-mapping has a real loopback HTTP contract test covering location, mode, context,
-patch, counts, and status. A test-signed release APK built in 189.1 seconds,
-installed on a cold-booted Pixel 6 emulator, and launched as the resumed Android
-activity with no Flutter, RenderFlex, overflow, or fatal-exception log. The
-throwaway signing material was removed and the APK must not be distributed.
-Live VCS response evidence is still missing: the emulator has no OpenCode server,
-and the user's Tailscale-visible phone refused Termux SSH on port 8022 during the
-check. Do not claim the live `/vcs/diff` endpoint until one of those server paths
-is reachable.
+The generated VCS mapping has a real loopback HTTP contract test covering
+location, mode, context, patch, counts, and status. Live VCS evidence is now also
+complete against local OpenCode `1.18.23`: a reversible tracked README marker
+appeared in `/vcs/diff?mode=git` and the native Working tree scope with the exact
+path, `+2/-0` counts, and patch. Unified and split views, hunk navigation, Copy
+patch, and Ask about file remained usable. Branch scope loaded 67 files and
+`+11179/-760` lines without ANR, OOM, Flutter fatal, RenderFlex, or overflow.
+
+That live branch exposed two identical `ic_launcher.xml` phone tabs. Review now
+adds the shortest unique parent only when basenames collide, producing
+`ic_launcher.xml · mipmap-anydpi-v26` and
+`ic_launcher.xml · mipmap-anydpi-v33`, while accessibility announces each full
+path. The exact release-mode test build was installed on the Pixel 6 emulator and
+the corrected labels were verified from the live OpenCode response. The README
+probe was restored exactly, the temporary debug signing configuration was
+removed, and that locally test-signed APK must not be distributed. Flutter
+analysis is clean and all 310 tests pass serially.
 
 The next audited gap repaired is provider OAuth completion. Mobile now preserves
 OpenCode's OAuth attempt ID, `auto`/`code` mode, instructions, and expiry instead

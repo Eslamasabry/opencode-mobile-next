@@ -537,6 +537,7 @@ class _ReviewFileStrip extends StatelessWidget {
         itemBuilder: (context, index) => _ReviewFileTab(
           key: Key('review-file-$index'),
           diff: diffs[index],
+          label: _fileTabLabel(diffs, index),
           selected: selected == index,
           onTap: () => onSelected(index),
         ),
@@ -549,11 +550,13 @@ class _ReviewFileTab extends StatelessWidget {
   const _ReviewFileTab({
     super.key,
     required this.diff,
+    required this.label,
     required this.selected,
     required this.onTap,
   });
 
   final FileDiff diff;
+  final String label;
   final bool selected;
   final VoidCallback onTap;
 
@@ -565,7 +568,7 @@ class _ReviewFileTab extends StatelessWidget {
       selected: selected,
       button: true,
       label:
-          '${_basename(diff.file)}, ${_status(diff)}, '
+          '${diff.file}, ${_status(diff)}, '
           '${counts.added} additions, ${counts.removed} deletions',
       child: InkWell(
         onTap: onTap,
@@ -603,7 +606,7 @@ class _ReviewFileTab extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      _basename(diff.file),
+                      label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.labelLarge?.copyWith(
@@ -1668,6 +1671,32 @@ String _lineSemantics(_ReviewDiffLine line) {
 String _basename(String path) {
   final normalized = path.replaceAll('\\', '/');
   return normalized.split('/').last;
+}
+
+String _fileTabLabel(List<FileDiff> diffs, int index) {
+  final target = diffs[index].file.replaceAll('\\', '/');
+  final segments = target.split('/').where((part) => part.isNotEmpty).toList();
+  if (segments.isEmpty) return target;
+  final basename = segments.last;
+  final duplicates = diffs
+      .map((diff) => diff.file.replaceAll('\\', '/'))
+      .where((path) => _basename(path) == basename)
+      .toList();
+  if (duplicates.length == 1) return basename;
+
+  for (var depth = 1; depth < segments.length; depth++) {
+    final start = segments.length - 1 - depth;
+    final qualifier = segments.sublist(start, segments.length - 1).join('/');
+    final collision = duplicates.any((path) {
+      if (path == target) return false;
+      final other = path.split('/').where((part) => part.isNotEmpty).toList();
+      if (other.length <= depth) return false;
+      final otherStart = other.length - 1 - depth;
+      return other.sublist(otherStart, other.length - 1).join('/') == qualifier;
+    });
+    if (!collision) return '$basename · $qualifier';
+  }
+  return target;
 }
 
 String _directory(String path) {

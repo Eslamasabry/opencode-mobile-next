@@ -74,6 +74,42 @@ void main() {
     expect(find.text('Split'), findsOneWidget);
   });
 
+  testWidgets('disambiguates duplicate basenames in the phone file strip', (
+    tester,
+  ) async {
+    await _pumpReview(
+      tester,
+      () async => [
+        FileDiff(
+          file: 'android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml',
+          patch: '@@ -1 +1 @@\n-old v26\n+new v26',
+          additions: 1,
+          deletions: 1,
+        ),
+        FileDiff(
+          file: 'android/app/src/main/res/mipmap-anydpi-v33/ic_launcher.xml',
+          patch: '@@ -1 +1 @@\n-old v33\n+new v33',
+          additions: 1,
+          deletions: 1,
+        ),
+      ],
+      size: const Size(360, 700),
+    );
+
+    expect(find.text('ic_launcher.xml · mipmap-anydpi-v26'), findsOneWidget);
+    expect(find.text('ic_launcher.xml · mipmap-anydpi-v33'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(
+        RegExp(r'mipmap-anydpi-v26/ic_launcher\.xml, modified'),
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const Key('review-file-1')));
+    await tester.pumpAndSettle();
+    expect(find.text('+new v33'), findsOneWidget);
+  });
+
   testWidgets('shows a retryable error and a composed empty state', (
     tester,
   ) async {
