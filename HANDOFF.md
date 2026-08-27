@@ -29,7 +29,7 @@ installed on `emulator-5554`, and verified as version code 20/version name
 Flutter/render failure. The GitHub-downloaded asset matched the local tested APK
 byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 
-## Shorebird chat-timeline, update-notice, server-updater, and command-launcher patches for `1.0.19+20`
+## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`
 - Stable Patch 1 ID: `619842`
@@ -43,6 +43,8 @@ byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 - Shorebird-safe icon commit: `8f9a558`
 - Stable Patch 5 ID: `619985`
 - Command-launcher commit: `e75034368674581f93ff53969ec9a7db27fc3e8a`
+- Stable Patch 6 ID: `620296`
+- Review/focus/catalog/updater commit: `bf4f7912b725b369dbdd04e5a86826984334ec4a`
 - OpenCode reference revision: `c2eacd72afc4a4984564c393e15ab30011057269`
 - Command/feature map: [`docs/opencode-command-feature-map.md`](docs/opencode-command-feature-map.md)
 
@@ -140,6 +142,46 @@ asset-diff overrides. The exact public GitHub APK (version code 20/version name
 showed the live server `/review` result first for an exact search and `/diff` as a
 separate mobile-native action; Android logs contained no Flutter, RenderFlex,
 overflow, or fatal-exception failure.
+
+Patch 6 replaces the stacked diff sheet with a full-screen Review workspace. Phone
+layouts use compact changed-file tabs; wider layouts add a file rail. Review supports
+unified and split diff modes, old/new line numbers, hunk navigation, large-diff
+virtualization, line-range selection, copying, file questions, and grounded comments
+that return to the chat composer with the file and line range attached. Loading,
+retry, empty, and no-diff states remain explicit and the compact 640x320/2x-text
+layout is covered.
+
+The chat composer now derives its compact layout from the stable device height rather
+than the keyboard-shrunk body constraints, so focusing the prompt does not replace the
+TextField and dismiss the Android keyboard. Model and agent details continue to come
+from OpenCode. Detailed metadata is pruned against the server's current authoritative
+provider/model/agent inventory, the picker refreshes every time it opens, and a manual
+refresh action is available. This removes deleted catalog entries without introducing
+a hardcoded model list.
+
+The managed OpenCode installer now cleans the legacy persistent npm cache before its
+storage check and uses a fresh isolated npm cache for each download attempt. This
+repairs both the corrupt-cache `ENOENT rename` failure and the subsequent low-storage
+failure it caused. On `emulator-5554`, the cache had grown to 838 MiB; after the scoped
+cleanup the in-app updater completed, refreshed the model catalog, restarted the
+authenticated server, and reported OpenCode `1.18.23`. The picker then exposed six
+current models and an `ox alpha` search returned `No matching models`.
+
+Final-tree Flutter analysis was clean and all 230 tests passed. The release APK built
+with pinned Flutter `3.47.1`; Shorebird's dry run reported no issues, and Patch 6 was
+published without native- or asset-diff overrides. The exact public GitHub APK (SHA-256
+`c94c305d1ad329e1126065890fd3d0e4ffe92ddf26f7f12584532885f1164887`)
+downloaded the 1,661,180-byte x86_64 Patch 6 and activated
+`patches/6/dlc.vmcode` after a cold restart. On-device checks confirmed the Review
+empty state, a prompt that remained focused with the keyboard shown after four seconds,
+and the refreshed model picker. The next native maintenance release should upgrade
+Gradle to at least 9.1, AGP to at least 9.0.1, and Kotlin to at least 2.3.20.
+
+On the Ubuntu workstation, `z node_modules/opencode-ai` failed because zoxide had no
+matching history entry. The direct package path is `/home/eslam/node_modules/opencode-ai`;
+running `cd /home/eslam/node_modules/opencode-ai && node postinstall.mjs` repaired the
+binary, after which `opencode --version` reported `1.18.23` and
+`opencode models opencode --refresh` contained no Ox Alpha entry.
 
 ## Shorebird generated-artifact patch for `1.0.18+19`
 
