@@ -29,6 +29,35 @@ installed on `emulator-5554`, and verified as version code 20/version name
 Flutter/render failure. The GitHub-downloaded asset matched the local tested APK
 byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 
+## Production Android hardening branch
+
+- Branch: `production/android-release-hardening`
+- Implementation commit: `e6f290d64b3e0668eac15b50bbd2af3e11bb13cf`
+- Compare/PR: <https://github.com/Eslamasabry/oc_app/pull/new/production/android-release-hardening>
+
+This branch prepares the next native baseline without changing the patchable
+`1.0.19+20` release on `master`. It removes the debug signing fallback, adds a
+dedicated release signing configuration and ignored properties template, and
+upgrades to Gradle `9.5.0`, AGP `9.3.2`, built-in Kotlin with KGP `2.4.0`, and
+current AGP-9-compatible file/audio plugins. `flutter_secure_storage` advances
+from v9 to v10 deliberately so existing Android credentials pass through the
+required cipher migration; do not jump this release line directly to v11.
+
+Pinned Flutter `3.47.1` completed a release APK build in 139.5 seconds. The
+159.1 MB artifact used the known debug certificate only as an ignored local
+test key; that file was removed and the artifact must not be distributed.
+Flutter analysis was clean and all 237 tests passed. Shorebird's debug Maven
+repository lacked this fork's debug embedding, so release mode was the valid
+build gate. Pixel 6 install/launch verification was environment-blocked: the
+AVD never started Android's package service and then crashed with QEMU main-loop
+and CPU-thread watchdog errors even after its test data was reset.
+
+The remaining owner gate is the signing/package identity decision. Choose and
+back up the production upload key, decide how existing debug-signed sideload
+users transition, populate ignored `android/key.properties`, export the expected
+certificate fingerprint, then cut a new full Shorebird release. These native
+and dependency changes cannot ship as a patch to `1.0.19+20`.
+
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
 - Shorebird release ID: `792729`
