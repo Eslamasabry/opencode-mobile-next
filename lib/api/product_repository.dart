@@ -89,15 +89,19 @@ class ConsoleOrganization {
   });
 }
 
+enum VersionControlSetupState { git, absent, unknown }
+
 class VersionControlHealth {
   final String? branch;
   final String? defaultBranch;
   final List<VersionControlFile> changes;
+  final VersionControlSetupState setupState;
 
   const VersionControlHealth({
     this.branch,
     this.defaultBranch,
     required this.changes,
+    this.setupState = VersionControlSetupState.unknown,
   });
 
   int get additions => changes.fold(0, (total, file) => total + file.additions);
@@ -685,6 +689,9 @@ abstract class ProductRepository {
   Future<void> addSessionLocationReminder(String sessionID, String directory) =>
       Future.value();
   Future<VersionControlHealth> loadVersionControlHealth();
+  Future<void> initializeGitRepository() => Future.error(
+    const ProductException('Git initialization is unavailable on this server'),
+  );
   Future<List<VersionControlFile>> listFileStatuses();
   Future<List<LanguageServiceHealth>> listLanguageServices();
   Future<List<FormatterHealth>> listFormatters();
@@ -1072,6 +1079,18 @@ class SdkProductRepository
   @override
   Future<VersionControlHealth> loadVersionControlHealth() =>
       _guard('Could not load version control status', () async {
+        final projectFuture = () async {
+          try {
+            return (await _client.getProjectApi().projectCurrent(
+              directory: _directory,
+              workspace: _workspace,
+            )).data;
+          } catch (_) {
+            // Older servers can still provide useful VCS truth without the
+            // current-project metadata needed to offer Git initialization.
+            return null;
+          }
+        }();
         final responses = await Future.wait([
           _client.getInstanceApi().vcsGet(
             directory: _directory,
@@ -1084,9 +1103,15 @@ class SdkProductRepository
         ]);
         final info = responses[0].data as sdk.VcsInfo?;
         final status = responses[1].data as List<sdk.VcsFileStatus>?;
+        final project = await projectFuture;
         return VersionControlHealth(
           branch: info?.branch,
           defaultBranch: info?.defaultBranch,
+          setupState: project?.vcs == sdk.ProjectVcs.git
+              ? VersionControlSetupState.git
+              : project != null && project.vcs == null
+              ? VersionControlSetupState.absent
+              : VersionControlSetupState.unknown,
           changes: (status ?? const [])
               .map(
                 (file) => VersionControlFile(
@@ -1098,6 +1123,20 @@ class SdkProductRepository
               )
               .toList(),
         );
+      });
+
+  @override
+  Future<void> initializeGitRepository() =>
+      _guard('Could not initialize this Git repository', () async {
+        final response = await _client.getProjectApi().projectInitGit(
+          directory: _directory,
+          workspace: _workspace,
+        );
+        if (response.data?.vcs != sdk.ProjectVcs.git) {
+          throw const ProductException(
+            'OpenCode did not confirm Git initialization',
+          );
+        }
       });
 
   @override

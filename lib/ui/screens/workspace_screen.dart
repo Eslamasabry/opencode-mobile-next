@@ -64,15 +64,40 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       final projects = await repository.listProjects();
       if (!mounted || generation != _loadGeneration) return;
       projects.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      var shouldSelectInitialLocation = false;
       setState(() {
         _projects = projects;
-        if (_selectedProjectID == null && projects.isNotEmpty) {
-          _selectedProjectID = projects.first.id;
-          _selectedDirectory = projects.first.directory;
+        if (projects.isEmpty) {
+          _selectedProjectID = null;
+          _selectedDirectory = null;
+          _selectedWorkspaceID = null;
+          return;
+        }
+        final controllerDirectory = widget.controller.directory;
+        if (controllerDirectory != null) {
+          _selectedDirectory = controllerDirectory;
+          _selectedWorkspaceID = widget.controller.workspace;
+          final matching = _projectForDirectory(projects, controllerDirectory);
+          if (matching != null) {
+            _selectedProjectID = matching.id;
+          } else if (!projects.any(
+            (project) => project.id == _selectedProjectID,
+          )) {
+            _selectedProjectID = projects.first.id;
+          }
+        } else {
+          final retained = projects.where(
+            (project) => project.id == _selectedProjectID,
+          );
+          final selected = retained.isEmpty ? projects.first : retained.first;
+          _selectedProjectID = selected.id;
+          _selectedDirectory = selected.directory;
+          _selectedWorkspaceID = null;
+          shouldSelectInitialLocation = true;
         }
       });
       final selected = _selectedProject;
-      if (selected != null) {
+      if (shouldSelectInitialLocation && selected != null) {
         await widget.controller.selectLocation(
           directory: _selectedDirectory ?? selected.directory,
         );
@@ -112,6 +137,27 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       if (project.id == _selectedProjectID) return project;
     }
     return null;
+  }
+
+  static WorkspaceProject? _projectForDirectory(
+    List<WorkspaceProject> projects,
+    String directory,
+  ) {
+    for (final project in projects) {
+      if (project.directory == directory ||
+          project.worktrees.contains(directory)) {
+        return project;
+      }
+    }
+    return null;
+  }
+
+  bool get _hasExternalSessionDirectory {
+    final directory = _selectedDirectory;
+    final project = _selectedProject;
+    if (directory == null || project == null) return false;
+    return project.directory != directory &&
+        !project.worktrees.contains(directory);
   }
 
   Future<void> _selectProject(WorkspaceProject project) async {
@@ -223,6 +269,17 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                         },
                       ),
                     ),
+                    if (_hasExternalSessionDirectory)
+                      ListTile(
+                        key: const ValueKey('active-session-directory'),
+                        leading: const Icon(Icons.subdirectory_arrow_right),
+                        title: Text(_basename(_selectedDirectory!)),
+                        subtitle: Text(
+                          'Active session directory · $_selectedDirectory',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     if ((_selectedProject?.worktrees.isNotEmpty ?? false)) ...[
                       const SectionLabel('Worktree'),
                       SizedBox(

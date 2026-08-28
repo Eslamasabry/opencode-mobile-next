@@ -27,6 +27,7 @@ import 'files_screen.dart';
 import 'global_sessions_screen.dart';
 import 'home_screen.dart';
 import 'library_screen.dart';
+import 'project_health_screen.dart';
 import 'review_workspace.dart';
 import 'session_destination_sheet.dart';
 import 'settings_screen.dart';
@@ -1811,6 +1812,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         action: _ChatCommandAction.files,
       ),
       _ChatCommand.mobile(
+        slash: 'health',
+        title: 'Project health',
+        description:
+            'Inspect Git, language services, and formatters for this project',
+        group: 'Navigate',
+        action: _ChatCommandAction.projectHealth,
+      ),
+      _ChatCommand.mobile(
         slash: 'terminal',
         title: 'Terminal',
         description: 'Open persistent workspace terminals',
@@ -2105,6 +2114,22 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   onAttachFile: _attachProjectFile,
                   onReviewPrompt: _addReviewPrompt,
                 ),
+              ),
+            ),
+          );
+        }
+        return;
+      case _ChatCommandAction.projectHealth:
+        final repository = await _conn.prepareActionRepository();
+        if (repository == null) {
+          throw const ProductException('OpenCode is reconnecting. Try again.');
+        }
+        if (mounted) {
+          await Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => ProjectHealthScreen(
+                repository: repository,
+                repositoryResolver: _conn.prepareActionRepository,
               ),
             ),
           );
@@ -3068,6 +3093,7 @@ enum _ChatCommandAction {
   move,
   warp,
   files,
+  projectHealth,
   promptEditor,
   terminal,
   model,

@@ -32,8 +32,44 @@ byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 ## Production Android hardening branch
 
 - Branch: `production/android-release-hardening`
-- Implementation commit: `e6f290d64b3e0668eac15b50bbd2af3e11bb13cf`
+- Last pushed commit before the `1.0.20+21` candidate: `c17f4f63ae14e3ab676da440df44fc23e1116356`
 - Compare/PR: <https://github.com/Eslamasabry/oc_app/pull/new/production/android-release-hardening>
+
+### Verified `1.0.20+21` candidate
+
+This branch now carries the first installable `1.0.20+21` candidate. It is not
+published and is not yet registered as a full Shorebird release. The final
+Flutter-built APK is package `ai.opencode.opencode_mobile`, version code `21`,
+version name `1.0.20`, `161366803` bytes, and SHA-256
+`701591bfece1a506ec7a97bf4279753fc7d6a6a8488524bea381db1199280387`.
+Its signer SHA-256 is
+`1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c`,
+exactly matching the public `1.0.19+20` GitHub APK. Installing it with
+`adb install -r` preserved the public app's first-install time and advanced the
+installed version from code 20/name 1.0.19 to code 21/name 1.0.20.
+
+The candidate finishes the Project health Git setup path. OpenCode's generated
+current-project contract determines whether the exact active location is a Git
+repository. A non-Git location shows a truthful empty state and an explicit
+confirmation before generated `project.initGit` is called; success must return
+a Git project, then health refreshes, while rejection stays inline and retryable.
+Mobile `/health` opens this same native surface. No model or provider inventory
+is hardcoded.
+
+A live release-mode Pixel 6 check against OpenCode `1.18.23` also found and fixed
+a location-integrity defect: mounting Workspace could overwrite a directory
+selected from the global session finder with the server project root. Workspace
+now respects the controller's active session directory during refresh. The final
+live proof opened `/tmp/oc-git-proof2.iwAf13/project`, displayed `Git is not
+initialized`, confirmed the action, created the repository at that exact path,
+and refreshed to `master`, `Working tree is clean`, and `No uncommitted changes`.
+Android logged no app fatal exception, ANR, RenderFlex, overflow, or OOM.
+
+Final-tree evidence: Flutter analysis is clean; all 400 app tests pass serially;
+all four generated-SDK integrity verifiers pass for 188 operations; all 46 SDK
+tests and SDK analysis pass; the compiled SDK smoke binary runs; Android
+`lintRelease` passes; and the generated SDK audit counts 87 directly used
+operations. Traycer and the agent/task-tree lane remain explicitly deferred.
 
 This branch prepares the next native baseline without changing the patchable
 `1.0.19+20` release on `master`. It removes the debug signing fallback, adds a
@@ -52,11 +88,12 @@ build gate. Pixel 6 install/launch verification was environment-blocked: the
 AVD never started Android's package service and then crashed with QEMU main-loop
 and CPU-thread watchdog errors even after its test data was reset.
 
-The remaining owner gate is the signing/package identity decision. Choose and
-back up the production upload key, decide how existing debug-signed sideload
-users transition, populate ignored `android/key.properties`, export the expected
-certificate fingerprint, then cut a new full Shorebird release. These native
-and dependency changes cannot ship as a patch to `1.0.19+20`.
+The GitHub sideload upgrade identity is now resolved: the available local key
+matches the public `1.0.19+20` APK exactly. Back it up before publishing another
+GitHub APK. Play/store production signing and any migration away from this legacy
+debug certificate remain separate owner decisions. These native and dependency
+changes cannot ship as a patch to `1.0.19+20`; they require a new full Shorebird
+release.
 
 The branch also has a bounded production-guardrail follow-up: a bundled,
 user-facing privacy policy; adaptive, round, and Android 13 themed launcher

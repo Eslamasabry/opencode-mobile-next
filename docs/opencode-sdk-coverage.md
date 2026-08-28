@@ -9,7 +9,7 @@ Authoritative inputs:
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app
-currently calls **86 generated operations directly**. It also uses a set of
+currently calls **87 generated operations directly**. It also uses a set of
 older or compatibility routes through `OpenCodeApi` and raw `Dio`; those are
 listed separately so a working feature is not incorrectly labelled missing.
 
@@ -40,7 +40,7 @@ Legend:
 | OpenCode HTTP v2 | agent list, credential remove | - | credential update, health, location |
 | Permission | list, reply, deprecated session reply fallback | - | - |
 | Permissions v2 | request list, session reply, saved permission list/remove | - | per-session create/get/list |
-| Project | `projectList`, `projectDirectories`, current project | - | Git init, update |
+| Project | `projectList`, `projectDirectories`, current project, Git init | - | update |
 | Project copy | - | - | generated name, create, refresh, remove |
 | Provider | - | provider list and configured-provider fallback | auth methods and OAuth authorize/callback |
 | Providers v2 | provider list | - | provider get |
@@ -75,6 +75,13 @@ Legend:
 4. **Coding health and navigation:** VCS status/info, LSP, and formatter status now share one
    flat Project health surface in the selected workspace. Each section fails
    independently so one unavailable endpoint does not hide valid server truth.
+   Current-project metadata distinguishes an uninitialized folder from a clean
+   Git repository without guessing from an empty status response. The native
+   surface offers `project.git.init` only after explicit confirmation, sends
+   the exact directory/workspace context, requires the returned project to
+   confirm `vcs: git`, then refreshes all health sections. Older servers that
+   cannot provide current-project metadata retain their existing VCS status
+   without being mislabeled as non-Git.
    Files now has adjacent Files and Symbols tabs; generated LSP symbol results
    open the referenced source file at its exact one-based line and highlight it.
    The Files browser also uses OpenCode's generated VCS status contract:

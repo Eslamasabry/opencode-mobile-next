@@ -1047,6 +1047,16 @@ void main() {
           requests.add(request.uri);
           request.response.headers.contentType = ContentType.json;
           switch (request.uri.path) {
+            case '/project/current':
+              request.response.write(
+                jsonEncode({
+                  'id': 'project-1',
+                  'worktree': '/work/app',
+                  'vcs': 'git',
+                  'time': {'created': 1, 'updated': 2},
+                  'sandboxes': <Object?>[],
+                }),
+              );
             case '/vcs':
               request.response.write(
                 jsonEncode({
@@ -1125,6 +1135,7 @@ void main() {
           );
 
           expect(vcs.branch, 'feature/mobile');
+          expect(vcs.setupState, VersionControlSetupState.git);
           expect(vcs.defaultBranch, 'main');
           expect(vcs.additions, 7);
           expect(vcs.deletions, 2);
@@ -1145,6 +1156,7 @@ void main() {
           expect(symbols.single.line, 42);
           expect(symbols.single.column, 4);
           expect(requests.map((uri) => uri.path).toSet(), {
+            '/project/current',
             '/vcs',
             '/vcs/status',
             '/lsp',
@@ -1162,6 +1174,90 @@ void main() {
               if (uri.path == '/find/symbol') 'query': 'ProjectHealth',
             });
           }
+        } finally {
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
+
+  test(
+    'project Git setup is detected and initialized through generated APIs',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        final requests = <({String method, Uri uri, String body})>[];
+        var initCalls = 0;
+        server.listen((request) async {
+          final body = await utf8.decoder.bind(request).join();
+          requests.add((method: request.method, uri: request.uri, body: body));
+          request.response.headers.contentType = ContentType.json;
+          switch (request.uri.path) {
+            case '/project/current':
+              request.response.write(
+                jsonEncode({
+                  'id': 'global',
+                  'worktree': '/',
+                  'time': {'created': 1, 'updated': 1},
+                  'sandboxes': <Object?>[],
+                }),
+              );
+            case '/vcs':
+              request.response.write(
+                jsonEncode({'branch': null, 'default_branch': null}),
+              );
+            case '/vcs/status':
+              request.response.write(jsonEncode(<Object?>[]));
+            case '/project/git/init':
+              initCalls++;
+              request.response.write(
+                jsonEncode({
+                  'id': 'global',
+                  'worktree': '/work/new-project',
+                  if (initCalls == 1) 'vcs': 'git',
+                  'time': {'created': 1, 'updated': 2},
+                  'sandboxes': <Object?>[],
+                }),
+              );
+            default:
+              request.response.statusCode = HttpStatus.notFound;
+          }
+          await request.response.close();
+        });
+
+        try {
+          final api = OpenCodeApi(
+            baseUrl: 'http://${server.address.host}:${server.port}',
+          );
+          final repository = SdkProductRepository(api.sdkClient)
+            ..setLocation(directory: '/work/new-project', workspace: 'phone');
+
+          final health = await repository.loadVersionControlHealth();
+          expect(health.setupState, VersionControlSetupState.absent);
+          expect(health.branch, isNull);
+          expect(health.changes, isEmpty);
+
+          await repository.initializeGitRepository();
+          final initRequest = requests.singleWhere(
+            (request) => request.uri.path == '/project/git/init',
+          );
+          expect(initRequest.method, 'POST');
+          expect(initRequest.uri.queryParameters, {
+            'directory': '/work/new-project',
+            'workspace': 'phone',
+          });
+          expect(initRequest.body, isEmpty);
+
+          await expectLater(
+            repository.initializeGitRepository(),
+            throwsA(
+              isA<ProductException>().having(
+                (error) => error.toString(),
+                'message',
+                contains('did not confirm'),
+              ),
+            ),
+          );
         } finally {
           await server.close(force: true);
         }

@@ -12,6 +12,7 @@ import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/app_diagnostics_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/global_sessions_screen.dart';
+import 'package:opencode_mobile/ui/screens/project_health_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeOpenCodeApi extends OpenCodeApi {
@@ -237,6 +238,12 @@ class _DestinationRepository extends _FakeProductRepository {
       ],
     );
   }
+
+  @override
+  Future<List<LanguageServiceHealth>> listLanguageServices() async => const [];
+
+  @override
+  Future<List<FormatterHealth>> listFormatters() async => const [];
 
   @override
   Future<void> moveSession(
@@ -1318,6 +1325,23 @@ void main() {
 
     expect(find.byType(AppDiagnosticsScreen), findsOneWidget);
     expect(find.text('Private until you send it'), findsOneWidget);
+  });
+
+  testWidgets('health command opens native project health', (tester) async {
+    final repository = _DestinationRepository();
+    await _pumpChat(tester, _FakeOpenCodeApi(), repository: repository);
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'health',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('command-mobile-health')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ProjectHealthScreen), findsOneWidget);
+    expect(find.text('feature/mobile'), findsOneWidget);
   });
 
   testWidgets('sessions command opens the all-project native finder', (

@@ -26,7 +26,9 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
   String? _versionControlError;
   String? _languageServicesError;
   String? _formattersError;
+  String? _gitInitializationError;
   bool _refreshing = false;
+  bool _initializingGit = false;
   int _generation = 0;
 
   @override
@@ -42,6 +44,7 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
       _versionControlError = null;
       _languageServicesError = null;
       _formattersError = null;
+      _gitInitializationError = null;
     });
     final repository = await _resolveRepository();
     if (!mounted || generation != _generation) return;
@@ -67,6 +70,55 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
 
   Future<ProductRepository?> _resolveRepository() async =>
       widget.repositoryResolver?.call() ?? widget.repository;
+
+  Future<void> _initializeGit() async {
+    if (_initializingGit) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Initialize Git repository?'),
+        content: const Text(
+          'OpenCode will run git init in the current project. Existing files '
+          'will not be changed or committed. This enables branch, working-tree, '
+          'and Review features.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            key: const ValueKey('confirm-git-initialization'),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Initialize Git'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() {
+      _initializingGit = true;
+      _gitInitializationError = null;
+    });
+    try {
+      final repository = await _resolveRepository();
+      if (repository == null) {
+        throw const ProductException('OpenCode is reconnecting. Try again.');
+      }
+      await repository.initializeGitRepository();
+      await _load();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Git repository initialized')),
+      );
+    } catch (error) {
+      if (mounted) {
+        setState(() => _gitInitializationError = error.toString());
+      }
+    } finally {
+      if (mounted) setState(() => _initializingGit = false);
+    }
+  }
 
   Future<void> _loadVersionControl(
     ProductRepository repository,
@@ -124,7 +176,7 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
         actions: [
           IconButton(
             tooltip: 'Refresh project health',
-            onPressed: _refreshing ? null : _load,
+            onPressed: _refreshing || _initializingGit ? null : _load,
             icon: _refreshing
                 ? const SizedBox.square(
                     dimension: 20,
@@ -184,6 +236,45 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
     final vcs = _versionControl;
     if (vcs == null) {
       return const [_HealthLoadingTile(label: 'version control')];
+    }
+    if (vcs.setupState == VersionControlSetupState.absent) {
+      return [
+        const ListTile(
+          key: ValueKey('git-not-initialized'),
+          leading: Icon(Icons.account_tree_outlined),
+          title: Text('Git is not initialized'),
+          subtitle: Text(
+            'Initialize this project to enable branches, working-tree changes, and Review.',
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          child: FilledButton(
+            key: const ValueKey('initialize-git-repository'),
+            onPressed: _initializingGit ? null : _initializeGit,
+            child: _initializingGit
+                ? const SizedBox.square(
+                    dimension: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Initialize Git'),
+          ),
+        ),
+        if (_gitInitializationError != null)
+          ListTile(
+            leading: const Icon(Icons.error_outline_rounded),
+            title: const Text('Git initialization failed'),
+            subtitle: Text(
+              _gitInitializationError!,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: TextButton(
+              onPressed: _initializingGit ? null : _initializeGit,
+              child: const Text('Retry'),
+            ),
+          ),
+      ];
     }
     final branch = vcs.branch?.trim();
     final defaultBranch = vcs.defaultBranch?.trim();
