@@ -16,6 +16,7 @@ import '../widgets/product_states.dart';
 import '../widgets/pickers.dart';
 import 'about_screen.dart';
 import 'app_diagnostics_screen.dart';
+import 'guide_screen.dart';
 import 'saved_permissions_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -619,6 +620,20 @@ class _SettingsScreenState extends State<SettingsScreen>
             },
           ),
           const SectionLabel('About'),
+          ListTile(
+            key: const ValueKey('settings-setup-guide'),
+            leading: const Icon(Icons.menu_book_outlined),
+            title: const Text('Setup guide'),
+            subtitle: const Text(
+              'Connect a computer or run OpenCode on this phone',
+            ),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => GuideScreen(embedded: false),
+              ),
+            ),
+          ),
           ListTile(
             leading: const Icon(Icons.privacy_tip_outlined),
             title: const Text('Privacy and data use'),

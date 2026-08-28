@@ -54,15 +54,13 @@ Widget _app(
 );
 
 Future<void> _openEditor(WidgetTester tester) async {
-  final remote = find.text('Remote machine (LAN)');
-  if (remote.evaluate().isEmpty) {
-    await tester.scrollUntilVisible(
-      remote,
-      160,
-      scrollable: find.byType(Scrollable).first,
-    );
-  }
-  await tester.tap(find.text('Remote machine (LAN)'));
+  // With no saved profile the Servers screen shows the first-run welcome;
+  // its connect card is the path into the editor. Large text scales can push
+  // the card below the fold, so bring it fully on screen before tapping.
+  final connect = find.byKey(const ValueKey('welcome-connect-card'));
+  await tester.ensureVisible(connect);
+  await tester.pumpAndSettle();
+  await tester.tap(connect);
   await tester.pumpAndSettle();
 }
 
