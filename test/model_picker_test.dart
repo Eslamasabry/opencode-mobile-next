@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
+import 'package:opencode_mobile/api/provider_presentation.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
@@ -186,6 +187,75 @@ Widget _app(ConnectionController controller, {double textScale = 1}) {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('model presentation leads with current model and provider family', () {
+    const models = [
+      CatalogModel(
+        id: 'gemini-wire-first',
+        providerID: 'google',
+        name: 'Gemini wire first',
+        enabled: true,
+        status: 'active',
+        contextLimit: 1000000,
+        outputLimit: 64000,
+        reasoning: true,
+        attachments: true,
+        tools: true,
+        variants: [],
+      ),
+      CatalogModel(
+        id: 'gpt-current',
+        providerID: 'openai',
+        name: 'GPT current',
+        enabled: true,
+        status: 'active',
+        contextLimit: 400000,
+        outputLimit: 128000,
+        reasoning: true,
+        attachments: true,
+        tools: true,
+        variants: [],
+      ),
+      CatalogModel(
+        id: 'gpt-sibling',
+        providerID: 'openai',
+        name: 'GPT sibling',
+        enabled: true,
+        status: 'active',
+        contextLimit: 400000,
+        outputLimit: 128000,
+        reasoning: true,
+        attachments: true,
+        tools: true,
+        variants: [],
+      ),
+      CatalogModel(
+        id: 'local-last',
+        providerID: 'local',
+        name: 'Local last',
+        enabled: true,
+        status: 'active',
+        contextLimit: 32000,
+        outputLimit: 4000,
+        reasoning: false,
+        attachments: false,
+        tools: false,
+        variants: [],
+      ),
+    ];
+
+    final ordered = presentModels(
+      models,
+      selected: ModelRef(providerID: 'openai', modelID: 'gpt-current'),
+    );
+
+    expect(ordered.map((model) => '${model.providerID}/${model.id}').toList(), [
+      'openai/gpt-current',
+      'openai/gpt-sibling',
+      'google/gemini-wire-first',
+      'local/local-last',
+    ]);
+  });
+
   testWidgets('model selector searches and persists a new selection', (
     tester,
   ) async {
@@ -223,6 +293,51 @@ void main() {
     expect(controller.selectedModel?.providerID, 'opencode');
     expect(controller.selectedModel?.modelID, 'nemotron-3-ultra-free');
     expect(find.text('Model, mode & agent'), findsNothing);
+  });
+
+  testWidgets('current model and provider family lead the unfiltered catalog', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(411, 891));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    final existing = controller.catalog!;
+    controller.catalog = CatalogSnapshot(
+      providers: const [
+        CatalogProvider(id: 'google', name: 'Google', enabled: true),
+        CatalogProvider(id: 'opencode', name: 'OpenCode Zen', enabled: true),
+        CatalogProvider(id: 'local', name: 'Local models', enabled: true),
+      ],
+      models: [
+        const CatalogModel(
+          id: 'gemini-first-on-wire',
+          providerID: 'google',
+          name: 'Gemini first on wire',
+          enabled: true,
+          status: 'active',
+          contextLimit: 1000000,
+          outputLimit: 64000,
+          reasoning: true,
+          attachments: true,
+          tools: true,
+          variants: [],
+        ),
+        ...existing.models,
+      ],
+      agents: existing.agents,
+    );
+    await tester.pumpWidget(_app(controller));
+
+    await tester.tap(find.text('Choose model'));
+    await tester.pumpAndSettle();
+
+    final current = find.byKey(
+      const Key('model-option-opencode-nemotron-3.5-lightning-free'),
+    );
+    expect(current, findsOneWidget);
+    expect(tester.getTopLeft(current).dy, lessThan(891));
+    expect(find.text('Use model and mode'), findsOneWidget);
   });
 
   testWidgets('explicit fast thinking mode is selected and persisted', (

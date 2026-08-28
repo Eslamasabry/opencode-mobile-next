@@ -33,7 +33,7 @@ byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 
 - Branch: `production/android-release-hardening`
 - Last pushed commit before the `1.0.20+21` candidate: `c17f4f63ae14e3ab676da440df44fc23e1116356`
-- Latest app-completeness implementation: `bf422f826486d316c7ac041e08ef4d5b13bbfbb8`
+- Latest app-completeness implementation: `PENDING_CURRENT_FIRST_MODEL_COMMIT`
 - Compare/PR: <https://github.com/Eslamasabry/oc_app/pull/new/production/android-release-hardening>
 
 ### Verified `1.0.20+21` candidate
@@ -348,6 +348,42 @@ and the public legacy certificate SHA-256
 `1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c`.
 Temporary signing properties were removed; this APK was not published or
 distributed.
+
+The unified model/mode/agent selector now opens on the exact active model and
+then the rest of its presented provider family before preserving the remaining
+server catalog order. Previously, the live OpenCode catalog began with Google,
+so a session visibly configured for `openai/gpt-5.6-sol` opened on unrelated
+Gemini rows and hid its current selection and thinking modes below hundreds of
+models. The correction changes presentation order only: all provider/model wire
+IDs, Z.AI regional aliases, search, provider filtering, Fast modes, Reasoning,
+Largest context, and explicit variant selection remain server-backed. Largest
+context still takes over ordering when the user selects that intent.
+
+A same-viewport release-mode Pixel 6 comparison against OpenCode `1.18.23`
+proved the change with the live 349-model catalog. Before the correction the
+first row was Google's `gemini-3.1-flash-tts-preview`; afterward the first row
+was the selected OpenAI `gpt-5.6-sol`, presented by the server as
+`GPT-5.6 Sol 1M (OAuth)` with 1,050,000 context, 128,000 output, reasoning,
+tools, attachments, fast-mode availability, and Default/none/low/medium/high/
+xhigh/max thinking choices immediately visible. The one audit-created session
+was verified by exact ID with zero messages before deletion; no user session
+was removed.
+
+The first post-install startup logged flutter_secure_storage's algorithm-change
+migration path, which found zero encrypted items and explicitly completed
+successfully. A clean-log close/reopen of the corrected picker then produced no
+app fatal exception, ANR, RenderFlex overflow, OOM, SIGSEGV, or Flutter error.
+Final-tree Flutter analysis is clean and all 458 app tests pass serially. All
+four generated-SDK integrity verifiers pass for 188 operations; all 46 SDK
+tests and SDK analysis pass; the compiled SDK smoke binary runs; and aggregate
+Android `lintRelease` passes. The generated SDK audit remains at 101 directly
+used operations. The locally test-signed `1.0.20+21` APK is `162039375` bytes
+with SHA-256
+`34322f2d85ef300e68b8f387df72cff7ca546ac7939102177b925474f11c72ef`
+and the public legacy certificate SHA-256
+`1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c`.
+It upgraded the emulator in place, temporary signing properties were removed,
+and the APK was not published or distributed.
 
 A live release-mode Pixel 6 check against OpenCode `1.18.23` also found and fixed
 a location-integrity defect: mounting Workspace could overwrite a directory

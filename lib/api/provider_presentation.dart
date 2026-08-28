@@ -125,7 +125,26 @@ List<CatalogModel> presentModels(
       ).compareTo(_aliasPriority(b.providerID));
     });
   }
-  return [for (final entries in groups.values) ...entries];
+
+  final orderedKeys = groups.keys.toList();
+  if (selected != null) {
+    final selectedGroup = presentProvider(selected.providerID).groupID;
+    final selectedKey = '$selectedGroup\u0000${selected.modelID}';
+    final currentProviderKeys = orderedKeys
+        .where(
+          (key) => key != selectedKey && key.startsWith('$selectedGroup\u0000'),
+        )
+        .toList();
+    orderedKeys.removeWhere(
+      (key) => key == selectedKey || currentProviderKeys.contains(key),
+    );
+    orderedKeys.insertAll(0, [
+      if (groups.containsKey(selectedKey)) selectedKey,
+      ...currentProviderKeys,
+    ]);
+  }
+
+  return [for (final key in orderedKeys) ...groups[key]!];
 }
 
 String presentedProviderName(

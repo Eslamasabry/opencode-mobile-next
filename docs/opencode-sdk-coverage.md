@@ -326,7 +326,17 @@ Legend:
    retry error. OpenCode 1.18.23 returned an empty `v2.session.context` payload
    for populated legacy sessions, so mobile follows upstream web's message-
    derived approach instead of presenting that endpoint as authoritative.
-23. **Deferred by owner:** a Traycer-style task cockpit remains outside the
+23. **Current-first model and mode discovery:** the unified selector still
+   exposes the full runtime catalog, provider grouping, search, capability
+   intents, exact backend routes, and server variants. Its unfiltered order now
+   leads with the exact selected provider/model, then the rest of that presented
+   provider family, before preserving the server's remaining order. Opening the
+   picker therefore exposes the active model, context/output limits,
+   capabilities, and thinking modes immediately instead of beginning on an
+   unrelated provider merely because that provider appeared first on the wire.
+   Explicit `Largest context` sorting remains authoritative when selected, and
+   no model or provider inventory is hardcoded.
+24. **Deferred by owner:** a Traycer-style task cockpit remains outside the
    current implementation lane.
 
 ## Deliberate non-goals
