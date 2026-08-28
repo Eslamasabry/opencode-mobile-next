@@ -8,6 +8,7 @@ import '../widgets/connection_status_banner.dart';
 import '../widgets/pickers.dart';
 import 'files_screen.dart';
 import 'library_screen.dart';
+import 'mission_control_screen.dart';
 import 'requests_screen.dart';
 import 'settings_screen.dart';
 import 'terminal_screen.dart';
@@ -99,6 +100,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             tooltip: 'Model / agent',
             icon: const Icon(Icons.tune_rounded),
             onPressed: () => showModelPicker(context),
+          ),
+          Badge(
+            isLabelVisible: pending > 0,
+            label: Text('$pending'),
+            child: IconButton(
+              key: const ValueKey('mission-control-button'),
+              tooltip: 'Mission Control',
+              icon: const Icon(Icons.space_dashboard_outlined),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => MissionControlScreen(controller: conn),
+                ),
+              ),
+            ),
           ),
           Badge(
             isLabelVisible: pending > 0,
