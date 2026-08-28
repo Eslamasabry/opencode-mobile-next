@@ -933,6 +933,17 @@ abstract class ProductRepository {
   Future<void> unshareSession(String id);
   Future<void> archiveSession(String id);
   Future<String> forkSession(String id, {String? messageID});
+
+  /// Permanently removes one message and all of its parts from the session's
+  /// stored conversation, so future replies no longer see it. File changes
+  /// that message made are not reverted.
+  Future<void> deleteMessage({
+    required String sessionID,
+    required String messageID,
+  }) => Future.error(
+    const ProductException('Message deletion is unavailable on this server'),
+  );
+
   Future<void> revertSession(String id, String messageID);
   Future<void> restoreSession(String id);
   Future<void> compactSession(
@@ -2610,6 +2621,23 @@ class SdkProductRepository
         }
         return fork.id;
       });
+
+  @override
+  Future<void> deleteMessage({
+    required String sessionID,
+    required String messageID,
+  }) =>
+      // The detail-preserving guard: a declared refusal (for example a message
+      // still owned by an active response) surfaces OpenCode's own words.
+      _guardWorktree(
+        'Could not delete the message',
+        () async => _client.getSessionApi().sessionDeleteMessage(
+          sessionID: sessionID,
+          messageID: messageID,
+          directory: _directory,
+          workspace: _workspace,
+        ),
+      );
 
   @override
   Future<void> revertSession(String id, String messageID) => _guard(
