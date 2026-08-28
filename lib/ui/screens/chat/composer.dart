@@ -563,7 +563,13 @@ class _ContextMeterLine extends StatelessWidget {
                   alignment: AlignmentDirectional.centerStart,
                   child: FractionallySizedBox(
                     widthFactor: t.clamp(0.0, 1.0),
-                    child: ColoredBox(color: fill),
+                    // Both factors must be tight: with a loose height the
+                    // fill box collapses to zero and only the track paints.
+                    heightFactor: 1,
+                    child: ColoredBox(
+                      key: const ValueKey('composer-context-meter-fill'),
+                      color: fill,
+                    ),
                   ),
                 ),
               ),

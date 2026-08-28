@@ -3128,6 +3128,20 @@ void main() {
       find.bySemanticsLabel('Context window 50 percent used'),
       findsOneWidget,
     );
+
+    // The fill must actually paint: half the track's width at full height.
+    await tester.pumpAndSettle();
+    final fillSize = tester.getSize(
+      find.byKey(const ValueKey('composer-context-meter-fill')),
+    );
+    final trackSize = tester.getSize(
+      find.byKey(const ValueKey('composer-context-meter')),
+    );
+    expect(fillSize.height, trackSize.height);
+    expect(
+      fillSize.width / trackSize.width,
+      moreOrLessEquals(.5, epsilon: .01),
+    );
     semantics.dispose();
   });
 
