@@ -33,7 +33,7 @@ byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 
 - Branch: `production/android-release-hardening`
 - Last pushed commit before the `1.0.20+21` candidate: `c17f4f63ae14e3ab676da440df44fc23e1116356`
-- Latest app-completeness implementation: `36a1f783eaab8c2420211ae1957c46bc9c76b3c2`
+- Latest app-completeness implementation: `36a1f789ca0681c776d91ef12b12cdb45e0bafac`
 - Compare/PR: <https://github.com/Eslamasabry/oc_app/pull/new/production/android-release-hardening>
 
 ### Verified `1.0.20+21` candidate
