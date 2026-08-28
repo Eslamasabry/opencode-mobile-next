@@ -73,6 +73,29 @@ sites, followed by implementation of the highest-impact hidden or incomplete
 coding workflow. Signing and store publication remain deferred until that
 product-completeness audit is worked down.
 
+Long-idle and server-interruption recovery now preserves the product context
+instead of falling back to a fresh connection. Home and active Chat share one
+flat, accessible status banner; automatic SSE recovery keeps a force-retry
+action available, while repeated manual taps coalesce behind one health-check
+and transport rebuild. The rebuild retains the active profile, directory,
+workspace, sessions, and rendered transcript. A failed health check shows its
+error in place and no longer ejects Home or Chat to the server list; restarting
+OpenCode and retrying restores live events and reconciles server-owned data at
+the exact retained location. Explicit Disconnect remains the only flow that
+clears location data and returns to Servers.
+
+Release-mode Pixel 6 verification against isolated OpenCode `1.18.23` stopped
+the server from an active `oc_app` chat, observed automatic reconnect with an
+enabled Retry action, forced a failed health-check retry, and confirmed the
+same chat remained visible with the failure. After the server restarted, Retry
+removed the banner without navigation; returning to Workspace showed `oc_app`
+still selected and the same session still present. Android logged no fatal
+exception, ANR, RenderFlex overflow, or OOM. Final-tree Flutter analysis is
+clean, the generated SDK's four independent verifiers, 46 tests, and analyzer
+pass, Android `lintRelease` passes, and the test-signed release APK compiles at
+161,120,523 bytes. The locally signed APK and disposable server/signing state
+were removed and were not distributed. Traycer remains explicitly deferred.
+
 That API audit is now recorded in
 [`docs/opencode-sdk-coverage.md`](docs/opencode-sdk-coverage.md). The generated
 Dart SDK exposes 188 HTTP operations across 32 groups; the app directly used 30

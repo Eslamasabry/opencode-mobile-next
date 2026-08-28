@@ -11,11 +11,13 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../../api/models.dart';
 import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
+import '../../api/sse.dart';
 import '../../state/connection.dart';
 import '../../voice/controller.dart';
 import '../../voice/voice_ui.dart';
 import '../permission_presentation.dart';
 import '../widgets/appearance_picker.dart';
+import '../widgets/connection_status_banner.dart';
 import '../widgets/file_preview.dart';
 import '../widgets/markdown.dart';
 import '../widgets/pickers.dart';
@@ -2657,6 +2659,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       ),
       body: Column(
         children: [
+          if (_conn.status != StreamStatus.connected)
+            ConnectionStatusBanner(controller: _conn),
           if (shareUrl != null)
             _SharedSessionBanner(url: shareUrl, onStop: _stopSharing),
           if (_promptError case final promptError?)

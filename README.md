@@ -16,7 +16,8 @@ is also bundled under **Settings > Privacy and data use**.
 - **Guided on-device setup**: detects Termux, unlocks the bridge, installs
   opencode (node + npm), launches `opencode serve`, health-polls until live and
   connects — automatically
-- Live SSE event stream (`/event`) with reconnect + backoff, polling fallback
+- Live SSE event stream (`/event`) with reconnect + backoff, polling fallback,
+  and location-preserving manual recovery that keeps active chats visible
 - Chats: create/rename/delete sessions, streaming responses, optimistic send, abort
 - All-project session finder with server-side title search, archived inclusion,
   cursor pagination, and exact location switching

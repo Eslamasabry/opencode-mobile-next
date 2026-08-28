@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/sse.dart';
 import '../../state/connection.dart';
+import '../widgets/connection_status_banner.dart';
 import '../widgets/pickers.dart';
 import 'files_screen.dart';
 import 'library_screen.dart';
@@ -38,13 +39,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _onConnChanged() {
     if (!mounted) return;
-    final conn = ref.read(connProvider);
-    if (conn.status == StreamStatus.disconnected &&
-        conn.api == null &&
-        !conn.lifecycleSuspended) {
-      Navigator.of(context).pushNamedAndRemoveUntil('/servers', (_) => false);
-      return;
-    }
     setState(() {});
   }
 
@@ -147,7 +141,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           final content = Column(
             children: [
               if (conn.status != StreamStatus.connected)
-                _ConnectionBanner(controller: conn),
+                ConnectionStatusBanner(controller: conn),
               Expanded(
                 child: IndexedStack(index: _tab, children: tabs),
               ),
@@ -286,40 +280,6 @@ class _StatusDot extends StatelessWidget {
               height: 10,
               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
-    );
-  }
-}
-
-class _ConnectionBanner extends StatelessWidget {
-  final ConnectionController controller;
-  const _ConnectionBanner({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    final reconnecting =
-        controller.status == StreamStatus.connecting ||
-        controller.status == StreamStatus.reconnecting;
-    return MaterialBanner(
-      leading: reconnecting
-          ? const SizedBox.square(
-              dimension: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : const Icon(Icons.cloud_off_outlined),
-      content: Text(
-        reconnecting
-            ? 'Reconnecting. Live updates may be delayed.'
-            : 'Live updates are offline. Displayed data may be stale, and actions can fail until OpenCode reconnects.',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            final profile = controller.profile;
-            if (profile != null) controller.connect(profile);
-          },
-          child: const Text('Retry'),
-        ),
-      ],
     );
   }
 }

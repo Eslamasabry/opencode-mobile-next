@@ -550,6 +550,115 @@ void main() {
     controller.dispose();
   });
 
+  testWidgets(
+    'manual reconnect is coalesced and preserves the selected location',
+    (tester) async {
+      final apis = <_ControlledApi>[];
+      final streams = <_FakeEventStream>[];
+      final controller = ConnectionController(
+        await _store(),
+        apiFactory: (profile) {
+          final api = _ControlledApi('${profile.id}-${apis.length}');
+          apis.add(api);
+          return api;
+        },
+        repositoryFactory: _repositoryFactory,
+        eventStreamFactory: _streamFactory(streams),
+      );
+
+      final connect = controller.connect(_profile('server'));
+      await tester.pump();
+      apis.single.healthResult.complete(Health(healthy: true, version: '1'));
+      await connect;
+      await controller.selectLocation(
+        directory: '/work/acme',
+        workspace: 'workspace-1',
+      );
+      controller.sessionsById['session-1'] = Session(
+        id: 'session-1',
+        title: 'Retained chat',
+      );
+
+      final firstRetry = controller.retryConnection();
+      final secondRetry = controller.retryConnection();
+      await tester.pump();
+
+      expect(secondRetry, same(firstRetry));
+      expect(apis, hasLength(3));
+      expect(apis.last.directory, '/work/acme');
+      expect(apis.last.workspace, 'workspace-1');
+      expect(controller.directory, '/work/acme');
+      expect(controller.workspace, 'workspace-1');
+      expect(controller.sessionsById, contains('session-1'));
+      expect(controller.manualReconnectInProgress, isTrue);
+
+      apis.last.healthResult.complete(Health(healthy: true, version: '2'));
+      await firstRetry;
+      await tester.pump();
+
+      expect(controller.api, same(apis.last));
+      expect(controller.version, '2');
+      expect(controller.directory, '/work/acme');
+      expect(controller.workspace, 'workspace-1');
+      expect(controller.manualReconnectInProgress, isFalse);
+      controller.dispose();
+    },
+  );
+
+  testWidgets(
+    'failed manual reconnect retains stale data and can retry again',
+    (tester) async {
+      final apis = <_ControlledApi>[];
+      final controller = ConnectionController(
+        await _store(),
+        apiFactory: (profile) {
+          final api = _ControlledApi('${profile.id}-${apis.length}');
+          apis.add(api);
+          return api;
+        },
+        repositoryFactory: _repositoryFactory,
+        eventStreamFactory: _streamFactory([]),
+      );
+
+      final connect = controller.connect(_profile('server'));
+      await tester.pump();
+      apis.single.healthResult.complete(Health(healthy: true, version: '1'));
+      await connect;
+      await controller.selectLocation(
+        directory: '/work/acme',
+        workspace: 'workspace-1',
+      );
+      controller.sessionsById['session-1'] = Session(
+        id: 'session-1',
+        title: 'Retained chat',
+      );
+
+      final failedApiIndex = apis.length;
+      final failedRetry = controller.retryConnection();
+      apis[failedApiIndex].healthFailure = ApiException('server unavailable');
+      await tester.pump();
+      await failedRetry;
+      await tester.pump();
+
+      expect(controller.status, StreamStatus.disconnected);
+      expect(controller.api, isNull);
+      expect(controller.connectionError, contains('server unavailable'));
+      expect(controller.directory, '/work/acme');
+      expect(controller.workspace, 'workspace-1');
+      expect(controller.sessionsById, contains('session-1'));
+
+      final successfulRetry = controller.retryConnection();
+      await tester.pump();
+      expect(apis.last.directory, '/work/acme');
+      expect(apis.last.workspace, 'workspace-1');
+      apis.last.healthResult.complete(Health(healthy: true, version: '2'));
+      await successfulRetry;
+      expect(controller.api, same(apis.last));
+      expect(controller.version, '2');
+      controller.dispose();
+    },
+  );
+
   testWidgets('move, warp, and org rebuild the authoritative transport', (
     tester,
   ) async {

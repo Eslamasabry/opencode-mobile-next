@@ -203,10 +203,15 @@ class ConnectionController extends ChangeNotifier {
   bool _lifecycleSuspended = false;
   bool _lifecycleWasBackgrounded = false;
   Future<void>? _lifecycleResume;
+  Future<void>? _manualReconnect;
 
   /// True only while the app intentionally has its transport retired in the
   /// background. UI must not treat this as a user-initiated disconnect.
   bool get lifecycleSuspended => _lifecycleSuspended;
+
+  /// True while a user-requested reconnect is rebuilding the transport for
+  /// the retained server and location.
+  bool get manualReconnectInProgress => _manualReconnect != null;
 
   static const _permissionHydrationRetryDelays = [
     Duration(milliseconds: 250),
@@ -831,6 +836,7 @@ class ConnectionController extends ChangeNotifier {
     _lifecycleSuspended = false;
     _lifecycleWasBackgrounded = false;
     _lifecycleResume = null;
+    _manualReconnect = null;
     final generation = _beginGeneration();
     _retireTransport();
     _clearLocationData();
@@ -1836,6 +1842,41 @@ class ConnectionController extends ChangeNotifier {
     );
   }
 
+  /// Reconnects the active profile without discarding the selected location
+  /// or already-rendered product data. Repeated taps share one operation.
+  Future<void> retryConnection() {
+    if (_disposed) return Future.value();
+    final inFlight = _manualReconnect ?? _lifecycleResume;
+    if (inFlight != null) return inFlight;
+
+    final retainedProfile = _connectedProfile ?? profile;
+    if (retainedProfile == null) {
+      lastError = 'Choose an OpenCode server before retrying.';
+      status = StreamStatus.disconnected;
+      notifyListeners();
+      return Future.value();
+    }
+
+    _lifecycleSuspended = false;
+    _lifecycleWasBackgrounded = false;
+    _dismissAllCodingAlerts(clearActive: true);
+
+    late final Future<void> tracked;
+    tracked =
+        _resumeLifecycleTransport(
+          retainedProfile,
+          directory: directory,
+          workspace: workspace,
+        ).whenComplete(() {
+          if (identical(_manualReconnect, tracked)) {
+            _manualReconnect = null;
+            if (!_disposed) notifyListeners();
+          }
+        });
+    _manualReconnect = tracked;
+    return tracked;
+  }
+
   Future<void> _trackLifecycleResume(Future<void> operation) {
     late final Future<void> tracked;
     tracked = operation.whenComplete(() {
@@ -1940,6 +1981,7 @@ class ConnectionController extends ChangeNotifier {
   }) async {
     final generation = _beginGeneration();
     _retireTransport();
+    _connectedProfile = profile;
     final currentApi = _apiFactory(profile)
       ..setLocation(directory: directory, workspace: workspace);
     final currentRepository = _repositoryFactory(currentApi)
@@ -2254,7 +2296,6 @@ class ConnectionController extends ChangeNotifier {
 
   void _failCurrentConnection(String error) {
     _retireTransport();
-    _connectedProfile = null;
     version = null;
     status = StreamStatus.disconnected;
     lastError = error;

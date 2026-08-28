@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
+import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
@@ -299,7 +300,9 @@ class _DestinationRepository extends _FakeProductRepository {
 Future<ConnectionController> _controller(_FakeOpenCodeApi api) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
-  return ConnectionController(ProfileStore(prefs: prefs))..api = api;
+  return ConnectionController(ProfileStore(prefs: prefs))
+    ..api = api
+    ..status = StreamStatus.connected;
 }
 
 class _DelayedActionController extends ConnectionController {
@@ -406,6 +409,40 @@ void main() {
     });
 
     expect(info.errorText, 'The selected model is unavailable');
+  });
+
+  testWidgets('offline chat keeps its transcript and shows recovery actions', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('assistant-1', 'assistant', [
+          Part(
+            id: 'part-1',
+            type: 'text',
+            text: 'Retained response',
+            messageID: 'assistant-1',
+          ),
+        ]),
+      ];
+    final controller = await _pumpChat(tester, api);
+    expect(find.text('Retained response'), findsOneWidget);
+
+    controller
+      ..status = StreamStatus.disconnected
+      ..lastError = 'Endpoint is unavailable'
+      ..signalDataRefreshForTesting();
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Retained response'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('connection-status-banner')),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Endpoint is unavailable'), findsOneWidget);
+    expect(find.text('Retry'), findsOneWidget);
+    expect(find.text('Change server'), findsOneWidget);
   });
 
   testWidgets('renders current OpenCode unified patches and server counts', (

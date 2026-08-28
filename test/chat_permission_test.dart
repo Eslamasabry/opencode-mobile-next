@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
+import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
@@ -51,7 +52,9 @@ class _FakeOpenCodeApi extends OpenCodeApi {
 Future<ConnectionController> _controller(_FakeOpenCodeApi api) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
-  return ConnectionController(ProfileStore(prefs: prefs))..api = api;
+  return ConnectionController(ProfileStore(prefs: prefs))
+    ..api = api
+    ..status = StreamStatus.connected;
 }
 
 EventEnvelope _permission(
