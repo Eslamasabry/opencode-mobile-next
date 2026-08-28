@@ -160,6 +160,33 @@ class _TestRepository extends SdkProductRepository {
   Future<List<IntegrationInfo>> listIntegrations() async => const [];
 }
 
+class _LocationRepository extends _TestRepository {
+  _LocationRepository(
+    super.api, {
+    required this.projectsByDirectory,
+    this.workspaces = const [],
+  });
+
+  final Map<String, WorkspaceProject?> projectsByDirectory;
+  final List<WorkspaceInfo> workspaces;
+  String? selectedDirectory;
+  String? selectedWorkspace;
+
+  @override
+  void setLocation({String? directory, String? workspace}) {
+    selectedDirectory = directory;
+    selectedWorkspace = workspace;
+    super.setLocation(directory: directory, workspace: workspace);
+  }
+
+  @override
+  Future<WorkspaceProject?> loadCurrentProject() async =>
+      projectsByDirectory[selectedDirectory];
+
+  @override
+  Future<List<WorkspaceInfo>> listWorkspaces() async => workspaces;
+}
+
 class _DestinationCalls {
   String? movedDirectory;
   bool? movedChanges;
@@ -635,8 +662,9 @@ void main() {
   ) async {
     final apis = <_ControlledApi>[];
     final streams = <_FakeEventStream>[];
+    final store = await _store();
     final controller = ConnectionController(
-      await _store(),
+      store,
       apiFactory: (profile) {
         final api = _ControlledApi('${profile.id}-${apis.length}');
         apis.add(api);
@@ -666,6 +694,197 @@ void main() {
     expect(controller.locationLoading, isTrue);
     await selection;
     expect(controller.locationLoading, isFalse);
+    expect(store.locationFor('server')?.directory, '/work/acme');
+    expect(store.locationFor('server')?.workspace, 'workspace-1');
+    controller.dispose();
+  });
+
+  testWidgets('cold connect restores one verified per-server location', (
+    tester,
+  ) async {
+    final store = await _store();
+    await store.setLocation(
+      'server',
+      directory: '/work/acme',
+      workspace: 'workspace-1',
+    );
+    final apis = <_ControlledApi>[];
+    final repositories = <_LocationRepository>[];
+    final controller = ConnectionController(
+      store,
+      apiFactory: (profile) {
+        final api = _ControlledApi('${profile.id}-${apis.length}');
+        apis.add(api);
+        return api;
+      },
+      repositoryFactory: (api) {
+        final repository = _LocationRepository(
+          api,
+          projectsByDirectory: {
+            '/work/acme': const WorkspaceProject(
+              id: 'project-1',
+              name: 'Acme',
+              directory: '/work/acme',
+              worktrees: [],
+              updatedAt: 1,
+            ),
+          },
+          workspaces: const [
+            WorkspaceInfo(
+              id: 'workspace-1',
+              projectID: 'project-1',
+              name: 'Phone',
+              type: 'remote',
+              directory: '/work/acme',
+            ),
+          ],
+        );
+        repositories.add(repository);
+        return repository;
+      },
+      eventStreamFactory: _streamFactory([]),
+    );
+
+    final connect = controller.connect(_profile('server'));
+    await tester.pump();
+    apis.first.healthResult.complete(Health(healthy: true, version: '1'));
+    await connect;
+    await tester.pump();
+
+    expect(apis, hasLength(2));
+    expect(apis.last.directory, '/work/acme');
+    expect(apis.last.workspace, 'workspace-1');
+    expect(controller.directory, '/work/acme');
+    expect(controller.workspace, 'workspace-1');
+    expect(controller.locationNotice, isNull);
+    expect(repositories.first.selectedDirectory, isNull);
+    expect(repositories.first.selectedWorkspace, isNull);
+    controller.dispose();
+  });
+
+  testWidgets('server switching restores only that profile location', (
+    tester,
+  ) async {
+    final store = await _store();
+    await store.setLocation('first', directory: '/work/first');
+    await store.setLocation('second', directory: '/work/second');
+    final apis = <_ControlledApi>[];
+    final projects = {
+      '/work/first': const WorkspaceProject(
+        id: 'project-first',
+        name: 'First',
+        directory: '/work/first',
+        worktrees: [],
+        updatedAt: 1,
+      ),
+      '/work/second': const WorkspaceProject(
+        id: 'project-second',
+        name: 'Second',
+        directory: '/work/second',
+        worktrees: [],
+        updatedAt: 1,
+      ),
+    };
+    final controller = ConnectionController(
+      store,
+      apiFactory: (profile) {
+        final api = _ControlledApi('${profile.id}-${apis.length}');
+        apis.add(api);
+        return api;
+      },
+      repositoryFactory: (api) =>
+          _LocationRepository(api, projectsByDirectory: projects),
+      eventStreamFactory: _streamFactory([]),
+    );
+
+    final firstConnect = controller.connect(_profile('first'));
+    await tester.pump();
+    apis[0].healthResult.complete(Health(healthy: true, version: '1'));
+    await firstConnect;
+    expect(controller.directory, '/work/first');
+
+    final secondConnect = controller.connect(_profile('second'));
+    await tester.pump();
+    apis[2].healthResult.complete(Health(healthy: true, version: '1'));
+    await secondConnect;
+
+    expect(apis, hasLength(4));
+    expect(controller.directory, '/work/second');
+    expect(store.locationFor('first')?.directory, '/work/first');
+    expect(store.locationFor('second')?.directory, '/work/second');
+    controller.dispose();
+  });
+
+  testWidgets('confirmed stale project falls back and clears saved location', (
+    tester,
+  ) async {
+    final store = await _store();
+    await store.setLocation('server', directory: '/deleted/worktree');
+    final api = _ControlledApi('server');
+    final controller = ConnectionController(
+      store,
+      apiFactory: (_) => api,
+      repositoryFactory: (api) => _LocationRepository(
+        api,
+        projectsByDirectory: const {'/deleted/worktree': null},
+      ),
+      eventStreamFactory: _streamFactory([]),
+    );
+
+    final connect = controller.connect(_profile('server'));
+    await tester.pump();
+    api.healthResult.complete(Health(healthy: true, version: '1'));
+    await connect;
+    await tester.pump();
+
+    expect(controller.directory, isNull);
+    expect(controller.workspace, isNull);
+    expect(controller.locationNotice, contains('no longer available'));
+    expect(store.locationFor('server'), isNull);
+    controller.dispose();
+  });
+
+  testWidgets('missing workspace restores its project locally', (tester) async {
+    final store = await _store();
+    await store.setLocation(
+      'server',
+      directory: '/work/acme',
+      workspace: 'deleted-workspace',
+    );
+    final apis = <_ControlledApi>[];
+    final controller = ConnectionController(
+      store,
+      apiFactory: (profile) {
+        final api = _ControlledApi('${profile.id}-${apis.length}');
+        apis.add(api);
+        return api;
+      },
+      repositoryFactory: (api) => _LocationRepository(
+        api,
+        projectsByDirectory: {
+          '/work/acme': const WorkspaceProject(
+            id: 'project-1',
+            name: 'Acme',
+            directory: '/work/acme',
+            worktrees: [],
+            updatedAt: 1,
+          ),
+        },
+      ),
+      eventStreamFactory: _streamFactory([]),
+    );
+
+    final connect = controller.connect(_profile('server'));
+    await tester.pump();
+    apis.first.healthResult.complete(Health(healthy: true, version: '1'));
+    await connect;
+    await tester.pump();
+
+    expect(controller.directory, '/work/acme');
+    expect(controller.workspace, isNull);
+    expect(controller.locationNotice, contains('opened locally'));
+    expect(store.locationFor('server')?.directory, '/work/acme');
+    expect(store.locationFor('server')?.workspace, isNull);
     controller.dispose();
   });
 

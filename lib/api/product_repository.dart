@@ -677,6 +677,7 @@ abstract class ProductRepository {
     ),
   );
   Future<List<WorkspaceProject>> listProjects();
+  Future<WorkspaceProject?> loadCurrentProject() async => null;
   Future<List<WorktreeInfo>> listWorktrees({
     required String projectDirectory,
     String? projectID,
@@ -982,6 +983,26 @@ class SdkProductRepository
               ),
             )
             .toList();
+      });
+
+  @override
+  Future<WorkspaceProject?> loadCurrentProject() =>
+      _guard('Could not resolve the current project', () async {
+        final response = await _client.getProjectApi().projectCurrent(
+          directory: _directory,
+          workspace: _workspace,
+        );
+        final project = response.data;
+        if (project == null || project.worktree.trim().isEmpty) return null;
+        return WorkspaceProject(
+          id: project.id,
+          name: project.name?.trim().isNotEmpty == true
+              ? project.name!
+              : _basename(project.worktree),
+          directory: project.worktree,
+          worktrees: project.sandboxes,
+          updatedAt: project.time.updated,
+        );
       });
 
   @override

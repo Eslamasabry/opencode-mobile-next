@@ -99,7 +99,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       });
       final selected = _selectedProject;
       if (shouldSelectInitialLocation && selected != null) {
-        await widget.controller.selectLocation(
+        await widget.controller.selectInitialLocation(
           directory: _selectedDirectory ?? selected.directory,
         );
       }
@@ -241,6 +241,12 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (widget.controller.locationNotice != null)
+                      ListTile(
+                        key: const ValueKey('location-recovery-notice'),
+                        leading: const Icon(Icons.info_outline_rounded),
+                        title: Text(widget.controller.locationNotice!),
+                      ),
                     const SectionLabel('Project'),
                     SizedBox(
                       height: 52,

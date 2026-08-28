@@ -159,6 +159,7 @@ class ConnectionController extends ChangeNotifier {
   String? workspace;
   bool locationLoading = false;
   String? locationError;
+  String? locationNotice;
   bool sessionsLoading = false;
   String? sessionsError;
   bool catalogLoading = false;
@@ -500,6 +501,62 @@ class ConnectionController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<ProfileLocation?> _validatedSavedLocation(
+    ServerProfile profile,
+    ProductRepository currentRepository,
+    int generation,
+    OpenCodeApi currentApi,
+  ) async {
+    final saved = store.locationFor(profile.id);
+    if (saved == null) return null;
+    var workspace = saved.workspace;
+    try {
+      if (saved.directory != null) {
+        currentRepository.setLocation(
+          directory: saved.directory,
+          workspace: null,
+        );
+        final project = await currentRepository.loadCurrentProject();
+        if (!_isCurrent(generation, currentApi)) return null;
+        if (project == null) {
+          try {
+            await store.clearLocation(profile.id);
+          } catch (_) {
+            // The current connection can still recover to its server root.
+          }
+          locationNotice =
+              'The last project is no longer available. '
+              'OpenCode Mobile returned to the server workspace.';
+          return null;
+        }
+      }
+      if (workspace != null) {
+        currentRepository.setLocation(
+          directory: saved.directory,
+          workspace: null,
+        );
+        final workspaces = await currentRepository.listWorkspaces();
+        if (!_isCurrent(generation, currentApi)) return null;
+        if (!workspaces.any((candidate) => candidate.id == workspace)) {
+          workspace = null;
+          locationNotice =
+              'The last remote workspace is no longer available. '
+              'The project was opened locally.';
+        }
+      }
+      return ProfileLocation(directory: saved.directory, workspace: workspace);
+    } catch (_) {
+      if (_isCurrent(generation, currentApi)) {
+        locationNotice =
+            'The last project could not be verified. '
+            'OpenCode Mobile opened the server workspace instead.';
+      }
+      return null;
+    } finally {
+      currentRepository.setLocation(directory: null, workspace: null);
+    }
+  }
+
   Future<void> connect(ServerProfile profile) async {
     _lifecycleSuspended = false;
     _lifecycleWasBackgrounded = false;
@@ -535,6 +592,7 @@ class ConnectionController extends ChangeNotifier {
     status = StreamStatus.connecting;
     lastError = null;
     locationError = null;
+    locationNotice = null;
     notifyListeners();
     enablePollingFallback();
 
@@ -572,6 +630,22 @@ class ConnectionController extends ChangeNotifier {
         : null;
     selectedAgent = store.agentFor(profile.id);
     selectedVariant = store.variantFor(profile.id);
+
+    final savedLocation = await _validatedSavedLocation(
+      profile,
+      currentRepository,
+      generation,
+      currentApi,
+    );
+    if (!_isCurrent(generation, currentApi)) return;
+    if (savedLocation != null) {
+      await _selectLocation(
+        directory: savedLocation.directory,
+        workspace: savedLocation.workspace,
+        preserveNotice: true,
+      );
+      return;
+    }
 
     await _refreshPreexistingProviderRuntime(
       generation: generation,
@@ -948,6 +1022,7 @@ class ConnectionController extends ChangeNotifier {
     locationRevision += 1;
     locationLoading = false;
     locationError = null;
+    locationNotice = null;
     status = StreamStatus.disconnected;
     if (!silent) notifyListeners();
     if (!keepActive) {
@@ -2156,10 +2231,39 @@ class ConnectionController extends ChangeNotifier {
     return list;
   }
 
-  Future<void> selectLocation({String? directory, String? workspace}) async {
+  Future<void> selectLocation({String? directory, String? workspace}) =>
+      _selectLocation(directory: directory, workspace: workspace);
+
+  Future<void> selectInitialLocation({String? directory, String? workspace}) =>
+      _selectLocation(
+        directory: directory,
+        workspace: workspace,
+        preserveNotice: true,
+      );
+
+  Future<void> _selectLocation({
+    String? directory,
+    String? workspace,
+    bool preserveNotice = false,
+  }) async {
     final profile = _connectedProfile;
     if (profile == null || api == null) return;
-    if (this.directory == directory && this.workspace == workspace) return;
+    if (!preserveNotice) locationNotice = null;
+    if (this.directory == directory && this.workspace == workspace) {
+      try {
+        await store.setLocation(
+          profile.id,
+          directory: directory,
+          workspace: workspace,
+        );
+      } catch (_) {
+        locationNotice =
+            'This location is active, but it could not be remembered '
+            'for the next launch.';
+      }
+      notifyListeners();
+      return;
+    }
 
     final generation = _beginGeneration();
     final previousVersion = version;
@@ -2197,6 +2301,20 @@ class ConnectionController extends ChangeNotifier {
       refreshPendingPermissions(),
       refreshPendingQuestions(),
     ]);
+    if (!_isCurrent(generation, currentApi)) return;
+    if (locationError == null) {
+      try {
+        await store.setLocation(
+          profile.id,
+          directory: directory,
+          workspace: workspace,
+        );
+      } catch (_) {
+        locationNotice =
+            'This location is active, but it could not be remembered '
+            'for the next launch.';
+      }
+    }
     if (!_isCurrent(generation, currentApi)) return;
     locationLoading = false;
     notifyListeners();

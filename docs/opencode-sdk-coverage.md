@@ -272,7 +272,17 @@ Legend:
    migrated to the current project default. Short and expanded reasoning use
    the same Markdown-aware renderer as assistant text while retaining their
    distinct muted presentation.
-18. **Deferred by owner:** a Traycer-style task cockpit remains outside the
+18. **Per-server location continuity:** each saved server now remembers its
+   exact active project directory and optional remote workspace independently.
+   A cold connection verifies the saved directory through generated
+   `project.current` truth before rebuilding the location-scoped transport; a
+   deleted project falls back to the server workspace and clears the stale
+   selection, while a removed remote workspace degrades to the still-valid
+   local project. The recovery remains visible in Workspace instead of silently
+   selecting an unrelated first project. Manual project, worktree, session,
+   move, and warp navigation all converge on the same durable selection path,
+   and no project or workspace inventory is hardcoded.
+19. **Deferred by owner:** a Traycer-style task cockpit remains outside the
    current implementation lane.
 
 ## Deliberate non-goals

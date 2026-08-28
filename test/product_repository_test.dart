@@ -252,6 +252,54 @@ void main() {
   });
 
   test(
+    'saved-location validation uses generated current-project truth',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        Uri? requestUri;
+        server.listen((request) async {
+          requestUri = request.uri;
+          request.response.headers.contentType = ContentType.json;
+          request.response.write(
+            jsonEncode({
+              'id': 'project-1',
+              'worktree': '/work/acme',
+              'name': 'Acme',
+              'time': {'created': 1000, 'updated': 2000},
+              'sandboxes': ['/work/acme-proof'],
+            }),
+          );
+          await request.response.close();
+        });
+
+        try {
+          final api = OpenCodeApi(
+            baseUrl: 'http://${server.address.host}:${server.port}',
+          );
+          final repository = SdkProductRepository(api.sdkClient)
+            ..setLocation(
+              directory: '/work/acme-proof',
+              workspace: 'workspace-1',
+            );
+
+          final project = await repository.loadCurrentProject();
+
+          expect(requestUri?.path, '/project/current');
+          expect(requestUri?.queryParameters, {
+            'directory': '/work/acme-proof',
+            'workspace': 'workspace-1',
+          });
+          expect(project?.id, 'project-1');
+          expect(project?.directory, '/work/acme');
+          expect(project?.worktrees, ['/work/acme-proof']);
+        } finally {
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
+
+  test(
     'worktree lifecycle uses the primary project context and exact bodies',
     () async {
       await HttpOverrides.runZoned(() async {

@@ -198,6 +198,32 @@ That exact final artifact clean-installed and launched on `emulator-5554`.
 Temporary signing properties were removed, and this APK was not published or
 distributed.
 
+Project and workspace continuity is now durable per saved server. Every
+successful location change stores the exact project directory plus optional
+remote workspace; the next cold connection validates that evidence through
+generated `project.current` and workspace-list truth before rebuilding the
+location-scoped API, event stream, provider/model catalog, sessions,
+permissions, and questions. A confirmed deleted project clears its stale
+selection and returns to the server workspace with a visible explanation. A
+removed remote workspace keeps the valid project and opens it locally. Each
+server retains an independent location, including non-POSIX paths, and no
+project/workspace value is hardcoded.
+
+Release-mode Pixel 6 proof selected the real `oc_app` project while the server's
+first project was `opencode-mobile-worktree-proof.zwFucJ`. After an Android
+force-stop and cold relaunch, `oc_app` returned selected and the unrelated first
+project remained unselected. A second clean-log repeat produced the same UI
+truth without an app fatal exception, ANR, RenderFlex overflow, or OOM. Final
+Flutter analysis is clean and all 433 app tests pass serially; all four
+generated-SDK integrity verifiers pass for 188 operations; all 46 SDK tests and
+SDK analysis pass; the compiled SDK smoke binary runs; and Android
+`lintRelease` passes. The generated SDK audit remains at 93 directly used
+operations because `projectCurrent` was already in use. The locally test-signed
+release APK is `161694863` bytes with SHA-256
+`764ad0807cec5e6ce5f069e94504ef1ae19d99109429a2418194b1e97d272617`.
+Temporary signing properties and the disposable keystore were removed; this APK
+was not published or distributed.
+
 A live release-mode Pixel 6 check against OpenCode `1.18.23` also found and fixed
 a location-integrity defect: mounting Workspace could overwrite a directory
 selected from the global session finder with the server project root. Workspace

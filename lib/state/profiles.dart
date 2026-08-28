@@ -80,6 +80,13 @@ String? validateServerProfileUrl(
 
 enum AppAppearance { system, light, dark }
 
+class ProfileLocation {
+  final String? directory;
+  final String? workspace;
+
+  const ProfileLocation({this.directory, this.workspace});
+}
+
 /// Persists server profiles. Metadata in SharedPreferences, secrets in the
 /// Android Keystore via flutter_secure_storage.
 class ProfileStore {
@@ -89,6 +96,7 @@ class ProfileStore {
   static const _modelExplicitKey = 'oc.modelExplicit.'; // + profileId
   static const _agentKey = 'oc.agent.'; // + profileId
   static const _variantKey = 'oc.variant.'; // + profileId
+  static const _locationKey = 'oc.location.'; // + profileId -> JSON
   static const _transcriptReasoningKey = 'oc.transcript.reasoningExpanded';
   static const _transcriptTimestampsKey = 'oc.transcript.timestampsVisible';
   static const _appearanceKey = 'oc.appearance';
@@ -214,6 +222,59 @@ class ProfileStore {
       if (p.id == id) return p;
     }
     return null;
+  }
+
+  ProfileLocation? locationFor(String profileId) {
+    final raw = prefs.getString('$_locationKey$profileId');
+    if (raw == null) return null;
+    try {
+      final value = jsonDecode(raw);
+      if (value is! Map) return null;
+      final directoryValue = value['directory'];
+      final workspaceValue = value['workspace'];
+      final directory = directoryValue is String && directoryValue.isNotEmpty
+          ? directoryValue
+          : null;
+      final workspace = workspaceValue is String && workspaceValue.isNotEmpty
+          ? workspaceValue
+          : null;
+      if (directory == null && workspace == null) return null;
+      return ProfileLocation(directory: directory, workspace: workspace);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> setLocation(
+    String profileId, {
+    String? directory,
+    String? workspace,
+  }) async {
+    final normalizedDirectory = directory?.isNotEmpty == true
+        ? directory
+        : null;
+    final normalizedWorkspace = workspace?.isNotEmpty == true
+        ? workspace
+        : null;
+    if (normalizedDirectory == null && normalizedWorkspace == null) {
+      await clearLocation(profileId);
+      return;
+    }
+    if (!await prefs.setString(
+      '$_locationKey$profileId',
+      jsonEncode({
+        'directory': normalizedDirectory,
+        'workspace': normalizedWorkspace,
+      }),
+    )) {
+      throw StateError('Could not save the selected server location');
+    }
+  }
+
+  Future<void> clearLocation(String profileId) async {
+    if (!await prefs.remove('$_locationKey$profileId')) {
+      throw StateError('Could not clear the selected server location');
+    }
   }
 
   String _providerRuntimeRefreshKey(

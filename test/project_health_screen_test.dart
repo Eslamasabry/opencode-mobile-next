@@ -115,6 +115,10 @@ class _WorkspaceLocationController extends ConnectionController {
     dataRefreshRevision += 1;
     notifyListeners();
   }
+
+  @override
+  Future<void> selectInitialLocation({String? directory, String? workspace}) =>
+      selectLocation(directory: directory, workspace: workspace);
 }
 
 Widget _app(Widget home, {double textScale = 1}) => MaterialApp(
@@ -378,6 +382,8 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     final repository = _HealthRepository();
     final controller = await _controller(repository);
+    controller.locationNotice =
+        'The last project is no longer available. Opened the server workspace.';
     addTearDown(controller.dispose);
 
     await tester.pumpWidget(
@@ -388,6 +394,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(
+      find.byKey(const ValueKey('location-recovery-notice')),
+      findsOneWidget,
+    );
     expect(find.byKey(const ValueKey('project-health-entry')), findsOneWidget);
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('search-all-sessions')),

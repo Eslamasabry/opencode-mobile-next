@@ -61,6 +61,41 @@ void main() {
     expect(store.variantFor('server-1'), isEmpty);
   });
 
+  test('persists an exact location independently for each server', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final store = ProfileStore(prefs: prefs);
+
+    await store.setLocation(
+      'server-1',
+      directory: '/work/acme',
+      workspace: 'workspace-1',
+    );
+    await store.setLocation('server-2', directory: r'C:\work\mobile');
+
+    final first = ProfileStore(prefs: prefs).locationFor('server-1');
+    final second = ProfileStore(prefs: prefs).locationFor('server-2');
+    expect(first?.directory, '/work/acme');
+    expect(first?.workspace, 'workspace-1');
+    expect(second?.directory, r'C:\work\mobile');
+    expect(second?.workspace, isNull);
+
+    await store.clearLocation('server-1');
+    expect(store.locationFor('server-1'), isNull);
+    expect(store.locationFor('server-2')?.directory, r'C:\work\mobile');
+  });
+
+  test('ignores malformed and empty saved locations', () async {
+    SharedPreferences.setMockInitialValues({
+      'oc.location.broken': '{not-json',
+      'oc.location.empty': '{"directory":"","workspace":null}',
+    });
+    final store = ProfileStore(prefs: await SharedPreferences.getInstance());
+
+    expect(store.locationFor('broken'), isNull);
+    expect(store.locationFor('empty'), isNull);
+  });
+
   test('persists app-wide transcript display preferences', () async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
