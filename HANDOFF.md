@@ -87,6 +87,16 @@ then independently verifies one signer, package
 and again after an explicit `--publish`. It uploads nothing by default and does
 not create a GitHub release or tag.
 
+The complete helper was then exercised at commit
+`e7518d00882f6f14a44edbdd017aa11931d79284` from an isolated clean `master`
+tracking an isolated `origin/master`, using the real matching keystore and
+Android build tools. It passed analysis, all 400 tests, Shorebird's dry run,
+and every post-build identity gate. That dry-run APK was `161366803` bytes with
+SHA-256 `56e24f5bfaf542e58df81a4e989653ef2913ccf70ee7f0ff4dc4ec42dfcda200`.
+APK hashes are recorded per derivation rather than assumed reproducible;
+explicit publish mode deletes the dry-run output, rebuilds, and verifies the
+actual post-upload artifact again. Nothing was uploaded in this proof.
+
 This branch prepares the next native baseline without changing the patchable
 `1.0.19+20` release on `master`. It removes the debug signing fallback, adds a
 dedicated release signing configuration and ignored properties template, and
