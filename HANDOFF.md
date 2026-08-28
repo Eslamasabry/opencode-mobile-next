@@ -149,6 +149,19 @@ Remaining facelift lanes: Files/Review/Terminal inspiration passes (queued
 in the design doc); Terminal's bottom-nav slot; list-item motion; remaining
 empty-state upgrades; onboarding editor pre-seed rethink.
 
+Slice seven (showcase video, owner-directed): the 2.5-minute showcase is
+DONE and published. Plan in docs/showcase-video-plan.md; Remotion project
+in `video/` (150s @30fps, ShowcaseLandscape 1920x1080 + ShowcaseVertical
+1080x1920); 11 real emulator recordings + stills in video/public/shots/
+(headless Pixel_6, opencode serve on 4096 via adb reverse). Renders MUST
+run foreground in 4 chunks of 1125 frames (`--frames A-B`, ~3–5 min each)
+then ffmpeg concat (`out/concat.txt` / `out/vconcat.txt`) — full renders
+in background get killed. Every scene passed the skill's still-extraction
+verification loop; two offset fixes came from it (S05 1150, S11 780 —
+rec11's PTY connects at ~26s). Both masters are attached to release
+v1.0.27+28-preview.7 with links in its notes. Video source is committed;
+out/ artifacts are not.
+
 ## Production Android hardening branch
 
 - Branch: `production/android-release-hardening`
