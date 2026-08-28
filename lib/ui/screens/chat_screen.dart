@@ -20,6 +20,7 @@ import '../permission_presentation.dart';
 import '../app_theme.dart';
 import '../widgets/appearance_picker.dart';
 import '../widgets/connection_status_banner.dart';
+import '../widgets/entrance.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/file_preview.dart';
 import '../widgets/markdown.dart';

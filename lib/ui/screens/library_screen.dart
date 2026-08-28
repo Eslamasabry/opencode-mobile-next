@@ -9,6 +9,7 @@ import '../../api/mcp_oauth.dart';
 import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
+import '../widgets/entrance.dart';
 import '../widgets/file_preview.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/product_states.dart';
@@ -175,7 +176,10 @@ class _DestinationGrid extends StatelessWidget {
             crossAxisSpacing: 10,
             mainAxisSpacing: 10,
           ),
-          children: cards,
+          children: [
+            for (var index = 0; index < cards.length; index++)
+              EntranceReveal(index: index, child: cards[index]),
+          ],
         );
       },
     );

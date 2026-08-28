@@ -550,8 +550,10 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
   late final TextEditingController _name = TextEditingController(
     text: widget.existing?.name ?? '',
   );
+  // New profiles start empty: the normalizer on Test/Save adds the scheme,
+  // and a pre-seeded 'https://' fought typed bare hosts.
   late final TextEditingController _url = TextEditingController(
-    text: widget.existing?.baseUrl ?? 'https://',
+    text: widget.existing?.baseUrl ?? '',
   );
   late final TextEditingController _user = TextEditingController(
     text: widget.existing?.username ?? '',
@@ -642,7 +644,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
 
   bool get _dirty =>
       _name.text != (widget.existing?.name ?? '') ||
-      _url.text != (widget.existing?.baseUrl ?? 'https://') ||
+      _url.text != (widget.existing?.baseUrl ?? '') ||
       _user.text != (widget.existing?.username ?? '') ||
       _pass.text != (widget.existing?.password ?? '');
 
@@ -799,7 +801,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                 onChanged: _urlChanged,
                 decoration: InputDecoration(
                   labelText: 'Server URL',
-                  hintText: 'host:4096 — pasting an address fills the rest',
+                  hintText: '192.168.1.20:4096 or https://…',
                   errorText: _error,
                   errorMaxLines: 3,
                   helperText:
