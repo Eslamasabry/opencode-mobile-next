@@ -2455,6 +2455,82 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
+  /// One bottom sheet for every session view destination and the two
+  /// transcript display toggles, replacing the old app-bar popup menu.
+  Future<void> _openSessionViews() async {
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => LayoutBuilder(
+        builder: (context, constraints) => ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: constraints.maxHeight * .85),
+          child: _SessionViewsSheet(
+            reasoningExpanded: _conn.transcriptReasoningExpanded,
+            timestampsVisible: _conn.transcriptTimestampsVisible,
+          ),
+        ),
+      ),
+    );
+    if (!mounted || action == null) return;
+    switch (action) {
+      case 'timeline':
+        await _openTimeline();
+      case 'context':
+        await _showContext();
+      case 'changes':
+        _showDiff();
+      case 'todos':
+        _showTodos();
+      case 'subagents':
+        await _showSubagents();
+      case 'thinking':
+        await _runMobileCommand(_ChatCommandAction.thinking);
+      case 'timestamps':
+        await _runMobileCommand(_ChatCommandAction.timestamps);
+    }
+  }
+
+  /// One bottom sheet for the session's mutation and utility actions,
+  /// replacing the old unlabeled app-bar overflow menu.
+  Future<void> _openSessionActions({
+    required bool reverted,
+    required bool shared,
+  }) async {
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => LayoutBuilder(
+        builder: (context, constraints) => ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: constraints.maxHeight * .85),
+          child: _SessionActionsSheet(reverted: reverted, shared: shared),
+        ),
+      ),
+    );
+    if (!mounted || action == null) return;
+    switch (action) {
+      case 'retry':
+        await _retryLast();
+      case 'revert':
+        await _revertLast();
+      case 'restore':
+        await _restore();
+      case 'fork':
+        await _fork();
+      case 'compact':
+        await _compact();
+      case 'share':
+        await _share();
+      case 'unshare':
+        await _stopSharing();
+      case 'shell':
+        await _runShellDialog();
+      case 'slash':
+        await _openCommandLauncher();
+      case 'reload':
+        await _load();
+    }
+  }
+
   void _showTodos() {
     showModalBottomSheet(
       context: context,
@@ -2762,80 +2838,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             overflow: TextOverflow.ellipsis,
           ),
           actions: [
-            PopupMenuButton<String>(
+            IconButton(
               tooltip: 'Session views',
               icon: const Icon(Icons.view_agenda_outlined),
-              onSelected: (value) {
-                if (value == 'timeline') unawaited(_openTimeline());
-                if (value == 'context') unawaited(_showContext());
-                if (value == 'changes') _showDiff();
-                if (value == 'todos') _showTodos();
-                if (value == 'subagents') unawaited(_showSubagents());
-                if (value == 'thinking') {
-                  unawaited(_runMobileCommand(_ChatCommandAction.thinking));
-                }
-                if (value == 'timestamps') {
-                  unawaited(_runMobileCommand(_ChatCommandAction.timestamps));
-                }
-              },
-              itemBuilder: (_) => [
-                const PopupMenuItem(
-                  value: 'timeline',
-                  child: _SessionViewMenuItem(
-                    icon: Icons.view_timeline_outlined,
-                    label: 'Timeline',
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'context',
-                  child: _SessionViewMenuItem(
-                    icon: Icons.donut_large_outlined,
-                    label: 'Context usage',
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'changes',
-                  child: _SessionViewMenuItem(
-                    icon: Icons.difference_outlined,
-                    label: 'Changes',
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'todos',
-                  child: _SessionViewMenuItem(
-                    icon: Icons.checklist_rounded,
-                    label: 'Todos',
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'subagents',
-                  child: _SessionViewMenuItem(
-                    icon: Icons.account_tree_outlined,
-                    label: 'Subagent sessions',
-                  ),
-                ),
-                const PopupMenuDivider(),
-                CheckedPopupMenuItem(
-                  key: const ValueKey('session-view-thinking'),
-                  value: 'thinking',
-                  checked: _conn.transcriptReasoningExpanded,
-                  child: Text(
-                    _conn.transcriptReasoningExpanded
-                        ? 'Collapse reasoning'
-                        : 'Expand reasoning',
-                  ),
-                ),
-                CheckedPopupMenuItem(
-                  key: const ValueKey('session-view-timestamps'),
-                  value: 'timestamps',
-                  checked: _conn.transcriptTimestampsVisible,
-                  child: Text(
-                    _conn.transcriptTimestampsVisible
-                        ? 'Hide timestamps'
-                        : 'Show timestamps',
-                  ),
-                ),
-              ],
+              onPressed: () => unawaited(_openSessionViews()),
             ),
             if (busy)
               IconButton(
@@ -2846,54 +2852,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 ),
                 onPressed: _aborting ? null : _abort,
               ),
-            PopupMenuButton<String>(
-              onSelected: (v) async {
-                if (v == 'shell') await _runShellDialog();
-                if (v == 'slash') await _openCommandLauncher();
-                if (v == 'share') await _share();
-                if (v == 'unshare') await _stopSharing();
-                if (v == 'fork') await _fork();
-                if (v == 'compact') await _compact();
-                if (v == 'retry') await _retryLast();
-                if (v == 'revert') await _revertLast();
-                if (v == 'restore') await _restore();
-                if (v == 'reload') await _load();
-              },
-              itemBuilder: (_) => [
-                const PopupMenuItem(
-                  value: 'retry',
-                  child: Text('Retry last prompt'),
+            IconButton(
+              key: const ValueKey('session-actions-button'),
+              tooltip: 'Session actions',
+              icon: const Icon(Icons.more_vert_rounded),
+              onPressed: () => unawaited(
+                _openSessionActions(
+                  reverted: session?.reverted == true,
+                  shared: shareUrl != null,
                 ),
-                PopupMenuItem(
-                  value: session?.reverted == true ? 'restore' : 'revert',
-                  child: Text(
-                    session?.reverted == true
-                        ? 'Restore messages'
-                        : 'Revert last prompt',
-                  ),
-                ),
-                const PopupMenuItem(value: 'fork', child: Text('Fork session')),
-                const PopupMenuItem(
-                  value: 'compact',
-                  child: Text('Compact context'),
-                ),
-                PopupMenuItem(
-                  value: shareUrl == null ? 'share' : 'unshare',
-                  child: Text(
-                    shareUrl == null ? 'Share session' : 'Stop sharing',
-                  ),
-                ),
-                const PopupMenuDivider(),
-                const PopupMenuItem(
-                  value: 'shell',
-                  child: Text('Run shell command'),
-                ),
-                const PopupMenuItem(value: 'slash', child: Text('Commands')),
-                const PopupMenuItem(
-                  value: 'reload',
-                  child: Text('Reload messages'),
-                ),
-              ],
+              ),
             ),
           ],
         ),

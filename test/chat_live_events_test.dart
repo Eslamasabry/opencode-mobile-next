@@ -2824,7 +2824,7 @@ void main() {
     final controller = await _pumpChat(tester, api);
     controller.selectedVariant = 'fast';
 
-    await tester.tap(find.byType(PopupMenuButton<String>).last);
+    await tester.tap(find.byTooltip('Session actions'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Retry last prompt'));
     await tester.pumpAndSettle();
@@ -2845,7 +2845,7 @@ void main() {
       }),
     );
     await _pumpEvent(tester);
-    await tester.tap(find.byType(PopupMenuButton<String>).last);
+    await tester.tap(find.byTooltip('Session actions'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Retry last prompt'));
     await tester.pumpAndSettle();
@@ -3152,5 +3152,48 @@ void main() {
     await _pumpChat(tester, api);
 
     expect(find.byKey(const ValueKey('composer-context-meter')), findsNothing);
+  });
+
+  testWidgets('session sheets fit a 320dp phone at 2x text', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(320, 640));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final api = _FakeOpenCodeApi();
+    final controller = await _controller(api);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(2)),
+            child: child!,
+          ),
+          home: const ChatScreen(sessionID: 'session-1'),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    expect(find.text('Timeline'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('session-view-timestamps')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Session actions'));
+    await tester.pumpAndSettle();
+    expect(find.text('Retry last prompt'), findsOneWidget);
+    await tester.drag(find.text('Retry last prompt'), const Offset(0, -400));
+    await tester.pumpAndSettle();
+    expect(find.text('Reload messages'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }

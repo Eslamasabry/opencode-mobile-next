@@ -7,21 +7,160 @@ class _TimelineSelection {
   final bool fork;
 }
 
-class _SessionViewMenuItem extends StatelessWidget {
-  const _SessionViewMenuItem({required this.icon, required this.label});
+/// Bottom sheet listing the session's view destinations plus the two
+/// transcript display toggles. Every row pops with its action value; the
+/// caller runs the handler, matching the popup menu this replaces.
+class _SessionViewsSheet extends StatelessWidget {
+  const _SessionViewsSheet({
+    required this.reasoningExpanded,
+    required this.timestampsVisible,
+  });
+
+  final bool reasoningExpanded;
+  final bool timestampsVisible;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SectionLabel('Views'),
+            _SessionSheetRow(
+              icon: Icons.view_timeline_outlined,
+              label: 'Timeline',
+              value: 'timeline',
+            ),
+            _SessionSheetRow(
+              icon: Icons.donut_large_outlined,
+              label: 'Context usage',
+              value: 'context',
+            ),
+            _SessionSheetRow(
+              icon: Icons.difference_outlined,
+              label: 'Changes',
+              value: 'changes',
+            ),
+            _SessionSheetRow(
+              icon: Icons.checklist_rounded,
+              label: 'Todos',
+              value: 'todos',
+            ),
+            _SessionSheetRow(
+              icon: Icons.account_tree_outlined,
+              label: 'Subagent sessions',
+              value: 'subagents',
+            ),
+            const SectionLabel('Transcript'),
+            SwitchListTile(
+              key: const ValueKey('session-view-thinking'),
+              secondary: const Icon(Icons.psychology_alt_outlined),
+              title: Text(
+                reasoningExpanded ? 'Collapse reasoning' : 'Expand reasoning',
+              ),
+              value: reasoningExpanded,
+              onChanged: (_) => Navigator.pop(context, 'thinking'),
+            ),
+            SwitchListTile(
+              key: const ValueKey('session-view-timestamps'),
+              secondary: const Icon(Icons.schedule_rounded),
+              title: Text(
+                timestampsVisible ? 'Hide timestamps' : 'Show timestamps',
+              ),
+              value: timestampsVisible,
+              onChanged: (_) => Navigator.pop(context, 'timestamps'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Bottom sheet grouping the session's mutation and utility actions.
+class _SessionActionsSheet extends StatelessWidget {
+  const _SessionActionsSheet({required this.reverted, required this.shared});
+
+  final bool reverted;
+  final bool shared;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SectionLabel('Prompt'),
+            _SessionSheetRow(
+              icon: Icons.replay_rounded,
+              label: 'Retry last prompt',
+              value: 'retry',
+            ),
+            _SessionSheetRow(
+              icon: reverted
+                  ? Icons.settings_backup_restore_rounded
+                  : Icons.history_rounded,
+              label: reverted ? 'Restore messages' : 'Revert last prompt',
+              value: reverted ? 'restore' : 'revert',
+            ),
+            _SessionSheetRow(
+              icon: Icons.fork_right_rounded,
+              label: 'Fork session',
+              value: 'fork',
+            ),
+            const SectionLabel('Context'),
+            _SessionSheetRow(
+              icon: Icons.compress_rounded,
+              label: 'Compact context',
+              value: 'compact',
+            ),
+            const SectionLabel('Sharing'),
+            _SessionSheetRow(
+              icon: shared ? Icons.public_off_rounded : Icons.public_rounded,
+              label: shared ? 'Stop sharing' : 'Share session',
+              value: shared ? 'unshare' : 'share',
+            ),
+            const SectionLabel('Advanced'),
+            _SessionSheetRow(
+              icon: Icons.terminal_rounded,
+              label: 'Run shell command',
+              value: 'shell',
+            ),
+            _SessionSheetRow(
+              icon: Icons.electric_bolt_outlined,
+              label: 'Commands',
+              value: 'slash',
+            ),
+            _SessionSheetRow(
+              icon: Icons.refresh_rounded,
+              label: 'Reload messages',
+              value: 'reload',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SessionSheetRow extends StatelessWidget {
+  const _SessionSheetRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
   final IconData icon;
   final String label;
+  final String value;
 
   @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      Icon(icon, size: 20),
-      const SizedBox(width: 12),
-      Flexible(
-        child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
-      ),
-    ],
+  Widget build(BuildContext context) => ListTile(
+    leading: Icon(icon),
+    title: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+    onTap: () => Navigator.pop(context, value),
   );
 }
 
