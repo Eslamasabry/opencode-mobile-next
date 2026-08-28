@@ -603,7 +603,7 @@ class _FilesScreenState extends State<FilesScreen> {
   Widget _fileListContent(ThemeData theme) {
     final entries = _displayEntries();
     if (_loading && _entries == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const LoadingList(rows: 8);
     }
     if (_error != null) {
       return RefreshIndicator(
@@ -758,7 +758,7 @@ class _FilesScreenState extends State<FilesScreen> {
 
   Widget _symbolList(ThemeData theme) {
     if (_loading && _symbols == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const LoadingList(rows: 6);
     }
     if (_error != null) {
       return RefreshIndicator(
@@ -1179,14 +1179,9 @@ class __FileViewerState extends State<_FileViewer> {
             const Divider(),
             Expanded(
               child: _content == null && _error == null
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const LoadingList(rows: 6)
                   : _error != null
-                  ? Center(
-                      child: Text(
-                        _error!,
-                        style: TextStyle(color: theme.colorScheme.error),
-                      ),
-                    )
+                  ? ProductErrorState(message: _error!, onRetry: _fetch)
                   : FilePreviewBody(
                       data: _previewData,
                       initialLine: widget.initialLine,
