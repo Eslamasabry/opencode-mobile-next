@@ -9,6 +9,7 @@ import 'state/connection.dart';
 import 'state/profiles.dart';
 import 'update/shorebird_update_notice.dart';
 import 'ui/app_theme.dart';
+import 'ui/navigation/chat_route.dart';
 import 'ui/screens/guide_screen.dart';
 import 'ui/screens/about_screen.dart';
 import 'ui/screens/home_screen.dart';
@@ -295,7 +296,15 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
         onGenerateRoute: (settings) {
           if (settings.name?.startsWith('/chat/') == true) {
             final id = settings.name!.substring('/chat/'.length);
-            return MaterialPageRoute(builder: (_) => ChatScreen(sessionID: id));
+            final arguments = settings.arguments;
+            return MaterialPageRoute(
+              builder: (_) => ChatScreen(
+                sessionID: id,
+                discardIfUntouched:
+                    arguments is ChatRouteArguments &&
+                    arguments.discardIfUntouched,
+              ),
+            );
           }
           return null;
         },

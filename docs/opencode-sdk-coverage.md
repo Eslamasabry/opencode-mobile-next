@@ -336,7 +336,17 @@ Legend:
    unrelated provider merely because that provider appeared first on the wire.
    Explicit `Largest context` sorting remains authoritative when selected, and
    no model or provider inventory is hardcoded.
-24. **Deferred by owner:** a Traycer-style task cockpit remains outside the
+24. **Mobile-created session lifecycle:** Workspace New session and mobile
+   `/new` mark only their newly created chat routes as provisional. Leaving one
+   reconciles the wake-safe transport and fetches that exact session's current
+   server messages before deletion; mobile deletes only a still-empty session
+   with no local send, pending send, or busy state. Existing chat routes are
+   never cleanup candidates, even when empty, and a verification or deletion
+   failure preserves server state with a scoped explanation. Unsent text or
+   attachments on every route require an explicit Keep editing or Discard draft
+   decision. `/new` also safely removes the untouched provisional session it
+   replaces, preventing a chain of empty server sessions.
+25. **Deferred by owner:** a Traycer-style task cockpit remains outside the
    current implementation lane.
 
 ## Deliberate non-goals

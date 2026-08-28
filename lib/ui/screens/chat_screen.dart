@@ -15,6 +15,7 @@ import '../../api/sse.dart';
 import '../../state/connection.dart';
 import '../../voice/controller.dart';
 import '../../voice/voice_ui.dart';
+import '../navigation/chat_route.dart';
 import '../permission_presentation.dart';
 import '../widgets/appearance_picker.dart';
 import '../widgets/connection_status_banner.dart';
@@ -118,7 +119,10 @@ class SessionsTab extends StatelessWidget {
     try {
       final session = await controller.createSession();
       if (!context.mounted) return;
-      Navigator.of(context).pushNamed('/chat/${session.id}');
+      Navigator.of(context).pushNamed(
+        '/chat/${session.id}',
+        arguments: const ChatRouteArguments.newlyCreated(),
+      );
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(
@@ -314,6 +318,7 @@ class ChatScreen extends StatefulWidget {
   final VoiceComposerController? voiceController;
   final String initialText;
   final List<PromptAttachment> initialAttachments;
+  final bool discardIfUntouched;
 
   const ChatScreen({
     super.key,
@@ -321,6 +326,7 @@ class ChatScreen extends StatefulWidget {
     this.voiceController,
     this.initialText = '',
     this.initialAttachments = const [],
+    this.discardIfUntouched = false,
   });
 
   @override
@@ -431,6 +437,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<VoiceComposerController>? _voiceFuture;
   VoiceComposerController? _voice;
   bool _voiceOpening = false;
+  bool _allowRoutePop = false;
+  bool _leavingProvisionalSession = false;
   String? _localShareUrl;
   String? _promptError;
   List<CommandInfo>? _serverCommands;
@@ -2212,11 +2220,24 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _executeMobileCommand(_ChatCommandAction action) async {
     switch (action) {
       case _ChatCommandAction.newSession:
+        if (_hasUnsentDraft) {
+          final discard = await _confirmDiscardDraft();
+          if (!mounted || !discard) return;
+        }
         final session = await _conn.createSession();
         if (mounted) {
+          final cleanupWarning = await _discardUntouchedMobileSession();
+          if (!mounted) return;
           await _conn.refreshSessions();
           if (mounted) {
-            Navigator.of(context).pushReplacementNamed('/chat/${session.id}');
+            final messenger = ScaffoldMessenger.maybeOf(context);
+            Navigator.of(context).pushReplacementNamed(
+              '/chat/${session.id}',
+              arguments: const ChatRouteArguments.newlyCreated(),
+            );
+            if (cleanupWarning != null) {
+              messenger?.showSnackBar(SnackBar(content: Text(cleanupWarning)));
+            }
           }
         }
         return;
@@ -2742,6 +2763,80 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     setState(() => _attachments.add(attachment));
   }
 
+  bool get _hasUnsentDraft =>
+      _composer.text.isNotEmpty || _attachments.isNotEmpty;
+
+  Future<bool> _confirmDiscardDraft() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        key: const ValueKey('discard-chat-draft-dialog'),
+        scrollable: true,
+        title: const Text('Discard unsent draft?'),
+        content: const Text(
+          'Your text and attachments have not been sent to OpenCode.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Keep editing'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Discard draft'),
+          ),
+        ],
+      ),
+    );
+    return result == true;
+  }
+
+  Future<String?> _discardUntouchedMobileSession() async {
+    if (!widget.discardIfUntouched ||
+        _messages.isNotEmpty ||
+        _pendingSends.isNotEmpty ||
+        _sending ||
+        _conn.busySessions.contains(widget.sessionID)) {
+      return null;
+    }
+    try {
+      final api = await _conn.prepareActionTransport();
+      if (api == null) throw StateError('OpenCode is reconnecting.');
+      final currentMessages = await api.messages(widget.sessionID);
+      if (currentMessages.isNotEmpty) return null;
+      await api.deleteSession(widget.sessionID);
+      try {
+        await _conn.refreshSessions();
+      } catch (_) {
+        // The exact empty session is already gone. The destination screen will
+        // reconcile on its normal refresh even if this optional refresh fails.
+      }
+      return null;
+    } catch (_) {
+      return 'Empty session was kept because OpenCode could not verify or remove it.';
+    }
+  }
+
+  Future<void> _leaveChat() async {
+    if (_leavingProvisionalSession) return;
+    if (_hasUnsentDraft) {
+      final discard = await _confirmDiscardDraft();
+      if (!mounted || !discard) return;
+    }
+    _leavingProvisionalSession = true;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final warning = await _discardUntouchedMobileSession();
+    if (!mounted) return;
+    setState(() => _allowRoutePop = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.of(context).maybePop();
+      if (warning != null) {
+        messenger?.showSnackBar(SnackBar(content: Text(warning)));
+      }
+    });
+  }
+
   Future<void> _downloadToolOutputFile(
     ToolOutputFile file,
     FilePreviewData data,
@@ -2783,298 +2878,308 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       (candidate) => candidate.id == widget.sessionID,
     );
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          title?.isNotEmpty == true ? title! : 'Chat',
-          overflow: TextOverflow.ellipsis,
+    return PopScope(
+      canPop: _allowRoutePop,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) unawaited(_leaveChat());
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            title?.isNotEmpty == true ? title! : 'Chat',
+            overflow: TextOverflow.ellipsis,
+          ),
+          actions: [
+            PopupMenuButton<String>(
+              tooltip: 'Session views',
+              icon: const Icon(Icons.view_agenda_outlined),
+              onSelected: (value) {
+                if (value == 'timeline') unawaited(_openTimeline());
+                if (value == 'context') unawaited(_showContext());
+                if (value == 'changes') _showDiff();
+                if (value == 'todos') _showTodos();
+                if (value == 'subagents') unawaited(_showSubagents());
+                if (value == 'thinking') {
+                  unawaited(_runMobileCommand(_ChatCommandAction.thinking));
+                }
+                if (value == 'timestamps') {
+                  unawaited(_runMobileCommand(_ChatCommandAction.timestamps));
+                }
+              },
+              itemBuilder: (_) => [
+                const PopupMenuItem(
+                  value: 'timeline',
+                  child: _SessionViewMenuItem(
+                    icon: Icons.view_timeline_outlined,
+                    label: 'Timeline',
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'context',
+                  child: _SessionViewMenuItem(
+                    icon: Icons.donut_large_outlined,
+                    label: 'Context usage',
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'changes',
+                  child: _SessionViewMenuItem(
+                    icon: Icons.difference_outlined,
+                    label: 'Changes',
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'todos',
+                  child: _SessionViewMenuItem(
+                    icon: Icons.checklist_rounded,
+                    label: 'Todos',
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'subagents',
+                  child: _SessionViewMenuItem(
+                    icon: Icons.account_tree_outlined,
+                    label: 'Subagent sessions',
+                  ),
+                ),
+                const PopupMenuDivider(),
+                CheckedPopupMenuItem(
+                  key: const ValueKey('session-view-thinking'),
+                  value: 'thinking',
+                  checked: _conn.transcriptReasoningExpanded,
+                  child: Text(
+                    _conn.transcriptReasoningExpanded
+                        ? 'Collapse reasoning'
+                        : 'Expand reasoning',
+                  ),
+                ),
+                CheckedPopupMenuItem(
+                  key: const ValueKey('session-view-timestamps'),
+                  value: 'timestamps',
+                  checked: _conn.transcriptTimestampsVisible,
+                  child: Text(
+                    _conn.transcriptTimestampsVisible
+                        ? 'Hide timestamps'
+                        : 'Show timestamps',
+                  ),
+                ),
+              ],
+            ),
+            if (busy)
+              IconButton(
+                tooltip: 'Stop',
+                icon: Icon(
+                  Icons.stop_circle_outlined,
+                  color: theme.colorScheme.error,
+                ),
+                onPressed: _aborting ? null : _abort,
+              ),
+            PopupMenuButton<String>(
+              onSelected: (v) async {
+                if (v == 'shell') await _runShellDialog();
+                if (v == 'slash') await _openCommandLauncher();
+                if (v == 'share') await _share();
+                if (v == 'unshare') await _stopSharing();
+                if (v == 'fork') await _fork();
+                if (v == 'compact') await _compact();
+                if (v == 'retry') await _retryLast();
+                if (v == 'revert') await _revertLast();
+                if (v == 'restore') await _restore();
+                if (v == 'reload') await _load();
+              },
+              itemBuilder: (_) => [
+                const PopupMenuItem(
+                  value: 'retry',
+                  child: Text('Retry last prompt'),
+                ),
+                PopupMenuItem(
+                  value: session?.reverted == true ? 'restore' : 'revert',
+                  child: Text(
+                    session?.reverted == true
+                        ? 'Restore messages'
+                        : 'Revert last prompt',
+                  ),
+                ),
+                const PopupMenuItem(value: 'fork', child: Text('Fork session')),
+                const PopupMenuItem(
+                  value: 'compact',
+                  child: Text('Compact context'),
+                ),
+                PopupMenuItem(
+                  value: shareUrl == null ? 'share' : 'unshare',
+                  child: Text(
+                    shareUrl == null ? 'Share session' : 'Stop sharing',
+                  ),
+                ),
+                const PopupMenuDivider(),
+                const PopupMenuItem(
+                  value: 'shell',
+                  child: Text('Run shell command'),
+                ),
+                const PopupMenuItem(value: 'slash', child: Text('Commands')),
+                const PopupMenuItem(
+                  value: 'reload',
+                  child: Text('Reload messages'),
+                ),
+              ],
+            ),
+          ],
         ),
-        actions: [
-          PopupMenuButton<String>(
-            tooltip: 'Session views',
-            icon: const Icon(Icons.view_agenda_outlined),
-            onSelected: (value) {
-              if (value == 'timeline') unawaited(_openTimeline());
-              if (value == 'context') unawaited(_showContext());
-              if (value == 'changes') _showDiff();
-              if (value == 'todos') _showTodos();
-              if (value == 'subagents') unawaited(_showSubagents());
-              if (value == 'thinking') {
-                unawaited(_runMobileCommand(_ChatCommandAction.thinking));
-              }
-              if (value == 'timestamps') {
-                unawaited(_runMobileCommand(_ChatCommandAction.timestamps));
-              }
-            },
-            itemBuilder: (_) => [
-              const PopupMenuItem(
-                value: 'timeline',
-                child: _SessionViewMenuItem(
-                  icon: Icons.view_timeline_outlined,
-                  label: 'Timeline',
-                ),
+        body: Column(
+          children: [
+            if (_conn.status != StreamStatus.connected)
+              ConnectionStatusBanner(controller: _conn),
+            if (shareUrl != null)
+              _SharedSessionBanner(url: shareUrl, onStop: _stopSharing),
+            if (parentID != null)
+              _SubagentContextBanner(
+                position: siblingIndex < 0 ? null : siblingIndex + 1,
+                total: siblings.isEmpty ? null : siblings.length,
+                onParent: _openParentSession,
+                onAll: _showSubagents,
               ),
-              const PopupMenuItem(
-                value: 'context',
-                child: _SessionViewMenuItem(
-                  icon: Icons.donut_large_outlined,
-                  label: 'Context usage',
-                ),
+            if (_promptError case final promptError?)
+              _PromptErrorBanner(
+                message: promptError,
+                onDismiss: () => setState(() => _promptError = null),
               ),
-              const PopupMenuItem(
-                value: 'changes',
-                child: _SessionViewMenuItem(
-                  icon: Icons.difference_outlined,
-                  label: 'Changes',
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'todos',
-                child: _SessionViewMenuItem(
-                  icon: Icons.checklist_rounded,
-                  label: 'Todos',
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'subagents',
-                child: _SessionViewMenuItem(
-                  icon: Icons.account_tree_outlined,
-                  label: 'Subagent sessions',
-                ),
-              ),
-              const PopupMenuDivider(),
-              CheckedPopupMenuItem(
-                key: const ValueKey('session-view-thinking'),
-                value: 'thinking',
-                checked: _conn.transcriptReasoningExpanded,
-                child: Text(
-                  _conn.transcriptReasoningExpanded
-                      ? 'Collapse reasoning'
-                      : 'Expand reasoning',
-                ),
-              ),
-              CheckedPopupMenuItem(
-                key: const ValueKey('session-view-timestamps'),
-                value: 'timestamps',
-                checked: _conn.transcriptTimestampsVisible,
-                child: Text(
-                  _conn.transcriptTimestampsVisible
-                      ? 'Hide timestamps'
-                      : 'Show timestamps',
-                ),
-              ),
-            ],
-          ),
-          if (busy)
-            IconButton(
-              tooltip: 'Stop',
-              icon: Icon(
-                Icons.stop_circle_outlined,
-                color: theme.colorScheme.error,
-              ),
-              onPressed: _aborting ? null : _abort,
-            ),
-          PopupMenuButton<String>(
-            onSelected: (v) async {
-              if (v == 'shell') await _runShellDialog();
-              if (v == 'slash') await _openCommandLauncher();
-              if (v == 'share') await _share();
-              if (v == 'unshare') await _stopSharing();
-              if (v == 'fork') await _fork();
-              if (v == 'compact') await _compact();
-              if (v == 'retry') await _retryLast();
-              if (v == 'revert') await _revertLast();
-              if (v == 'restore') await _restore();
-              if (v == 'reload') await _load();
-            },
-            itemBuilder: (_) => [
-              const PopupMenuItem(
-                value: 'retry',
-                child: Text('Retry last prompt'),
-              ),
-              PopupMenuItem(
-                value: session?.reverted == true ? 'restore' : 'revert',
-                child: Text(
-                  session?.reverted == true
-                      ? 'Restore messages'
-                      : 'Revert last prompt',
-                ),
-              ),
-              const PopupMenuItem(value: 'fork', child: Text('Fork session')),
-              const PopupMenuItem(
-                value: 'compact',
-                child: Text('Compact context'),
-              ),
-              PopupMenuItem(
-                value: shareUrl == null ? 'share' : 'unshare',
-                child: Text(
-                  shareUrl == null ? 'Share session' : 'Stop sharing',
-                ),
-              ),
-              const PopupMenuDivider(),
-              const PopupMenuItem(
-                value: 'shell',
-                child: Text('Run shell command'),
-              ),
-              const PopupMenuItem(value: 'slash', child: Text('Commands')),
-              const PopupMenuItem(
-                value: 'reload',
-                child: Text('Reload messages'),
-              ),
-            ],
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          if (_conn.status != StreamStatus.connected)
-            ConnectionStatusBanner(controller: _conn),
-          if (shareUrl != null)
-            _SharedSessionBanner(url: shareUrl, onStop: _stopSharing),
-          if (parentID != null)
-            _SubagentContextBanner(
-              position: siblingIndex < 0 ? null : siblingIndex + 1,
-              total: siblings.isEmpty ? null : siblings.length,
-              onParent: _openParentSession,
-              onAll: _showSubagents,
-            ),
-          if (_promptError case final promptError?)
-            _PromptErrorBanner(
-              message: promptError,
-              onDismiss: () => setState(() => _promptError = null),
-            ),
-          Expanded(
-            child: _loading
-                ? const Center(child: CircularProgressIndicator())
-                : _error != null
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '$_error',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: theme.colorScheme.error),
-                        ),
-                        const SizedBox(height: 8),
-                        FilledButton.tonal(
-                          onPressed: _load,
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
-                  )
-                : LayoutBuilder(
-                    builder: (context, bodyConstraints) {
-                      // Keyboard insets reduce [bodyConstraints] but do not
-                      // change the device's layout class. Deriving compact
-                      // mode from those shrinking constraints replaces the
-                      // focused TextField and immediately dismisses Android's
-                      // keyboard. Keep one composer structure for the lifetime
-                      // of the focus interaction instead.
-                      final compactComposer =
-                          MediaQuery.sizeOf(context).height < 520;
-                      return Column(
+            Expanded(
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _error != null
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Expanded(
-                            child: _messages.isEmpty
-                                ? Center(
-                                    child: Text(
-                                      'Ask opencode to do something…',
-                                      style: TextStyle(color: theme.hintColor),
-                                    ),
-                                  )
-                                : NotificationListener<ScrollNotification>(
-                                    onNotification: (_) => false,
-                                    child: Align(
-                                      alignment: Alignment.topCenter,
-                                      child: ScrollablePositionedList.builder(
-                                        reverse: true,
-                                        itemScrollController: _messageScroll,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 10,
-                                        ),
-                                        itemCount:
-                                            _messages.length + (busy ? 1 : 0),
-                                        itemBuilder: (context, i) {
-                                          final index =
-                                              _messages.length - 1 - i;
-                                          if (index < 0) {
-                                            return _TypingIndicator();
-                                          }
-                                          final m = _messages[index];
-                                          final meta = _messageMeta(
-                                            _messages,
-                                            index,
-                                          );
-                                          final parts = displayParts[index];
-                                          if (parts.isEmpty &&
-                                              meta.isEmpty &&
-                                              m.info.errorText == null) {
-                                            return const SizedBox.shrink();
-                                          }
-                                          return _MessageView(
-                                            key: ValueKey(
-                                              'message-${m.info.id}',
-                                            ),
-                                            m: m,
-                                            meta: meta,
-                                            parts: parts,
-                                            reasoningExpanded: _conn
-                                                .transcriptReasoningExpanded,
-                                            showTimestamp: _conn
-                                                .transcriptTimestampsVisible,
-                                            highlighted:
-                                                _highlightedMessageID ==
-                                                m.info.id,
-                                            filePreviewLoader:
-                                                _loadToolOutputFile,
-                                            onAttachFile: _attachToolOutputFile,
-                                            onDownloadFile:
-                                                _downloadToolOutputFile,
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  ),
+                          Text(
+                            '$_error',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: theme.colorScheme.error),
                           ),
-                          _ChatComposer(
-                            compact: compactComposer,
-                            allowInlineCommands:
-                                bodyConstraints.maxHeight >= 300,
-                            controller: _composer,
-                            focusNode: _focus,
-                            commands: _chatCommands,
-                            agents: _subagents,
-                            onSelectCommand: _selectChatCommand,
-                            onSelectAgent: _insertAgentMention,
-                            onOpenCommands: _openCommandLauncher,
-                            onOpenAgents: () => _openCommandLauncher(
-                              initialTab: _ComposerToolTab.agents,
-                            ),
-                            onOpenEditor: _openPromptEditor,
-                            attachments: _attachments,
-                            busy: busy,
-                            sending: _sending,
-                            voiceOpening: _voiceOpening,
-                            selectedAgent: _conn.selectedAgent,
-                            selectedModel: _conn.selectedModel,
-                            selectedVariant: _conn.selectedVariant,
-                            onAttach: _pickAttachment,
-                            onVoice: _openVoice,
-                            onSend: _send,
-                            onStop: _abort,
-                            onChooseModel: () => showModelPicker(context),
-                            onRemoveAttachment: (attachment) =>
-                                setState(() => _attachments.remove(attachment)),
+                          const SizedBox(height: 8),
+                          FilledButton.tonal(
+                            onPressed: _load,
+                            child: const Text('Retry'),
                           ),
                         ],
-                      );
-                    },
-                  ),
-          ),
-        ],
+                      ),
+                    )
+                  : LayoutBuilder(
+                      builder: (context, bodyConstraints) {
+                        // Keyboard insets reduce [bodyConstraints] but do not
+                        // change the device's layout class. Deriving compact
+                        // mode from those shrinking constraints replaces the
+                        // focused TextField and immediately dismisses Android's
+                        // keyboard. Keep one composer structure for the lifetime
+                        // of the focus interaction instead.
+                        final compactComposer =
+                            MediaQuery.sizeOf(context).height < 520;
+                        return Column(
+                          children: [
+                            Expanded(
+                              child: _messages.isEmpty
+                                  ? Center(
+                                      child: Text(
+                                        'Ask opencode to do something…',
+                                        style: TextStyle(
+                                          color: theme.hintColor,
+                                        ),
+                                      ),
+                                    )
+                                  : NotificationListener<ScrollNotification>(
+                                      onNotification: (_) => false,
+                                      child: Align(
+                                        alignment: Alignment.topCenter,
+                                        child: ScrollablePositionedList.builder(
+                                          reverse: true,
+                                          itemScrollController: _messageScroll,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 10,
+                                          ),
+                                          itemCount:
+                                              _messages.length + (busy ? 1 : 0),
+                                          itemBuilder: (context, i) {
+                                            final index =
+                                                _messages.length - 1 - i;
+                                            if (index < 0) {
+                                              return _TypingIndicator();
+                                            }
+                                            final m = _messages[index];
+                                            final meta = _messageMeta(
+                                              _messages,
+                                              index,
+                                            );
+                                            final parts = displayParts[index];
+                                            if (parts.isEmpty &&
+                                                meta.isEmpty &&
+                                                m.info.errorText == null) {
+                                              return const SizedBox.shrink();
+                                            }
+                                            return _MessageView(
+                                              key: ValueKey(
+                                                'message-${m.info.id}',
+                                              ),
+                                              m: m,
+                                              meta: meta,
+                                              parts: parts,
+                                              reasoningExpanded: _conn
+                                                  .transcriptReasoningExpanded,
+                                              showTimestamp: _conn
+                                                  .transcriptTimestampsVisible,
+                                              highlighted:
+                                                  _highlightedMessageID ==
+                                                  m.info.id,
+                                              filePreviewLoader:
+                                                  _loadToolOutputFile,
+                                              onAttachFile:
+                                                  _attachToolOutputFile,
+                                              onDownloadFile:
+                                                  _downloadToolOutputFile,
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                            ),
+                            _ChatComposer(
+                              compact: compactComposer,
+                              allowInlineCommands:
+                                  bodyConstraints.maxHeight >= 300,
+                              controller: _composer,
+                              focusNode: _focus,
+                              commands: _chatCommands,
+                              agents: _subagents,
+                              onSelectCommand: _selectChatCommand,
+                              onSelectAgent: _insertAgentMention,
+                              onOpenCommands: _openCommandLauncher,
+                              onOpenAgents: () => _openCommandLauncher(
+                                initialTab: _ComposerToolTab.agents,
+                              ),
+                              onOpenEditor: _openPromptEditor,
+                              attachments: _attachments,
+                              busy: busy,
+                              sending: _sending,
+                              voiceOpening: _voiceOpening,
+                              selectedAgent: _conn.selectedAgent,
+                              selectedModel: _conn.selectedModel,
+                              selectedVariant: _conn.selectedVariant,
+                              onAttach: _pickAttachment,
+                              onVoice: _openVoice,
+                              onSend: _send,
+                              onStop: _abort,
+                              onChooseModel: () => showModelPicker(context),
+                              onRemoveAttachment: (attachment) => setState(
+                                () => _attachments.remove(attachment),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
+import '../navigation/chat_route.dart';
 import '../widgets/product_states.dart';
 import 'global_sessions_screen.dart';
 import 'managed_workspaces_screen.dart';
@@ -182,7 +183,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     try {
       final session = await widget.controller.createSession();
       if (!mounted) return;
-      await Navigator.of(context).pushNamed('/chat/${session.id}');
+      await Navigator.of(context).pushNamed(
+        '/chat/${session.id}',
+        arguments: const ChatRouteArguments.newlyCreated(),
+      );
       await widget.controller.refreshSessions();
     } catch (error) {
       if (mounted) _showError('Could not create a session: $error');

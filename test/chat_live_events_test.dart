@@ -422,6 +422,51 @@ Future<ConnectionController> _pumpChat(
   return activeController;
 }
 
+Future<ConnectionController> _pumpProvisionalChat(
+  WidgetTester tester,
+  _FakeOpenCodeApi api, {
+  double textScale = 1,
+}) async {
+  final controller = await _controller(api);
+  addTearDown(controller.dispose);
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [connProvider.overrideWithValue(controller)],
+      child: MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
+        home: Builder(
+          builder: (context) => Scaffold(
+            key: const ValueKey('provisional-chat-host'),
+            body: Center(
+              child: FilledButton(
+                key: const ValueKey('open-provisional-chat'),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const ChatScreen(
+                      sessionID: 'session-1',
+                      discardIfUntouched: true,
+                    ),
+                  ),
+                ),
+                child: const Text('Open provisional chat'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.tap(find.byKey(const ValueKey('open-provisional-chat')));
+  await tester.pump();
+  await tester.pump();
+  return controller;
+}
+
 Future<void> _pumpEvent(WidgetTester tester) async {
   await tester.pump();
   await tester.pump();
@@ -442,6 +487,134 @@ void main() {
     });
 
     expect(info.errorText, 'The selected model is unavailable');
+  });
+
+  testWidgets('back discards only the exact verified empty mobile session', (
+    tester,
+  ) async {
+    final requested = <String>[];
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (id) async {
+        requested.add(id);
+        return [];
+      };
+    await _pumpProvisionalChat(tester, api);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(requested, everyElement('session-1'));
+    expect(requested.length, greaterThanOrEqualTo(2));
+    expect(api.deleteCalls, ['session-1']);
+    expect(find.byKey(const ValueKey('provisional-chat-host')), findsOneWidget);
+  });
+
+  testWidgets('back preserves a newly created session after server messages', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('user-committed', 'user', [
+          Part(type: 'text', text: 'Keep this session'),
+        ]),
+      ];
+    await _pumpProvisionalChat(tester, api);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(api.deleteCalls, isEmpty);
+    expect(find.byKey(const ValueKey('provisional-chat-host')), findsOneWidget);
+  });
+
+  testWidgets('failed empty-session verification keeps server state', (
+    tester,
+  ) async {
+    var calls = 0;
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async {
+        calls += 1;
+        if (calls > 1) throw StateError('transport moved');
+        return [];
+      };
+    await _pumpProvisionalChat(tester, api);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(api.deleteCalls, isEmpty);
+    expect(
+      find.text(
+        'Empty session was kept because OpenCode could not verify or remove it.',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('unsent draft requires confirmation on a compact phone', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(640, 1280);
+    tester.view.devicePixelRatio = 2;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final api = _FakeOpenCodeApi()..messagesHandler = (_) async => [];
+    await _pumpProvisionalChat(tester, api, textScale: 2);
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      'Keep this draft',
+    );
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('discard-chat-draft-dialog')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Keep editing'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ChatScreen), findsOneWidget);
+    expect(api.deleteCalls, isEmpty);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Discard draft'));
+    await tester.pumpAndSettle();
+
+    expect(api.deleteCalls, ['session-1']);
+    expect(find.byKey(const ValueKey('provisional-chat-host')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('mobile new command cannot silently replace an unsent draft', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()..messagesHandler = (_) async => [];
+    await _pumpProvisionalChat(tester, api);
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      'Keep this draft',
+    );
+
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('command-mobile-new')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('discard-chat-draft-dialog')),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Keep editing'));
+    await tester.pumpAndSettle();
+
+    expect(api.createCalls, 0);
+    expect(api.deleteCalls, isEmpty);
+    final composer = tester.widget<TextField>(
+      find.byKey(const Key('chat-composer-field')),
+    );
+    expect(composer.controller?.text, 'Keep this draft');
   });
 
   testWidgets('child chat exposes parent and sibling navigation', (

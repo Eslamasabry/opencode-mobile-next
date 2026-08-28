@@ -33,7 +33,7 @@ byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 
 - Branch: `production/android-release-hardening`
 - Last pushed commit before the `1.0.20+21` candidate: `c17f4f63ae14e3ab676da440df44fc23e1116356`
-- Latest app-completeness implementation: `fd03b120452ff4f86a98cca21fdf962408cf7c7f`
+- Latest app-completeness implementation: `PENDING_SESSION_LIFECYCLE_COMMIT`
 - Compare/PR: <https://github.com/Eslamasabry/oc_app/pull/new/production/android-release-hardening>
 
 ### Verified `1.0.20+21` candidate
@@ -380,6 +380,49 @@ Android `lintRelease` passes. The generated SDK audit remains at 101 directly
 used operations. The locally test-signed `1.0.20+21` APK is `162039375` bytes
 with SHA-256
 `34322f2d85ef300e68b8f387df72cff7ca546ac7939102177b925474f11c72ef`
+and the public legacy certificate SHA-256
+`1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c`.
+It upgraded the emulator in place, temporary signing properties were removed,
+and the APK was not published or distributed.
+
+Mobile-created session lifecycle is now explicit instead of leaking empty
+server sessions when a user opens New session and immediately backs out. Only
+routes marked as newly created by mobile are eligible for cleanup. Back first
+reconciles the wake-safe transport, fetches the exact session's current server
+messages, and deletes it only when it is still empty and no local send, pending
+send, or busy state exists. Existing routes are never cleanup candidates, even
+when their sessions are empty. Verification or deletion failure fails closed:
+the session is preserved and mobile explains that it could not safely remove
+it. Mobile `/new` applies the same rule to the provisional session it replaces
+and cannot replace unsent text or attachments without the same confirmation.
+
+Unsent composer text or attachments are protected for every chat route. Back
+shows one compact `Discard unsent draft?` confirmation with Keep editing and
+Discard draft; Keep editing retains the exact draft and session. Widget coverage
+proves exact empty-session deletion, server-message preservation, verification-
+failure preservation, and the confirmation at 320dp with 2x text scaling.
+
+Release-mode Pixel 6 verification against OpenCode `1.18.23` exercised the
+server lifecycle by exact ID. Draft session
+`ses_fb784317fffeMCBJo6xD19O2yu` remained after Keep editing and disappeared
+only after Discard draft. Untouched session
+`ses_fb7828c78ffepvRbEfaZy321cz` was removed on back. Existing session
+`ses_fd13fc507ffeq9Vnk7GoQJwSo3` remained intact. Mobile `/new` removed its
+first provisional session `ses_fb781d43dffeKIdvxAV0CJKZym`, opened replacement
+`ses_fb781886dffe2sR7GjRGtndE73`, and back removed that untouched replacement.
+The final rebuilt binary additionally kept draft session
+`ses_fb779fc92ffeL3qFVahFE1Dd0t` and its exact composer text when `/new` was
+cancelled through Keep editing; no replacement session was created, and the
+audit session was removed only after the later explicit Discard draft action.
+Android logged no app fatal exception, ANR, RenderFlex overflow, OOM, SIGSEGV,
+or Flutter error.
+
+Final-tree Flutter analysis is clean and all 463 app tests pass serially. All
+four generated-SDK integrity verifiers pass for 188 operations; all 46 SDK
+tests and SDK analysis pass; the compiled SDK smoke binary runs; and aggregate
+Android `lintRelease` passes. The locally test-signed `1.0.20+21` APK is
+`162039375` bytes with SHA-256
+`133bb537935296a83672d7c9381f51381d40d30d5db0734815a895e390ef974d`
 and the public legacy certificate SHA-256
 `1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c`.
 It upgraded the emulator in place, temporary signing properties were removed,
