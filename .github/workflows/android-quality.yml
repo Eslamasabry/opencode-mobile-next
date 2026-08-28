@@ -3,7 +3,9 @@ name: Android quality gate
 on:
   pull_request:
   push:
-    branches: [master]
+    branches:
+      - master
+      - production/android-release-hardening
   workflow_dispatch:
 
 permissions:
@@ -36,6 +38,38 @@ jobs:
 
       - name: Resolve dependencies
         run: flutter pub get
+
+      - name: Resolve generated SDK dependencies
+        run: dart pub get --directory packages/opencode_sdk --enforce-lockfile
+
+      - name: Verify generated OpenCode SDK integrity
+        run: |
+          dart run tool/sdk/verify_contract.dart \
+            contracts/opencode-openapi-03bba464.json \
+            contracts/opencode-sdk-manifest.json before
+          dart run tool/sdk/verify_generated.dart \
+            packages/opencode_sdk \
+            contracts/opencode-sdk-manifest.json
+          dart run tool/sdk/verify_contract_matrix.dart \
+            contracts/opencode-openapi-03bba464.json \
+            contracts/opencode-sdk-manifest.json \
+            packages/opencode_sdk \
+            contracts/opencode-sdk-matrix.json \
+            contracts/opencode-sdk-matrix.md
+          dart run tool/sdk/verify_artifacts_independent.dart \
+            contracts/opencode-openapi-03bba464.json \
+            contracts/opencode-sdk-manifest.json \
+            packages/opencode_sdk \
+            contracts/opencode-sdk-matrix.json \
+            contracts/opencode-sdk-matrix.md
+
+      - name: Test generated OpenCode SDK
+        working-directory: packages/opencode_sdk
+        run: dart test
+
+      - name: Analyze generated OpenCode SDK
+        working-directory: packages/opencode_sdk
+        run: dart analyze
 
       - name: Analyze
         run: flutter analyze
@@ -73,4 +107,3 @@ jobs:
 
       - name: Verify release artifact exists
         run: test -s build/app/outputs/flutter-apk/app-release.apk
-

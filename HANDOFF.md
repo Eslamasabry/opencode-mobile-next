@@ -1025,6 +1025,15 @@ logged no fatal exception, ANR, RenderFlex overflow, or OOM. The proof used no
 Traycer integration. Final-tree Flutter analysis is clean, all 347 tests pass
 serially, and the Android release APK compiled successfully.
 
+The Android quality workflow now runs on pushes to the active
+`production/android-release-hardening` branch as well as `master`, closing the
+gap where the repository had a workflow file but no recorded GitHub Actions
+run. Before Flutter analysis and tests, CI also verifies the canonical OpenCode
+contract, generated Dart SDK, committed contract matrices, and independent
+artifact inventory, then runs the generated SDK's own tests and analysis.
+Android release lint and the isolated test-signed APK compile remain required;
+the CI signing identity is created per job and never distributed.
+
 ## Shorebird wake patch for `1.0.17+18`
 
 - Shorebird release ID: `789345`

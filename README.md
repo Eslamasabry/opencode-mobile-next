@@ -63,9 +63,12 @@ a clean `master` synchronized with its same-named tracked upstream (normally
 and a Shorebird dry-run. It uploads nothing unless `--publish` is supplied
 explicitly.
 
-Pull requests and pushes to `master` run the pinned Flutter analysis and test
-gate in GitHub Actions, plus Android `lintRelease` and a test-signed release APK
-compile. The CI key is generated per job and its artifact is never distributed.
+Pull requests and pushes to `master` or the active
+`production/android-release-hardening` branch run the pinned Flutter analysis
+and test gate in GitHub Actions. The same job verifies the checked-in OpenCode
+contract, generated SDK, independent artifact matrix, SDK tests and analysis,
+Android `lintRelease`, and a test-signed release APK compile. The CI key is
+generated per job and its artifact is never distributed.
 
 `shorebird.yaml` disables the engine's automatic updater because the app already
 owns checks, downloads, progress, and resume-time retries through
