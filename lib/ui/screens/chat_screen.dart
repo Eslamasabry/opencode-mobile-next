@@ -9,9 +9,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import '../../api/models.dart';
+import '../../api/opencode_api.dart' show ApiException;
 import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../api/sse.dart';
+import '../../state/offline_queue.dart';
 import '../../state/connection.dart';
 import '../../voice/controller.dart';
 import '../../voice/voice_ui.dart';
@@ -806,6 +808,75 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     return true;
   }
 
+  /// Queues a drafted prompt for delivery when the server returns. Returns
+  /// false (with the limits message shown) when the entry cannot be queued.
+  Future<bool> _queueDraft(
+    String text,
+    List<PromptAttachment> attachments,
+    List<PromptAgentMention> mentions,
+  ) async {
+    final profileID = _conn.profile?.id;
+    if (profileID == null) return false;
+    final now = DateTime.now();
+    final queued = await _conn.queuePrompt(
+      QueuedPrompt(
+        id: 'queued-${now.microsecondsSinceEpoch}',
+        profileID: profileID,
+        sessionID: widget.sessionID,
+        text: text,
+        attachments: attachments,
+        mentions: mentions,
+        modelProviderID: _conn.selectedModel?.providerID,
+        modelID: _conn.selectedModel?.modelID,
+        agent: _conn.selectedAgent,
+        variant: _conn.selectedVariant,
+        createdAt: now.millisecondsSinceEpoch,
+      ),
+    );
+    if (!mounted) return queued;
+    if (queued) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Queued — will send when reconnected')),
+      );
+    } else {
+      _showActionError(
+        'This draft exceeds the attachment size limits and cannot be queued.',
+      );
+    }
+    return queued;
+  }
+
+  Future<void> _editQueuedPrompt(QueuedPrompt entry) async {
+    await _conn.removeQueuedPrompt(entry.id);
+    if (!mounted) return;
+    setState(() {
+      _attachments
+        ..clear()
+        ..addAll(entry.attachments);
+    });
+    final current = _composer.text;
+    _composer.text = current.trim().isEmpty
+        ? entry.text
+        : '${entry.text}\n$current';
+    _composer.selection = TextSelection.collapsed(
+      offset: _composer.text.length,
+    );
+    _focus.requestFocus();
+  }
+
+  Future<void> _discardQueuedPrompt(QueuedPrompt entry) async {
+    final confirmed = await showConfirmSheet(
+      context,
+      icon: Icons.delete_sweep_outlined,
+      title: 'Discard queued draft?',
+      message: 'This draft has not been sent to OpenCode.',
+      confirmLabel: 'Discard draft',
+      cancelLabel: 'Keep it queued',
+      destructive: true,
+    );
+    if (confirmed) await _conn.removeQueuedPrompt(entry.id);
+  }
+
   Future<void> _send() async {
     await _voice?.cancel();
     if (_sending || (_composer.text.trim().isEmpty && _attachments.isEmpty)) {
@@ -820,6 +891,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final typedCommand = _typedChatCommand(_composer.text.trim());
     if (_attachments.isEmpty && typedCommand != null) {
       await _submitTypedCommand(typedCommand);
+      return;
+    }
+    if (_conn.status != StreamStatus.connected) {
+      // Offline compose: the draft queues instead of failing, and flushes
+      // through the same send path when the connection returns.
+      final draftText = _composer.text.trim();
+      final draftAttachments = List<PromptAttachment>.from(_attachments);
+      final draftMentions = _promptAgentMentions(draftText, _subagents);
+      if (await _queueDraft(draftText, draftAttachments, draftMentions)) {
+        if (!mounted) return;
+        setState(() => _attachments.clear());
+        _composer.clear();
+        _focus.requestFocus();
+      }
       return;
     }
     setState(() => _sending = true);
@@ -905,8 +990,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               message.info.id == pending.localID ||
               message.info.id == pending.canonicalID,
         );
-        _attachments.insertAll(0, attachments);
       });
+      // A transport-level failure (no HTTP response) means the server became
+      // unreachable mid-send: queue the draft rather than erroring.
+      if (e is ApiException && e.statusCode == null) {
+        if (await _queueDraft(text, attachments, agentMentions)) return;
+      }
+      if (!mounted) return;
+      setState(() => _attachments.insertAll(0, attachments));
       final currentText = _composer.text;
       if (text.isNotEmpty && currentText.trim() != text) {
         _composer.text = currentText.isEmpty ? text : '$text\n$currentText';
@@ -2917,7 +3008,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         body: Column(
           children: [
             if (_conn.status != StreamStatus.connected)
-              ConnectionStatusBanner(controller: _conn),
+              ConnectionStatusBanner(
+                controller: _conn,
+                note: _conn.queuedPromptCount > 0
+                    ? '${_conn.queuedPromptCount} draft'
+                          '${_conn.queuedPromptCount == 1 ? '' : 's'} queued '
+                          'to send on reconnect.'
+                    : null,
+              ),
             // At most one contextual strip below the connection truth, so
             // banners cannot stack three deep over the transcript: a prompt
             // error outranks subagent context, which outranks the share
@@ -3041,6 +3139,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                       ),
                                     ),
                             ),
+                            if (_conn.queuedPromptsFor(widget.sessionID)
+                                case final queuedDrafts
+                                when queuedDrafts.isNotEmpty)
+                              _QueuedPromptsStrip(
+                                entries: queuedDrafts,
+                                onEdit: _editQueuedPrompt,
+                                onDiscard: _discardQueuedPrompt,
+                              ),
                             Center(
                               child: ConstrainedBox(
                                 constraints: const BoxConstraints(
