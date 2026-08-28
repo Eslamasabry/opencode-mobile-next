@@ -798,6 +798,30 @@ class _ReviewDiffToolbar extends StatelessWidget {
       for (final entry in lines.asMap().entries)
         if (entry.value.kind == _ReviewLineKind.hunk) entry.key,
     ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (!compact && constraints.maxWidth < 560) {
+          return _ReviewPhoneDiffToolbar(
+            diff: diff,
+            hunks: hunks,
+            mode: mode,
+            onModeChanged: onModeChanged,
+            onCopy: onCopy,
+            onAsk: onAsk,
+            onHunk: onHunk,
+          );
+        }
+        return _wideToolbar(context, theme, counts, hunks);
+      },
+    );
+  }
+
+  Widget _wideToolbar(
+    BuildContext context,
+    ThemeData theme,
+    ({int added, int removed}) counts,
+    List<int> hunks,
+  ) {
     if (compact) {
       return SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -917,6 +941,162 @@ class _ReviewDiffToolbar extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+enum _ReviewFileAction { ask, copy }
+
+class _ReviewPhoneDiffToolbar extends StatelessWidget {
+  const _ReviewPhoneDiffToolbar({
+    required this.diff,
+    required this.hunks,
+    required this.mode,
+    required this.onModeChanged,
+    required this.onCopy,
+    required this.onAsk,
+    required this.onHunk,
+  });
+
+  final FileDiff diff;
+  final List<int> hunks;
+  final ReviewDiffMode mode;
+  final ValueChanged<ReviewDiffMode> onModeChanged;
+  final VoidCallback onCopy;
+  final VoidCallback onAsk;
+  final void Function(int direction, List<int> hunks) onHunk;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final counts = diff.counts;
+    final canCopy = (diff.patch ?? diff.after ?? '').isNotEmpty;
+    return Semantics(
+      container: true,
+      label: 'Reviewing ${diff.file}',
+      child: Padding(
+        key: const Key('review-phone-toolbar'),
+        padding: const EdgeInsets.fromLTRB(12, 7, 4, 6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 3,
+                  height: 34,
+                  color: _statusColor(context, diff),
+                ),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Tooltip(
+                    message: diff.file,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _basename(diff.file),
+                          key: const Key('review-current-file-name'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontFamily: 'monospace',
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          '${_status(diff)}  +${counts.added} -${counts.removed}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                PopupMenuButton<_ReviewFileAction>(
+                  key: const Key('review-file-actions'),
+                  tooltip: 'File review actions',
+                  onSelected: (action) {
+                    switch (action) {
+                      case _ReviewFileAction.ask:
+                        onAsk();
+                      case _ReviewFileAction.copy:
+                        onCopy();
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: _ReviewFileAction.ask,
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(Icons.chat_bubble_outline_rounded),
+                        title: Text('Ask about file'),
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: _ReviewFileAction.copy,
+                      enabled: canCopy,
+                      child: const ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(Icons.content_copy_rounded),
+                        title: Text('Copy patch'),
+                      ),
+                    ),
+                  ],
+                  icon: const Icon(Icons.more_horiz_rounded),
+                ),
+              ],
+            ),
+            const SizedBox(height: 5),
+            Row(
+              children: [
+                Expanded(
+                  child: _ModeButton(
+                    key: const Key('review-mode-unified'),
+                    label: 'Unified',
+                    selected: mode == ReviewDiffMode.unified,
+                    onPressed: () => onModeChanged(ReviewDiffMode.unified),
+                  ),
+                ),
+                Expanded(
+                  child: _ModeButton(
+                    key: const Key('review-mode-split'),
+                    label: 'Split',
+                    selected: mode == ReviewDiffMode.split,
+                    onPressed: () => onModeChanged(ReviewDiffMode.split),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                SizedBox(
+                  width: 36,
+                  child: Text(
+                    '${hunks.length}',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.labelMedium,
+                    semanticsLabel:
+                        '${hunks.length} ${hunks.length == 1 ? 'hunk' : 'hunks'}',
+                  ),
+                ),
+                IconButton(
+                  key: const Key('review-previous-hunk'),
+                  tooltip: 'Previous hunk',
+                  onPressed: hunks.isEmpty ? null : () => onHunk(-1, hunks),
+                  icon: const Icon(Icons.arrow_upward_rounded, size: 20),
+                ),
+                IconButton(
+                  key: const Key('review-next-hunk'),
+                  tooltip: 'Next hunk',
+                  onPressed: hunks.isEmpty ? null : () => onHunk(1, hunks),
+                  icon: const Icon(Icons.arrow_downward_rounded, size: 20),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

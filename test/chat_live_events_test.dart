@@ -994,6 +994,62 @@ void main() {
     }
   });
 
+  testWidgets('renders grouped tool failures as flat inline results', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('assistant-errors', 'assistant', [
+          Part(
+            id: 'failed-edit',
+            messageID: 'assistant-errors',
+            type: 'tool',
+            toolName: 'edit',
+            toolState: ToolState.fromJson(const {
+              'status': 'error',
+              'input': {'filePath': '/workspace/lib/main.dart'},
+              'error': 'Tool execution aborted',
+            }, toolName: 'edit'),
+          ),
+          Part(
+            id: 'failed-shell',
+            messageID: 'assistant-errors',
+            type: 'tool',
+            toolName: 'bash',
+            toolState: ToolState.fromJson(const {
+              'status': 'error',
+              'input': {'command': 'flutter test'},
+              'error': 'Process exited before completion',
+            }, toolName: 'bash'),
+          ),
+        ]),
+      ];
+
+    await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('tool-call-group')), findsOneWidget);
+    expect(
+      find.byKey(const Key('embedded-tool-error-output')),
+      findsNWidgets(2),
+    );
+    expect(find.text('Tool execution aborted'), findsOneWidget);
+    expect(find.text('Process exited before completion'), findsOneWidget);
+    expect(find.byKey(const Key('standalone-tool-error-output')), findsNothing);
+
+    for (final result in tester.widgetList<Container>(
+      find.byKey(const Key('embedded-tool-error-output')),
+    )) {
+      final decoration = result.decoration! as BoxDecoration;
+      expect(decoration.color, isNull);
+      expect(decoration.borderRadius, isNull);
+      expect((decoration.border! as Border).top.style, BorderStyle.none);
+      expect((decoration.border! as Border).right.style, BorderStyle.none);
+      expect((decoration.border! as Border).bottom.style, BorderStyle.none);
+      expect((decoration.border! as Border).left.width, 2);
+    }
+  });
+
   testWidgets('keeps a tool chain growing across assistant records', (
     tester,
   ) async {

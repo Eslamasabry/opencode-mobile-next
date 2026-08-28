@@ -532,8 +532,14 @@ class _ToolCardState extends State<ToolCard> {
           if (_expanded && hasBody)
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(10, 4, 10, 10),
-              child: _ToolContractBody(contract: contract, state: widget.state),
+              padding: widget.embedded
+                  ? const EdgeInsets.fromLTRB(34, 0, 10, 8)
+                  : const EdgeInsets.fromLTRB(10, 4, 10, 10),
+              child: _ToolContractBody(
+                contract: contract,
+                state: widget.state,
+                embedded: widget.embedded,
+              ),
             ),
         ],
       ),
@@ -542,10 +548,15 @@ class _ToolCardState extends State<ToolCard> {
 }
 
 class _ToolContractBody extends StatelessWidget {
-  const _ToolContractBody({required this.contract, required this.state});
+  const _ToolContractBody({
+    required this.contract,
+    required this.state,
+    required this.embedded,
+  });
 
   final _ToolContract contract;
   final ToolState state;
+  final bool embedded;
 
   Map<String, dynamic> get _metadata =>
       state.metadata ?? const <String, dynamic>{};
@@ -553,7 +564,10 @@ class _ToolContractBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (state.status == 'error') {
-      return _ErrorOutput(message: state.output ?? 'Tool failed.');
+      return _ErrorOutput(
+        message: state.output ?? 'Tool failed.',
+        embedded: embedded,
+      );
     }
     return switch (contract.kind) {
       _ToolKind.read => _readBody(),
@@ -853,14 +867,39 @@ class _ToolContractBody extends StatelessWidget {
 }
 
 class _ErrorOutput extends StatelessWidget {
-  const _ErrorOutput({required this.message});
+  const _ErrorOutput({required this.message, required this.embedded});
 
   final String message;
+  final bool embedded;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final text = SelectableText(
+      message.replaceFirst(RegExp(r'^Error:\s*'), ''),
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+        color: scheme.onErrorContainer,
+        fontFamily: 'monospace',
+      ),
+    );
+    if (embedded) {
+      return Container(
+        key: const Key('embedded-tool-error-output'),
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(9, 5, 0, 5),
+        decoration: BoxDecoration(
+          border: Border(
+            left: BorderSide(
+              width: 2,
+              color: scheme.error.withValues(alpha: .72),
+            ),
+          ),
+        ),
+        child: text,
+      );
+    }
     return Container(
+      key: const Key('standalone-tool-error-output'),
       width: double.infinity,
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -868,13 +907,7 @@ class _ErrorOutput extends StatelessWidget {
         borderRadius: BorderRadius.circular(7),
         border: Border.all(color: scheme.error.withValues(alpha: .28)),
       ),
-      child: SelectableText(
-        message.replaceFirst(RegExp(r'^Error:\s*'), ''),
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: scheme.onErrorContainer,
-          fontFamily: 'monospace',
-        ),
-      ),
+      child: text,
     );
   }
 }

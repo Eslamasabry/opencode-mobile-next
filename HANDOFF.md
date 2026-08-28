@@ -56,6 +56,29 @@ a Git project, then health refreshes, while rejection stays inline and retryable
 Mobile `/health` opens this same native surface. No model or provider inventory
 is hardcoded.
 
+The latest app-readiness slice repairs two phone transcript/review defects and
+revalidates persisted artifacts. Review now uses a phone-specific toolbar below
+560dp: file truth and counts remain visible, Unified/Split and hunk navigation
+fit without horizontal clipping, and the lower-frequency Ask about file and Copy
+patch actions share one accessible overflow menu. A release-mode Pixel 6 opened
+the live 114-file Branch response from OpenCode `1.18.23` and exercised both menu
+actions. Consecutive tool calls still share one growing Tools surface, while
+embedded failures are now flat inline results with a slim error accent instead
+of cards nested inside that group. The same release build rendered this shape in
+an existing real chat.
+
+Old-chat image compatibility was proven from server persistence rather than a
+widget fixture. A disposable OpenCode session stored an assistant shell result
+whose exact output was `{"filePath":"/home/eslam/Storage/Code/oc_app/incoming-photo.jpg"}`
+before the updated APK was installed. After reinstall, the chat rendered the
+JPEG inline; its full preview showed MIME type and byte count, Attach to prompt
+added the original file to the composer, and Save to device opened Android's
+document destination picker with the correct filename. The two disposable test
+sessions were verified by exact ID (one artifact session and one empty session)
+before deletion. No user session was removed. Final-tree Flutter analysis is
+clean and all 402 tests pass serially. The test-signed APK was used only on the
+emulator and was not published or distributed.
+
 A live release-mode Pixel 6 check against OpenCode `1.18.23` also found and fixed
 a location-integrity defect: mounting Workspace could overwrite a directory
 selected from the global session finder with the server project root. Workspace

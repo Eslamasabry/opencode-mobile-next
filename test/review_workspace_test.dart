@@ -273,4 +273,44 @@ void main() {
     expect(find.byKey(const Key('review-mode-unified')), findsOneWidget);
     expect(find.text('+after'), findsOneWidget);
   });
+
+  testWidgets('fits primary review actions on a phone without a clipped strip', (
+    tester,
+  ) async {
+    await _pumpReview(
+      tester,
+      () async => [
+        FileDiff(
+          file:
+              '.github/workflows/a-very-long-android-quality-workflow-name.yml',
+          patch: '@@ -0,0 +1,2 @@\n+name: Android quality\n+on: push',
+          additions: 2,
+          deletions: 0,
+          status: 'added',
+        ),
+      ],
+      size: const Size(360, 800),
+    );
+
+    expect(tester.takeException(), isNull);
+    expect(find.byKey(const Key('review-phone-toolbar')), findsOneWidget);
+    expect(find.byKey(const Key('review-current-file-name')), findsOneWidget);
+
+    for (final key in const [
+      Key('review-mode-unified'),
+      Key('review-mode-split'),
+      Key('review-previous-hunk'),
+      Key('review-next-hunk'),
+      Key('review-file-actions'),
+    ]) {
+      final rect = tester.getRect(find.byKey(key));
+      expect(rect.left, greaterThanOrEqualTo(0), reason: '$key left edge');
+      expect(rect.right, lessThanOrEqualTo(360), reason: '$key right edge');
+    }
+
+    await tester.tap(find.byKey(const Key('review-file-actions')));
+    await tester.pumpAndSettle();
+    expect(find.text('Ask about file'), findsOneWidget);
+    expect(find.text('Copy patch'), findsOneWidget);
+  });
 }
