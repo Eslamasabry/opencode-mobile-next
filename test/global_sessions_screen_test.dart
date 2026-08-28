@@ -315,7 +315,11 @@ void main() {
     final repository = _FinderRepository(
       (query) async => [
         _result(1, directory: '/work/active'),
+        // Plain cross-directory rows never offer steal: live OpenCode
+        // refuses /sync/steal outside the workspace sync system, and plain
+        // directory transfer remains the /move workflow.
         _result(2, directory: '/work/other'),
+        _result(3, directory: '/work/other', workspace: 'ws-remote'),
       ],
     );
     final controller = await _controller(repository);
@@ -325,14 +329,16 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('steal-session-ses_1')), findsNothing);
-    expect(find.byKey(const ValueKey('steal-session-ses_2')), findsOneWidget);
+    expect(find.byKey(const ValueKey('steal-session-ses_2')), findsNothing);
+    expect(find.byKey(const ValueKey('steal-session-ses_3')), findsOneWidget);
   });
 
   testWidgets('stealing confirms, calls the repository, and opens the chat', (
     tester,
   ) async {
     final repository = _FinderRepository(
-      (query) async => [_result(2, directory: '/work/other')],
+      (query) async =>
+          [_result(2, directory: '/work/other', workspace: 'ws-remote')],
     );
     final controller = await _controller(repository);
     controller.directory = '/work/active';
@@ -366,7 +372,8 @@ void main() {
     tester,
   ) async {
     final repository = _FinderRepository(
-      (query) async => [_result(2, directory: '/work/other')],
+      (query) async =>
+          [_result(2, directory: '/work/other', workspace: 'ws-remote')],
     )..stealError = const ProductException('Sync is unavailable');
     final controller = await _controller(repository);
     controller.directory = '/work/active';
@@ -394,7 +401,8 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(320, 640));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final repository = _FinderRepository(
-      (query) async => [_result(2, directory: '/work/other')],
+      (query) async =>
+          [_result(2, directory: '/work/other', workspace: 'ws-remote')],
     );
     final controller = await _controller(repository);
     controller.directory = '/work/active';

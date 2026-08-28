@@ -179,17 +179,22 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
     }
   }
 
-  /// True when the session lives in a different directory or workspace than
-  /// the active location, so continuing it here requires a steal.
+  /// True when a steal can genuinely move this session here. Live OpenCode
+  /// 1.18.23 refuses `/sync/steal` (BadRequest) for plain cross-directory
+  /// sessions — steal operates on the workspace sync system only, and plain
+  /// directory transfer remains the /move workflow. So the affordance shows
+  /// only when a workspace is involved on either side, never for ordinary
+  /// cross-project rows.
   bool _isElsewhere(GlobalSessionResult result) {
     final active = widget.controller.directory?.trim() ?? '';
     if (active.isEmpty) return false;
-    final sessionDirectory =
-        (result.session.directory ?? result.projectDirectory)?.trim() ?? '';
     final activeWorkspace = widget.controller.workspace?.trim() ?? '';
     final sessionWorkspace = result.session.workspaceID?.trim() ?? '';
-    if (sessionDirectory.isNotEmpty && sessionDirectory != active) return true;
-    return sessionWorkspace != activeWorkspace;
+    if (sessionWorkspace.isEmpty && activeWorkspace.isEmpty) return false;
+    if (sessionWorkspace != activeWorkspace) return true;
+    final sessionDirectory =
+        (result.session.directory ?? result.projectDirectory)?.trim() ?? '';
+    return sessionDirectory.isNotEmpty && sessionDirectory != active;
   }
 
   Future<void> _steal(GlobalSessionResult result) async {

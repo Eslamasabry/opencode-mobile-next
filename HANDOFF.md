@@ -111,8 +111,28 @@ Slice four (owner-directed, partly built by three parallel worktree agents):
   (plus legacy 4747 mapped) against the user's real emulator profile;
   read-only — no prompts sent, no sessions mutated.
 
-Remaining facelift lanes: session-steal UI; reconsidering Terminal's
-bottom-nav slot; list-item motion; remaining empty-state upgrades.
+Slice five (owner-directed parallel build): session-steal UI (workspace-
+scoped after live 1.18.23 proof that `/sync/steal` rejects plain
+cross-directory sessions with BadRequest even after `sync.start` — plain
+directory transfer stays `/move`; a positive live steal needs a managed
+workspace, which this server does not expose), first-run welcome flow with
+URL normalization and a live Test-connection verdict (device-verified end to
+end: bare `127.0.0.1:4096` normalized to http on Test, `Connected — OpenCode
+1.18.23 answered`, saved, connected; note the editor still pre-seeds
+`https://` so typed-over text keeps that scheme — follow-up polish), Ubuntu
+host management (script + copy-only Settings surface), message deletion
+(part-patching deliberately skipped as invisible history rewriting),
+notification permission/question actions (Dart-tested and lint-clean; full
+device proof deferred — it needs a permission-gated model run), Linux
+desktop scaffold + feasibility study (unmodified app builds a working Linux
+binary; Shorebird is the only desktop gap), Ctrl/Cmd+Enter send, and a
+one-contextual-banner cap in chat. Background-task caution: long background
+harness tasks were SIGKILLed on this loaded machine while identical
+foreground runs survived — run builds/suites foreground when it recurs.
+
+Remaining facelift lanes: reconsidering Terminal's bottom-nav slot;
+list-item motion; remaining empty-state upgrades; onboarding editor
+pre-seed rethink.
 
 ## Production Android hardening branch
 
