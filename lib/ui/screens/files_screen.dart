@@ -1172,7 +1172,6 @@ class __FileViewerState extends State<_FileViewer> {
                     : '${widget.path} · Line ${widget.initialLine}',
                 style: theme.textTheme.labelSmall!.copyWith(
                   color: theme.hintColor,
-                  fontSize: 10,
                 ),
               ),
             ),
