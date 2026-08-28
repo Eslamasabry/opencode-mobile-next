@@ -53,6 +53,13 @@ Future<ConnectionController> _controllerFor(String baseUrl) async {
     ..status = StreamStatus.connected;
 }
 
+Future<void> _openServerCategory(WidgetTester tester) async {
+  final row = find.byKey(const ValueKey('settings-category-server'));
+  await tester.ensureVisible(row);
+  await tester.tap(row);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   test('the ubuntu host script passes bash syntax validation', () {
     final result = Process.runSync('bash', [
@@ -72,6 +79,7 @@ void main() {
       MaterialApp(home: SettingsScreen(controller: controller)),
     );
     await tester.pumpAndSettle();
+    await _openServerCategory(tester);
 
     await tester.scrollUntilVisible(
       find.byKey(const Key('host-management-entry')),
@@ -103,6 +111,7 @@ void main() {
       MaterialApp(home: SettingsScreen(controller: controller)),
     );
     await tester.pumpAndSettle();
+    await _openServerCategory(tester);
 
     expect(find.byKey(const Key('host-management-entry')), findsNothing);
   });
