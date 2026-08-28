@@ -398,13 +398,37 @@ class IntegrationInfo {
   final String id;
   final String name;
   final List<IntegrationMethodInfo> methods;
+  final List<IntegrationConnectionInfo> connections;
   final int connectionCount;
 
   const IntegrationInfo({
     required this.id,
     required this.name,
     required this.methods,
+    this.connections = const [],
     required this.connectionCount,
+  });
+
+  List<String> get credentialIDs => connections
+      .where((connection) => connection.type == 'credential')
+      .map((connection) => connection.id)
+      .whereType<String>()
+      .where((id) => id.isNotEmpty)
+      .toList(growable: false);
+
+  bool get hasEnvironmentConnection =>
+      connections.any((connection) => connection.type == 'env');
+}
+
+class IntegrationConnectionInfo {
+  final String type;
+  final String? id;
+  final String label;
+
+  const IntegrationConnectionInfo({
+    required this.type,
+    this.id,
+    required this.label,
   });
 }
 
@@ -641,6 +665,7 @@ abstract class ProductRepository {
   );
   Future<List<IntegrationInfo>> listIntegrations();
   Future<void> connectIntegrationKey(String id, String key, {String? label});
+  Future<void> disconnectIntegration(IntegrationInfo integration);
   Future<void> refreshProviderRuntime();
   Future<IntegrationAuthLaunch> startIntegrationOAuth(
     String id,
@@ -1335,40 +1360,59 @@ class SdkProductRepository
   }
 
   @override
-  Future<List<IntegrationInfo>> listIntegrations() =>
-      _guard('Could not load integrations', () async {
-        final response = await _client.getIntegrationsApi().v2IntegrationList(
-          locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
-          locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
-        );
-        return (response.data?.data ?? const []).map((integration) {
-          return IntegrationInfo(
-            id: integration.id,
-            name: integration.name,
-            methods: integration.methods.map((method) {
-              final value = method.objectValue ?? const <String, dynamic>{};
+  Future<List<IntegrationInfo>> listIntegrations() => _guard(
+    'Could not load integrations',
+    () async {
+      final response = await _client.getIntegrationsApi().v2IntegrationList(
+        locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
+        locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
+      );
+      return (response.data?.data ?? const []).map((integration) {
+        final connections = integration.connections
+            .map((connection) {
+              final value = connection.objectValue ?? const <String, dynamic>{};
               final type = (value['type'] ?? 'unknown').toString();
-              final names = value['names'];
-              final prompts = value['prompts'];
-              return IntegrationMethodInfo(
+              return IntegrationConnectionInfo(
                 type: type,
                 id: value['id']?.toString(),
-                label: (value['label'] ?? _methodLabel(type)).toString(),
-                prompts: prompts is List
-                    ? prompts
-                          .whereType<Map>()
-                          .map((item) => Map<String, dynamic>.from(item))
-                          .toList()
-                    : const [],
-                environmentNames: names is List
-                    ? names.map((name) => name.toString()).toList()
-                    : const [],
+                label: switch (type) {
+                  'credential' =>
+                    (value['label'] ?? 'Stored credential').toString(),
+                  'env' => (value['name'] ?? 'Server environment').toString(),
+                  _ => 'Server-managed connection',
+                },
               );
-            }).toList(),
-            connectionCount: integration.connections.length,
-          );
-        }).toList();
-      });
+            })
+            .toList(growable: false);
+        return IntegrationInfo(
+          id: integration.id,
+          name: integration.name,
+          methods: integration.methods.map((method) {
+            final value = method.objectValue ?? const <String, dynamic>{};
+            final type = (value['type'] ?? 'unknown').toString();
+            final names = value['names'];
+            final prompts = value['prompts'];
+            return IntegrationMethodInfo(
+              type: type,
+              id: value['id']?.toString(),
+              label: (value['label'] ?? _methodLabel(type)).toString(),
+              prompts: prompts is List
+                  ? prompts
+                        .whereType<Map>()
+                        .map((item) => Map<String, dynamic>.from(item))
+                        .toList()
+                  : const [],
+              environmentNames: names is List
+                  ? names.map((name) => name.toString()).toList()
+                  : const [],
+            );
+          }).toList(),
+          connections: connections,
+          connectionCount: connections.length,
+        );
+      }).toList();
+    },
+  );
 
   @override
   Future<void> connectIntegrationKey(String id, String key, {String? label}) =>
@@ -1391,6 +1435,73 @@ class SdkProductRepository
           auth: sdk.Auth({'type': 'api', 'key': key}),
         );
         await refreshProviderRuntime();
+      });
+
+  @override
+  Future<void> disconnectIntegration(IntegrationInfo integration) =>
+      _guard('Could not disconnect the provider', () async {
+        final credentialIDs = integration.credentialIDs.toSet().toList();
+        if (credentialIDs.isEmpty) {
+          throw const ProductException(
+            'This provider is connected through the server environment and '
+            'cannot be disconnected from mobile',
+          );
+        }
+
+        // OpenCode 1.18.x can retain the same key in its legacy provider auth
+        // store and its v2 integration credential store. Remove the legacy
+        // copy first: if that write fails, the visible v2 connection remains
+        // untouched and the user can safely retry from this row.
+        try {
+          final response = await _client.getControlApi().authRemove(
+            providerID: integration.id,
+          );
+          if (response.data != true) {
+            throw StateError('The server did not confirm auth removal');
+          }
+        } catch (error) {
+          throw ProductException(
+            'OpenCode could not remove the provider runtime credential. '
+            'Nothing else was removed; try again.',
+            cause: error,
+          );
+        }
+
+        Object? credentialFailure;
+        for (final credentialID in credentialIDs) {
+          try {
+            await _client.getOpencodeHttpApiApi().v2CredentialRemove(
+              credentialID: credentialID,
+              locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
+              locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
+            );
+          } catch (error) {
+            credentialFailure ??= error;
+          }
+        }
+
+        Object? refreshFailure;
+        try {
+          await refreshProviderRuntime();
+        } catch (error) {
+          refreshFailure = error;
+        }
+
+        if (credentialFailure != null) {
+          throw ProductException(
+            'The runtime credential was removed, but OpenCode could not '
+            'remove every stored connection. The connection remains visible '
+            'so you can retry.',
+            cause: credentialFailure,
+          );
+        }
+        if (refreshFailure != null) {
+          throw ProductException(
+            'The provider credentials were removed, but OpenCode could not '
+            'refresh its model runtime. Reconnect or restart the server.',
+            cause: refreshFailure,
+          );
+        }
       });
 
   @override

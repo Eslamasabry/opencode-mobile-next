@@ -9,7 +9,7 @@ Authoritative inputs:
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app
-currently calls **76 generated operations directly**. It also uses a set of
+currently calls **78 generated operations directly**. It also uses a set of
 older or compatibility routes through `OpenCodeApi` and raw `Dio`; those are
 listed separately so a working feature is not incorrectly labelled missing.
 
@@ -24,7 +24,7 @@ Legend:
 |---|---|---|---|
 | Commands | `v2CommandList` | - | - |
 | Config | `configGet`, `configUpdate` | `configProviders` | - |
-| Control | `authSet` | - | `appLog`, `authRemove` |
+| Control | `authSet`, `authRemove` | - | `appLog` |
 | Control plane | `experimentalControlPlaneMoveSession` | - | - |
 | Event | - | `eventSubscribe` through the shared `/event` SSE transport | Generated event transport is unused |
 | Events v2 | - | Some v2-shaped events are reduced from the legacy stream | `v2EventSubscribe` |
@@ -37,7 +37,7 @@ Legend:
 | MCP | status, connect, disconnect, auth start | - | add, auth authenticate/callback/remove |
 | Messages v2 | - | legacy session message list | `v2SessionMessages` |
 | Models v2 | - | raw `/api/model` catalog parser | `v2ModelList` generated model is unused |
-| OpenCode HTTP v2 | - | raw `/api/agent` catalog parser | agent list, credential update/remove, health, location |
+| OpenCode HTTP v2 | credential remove | raw `/api/agent` catalog parser | agent list, credential update, health, location |
 | Permission | list, reply, deprecated session reply fallback | - | - |
 | Permissions v2 | request list, session reply, saved permission list/remove | - | per-session create/get/list |
 | Project | `projectList`, `projectDirectories`, current project | - | Git init, update |
@@ -65,7 +65,14 @@ Legend:
    automatic callbacks on resume or demand, accepts code-based completion,
    supports cancellation, and refreshes provider/model inventories only after
    the server confirms completion.
-3. **Coding health and navigation:** VCS status/info, LSP, and formatter status now share one
+3. **Provider access removal:** stored integration credentials can now be
+   revoked from the same native provider row. The app uses OpenCode's exact
+   returned credential ID for the v2 store and the exact integration ID for
+   the legacy runtime store; it does not infer aliases. Legacy removal happens
+   first so a failure leaves the visible v2 connection untouched for retry.
+   Environment-backed connections remain explicitly server-managed because
+   mobile cannot remove the server process environment.
+4. **Coding health and navigation:** VCS status/info, LSP, and formatter status now share one
    flat Project health surface in the selected workspace. Each section fails
    independently so one unavailable endpoint does not hide valid server truth.
    Files now has adjacent Files and Symbols tabs; generated LSP symbol results
@@ -80,14 +87,14 @@ Legend:
    formatted Markdown tables, fenced code, selection, and an explicit raw view.
    Project references are actionable from their native screen and preserve
    OpenCode's `@name` plus `file://` directory-part prompt contract.
-4. **Session location and organization parity:** `/move`, `/warp`, and `/org`
+5. **Session location and organization parity:** `/move`, `/warp`, and `/org`
    now use their generated contracts instead of redirecting to the generic
    workspace screen. Move can transfer working changes, warp can copy them to
    a connected workspace or return Local, and organization switching disposes
    and rebuilds the location-scoped transport so providers and models reload.
    Servers without workspace-status support retain their workspace list with
    an unknown status rather than losing the entire surface.
-5. **Transport modernization:** migrate compatibility routes to generated v2
+6. **Transport modernization:** migrate compatibility routes to generated v2
    APIs only where current and older OpenCode contracts can be reconciled
    without losing sessions, events, or provider inventory. The highest-volume
    async prompt path now uses `session.prompt_async` directly while preserving

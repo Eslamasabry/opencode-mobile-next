@@ -17,6 +17,7 @@ class _IntegrationsRepository implements ProductRepository {
   Object? serverError;
   Object? resourceError;
   Object? integrationError;
+  Object? providerDisconnectError;
   String mcpAuthorizationUrl = 'https://mcp-auth.example.com/authorize';
   IntegrationAuthLaunch oauthLaunch = const IntegrationAuthLaunch(
     attemptID: 'attempt-1',
@@ -33,7 +34,9 @@ class _IntegrationsRepository implements ProductRepository {
   int oauthCompleteCalls = 0;
   int oauthCancelCalls = 0;
   int providerRefreshCalls = 0;
+  int providerDisconnectCalls = 0;
   int mcpConnectCalls = 0;
+  IntegrationInfo? disconnectedIntegration;
   String? oauthCompletionCode;
 
   @override
@@ -104,6 +107,30 @@ class _IntegrationsRepository implements ProductRepository {
   }
 
   @override
+  Future<void> disconnectIntegration(IntegrationInfo integration) async {
+    providerDisconnectCalls++;
+    disconnectedIntegration = integration;
+    if (providerDisconnectError case final error?) throw error;
+    integrations = [
+      for (final current in integrations)
+        if (current.id != integration.id)
+          current
+        else
+          IntegrationInfo(
+            id: current.id,
+            name: current.name,
+            methods: current.methods,
+            connections: current.connections
+                .where((connection) => connection.type != 'credential')
+                .toList(),
+            connectionCount: current.connections
+                .where((connection) => connection.type != 'credential')
+                .length,
+          ),
+    ];
+  }
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -137,10 +164,18 @@ Future<ConnectionController> _controller(ProductRepository repository) async {
 Widget _app(
   ConnectionController controller, {
   Future<bool> Function(Uri destination)? authorizationLauncher,
+  double textScale = 1,
 }) => MaterialApp(
-  home: IntegrationsScreen(
-    controller: controller,
-    authorizationLauncher: authorizationLauncher,
+  home: Builder(
+    builder: (context) => MediaQuery(
+      data: MediaQuery.of(
+        context,
+      ).copyWith(textScaler: TextScaler.linear(textScale)),
+      child: IntegrationsScreen(
+        controller: controller,
+        authorizationLauncher: authorizationLauncher,
+      ),
+    ),
   ),
 );
 
@@ -244,6 +279,185 @@ void main() {
     expect(find.text('Connected\n(server-managed)'), findsOneWidget);
     expect(find.text('Connect'), findsOneWidget);
   });
+
+  testWidgets(
+    'stored provider credential requires confirmation before disconnect',
+    (tester) async {
+      final repository = _IntegrationsRepository()
+        ..integrations = const [
+          IntegrationInfo(
+            id: 'cloud',
+            name: 'Cloud Provider',
+            methods: [IntegrationMethodInfo(type: 'key', label: 'API key')],
+            connections: [
+              IntegrationConnectionInfo(
+                type: 'credential',
+                id: 'credential-1',
+                label: 'Personal key',
+              ),
+            ],
+            connectionCount: 1,
+          ),
+        ];
+      final controller = await _controller(repository);
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(_app(controller));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Stored credential: Personal key'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('disconnect-provider-cloud')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Disconnect Cloud Provider?'), findsOneWidget);
+      expect(
+        find.textContaining('An active response is not stopped'),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(repository.providerDisconnectCalls, 0);
+
+      await tester.tap(find.byKey(const ValueKey('disconnect-provider-cloud')));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('confirm-provider-disconnect')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(repository.providerDisconnectCalls, 1);
+      expect(repository.disconnectedIntegration?.id, 'cloud');
+      expect(repository.disconnectedIntegration?.credentialIDs, [
+        'credential-1',
+      ]);
+      expect(find.text('Cloud Provider disconnected'), findsOneWidget);
+      expect(find.text('Connect'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'environment provider explains that mobile cannot disconnect it',
+    (tester) async {
+      final repository = _IntegrationsRepository()
+        ..integrations = const [
+          IntegrationInfo(
+            id: 'environment-provider',
+            name: 'Environment Provider',
+            methods: [
+              IntegrationMethodInfo(
+                type: 'env',
+                label: 'Server environment',
+                environmentNames: ['PROVIDER_TOKEN'],
+              ),
+            ],
+            connections: [
+              IntegrationConnectionInfo(type: 'env', label: 'PROVIDER_TOKEN'),
+            ],
+            connectionCount: 1,
+          ),
+        ];
+      final controller = await _controller(repository);
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(_app(controller));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Server environment: PROVIDER_TOKEN'), findsOneWidget);
+      expect(find.text('Server\nenvironment'), findsOneWidget);
+      expect(find.text('Disconnect'), findsNothing);
+      expect(repository.providerDisconnectCalls, 0);
+    },
+  );
+
+  testWidgets('failed provider disconnect keeps its action visible for retry', (
+    tester,
+  ) async {
+    final repository = _IntegrationsRepository()
+      ..providerDisconnectError = const ProductException(
+        'The connection remains visible so you can retry.',
+      )
+      ..integrations = const [
+        IntegrationInfo(
+          id: 'cloud',
+          name: 'Cloud Provider',
+          methods: [IntegrationMethodInfo(type: 'key', label: 'API key')],
+          connections: [
+            IntegrationConnectionInfo(
+              type: 'credential',
+              id: 'credential-1',
+              label: 'Personal key',
+            ),
+          ],
+          connectionCount: 1,
+        ),
+      ];
+    final controller = await _controller(repository);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('disconnect-provider-cloud')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('confirm-provider-disconnect')));
+    await tester.pumpAndSettle();
+
+    expect(repository.providerDisconnectCalls, 1);
+    expect(
+      find.text('The connection remains visible so you can retry.'),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('disconnect-provider-cloud')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'provider disconnect confirmation fits a compact large-text phone',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 480);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final repository = _IntegrationsRepository()
+        ..integrations = const [
+          IntegrationInfo(
+            id: 'cloud',
+            name: 'Cloud Provider',
+            methods: [IntegrationMethodInfo(type: 'key', label: 'API key')],
+            connections: [
+              IntegrationConnectionInfo(
+                type: 'credential',
+                id: 'credential-1',
+                label: 'Personal key',
+              ),
+            ],
+            connectionCount: 1,
+          ),
+        ];
+      final controller = await _controller(repository);
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(_app(controller, textScale: 2));
+      await tester.pumpAndSettle();
+      final disconnect = find.byKey(
+        const ValueKey('disconnect-provider-cloud'),
+      );
+      await tester.scrollUntilVisible(disconnect, 160);
+      await Scrollable.ensureVisible(
+        tester.element(disconnect),
+        alignment: 0.5,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(disconnect);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Disconnect Cloud Provider?'), findsOneWidget);
+      expect(find.text('Cancel'), findsOneWidget);
+      expect(find.text('Disconnect provider'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('MCP resources remain available when integrations fail', (
     tester,

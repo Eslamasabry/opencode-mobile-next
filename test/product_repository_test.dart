@@ -635,6 +635,255 @@ void main() {
   );
 
   test(
+    'provider disconnect removes exact legacy and v2 credentials then refreshes',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        final requests = <({String method, Uri uri})>[];
+        server.listen((request) async {
+          requests.add((method: request.method, uri: request.uri));
+          request.response.headers.contentType = ContentType.json;
+          if (request.uri.path.startsWith('/api/credential/')) {
+            request.response.statusCode = HttpStatus.noContent;
+          } else {
+            request.response.write('true');
+          }
+          await request.response.close();
+        });
+
+        try {
+          final api = OpenCodeApi(
+            baseUrl: 'http://${server.address.host}:${server.port}',
+          );
+          final repository = SdkProductRepository(api.sdkClient)
+            ..setLocation(directory: '/root', workspace: 'phone');
+
+          await repository.disconnectIntegration(
+            const IntegrationInfo(
+              id: 'zai-coding-plan',
+              name: 'Z.AI Coding Plan',
+              methods: [],
+              connections: [
+                IntegrationConnectionInfo(
+                  type: 'credential',
+                  id: 'credential/phone key',
+                  label: 'Phone key',
+                ),
+              ],
+              connectionCount: 1,
+            ),
+          );
+
+          expect(requests.map((request) => request.method), [
+            'DELETE',
+            'DELETE',
+            'POST',
+            'POST',
+          ]);
+          expect(requests.map((request) => request.uri.path), [
+            '/auth/zai-coding-plan',
+            '/api/credential/credential%2Fphone%20key',
+            '/instance/dispose',
+            '/instance/dispose',
+          ]);
+          expect(requests[1].uri.queryParameters, {
+            'location[directory]': '/root',
+            'location[workspace]': 'phone',
+          });
+          expect(requests[2].uri.queryParameters, {
+            'directory': '/root',
+            'workspace': 'phone',
+          });
+          expect(requests[3].uri.queryParameters, isEmpty);
+        } finally {
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
+
+  test(
+    'integration listing retains exact credential and environment identities',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        server.listen((request) async {
+          request.response.headers.contentType = ContentType.json;
+          request.response.write(
+            jsonEncode({
+              'location': {
+                'directory': '/root',
+                'workspaceID': 'phone',
+                'project': {'id': 'project-1', 'directory': '/root'},
+              },
+              'data': [
+                {
+                  'id': 'cloud',
+                  'name': 'Cloud Provider',
+                  'methods': [
+                    {'type': 'key', 'label': 'API key'},
+                    {
+                      'type': 'env',
+                      'names': ['CLOUD_TOKEN'],
+                    },
+                  ],
+                  'connections': [
+                    {
+                      'type': 'credential',
+                      'id': 'credential-1',
+                      'label': 'Phone key',
+                    },
+                    {'type': 'env', 'name': 'CLOUD_TOKEN'},
+                  ],
+                },
+              ],
+            }),
+          );
+          await request.response.close();
+        });
+
+        try {
+          final api = OpenCodeApi(
+            baseUrl: 'http://${server.address.host}:${server.port}',
+          );
+          final repository = SdkProductRepository(api.sdkClient)
+            ..setLocation(directory: '/root', workspace: 'phone');
+
+          final integration = (await repository.listIntegrations()).single;
+
+          expect(integration.id, 'cloud');
+          expect(integration.connectionCount, 2);
+          expect(integration.credentialIDs, ['credential-1']);
+          expect(integration.hasEnvironmentConnection, isTrue);
+          expect(
+            integration.connections.map((connection) => connection.label),
+            ['Phone key', 'CLOUD_TOKEN'],
+          );
+        } finally {
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
+
+  test(
+    'provider disconnect preserves visible v2 connection when legacy removal fails',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        final requests = <({String method, Uri uri})>[];
+        server.listen((request) async {
+          requests.add((method: request.method, uri: request.uri));
+          request.response.statusCode = HttpStatus.internalServerError;
+          request.response.headers.contentType = ContentType.json;
+          request.response.write(jsonEncode({'message': 'write failed'}));
+          await request.response.close();
+        });
+
+        try {
+          final api = OpenCodeApi(
+            baseUrl: 'http://${server.address.host}:${server.port}',
+          );
+          final repository = SdkProductRepository(api.sdkClient)
+            ..setLocation(directory: '/root', workspace: 'phone');
+          const integration = IntegrationInfo(
+            id: 'cloud',
+            name: 'Cloud',
+            methods: [],
+            connections: [
+              IntegrationConnectionInfo(
+                type: 'credential',
+                id: 'credential-1',
+                label: 'default',
+              ),
+            ],
+            connectionCount: 1,
+          );
+
+          await expectLater(
+            repository.disconnectIntegration(integration),
+            throwsA(
+              isA<ProductException>().having(
+                (error) => error.message,
+                'message',
+                contains('Nothing else was removed'),
+              ),
+            ),
+          );
+
+          expect(requests, hasLength(1));
+          expect(requests.single.method, 'DELETE');
+          expect(requests.single.uri.path, '/auth/cloud');
+        } finally {
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
+
+  test(
+    'provider disconnect refreshes runtime and reports a retained v2 credential',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        final requests = <({String method, Uri uri})>[];
+        server.listen((request) async {
+          requests.add((method: request.method, uri: request.uri));
+          request.response.headers.contentType = ContentType.json;
+          if (request.uri.path.startsWith('/api/credential/')) {
+            request.response.statusCode = HttpStatus.internalServerError;
+            request.response.write(jsonEncode({'message': 'database busy'}));
+          } else {
+            request.response.write('true');
+          }
+          await request.response.close();
+        });
+
+        try {
+          final api = OpenCodeApi(
+            baseUrl: 'http://${server.address.host}:${server.port}',
+          );
+          final repository = SdkProductRepository(api.sdkClient)
+            ..setLocation(directory: '/root', workspace: 'phone');
+          const integration = IntegrationInfo(
+            id: 'cloud',
+            name: 'Cloud',
+            methods: [],
+            connections: [
+              IntegrationConnectionInfo(
+                type: 'credential',
+                id: 'credential-1',
+                label: 'default',
+              ),
+            ],
+            connectionCount: 1,
+          );
+
+          await expectLater(
+            repository.disconnectIntegration(integration),
+            throwsA(
+              isA<ProductException>().having(
+                (error) => error.message,
+                'message',
+                contains('connection remains visible'),
+              ),
+            ),
+          );
+
+          expect(requests.map((request) => request.uri.path), [
+            '/auth/cloud',
+            '/api/credential/credential-1',
+            '/instance/dispose',
+            '/instance/dispose',
+          ]);
+        } finally {
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
+
+  test(
     'project health uses generated VCS, LSP, and formatter contracts',
     () async {
       await HttpOverrides.runZoned(() async {

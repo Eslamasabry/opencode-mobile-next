@@ -706,26 +706,12 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
               )
             else
               for (final presented in presentIntegrations(_integrations!))
-                ListTile(
-                  leading: const Icon(Icons.link_rounded),
-                  title: Text(presented.name),
-                  subtitle: Text(_integrationSubtitle(presented.integration)),
-                  trailing: presented.connected
-                      ? const Text(
-                          'Connected\n(server-managed)',
-                          textAlign: TextAlign.end,
-                        )
-                      : TextButton(
-                          onPressed:
-                              presented.integration.methods.any(
-                                (method) =>
-                                    method.type == 'key' ||
-                                    method.type == 'oauth',
-                              )
-                              ? () => _connectIntegration(presented.integration)
-                              : null,
-                          child: const Text('Connect'),
-                        ),
+                _ProviderIntegrationTile(
+                  presented: presented,
+                  subtitle: _integrationSubtitle(presented.integration),
+                  busy: _busy.contains(presented.integration.id),
+                  onConnect: () => _connectIntegration(presented.integration),
+                  onDisconnect: () => _disconnectIntegration(presented),
                 ),
             const SectionLabel('Available resources'),
             if (_resourceError != null)
@@ -817,6 +803,17 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   };
 
   String _integrationSubtitle(IntegrationInfo integration) {
+    if (integration.connections.isNotEmpty) {
+      return integration.connections
+          .map((connection) {
+            return switch (connection.type) {
+              'credential' => 'Stored credential: ${connection.label}',
+              'env' => 'Server environment: ${connection.label}',
+              _ => connection.label,
+            };
+          })
+          .join(' - ');
+    }
     if (integration.methods.isEmpty) return 'No connection methods available';
     return integration.methods
         .map((method) {
@@ -829,6 +826,55 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
           return method.label;
         })
         .join(' - ');
+  }
+
+  Future<void> _disconnectIntegration(PresentedIntegration presented) async {
+    final integration = presented.integration;
+    final environmentRemains = integration.hasEnvironmentConnection;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        scrollable: true,
+        title: Text('Disconnect ${presented.name}?'),
+        content: Text(
+          'The stored credential will be removed from this OpenCode server. '
+          'New prompts will stop using it after the provider runtime refreshes. '
+          'An active response is not stopped.'
+          '${environmentRemains ? '\n\nThis provider also uses the server environment, which mobile cannot remove and which will remain active.' : ''}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            key: const ValueKey('confirm-provider-disconnect'),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Disconnect provider'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    await _runIntegrationAction(integration.id, () async {
+      final repository = await _requireActionRepository();
+      await repository.disconnectIntegration(integration);
+      await Future.wait([
+        _loadIntegrations(repository),
+        widget.controller.refreshCatalog(),
+      ]);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            environmentRemains
+                ? '${presented.name} credential removed; server environment remains active'
+                : '${presented.name} disconnected',
+          ),
+        ),
+      );
+    });
   }
 
   Future<void> _connectIntegration(IntegrationInfo integration) async {
@@ -1076,6 +1122,85 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     _integrationLoadGeneration++;
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+}
+
+class _ProviderIntegrationTile extends StatelessWidget {
+  final PresentedIntegration presented;
+  final String subtitle;
+  final bool busy;
+  final VoidCallback onConnect;
+  final VoidCallback onDisconnect;
+
+  const _ProviderIntegrationTile({
+    required this.presented,
+    required this.subtitle,
+    required this.busy,
+    required this.onConnect,
+    required this.onDisconnect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final textScale = MediaQuery.textScalerOf(context).scale(1);
+        final stackAction = constraints.maxWidth < 400 && textScale > 1.3;
+        final action = _action();
+        return ListTile(
+          leading: const Icon(Icons.link_rounded),
+          title: Text(presented.name),
+          subtitle: stackAction
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(subtitle),
+                    if (action != null) ...[
+                      const SizedBox(height: 4),
+                      Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: action,
+                      ),
+                    ],
+                  ],
+                )
+              : Text(subtitle),
+          trailing: stackAction ? null : action,
+        );
+      },
+    );
+  }
+
+  Widget? _action() {
+    final integration = presented.integration;
+    if (integration.credentialIDs.isNotEmpty) {
+      if (busy) {
+        return const SizedBox.square(
+          dimension: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        );
+      }
+      return TextButton(
+        key: ValueKey('disconnect-provider-${integration.id}'),
+        onPressed: onDisconnect,
+        child: const Text('Disconnect'),
+      );
+    }
+    if (presented.connected) {
+      return Text(
+        integration.hasEnvironmentConnection
+            ? 'Server\nenvironment'
+            : 'Connected\n(server-managed)',
+        textAlign: TextAlign.end,
+      );
+    }
+    final canConnect = integration.methods.any(
+      (method) => method.type == 'key' || method.type == 'oauth',
+    );
+    return TextButton(
+      onPressed: !busy && canConnect ? onConnect : null,
+      child: const Text('Connect'),
+    );
   }
 }
 

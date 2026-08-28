@@ -943,6 +943,39 @@ distributed. The generated SDK audit now counts 76 directly used operations.
 Final-tree Flutter analysis is clean, all 334 tests pass serially, and
 `:app:compileReleaseKotlin` succeeds. Traycer remains explicitly deferred.
 
+Provider connections now close their own credential lifecycle too. A stored
+connection shows OpenCode's returned label and an explicit Disconnect action;
+environment-backed connections remain visibly server-managed because mobile
+cannot remove the server process environment. Confirmation explains that new
+prompts stop using the credential after the runtime refresh and that an active
+response is not interrupted. The implementation deletes the exact integration
+ID from OpenCode's legacy auth store before deleting each exact server-issued
+credential ID from the v2 store, then disposes both provider-runtime instances.
+No Z.AI/Zhipu or other provider aliases are inferred or hardcoded.
+
+The ordering deliberately preserves a visible retry path. If legacy auth
+removal fails, no v2 credential is touched. If a v2 deletion fails after the
+legacy copy is removed, the remaining v2 connection stays in the row and the
+runtime is still refreshed. Environment-only connections cannot invoke the
+destructive action. Repository and widget coverage verifies exact encoded
+paths, dual-store ordering, partial failures, confirmation cancellation,
+retry visibility, credential/environment presentation, and an adaptive flat
+row plus scrollable confirmation at 320dp with 2x text.
+
+Live OpenCode `1.18.23` verification used isolated config, data, and cache homes
+plus a disposable fake 302.AI key, so no personal provider credential was read
+or changed. The release-mode Pixel 6 build rendered the server-issued `default`
+credential row and confirmation, disconnected it through the mobile UI, and
+returned the row to Connect. The server then reported an empty v2 connection
+list and an empty legacy auth-ID list. Android logged no fatal exception, ANR,
+RenderFlex, overflow, or OOM; the only update notice was the expected Shorebird
+binary-mismatch warning for a local rebuild of an existing version. The test
+profile, app, reverse port, isolated OpenCode state, disposable signing key, and
+locally signed APK were removed afterward; that APK must not be distributed.
+The generated SDK audit now counts 78 directly used operations. Final-tree
+Flutter analysis is clean, all 342 tests pass serially, and the Android release
+APK compiled successfully. Traycer remains explicitly deferred.
+
 ## Shorebird wake patch for `1.0.17+18`
 
 - Shorebird release ID: `789345`
