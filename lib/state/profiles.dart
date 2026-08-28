@@ -39,6 +39,24 @@ class ServerProfile {
 
 /// Validates the transport boundary used by both profile editing and connect.
 /// Android only permits cleartext traffic to the two Termux loopback names.
+/// Expands a pasted bare address into a full server URL so setup does not
+/// require knowing URL syntax. `host[:port]` and bare IPs gain a scheme:
+/// loopback becomes `http://` (the only place HTTP is allowed) and everything
+/// else becomes `https://`. Values that already carry a scheme, and values
+/// that are not a plausible single address, come back unchanged for the
+/// validator to explain.
+String normalizeServerProfileUrl(String value) {
+  final raw = value.trim();
+  if (raw.isEmpty || raw.contains('://')) return raw;
+  final bare = RegExp(
+    r'^\[?[A-Za-z0-9._\-:]+\]?(:\d{1,5})?$',
+  );
+  if (!bare.hasMatch(raw)) return raw;
+  final host = raw.split(':').first.toLowerCase();
+  final loopback = host == 'localhost' || host == '127.0.0.1';
+  return '${loopback ? 'http' : 'https'}://$raw';
+}
+
 String? validateServerProfileUrl(
   String value, {
   String username = '',

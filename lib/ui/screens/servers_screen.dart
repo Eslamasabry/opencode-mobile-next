@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../api/server_probe.dart';
 import '../../state/connection.dart';
 import '../../state/profiles.dart';
+import '../app_theme.dart';
 
 /// Manage opencode server profiles and connect.
 class ServersScreen extends ConsumerStatefulWidget {
@@ -188,6 +190,14 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
       body: Builder(
         builder: (context) {
           final store = bootstrap.store;
+          if (store.profiles.isEmpty) {
+            return _WelcomeView(
+              busy: _busy,
+              onConnect: () => _edit(),
+              onTermux: () => Navigator.pushNamed(context, '/termux-setup'),
+              onGuide: () => Navigator.pushNamed(context, '/guide'),
+            );
+          }
           final activeId = store.activeId;
           final needsPassword = store.profiles.any(
             (profile) =>
@@ -325,32 +335,6 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                     ),
                   ),
                 ),
-              if (store.profiles.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 32),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.cloud_off_rounded,
-                        size: 42,
-                        color: Theme.of(context).hintColor,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'No servers yet',
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Add a remote host or the on-device Termux preset.',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                          color: Theme.of(context).hintColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               const SizedBox(height: 16),
               OutlinedButton.icon(
                 onPressed: _busy ? null : () => _edit(),
@@ -394,6 +378,166 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
   }
 }
 
+/// The first-run experience: an identity moment plus the three concrete
+/// paths into the product. Shown only while no server profile exists.
+class _WelcomeView extends StatelessWidget {
+  final bool busy;
+  final VoidCallback onConnect;
+  final VoidCallback onTermux;
+  final VoidCallback onGuide;
+
+  const _WelcomeView({
+    required this.busy,
+    required this.onConnect,
+    required this.onTermux,
+    required this.onGuide,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: constraints.hasBoundedHeight ? constraints.maxHeight : 0,
+          ),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
+                child: Column(
+                  key: const ValueKey('first-run-welcome'),
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '❯',
+                          style: theme.textTheme.headlineMedium!.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontFamily: AppTheme.monoFamily,
+                          ),
+                        ),
+                        const SizedBox(width: 9),
+                        Container(
+                          width: 13,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: .45,
+                            ),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      'Your coding agent, in your pocket',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'This app drives an OpenCode server. '
+                      'Pick where yours runs.',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    _WelcomeCard(
+                      cardKey: const ValueKey('welcome-connect-card'),
+                      icon: Icons.dns_rounded,
+                      accent: true,
+                      title: 'Connect to your computer',
+                      subtitle:
+                          'Paste the address of an OpenCode server you run — '
+                          'the app fills in the rest',
+                      onTap: busy ? null : onConnect,
+                    ),
+                    const SizedBox(height: 10),
+                    _WelcomeCard(
+                      cardKey: const ValueKey('welcome-termux-card'),
+                      icon: Icons.smartphone_rounded,
+                      title: 'Run OpenCode on this phone',
+                      subtitle:
+                          'Guided Termux setup — the app drives it for you',
+                      onTap: busy ? null : onTermux,
+                    ),
+                    const SizedBox(height: 10),
+                    _WelcomeCard(
+                      cardKey: const ValueKey('welcome-guide-card'),
+                      icon: Icons.menu_book_outlined,
+                      title: 'Learn how OpenCode works',
+                      subtitle: 'A two-minute guide to both paths',
+                      onTap: onGuide,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WelcomeCard extends StatelessWidget {
+  final Key cardKey;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool accent;
+  final VoidCallback? onTap;
+
+  const _WelcomeCard({
+    required this.cardKey,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.accent = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      key: cardKey,
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      color: accent
+          ? theme.colorScheme.primaryContainer.withValues(alpha: .35)
+          : null,
+      child: ListTile(
+        minTileHeight: 72,
+        onTap: onTap,
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primary.withValues(alpha: .12),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, size: 22, color: theme.colorScheme.primary),
+        ),
+        title: Text(title),
+        subtitle: Text(subtitle, maxLines: 3, overflow: TextOverflow.ellipsis),
+        trailing: const Icon(Icons.chevron_right_rounded),
+      ),
+    );
+  }
+}
+
 class _ProfileEditorScreen extends StatefulWidget {
   final ServerProfile? existing;
   const _ProfileEditorScreen({this.existing});
@@ -422,7 +566,79 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
   String? _error;
   bool _obscurePassword = true;
   bool _closing = false;
+  bool _testing = false;
+  ServerProbeResult? _testResult;
+  int _urlLength = 0;
+  int _probeGeneration = 0;
   bool get _needsPassword => widget.existing?.requiresPasswordReentry ?? false;
+
+  @override
+  void initState() {
+    super.initState();
+    _urlLength = _url.text.length;
+  }
+
+  /// A paste is a jump of several characters at once. When it lands without a
+  /// scheme, expand it in place so `192.168.1.7:4096` just works.
+  void _urlChanged(String value) {
+    final pasted = value.length - _urlLength >= 4;
+    _urlLength = value.length;
+    if (pasted && !value.contains('://')) {
+      final normalized = normalizeServerProfileUrl(value);
+      if (normalized != value.trim()) {
+        _urlLength = normalized.length;
+        _url.value = TextEditingValue(
+          text: normalized,
+          selection: TextSelection.collapsed(offset: normalized.length),
+        );
+      }
+    }
+    setState(() {
+      _error = null;
+      _testResult = null;
+    });
+  }
+
+  Future<void> _testConnection() async {
+    if (_testing) return;
+    final url = normalizeServerProfileUrl(_url.text);
+    if (url != _url.text.trim()) {
+      _urlLength = url.length;
+      _url.value = TextEditingValue(
+        text: url,
+        selection: TextSelection.collapsed(offset: url.length),
+      );
+    }
+    final error = validateServerProfileUrl(
+      url,
+      username: _user.text,
+      password: _pass.text,
+    );
+    if (error != null) {
+      setState(() {
+        _error = error;
+        _testResult = null;
+      });
+      _urlFocus.requestFocus();
+      return;
+    }
+    final generation = ++_probeGeneration;
+    setState(() {
+      _testing = true;
+      _testResult = null;
+      _error = null;
+    });
+    final result = await serverProbe(
+      baseUrl: url,
+      username: _user.text.trim(),
+      password: _pass.text,
+    );
+    if (!mounted || generation != _probeGeneration) return;
+    setState(() {
+      _testing = false;
+      _testResult = result;
+    });
+  }
 
   bool get _dirty =>
       _name.text != (widget.existing?.name ?? '') ||
@@ -472,7 +688,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
   }
 
   void _save() {
-    var url = _url.text.trim();
+    var url = normalizeServerProfileUrl(_url.text);
     final error = validateServerProfileUrl(
       url,
       username: _user.text,
@@ -580,10 +796,10 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                 keyboardType: TextInputType.url,
                 textInputAction: TextInputAction.next,
                 onSubmitted: (_) => _nameFocus.requestFocus(),
-                onChanged: (_) => setState(() => _error = null),
+                onChanged: _urlChanged,
                 decoration: InputDecoration(
                   labelText: 'Server URL',
-                  hintText: 'https://host:4096',
+                  hintText: 'host:4096 — pasting an address fills the rest',
                   errorText: _error,
                   errorMaxLines: 3,
                   helperText:
@@ -618,7 +834,10 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                 focusNode: _userFocus,
                 textInputAction: TextInputAction.next,
                 onSubmitted: (_) => _passFocus.requestFocus(),
-                onChanged: (_) => setState(() => _error = null),
+                onChanged: (_) => setState(() {
+                  _error = null;
+                  _testResult = null;
+                }),
                 decoration: const InputDecoration(
                   labelText: 'Username (optional)',
                   hintText: 'opencode',
@@ -630,7 +849,10 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                 controller: _pass,
                 focusNode: _passFocus,
                 autofocus: _needsPassword,
-                onChanged: (_) => setState(() => _error = null),
+                onChanged: (_) => setState(() {
+                  _error = null;
+                  _testResult = null;
+                }),
                 obscureText: _obscurePassword,
                 textInputAction: TextInputAction.done,
                 onSubmitted: (_) => _save(),
@@ -657,6 +879,71 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 24),
+              FilledButton.tonalIcon(
+                key: const ValueKey('test-server-connection'),
+                onPressed: _testing ? null : _testConnection,
+                icon: _testing
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.network_check_rounded),
+                label: Text(_testing ? 'Testing…' : 'Test connection'),
+              ),
+              if (_testResult case final result?) ...[
+                const SizedBox(height: 12),
+                Semantics(
+                  container: true,
+                  liveRegion: true,
+                  child: Container(
+                    key: ValueKey(
+                      result.ok
+                          ? 'server-test-success'
+                          : 'server-test-failure',
+                    ),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: result.ok
+                          ? AppTheme.success(
+                              theme.colorScheme,
+                            ).withValues(alpha: .14)
+                          : theme.colorScheme.errorContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          result.ok
+                              ? Icons.check_circle_outline_rounded
+                              : Icons.error_outline_rounded,
+                          size: 20,
+                          color: result.ok
+                              ? AppTheme.success(theme.colorScheme)
+                              : theme.colorScheme.onErrorContainer,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            result.ok
+                                ? 'Connected — OpenCode '
+                                      '${result.version ?? 'server'} '
+                                      'answered. Save to finish.'
+                                : result.message!,
+                            style: TextStyle(
+                              color: result.ok
+                                  ? theme.colorScheme.onSurface
+                                  : theme.colorScheme.onErrorContainer,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
