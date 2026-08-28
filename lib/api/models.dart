@@ -99,18 +99,32 @@ class Tokens {
   final int input;
   final int output;
   final int reasoning;
-  Tokens({this.input = 0, this.output = 0, this.reasoning = 0});
+  final int cacheRead;
+  final int cacheWrite;
+  Tokens({
+    this.input = 0,
+    this.output = 0,
+    this.reasoning = 0,
+    this.cacheRead = 0,
+    this.cacheWrite = 0,
+  });
 
   factory Tokens.fromJson(dynamic v) {
     if (v is! Map<String, dynamic>) return Tokens();
+    final cache = v['cache'];
     return Tokens(
       input: _asInt(v['input']) ?? 0,
       output: _asInt(v['output']) ?? 0,
       reasoning: _asInt(v['reasoning']) ?? 0,
+      cacheRead: cache is Map ? _asInt(cache['read']) ?? 0 : 0,
+      cacheWrite: cache is Map ? _asInt(cache['write']) ?? 0 : 0,
     );
   }
 
-  int get total => input + output + reasoning;
+  int get cache => cacheRead + cacheWrite;
+
+  /// The same context-total definition used by the upstream OpenCode client.
+  int get total => input + output + reasoning + cache;
 }
 
 class MessageInfo {

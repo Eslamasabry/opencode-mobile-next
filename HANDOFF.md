@@ -33,7 +33,7 @@ byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 
 - Branch: `production/android-release-hardening`
 - Last pushed commit before the `1.0.20+21` candidate: `c17f4f63ae14e3ab676da440df44fc23e1116356`
-- Latest app-completeness implementation: `1868a85f8efa49bac7404794709b97b1a88d3f65`
+- Latest app-completeness implementation: `PENDING_SESSION_CONTEXT_COMMIT`
 - Compare/PR: <https://github.com/Eslamasabry/oc_app/pull/new/production/android-release-hardening>
 
 ### Verified `1.0.20+21` candidate
@@ -310,6 +310,44 @@ SHA-256
 `6333e4845c023d60f5cc91c111d48bb2608a35af78181f9403cd3e8d69fab6e6`.
 Temporary signing properties and the disposable keystore were removed; this APK
 was not published or distributed.
+
+Native session context is now available from Chat's Session views menu and the
+mobile `/context` command, with `/usage` as an alias. It derives exact usage from
+the latest token-bearing assistant message, including cache read/write, and
+matches that message's exact provider/model to the server catalog for the model
+name and context limit. Message counts and accumulated reported cost are kept
+separate from the current context window. The user, assistant, tool, and other
+input makeup is explicitly labelled estimated; exact token totals are never
+presented as inferred composition. OpenCode `1.18.23` returned an empty
+`v2.session.context` payload for populated legacy sessions, so the native screen
+follows upstream web and uses hydrated generated session-message truth instead.
+
+The retained screen refreshes after wake-time transport replacement, location
+changes, global data reconciliation, and busy-to-idle completion. A failed
+refresh preserves cached metrics with an inline retry instead of replacing them
+with an error screen. The visual treatment is flat and compact: divided metrics
+and one tonal gauge, no nested cards, with a side-by-side summary at Pixel width
+and a stacked layout under narrow or enlarged-text constraints.
+
+A release-mode Pixel 6 opened an existing 940-message session against OpenCode
+`1.18.23` and rendered `openai/gpt-5.6-sol-fast` as `GPT-5.6 Sol Fast` at
+`129625 / 400000` tokens (`32.4%`): input `19339`, output `236`, reasoning `482`,
+cache read `109568`, and cache write `0`. It reported 57 user plus 883 assistant
+messages and explicitly estimated the latest input makeup as 44 user, 1327
+assistant, 17967 tool, and 1 other token. Android logged no app fatal exception,
+ANR, RenderFlex overflow, OOM, or Flutter error.
+
+Final-tree Flutter analysis is clean and all 456 app tests pass serially. All
+four generated-SDK integrity verifiers pass for 188 operations; all 46 SDK
+tests and SDK analysis pass; the compiled SDK smoke binary runs; and aggregate
+Android `lintRelease` passes. The generated SDK audit remains at 101 directly
+used operations. The locally test-signed release APK is `162039375` bytes with
+SHA-256
+`a161dcb6d6ff052420b80dc2d99c10f3c655c2de850395e9c27757ee585819fa`
+and the public legacy certificate SHA-256
+`1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c`.
+Temporary signing properties were removed; this APK was not published or
+distributed.
 
 A live release-mode Pixel 6 check against OpenCode `1.18.23` also found and fixed
 a location-integrity defect: mounting Workspace could overwrite a directory

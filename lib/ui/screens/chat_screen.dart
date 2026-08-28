@@ -29,6 +29,7 @@ import 'home_screen.dart';
 import 'library_screen.dart';
 import 'project_health_screen.dart';
 import 'review_workspace.dart';
+import 'session_context_screen.dart';
 import 'session_destination_sheet.dart';
 import 'session_relations_screen.dart';
 import 'settings_screen.dart';
@@ -2027,6 +2028,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         action: _ChatCommandAction.diff,
       ),
       _ChatCommand.mobile(
+        slash: 'context',
+        aliases: const ['usage'],
+        title: 'Session context',
+        description: 'Inspect current tokens, cache, cost, and context usage',
+        group: 'Current session',
+        action: _ChatCommandAction.context,
+        enabled: _messages.any(
+          (message) =>
+              message.info.role == 'assistant' && message.info.tokens.total > 0,
+        ),
+      ),
+      _ChatCommand.mobile(
         slash: 'share',
         title: _shareUrl == null ? 'Share session' : 'Copy share link',
         description: 'Create or copy a public session link',
@@ -2362,6 +2375,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       case _ChatCommandAction.diff:
         _showDiff();
         return;
+      case _ChatCommandAction.context:
+        await _showContext();
+        return;
       case _ChatCommandAction.share:
         if (_shareUrl == null) {
           await _share();
@@ -2537,6 +2553,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       context: context,
       showDragHandle: true,
       builder: (_) => _TodosSheet(conn: _conn, sessionID: widget.sessionID),
+    );
+  }
+
+  Future<void> _showContext() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => SessionContextScreen(
+          controller: _conn,
+          sessionID: widget.sessionID,
+          initialMessages: List.unmodifiable(_messages),
+        ),
+      ),
     );
   }
 
@@ -2767,6 +2795,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             icon: const Icon(Icons.view_agenda_outlined),
             onSelected: (value) {
               if (value == 'timeline') unawaited(_openTimeline());
+              if (value == 'context') unawaited(_showContext());
               if (value == 'changes') _showDiff();
               if (value == 'todos') _showTodos();
               if (value == 'subagents') unawaited(_showSubagents());
@@ -2783,6 +2812,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 child: _SessionViewMenuItem(
                   icon: Icons.view_timeline_outlined,
                   label: 'Timeline',
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'context',
+                child: _SessionViewMenuItem(
+                  icon: Icons.donut_large_outlined,
+                  label: 'Context usage',
                 ),
               ),
               const PopupMenuItem(
@@ -3309,6 +3345,7 @@ enum _ChatCommandAction {
   diagnostics,
   appearance,
   diff,
+  context,
   share,
   unshare,
   rename,

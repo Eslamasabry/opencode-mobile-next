@@ -49,7 +49,7 @@ Legend:
 | Reference | `v2ReferenceList` | - | References can be copied standalone or added to the active composer as OpenCode directory parts |
 | Session | list, create, get, delete, update/rename, status, messages, children, todos, diff, fork, revert, unrevert, share, unshare, summarize, async prompt including native agent mention parts and synthetic location reminder, command, abort | shell | init endpoint, delete/update part, delete/get one message, synchronous prompt |
 | Session questions v2 | global request list, session reply/reject | - | per-session list |
-| Sessions v2 | - | - | active, compact, context, create/get/list/message/prompt/history/events/wait/interrupt, model/agent switch, staged revert operations |
+| Sessions v2 | - | - | active, compact, create/get/list/message/prompt/history/events/wait/interrupt, model/agent switch, staged revert operations; `context` is deliberately unused because OpenCode 1.18.23 returned an empty payload for populated legacy sessions, while the native context inspector derives exact token truth from hydrated generated session messages like upstream web |
 | Skills | `v2SkillList` | - | Skill content uses the shared Markdown/code-aware preview with rendered and raw modes |
 | Sync | - | - | history, replay, start, steal |
 | TUI control | - | - | append/clear/submit prompt, command execution, next-control flow, publish, select session, help/models/sessions/themes/toast |
@@ -312,7 +312,21 @@ Legend:
    schemas share one scroll surface instead of nesting cards or making the
    schema unreachable. Capability and registered-ID failures stay scoped, so an
    older optional endpoint cannot hide a valid callable-tool response.
-22. **Deferred by owner:** a Traycer-style task cockpit remains outside the
+22. **Native session context truth:** Session views and mobile `/context`
+   (`/usage` alias) open one flat context inspector derived from the hydrated
+   generated session-message contract. The latest token-bearing assistant
+   message supplies exact input, output, reasoning, cache-read, cache-write, and
+   total usage; its exact provider/model pair supplies the server catalog's
+   context limit. Message counts and accumulated reported cost remain separate
+   session totals. The input-makeup visualization is explicitly labelled as an
+   estimate: text and tool characters are scaled to the exact latest input
+   token count, and the remainder is shown as other provider/system overhead.
+   The retained screen reconciles after wake, location changes, data refreshes,
+   and busy-to-idle completion while preserving cached truth behind a scoped
+   retry error. OpenCode 1.18.23 returned an empty `v2.session.context` payload
+   for populated legacy sessions, so mobile follows upstream web's message-
+   derived approach instead of presenting that endpoint as authoritative.
+23. **Deferred by owner:** a Traycer-style task cockpit remains outside the
    current implementation lane.
 
 ## Deliberate non-goals

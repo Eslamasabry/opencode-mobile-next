@@ -13,6 +13,7 @@ import 'package:opencode_mobile/ui/screens/app_diagnostics_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/global_sessions_screen.dart';
 import 'package:opencode_mobile/ui/screens/project_health_screen.dart';
+import 'package:opencode_mobile/ui/screens/session_context_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeOpenCodeApi extends OpenCodeApi {
@@ -1446,6 +1447,42 @@ void main() {
     expect(find.text('chat.dart'), findsOneWidget);
     expect(find.text('+7'), findsOneWidget);
     expect(find.text('-2'), findsOneWidget);
+  });
+
+  testWidgets('command launcher maps context to the native usage surface', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('user-context', 'user', [
+          Part(type: 'text', text: 'Inspect context'),
+        ], created: 1),
+        _message(
+          'assistant-context',
+          'assistant',
+          [Part(type: 'text', text: 'Context ready')],
+          created: 2,
+          providerID: 'openai',
+          modelID: 'gpt-context',
+          tokens: Tokens(input: 700, output: 40, cacheRead: 260),
+          cost: .031,
+        ),
+      ];
+
+    await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'context',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('command-mobile-context')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SessionContextScreen), findsOneWidget);
+    expect(find.text('1,000 tokens · limit unavailable'), findsOneWidget);
   });
 
   testWidgets('debug command opens native app diagnostics', (tester) async {
