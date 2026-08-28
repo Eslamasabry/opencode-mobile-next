@@ -139,6 +139,7 @@ void main() {
       'kind': 'permission',
       'sessionID': 'session-1',
       'decision': 'allow',
+      'requestID': 'permission-1',
     });
 
     expect(result, {'handled': true});
@@ -163,6 +164,7 @@ void main() {
       'kind': 'permission',
       'sessionID': 'session-1',
       'decision': 'deny',
+      'requestID': 'permission-1',
     });
 
     expect(result, {'handled': true});
@@ -186,6 +188,7 @@ void main() {
       'kind': 'question',
       'sessionID': 'session-1',
       'decision': 'reply',
+      'requestID': 'question-1',
       'reply': '  Ship the fix  ',
     });
 
@@ -215,6 +218,7 @@ void main() {
       'kind': 'question',
       'sessionID': 'session-1',
       'decision': 'reply',
+      'requestID': 'question-1',
       'reply': 'free text',
     });
 
@@ -237,6 +241,7 @@ void main() {
       'kind': 'permission',
       'sessionID': 'session-1',
       'decision': 'allow',
+      'requestID': 'permission-1',
     });
 
     expect(result, {'handled': false});
@@ -257,11 +262,44 @@ void main() {
       'kind': 'question',
       'sessionID': 'session-1',
       'decision': 'reply',
+      'requestID': 'question-1',
       'reply': '   ',
     });
 
     expect(result, {'handled': false});
     expect(harness.api.questionReplies, isEmpty);
     expect(harness.controller.questions, hasLength(1));
+  });
+
+  test('a stale request ID never resolves a different pending request', () async {
+    final harness = await _harness();
+    addTearDown(harness.controller.dispose);
+    _askPermission(harness.controller);
+    harness.controller.handleEventForTesting(
+      EventEnvelope(
+        type: 'permission.v2.asked',
+        properties: const {
+          'id': 'permission-2',
+          'sessionID': 'session-1',
+          'action': 'shell',
+          'resources': ['rm -rf build'],
+        },
+      ),
+    );
+    await _flush();
+
+    // The notification represented permission-1, which was resolved from the
+    // app before the user tapped the action. permission-2 must survive.
+    harness.controller.permissions.remove('permission-1');
+    final result = await harness.backgroundLive.handleNativeAction({
+      'kind': 'permission',
+      'sessionID': 'session-1',
+      'decision': 'allow',
+      'requestID': 'permission-1',
+    });
+
+    expect(result, {'handled': true});
+    expect(harness.api.permissionReplies, isEmpty);
+    expect(harness.controller.permissions.keys, ['permission-2']);
   });
 }

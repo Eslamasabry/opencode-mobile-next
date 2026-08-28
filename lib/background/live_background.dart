@@ -48,11 +48,17 @@ class CodingAlertAction {
     required this.kind,
     required this.sessionID,
     required this.decision,
+    this.requestID = '',
     this.reply,
   });
 
   final CodingAlertKind kind;
   final String sessionID;
+
+  /// The exact pending request this notification represented. Resolution is
+  /// bound to this ID; an empty or stale ID never resolves a different
+  /// request for the same session.
+  final String requestID;
 
   /// 'allow' | 'deny' for permission alerts, 'reply' for question alerts.
   final String decision;
@@ -70,6 +76,7 @@ class CodingAlertAction {
       kind: kind,
       sessionID: sessionID,
       decision: decision,
+      requestID: arguments['requestID']?.toString().trim() ?? '',
       reply: arguments['reply']?.toString(),
     );
   }
@@ -155,6 +162,7 @@ class BackgroundLiveController extends ChangeNotifier {
     required String sessionID,
     required String key,
     bool quickReply = false,
+    String requestID = '',
   }) async {
     if (!enabled || !notificationGranted) return false;
     try {
@@ -163,6 +171,7 @@ class BackgroundLiveController extends ChangeNotifier {
         'sessionID': sessionID,
         'key': key,
         'quickReply': quickReply,
+        'requestID': requestID,
       });
       return result['shown'] == true;
     } on PlatformException {

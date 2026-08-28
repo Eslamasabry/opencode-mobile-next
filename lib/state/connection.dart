@@ -201,7 +201,8 @@ class ConnectionController extends ChangeNotifier {
   final Map<String, String> _v2QuestionSessions = {};
   final Set<String> _resolvedQuestionIDs = {};
   final Set<String> _attentionActiveSessions = {};
-  final Map<String, CodingAlertKind> _alertedInputKinds = {};
+  final Map<String, ({CodingAlertKind kind, String requestID})>
+  _alertedInputKinds = {};
   final Set<String> _alertedStatusSessions = {};
   CodingAlertOpen? _pendingCodingAlertOpen;
   int _permissionRevision = 0;
@@ -273,10 +274,11 @@ class ConnectionController extends ChangeNotifier {
       switch (action.decision) {
         case 'allow':
         case 'deny':
-          final permission = permissionForSession(action.sessionID);
-          if (permission == null) {
-            // Already resolved elsewhere; refresh the alert lifecycle so a
-            // stale notification cannot outlive its request.
+          // Resolution is bound to the exact request the notification
+          // represented; a stale or missing ID refreshes the alert instead
+          // of resolving whichever request happens to be pending now.
+          final permission = permissions[action.requestID];
+          if (permission == null || permission.sessionID != action.sessionID) {
             _syncInputAlerts();
             return true;
           }
@@ -290,8 +292,10 @@ class ConnectionController extends ChangeNotifier {
         case 'reply':
           final text = action.reply?.trim() ?? '';
           if (text.isEmpty) return false;
-          final question = _quickReplyQuestionForSession(action.sessionID);
-          if (question == null) {
+          final question = questions[action.requestID];
+          if (question == null ||
+              question.sessionID != action.sessionID ||
+              !_questionSupportsQuickReply(question)) {
             _syncInputAlerts();
             return true;
           }
@@ -311,6 +315,13 @@ class ConnectionController extends ChangeNotifier {
   /// text.
   static bool _questionSupportsQuickReply(PendingQuestion question) =>
       question.prompts.length == 1 && question.prompts.single.custom;
+
+  PendingQuestion? questionForSession(String sessionID) {
+    for (final question in questions.values) {
+      if (question.sessionID == sessionID) return question;
+    }
+    return null;
+  }
 
   PendingQuestion? _quickReplyQuestionForSession(String sessionID) {
     for (final question in questions.values) {
@@ -417,23 +428,32 @@ class ConnectionController extends ChangeNotifier {
 
   void _showInputAlert(String sessionID, CodingAlertKind kind) {
     if (sessionID.isEmpty || !_canShowCodingAlert) return;
-    if (_alertedInputKinds[sessionID] == kind) return;
-    _alertedInputKinds[sessionID] = kind;
+    // The alert represents one exact request: the front permission, or the
+    // quick-reply-eligible question (falling back to the front question).
+    final quickReplyQuestion = kind == CodingAlertKind.question
+        ? _quickReplyQuestionForSession(sessionID)
+        : null;
+    final requestID = kind == CodingAlertKind.permission
+        ? permissionForSession(sessionID)?.id
+        : (quickReplyQuestion ?? questionForSession(sessionID))?.id;
+    if (requestID == null || requestID.isEmpty) return;
+    final alerted = (kind: kind, requestID: requestID);
+    if (_alertedInputKinds[sessionID] == alerted) return;
+    _alertedInputKinds[sessionID] = alerted;
     unawaited(
       backgroundLive
           .showCodingAlert(
             kind: kind,
             sessionID: sessionID,
             key: _inputAlertKey(sessionID),
-            quickReply:
-                kind == CodingAlertKind.question &&
-                _quickReplyQuestionForSession(sessionID) != null,
+            quickReply: quickReplyQuestion != null,
+            requestID: requestID,
           )
           .then((shown) {
             if (!shown &&
                 !_disposed &&
                 _lifecycleWasBackgrounded &&
-                _alertedInputKinds[sessionID] == kind) {
+                _alertedInputKinds[sessionID] == alerted) {
               _alertedInputKinds.remove(sessionID);
             }
           }),

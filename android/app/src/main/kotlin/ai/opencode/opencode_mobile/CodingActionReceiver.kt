@@ -29,6 +29,9 @@ class CodingActionReceiver : BroadcastReceiver() {
         val decision = intent.getStringExtra(
             BackgroundConnectionService.EXTRA_CODING_ALERT_DECISION
         ).orEmpty()
+        val requestID = intent.getStringExtra(
+            BackgroundConnectionService.EXTRA_CODING_ALERT_REQUEST_ID
+        ).orEmpty()
         if (kind.isBlank() || sessionID.isBlank() || decision.isBlank()) return
 
         val reply = RemoteInput.getResultsFromIntent(intent)
@@ -49,20 +52,21 @@ class CodingActionReceiver : BroadcastReceiver() {
                     "kind" to kind,
                     "sessionID" to sessionID,
                     "decision" to decision,
-                    "reply" to reply
+                    "reply" to reply,
+                    "requestID" to requestID
                 ),
                 object : MethodChannel.Result {
                     override fun success(result: Any?) {
                         val handled = (result as? Map<*, *>)?.get("handled") == true
                         if (!handled) {
-                            repost(appContext, kind, sessionID, key, decision)
+                            repost(appContext, kind, sessionID, key, decision, requestID)
                         }
                         // A handled reply's RemoteInput spinner resolves when
                         // Dart's resolution lifecycle cancels the alert.
                     }
 
                     override fun error(code: String, message: String?, details: Any?) {
-                        repost(appContext, kind, sessionID, key, decision)
+                        repost(appContext, kind, sessionID, key, decision, requestID)
                     }
 
                     override fun notImplemented() {
@@ -80,7 +84,8 @@ class CodingActionReceiver : BroadcastReceiver() {
         kind: String,
         sessionID: String,
         key: String,
-        decision: String
+        decision: String,
+        requestID: String
     ) {
         if (key.isBlank()) return
         BackgroundConnectionService.showCodingAlert(
@@ -88,7 +93,8 @@ class CodingActionReceiver : BroadcastReceiver() {
             kind = kind,
             sessionID = sessionID,
             key = key,
-            quickReply = decision == "reply"
+            quickReply = decision == "reply",
+            requestID = requestID
         )
     }
 

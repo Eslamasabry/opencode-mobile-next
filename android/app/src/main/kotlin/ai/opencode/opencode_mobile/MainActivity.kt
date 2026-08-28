@@ -92,6 +92,7 @@ class MainActivity : FlutterActivity() {
                         val sessionID = call.argument<String>("sessionID").orEmpty()
                         val key = call.argument<String>("key").orEmpty()
                         val quickReply = call.argument<Boolean>("quickReply") ?: false
+                        val requestID = call.argument<String>("requestID").orEmpty()
                         result.success(
                             mapOf(
                                 "shown" to BackgroundConnectionService.showCodingAlert(
@@ -99,7 +100,8 @@ class MainActivity : FlutterActivity() {
                                     kind = kind,
                                     sessionID = sessionID,
                                     key = key,
-                                    quickReply = quickReply
+                                    quickReply = quickReply,
+                                    requestID = requestID
                                 )
                             )
                         )

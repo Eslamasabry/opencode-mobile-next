@@ -117,7 +117,8 @@ class BackgroundConnectionService : Service() {
             kind: String,
             sessionID: String,
             key: String,
-            quickReply: Boolean = false
+            quickReply: Boolean = false,
+            requestID: String = ""
         ): Boolean {
             if (sessionID.isBlank() || key.isBlank()) return false
             val manager = context.getSystemService(NotificationManager::class.java)
@@ -196,7 +197,7 @@ class BackgroundConnectionService : Service() {
                 .setVisibility(Notification.VISIBILITY_PRIVATE)
                 .setGroup(CODING_ALERT_GROUP)
             for (action in codingAlertActions(
-                context, kind, sessionID, key, quickReply, notificationID
+                context, kind, sessionID, key, quickReply, requestID, notificationID
             )) {
                 builder.addAction(action)
             }
@@ -212,6 +213,7 @@ class BackgroundConnectionService : Service() {
             sessionID: String,
             key: String,
             quickReply: Boolean,
+            requestID: String,
             notificationID: Int
         ): List<Notification.Action> {
             fun actionIntent(decision: String): Intent =
@@ -222,6 +224,9 @@ class BackgroundConnectionService : Service() {
                     putExtra(EXTRA_CODING_ALERT_SESSION_ID, sessionID)
                     putExtra(EXTRA_CODING_ALERT_KEY, key)
                     putExtra(EXTRA_CODING_ALERT_DECISION, decision)
+                    // The exact pending request this notification represents;
+                    // Dart refuses to resolve any other request with it.
+                    putExtra(EXTRA_CODING_ALERT_REQUEST_ID, requestID)
                 }
 
             val icon = Icon.createWithResource(context, R.mipmap.ic_launcher)
@@ -318,6 +323,8 @@ class BackgroundConnectionService : Service() {
             "ai.opencode.opencode_mobile.extra.CODING_ALERT_KEY"
         const val EXTRA_CODING_ALERT_DECISION =
             "ai.opencode.opencode_mobile.extra.CODING_ALERT_DECISION"
+        const val EXTRA_CODING_ALERT_REQUEST_ID =
+            "ai.opencode.opencode_mobile.CODING_ALERT_REQUEST_ID"
         const val ACTION_CODING_ALERT =
             "ai.opencode.opencode_mobile.action.CODING_ALERT"
         const val REMOTE_INPUT_REPLY = "oc.codingAlertReply"

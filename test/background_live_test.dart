@@ -128,6 +128,7 @@ void main() {
       'sessionID': 'session-1',
       'key': 'input:session-1',
       'quickReply': false,
+      'requestID': '',
     });
     expect(calls[2].$1, 'dismissCodingAlert');
     expect(calls[2].$2, {'key': 'input:session-1'});
