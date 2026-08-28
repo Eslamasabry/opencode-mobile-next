@@ -29,6 +29,52 @@ installed on `emulator-5554`, and verified as version code 20/version name
 Flutter/render failure. The GitHub-downloaded asset matched the local tested APK
 byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 
+## Operation Facelift (UI/UX revamp lane)
+
+The owner opened a dedicated UI/UX lane on this branch with explicit license
+to use any packages and to publish preview APKs with links. The first slice
+is complete and verified:
+
+- **Structure first:** `chat_screen.dart` (6,557 lines) is now a library with
+  eight part files under `lib/ui/screens/chat/`, and `library_screen.dart`
+  (2,376 lines) six part files under `lib/ui/screens/library/`. Pure moves;
+  private cross-references survive through part files.
+- **Chat surface:** streaming shows a terminal-style blinking block caret
+  (reduce-motion renders it solid); empty sessions show a prompt-glyph
+  invitation with suggestion chips that fill the composer; a jump-to-latest
+  pill appears once the reversed transcript scrolls past ~480px, using the
+  previously dead scroll listener; long-pressing a message opens Copy and,
+  for user prompts, Fork-from-this-prompt backed by the existing
+  `_forkFromMessage`; chat loading/error use `LoadingList`/`ProductErrorState`;
+  transcript and composer cap at 860dp and user bubbles at 640dp on wide
+  screens. User-bubble prose is deliberately non-selectable so the long-press
+  menu wins the gesture arena; `_AttachmentPart` became `container: true`
+  semantics so mixed messages keep distinct labels.
+- **Typography and code:** JetBrains Mono TTFs are bundled as the `AppMono`
+  family (OFL text in `LICENSES/`, notice added) and replace every
+  `'monospace'` site. Fenced code blocks highlight through the `highlight`
+  package via `lib/ui/widgets/code_highlight.dart`: colors derive from the
+  active `ColorScheme`, unknown languages and blocks over 20k chars fall back
+  to plain text, and `file_preview` inherits it through `CodeBlock`.
+- **System polish:** M3 fade-forwards page transitions; a brightness-aware
+  `AppTheme.success` green replaces raw `Colors.green/orange/red` at status
+  dots, done states, and diff additions; Settings' two `/about` tiles now open
+  distinct Privacy and Open source tabs; the never-committed empty
+  `lib/ui/sdk_explorer/` scaffold is gone.
+- **Motion caution:** `flutter_animate` was added and then removed — its
+  internal timers trip `flutter_test`'s pending-timer invariant whenever a
+  test disposes an animating tree. Entrances use ticker-driven
+  `TweenAnimationBuilder` instead. Do not reintroduce `flutter_animate` in
+  widgets that tests can dispose mid-animation.
+- Flutter analysis is clean and all 468 tests pass serially with the pinned
+  Shorebird Flutter `3.47.1` (local `flutter` on PATH is 3.38.5 and cannot
+  resolve packages; use `~/.shorebird/bin/cache/flutter/91f8bd7…/bin/flutter`).
+
+Remaining facelift lanes, in intended order: dialog-to-bottom-sheet sweep for
+confirms/pickers; flattening the More link-farm into grouped sections and
+reconsidering Terminal's bottom-nav slot; picker/selector polish; list-item
+motion; per-screen empty-state upgrades through `product_states.dart`.
+
 ## Production Android hardening branch
 
 - Branch: `production/android-release-hardening`
