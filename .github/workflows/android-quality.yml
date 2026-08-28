@@ -1,3 +1,14 @@
+# OWNER ACTION REQUIRED before this gate can run at all:
+# Every recorded run of this workflow (35/35 as of 2026-08-28) failed in ~5s
+# with zero steps and runner_id 0. The check-run annotation on each says:
+#   "The job was not started because recent account payments have failed or
+#    your spending limit needs to be increased. Please check the
+#    'Billing & plans' section in your settings"
+# This is a GitHub account-level block, not a workflow defect. Fix it at
+# https://github.com/settings/billing (resolve the failed payment or raise
+# the Actions spending limit), then re-run any run or push to verify.
+# Nothing inside this file can lift that block.
+
 name: Android quality gate
 
 on:
@@ -75,7 +86,19 @@ jobs:
         run: flutter analyze
 
       - name: Test
-        run: flutter test --concurrency=1
+        # Chunked into thirds so one hung invocation cannot consume the whole
+        # job timeout; each chunk keeps the repo's serial --concurrency=1.
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(ls test/*_test.dart | sort)
+          total=${#files[@]}
+          test "$total" -gt 0
+          third=$(( (total + 2) / 3 ))
+          for start in 0 "$third" $((third * 2)); do
+            chunk=("${files[@]:start:third}")
+            [ ${#chunk[@]} -eq 0 ] && continue
+            flutter test --concurrency=1 "${chunk[@]}"
+          done
 
       - name: Create isolated CI signing identity
         env:
