@@ -259,7 +259,7 @@ class _StatusDot extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final (color, pulse) = switch (status) {
-      StreamStatus.connected => (AppTheme.success(theme.colorScheme), false),
+      StreamStatus.connected => (AppTheme.successOf(theme), false),
       StreamStatus.connecting ||
       StreamStatus.reconnecting => (theme.colorScheme.tertiary, true),
       StreamStatus.disconnected => (theme.colorScheme.error, false),

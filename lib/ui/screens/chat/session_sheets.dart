@@ -191,9 +191,7 @@ class _DiffSheetState extends State<_DiffSheet> {
                                   Text(
                                     '+${c.added}',
                                     style: TextStyle(
-                                      color: AppTheme.success(
-                                        Theme.of(context).colorScheme,
-                                      ),
+                                      color: AppTheme.successOf(Theme.of(context)),
                                       fontFamily: 'AppMono',
                                     ),
                                   ),

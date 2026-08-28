@@ -1,16 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'theme_packs.dart';
+
+/// Pack-provided colors that live outside Material's scheme, carried on the
+/// ThemeData so widgets resolve them from context.
+class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
+  final Color success;
+
+  const AppSemanticColors({required this.success});
+
+  @override
+  AppSemanticColors copyWith({Color? success}) =>
+      AppSemanticColors(success: success ?? this.success);
+
+  @override
+  AppSemanticColors lerp(AppSemanticColors? other, double t) => other == null
+      ? this
+      : AppSemanticColors(
+          success: Color.lerp(success, other.success, t) ?? success,
+        );
+}
+
 /// The shared visual system for the mobile client.
 ///
 /// Keeping component defaults here prevents individual screens from drifting
-/// back to stock Material styling as the product grows.
+/// back to stock Material styling as the product grows. Color comes from a
+/// [ThemePack]; structure never changes between packs.
 abstract final class AppTheme {
   /// Bundled JetBrains Mono; code is this product's primary material.
   static const monoFamily = 'AppMono';
 
-  /// Brightness-aware success green for status dots, done states, and diff
-  /// additions; raw material greens disappear against both scheme surfaces.
+  /// Pack-aware success green for status dots, done states, and diff
+  /// additions. Prefer this over [success] wherever a ThemeData is in reach.
+  static Color successOf(ThemeData theme) =>
+      theme.extension<AppSemanticColors>()?.success ??
+      success(theme.colorScheme);
+
+  /// Brightness-based fallback with the OpenCode pack's values, for the rare
+  /// place that has only a scheme.
   static Color success(ColorScheme scheme) =>
       scheme.brightness == Brightness.dark
       ? const Color(0xFF86D8A5)
@@ -23,88 +51,27 @@ abstract final class AppTheme {
   static const lightSurface = Color(0xFFFFFFFF);
   static const lightAccent = Color(0xFF176B4B);
 
-  static ThemeData dark() {
-    final scheme =
-        ColorScheme.fromSeed(
-          seedColor: accent,
-          brightness: Brightness.dark,
-        ).copyWith(
-          primary: accent,
-          onPrimary: const Color(0xFF052117),
-          primaryContainer: const Color(0xFF183B2D),
-          onPrimaryContainer: const Color(0xFFB6EBD2),
-          secondary: const Color(0xFFA8CBB9),
-          onSecondary: const Color(0xFF10231A),
-          secondaryContainer: const Color(0xFF253A30),
-          onSecondaryContainer: const Color(0xFFD7E9DE),
-          surface: surface,
-          onSurface: const Color(0xFFE3E8E4),
-          onSurfaceVariant: const Color(0xFFBCC5BF),
-          outline: const Color(0xFF7F8A83),
-          outlineVariant: const Color(0xFF3B443F),
-          error: const Color(0xFFFFB4AB),
-          onError: const Color(0xFF690005),
-          errorContainer: const Color(0xFF4B1518),
-          onErrorContainer: const Color(0xFFFFDAD6),
-          surfaceContainerLowest: const Color(0xFF0C0F0D),
-          surfaceContainerLow: const Color(0xFF171C19),
-          surfaceContainer: const Color(0xFF1B211D),
-          surfaceContainerHigh: const Color(0xFF222824),
-          surfaceContainerHighest: const Color(0xFF29302B),
-        );
-    return _build(
-      scheme: scheme,
-      backgroundColor: background,
-      navigationColor: const Color(0xFF131714),
-      overlayStyle: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: background,
-        systemNavigationBarIconBrightness: Brightness.light,
-      ),
-    );
-  }
+  static ThemeData dark([ThemePack? pack]) =>
+      fromPalette((pack ?? themePack(ThemePackId.opencode)).dark);
 
-  static ThemeData light() {
-    final scheme =
-        ColorScheme.fromSeed(
-          seedColor: lightAccent,
-          brightness: Brightness.light,
-        ).copyWith(
-          primary: lightAccent,
-          onPrimary: Colors.white,
-          primaryContainer: const Color(0xFFD0F2DF),
-          onPrimaryContainer: const Color(0xFF083923),
-          secondary: const Color(0xFF4F6A5D),
-          onSecondary: Colors.white,
-          secondaryContainer: const Color(0xFFD7E8DE),
-          onSecondaryContainer: const Color(0xFF243A30),
-          surface: lightSurface,
-          onSurface: const Color(0xFF172019),
-          onSurfaceVariant: const Color(0xFF46534B),
-          outline: const Color(0xFF68776E),
-          outlineVariant: const Color(0xFFC5D0C8),
-          error: const Color(0xFFBA1A1A),
-          onError: Colors.white,
-          errorContainer: const Color(0xFFFFDAD6),
-          onErrorContainer: const Color(0xFF410002),
-          surfaceContainerLowest: Colors.white,
-          surfaceContainerLow: const Color(0xFFF0F5F1),
-          surfaceContainer: const Color(0xFFEAF0EB),
-          surfaceContainerHigh: const Color(0xFFE3EAE5),
-          surfaceContainerHighest: const Color(0xFFDCE4DE),
-        );
+  static ThemeData light([ThemePack? pack]) =>
+      fromPalette((pack ?? themePack(ThemePackId.opencode)).light);
+
+  static ThemeData fromPalette(ThemePalette palette) {
+    final dark = palette.scheme.brightness == Brightness.dark;
     return _build(
-      scheme: scheme,
-      backgroundColor: lightBackground,
-      navigationColor: const Color(0xFFF0F5F1),
-      overlayStyle: const SystemUiOverlayStyle(
+      scheme: palette.scheme,
+      backgroundColor: palette.background,
+      navigationColor: palette.navigation,
+      successColor: palette.success,
+      overlayStyle: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
-        systemNavigationBarColor: lightBackground,
-        systemNavigationBarIconBrightness: Brightness.dark,
+        statusBarIconBrightness: dark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: dark ? Brightness.dark : Brightness.light,
+        systemNavigationBarColor: palette.background,
+        systemNavigationBarIconBrightness: dark
+            ? Brightness.light
+            : Brightness.dark,
       ),
     );
   }
@@ -113,6 +80,7 @@ abstract final class AppTheme {
     required ColorScheme scheme,
     required Color backgroundColor,
     required Color navigationColor,
+    required Color successColor,
     required SystemUiOverlayStyle overlayStyle,
   }) {
     const roundedRectangle = RoundedRectangleBorder(
@@ -138,6 +106,7 @@ abstract final class AppTheme {
     );
 
     return base.copyWith(
+      extensions: [AppSemanticColors(success: successColor)],
       textTheme: base.textTheme.copyWith(
         headlineSmall: base.textTheme.headlineSmall?.copyWith(
           fontWeight: FontWeight.w700,

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -9,6 +10,7 @@ import 'state/connection.dart';
 import 'state/profiles.dart';
 import 'update/shorebird_update_notice.dart';
 import 'ui/app_theme.dart';
+import 'ui/theme_packs.dart';
 import 'ui/navigation/chat_route.dart';
 import 'ui/screens/guide_screen.dart';
 import 'ui/screens/about_screen.dart';
@@ -188,6 +190,7 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    unawaited(_harvestDynamicColors());
     _controller = ref.read(connProvider);
     _controller.addListener(_controllerChanged);
     _updateService = widget.updateService ?? ShorebirdAppUpdateService();
@@ -266,7 +269,14 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<AppAppearance>(
       valueListenable: _controller.appearance,
-      builder: (context, appearance, _) => MaterialApp(
+      builder: (context, appearance, _) => ListenableBuilder(
+        listenable: Listenable.merge([
+          _controller.themePack,
+          harvestedDynamicPack,
+        ]),
+        builder: (context, _) {
+          final pack = effectiveThemePack(_controller.themePack.value);
+          return MaterialApp(
         navigatorKey: _navigatorKey,
         scaffoldMessengerKey: _messengerKey,
         builder: (context, child) => ShorebirdUpdateNotice(
@@ -281,8 +291,8 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
           AppAppearance.light => ThemeMode.light,
           AppAppearance.dark => ThemeMode.dark,
         },
-        theme: AppTheme.light(),
-        darkTheme: AppTheme.dark(),
+        theme: AppTheme.light(pack),
+        darkTheme: AppTheme.dark(pack),
         initialRoute: '/',
         routes: {
           '/': (_) => _Root(),
@@ -308,8 +318,24 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
           }
           return null;
         },
+          );
+        },
       ),
     );
+  }
+
+  Future<void> _harvestDynamicColors() async {
+    try {
+      final palette = await DynamicColorPlugin.getCorePalette();
+      if (palette == null) return;
+      harvestedDynamicPack.value = dynamicThemePack(
+        lightScheme: palette.toColorScheme(brightness: Brightness.light),
+        darkScheme: palette.toColorScheme(brightness: Brightness.dark),
+      );
+    } catch (_) {
+      // Below Android 12, on desktop, or in tests: Material You stays
+      // unavailable and the OpenCode pack remains the fallback.
+    }
   }
 
   @override

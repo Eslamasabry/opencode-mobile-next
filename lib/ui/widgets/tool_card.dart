@@ -361,7 +361,7 @@ class _ToolCardState extends State<ToolCard> {
   Color get _statusColor {
     switch (widget.state.status) {
       case 'completed':
-        return AppTheme.success(Theme.of(context).colorScheme);
+        return AppTheme.successOf(Theme.of(context));
       case 'error':
         return Theme.of(context).colorScheme.error;
       default:
@@ -1021,7 +1021,7 @@ class _PatchFileSection extends StatelessWidget {
               Text(
                 '+$additions',
                 style: TextStyle(
-                  color: AppTheme.success(Theme.of(context).colorScheme),
+                  color: AppTheme.successOf(Theme.of(context)),
                 ),
               ),
             if (additions > 0 && deletions > 0) const SizedBox(width: 6),
@@ -1100,7 +1100,7 @@ class _DiffPreviewLine extends StatelessWidget {
     final added = line.startsWith('+') && !line.startsWith('+++');
     final removed = line.startsWith('-') && !line.startsWith('---');
     final header = line.startsWith('@@') || line.startsWith('diff ');
-    final success = AppTheme.success(theme.colorScheme);
+    final success = AppTheme.successOf(theme);
     final background = added
         ? success.withValues(alpha: .14)
         : removed
@@ -1155,7 +1155,7 @@ class _TodoRow extends StatelessWidget {
                 ? Icons.hourglass_top_rounded
                 : Icons.checklist_rounded,
             size: 17,
-            color: done ? AppTheme.success(theme.colorScheme) : theme.hintColor,
+            color: done ? AppTheme.successOf(theme) : theme.hintColor,
           ),
           const SizedBox(width: 8),
           Expanded(

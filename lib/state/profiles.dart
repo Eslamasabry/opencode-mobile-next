@@ -98,6 +98,9 @@ String? validateServerProfileUrl(
 
 enum AppAppearance { system, light, dark }
 
+/// Selectable color identity; palettes live in lib/ui/theme_packs.dart.
+enum ThemePackId { opencode, catppuccin, gruvbox, solarized, dynamic }
+
 class ProfileLocation {
   final String? directory;
   final String? workspace;
@@ -118,6 +121,7 @@ class ProfileStore {
   static const _transcriptReasoningKey = 'oc.transcript.reasoningExpanded';
   static const _transcriptTimestampsKey = 'oc.transcript.timestampsVisible';
   static const _appearanceKey = 'oc.appearance';
+  static const _themePackKey = 'oc.themePack';
   static const _providerRuntimeRefreshVersion = 'v1';
 
   final SharedPreferences prefs;
@@ -407,6 +411,20 @@ class ProfileStore {
     'light' => AppAppearance.light,
     _ => AppAppearance.dark,
   };
+
+  ThemePackId get themePack {
+    final raw = prefs.getString(_themePackKey);
+    for (final pack in ThemePackId.values) {
+      if (pack.name == raw) return pack;
+    }
+    return ThemePackId.opencode;
+  }
+
+  Future<void> setThemePack(ThemePackId pack) async {
+    if (!await prefs.setString(_themePackKey, pack.name)) {
+      throw StateError('Could not save the theme preference');
+    }
+  }
 
   Future<void> setAppearance(AppAppearance appearance) async {
     if (!await prefs.setString(_appearanceKey, appearance.name)) {
