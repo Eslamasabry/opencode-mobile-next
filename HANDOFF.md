@@ -1058,6 +1058,31 @@ overflow, or OOM. Final-tree Flutter analysis is clean, all 354 tests pass
 serially, Android `lintRelease` passes, and the release APK compiled at
 160,792,591 bytes. This capability includes no Traycer integration.
 
+Remote MCP OAuth now completes on Android instead of ending after the browser
+opens. Mobile preserves OpenCode's server-issued `oauthState`, accepts only an
+explicit HTTP loopback callback embedded in the already validated HTTPS
+authorization URL, listens on that phone-local address for up to ten minutes,
+rejects mismatched state, and sends the authorization code through generated
+`mcp.auth.callback`. A flat pending row provides manual callback-URL/code entry
+when automatic capture is unavailable and cancels through generated
+`mcp.auth.remove`; leaving the screen also clears the listener and pending
+server transport. The same work repaired the MCP server row and authorization
+dialog at 320dp with 2x text scaling, without nested cards.
+
+Pixel 6 release-mode proof used isolated OpenCode `1.18.23` behind a controlled
+MCP OAuth fixture. The app rendered `needs_auth`, opened the validated browser
+host, showed its secure pending row, received a real Android Chrome redirect at
+`127.0.0.1:19876`, posted the exact callback through the selected workspace,
+and refreshed to `connected`. The proxy recorded the generated start, callback,
+and status requests, while Android logged no fatal exception, ANR, RenderFlex
+overflow, or OOM. The generated SDK audit now counts 80 directly used
+operations. Final-tree Flutter analysis is clean, all 361 tests pass serially,
+Android `lintRelease` passes, and the isolated release APK compiled at
+161,022,083 bytes. The exact final APK was reinstalled on `emulator-5554` and
+repeated the browser-to-phone-loopback success path before cleanup. This
+locally signed APK must not be distributed. Traycer remains explicitly
+deferred.
+
 ## Shorebird wake patch for `1.0.17+18`
 
 - Shorebird release ID: `789345`

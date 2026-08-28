@@ -9,7 +9,7 @@ Authoritative inputs:
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app
-currently calls **78 generated operations directly**. It also uses a set of
+currently calls **80 generated operations directly**. It also uses a set of
 older or compatibility routes through `OpenCodeApi` and raw `Dio`; those are
 listed separately so a working feature is not incorrectly labelled missing.
 
@@ -34,7 +34,7 @@ Legend:
 | Global | `globalConfigGet`, `globalConfigUpdate` | health | dispose, event, upgrade |
 | Instance | `instanceDispose`, `vcsDiff`, `vcsGet`, `vcsStatus`, `lspStatus`, `formatterStatus` | - | agents, skills, command list, path, VCS raw diff/apply |
 | Integrations | list, key connect, OAuth start, attempt status, complete, cancel | provider runtime refresh after confirmed completion | - |
-| MCP | status, connect, disconnect, auth start | - | add, auth authenticate/callback/remove |
+| MCP | status, connect, disconnect, auth start/callback/remove | - | runtime-only add and same-host auth authenticate |
 | Messages v2 | - | legacy session message list | `v2SessionMessages` |
 | Models v2 | - | raw `/api/model` catalog parser | `v2ModelList` generated model is unused |
 | OpenCode HTTP v2 | credential remove | raw `/api/agent` catalog parser | agent list, credential update, health, location |
@@ -168,7 +168,18 @@ Legend:
    `v2.permission.saved.remove` only after explicit confirmation. Loading and
    mutation both wait for the wake-reconciled repository; an unavailable older
    endpoint stays scoped to this screen instead of breaking Settings.
-9. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
+9. **Mobile MCP OAuth completion:** remote MCP authorization no longer stops
+   after opening the phone browser. Mobile retains OpenCode's `oauthState`,
+   discovers only an explicit HTTP loopback redirect from the validated HTTPS
+   authorization URL, listens on that phone-local callback, rejects mismatched
+   state, and forwards the code through generated `mcp.auth.callback`. A flat
+   pending row exposes manual callback-URL/code entry when the port is occupied
+   or a provider uses a custom redirect, plus cancellation through generated
+   `mcp.auth.remove`. The listener is bounded to loopback and ten minutes, and
+   route disposal cleans up the server-side pending transport. The blocking
+   `mcp.auth.authenticate` endpoint remains hidden because it opens a browser on
+   the OpenCode host and is correct for same-host desktop clients, not Android.
+10. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
    worktree lifecycle are deliberately not the current implementation lane.
 
 ## Deliberate non-goals

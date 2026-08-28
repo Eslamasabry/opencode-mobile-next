@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/api/mcp_oauth.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/state/connection.dart';
@@ -18,7 +19,13 @@ class _IntegrationsRepository implements ProductRepository {
   Object? resourceError;
   Object? integrationError;
   Object? providerDisconnectError;
-  String mcpAuthorizationUrl = 'https://mcp-auth.example.com/authorize';
+  McpAuthLaunch mcpAuthLaunch = McpAuthLaunch(
+    authorizationUrl: Uri.parse(
+      'https://mcp-auth.example.com/authorize?redirect_uri='
+      'http%3A%2F%2F127.0.0.1%3A19876%2Fmcp%2Foauth%2Fcallback',
+    ),
+    oauthState: 'mcp-state-1',
+  );
   IntegrationAuthLaunch oauthLaunch = const IntegrationAuthLaunch(
     attemptID: 'attempt-1',
     url: 'https://provider-auth.example.com/authorize',
@@ -36,6 +43,9 @@ class _IntegrationsRepository implements ProductRepository {
   int providerRefreshCalls = 0;
   int providerDisconnectCalls = 0;
   int mcpConnectCalls = 0;
+  int mcpCompleteCalls = 0;
+  int mcpCancelCalls = 0;
+  String? mcpCompletionCode;
   IntegrationInfo? disconnectedIntegration;
   String? oauthCompletionCode;
 
@@ -61,8 +71,24 @@ class _IntegrationsRepository implements ProductRepository {
   }
 
   @override
-  Future<String> startMcpAuthentication(String name) async =>
-      mcpAuthorizationUrl;
+  Future<McpAuthLaunch> startMcpAuthentication(String name) async =>
+      mcpAuthLaunch;
+
+  @override
+  Future<McpServerInfo> completeMcpAuthentication(
+    String name,
+    String code,
+  ) async {
+    mcpCompleteCalls += 1;
+    mcpCompletionCode = code;
+    servers = [McpServerInfo(name: name, status: 'connected')];
+    return servers.single;
+  }
+
+  @override
+  Future<void> cancelMcpAuthentication(String name) async {
+    mcpCancelCalls += 1;
+  }
 
   @override
   Future<void> connectMcp(String name) async {
@@ -487,8 +513,12 @@ void main() {
       ..servers = const [
         McpServerInfo(name: 'remote-tools', status: 'needs_auth'),
       ]
-      ..mcpAuthorizationUrl =
-          'https://mcp-auth.example.com:8443/authorize?state=secret';
+      ..mcpAuthLaunch = McpAuthLaunch(
+        authorizationUrl: Uri.parse(
+          'https://mcp-auth.example.com:8443/authorize?state=secret',
+        ),
+        oauthState: 'mcp-state-1',
+      );
 
     await tester.pumpWidget(_app(await _controller(repository)));
     await tester.pumpAndSettle();
@@ -512,7 +542,10 @@ void main() {
       ..servers = const [
         McpServerInfo(name: 'remote-tools', status: 'needs_auth'),
       ]
-      ..mcpAuthorizationUrl = 'opencode://authorize';
+      ..mcpAuthLaunch = McpAuthLaunch(
+        authorizationUrl: Uri.parse('opencode://authorize'),
+        oauthState: 'mcp-state-1',
+      );
 
     await tester.pumpWidget(_app(await _controller(repository)));
     await tester.pumpAndSettle();
@@ -521,6 +554,153 @@ void main() {
 
     expect(find.text('Open authorization page?'), findsNothing);
     expect(find.textContaining('unsafe authorization link'), findsOneWidget);
+  });
+
+  testWidgets('MCP authorization completes from a state-validated callback URL', (
+    tester,
+  ) async {
+    Uri? opened;
+    final repository = _IntegrationsRepository()
+      ..servers = const [
+        McpServerInfo(name: 'remote-tools', status: 'needs_auth'),
+      ]
+      ..mcpAuthLaunch = McpAuthLaunch(
+        authorizationUrl: Uri.parse(
+          'https://mcp-auth.example.com/authorize?client_id=mobile',
+        ),
+        oauthState: 'mcp-state-1',
+      );
+
+    await tester.pumpWidget(
+      _app(
+        await _controller(repository),
+        authorizationLauncher: (destination) async {
+          opened = destination;
+          return true;
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Authenticate'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('Open browser'));
+    await tester.pumpAndSettle();
+
+    expect(opened?.host, 'mcp-auth.example.com');
+    expect(find.byKey(const ValueKey('pending-mcp-oauth')), findsOneWidget);
+    expect(
+      find.textContaining('Automatic callback capture is unavailable'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('enter-mcp-oauth-code')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('mcp-oauth-code-input')),
+      'http://127.0.0.1:19876/mcp/oauth/callback?code=code-1&state=mcp-state-1',
+    );
+    await tester.tap(find.byKey(const ValueKey('complete-mcp-oauth')));
+    await tester.pumpAndSettle();
+
+    expect(repository.mcpCompleteCalls, 1);
+    expect(repository.mcpCompletionCode, 'code-1');
+    expect(find.byKey(const ValueKey('pending-mcp-oauth')), findsNothing);
+    expect(find.text('Connected and tools are available'), findsOneWidget);
+    expect(find.text('remote-tools authenticated'), findsOneWidget);
+  });
+
+  testWidgets(
+    'MCP authorization rejects mismatched state and can be cancelled',
+    (tester) async {
+      final repository = _IntegrationsRepository()
+        ..servers = const [
+          McpServerInfo(name: 'remote-tools', status: 'needs_auth'),
+        ]
+        ..mcpAuthLaunch = McpAuthLaunch(
+          authorizationUrl: Uri.parse(
+            'https://mcp-auth.example.com/authorize?client_id=mobile',
+          ),
+          oauthState: 'mcp-state-1',
+        );
+
+      await tester.pumpWidget(
+        _app(
+          await _controller(repository),
+          authorizationLauncher: (_) async => true,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Authenticate'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.tap(find.text('Open browser'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('enter-mcp-oauth-code')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('mcp-oauth-code-input')),
+        'http://127.0.0.1:19876/mcp/oauth/callback?code=code-1&state=wrong',
+      );
+      await tester.tap(find.byKey(const ValueKey('complete-mcp-oauth')));
+      await tester.pump();
+
+      expect(find.textContaining('state does not match'), findsOneWidget);
+      expect(repository.mcpCompleteCalls, 0);
+      await tester.tap(find.text('Back'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('cancel-mcp-oauth')));
+      await tester.pumpAndSettle();
+
+      expect(repository.mcpCancelCalls, 1);
+      expect(find.byKey(const ValueKey('pending-mcp-oauth')), findsNothing);
+    },
+  );
+
+  testWidgets('pending MCP authorization fits compact large-text phones', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 480);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final repository = _IntegrationsRepository()
+      ..servers = const [
+        McpServerInfo(name: 'remote-tools', status: 'needs_auth'),
+      ]
+      ..mcpAuthLaunch = McpAuthLaunch(
+        authorizationUrl: Uri.parse(
+          'https://mcp-auth.example.com/authorize?client_id=mobile',
+        ),
+        oauthState: 'mcp-state-1',
+      );
+
+    await tester.pumpWidget(
+      _app(
+        await _controller(repository),
+        authorizationLauncher: (_) async => true,
+        textScale: 2,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Authenticate'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(tester.takeException(), isNull);
+    await tester.ensureVisible(find.text('Open browser'));
+    await tester.tap(find.text('Open browser'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('enter-mcp-oauth-code')),
+      160,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    expect(find.byKey(const ValueKey('enter-mcp-oauth-code')), findsOneWidget);
+    expect(find.byKey(const ValueKey('cancel-mcp-oauth')), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('MCP actions wait for the wake-time replacement repository', (

@@ -438,6 +438,85 @@ void main() {
   });
 
   test(
+    'MCP OAuth preserves state and completes through generated routes',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        final requests = <({String method, Uri uri, Object? body})>[];
+        server.listen((request) async {
+          final text = await utf8.decoder.bind(request).join();
+          requests.add((
+            method: request.method,
+            uri: request.uri,
+            body: text.isEmpty ? null : jsonDecode(text),
+          ));
+          request.response.headers.contentType = ContentType.json;
+          if (request.method == 'DELETE') {
+            request.response.write(jsonEncode({'success': true}));
+          } else if (request.uri.path.endsWith('/auth/callback')) {
+            request.response.write(jsonEncode({'status': 'connected'}));
+          } else {
+            request.response.write(
+              jsonEncode({
+                'authorizationUrl':
+                    'https://mcp-auth.example.com/authorize?redirect_uri='
+                    'http%3A%2F%2F127.0.0.1%3A19876%2Fmcp%2Foauth%2Fcallback',
+                'oauthState': 'state-1',
+              }),
+            );
+          }
+          await request.response.close();
+        });
+
+        final api = OpenCodeApi(
+          baseUrl: 'http://${server.address.host}:${server.port}',
+        );
+        final repository = SdkProductRepository(api.sdkClient)
+          ..setLocation(directory: '/work/mobile', workspace: 'workspace-1');
+        try {
+          final launch = await repository.startMcpAuthentication(
+            'remote/tools',
+          );
+          expect(launch.oauthState, 'state-1');
+          expect(launch.authorizationUrl.host, 'mcp-auth.example.com');
+
+          final status = await repository.completeMcpAuthentication(
+            'remote/tools',
+            'code-1',
+          );
+          expect(status.name, 'remote/tools');
+          expect(status.status, 'connected');
+
+          await repository.cancelMcpAuthentication('remote/tools');
+
+          expect(requests.map((request) => request.method), [
+            'POST',
+            'POST',
+            'DELETE',
+          ]);
+          expect(requests.map((request) => request.uri.path), [
+            '/mcp/remote%2Ftools/auth',
+            '/mcp/remote%2Ftools/auth/callback',
+            '/mcp/remote%2Ftools/auth',
+          ]);
+          expect(
+            requests.every(
+              (request) =>
+                  request.uri.queryParameters['directory'] == '/work/mobile' &&
+                  request.uri.queryParameters['workspace'] == 'workspace-1',
+            ),
+            isTrue,
+          );
+          expect(requests[1].body, {'code': 'code-1'});
+        } finally {
+          api.close();
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
+
+  test(
     'persistent MCP setup rejects duplicate names before patching',
     () async {
       await HttpOverrides.runZoned(() async {

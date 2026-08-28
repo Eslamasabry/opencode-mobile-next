@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:opencode_sdk/opencode_sdk.dart' as sdk;
 
+import 'mcp_oauth.dart';
 import 'models.dart';
 
 enum VcsDiffMode { workingTree, branch }
@@ -655,7 +656,18 @@ abstract class ProductRepository {
   Future<List<McpResourceInfo>> listMcpResources();
   Future<void> connectMcp(String name);
   Future<void> disconnectMcp(String name);
-  Future<String> startMcpAuthentication(String name);
+  Future<McpAuthLaunch> startMcpAuthentication(String name);
+  Future<McpServerInfo> completeMcpAuthentication(String name, String code) =>
+      Future.error(
+        const ProductException(
+          'Completing MCP authentication is unavailable on this server',
+        ),
+      );
+  Future<void> cancelMcpAuthentication(String name) => Future.error(
+    const ProductException(
+      'Cancelling MCP authentication is unavailable on this server',
+    ),
+  );
   Future<void> addMcpServer(
     McpServerDraft draft, {
     required McpConfigScope scope,
@@ -1264,14 +1276,9 @@ class SdkProductRepository
           directory: _directory,
           workspace: _workspace,
         );
-        return (response.data ?? const {}).entries.map((entry) {
-          final data = entry.value.objectValue ?? const <String, dynamic>{};
-          return McpServerInfo(
-            name: entry.key,
-            status: (data['status'] ?? 'unknown').toString(),
-            error: data['error']?.toString(),
-          );
-        }).toList();
+        return (response.data ?? const {}).entries
+            .map((entry) => _mcpServerInfo(entry.key, entry.value))
+            .toList();
       });
 
   @override
@@ -1317,19 +1324,49 @@ class SdkProductRepository
   );
 
   @override
-  Future<String> startMcpAuthentication(String name) =>
+  Future<McpAuthLaunch> startMcpAuthentication(String name) =>
       _guard('Could not start authentication', () async {
         final response = await _client.getMcpApi().mcpAuthStart(
           name: name,
           directory: _directory,
           workspace: _workspace,
         );
-        final url = response.data?.authorizationUrl;
-        if (url == null) {
+        final data = response.data;
+        final url = Uri.tryParse(data?.authorizationUrl.trim() ?? '');
+        final state = data?.oauthState.trim() ?? '';
+        if (url == null || url.toString().isEmpty || state.isEmpty) {
           throw const ProductException('No authorization link was returned');
         }
-        return url;
+        return McpAuthLaunch(authorizationUrl: url, oauthState: state);
       });
+
+  @override
+  Future<McpServerInfo> completeMcpAuthentication(String name, String code) =>
+      _guard('Could not complete authentication', () async {
+        final response = await _client.getMcpApi().mcpAuthCallback(
+          name: name,
+          directory: _directory,
+          workspace: _workspace,
+          mcpAuthCallbackRequest: sdk.McpAuthCallbackRequest(code: code),
+        );
+        final status = response.data;
+        if (status == null) {
+          throw const ProductException(
+            'OpenCode did not return the MCP connection status',
+          );
+        }
+        return _mcpServerInfo(name, status);
+      });
+
+  @override
+  Future<void> cancelMcpAuthentication(String name) => _guard(
+    'Could not cancel authentication',
+    () => _client.getMcpApi().mcpAuthRemove(
+      name: name,
+      directory: _directory,
+      workspace: _workspace,
+    ),
+  );
 
   @override
   Future<void> addMcpServer(
@@ -1903,6 +1940,15 @@ class SdkProductRepository
     'env' => 'Server environment',
     _ => type,
   };
+
+  static McpServerInfo _mcpServerInfo(String name, sdk.MCPStatus status) {
+    final data = status.objectValue ?? const <String, dynamic>{};
+    return McpServerInfo(
+      name: name,
+      status: (data['status'] ?? 'unknown').toString(),
+      error: data['error']?.toString(),
+    );
+  }
 
   static Future<T> _guard<T>(
     String message,

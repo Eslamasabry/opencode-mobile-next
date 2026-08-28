@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../api/models.dart' show ModelRef;
+import '../../api/mcp_oauth.dart';
 import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
@@ -432,7 +433,8 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   String? _resourceError;
   String? _integrationError;
   final Set<String> _busy = {};
-  bool _refreshOnResume = false;
+  _PendingMcpOAuth? _pendingMcpOAuth;
+  bool _finishingMcpOAuth = false;
   _PendingIntegrationOAuth? _pendingOAuth;
   bool _checkingOAuth = false;
   bool _requestCodeOnResume = false;
@@ -460,11 +462,6 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
           if (mounted) unawaited(_enterOAuthCode());
         });
       }
-    }
-    if (_refreshOnResume) {
-      _refreshOnResume = false;
-      unawaited(_load());
-      unawaited(widget.controller.refreshCatalog());
     }
   }
 
@@ -543,21 +540,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
           break;
         case 'needs_auth':
         case 'needs_client_registration':
-          final url = await repository.startMcpAuthentication(server.name);
-          final destination = parseAuthorizationUrl(url);
-          if (!mounted || !await _confirmAuthorizationLaunch(destination)) {
-            return;
-          }
-          final launched = await launchUrl(
-            destination,
-            mode: LaunchMode.externalApplication,
-          );
-          if (!launched) {
-            throw const ProductException(
-              'Could not open the authorization page',
-            );
-          }
-          _refreshOnResume = true;
+          await _startMcpAuthentication(server, repository);
           return;
         default:
           await repository.connectMcp(server.name);
@@ -571,6 +554,152 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
       }
     } finally {
       if (mounted) setState(() => _busy.remove(server.name));
+    }
+  }
+
+  Future<void> _startMcpAuthentication(
+    McpServerInfo server,
+    ProductRepository repository,
+  ) async {
+    if (_pendingMcpOAuth != null) {
+      throw const ProductException(
+        'Finish or cancel the current MCP authorization first.',
+      );
+    }
+    final launch = await repository.startMcpAuthentication(server.name);
+    final destination = parseAuthorizationUrl(
+      launch.authorizationUrl.toString(),
+    );
+    if (!mounted || !await _confirmAuthorizationLaunch(destination)) {
+      await repository.cancelMcpAuthentication(server.name);
+      return;
+    }
+
+    McpOAuthLoopbackListener? listener;
+    final redirect = mcpLoopbackRedirect(destination);
+    if (redirect != null) {
+      try {
+        listener = await McpOAuthLoopbackListener.bind(
+          redirect: redirect,
+          expectedState: launch.oauthState,
+        );
+      } catch (_) {
+        // A custom callback, occupied port, or Android network policy still has
+        // a manual code/URL path in the pending row below.
+      }
+    }
+    if (!mounted) {
+      await listener?.close();
+      await repository.cancelMcpAuthentication(server.name);
+      return;
+    }
+
+    final pending = _PendingMcpOAuth(
+      server: server,
+      launch: launch,
+      listener: listener,
+    );
+    setState(() => _pendingMcpOAuth = pending);
+    if (listener != null) unawaited(_watchMcpCallback(pending));
+    try {
+      final opened = widget.authorizationLauncher == null
+          ? await launchUrl(destination, mode: LaunchMode.externalApplication)
+          : await widget.authorizationLauncher!(destination);
+      if (!opened) {
+        throw const ProductException('Could not open the authorization page');
+      }
+    } catch (_) {
+      if (mounted && _pendingMcpOAuth == pending) {
+        setState(() => _pendingMcpOAuth = null);
+      }
+      await listener?.close();
+      await repository.cancelMcpAuthentication(server.name);
+      rethrow;
+    }
+  }
+
+  Future<void> _watchMcpCallback(_PendingMcpOAuth pending) async {
+    try {
+      final code = await pending.listener!.code;
+      if (!mounted || _pendingMcpOAuth != pending) return;
+      await _completeMcpAuthentication(pending, code);
+    } catch (error) {
+      if (!mounted || _pendingMcpOAuth != pending || _finishingMcpOAuth) {
+        return;
+      }
+      _showError(error);
+    }
+  }
+
+  Future<void> _enterMcpAuthorizationCode() async {
+    final pending = _pendingMcpOAuth;
+    if (pending == null || _finishingMcpOAuth) return;
+    final code = await showDialog<String>(
+      context: context,
+      builder: (context) =>
+          _McpOAuthCodeDialog(expectedState: pending.launch.oauthState),
+    );
+    if (code == null || !mounted || _pendingMcpOAuth != pending) return;
+    await _completeMcpAuthentication(pending, code);
+  }
+
+  Future<void> _completeMcpAuthentication(
+    _PendingMcpOAuth pending,
+    String code,
+  ) async {
+    if (_finishingMcpOAuth || _pendingMcpOAuth != pending) return;
+    setState(() => _finishingMcpOAuth = true);
+    try {
+      final repository = await _requireActionRepository();
+      final status = await repository.completeMcpAuthentication(
+        pending.server.name,
+        code,
+      );
+      await pending.listener?.close();
+      if (!mounted || _pendingMcpOAuth != pending) return;
+      setState(() {
+        _pendingMcpOAuth = null;
+        _servers = [
+          for (final server in _servers ?? const <McpServerInfo>[])
+            if (server.name == status.name) status else server,
+        ];
+      });
+      await Future.wait([_loadServers(repository), _loadResources(repository)]);
+      if (!mounted) return;
+      final connected = status.status == 'connected';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            connected
+                ? '${pending.server.name} authenticated'
+                : status.error?.isNotEmpty == true
+                ? status.error!
+                : '${pending.server.name}: ${_statusLabel(status.status)}',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (mounted) _showError(error);
+    } finally {
+      if (mounted) setState(() => _finishingMcpOAuth = false);
+    }
+  }
+
+  Future<void> _cancelMcpAuthentication() async {
+    final pending = _pendingMcpOAuth;
+    if (pending == null || _finishingMcpOAuth) return;
+    setState(() => _finishingMcpOAuth = true);
+    await pending.listener?.close();
+    try {
+      final repository = await _requireActionRepository();
+      await repository.cancelMcpAuthentication(pending.server.name);
+      if (!mounted || _pendingMcpOAuth != pending) return;
+      setState(() => _pendingMcpOAuth = null);
+      await _loadServers(repository);
+    } catch (error) {
+      if (mounted) _showError(error);
+    } finally {
+      if (mounted) setState(() => _finishingMcpOAuth = false);
     }
   }
 
@@ -658,27 +787,32 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
                 ),
               )
             else
-              for (final server in _servers!)
-                ListTile(
-                  leading: _McpStatus(status: server.status),
-                  title: Text(server.name),
-                  subtitle: Text(
-                    server.error?.isNotEmpty == true
-                        ? server.error!
-                        : _statusLabel(server.status),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: _busy.contains(server.name)
-                      ? const SizedBox.square(
-                          dimension: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : TextButton(
-                          onPressed: () => _action(server),
-                          child: Text(_actionLabel(server.status)),
-                        ),
+              for (final server in _servers!) ...[
+                _McpServerTile(
+                  server: server,
+                  subtitle: server.error?.isNotEmpty == true
+                      ? server.error!
+                      : _statusLabel(server.status),
+                  actionLabel: _pendingMcpOAuth?.server.name == server.name
+                      ? 'Authorizing'
+                      : _actionLabel(server.status),
+                  busy:
+                      _busy.contains(server.name) ||
+                      (_pendingMcpOAuth?.server.name == server.name &&
+                          _finishingMcpOAuth),
+                  onAction: _pendingMcpOAuth?.server.name == server.name
+                      ? null
+                      : () => _action(server),
                 ),
+                if (_pendingMcpOAuth case final pending?
+                    when pending.server.name == server.name)
+                  _PendingMcpOAuthTile(
+                    pending: pending,
+                    busy: _finishingMcpOAuth,
+                    onEnterCode: _enterMcpAuthorizationCode,
+                    onCancel: _cancelMcpAuthentication,
+                  ),
+              ],
             const SectionLabel('Provider connections'),
             if (_pendingOAuth case final pending?)
               _PendingOAuthTile(
@@ -753,6 +887,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     return await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
+            scrollable: true,
             title: const Text('Open authorization page?'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -1120,7 +1255,251 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     _serverLoadGeneration++;
     _resourceLoadGeneration++;
     _integrationLoadGeneration++;
+    if (_pendingMcpOAuth case final pending?) {
+      unawaited(_disposePendingMcpAuthentication(pending));
+    }
     WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  Future<void> _disposePendingMcpAuthentication(
+    _PendingMcpOAuth pending,
+  ) async {
+    await pending.listener?.close();
+    try {
+      final repository = await widget.controller.prepareActionRepository();
+      await repository?.cancelMcpAuthentication(pending.server.name);
+    } catch (_) {
+      // Route disposal cannot present recovery UI. A later auth start replaces
+      // any abandoned server-side pending transport.
+    }
+  }
+}
+
+class _McpServerTile extends StatelessWidget {
+  final McpServerInfo server;
+  final String subtitle;
+  final String actionLabel;
+  final bool busy;
+  final VoidCallback? onAction;
+
+  const _McpServerTile({
+    required this.server,
+    required this.subtitle,
+    required this.actionLabel,
+    required this.busy,
+    required this.onAction,
+  });
+
+  Widget _action() => busy
+      ? const Padding(
+          padding: EdgeInsets.all(14),
+          child: SizedBox.square(
+            dimension: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        )
+      : TextButton(onPressed: onAction, child: Text(actionLabel));
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final scaledBody = MediaQuery.textScalerOf(context).scale(14);
+      final stackAction = constraints.maxWidth < 420 || scaledBody > 20;
+      if (!stackAction) {
+        return ListTile(
+          leading: _McpStatus(status: server.status),
+          title: Text(server.name),
+          subtitle: Text(
+            subtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          trailing: _action(),
+        );
+      }
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 12, 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: _McpStatus(status: server.status),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    server.name,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  _action(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+class _PendingMcpOAuth {
+  final McpServerInfo server;
+  final McpAuthLaunch launch;
+  final McpOAuthLoopbackListener? listener;
+
+  const _PendingMcpOAuth({
+    required this.server,
+    required this.launch,
+    required this.listener,
+  });
+}
+
+class _PendingMcpOAuthTile extends StatelessWidget {
+  final _PendingMcpOAuth pending;
+  final bool busy;
+  final VoidCallback onEnterCode;
+  final VoidCallback onCancel;
+
+  const _PendingMcpOAuthTile({
+    required this.pending,
+    required this.busy,
+    required this.onEnterCode,
+    required this.onCancel,
+  });
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    container: true,
+    label: 'MCP authorization pending for ${pending.server.name}',
+    child: Padding(
+      key: const ValueKey('pending-mcp-oauth'),
+      padding: const EdgeInsets.fromLTRB(16, 4, 12, 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 4),
+            child: Icon(Icons.phonelink_lock_outlined),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Waiting for browser authorization',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  pending.listener == null
+                      ? 'Automatic callback capture is unavailable. Paste the callback URL or authorization code.'
+                      : 'The phone is securely listening for this authorization callback. You can also enter it manually.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 4,
+                  runSpacing: 4,
+                  children: [
+                    TextButton(
+                      key: const ValueKey('enter-mcp-oauth-code'),
+                      onPressed: busy ? null : onEnterCode,
+                      child: const Text('Enter code'),
+                    ),
+                    TextButton.icon(
+                      key: const ValueKey('cancel-mcp-oauth'),
+                      onPressed: busy ? null : onCancel,
+                      icon: const Icon(Icons.close_rounded),
+                      label: const Text('Cancel'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _McpOAuthCodeDialog extends StatefulWidget {
+  final String expectedState;
+
+  const _McpOAuthCodeDialog({required this.expectedState});
+
+  @override
+  State<_McpOAuthCodeDialog> createState() => _McpOAuthCodeDialogState();
+}
+
+class _McpOAuthCodeDialogState extends State<_McpOAuthCodeDialog> {
+  final _controller = TextEditingController();
+  String? _error;
+
+  void _submit() {
+    try {
+      final code = parseMcpAuthorizationCode(
+        _controller.text,
+        expectedState: widget.expectedState,
+      );
+      Navigator.pop(context, code);
+    } catch (error) {
+      setState(() => _error = error.toString());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    scrollable: true,
+    title: const Text('Complete MCP authorization'),
+    content: TextField(
+      key: const ValueKey('mcp-oauth-code-input'),
+      controller: _controller,
+      autofocus: true,
+      minLines: 1,
+      maxLines: 4,
+      autocorrect: false,
+      enableSuggestions: false,
+      decoration: InputDecoration(
+        labelText: 'Callback URL or code',
+        helperText:
+            'Paste the complete callback URL when available so its security state can be verified.',
+        errorText: _error,
+      ),
+      onSubmitted: (_) => _submit(),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Back'),
+      ),
+      FilledButton(
+        key: const ValueKey('complete-mcp-oauth'),
+        onPressed: _submit,
+        child: const Text('Complete'),
+      ),
+    ],
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
     super.dispose();
   }
 }
