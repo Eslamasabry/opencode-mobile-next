@@ -19,7 +19,7 @@ export const S11Terminal: React.FC<{ layout: Layout }> = ({ layout }) => (
     <DeviceScene
       layout={layout}
       src="shots/rec11-terminal.mp4"
-      startFrom={300}
+      startFrom={780}
       captions={[
         { text: "A real terminal.", hero: "real", at: 16 },
         { text: "Cursor-safe across sleep.", at: 120 },
