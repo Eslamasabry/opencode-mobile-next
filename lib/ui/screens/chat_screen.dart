@@ -2869,20 +2869,24 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           children: [
             if (_conn.status != StreamStatus.connected)
               ConnectionStatusBanner(controller: _conn),
-            if (shareUrl != null)
-              _SharedSessionBanner(url: shareUrl, onStop: _stopSharing),
-            if (parentID != null)
+            // At most one contextual strip below the connection truth, so
+            // banners cannot stack three deep over the transcript: a prompt
+            // error outranks subagent context, which outranks the share
+            // notice (sharing stays visible in Session actions).
+            if (_promptError case final promptError?)
+              _PromptErrorBanner(
+                message: promptError,
+                onDismiss: () => setState(() => _promptError = null),
+              )
+            else if (parentID != null)
               _SubagentContextBanner(
                 position: siblingIndex < 0 ? null : siblingIndex + 1,
                 total: siblings.isEmpty ? null : siblings.length,
                 onParent: _openParentSession,
                 onAll: _showSubagents,
-              ),
-            if (_promptError case final promptError?)
-              _PromptErrorBanner(
-                message: promptError,
-                onDismiss: () => setState(() => _promptError = null),
-              ),
+              )
+            else if (shareUrl != null)
+              _SharedSessionBanner(url: shareUrl, onStop: _stopSharing),
             Expanded(
               child: _loading
                   ? const LoadingList(rows: 6)
