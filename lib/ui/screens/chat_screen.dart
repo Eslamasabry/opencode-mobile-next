@@ -15,6 +15,7 @@ import '../../state/connection.dart';
 import '../../voice/controller.dart';
 import '../../voice/voice_ui.dart';
 import '../permission_presentation.dart';
+import '../widgets/appearance_picker.dart';
 import '../widgets/file_preview.dart';
 import '../widgets/markdown.dart';
 import '../widgets/pickers.dart';
@@ -1882,6 +1883,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         action: _ChatCommandAction.status,
       ),
       _ChatCommand.mobile(
+        slash: 'themes',
+        aliases: const ['theme'],
+        title: 'Appearance',
+        description: 'Follow Android or choose the native light or dark theme',
+        group: 'Transcript display',
+        action: _ChatCommandAction.appearance,
+      ),
+      _ChatCommand.mobile(
         slash: 'diff',
         title: 'Session changes',
         description: 'Review the actual diff for this session',
@@ -2160,6 +2169,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               builder: (_) => SettingsScreen(controller: _conn),
             ),
           );
+        }
+        return;
+      case _ChatCommandAction.appearance:
+        if (mounted) {
+          await showAppearancePicker(context, controller: _conn);
         }
         return;
       case _ChatCommandAction.diff:
@@ -3033,6 +3047,7 @@ enum _ChatCommandAction {
   skills,
   references,
   status,
+  appearance,
   diff,
   share,
   unshare,

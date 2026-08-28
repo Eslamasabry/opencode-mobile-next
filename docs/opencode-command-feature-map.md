@@ -26,7 +26,7 @@ The mobile launcher combines these sources. Client actions are explicitly mapped
 | `/org` | `/orgs`, `/switch-org` | Switch OpenCode Console organization when available | Native: account-grouped organization picker, server switch, instance disposal, and provider/model reload |
 | `/status` | — | View runtime status | Adapted: server health, version, connection, and background mode |
 | `/debug` | — | View TUI debug information | Adapted: server status; TUI renderer diagnostics are irrelevant on Flutter |
-| `/themes` | — | Switch TUI theme | Gap: the mobile app currently has one designed dark theme |
+| `/themes` | `/theme` | Switch TUI theme | Native: follow Android or choose the designed light or dark workspace theme |
 | `/help` | — | Open help | Native: searchable command and action map |
 | `/exit` | `/quit`, `/q` | Exit the terminal process | Intentionally omitted: Android owns app lifecycle |
 | `/share` | — | Share or copy session link | Native |
@@ -91,5 +91,4 @@ Selecting a dynamic command inserts it into the composer so arguments can be edi
 
 ## Next command parity work
 
-1. Decide whether mobile theme selection is valuable before exposing `/themes`; do not mirror terminal themes mechanically.
-2. Continue the generated-SDK audit with transport modernization and the highest-impact remaining coding workflow; keep Traycer deferred.
+1. Continue the generated-SDK audit with transport modernization and the highest-impact remaining coding workflow; keep Traycer deferred.

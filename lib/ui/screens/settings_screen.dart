@@ -4,8 +4,10 @@ import 'package:flutter/services.dart';
 import '../../api/models.dart';
 import '../../api/provider_presentation.dart';
 import '../../state/connection.dart';
+import '../../state/profiles.dart';
 import '../../termux/bridge.dart';
 import '../../voice/notices.dart';
+import '../widgets/appearance_picker.dart';
 import '../widgets/product_states.dart';
 import '../widgets/pickers.dart';
 import 'saved_permissions_screen.dart';
@@ -228,6 +230,19 @@ class _SettingsScreenState extends State<SettingsScreen>
               MaterialPageRoute<void>(
                 builder: (_) => SavedPermissionsScreen(controller: controller),
               ),
+            ),
+          ),
+          const SectionLabel('Appearance'),
+          ValueListenableBuilder<AppAppearance>(
+            valueListenable: controller.appearance,
+            builder: (context, appearance, _) => ListTile(
+              key: const ValueKey('appearance-settings-entry'),
+              leading: const Icon(Icons.palette_outlined),
+              title: const Text('Theme'),
+              subtitle: Text(appearanceLabel(appearance)),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () =>
+                  showAppearancePicker(context, controller: controller),
             ),
           ),
           const SectionLabel('Defaults'),

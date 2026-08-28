@@ -77,6 +77,39 @@ void main() {
     expect(connection.resumes, 1);
   });
 
+  testWidgets('app restores and applies appearance without a restart', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({'oc.appearance': 'light'});
+    final store = ProfileStore(prefs: await SharedPreferences.getInstance());
+    final connection = ConnectionController(store);
+    addTearDown(connection.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          bootstrapProvider.overrideWithValue(AppBootstrap(store)),
+          connProvider.overrideWithValue(connection),
+        ],
+        child: const OcApp(),
+      ),
+    );
+    await tester.pump();
+
+    expect(
+      tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+      ThemeMode.light,
+    );
+
+    await connection.setAppearance(AppAppearance.dark);
+    await tester.pump();
+
+    expect(
+      tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+      ThemeMode.dark,
+    );
+  });
+
   testWidgets('background suspension keeps Home on its current route', (
     tester,
   ) async {

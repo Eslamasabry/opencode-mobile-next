@@ -1265,6 +1265,28 @@ void main() {
     expect(find.text('-2'), findsOneWidget);
   });
 
+  testWidgets('themes command opens the native appearance picker', (
+    tester,
+  ) async {
+    final controller = await _pumpChat(tester, _FakeOpenCodeApi());
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'themes',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('command-mobile-themes')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('appearance-picker')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('appearance-light')));
+    await tester.pumpAndSettle();
+
+    expect(controller.appearance.value, AppAppearance.light);
+    expect(find.text('Appearance set to Light'), findsOneWidget);
+  });
+
   testWidgets('session todo view shows server status and priority', (
     tester,
   ) async {

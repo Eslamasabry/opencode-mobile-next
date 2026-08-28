@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'background/live_background.dart';
 import 'state/connection.dart';
+import 'state/profiles.dart';
 import 'update/shorebird_update_notice.dart';
 import 'ui/app_theme.dart';
 import 'ui/screens/guide_screen.dart';
@@ -126,34 +127,42 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: _navigatorKey,
-      scaffoldMessengerKey: _messengerKey,
-      builder: (context, child) => ShorebirdUpdateNotice(
-        service: _updateService,
-        messengerKey: _messengerKey,
-        child: child ?? const SizedBox.shrink(),
+    return ValueListenableBuilder<AppAppearance>(
+      valueListenable: _controller.appearance,
+      builder: (context, appearance, _) => MaterialApp(
+        navigatorKey: _navigatorKey,
+        scaffoldMessengerKey: _messengerKey,
+        builder: (context, child) => ShorebirdUpdateNotice(
+          service: _updateService,
+          messengerKey: _messengerKey,
+          child: child ?? const SizedBox.shrink(),
+        ),
+        title: 'OpenCode',
+        debugShowCheckedModeBanner: false,
+        themeMode: switch (appearance) {
+          AppAppearance.system => ThemeMode.system,
+          AppAppearance.light => ThemeMode.light,
+          AppAppearance.dark => ThemeMode.dark,
+        },
+        theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
+        initialRoute: '/',
+        routes: {
+          '/': (_) => _Root(),
+          '/servers': (_) => const ServersScreen(),
+          '/home': (_) => const HomeScreen(),
+          '/guide': (_) => GuideScreen(embedded: false),
+          '/about': (_) => const AboutScreen(),
+          '/termux-setup': (_) => const TermuxSetupScreen(),
+        },
+        onGenerateRoute: (settings) {
+          if (settings.name?.startsWith('/chat/') == true) {
+            final id = settings.name!.substring('/chat/'.length);
+            return MaterialPageRoute(builder: (_) => ChatScreen(sessionID: id));
+          }
+          return null;
+        },
       ),
-      title: 'OpenCode',
-      debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.dark,
-      darkTheme: AppTheme.dark(),
-      initialRoute: '/',
-      routes: {
-        '/': (_) => _Root(),
-        '/servers': (_) => const ServersScreen(),
-        '/home': (_) => const HomeScreen(),
-        '/guide': (_) => GuideScreen(embedded: false),
-        '/about': (_) => const AboutScreen(),
-        '/termux-setup': (_) => const TermuxSetupScreen(),
-      },
-      onGenerateRoute: (settings) {
-        if (settings.name?.startsWith('/chat/') == true) {
-          final id = settings.name!.substring('/chat/'.length);
-          return MaterialPageRoute(builder: (_) => ChatScreen(sessionID: id));
-        }
-        return null;
-      },
     );
   }
 

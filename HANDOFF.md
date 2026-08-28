@@ -1034,6 +1034,30 @@ artifact inventory, then runs the generated SDK's own tests and analysis.
 Android release lint and the isolated test-signed APK compile remain required;
 the CI signing identity is created per job and never distributed.
 
+The first live workflow run was created successfully at
+<https://github.com/Eslamasabry/oc_app/actions/runs/33137323986>, but GitHub
+rejected the job before allocating a runner because the account has a failed
+payment or exhausted spending limit. No repository step failed and no remote
+gate is claimed green. The complete equivalent passed locally: all canonical
+SDK verifiers, 46 generated-SDK tests, both analyzers, all 347 Flutter tests,
+Android `lintRelease`, and a 160,775,755-byte release APK compile. Billing must
+be repaired and that workflow rerun before remote CI can serve as release
+evidence.
+
+Appearance is now a native mobile capability rather than a mechanical copy of
+terminal color schemes. Settings and `/themes` (with `/theme`) offer Follow
+Android, Light, and Dark; selection applies immediately and persists app-wide.
+The established dark design remains the migration-safe default, while the new
+light theme has its own high-contrast surfaces, system-bar treatment, controls,
+and diff addition colors. Pixel 6 release-mode verification against an isolated
+OpenCode `1.18.23` server proved the native `/themes` command path, immediate
+Dark-to-Light switching, persistence after a forced process restart, and a
+readable light-mode Working tree Review with distinct metadata, hunk, removal,
+and addition treatments. Android logged no fatal exception, ANR, RenderFlex
+overflow, or OOM. Final-tree Flutter analysis is clean, all 354 tests pass
+serially, Android `lintRelease` passes, and the release APK compiled at
+160,792,591 bytes. This capability includes no Traycer integration.
+
 ## Shorebird wake patch for `1.0.17+18`
 
 - Shorebird release ID: `789345`

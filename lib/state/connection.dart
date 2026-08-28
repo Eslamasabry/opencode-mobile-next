@@ -116,6 +116,7 @@ typedef EventStreamFactory =
 class ConnectionController extends ChangeNotifier {
   final ProfileStore store;
   final BackgroundLiveController backgroundLive;
+  late final ValueNotifier<AppAppearance> appearance;
   final OpenCodeApiFactory _apiFactory;
   final ProductRepositoryFactory _repositoryFactory;
   final EventStreamFactory _eventStreamFactory;
@@ -233,6 +234,7 @@ class ConnectionController extends ChangeNotifier {
        backgroundLive =
            backgroundLive ??
            BackgroundLiveController(preferences: store.prefs) {
+    appearance = ValueNotifier(store.appearance);
     transcriptReasoningExpanded = store.transcriptReasoningExpanded;
     transcriptTimestampsVisible = store.transcriptTimestampsVisible;
     this.backgroundLive.addListener(_backgroundLiveChanged);
@@ -275,6 +277,12 @@ class ConnectionController extends ChangeNotifier {
     if (_disposed) return;
     transcriptTimestampsVisible = visible;
     notifyListeners();
+  }
+
+  Future<void> setAppearance(AppAppearance value) async {
+    await store.setAppearance(value);
+    if (_disposed) return;
+    appearance.value = value;
   }
 
   void _backgroundLiveChanged() {
@@ -2331,6 +2339,7 @@ class ConnectionController extends ChangeNotifier {
     _retireTransport();
     backgroundLive.removeListener(_backgroundLiveChanged);
     backgroundLive.dispose();
+    appearance.dispose();
     unawaited(_eventBus.close());
     super.dispose();
   }

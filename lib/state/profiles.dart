@@ -78,6 +78,8 @@ String? validateServerProfileUrl(
   return null;
 }
 
+enum AppAppearance { system, light, dark }
+
 /// Persists server profiles. Metadata in SharedPreferences, secrets in the
 /// Android Keystore via flutter_secure_storage.
 class ProfileStore {
@@ -89,6 +91,7 @@ class ProfileStore {
   static const _variantKey = 'oc.variant.'; // + profileId
   static const _transcriptReasoningKey = 'oc.transcript.reasoningExpanded';
   static const _transcriptTimestampsKey = 'oc.transcript.timestampsVisible';
+  static const _appearanceKey = 'oc.appearance';
   static const _providerRuntimeRefreshVersion = 'v1';
 
   final SharedPreferences prefs;
@@ -317,6 +320,18 @@ class ProfileStore {
   Future<void> setTranscriptTimestampsVisible(bool visible) async {
     if (!await prefs.setBool(_transcriptTimestampsKey, visible)) {
       throw StateError('Could not save the timestamp display preference');
+    }
+  }
+
+  AppAppearance get appearance => switch (prefs.getString(_appearanceKey)) {
+    'system' => AppAppearance.system,
+    'light' => AppAppearance.light,
+    _ => AppAppearance.dark,
+  };
+
+  Future<void> setAppearance(AppAppearance appearance) async {
+    if (!await prefs.setString(_appearanceKey, appearance.name)) {
+      throw StateError('Could not save the appearance preference');
     }
   }
 }

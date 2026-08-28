@@ -85,4 +85,26 @@ void main() {
     expect(store.transcriptReasoningExpanded, isFalse);
     expect(store.transcriptTimestampsVisible, isFalse);
   });
+
+  test(
+    'persists app-wide appearance with a migration-safe dark default',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final store = ProfileStore(prefs: prefs);
+
+      expect(store.appearance, AppAppearance.dark);
+
+      await store.setAppearance(AppAppearance.system);
+      expect(ProfileStore(prefs: prefs).appearance, AppAppearance.system);
+
+      await store.setAppearance(AppAppearance.light);
+      final controller = ConnectionController(ProfileStore(prefs: prefs));
+      expect(controller.appearance.value, AppAppearance.light);
+      controller.dispose();
+
+      await prefs.setString('oc.appearance', 'unknown-old-value');
+      expect(ProfileStore(prefs: prefs).appearance, AppAppearance.dark);
+    },
+  );
 }

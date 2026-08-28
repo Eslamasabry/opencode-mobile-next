@@ -532,7 +532,7 @@ class _ChangeCount extends StatelessWidget {
       fontFamily: 'monospace',
       fontWeight: FontWeight.w600,
       color: added
-          ? const Color(0xff78c59d)
+          ? _additionColor(Theme.of(context))
           : Theme.of(context).colorScheme.error,
     ),
   );
@@ -1658,7 +1658,7 @@ List<_ReviewSplitRow> _splitRows(List<_ReviewDiffLine> lines) {
 }
 
 Color? _lineBackground(ThemeData theme, _ReviewLineKind kind) => switch (kind) {
-  _ReviewLineKind.added => const Color(0xff174b35).withValues(alpha: .42),
+  _ReviewLineKind.added => _additionBackground(theme),
   _ReviewLineKind.removed => theme.colorScheme.errorContainer.withValues(
     alpha: .38,
   ),
@@ -1670,7 +1670,7 @@ Color? _lineBackground(ThemeData theme, _ReviewLineKind kind) => switch (kind) {
 };
 
 Color _lineAccent(ThemeData theme, _ReviewLineKind kind) => switch (kind) {
-  _ReviewLineKind.added => const Color(0xff78c59d),
+  _ReviewLineKind.added => _additionColor(theme),
   _ReviewLineKind.removed => theme.colorScheme.error,
   _ReviewLineKind.hunk => theme.colorScheme.primary,
   _ => Colors.transparent,
@@ -1748,7 +1748,16 @@ String _status(FileDiff diff) {
 
 Color _statusColor(BuildContext context, FileDiff diff) =>
     switch (_status(diff)) {
-      'added' => const Color(0xff78c59d),
+      'added' => _additionColor(Theme.of(context)),
       'deleted' => Theme.of(context).colorScheme.error,
       _ => Theme.of(context).colorScheme.primary,
     };
+
+Color _additionColor(ThemeData theme) => theme.brightness == Brightness.dark
+    ? const Color(0xff78c59d)
+    : const Color(0xff176b4b);
+
+Color _additionBackground(ThemeData theme) =>
+    theme.brightness == Brightness.dark
+    ? const Color(0xff174b35).withValues(alpha: .42)
+    : const Color(0xffd0f2df).withValues(alpha: .7);

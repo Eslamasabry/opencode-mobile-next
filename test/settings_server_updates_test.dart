@@ -131,4 +131,31 @@ void main() {
     expect(find.byType(SavedPermissionsScreen), findsOneWidget);
     expect(find.text('No always allowed actions'), findsOneWidget);
   });
+
+  testWidgets('settings exposes the persisted native appearance choices', (
+    tester,
+  ) async {
+    final controller = await _controllerFor('http://127.0.0.1:4096');
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(home: SettingsScreen(controller: controller)),
+    );
+    await tester.pumpAndSettle();
+
+    final entry = find.byKey(const ValueKey('appearance-settings-entry'));
+    await tester.scrollUntilVisible(
+      entry,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Dark'), findsOneWidget);
+    await tester.tap(entry);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('appearance-system')));
+    await tester.pumpAndSettle();
+
+    expect(controller.appearance.value, AppAppearance.system);
+    expect(find.text('Follow Android'), findsOneWidget);
+  });
 }
