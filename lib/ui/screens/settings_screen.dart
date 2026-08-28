@@ -16,6 +16,7 @@ import '../widgets/product_states.dart';
 import '../widgets/pickers.dart';
 import 'about_screen.dart';
 import 'app_diagnostics_screen.dart';
+import 'host_management_screen.dart';
 import 'saved_permissions_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -439,6 +440,23 @@ class _SettingsScreenState extends State<SettingsScreen>
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => Navigator.of(context).pushNamed('/servers'),
           ),
+          if (!managedLocally)
+            ListTile(
+              key: const Key('host-management-entry'),
+              leading: const Icon(Icons.terminal_outlined),
+              title: const Text('Ubuntu host management'),
+              subtitle: const Text(
+                'Run OpenCode as a service on the host; copy setup, status, '
+                'restart, log, and update commands',
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) =>
+                      HostManagementScreen(controller: controller),
+                ),
+              ),
+            ),
           ListTile(
             key: const Key('server-updates-tile'),
             leading: const Icon(Icons.system_update_alt_rounded),
