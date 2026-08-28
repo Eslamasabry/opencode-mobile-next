@@ -11,7 +11,8 @@ is also bundled under **Settings > Privacy and data use**.
 
 ## Features
 
-- Server profiles with basic-auth (`OPENCODE_SERVER_PASSWORD`), stored in the Android Keystore
+- Server profiles with basic-auth (`OPENCODE_SERVER_PASSWORD`), stored in the
+  Android Keystore and edited in a keyboard-safe, large-text-ready native flow
 - **Guided on-device setup**: detects Termux, unlocks the bridge, installs
   opencode (node + npm), launches `opencode serve`, health-polls until live and
   connects — automatically

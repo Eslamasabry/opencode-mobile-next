@@ -511,6 +511,23 @@ four independent SDK verifiers pass, Android release lint succeeds, and the
 generated SDK audit now counts 85 directly used operations. Traycer remains
 explicitly deferred.
 
+The first-run server connection path is no longer a cramped modal. A fresh
+release-mode Pixel 6 audit found overlapping field labels/helper text, actions
+competing with the Android keyboard, and an app-bar overflow at 320dp with 2x
+text. Add, edit, and password-reentry now share one flat full-screen profile
+editor. The required URL receives initial focus; display name and authentication
+are explicitly optional; fields scroll above the keyboard; Save remains in the
+app bar; password visibility is user-controlled; URL errors retain their full
+instruction; and closing a changed profile requires discard confirmation.
+
+The same locally test-signed release build was rechecked at normal and 2x Android
+font scales. The server list, URL-first editor, keyboard state, and incomplete-URL
+recovery rendered without a fatal exception, ANR, OOM, RenderFlex, or overflow.
+The 161,120,523-byte APK is verification-only and was not published. Final-tree
+Flutter analysis is clean, all 379 app tests and 46 generated-SDK tests pass, all
+four independent SDK verifiers pass, and Android release lint succeeds. Traycer
+remains explicitly deferred.
+
 `tool/smoke_test.dart` now makes this server evidence stronger and safer. It
 accepts explicit directory/workspace scope, verifies health, session lifecycle,
 provider/agent catalogs, a model-free shell plus hydrated output, files/search,

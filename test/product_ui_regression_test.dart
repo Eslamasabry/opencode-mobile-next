@@ -1420,7 +1420,9 @@ void main() {
     await tester.tap(find.text('Remote machine (LAN)'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Add server'), findsNWidgets(2));
+    expect(find.text('Add server'), findsOneWidget);
+    expect(find.byKey(const ValueKey('server-profile-editor')), findsOneWidget);
+    expect(find.byType(AlertDialog), findsNothing);
     expect(find.text('Server URL'), findsOneWidget);
     expect(store.profiles, isEmpty);
     expect(find.text('Start the server'), findsNothing);

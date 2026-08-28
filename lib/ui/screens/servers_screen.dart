@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -55,9 +57,10 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
   }
 
   Future<void> _edit([ServerProfile? existing]) async {
-    final result = await showDialog<ServerProfile>(
-      context: context,
-      builder: (_) => _ProfileDialog(existing: existing),
+    final result = await Navigator.of(context).push<ServerProfile>(
+      MaterialPageRoute<ServerProfile>(
+        builder: (_) => _ProfileEditorScreen(existing: existing),
+      ),
     );
     if (result == null || !mounted) return;
     final store = ref.read(bootstrapProvider).store;
@@ -153,13 +156,20 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.terminal_rounded,
               color: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(width: 10),
-            const Text('OpenCode'),
+            const Flexible(
+              child: Text(
+                'OpenCode',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
         actions: [
@@ -384,15 +394,15 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
   }
 }
 
-class _ProfileDialog extends StatefulWidget {
+class _ProfileEditorScreen extends StatefulWidget {
   final ServerProfile? existing;
-  const _ProfileDialog({this.existing});
+  const _ProfileEditorScreen({this.existing});
 
   @override
-  State<_ProfileDialog> createState() => _ProfileDialogState();
+  State<_ProfileEditorScreen> createState() => _ProfileEditorScreenState();
 }
 
-class _ProfileDialogState extends State<_ProfileDialog> {
+class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
   late final TextEditingController _name = TextEditingController(
     text: widget.existing?.name ?? '',
   );
@@ -405,8 +415,20 @@ class _ProfileDialogState extends State<_ProfileDialog> {
   late final TextEditingController _pass = TextEditingController(
     text: widget.existing?.password ?? '',
   );
+  final _urlFocus = FocusNode();
+  final _nameFocus = FocusNode();
+  final _userFocus = FocusNode();
+  final _passFocus = FocusNode();
   String? _error;
+  bool _obscurePassword = true;
+  bool _closing = false;
   bool get _needsPassword => widget.existing?.requiresPasswordReentry ?? false;
+
+  bool get _dirty =>
+      _name.text != (widget.existing?.name ?? '') ||
+      _url.text != (widget.existing?.baseUrl ?? 'https://') ||
+      _user.text != (widget.existing?.username ?? '') ||
+      _pass.text != (widget.existing?.password ?? '');
 
   @override
   void dispose() {
@@ -414,128 +436,231 @@ class _ProfileDialogState extends State<_ProfileDialog> {
     _url.dispose();
     _user.dispose();
     _pass.dispose();
+    _urlFocus.dispose();
+    _nameFocus.dispose();
+    _userFocus.dispose();
+    _passFocus.dispose();
     super.dispose();
+  }
+
+  Future<void> _close() async {
+    if (_closing) return;
+    if (!_dirty) {
+      Navigator.pop(context);
+      return;
+    }
+    _closing = true;
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Discard server changes?'),
+        content: const Text('The server profile has not been saved.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Keep editing'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Discard'),
+          ),
+        ],
+      ),
+    );
+    _closing = false;
+    if (discard == true && mounted) Navigator.pop(context);
+  }
+
+  void _save() {
+    var url = _url.text.trim();
+    final error = validateServerProfileUrl(
+      url,
+      username: _user.text,
+      password: _pass.text,
+    );
+    if (error != null) {
+      setState(() => _error = error);
+      _urlFocus.requestFocus();
+      return;
+    }
+    final uri = Uri.parse(url);
+    url = uri.replace(scheme: uri.scheme.toLowerCase()).toString();
+    Navigator.pop(
+      context,
+      ServerProfile(
+        id:
+            widget.existing?.id ??
+            DateTime.now().microsecondsSinceEpoch.toString(),
+        name: _name.text.trim().isEmpty ? uri.host : _name.text.trim(),
+        baseUrl: url.endsWith('/') ? url.substring(0, url.length - 1) : url,
+        username: _user.text.trim(),
+        password: _pass.text,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(
-        widget.existing == null
-            ? 'Add server'
-            : _needsPassword
-            ? 'Re-enter password'
-            : 'Edit server',
-      ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (_needsPassword) ...[
-              Semantics(
-                container: true,
-                excludeSemantics: true,
-                label:
-                    'The saved password is unavailable. Enter it again, or leave it empty only if this server no longer requires a password.',
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.errorContainer,
-                    borderRadius: BorderRadius.circular(12),
+    final title = widget.existing == null
+        ? 'Add server'
+        : _needsPassword
+        ? 'Re-enter password'
+        : 'Edit server';
+    final theme = Theme.of(context);
+    final compact =
+        MediaQuery.sizeOf(context).width < 360 ||
+        MediaQuery.textScalerOf(context).scale(14) > 20;
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) unawaited(_close());
+      },
+      child: Scaffold(
+        key: const ValueKey('server-profile-editor'),
+        appBar: AppBar(
+          leading: IconButton(
+            tooltip: 'Close server editor',
+            onPressed: _close,
+            icon: const Icon(Icons.close_rounded),
+          ),
+          title: Text(title),
+          actions: [
+            TextButton(
+              key: const ValueKey('save-server-profile'),
+              onPressed: _save,
+              child: Text(
+                widget.existing == null && !compact ? 'Save server' : 'Save',
+              ),
+            ),
+            const SizedBox(width: 4),
+          ],
+        ),
+        body: SafeArea(
+          top: false,
+          child: ListView(
+            key: const ValueKey('server-profile-fields'),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+            children: [
+              Text(
+                'Connect to an OpenCode server running on this phone or another machine.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              if (_needsPassword) ...[
+                const SizedBox(height: 16),
+                Semantics(
+                  container: true,
+                  liveRegion: true,
+                  excludeSemantics: true,
+                  label:
+                      'The saved password is unavailable. Enter it again, or leave it empty only if this server no longer requires a password.',
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.errorContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'The saved password is unavailable. Enter it again, or leave it empty only if this server no longer requires one.',
+                      style: TextStyle(
+                        color: theme.colorScheme.onErrorContainer,
+                      ),
+                    ),
                   ),
-                  child: Text(
-                    'The saved password is unavailable. Enter it again, or leave it empty only if this server no longer requires one.',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onErrorContainer,
+                ),
+              ],
+              const SizedBox(height: 24),
+              TextField(
+                key: const ValueKey('server-url-field'),
+                controller: _url,
+                focusNode: _urlFocus,
+                autofocus: widget.existing == null && !_needsPassword,
+                keyboardType: TextInputType.url,
+                textInputAction: TextInputAction.next,
+                onSubmitted: (_) => _nameFocus.requestFocus(),
+                onChanged: (_) => setState(() => _error = null),
+                decoration: InputDecoration(
+                  labelText: 'Server URL',
+                  hintText: 'https://host:4096',
+                  errorText: _error,
+                  errorMaxLines: 3,
+                  helperText:
+                      'Use HTTPS for remote machines. HTTP is limited to localhost or 127.0.0.1.',
+                  helperMaxLines: 3,
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                key: const ValueKey('server-name-field'),
+                controller: _name,
+                focusNode: _nameFocus,
+                textInputAction: TextInputAction.next,
+                onSubmitted: (_) => _userFocus.requestFocus(),
+                decoration: const InputDecoration(
+                  labelText: 'Display name (optional)',
+                  hintText: 'Defaults to the server host',
+                ),
+              ),
+              const SizedBox(height: 28),
+              Text(
+                'AUTHENTICATION',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                key: const ValueKey('server-username-field'),
+                controller: _user,
+                focusNode: _userFocus,
+                textInputAction: TextInputAction.next,
+                onSubmitted: (_) => _passFocus.requestFocus(),
+                onChanged: (_) => setState(() => _error = null),
+                decoration: const InputDecoration(
+                  labelText: 'Username (optional)',
+                  hintText: 'opencode',
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                key: const ValueKey('server-password-field'),
+                controller: _pass,
+                focusNode: _passFocus,
+                autofocus: _needsPassword,
+                onChanged: (_) => setState(() => _error = null),
+                obscureText: _obscurePassword,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _save(),
+                decoration: InputDecoration(
+                  labelText: _needsPassword
+                      ? 'Re-enter password'
+                      : 'Password (optional)',
+                  helperText: _needsPassword
+                      ? 'Leave empty only if this server no longer uses a password.'
+                      : 'Matches OPENCODE_SERVER_PASSWORD on the server.',
+                  helperMaxLines: 2,
+                  suffixIcon: IconButton(
+                    key: const ValueKey('toggle-server-password'),
+                    tooltip: _obscurePassword
+                        ? 'Show server password'
+                        : 'Hide server password',
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
             ],
-            TextField(
-              controller: _name,
-              decoration: const InputDecoration(labelText: 'Name'),
-              autofocus: widget.existing == null,
-            ),
-            TextField(
-              controller: _url,
-              keyboardType: TextInputType.url,
-              onChanged: (_) => setState(() => _error = null),
-              decoration: InputDecoration(
-                labelText: 'Server URL',
-                hintText: 'https://host:4096',
-                errorText: _error,
-                helperText:
-                    'HTTP works only with localhost or 127.0.0.1 for Termux.',
-                helperMaxLines: 2,
-              ),
-            ),
-            TextField(
-              controller: _user,
-              onChanged: (_) => setState(() => _error = null),
-              decoration: const InputDecoration(
-                labelText: 'Username (optional)',
-                hintText: 'opencode',
-              ),
-            ),
-            TextField(
-              controller: _pass,
-              autofocus: _needsPassword,
-              onChanged: (_) => setState(() => _error = null),
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: _needsPassword
-                    ? 'Re-enter password'
-                    : 'Password (optional)',
-                helperText: _needsPassword
-                    ? 'Saving an empty value confirms this server no longer uses a password.'
-                    : 'Set OPENCODE_SERVER_PASSWORD on the server',
-                helperMaxLines: 2,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () {
-            var url = _url.text.trim();
-            final error = validateServerProfileUrl(
-              url,
-              username: _user.text,
-              password: _pass.text,
-            );
-            if (error != null) {
-              setState(() => _error = error);
-              return;
-            }
-            final uri = Uri.parse(url);
-            url = uri.replace(scheme: uri.scheme.toLowerCase()).toString();
-            Navigator.pop(
-              context,
-              ServerProfile(
-                id:
-                    widget.existing?.id ??
-                    DateTime.now().microsecondsSinceEpoch.toString(),
-                name: _name.text.trim().isEmpty
-                    ? Uri.parse(url).host
-                    : _name.text.trim(),
-                baseUrl: url.endsWith('/')
-                    ? url.substring(0, url.length - 1)
-                    : url,
-                username: _user.text.trim(),
-                password: _pass.text,
-              ),
-            );
-          },
-          child: const Text('Save'),
-        ),
-      ],
     );
   }
 }
