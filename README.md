@@ -82,7 +82,7 @@ owns checks, downloads, progress, and resume-time retries through
 can validly return while the automatic updater is still working, which would let
 the UI announce restart readiness before a patch is actually staged.
 
-### Signing identity decision gate
+### Signing identities and distribution lanes
 
 **Do not publish a store release yet.** The current
 [`android/app/build.gradle.kts`](android/app/build.gradle.kts) has a dedicated
@@ -100,13 +100,17 @@ running the helper. The properties file and keystore must be private to the
 current OS user, the keystore must be a regular file outside the repository, and
 its alias must already match `RELEASE_CERT_SHA256`. The helper rejects Android
 debug certificates, then checks the generated AAB certificate again after its
-dry-run and before any upload.
+dry-run and after any explicit upload.
 
-Also decide how to handle existing debug-signed sideload installs: Android
-cannot upgrade them in place to an APK signed by a different key, so those users
-must uninstall the old build (losing its local app data) before installing the
-new production-signed line. This repository does not perform that signing
-migration automatically.
+The existing GitHub sideload line is separate and now has a verified upgrade
+identity. Public `1.0.19+20` uses certificate SHA-256
+`1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c`.
+`./scripts/release.sh sideload` accepts only that exact fingerprint; it does not
+turn the store release's debug-certificate rejection into a general bypass.
+This preserves in-place upgrades and app data for current GitHub users. A future
+move from this legacy certificate to a production-signed GitHub or Play line
+still requires uninstalling the old app and loses its local app data unless an
+Android-supported signing migration is deliberately established.
 
 ### Full Play Store release (AAB)
 
@@ -153,18 +157,28 @@ Dart code only; the installed app applies a downloaded patch after restart.
 ### GitHub sideload APK (separate distribution)
 
 Every installable GitHub APK must first be registered as a full Shorebird
-release. Until the production-signing migration is complete, create the next
-versioned sideload baseline with the pinned Flutter toolchain:
+release. For the existing legacy upgrade line, populate ignored
+`android/key.properties` with the externally stored matching key, keep both
+files mode `600`, then validate and publish as separate actions:
 
 ```bash
-shorebird release android --artifact apk --flutter-version 3.47.1
+./scripts/release.sh sideload             # gates + dry-run; uploads nothing
+./scripts/release.sh sideload --publish   # repeats validation, then uploads
 ```
 
-Publish the exact APK produced by that command. Never publish an APK from a raw
-`flutter build apk`: using Shorebird's Flutter binary alone does not register a
-release, so that install cannot receive automatic patches. Tag the published
-source with the exact `v<x.y.z+build>` value so `./scripts/release.sh patch`
-can verify and target the baseline later.
+This lane hard-pins the public certificate fingerprint, requires a clean synced
+`master`, validates the source version, uses Flutter `3.47.1`, and builds the APK
+through Shorebird. It then independently verifies that the artifact has exactly
+one signer, package `ai.opencode.opencode_mobile`, and the exact version name and
+code from `pubspec.yaml`. Publish mode removes the dry-run artifact, performs the
+real Shorebird release, and repeats every APK identity check on the new output.
+
+Attach that exact `build/app/outputs/flutter-apk/app-release.apk` to GitHub
+release `v<x.y.z+build>`, then create and push the immutable tag on the same
+commit. The helper intentionally does not create GitHub releases or tags. Never
+publish an APK from a raw `flutter build apk`: using Shorebird's Flutter binary
+alone does not register a release, so that install cannot receive automatic
+patches.
 
 After production signing is configured, use the store AAB derivation below so
 the GitHub channel has an explicit, stable certificate lineage.

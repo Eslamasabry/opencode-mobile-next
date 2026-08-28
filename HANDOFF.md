@@ -77,6 +77,16 @@ version `1.0.20+21`, built the AAB and APK, and reported `No issues detected`.
 The Shorebird APK remained byte-for-byte identical to the candidate hash and
 retained the matching certificate above. Nothing was uploaded or published.
 
+The release helper now has a separate `sideload` mode for this verified legacy
+GitHub lineage. It does not weaken the production/store `release` mode: store
+builds still reject every debug certificate, while sideload builds require the
+exact public SHA-256 fingerprint above. Both modes require a private external
+keystore and ignored private properties. `sideload` uses Shorebird APK mode,
+then independently verifies one signer, package
+`ai.opencode.opencode_mobile`, version name, and version code after the dry run
+and again after an explicit `--publish`. It uploads nothing by default and does
+not create a GitHub release or tag.
+
 This branch prepares the next native baseline without changing the patchable
 `1.0.19+20` release on `master`. It removes the debug signing fallback, adds a
 dedicated release signing configuration and ignored properties template, and

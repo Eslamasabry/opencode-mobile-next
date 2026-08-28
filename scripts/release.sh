@@ -6,19 +6,27 @@ readonly EXIT_USAGE=64
 readonly RELEASE_BRANCH="master"
 readonly SHOREBIRD_FLUTTER_VERSION="3.47.1"
 readonly AAB_PATH="build/app/outputs/bundle/release/app-release.aab"
+readonly APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
+readonly ANDROID_APPLICATION_ID="ai.opencode.opencode_mobile"
 readonly LEGACY_DEBUG_CERT_SHA256="1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C"
 
 UPSTREAM_REMOTE=""
 RELEASE_KEYSTORE=""
 RELEASE_KEY_ALIAS=""
 EXPECTED_CERT_SHA256=""
+ACTUAL_CERT_SHA256=""
+SIGNING_CERTIFICATE_OUTPUT=""
 
 usage() {
   cat >&2 <<'EOF'
-Usage: ./scripts/release.sh <release|patch> [--publish]
+Usage: ./scripts/release.sh <release|sideload|patch> [--publish]
 
 Without --publish, the command runs every gate and a Shorebird dry-run only.
 Add --publish to upload to Shorebird after the dry-run succeeds.
+
+release  creates the production/store AAB and rejects the legacy certificate.
+sideload creates the GitHub APK and requires the exact public legacy certificate.
+patch    creates a Dart-only patch for the exact tagged release version.
 EOF
 }
 
@@ -53,7 +61,7 @@ fi
 
 readonly MODE="$1"
 case "$MODE" in
-  release | patch) ;;
+  release | sideload | patch) ;;
   *)
     usage
     exit "$EXIT_USAGE"
@@ -130,58 +138,52 @@ assert_git_ready() {
     fail "$branch is not synchronized with $upstream (behind $behind, ahead $ahead)."
 }
 
-assert_store_signing_ready() {
+load_release_signing_identity() {
+  local release_kind="$1"
   local gradle_file="android/app/build.gradle.kts"
   local properties_file="android/key.properties"
   [[ -f "$gradle_file" ]] || fail "Missing Android application Gradle configuration: $gradle_file"
 
   grep -Eq '(signingConfigs\.)?create\(["'\'']release["'\'']\)' "$gradle_file" &&
     grep -Eq 'signingConfig[[:space:]]*=[[:space:]]*signingConfigs\.getByName\(["'\'']release["'\'']\)' "$gradle_file" ||
-    fail "Store release is blocked: Android does not have an explicit release signing configuration. Complete the documented signing migration first."
+    fail "$release_kind release is blocked: Android does not have an explicit release signing configuration. Complete the documented signing setup first."
 
   [[ -f "$properties_file" ]] ||
-    fail "Store release is blocked: $properties_file is missing. Complete the documented signing migration first."
+    fail "$release_kind release is blocked: $properties_file is missing. Complete the documented signing setup first."
   [[ ! -L "$properties_file" ]] ||
-    fail "Store release is blocked: $properties_file must be a regular file, not a symbolic link."
+    fail "$release_kind release is blocked: $properties_file must be a regular file, not a symbolic link."
   assert_private_file "$properties_file" "$properties_file"
   local property_name
   for property_name in storeFile storePassword keyAlias keyPassword; do
     grep -Eq "^[[:space:]]*${property_name}[[:space:]]*=[[:space:]]*[^[:space:]].*$" "$properties_file" ||
-      fail "Store release is blocked: $properties_file has no non-empty $property_name."
+      fail "$release_kind release is blocked: $properties_file has no non-empty $property_name."
   done
 
-  [[ -n "${RELEASE_CERT_SHA256:-}" ]] ||
-    fail "Store release is blocked: set RELEASE_CERT_SHA256 to the expected production upload-certificate SHA-256 fingerprint."
-  [[ "${RELEASE_CERT_SHA256//:/}" =~ ^[0-9A-Fa-f]{64}$ ]] ||
-    fail "RELEASE_CERT_SHA256 must be a 32-byte SHA-256 fingerprint, with or without colons."
   command -v keytool >/dev/null 2>&1 || fail "Required command is not available: keytool"
 
   local configured_store_file configured_alias repository_root resolved_store_file
   configured_store_file="$(read_property storeFile "$properties_file")"
   configured_alias="$(read_property keyAlias "$properties_file")"
   [[ "$configured_store_file" == /* ]] ||
-    fail "Store release is blocked: storeFile must be an absolute path outside the repository."
+    fail "$release_kind release is blocked: storeFile must be an absolute path outside the repository."
   [[ -f "$configured_store_file" && ! -L "$configured_store_file" ]] ||
-    fail "Store release is blocked: storeFile does not identify a regular, non-symlink keystore."
+    fail "$release_kind release is blocked: storeFile does not identify a regular, non-symlink keystore."
   resolved_store_file="$(realpath -e "$configured_store_file")" ||
-    fail "Store release is blocked: storeFile cannot be resolved."
+    fail "$release_kind release is blocked: storeFile cannot be resolved."
   repository_root="$(pwd -P)"
   case "$resolved_store_file" in
     "$repository_root" | "$repository_root"/*)
-      fail "Store release is blocked: the keystore must live outside the repository."
+      fail "$release_kind release is blocked: the keystore must live outside the repository."
       ;;
   esac
   assert_private_file "$resolved_store_file" "The release keystore"
 
   RELEASE_KEYSTORE="$resolved_store_file"
   RELEASE_KEY_ALIAS="$configured_alias"
-  EXPECTED_CERT_SHA256="$(normalize_fingerprint "$RELEASE_CERT_SHA256")"
-  [[ "$EXPECTED_CERT_SHA256" != "$LEGACY_DEBUG_CERT_SHA256" ]] ||
-    fail "Store release is blocked: RELEASE_CERT_SHA256 is the legacy Android debug certificate."
 
-  local store_password certificate_output actual_fingerprint
+  local store_password
   store_password="$(read_property storePassword "$properties_file")"
-  certificate_output="$(
+  SIGNING_CERTIFICATE_OUTPUT="$(
     OC_RELEASE_STORE_PASSWORD="$store_password" keytool \
       -J-Duser.language=en \
       -list -v \
@@ -190,11 +192,31 @@ assert_store_signing_ready() {
       -storepass:env OC_RELEASE_STORE_PASSWORD
   )" || fail "Unable to read the configured release keystore and alias."
   unset store_password
-  [[ "$certificate_output" != *"CN=Android Debug"* ]] ||
+  ACTUAL_CERT_SHA256="$(sed -n 's/^[[:space:]]*SHA256:[[:space:]]*//p' <<<"$SIGNING_CERTIFICATE_OUTPUT" | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')"
+  [[ "$ACTUAL_CERT_SHA256" =~ ^[0-9A-F]{64}$ ]] ||
+    fail "Unable to read a single SHA-256 certificate fingerprint from the configured release alias."
+}
+
+assert_store_signing_ready() {
+  load_release_signing_identity "Store"
+  [[ -n "${RELEASE_CERT_SHA256:-}" ]] ||
+    fail "Store release is blocked: set RELEASE_CERT_SHA256 to the expected production upload-certificate SHA-256 fingerprint."
+  [[ "${RELEASE_CERT_SHA256//:/}" =~ ^[0-9A-Fa-f]{64}$ ]] ||
+    fail "RELEASE_CERT_SHA256 must be a 32-byte SHA-256 fingerprint, with or without colons."
+  EXPECTED_CERT_SHA256="$(normalize_fingerprint "$RELEASE_CERT_SHA256")"
+  [[ "$EXPECTED_CERT_SHA256" != "$LEGACY_DEBUG_CERT_SHA256" ]] ||
+    fail "Store release is blocked: RELEASE_CERT_SHA256 is the legacy Android debug certificate."
+  [[ "$SIGNING_CERTIFICATE_OUTPUT" != *"CN=Android Debug"* ]] ||
     fail "Store release is blocked: the configured alias contains an Android debug certificate."
-  actual_fingerprint="$(sed -n 's/^[[:space:]]*SHA256:[[:space:]]*//p' <<<"$certificate_output" | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')"
-  [[ -n "$actual_fingerprint" && "$actual_fingerprint" == "$EXPECTED_CERT_SHA256" ]] ||
+  [[ "$ACTUAL_CERT_SHA256" == "$EXPECTED_CERT_SHA256" ]] ||
     fail "Configured release keystore certificate does not match RELEASE_CERT_SHA256."
+}
+
+assert_sideload_signing_ready() {
+  load_release_signing_identity "GitHub sideload"
+  EXPECTED_CERT_SHA256="$LEGACY_DEBUG_CERT_SHA256"
+  [[ "$ACTUAL_CERT_SHA256" == "$EXPECTED_CERT_SHA256" ]] ||
+    fail "GitHub sideload release is blocked: the configured certificate does not match the public APK upgrade lineage."
 }
 
 assert_aab_certificate() {
@@ -206,6 +228,58 @@ assert_aab_certificate() {
   actual_fingerprint="$(sed -n 's/^[[:space:]]*SHA256:[[:space:]]*//p' <<<"$certificate_output" | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')"
   [[ -n "$actual_fingerprint" && "$actual_fingerprint" == "$EXPECTED_CERT_SHA256" ]] ||
     fail "AAB signing certificate does not match RELEASE_CERT_SHA256."
+}
+
+resolve_android_tool() {
+  local tool_name="$1"
+  local direct
+  direct="$(command -v "$tool_name" 2>/dev/null || true)"
+  if [[ -n "$direct" ]]; then
+    printf '%s\n' "$direct"
+    return
+  fi
+
+  local sdk_root candidate
+  for sdk_root in "${ANDROID_HOME:-}" "${ANDROID_SDK_ROOT:-}"; do
+    [[ -n "$sdk_root" && -d "$sdk_root/build-tools" ]] || continue
+    candidate="$(find "$sdk_root/build-tools" -mindepth 2 -maxdepth 2 -type f -name "$tool_name" -print | sort -V | tail -n 1)"
+    if [[ -n "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return
+    fi
+  done
+  fail "Required Android build tool is not available: $tool_name"
+}
+
+assert_apk_identity() {
+  [[ -f "$APK_PATH" ]] || fail "Shorebird dry-run did not create the expected APK: $APK_PATH"
+
+  local apksigner aapt certificate_output badging
+  local -a signer_fingerprints
+  apksigner="$(resolve_android_tool apksigner)"
+  aapt="$(resolve_android_tool aapt)"
+  certificate_output="$("$apksigner" verify --print-certs "$APK_PATH")" ||
+    fail "Unable to verify the APK signature: $APK_PATH"
+  mapfile -t signer_fingerprints < <(
+    sed -n 's/^Signer #[0-9][0-9]* certificate SHA-256 digest:[[:space:]]*//p' <<<"$certificate_output" |
+      tr '[:lower:]' '[:upper:]'
+  )
+  [[ "${#signer_fingerprints[@]}" == 1 ]] ||
+    fail "GitHub sideload APK must contain exactly one signing certificate."
+  [[ "${signer_fingerprints[0]}" == "$EXPECTED_CERT_SHA256" ]] ||
+    fail "GitHub sideload APK certificate does not match the public upgrade lineage."
+
+  badging="$("$aapt" dump badging "$APK_PATH")" ||
+    fail "Unable to inspect the APK package identity: $APK_PATH"
+  local package_line package_name version_code version_name
+  package_line="$(sed -n '1p' <<<"$badging")"
+  package_name="$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" <<<"$package_line")"
+  version_code="$(sed -n "s/^package:.* versionCode='\([^']*\)'.*/\1/p" <<<"$package_line")"
+  version_name="$(sed -n "s/^package:.* versionName='\([^']*\)'.*/\1/p" <<<"$package_line")"
+  [[ "$package_name" == "$ANDROID_APPLICATION_ID" ]] ||
+    fail "GitHub sideload APK package is $package_name, expected $ANDROID_APPLICATION_ID."
+  [[ "$version_code" == "$BUILD_NUMBER" && "$version_name" == "$BUILD_NAME" ]] ||
+    fail "GitHub sideload APK version is ${version_name:-<missing>}+${version_code:-<missing>}, expected $VERSION."
 }
 
 assert_patchable_diff() {
@@ -247,50 +321,82 @@ assert_patchable_diff() {
 assert_flutter_version
 assert_git_ready
 
-if [[ "$MODE" == "release" ]]; then
-  assert_store_signing_ready
-else
-  assert_patchable_diff
-fi
+case "$MODE" in
+  release) assert_store_signing_ready ;;
+  sideload) assert_sideload_signing_ready ;;
+  patch) assert_patchable_diff ;;
+esac
 
 echo "==> Analyzing Dart code"
 flutter analyze
 echo "==> Running Flutter tests"
 flutter test --concurrency=1
 
-if [[ "$MODE" == "release" ]]; then
-  release_args=(
-    release android
-    --build-name "$BUILD_NAME"
-    --build-number "$BUILD_NUMBER"
-    --flutter-version "$SHOREBIRD_FLUTTER_VERSION"
-    --artifact aab
-  )
+case "$MODE" in
+  release)
+    release_args=(
+      release android
+      --build-name "$BUILD_NAME"
+      --build-number "$BUILD_NUMBER"
+      --flutter-version "$SHOREBIRD_FLUTTER_VERSION"
+      --artifact aab
+    )
 
-  echo "==> Validating Android App Bundle release $VERSION (no upload)"
-  shorebird "${release_args[@]}" --dry-run
-  assert_aab_certificate
+    echo "==> Validating Android App Bundle release $VERSION (no upload)"
+    rm -f -- "$AAB_PATH"
+    shorebird "${release_args[@]}" --dry-run
+    assert_aab_certificate
 
-  if [[ "$PUBLISH" == true ]]; then
-    echo "==> Publishing Shorebird release $VERSION"
-    shorebird "${release_args[@]}"
-    echo "==> AAB: ./$AAB_PATH"
-    echo "==> Create immutable baseline tag $RELEASE_TAG on this commit before any patch."
-  else
-    echo "==> Validation passed; nothing was uploaded."
-    echo "==> Publish explicitly with: ./scripts/release.sh release --publish"
-  fi
-else
-  patch_args=(patch android --release-version "$VERSION")
+    if [[ "$PUBLISH" == true ]]; then
+      echo "==> Publishing Shorebird release $VERSION"
+      rm -f -- "$AAB_PATH"
+      shorebird "${release_args[@]}"
+      assert_aab_certificate
+      echo "==> AAB: ./$AAB_PATH"
+      echo "==> Create immutable baseline tag $RELEASE_TAG on this commit before any patch."
+    else
+      echo "==> Validation passed; nothing was uploaded."
+      echo "==> Publish explicitly with: ./scripts/release.sh release --publish"
+    fi
+    ;;
+  sideload)
+    sideload_args=(
+      release android
+      --build-name "$BUILD_NAME"
+      --build-number "$BUILD_NUMBER"
+      --flutter-version "$SHOREBIRD_FLUTTER_VERSION"
+      --artifact apk
+    )
 
-  echo "==> Validating OTA patch for exact release $VERSION (no upload)"
-  shorebird "${patch_args[@]}" --dry-run
+    echo "==> Validating GitHub sideload APK $VERSION (no upload)"
+    rm -f -- "$APK_PATH"
+    shorebird "${sideload_args[@]}" --dry-run
+    assert_apk_identity
 
-  if [[ "$PUBLISH" == true ]]; then
-    echo "==> Publishing OTA patch for exact release $VERSION"
-    shorebird "${patch_args[@]}"
-  else
-    echo "==> Validation passed; nothing was uploaded."
-    echo "==> Publish explicitly with: ./scripts/release.sh patch --publish"
-  fi
-fi
+    if [[ "$PUBLISH" == true ]]; then
+      echo "==> Publishing Shorebird sideload release $VERSION"
+      rm -f -- "$APK_PATH"
+      shorebird "${sideload_args[@]}"
+      assert_apk_identity
+      echo "==> APK: ./$APK_PATH"
+      echo "==> Publish this exact APK in GitHub release $RELEASE_TAG, then create and push the immutable tag."
+    else
+      echo "==> Validation passed; nothing was uploaded."
+      echo "==> Publish explicitly with: ./scripts/release.sh sideload --publish"
+    fi
+    ;;
+  patch)
+    patch_args=(patch android --release-version "$VERSION")
+
+    echo "==> Validating OTA patch for exact release $VERSION (no upload)"
+    shorebird "${patch_args[@]}" --dry-run
+
+    if [[ "$PUBLISH" == true ]]; then
+      echo "==> Publishing OTA patch for exact release $VERSION"
+      shorebird "${patch_args[@]}"
+    else
+      echo "==> Validation passed; nothing was uploaded."
+      echo "==> Publish explicitly with: ./scripts/release.sh patch --publish"
+    fi
+    ;;
+esac
