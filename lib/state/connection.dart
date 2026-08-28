@@ -10,6 +10,7 @@ import '../api/opencode_api.dart';
 import '../api/product_repository.dart';
 import '../api/sse.dart';
 import '../background/live_background.dart';
+import '../background/widget_snapshot.dart';
 import '../diagnostics/app_diagnostics.dart';
 import '../termux/bridge.dart';
 import 'profiles.dart';
@@ -116,6 +117,7 @@ typedef EventStreamFactory =
 class ConnectionController extends ChangeNotifier {
   final ProfileStore store;
   final BackgroundLiveController backgroundLive;
+  final WidgetSessionSnapshot _widgetSnapshot;
   final AppDiagnosticsController diagnostics;
   final bool _ownsDiagnostics;
   late final ValueNotifier<AppAppearance> appearance;
@@ -252,6 +254,7 @@ class ConnectionController extends ChangeNotifier {
            localWakeLockEnsurer ?? TermuxBridge.ensureWakeLock,
        backgroundLive =
            backgroundLive ?? BackgroundLiveController(preferences: store.prefs),
+       _widgetSnapshot = WidgetSessionSnapshot(prefs: store.prefs),
        diagnostics = diagnostics ?? AppDiagnosticsController(),
        _ownsDiagnostics = diagnostics == null {
     appearance = ValueNotifier(store.appearance);
@@ -2324,6 +2327,22 @@ class ConnectionController extends ChangeNotifier {
       refreshPendingPermissions(),
       refreshPendingQuestions(),
     ]);
+  }
+
+  @override
+  void notifyListeners() {
+    super.notifyListeners();
+    // Keep the Android home-screen widget's snapshot in step with session
+    // truth; the writer itself skips unchanged payloads.
+    if (!_disposed) {
+      unawaited(
+        _widgetSnapshot.update(
+          sessions: sortedSessions(),
+          busySessions: busySessions,
+          connected: status == StreamStatus.connected,
+        ),
+      );
+    }
   }
 
   List<Session> sortedSessions() {
