@@ -86,8 +86,33 @@ and mode`. The current model is drafted on open, so the bar test contract
 share of the sheet height and scroll internally so 320dp/2x text degrades
 without RenderFlex overflow. All original keys survive.
 
-Remaining facelift lanes: reconsidering Terminal's bottom-nav slot;
-list-item motion; further per-screen empty-state upgrades.
+Slice four (owner-directed, partly built by three parallel worktree agents):
+- **Context window meter:** the composer's divider under *Ask OpenCode…* is
+  now an ambient meter filling with the newest assistant message's
+  `tokens.total` against the catalog's `contextLimit` for that exact model
+  (escalating colors at 70%/90%; unknown limit keeps the plain divider).
+  Live pixel-verification on the emulator caught a real bug the widget test
+  missed: inside `FractionallySizedBox(widthFactor:)`, the loose height
+  collapsed the fill to zero — both factors must be tight, and the test now
+  asserts the painted fill size, not just presence.
+- **Chat session sheets:** the app bar's two PopupMenuButtons became grouped
+  bottom sheets (Views + Transcript switches; Prompt/Context/Sharing/Advanced
+  actions), route-constraint capped for accessibility scales.
+- **Sync backbone:** generated `sync.start`/`sync.steal` wired through the
+  wake-safe repository with loopback contract tests; `history`/`replay`
+  documented as deliberately unused (client-held event log). Steal UI is the
+  next feature slice.
+- **Sweep:** files browser/viewer skeletons, shared retry surface, text-scale
+  fix.
+- Worktree-agent caution: fork worktrees may be created from a stale base;
+  every agent must verify its base commit before editing (all three did or
+  were corrected this run).
+- Live verification used a local `opencode serve` on 4096 with `adb reverse`
+  (plus legacy 4747 mapped) against the user's real emulator profile;
+  read-only — no prompts sent, no sessions mutated.
+
+Remaining facelift lanes: session-steal UI; reconsidering Terminal's
+bottom-nav slot; list-item motion; remaining empty-state upgrades.
 
 ## Production Android hardening branch
 
