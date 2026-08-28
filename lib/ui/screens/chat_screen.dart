@@ -1293,6 +1293,27 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
+  /// Fraction of the model's context window consumed, from the newest
+  /// assistant message that reported token usage and the catalog's limit for
+  /// its exact model. Null when either side is unknown.
+  double? _contextWindowUsage() {
+    final catalog = _conn.catalog;
+    if (catalog == null) return null;
+    for (var index = _messages.length - 1; index >= 0; index -= 1) {
+      final info = _messages[index].info;
+      if (info.role != 'assistant' || info.tokens.total <= 0) continue;
+      for (final model in catalog.models) {
+        if (model.providerID == info.providerID && model.id == info.modelID) {
+          return model.contextLimit > 0
+              ? info.tokens.total / model.contextLimit
+              : null;
+        }
+      }
+      return null;
+    }
+    return null;
+  }
+
   bool _onTranscriptScroll(ScrollNotification notification) {
     // The list is reversed, so pixel offset measures distance scrolled away
     // from the newest message.
@@ -3022,6 +3043,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               onSend: _send,
                               onStop: _abort,
                               onChooseModel: () => showModelPicker(context),
+                              contextUsage: _contextWindowUsage(),
                               onRemoveAttachment: (attachment) => setState(
                                 () => _attachments.remove(attachment),
                               ),

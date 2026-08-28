@@ -26,6 +26,7 @@ class _ChatComposer extends StatelessWidget {
     required this.onStop,
     required this.onChooseModel,
     required this.onRemoveAttachment,
+    this.contextUsage,
   });
 
   final bool compact;
@@ -52,6 +53,10 @@ class _ChatComposer extends StatelessWidget {
   final VoidCallback onStop;
   final VoidCallback onChooseModel;
   final ValueChanged<PromptAttachment> onRemoveAttachment;
+
+  /// Fraction of the model's context window the session has consumed, or
+  /// null when the limit is unknown.
+  final double? contextUsage;
 
   bool get _hasPrompt =>
       controller.text.trim().isNotEmpty || attachments.isNotEmpty;
@@ -155,12 +160,7 @@ class _ChatComposer extends StatelessWidget {
           maxLines: 6,
           contentPadding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
         ),
-        Divider(
-          height: 1,
-          indent: 14,
-          endIndent: 14,
-          color: scheme.outlineVariant.withValues(alpha: .55),
-        ),
+        _ContextMeterLine(usage: contextUsage),
         Padding(
           padding: const EdgeInsets.fromLTRB(8, 7, 8, 8),
           child: Row(
@@ -516,3 +516,61 @@ class _PendingAttachmentChip extends StatelessWidget {
   }
 }
 
+
+/// The hairline between the prompt field and the composer actions doubles as
+/// an ambient context-window meter: it fills from the left as the session
+/// consumes the model's context, staying a plain divider when no limit is
+/// known. Colors escalate as the window approaches full.
+class _ContextMeterLine extends StatelessWidget {
+  const _ContextMeterLine({required this.usage});
+
+  final double? usage;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final track = scheme.outlineVariant.withValues(alpha: .55);
+    final value = usage?.clamp(0.0, 1.0);
+    if (value == null) {
+      return Divider(height: 1, indent: 14, endIndent: 14, color: track);
+    }
+    final fill = value >= .9
+        ? scheme.error
+        : value >= .7
+        ? scheme.tertiary
+        : scheme.primary;
+    final percent = (value * 100).round();
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    return Semantics(
+      label: 'Context window $percent percent used',
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        child: ClipRRect(
+          key: const ValueKey('composer-context-meter'),
+          borderRadius: BorderRadius.circular(1.25),
+          child: SizedBox(
+            height: 2.5,
+            width: double.infinity,
+            child: ColoredBox(
+              color: track,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: value),
+                duration: reduceMotion
+                    ? Duration.zero
+                    : const Duration(milliseconds: 400),
+                curve: Curves.easeOutCubic,
+                builder: (context, t, _) => Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: FractionallySizedBox(
+                    widthFactor: t.clamp(0.0, 1.0),
+                    child: ColoredBox(color: fill),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

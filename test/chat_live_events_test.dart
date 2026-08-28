@@ -3087,4 +3087,56 @@ void main() {
     expect(copiedText, 'Fix the login bug');
     expect(find.text('Message text copied'), findsOneWidget);
   });
+
+  testWidgets('composer divider doubles as the context window meter', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('assistant-1', 'assistant', [
+          Part(type: 'text', text: 'done'),
+        ], providerID: 'p', modelID: 'm', tokens: Tokens(input: 45000, output: 5000)),
+      ];
+    final controller = await _controller(api);
+    controller.catalog = const CatalogSnapshot(
+      providers: [CatalogProvider(id: 'p', name: 'Provider', enabled: true)],
+      models: [
+        CatalogModel(
+          id: 'm',
+          providerID: 'p',
+          name: 'Model',
+          enabled: true,
+          status: 'active',
+          contextLimit: 100000,
+          outputLimit: 8192,
+          reasoning: false,
+          attachments: false,
+          tools: false,
+          variants: [],
+        ),
+      ],
+      agents: [],
+    );
+    await _pumpChat(tester, api, controller: controller);
+
+    final semantics = tester.ensureSemantics();
+    expect(
+      find.byKey(const ValueKey('composer-context-meter')),
+      findsOneWidget,
+    );
+    expect(
+      find.bySemanticsLabel('Context window 50 percent used'),
+      findsOneWidget,
+    );
+    semantics.dispose();
+  });
+
+  testWidgets('composer meter stays a plain divider without a known limit', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi();
+    await _pumpChat(tester, api);
+
+    expect(find.byKey(const ValueKey('composer-context-meter')), findsNothing);
+  });
 }
