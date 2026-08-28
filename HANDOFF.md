@@ -70,10 +70,24 @@ is complete and verified:
   Shorebird Flutter `3.47.1` (local `flutter` on PATH is 3.38.5 and cannot
   resolve packages; use `~/.shorebird/bin/cache/flutter/91f8bd7…/bin/flutter`).
 
-Remaining facelift lanes, in intended order: dialog-to-bottom-sheet sweep for
-confirms/pickers; flattening the More link-farm into grouped sections and
-reconsidering Terminal's bottom-nav slot; picker/selector polish; list-item
-motion; per-screen empty-state upgrades through `product_states.dart`.
+Slice two (also verified): simple yes/no confirms now share one
+`showConfirmSheet` bottom sheet (typed-name worktree/workspace guards keep
+their dialogs); More opens with a live model/agent/variant card plus grouped
+destination cards; section-level empties use `ProductInlineEmpty` instead of
+bare list rows.
+
+Slice three, after the owner reported the model picker "clumsy": the catalog
+sheet now builds rows lazily (`ListView.builder` — it previously built the
+entire ~350-model list eagerly), pins the search field above the list, and
+replaces the inline expand-under-the-row options with one pinned bottom apply
+bar that always shows the drafted model, its variant chips, and `Use model
+and mode`. The current model is drafted on open, so the bar test contract
+(`model-picker-apply-bar`) holds immediately. Both pinned regions cap at a
+share of the sheet height and scroll internally so 320dp/2x text degrades
+without RenderFlex overflow. All original keys survive.
+
+Remaining facelift lanes: reconsidering Terminal's bottom-nav slot;
+list-item motion; further per-screen empty-state upgrades.
 
 ## Production Android hardening branch
 

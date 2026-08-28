@@ -353,10 +353,17 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Fast modes'));
     await tester.pumpAndSettle();
-    expect(find.text('Nemotron Lightning'), findsOneWidget);
+    // The pinned apply bar also names the drafted (current) model, so the
+    // name can appear twice while its row stays unique.
+    expect(
+      find.byKey(const Key('model-option-opencode-nemotron-3.5-lightning-free')),
+      findsOneWidget,
+    );
     expect(find.text('Nemotron Ultra'), findsNothing);
 
-    await tester.tap(find.text('Nemotron Lightning'));
+    await tester.tap(
+      find.byKey(const Key('model-option-opencode-nemotron-3.5-lightning-free')),
+    );
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('fast · low effort'));
     await tester.pumpAndSettle();
@@ -447,5 +454,33 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('model-picker-provider')), findsWidgets);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('apply bar stays pinned while browsing models', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(411, 891));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(controller));
+
+    await tester.tap(find.text('Choose model'));
+    await tester.pumpAndSettle();
+
+    // The current model is drafted on open, so its apply action is already
+    // visible without scrolling.
+    expect(find.byKey(const Key('model-picker-apply-bar')), findsOneWidget);
+    expect(
+      find.byKey(const Key('use-model-opencode-nemotron-3.5-lightning-free')),
+      findsOneWidget,
+    );
+
+    // Tapping another row re-targets the same pinned bar immediately.
+    await tester.tap(find.text('Nemotron Ultra'));
+    await tester.pump();
+    expect(
+      find.byKey(const Key('use-model-opencode-nemotron-3-ultra-free')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('model-picker-apply-bar')), findsOneWidget);
   });
 }

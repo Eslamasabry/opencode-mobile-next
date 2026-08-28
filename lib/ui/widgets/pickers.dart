@@ -110,19 +110,87 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
     animation: widget.controller,
     builder: (context, _) {
       final catalog = widget.controller.catalog;
-      return Column(
-        children: [
-          if (widget.showHeader) _header(context),
-          if (widget.showHeader) const Divider(height: 1),
-          Expanded(
-            child: catalog == null
-                ? _catalogState()
-                : _catalog(context, catalog),
-          ),
-        ],
+      final drafted = catalog == null ? null : _draftedModel(catalog);
+      // Both pinned regions cap at a share of the available height and
+      // scroll internally, so extreme accessibility text scales degrade
+      // gracefully instead of overflowing while the list keeps real space.
+      return LayoutBuilder(
+        builder: (context, constraints) => Column(
+          children: [
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: constraints.maxHeight * .45,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    if (widget.showHeader) _header(context),
+                    if (widget.showHeader) const Divider(height: 1),
+                    if (catalog != null && catalog.models.isNotEmpty)
+                      _pinnedControls(context),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: catalog == null
+                  ? _catalogState()
+                  : _catalog(context, catalog),
+            ),
+            if (drafted != null)
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: constraints.maxHeight * .38,
+                ),
+                child: SingleChildScrollView(
+                  child: _applyBar(context, catalog!, drafted),
+                ),
+              ),
+          ],
+        ),
       );
     },
   );
+
+  CatalogModel? _draftedModel(CatalogSnapshot catalog) {
+    final draft = _draftModel;
+    if (draft == null) return null;
+    for (final model in catalog.models) {
+      if (model.providerID == draft.providerID && model.id == draft.modelID) {
+        return model.enabled ? model : null;
+      }
+    }
+    return null;
+  }
+
+  /// The search field stays fixed above the list so it never scrolls out of
+  /// reach while browsing a large catalog.
+  Widget _pinnedControls(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+      child: TextField(
+        key: const Key('model-picker-search'),
+        controller: _search,
+        textInputAction: TextInputAction.search,
+        onChanged: (value) => setState(() => _query = value),
+        decoration: InputDecoration(
+          hintText: 'Search models or providers',
+          prefixIcon: const Icon(Icons.search_rounded),
+          isDense: true,
+          suffixIcon: _query.isEmpty
+              ? null
+              : IconButton(
+                  tooltip: 'Clear model search',
+                  onPressed: () {
+                    _search.clear();
+                    setState(() => _query = '');
+                  },
+                  icon: const Icon(Icons.close_rounded),
+                ),
+        ),
+      ),
+    );
+  }
 
   Widget _header(BuildContext context) {
     final theme = Theme.of(context);
@@ -256,72 +324,58 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
       models.sort((a, b) => b.contextLimit.compareTo(a.contextLimit));
     }
 
-    return ListView(
-      controller: widget.scrollController,
-      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
-      children: [
-        if (!widget.controller.catalogDetailed)
-          const _Notice(
-            icon: Icons.info_outline_rounded,
-            text:
-                'This server returned a basic catalog. Capability and context details are unavailable.',
-          ),
-        _agentPicker(catalog),
-        const SizedBox(height: 12),
-        TextField(
-          key: const Key('model-picker-search'),
-          controller: _search,
-          textInputAction: TextInputAction.search,
-          onChanged: (value) => setState(() => _query = value),
-          decoration: InputDecoration(
-            hintText: 'Search models or providers',
-            prefixIcon: const Icon(Icons.search_rounded),
-            suffixIcon: _query.isEmpty
-                ? null
-                : IconButton(
-                    tooltip: 'Clear model search',
-                    onPressed: () {
-                      _search.clear();
-                      setState(() => _query = '');
-                    },
-                    icon: const Icon(Icons.close_rounded),
-                  ),
-          ),
+    final leadItems = <Widget>[
+      if (!widget.controller.catalogDetailed)
+        const _Notice(
+          icon: Icons.info_outline_rounded,
+          text:
+              'This server returned a basic catalog. Capability and context details are unavailable.',
         ),
-        const SizedBox(height: 12),
-        _providerPicker(providers),
-        const SizedBox(height: 12),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              _intentChip('All', _ModelIntent.all),
-              _intentChip('Fast modes', _ModelIntent.fast),
-              _intentChip('Reasoning', _ModelIntent.reasoning),
-              _intentChip('Largest context', _ModelIntent.context),
-            ],
-          ),
-        ),
-        const SizedBox(height: 18),
-        Row(
+      _agentPicker(catalog),
+      const SizedBox(height: 12),
+      _providerPicker(providers),
+      const SizedBox(height: 12),
+      SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
           children: [
-            Text('Models', style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(width: 8),
-            Text('${models.length}'),
+            _intentChip('All', _ModelIntent.all),
+            _intentChip('Fast modes', _ModelIntent.fast),
+            _intentChip('Reasoning', _ModelIntent.reasoning),
+            _intentChip('Largest context', _ModelIntent.context),
           ],
         ),
-        const SizedBox(height: 8),
-        if (models.isEmpty)
-          _PickerState(
-            icon: Icons.search_off_rounded,
-            title: 'No matching models',
-            message: _intent == _ModelIntent.fast
-                ? 'No model reports an explicit fast or low-effort mode.'
-                : 'Try another search, provider, or capability filter.',
-          )
-        else
-          for (final model in models) ...[
+      ),
+      const SizedBox(height: 14),
+      Row(
+        children: [
+          Text('Models', style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(width: 8),
+          Text('${models.length}'),
+        ],
+      ),
+      const SizedBox(height: 4),
+      if (models.isEmpty)
+        _PickerState(
+          icon: Icons.search_off_rounded,
+          title: 'No matching models',
+          message: _intent == _ModelIntent.fast
+              ? 'No model reports an explicit fast or low-effort mode.'
+              : 'Try another search, provider, or capability filter.',
+        ),
+    ];
+
+    // The catalog can hold hundreds of models; rows must build lazily.
+    return ListView.builder(
+      controller: widget.scrollController,
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 16),
+      itemCount: leadItems.length + models.length,
+      itemBuilder: (context, index) {
+        if (index < leadItems.length) return leadItems[index];
+        final model = models[index - leadItems.length];
+        return Column(
+          children: [
             _modelRow(
               context,
               model,
@@ -329,7 +383,8 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
             ),
             const Divider(height: 1),
           ],
-      ],
+        );
+      },
     );
   }
 
@@ -423,123 +478,160 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
         color: draft
             ? scheme.primary.withValues(alpha: .07)
             : Colors.transparent,
-        child: Column(
-          children: [
-            ListTile(
-              key: ValueKey('model-option-${model.providerID}-${model.id}'),
-              enabled: enabled,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-              title: Text(
-                model.name,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontWeight: current ? FontWeight.w700 : FontWeight.w500,
-                ),
-              ),
-              subtitle: Text(
-                [
-                  '$providerName · ${model.id}',
-                  if (model.contextLimit > 0)
-                    '${_number(model.contextLimit)} context',
-                  if (model.outputLimit > 0)
-                    '${_number(model.outputLimit)} output',
-                ].join(' · '),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              trailing: Icon(
-                current
-                    ? Icons.check_circle_rounded
-                    : Icons.expand_more_rounded,
-                color: current ? scheme.primary : null,
-              ),
-              onTap: enabled
-                  ? () => setState(() {
-                      _draftModel = ModelRef(
-                        providerID: model.providerID,
-                        modelID: model.id,
-                      );
-                      _draftVariant = current
-                          ? widget.controller.selectedVariant
-                          : '';
-                    })
-                  : null,
+        child: ListTile(
+          key: ValueKey('model-option-${model.providerID}-${model.id}'),
+          enabled: enabled,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+          title: Text(
+            model.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontWeight: current ? FontWeight.w700 : FontWeight.w500,
             ),
-            if (draft && enabled) _modelOptions(context, model),
-          ],
+          ),
+          subtitle: Text(
+            [
+              '$providerName · ${model.id}',
+              if (model.contextLimit > 0)
+                '${_number(model.contextLimit)} context',
+              if (model.outputLimit > 0)
+                '${_number(model.outputLimit)} output',
+            ].join(' · '),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          trailing: Icon(
+            draft
+                ? Icons.radio_button_checked_rounded
+                : current
+                ? Icons.check_circle_rounded
+                : Icons.radio_button_off_rounded,
+            color: draft || current ? scheme.primary : scheme.outline,
+          ),
+          onTap: enabled
+              ? () => setState(() {
+                  _draftModel = ModelRef(
+                    providerID: model.providerID,
+                    modelID: model.id,
+                  );
+                  _draftVariant = current
+                      ? widget.controller.selectedVariant
+                      : '';
+                })
+              : null,
         ),
       ),
     );
   }
 
-  Widget _modelOptions(BuildContext context, CatalogModel model) {
+  /// The drafted model's identity, thinking modes, and single apply action,
+  /// pinned to the sheet bottom so applying never requires scrolling.
+  Widget _applyBar(
+    BuildContext context,
+    CatalogSnapshot catalog,
+    CatalogModel model,
+  ) {
     final theme = Theme.of(context);
-    final variants = model.variants.where((variant) => !variant.disabled);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 0, 8, 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
+    final variants = model.variants
+        .where((variant) => !variant.disabled)
+        .toList();
+    final providerName = presentedProviderName(
+      model.providerID,
+      catalog.providers,
+    );
+    final capabilities = <String>[
+      if (model.reasoning) 'Reasoning',
+      if (model.tools) 'Tools',
+      if (model.attachments) 'Attachments',
+    ];
+    return Material(
+      key: const Key('model-picker-apply-bar'),
+      color: theme.colorScheme.surfaceContainerHigh,
+      elevation: 6,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (model.reasoning) const Chip(label: Text('Reasoning')),
-              if (model.tools) const Chip(label: Text('Tools')),
-              if (model.attachments) const Chip(label: Text('Attachments')),
-              if (variants.any((variant) => variant.isFast))
-                const Chip(label: Text('Fast mode available')),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text('Thinking mode', style: theme.textTheme.labelLarge),
-          const SizedBox(height: 6),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              ChoiceChip(
-                key: ValueKey('model-variant-${model.id}-default'),
-                label: const Text('Default'),
-                selected: _draftVariant.isEmpty,
-                onSelected: (_) => setState(() => _draftVariant = ''),
+              Text(
+                model.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleSmall,
               ),
-              for (final variant in variants)
-                ChoiceChip(
-                  key: ValueKey('model-variant-${model.id}-${variant.id}'),
-                  label: Text(_variantLabel(variant)),
-                  selected: _draftVariant == variant.id,
-                  onSelected: (_) => setState(() => _draftVariant = variant.id),
+              Text(
+                [
+                  '$providerName · ${model.id}',
+                  if (capabilities.isNotEmpty) capabilities.join(' · '),
+                ].join('  —  '),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
+              ),
+              const SizedBox(height: 8),
+              if (variants.isEmpty)
+                Text(
+                  'This provider exposes only its default mode.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.hintColor,
+                  ),
+                )
+              else
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          key: ValueKey('model-variant-${model.id}-default'),
+                          label: const Text('Default'),
+                          selected: _draftVariant.isEmpty,
+                          onSelected: (_) =>
+                              setState(() => _draftVariant = ''),
+                        ),
+                      ),
+                      for (final variant in variants)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            key: ValueKey(
+                              'model-variant-${model.id}-${variant.id}',
+                            ),
+                            label: Text(_variantLabel(variant)),
+                            selected: _draftVariant == variant.id,
+                            onSelected: (_) =>
+                                setState(() => _draftVariant = variant.id),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 10),
+              FilledButton.icon(
+                key: ValueKey('use-model-${model.providerID}-${model.id}'),
+                onPressed: () async {
+                  await widget.controller.selectModel(
+                    _draftModel!,
+                    variant: _draftVariant,
+                  );
+                  widget.onApplied?.call();
+                  if (mounted && widget.onApplied == null) {
+                    setState(_syncDraft);
+                  }
+                },
+                icon: const Icon(Icons.check_rounded),
+                label: const Text('Use model and mode'),
+              ),
             ],
           ),
-          if (model.variants.isEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text(
-                'This provider exposes only its default mode.',
-                style: theme.textTheme.bodySmall,
-              ),
-            ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              key: ValueKey('use-model-${model.providerID}-${model.id}'),
-              onPressed: () async {
-                await widget.controller.selectModel(
-                  _draftModel!,
-                  variant: _draftVariant,
-                );
-                widget.onApplied?.call();
-                if (mounted && widget.onApplied == null) setState(_syncDraft);
-              },
-              icon: const Icon(Icons.check_rounded),
-              label: const Text('Use model and mode'),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
