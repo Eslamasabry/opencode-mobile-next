@@ -2070,7 +2070,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         if (mounted) {
           await Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (_) => FilesScreen(controller: _conn),
+              builder: (_) => Scaffold(
+                appBar: AppBar(title: const Text('Project files')),
+                body: FilesScreen(
+                  controller: _conn,
+                  onAttachFile: _attachProjectFile,
+                ),
+              ),
             ),
           );
         }
@@ -2410,6 +2416,33 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     ToolOutputFile file,
     FilePreviewData data,
   ) async {
+    await _addPreviewAttachment(
+      filename: file.displayName,
+      mimeType: data.mimeType ?? file.mimeType,
+      data: data,
+    );
+    if (!mounted) return;
+    _focus.requestFocus();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${file.displayName} attached. Add your comment.'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> _attachProjectFile(String path, FilePreviewData data) =>
+      _addPreviewAttachment(
+        filename: path.split('/').last,
+        mimeType: data.mimeType,
+        data: data,
+      );
+
+  Future<void> _addPreviewAttachment({
+    required String filename,
+    required String? mimeType,
+    required FilePreviewData data,
+  }) async {
     final bytes = data.exportBytes;
     if (data.error != null || bytes == null) {
       throw StateError(data.error ?? 'The file has no content to attach.');
@@ -2427,21 +2460,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (currentBytes + bytes.length > _maxAggregateAttachmentBytes) {
       throw StateError('Attachments must total no more than 20 MB.');
     }
-    final mime = data.mimeType ?? file.mimeType ?? 'application/octet-stream';
+    final mime = mimeType ?? 'application/octet-stream';
     final attachment = PromptAttachment(
       mime: mime,
-      filename: file.displayName,
+      filename: filename,
       url: 'data:$mime;base64,${base64Encode(bytes)}',
     );
     if (!mounted) return;
     setState(() => _attachments.add(attachment));
-    _focus.requestFocus();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${file.displayName} attached. Add your comment.'),
-        duration: const Duration(seconds: 2),
-      ),
-    );
   }
 
   Future<void> _downloadToolOutputFile(

@@ -15,6 +15,7 @@ import 'package:opencode_mobile/ui/screens/library_screen.dart';
 import 'package:opencode_mobile/ui/screens/requests_screen.dart';
 import 'package:opencode_mobile/ui/screens/servers_screen.dart';
 import 'package:opencode_mobile/ui/screens/terminal_screen.dart';
+import 'package:opencode_mobile/ui/widgets/file_preview.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xterm/xterm.dart';
 
@@ -577,6 +578,59 @@ void main() {
     expect(find.byKey(const Key('file-preview-image')), findsOneWidget);
     expect(find.text('Pinch to zoom'), findsOneWidget);
     expect(find.byType(InteractiveViewer), findsOneWidget);
+    expect(find.byKey(const Key('project-file-download')), findsOneWidget);
+    expect(find.byKey(const Key('project-file-attach')), findsNothing);
+  });
+
+  testWidgets('chat file viewer can attach the original project file', (
+    tester,
+  ) async {
+    const path = 'docs/review.md';
+    const body = '# Review\n\nAdd a focused follow-up comment.';
+    final api = _TestApi(
+      files: (_) async => [
+        FileNode(name: 'review.md', path: path, isDir: false),
+      ],
+      contents: const {path: FileContent(body, mimeType: 'text/markdown')},
+    );
+    final controller = await _controller(
+      api: api,
+      repository: _LocationRepository(),
+    );
+    addTearDown(controller.dispose);
+    String? attachedPath;
+    FilePreviewData? attachedData;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: FilesScreen(
+            controller: controller,
+            onAttachFile: (path, data) async {
+              attachedPath = path;
+              attachedData = data;
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('review.md'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('project-file-download')), findsOneWidget);
+    expect(find.byKey(const Key('project-file-attach')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('project-file-attach')));
+    await tester.pumpAndSettle();
+
+    expect(attachedPath, path);
+    expect(attachedData?.name, 'review.md');
+    expect(attachedData?.mimeType, 'text/markdown');
+    expect(attachedData?.text, body);
+    expect(
+      find.text('review.md attached. Return to the chat to add your comment.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('symbol search opens the exact source line in file preview', (

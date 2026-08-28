@@ -363,6 +363,24 @@ replacement wake transport. Final-tree Flutter analysis is clean and all 295
 tests pass serially. The generated SDK audit now counts 69 directly used
 operations. Traycer remains explicitly deferred.
 
+Project files are now first-class artifacts from both entry points. The main
+Files tab always exposes Android's system document destination, while `/files`
+opened from a chat additionally exposes Attach to prompt and returns the full
+original bytes to that chat's bounded attachment list for a follow-up comment.
+Large text may stay bounded in the viewer without truncating its saved or
+attached payload. The `/files` command route now owns a proper Scaffold/AppBar;
+the prior bare widget route could assert for missing Material and provided no
+reliable back affordance.
+
+Release-mode Pixel 6 verification used live OpenCode `1.18.23`. A repository PNG
+rendered with zoom, saved through Android DocumentsUI, and matched the source
+SHA-256 exactly. `HANDOFF.md` rendered as Markdown with Rendered/Raw, Save, and
+chat-only Attach actions; the returned attachment plus a typed follow-up comment
+survived Android Home/background/resume with Send enabled. The downloaded probe,
+local server, reverse route, disposable signing key, and test APK were removed.
+Final-tree Flutter analysis is clean and all 315 tests pass serially. Traycer
+remains explicitly deferred.
+
 Wake safety now covers the full retained foreground action surface, not only
 chat send/stop and file reads. `ConnectionController` resolves the product
 repository paired with the post-wake API, and chat share/unshare, fork,

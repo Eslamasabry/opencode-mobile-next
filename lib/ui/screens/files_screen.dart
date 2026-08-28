@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -13,9 +14,14 @@ import '../widgets/product_states.dart';
 /// and content viewer.
 enum _FileSurface { files, symbols }
 
+typedef ProjectFileAttachment =
+    Future<void> Function(String path, FilePreviewData data);
+
 class FilesScreen extends StatefulWidget {
   final ConnectionController controller;
-  const FilesScreen({super.key, required this.controller});
+  final ProjectFileAttachment? onAttachFile;
+
+  const FilesScreen({super.key, required this.controller, this.onAttachFile});
 
   @override
   State<FilesScreen> createState() => _FilesScreenState();
@@ -329,6 +335,7 @@ class _FilesScreenState extends State<FilesScreen> {
         controller: widget.controller,
         path: path,
         initialLine: initialLine,
+        onAttachFile: widget.onAttachFile,
       ),
     );
   }
@@ -455,6 +462,7 @@ class _FilesScreenState extends State<FilesScreen> {
                             path: _selectedPath!,
                             initialLine: _selectedLine,
                             embedded: true,
+                            onAttachFile: widget.onAttachFile,
                           ),
                   ),
                 ],
@@ -642,12 +650,14 @@ class _FileViewer extends StatefulWidget {
   final String path;
   final int? initialLine;
   final bool embedded;
+  final ProjectFileAttachment? onAttachFile;
   const _FileViewer({
     super.key,
     required this.controller,
     required this.path,
     this.initialLine,
     this.embedded = false,
+    this.onAttachFile,
   });
 
   @override
@@ -658,6 +668,8 @@ class __FileViewerState extends State<_FileViewer> {
   FileContent? _content;
   String? _error;
   int _generation = 0;
+  bool _attaching = false;
+  bool _downloading = false;
 
   static const maxChars = 200000;
 
@@ -702,6 +714,67 @@ class __FileViewerState extends State<_FileViewer> {
     );
   }
 
+  FilePreviewData get _exportData {
+    final content = _content!;
+    return FilePreviewData(
+      name: widget.path.split('/').last,
+      mimeType: content.mimeType,
+      bytes: content.isBinary ? content.bytes() : null,
+      text: content.isBinary ? null : content.content,
+    );
+  }
+
+  Future<void> _attach() async {
+    final action = widget.onAttachFile;
+    if (action == null || _content == null || _attaching) return;
+    setState(() => _attaching = true);
+    try {
+      await action(widget.path, _exportData);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${widget.path.split('/').last} attached. Return to the chat to add your comment.',
+          ),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not attach file: $error')));
+    } finally {
+      if (mounted) setState(() => _attaching = false);
+    }
+  }
+
+  Future<void> _download() async {
+    if (_content == null || _downloading) return;
+    final data = _exportData;
+    final bytes = data.exportBytes;
+    if (bytes == null) return;
+    setState(() => _downloading = true);
+    try {
+      final savedPath = await FilePicker.saveFile(
+        dialogTitle: 'Save ${data.name}',
+        fileName: data.name,
+        bytes: bytes,
+      );
+      if (!mounted || savedPath == null) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${data.name} saved to your device.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not save file: $error')));
+    } finally {
+      if (mounted) setState(() => _downloading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -741,6 +814,33 @@ class __FileViewerState extends State<_FileViewer> {
                               );
                             }
                           },
+                  ),
+                  if (widget.onAttachFile != null)
+                    IconButton(
+                      key: const Key('project-file-attach'),
+                      tooltip: 'Attach to prompt',
+                      onPressed: _content == null || _attaching
+                          ? null
+                          : _attach,
+                      icon: _attaching
+                          ? const SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.attach_file_rounded, size: 19),
+                    ),
+                  IconButton(
+                    key: const Key('project-file-download'),
+                    tooltip: 'Save to device',
+                    onPressed: _content == null || _downloading
+                        ? null
+                        : _download,
+                    icon: _downloading
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.download_rounded, size: 19),
                   ),
                   IconButton(
                     tooltip: 'Reload file',

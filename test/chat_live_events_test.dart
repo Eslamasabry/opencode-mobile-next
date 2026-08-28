@@ -41,6 +41,7 @@ class _FakeOpenCodeApi extends OpenCodeApi {
   List<Todo> todoItems = const [];
   final Map<String, FileContent> fileContents = {};
   final List<String> fileContentRequests = [];
+  List<FileNode> projectFiles = const [];
 
   @override
   Future<List<Session>> sessions() async => const [];
@@ -66,6 +67,10 @@ class _FakeOpenCodeApi extends OpenCodeApi {
 
   @override
   Future<List<Todo>> todos(String id) async => todoItems;
+
+  @override
+  Future<List<FileNode>> listFiles([String path = '']) async =>
+      path.isEmpty ? projectFiles : const [];
 
   @override
   Future<FileContent> fileContent(String path) async {
@@ -1328,6 +1333,53 @@ void main() {
       find.byKey(const Key('chat-composer-field')),
     );
     expect(composer.controller?.text, '/review ');
+  });
+
+  testWidgets('/files attaches a project artifact back to the chat', (
+    tester,
+  ) async {
+    const path = 'docs/review.md';
+    final api = _FakeOpenCodeApi()
+      ..projectFiles = [FileNode(name: 'review.md', path: path, isDir: false)]
+      ..fileContents[path] = const FileContent(
+        '# Review\n\nPlease check this file.',
+        mimeType: 'text/markdown',
+      );
+
+    await _pumpChat(tester, api);
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'open',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('command-mobile-files')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('review.md'), findsOneWidget);
+    await tester.tap(find.text('review.md'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('project-file-attach')), findsOneWidget);
+    expect(find.byKey(const Key('project-file-download')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('project-file-attach')));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('review.md attached. Return to the chat to add your comment.'),
+      findsOneWidget,
+    );
+
+    Navigator.of(
+      tester.element(find.byKey(const Key('project-file-attach'))),
+    ).pop();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
+    expect(
+      find.bySemanticsLabel('Remove attachment review.md'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('move, warp, and org commands preserve their server semantics', (
