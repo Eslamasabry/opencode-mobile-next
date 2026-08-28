@@ -1083,6 +1083,31 @@ repeated the browser-to-phone-loopback success path before cleanup. This
 locally signed APK must not be distributed. Traycer remains explicitly
 deferred.
 
+Settings -> Defaults now exposes OpenCode's actual default shell rather than a
+hardcoded mobile list. The picker loads generated `pty.shells`, keeps full paths
+when names collide, labels shells that OpenCode considers terminal-only, and
+offers Automatic to remove the override. Selection updates the global shell
+configuration through generated `global.config.update`, then reads it back
+through `global.config.get` before showing success. The action resolves the
+wake-reconciled repository at mutation time; load and write failures stay scoped
+to the shell row and never replace the last server-reported choice.
+
+Live OpenCode `1.18.23` testing found and prevented a false implementation: its
+scoped `config.update` writes a project `config.json`, but its current loader
+does not read that legacy filename. Upstream web uses the global config route for
+this setting, so mobile now does the same. On the exact release-mode Pixel 6
+build, the picker rendered the isolated server's real shell inventory, including
+duplicate Bash paths and terminal-only Fish. Selecting Fish changed the app row
+and global config to `fish`; a new mobile terminal then reported
+`command: /usr/bin/fish`. Resetting Automatic removed the global override, and
+the next new terminal reported `command: /bin/bash`. Android logged no fatal
+exception, ANR, RenderFlex overflow, or OOM. The generated SDK audit now counts
+81 directly used operations. Final-tree Flutter analysis is clean, all 367 tests
+pass serially, Android `lintRelease` passes, and the isolated release APK compiled
+at 161,022,083 bytes. The emulator app, reverse port, isolated server/config/project,
+disposable signing key, and local APK were removed afterward; that APK was not
+distributed. Traycer remains explicitly deferred.
+
 ## Shorebird wake patch for `1.0.17+18`
 
 - Shorebird release ID: `789345`

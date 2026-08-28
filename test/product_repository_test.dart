@@ -1495,6 +1495,120 @@ void main() {
   });
 
   test(
+    'shell settings use generated config and server shell contracts',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        final requests = <({String method, Uri uri, Object? body})>[];
+        var selectedShell = 'zsh';
+        server.listen((request) async {
+          final text = await utf8.decoder.bind(request).join();
+          final body = text.isEmpty ? null : jsonDecode(text);
+          requests.add((method: request.method, uri: request.uri, body: body));
+          request.response.headers.contentType = ContentType.json;
+          switch ((request.method, request.uri.path)) {
+            case ('GET', '/global/config'):
+              request.response.write(jsonEncode({'shell': selectedShell}));
+            case ('GET', '/pty/shells'):
+              request.response.write(
+                jsonEncode([
+                  {'path': '/bin/bash', 'name': 'bash', 'acceptable': true},
+                  {
+                    'path': '/usr/bin/fish',
+                    'name': 'fish',
+                    'acceptable': false,
+                  },
+                ]),
+              );
+            case ('PATCH', '/global/config'):
+              selectedShell = (body as Map<String, dynamic>)['shell'] as String;
+              request.response.write(jsonEncode({'shell': selectedShell}));
+            default:
+              request.response.statusCode = HttpStatus.notFound;
+              request.response.write(jsonEncode({'message': 'Unexpected'}));
+          }
+          await request.response.close();
+        });
+
+        try {
+          final api = OpenCodeApi(
+            baseUrl: 'http://${server.address.host}:${server.port}',
+          );
+          final repository = SdkProductRepository(api.sdkClient)
+            ..setLocation(directory: '/work/acme', workspace: 'phone');
+
+          final settings = await repository.loadTerminalShellSettings();
+          expect(settings.selected, 'zsh');
+          expect(settings.options, hasLength(2));
+          expect(settings.options.first.path, '/bin/bash');
+          expect(settings.options.first.acceptable, isTrue);
+          expect(settings.options.last.name, 'fish');
+          expect(settings.options.last.acceptable, isFalse);
+
+          await repository.selectTerminalShell('/usr/bin/fish');
+
+          expect(requests.map((request) => request.method), [
+            'GET',
+            'GET',
+            'PATCH',
+            'GET',
+          ]);
+          expect(requests.map((request) => request.uri.path), [
+            '/global/config',
+            '/pty/shells',
+            '/global/config',
+            '/global/config',
+          ]);
+          expect(requests[1].uri.queryParameters, {
+            'directory': '/work/acme',
+            'workspace': 'phone',
+          });
+          expect(requests[0].uri.queryParameters, isEmpty);
+          expect(requests[2].uri.queryParameters, isEmpty);
+          expect(requests[3].uri.queryParameters, isEmpty);
+          expect(requests[2].body, {'shell': '/usr/bin/fish'});
+        } finally {
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
+
+  test(
+    'shell update fails closed when global config does not retain it',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        server.listen((request) async {
+          await request.drain<void>();
+          request.response.headers.contentType = ContentType.json;
+          request.response.write(jsonEncode({'shell': 'bash'}));
+          await request.response.close();
+        });
+        try {
+          final api = OpenCodeApi(
+            baseUrl: 'http://${server.address.host}:${server.port}',
+          );
+          final repository = SdkProductRepository(api.sdkClient);
+
+          await expectLater(
+            repository.selectTerminalShell('fish'),
+            throwsA(
+              isA<ProductException>().having(
+                (error) => error.toString(),
+                'message',
+                contains('did not retain'),
+              ),
+            ),
+          );
+        } finally {
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
+
+  test(
     'terminal connection requests a guarded ticket before WebSocket',
     () async {
       await HttpOverrides.runZoned(() async {

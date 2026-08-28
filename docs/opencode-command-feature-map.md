@@ -89,6 +89,7 @@ Selecting a dynamic command inserts it into the composer so arguments can be edi
 - Opt into foreground live-session mode and receive Shorebird update status
 - Update the app-managed local OpenCode server from Settings
 - Complete remote MCP OAuth on the phone through a state-validated loopback callback, with manual and cancel fallbacks
+- Choose OpenCode's global default shell from the server's live shell inventory, including Automatic reset and terminal-only guidance
 
 ## Next command parity work
 

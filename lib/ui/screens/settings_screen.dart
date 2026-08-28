@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../api/models.dart';
+import '../../api/product_repository.dart';
 import '../../api/provider_presentation.dart';
 import '../../state/connection.dart';
 import '../../state/profiles.dart';
@@ -25,6 +28,11 @@ class _SettingsScreenState extends State<SettingsScreen>
   Health? _health;
   String? _healthError;
   bool _checking = false;
+  TerminalShellSettings? _shellSettings;
+  String? _shellError;
+  bool _loadingShell = false;
+  bool _savingShell = false;
+  int _shellLoadGeneration = 0;
 
   @override
   void initState() {
@@ -32,6 +40,7 @@ class _SettingsScreenState extends State<SettingsScreen>
     WidgetsBinding.instance.addObserver(this);
     widget.controller.backgroundLive.addListener(_backgroundChanged);
     _checkHealth();
+    _loadShellSettings();
     widget.controller.backgroundLive.refreshStatus();
   }
 
@@ -43,7 +52,166 @@ class _SettingsScreenState extends State<SettingsScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       widget.controller.backgroundLive.refreshStatus();
+      unawaited(_loadShellSettings());
     }
+  }
+
+  Future<void> _loadShellSettings() async {
+    final generation = ++_shellLoadGeneration;
+    setState(() {
+      _loadingShell = true;
+      _shellError = null;
+    });
+    try {
+      final repository = await widget.controller.prepareActionRepository();
+      if (repository == null) {
+        throw const ProductException('OpenCode is reconnecting. Try again.');
+      }
+      final settings = await repository.loadTerminalShellSettings();
+      if (mounted && generation == _shellLoadGeneration) {
+        setState(() => _shellSettings = settings);
+      }
+    } catch (error) {
+      if (mounted && generation == _shellLoadGeneration) {
+        setState(() => _shellError = error.toString());
+      }
+    } finally {
+      if (mounted && generation == _shellLoadGeneration) {
+        setState(() => _loadingShell = false);
+      }
+    }
+  }
+
+  Future<void> _chooseShell() async {
+    final settings = _shellSettings;
+    if (_savingShell) return;
+    if (settings == null) {
+      await _loadShellSettings();
+      return;
+    }
+    final choices = _shellChoices(settings);
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height * 0.8,
+          ),
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              const ListTile(
+                leading: Icon(Icons.terminal_rounded),
+                title: Text('Default shell'),
+                subtitle: Text(
+                  'Used by new terminals and compatible shell commands on this OpenCode server.',
+                ),
+              ),
+              for (final choice in choices)
+                ListTile(
+                  key: ValueKey('server-shell-${choice.id}'),
+                  leading: Icon(
+                    choice.value == settings.selected
+                        ? Icons.radio_button_checked_rounded
+                        : Icons.radio_button_off_rounded,
+                  ),
+                  title: Text(choice.label),
+                  subtitle: choice.terminalOnly
+                      ? const Text(
+                          'Terminal only; OpenCode uses a compatible fallback for shell tools.',
+                        )
+                      : null,
+                  onTap: () => Navigator.pop(context, choice.value),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (selected == null || selected == settings.selected || !mounted) return;
+
+    setState(() => _savingShell = true);
+    final locationRevision = widget.controller.locationRevision;
+    try {
+      final repository = await widget.controller.prepareActionRepository();
+      if (repository == null) {
+        throw const ProductException('OpenCode is reconnecting. Try again.');
+      }
+      await repository.selectTerminalShell(selected);
+      if (!mounted) return;
+      if (locationRevision == widget.controller.locationRevision) {
+        setState(
+          () => _shellSettings = TerminalShellSettings(
+            selected: selected,
+            options: settings.options,
+          ),
+        );
+      }
+      await _loadShellSettings();
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Default shell updated')));
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.toString())));
+      }
+    } finally {
+      if (mounted) setState(() => _savingShell = false);
+    }
+  }
+
+  List<_ShellChoice> _shellChoices(TerminalShellSettings settings) {
+    final nameCounts = <String, int>{};
+    for (final option in settings.options) {
+      nameCounts.update(option.name, (count) => count + 1, ifAbsent: () => 1);
+    }
+    final choices = <_ShellChoice>[
+      const _ShellChoice(
+        id: 'automatic',
+        value: '',
+        label: 'Automatic (server default)',
+        terminalOnly: false,
+      ),
+    ];
+    final values = <String>{''};
+    for (final option in settings.options) {
+      final ambiguous = nameCounts[option.name] != 1;
+      final value = ambiguous ? option.path : option.name;
+      if (!values.add(value)) continue;
+      choices.add(
+        _ShellChoice(
+          id: option.path,
+          value: value,
+          label: ambiguous ? option.path : option.name,
+          terminalOnly: !option.acceptable,
+        ),
+      );
+    }
+    if (settings.selected.isNotEmpty && values.add(settings.selected)) {
+      choices.add(
+        _ShellChoice(
+          id: settings.selected,
+          value: settings.selected,
+          label: settings.selected,
+          terminalOnly: false,
+        ),
+      );
+    }
+    return choices;
+  }
+
+  String _selectedShellLabel(TerminalShellSettings settings) {
+    if (settings.selected.isEmpty) return 'Automatic (server default)';
+    final choices = _shellChoices(settings);
+    for (final choice in choices) {
+      if (choice.value == settings.selected) return choice.label;
+    }
+    return settings.selected;
   }
 
   Future<void> _checkHealth() async {
@@ -247,6 +415,27 @@ class _SettingsScreenState extends State<SettingsScreen>
           ),
           const SectionLabel('Defaults'),
           ListTile(
+            key: const ValueKey('default-shell-settings-entry'),
+            leading: const Icon(Icons.terminal_rounded),
+            title: const Text('Default shell'),
+            subtitle: Text(
+              _shellError != null
+                  ? '${_shellError!} Tap to retry.'
+                  : _shellSettings == null
+                  ? 'Loading shells from OpenCode…'
+                  : _selectedShellLabel(_shellSettings!),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: _loadingShell || _savingShell
+                ? const SizedBox.square(
+                    dimension: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.chevron_right_rounded),
+            onTap: _loadingShell || _savingShell ? null : _chooseShell,
+          ),
+          ListTile(
             leading: const Icon(Icons.model_training_outlined),
             title: const Text('Selected model'),
             subtitle: Text(
@@ -336,8 +525,23 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   @override
   void dispose() {
+    _shellLoadGeneration++;
     WidgetsBinding.instance.removeObserver(this);
     widget.controller.backgroundLive.removeListener(_backgroundChanged);
     super.dispose();
   }
+}
+
+class _ShellChoice {
+  final String id;
+  final String value;
+  final String label;
+  final bool terminalOnly;
+
+  const _ShellChoice({
+    required this.id,
+    required this.value,
+    required this.label,
+    required this.terminalOnly,
+  });
 }

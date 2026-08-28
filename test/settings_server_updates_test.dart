@@ -34,8 +34,43 @@ class _MemoryProfileStore extends ProfileStore {
 }
 
 class _EmptyPermissionRepository implements ProductRepository {
+  TerminalShellSettings shellSettings = const TerminalShellSettings(
+    selected: 'bash',
+    options: [
+      TerminalShellOption(path: '/bin/bash', name: 'bash', acceptable: true),
+      TerminalShellOption(
+        path: '/usr/bin/fish',
+        name: 'fish',
+        acceptable: false,
+      ),
+    ],
+  );
+  Object? shellError;
+  Object? shellSelectError;
+  int shellLoadCalls = 0;
+  int shellSelectCalls = 0;
+  String? selectedShell;
+
   @override
   void setLocation({String? directory, String? workspace}) {}
+
+  @override
+  Future<TerminalShellSettings> loadTerminalShellSettings() async {
+    shellLoadCalls++;
+    if (shellError case final error?) throw error;
+    return shellSettings;
+  }
+
+  @override
+  Future<void> selectTerminalShell(String value) async {
+    shellSelectCalls++;
+    if (shellSelectError case final error?) throw error;
+    selectedShell = value;
+    shellSettings = TerminalShellSettings(
+      selected: value,
+      options: shellSettings.options,
+    );
+  }
 
   @override
   Future<List<SavedPermission>> listSavedPermissions() async => const [];
@@ -157,5 +192,185 @@ void main() {
 
     expect(controller.appearance.value, AppAppearance.system);
     expect(find.text('Follow Android'), findsOneWidget);
+  });
+
+  testWidgets(
+    'settings selects a server shell through the current repository',
+    (tester) async {
+      final initial = _EmptyPermissionRepository();
+      final replacement = _EmptyPermissionRepository();
+      final controller = await _controllerFor(
+        'http://127.0.0.1:4096',
+        repository: initial,
+      );
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(home: SettingsScreen(controller: controller)),
+      );
+      await tester.pumpAndSettle();
+      final entry = find.byKey(const ValueKey('default-shell-settings-entry'));
+      await tester.scrollUntilVisible(
+        entry,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('bash'), findsOneWidget);
+      await tester.tap(entry);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Automatic (server default)'), findsOneWidget);
+      expect(find.text('fish'), findsOneWidget);
+      expect(
+        find.textContaining(
+          'Terminal only; OpenCode uses a compatible fallback',
+        ),
+        findsOneWidget,
+      );
+
+      controller.repository = replacement;
+      await tester.tap(
+        find.byKey(const ValueKey('server-shell-/usr/bin/fish')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(initial.shellSelectCalls, 0);
+      expect(replacement.shellSelectCalls, 1);
+      expect(replacement.selectedShell, 'fish');
+      expect(find.text('Default shell updated'), findsOneWidget);
+      expect(find.text('fish'), findsOneWidget);
+    },
+  );
+
+  testWidgets('shell failure remains scoped and can be retried', (
+    tester,
+  ) async {
+    final repository = _EmptyPermissionRepository()
+      ..shellError = const ProductException('Shell endpoint unavailable');
+    final controller = await _controllerFor(
+      'http://127.0.0.1:4096',
+      repository: repository,
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(home: SettingsScreen(controller: controller)),
+    );
+    await tester.pumpAndSettle();
+    final entry = find.byKey(const ValueKey('default-shell-settings-entry'));
+    await tester.scrollUntilVisible(
+      entry,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    expect(find.textContaining('Shell endpoint unavailable'), findsOneWidget);
+    expect(find.text('Selected model'), findsOneWidget);
+    repository.shellError = null;
+    await tester.tap(entry);
+    await tester.pumpAndSettle();
+
+    expect(repository.shellLoadCalls, 2);
+    expect(find.text('bash'), findsOneWidget);
+  });
+
+  testWidgets('failed shell update retains the server-reported selection', (
+    tester,
+  ) async {
+    final repository = _EmptyPermissionRepository()
+      ..shellSelectError = const ProductException('Config write failed');
+    final controller = await _controllerFor(
+      'http://127.0.0.1:4096',
+      repository: repository,
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(home: SettingsScreen(controller: controller)),
+    );
+    await tester.pumpAndSettle();
+    final entry = find.byKey(const ValueKey('default-shell-settings-entry'));
+    await tester.scrollUntilVisible(
+      entry,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(entry);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('server-shell-/usr/bin/fish')));
+    await tester.pumpAndSettle();
+
+    expect(repository.shellSelectCalls, 1);
+    expect(repository.shellSettings.selected, 'bash');
+    expect(find.textContaining('Config write failed'), findsOneWidget);
+    expect(find.text('bash'), findsOneWidget);
+  });
+
+  testWidgets('default shell picker fits a compact large-text phone', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 480);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final repository = _EmptyPermissionRepository();
+    final controller = await _controllerFor(
+      'http://127.0.0.1:4096',
+      repository: repository,
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: const TextScaler.linear(2)),
+          child: child!,
+        ),
+        home: SettingsScreen(controller: controller),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final entry = find.byKey(const ValueKey('default-shell-settings-entry'));
+    await tester.scrollUntilVisible(
+      entry,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(tester.takeException(), isNull);
+    tester.widget<ListTile>(entry).onTap!();
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(BottomSheet), findsOneWidget);
+    final pickerScroll = find.descendant(
+      of: find.byType(BottomSheet),
+      matching: find.byType(Scrollable),
+    );
+    await tester.scrollUntilVisible(
+      find.text('Automatic (server default)'),
+      120,
+      scrollable: pickerScroll,
+    );
+    expect(find.text('Automatic (server default)'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('server-shell-/bin/bash')),
+      120,
+      scrollable: pickerScroll,
+    );
+    expect(
+      find.byKey(const ValueKey('server-shell-/bin/bash')),
+      findsOneWidget,
+    );
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('server-shell-/usr/bin/fish')),
+      120,
+      scrollable: pickerScroll,
+    );
+    expect(
+      find.byKey(const ValueKey('server-shell-/usr/bin/fish')),
+      findsOneWidget,
+    );
   });
 }

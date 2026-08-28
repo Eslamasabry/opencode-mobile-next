@@ -186,6 +186,25 @@ class TerminalProcess {
   });
 }
 
+class TerminalShellOption {
+  final String path;
+  final String name;
+  final bool acceptable;
+
+  const TerminalShellOption({
+    required this.path,
+    required this.name,
+    required this.acceptable,
+  });
+}
+
+class TerminalShellSettings {
+  final String selected;
+  final List<TerminalShellOption> options;
+
+  const TerminalShellSettings({required this.selected, required this.options});
+}
+
 class CatalogVariant {
   final String id;
   final bool disabled;
@@ -641,6 +660,12 @@ abstract class ProductRepository {
   Future<List<FormatterHealth>> listFormatters();
   Future<List<WorkspaceSymbol>> findWorkspaceSymbols(String query);
   Future<List<TerminalProcess>> listTerminals();
+  Future<TerminalShellSettings> loadTerminalShellSettings() => Future.error(
+    const ProductException('Shell settings are unavailable on this server'),
+  );
+  Future<void> selectTerminalShell(String value) => Future.error(
+    const ProductException('Shell settings are unavailable on this server'),
+  );
   Future<TerminalProcess> createTerminal({String? title});
   Future<void> renameTerminal(String id, String title);
   Future<void> resizeTerminal(
@@ -1066,6 +1091,54 @@ class SdkProductRepository
         );
         return (response.data ?? const []).map(_terminal).toList();
       });
+
+  @override
+  Future<TerminalShellSettings> loadTerminalShellSettings() => _guard(
+    'Could not load shell settings',
+    () async {
+      final config = await _client.getGlobalApi().globalConfigGet();
+      final shells = await _client.getPtyApi().ptyShells(
+        directory: _directory,
+        workspace: _workspace,
+      );
+      return TerminalShellSettings(
+        selected: config.data?.shell?.trim() ?? '',
+        options: (shells.data ?? const [])
+            .where(
+              (shell) =>
+                  shell.path.trim().isNotEmpty && shell.name.trim().isNotEmpty,
+            )
+            .map(
+              (shell) => TerminalShellOption(
+                path: shell.path.trim(),
+                name: shell.name.trim(),
+                acceptable: shell.acceptable,
+              ),
+            )
+            .toList(),
+      );
+    },
+  );
+
+  @override
+  Future<void> selectTerminalShell(String value) => _guard(
+    'Could not update the default shell',
+    () async {
+      final normalized = value.trim();
+      if (normalized.length > 4096 || normalized.contains(RegExp(r'[\r\n]'))) {
+        throw const ProductException('OpenCode returned an invalid shell');
+      }
+      await _client.getGlobalApi().globalConfigUpdate(
+        config: sdk.Config(shell: normalized),
+      );
+      final confirmed = await _client.getGlobalApi().globalConfigGet();
+      if ((confirmed.data?.shell?.trim() ?? '') != normalized) {
+        throw const ProductException(
+          'OpenCode did not retain the selected default shell',
+        );
+      }
+    },
+  );
 
   @override
   Future<TerminalProcess> createTerminal({String? title}) =>

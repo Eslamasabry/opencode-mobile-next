@@ -9,7 +9,7 @@ Authoritative inputs:
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app
-currently calls **80 generated operations directly**. It also uses a set of
+currently calls **81 generated operations directly**. It also uses a set of
 older or compatibility routes through `OpenCodeApi` and raw `Dio`; those are
 listed separately so a working feature is not incorrectly labelled missing.
 
@@ -44,7 +44,7 @@ Legend:
 | Project copy | - | - | generated name, create, refresh, remove |
 | Provider | - | provider list and configured-provider fallback | auth methods and OAuth authorize/callback |
 | Providers v2 | - | raw `/api/provider` catalog parser | provider get/list generated models are unused |
-| PTY | create, list, update, remove, connect token | WebSocket connect uses the guarded ticket and OpenCode cursor resume | get, shells, direct connect, and all duplicate v2 PTY operations |
+| PTY | create, list, update, remove, shells, connect token | WebSocket connect uses the guarded ticket and OpenCode cursor resume | get, direct connect, and all duplicate v2 PTY operations |
 | Question | list, reply, reject | - | - |
 | Reference | `v2ReferenceList` | - | References can be copied standalone or added to the active composer as OpenCode directory parts |
 | Session | list, create, get, delete, update/rename, status, messages, todos, diff, fork, revert, unrevert, share, unshare, summarize, async prompt including synthetic location reminder, command, abort | shell | init endpoint, children, delete/update part, delete/get one message, synchronous prompt |
@@ -179,7 +179,16 @@ Legend:
    route disposal cleans up the server-side pending transport. The blocking
    `mcp.auth.authenticate` endpoint remains hidden because it opens a browser on
    the OpenCode host and is correct for same-host desktop clients, not Android.
-10. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
+10. **Server-backed default shell:** Settings now lists the actual shells from
+   generated `pty.shells` and updates the global OpenCode `shell` configuration
+   used by new terminals and compatible shell commands. Duplicate shell names
+   retain their full paths, terminal-only shells are identified truthfully, and
+   Automatic removes the override. Mobile follows the upstream web client by
+   using `global.config.get/update`: live OpenCode `1.18.23` proved the scoped
+   `config.update` route writes a legacy project `config.json` that its current
+   loader does not read. Every mutation is read back from global config before
+   mobile claims success, and shell actions use the wake-reconciled repository.
+11. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
    worktree lifecycle are deliberately not the current implementation lane.
 
 ## Deliberate non-goals
