@@ -111,6 +111,15 @@ Future<ConnectionController> _controllerFor(
     ..status = StreamStatus.connected;
 }
 
+/// The hub-and-spoke Settings places every section one level deep; open the
+/// category that owns the rows a test asserts on.
+Future<void> _openCategory(WidgetTester tester, String key) async {
+  final row = find.byKey(ValueKey(key));
+  await tester.ensureVisible(row);
+  await tester.tap(row);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('settings exposes process-local app diagnostics', (tester) async {
     final controller = await _controllerFor(
@@ -128,6 +137,7 @@ void main() {
       MaterialApp(home: SettingsScreen(controller: controller)),
     );
     await tester.pumpAndSettle();
+    await _openCategory(tester, 'settings-category-diagnostics');
 
     await tester.scrollUntilVisible(
       find.byKey(const Key('app-diagnostics-entry')),
@@ -154,6 +164,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await _openCategory(tester, 'settings-category-server');
 
     expect(find.text('Update managed OpenCode'), findsOneWidget);
     await tester.ensureVisible(find.byKey(const Key('server-updates-tile')));
@@ -172,6 +183,7 @@ void main() {
       MaterialApp(home: SettingsScreen(controller: controller)),
     );
     await tester.pumpAndSettle();
+    await _openCategory(tester, 'settings-category-server');
 
     expect(find.text('Server updates are managed externally'), findsOneWidget);
     expect(
@@ -200,6 +212,7 @@ void main() {
       MaterialApp(home: SettingsScreen(controller: controller)),
     );
     await tester.pumpAndSettle();
+    await _openCategory(tester, 'settings-category-server');
 
     expect(find.text('Update OpenCode to 1.19.0'), findsOneWidget);
     expect(find.textContaining('Current server: 1.18.23'), findsOneWidget);
@@ -245,6 +258,7 @@ void main() {
       MaterialApp(home: SettingsScreen(controller: controller)),
     );
     await tester.pumpAndSettle();
+    await _openCategory(tester, 'settings-category-server');
     await tester.scrollUntilVisible(
       find.byKey(const Key('server-updates-tile')),
       120,
@@ -299,6 +313,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await _openCategory(tester, 'settings-category-server');
     await tester.scrollUntilVisible(
       find.byKey(const Key('server-updates-tile')),
       120,
@@ -327,6 +342,7 @@ void main() {
       MaterialApp(home: SettingsScreen(controller: controller)),
     );
     await tester.pumpAndSettle();
+    await _openCategory(tester, 'settings-category-privacy');
 
     final entry = find.byKey(const ValueKey('saved-permissions-entry'));
     await tester.drag(find.byType(ListView), const Offset(0, -500));
@@ -350,6 +366,7 @@ void main() {
       MaterialApp(home: SettingsScreen(controller: controller)),
     );
     await tester.pumpAndSettle();
+    await _openCategory(tester, 'settings-category-appearance');
 
     final entry = find.byKey(const ValueKey('appearance-settings-entry'));
     await tester.scrollUntilVisible(
@@ -382,6 +399,7 @@ void main() {
         MaterialApp(home: SettingsScreen(controller: controller)),
       );
       await tester.pumpAndSettle();
+      await _openCategory(tester, 'settings-category-coding');
       final entry = find.byKey(const ValueKey('default-shell-settings-entry'));
       await tester.scrollUntilVisible(
         entry,
@@ -430,6 +448,7 @@ void main() {
       MaterialApp(home: SettingsScreen(controller: controller)),
     );
     await tester.pumpAndSettle();
+    await _openCategory(tester, 'settings-category-coding');
     final entry = find.byKey(const ValueKey('default-shell-settings-entry'));
     await tester.scrollUntilVisible(
       entry,
@@ -462,6 +481,7 @@ void main() {
       MaterialApp(home: SettingsScreen(controller: controller)),
     );
     await tester.pumpAndSettle();
+    await _openCategory(tester, 'settings-category-coding');
     final entry = find.byKey(const ValueKey('default-shell-settings-entry'));
     await tester.scrollUntilVisible(
       entry,
@@ -505,6 +525,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await _openCategory(tester, 'settings-category-coding');
     final entry = find.byKey(const ValueKey('default-shell-settings-entry'));
     await tester.scrollUntilVisible(
       entry,
@@ -545,5 +566,51 @@ void main() {
       find.byKey(const ValueKey('server-shell-/usr/bin/fish')),
       findsOneWidget,
     );
+  });
+
+  testWidgets('settings hub lists every category on a compact large-text '
+      'phone', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(320, 640));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final controller = await _controllerFor(
+      'http://127.0.0.1:4096',
+      repository: _EmptyPermissionRepository(),
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: const TextScaler.linear(2)),
+          child: child!,
+        ),
+        home: SettingsScreen(controller: controller),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('settings-connection-summary')),
+      findsOneWidget,
+    );
+    for (final key in const [
+      'settings-category-server',
+      'settings-category-coding',
+      'settings-category-background',
+      'settings-category-appearance',
+      'settings-category-privacy',
+      'settings-category-diagnostics',
+      'settings-category-about',
+    ]) {
+      await tester.scrollUntilVisible(
+        find.byKey(ValueKey(key)),
+        240,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.byKey(ValueKey(key)), findsOneWidget);
+    }
+    expect(tester.takeException(), isNull);
   });
 }
