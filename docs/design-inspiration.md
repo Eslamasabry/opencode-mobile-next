@@ -67,3 +67,38 @@ the tool actually executing ("Shell · flutter test…") instead of a static
 summary; long transcripts get an "N earlier messages" pill that opens the
 existing timeline. Already aligned: grouped tool timeline, composer context
 chips, context meter.
+
+## Files — developer file browsers
+
+- [GitHub repo browser](https://mobbin.com/screens/d9daf506-763b-497c-a9f4-af14e23ea690) —
+  folders first with distinct folder color; chevrons only where drilling in.
+- [Manus file management](https://mobbin.com/screens/81f2a963-b951-4d48-9a6e-724fcbf88298) —
+  tinted rounded-square type icons per file kind; type filter chips.
+- [Mimo code browser](https://mobbin.com/screens/993b5bd7-f3c2-47cc-842f-0a1a3af5c4a7) —
+  per-language glyphs (JS badge, braces for JSON).
+
+**Applied here:** file rows get type-aware tinted icons (code, image,
+document, config, archive) in the app's _TileIcon style; a breadcrumb path
+bar replaces back-only navigation in deep directories.
+
+## Review — pull-request review
+
+- [GitHub Files Changed](https://mobbin.com/screens/fd243541-6028-43b5-b70d-e5664601d2b7) —
+  aggregate +/− counts in the header and a per-file "viewed" checkmark —
+  the exact reviewed-progress pattern.
+
+**Applied here:** Review tracks which files' diffs were opened this session
+and shows "N of M viewed" beside the scope controls; the active file tab
+gains a filled treatment for legibility. Diff renderer and phone toolbar
+untouched (owner-verified live).
+
+## Terminal — session rows
+
+- [GitHub agent sessions](https://mobbin.com/screens/6c220cd6-4d7f-405e-8d55-0db5379ef6ce) —
+  colored status glyph + status chip + mono identity per session row.
+- [Telegram devices](https://mobbin.com/screens/d5905262-96e9-4793-b9c9-7d55b06c1379) —
+  active/past grouping for live vs ended sessions.
+
+**Applied here:** terminal rows show a status-colored glyph and
+Running/Exited chip (success green from AppTheme), with shell identity in
+AppMono. The xterm surface, WebSocket, and cursor resume stay untouched.

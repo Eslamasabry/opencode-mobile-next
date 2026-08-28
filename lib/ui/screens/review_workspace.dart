@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../api/models.dart';
+import '../app_theme.dart';
 
 typedef ReviewDiffLoader = Future<List<FileDiff>> Function();
 
@@ -38,6 +39,10 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
   List<FileDiff>? _diffs;
   Object? _error;
   int _selectedFile = 0;
+
+  /// Files whose diff was opened this session, per scope — the GitHub
+  /// "Viewed" pattern, session-local only.
+  final Set<String> _viewedFiles = {};
   int? _selectionStart;
   int? _selectionEnd;
   ReviewDiffMode _mode = ReviewDiffMode.unified;
@@ -88,6 +93,7 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
         } else if (_selectedFile >= diffs.length) {
           _selectedFile = 0;
         }
+        _markViewed(_selectedFile);
         _pendingInitialFile = null;
         _clearSelection();
       });
@@ -97,6 +103,14 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
       }
     }
   }
+
+  void _markViewed(int index) {
+    final diffs = _diffs;
+    if (diffs == null || index < 0 || index >= diffs.length) return;
+    _viewedFiles.add('$_scope:${diffs[index].file}');
+  }
+
+  bool _isViewed(FileDiff diff) => _viewedFiles.contains('$_scope:${diff.file}');
 
   ReviewDiffLoader _loaderFor(ReviewDiffScope scope) => switch (scope) {
     ReviewDiffScope.session => widget.loadDiffs!,
@@ -129,6 +143,7 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
     if (_selectedFile == index) return;
     setState(() {
       _selectedFile = index;
+      _markViewed(index);
       _clearSelection();
     });
     if (_vertical.hasClients) _vertical.jumpTo(0);
@@ -211,10 +226,12 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
       0,
       (sum, diff) => sum + diff.counts.removed,
     );
+    final viewedCount = diffs.where(_isViewed).length;
     final summary = _ReviewSummary(
       files: diffs.length,
       added: totalAdded,
       removed: totalRemoved,
+      viewed: viewedCount,
     );
     final selected = diffs[_selectedFile];
     final lines = _parseDiff(selected);
@@ -254,6 +271,7 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
               diffs: diffs,
               selected: _selectedFile,
               onSelected: _selectFile,
+              isViewed: _isViewed,
             ),
             const Divider(height: 1),
             Expanded(
@@ -488,11 +506,13 @@ class _ReviewSummary extends StatelessWidget {
     required this.files,
     required this.added,
     required this.removed,
+    required this.viewed,
   });
 
   final int files;
   final int added;
   final int removed;
+  final int viewed;
 
   @override
   Widget build(BuildContext context) {
@@ -502,12 +522,24 @@ class _ReviewSummary extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              '$files changed ${files == 1 ? 'file' : 'files'}',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                letterSpacing: -.2,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$files changed ${files == 1 ? 'file' : 'files'}',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -.2,
+                  ),
+                ),
+                Text(
+                  key: const ValueKey('review-viewed-progress'),
+                  '$viewed of $files viewed',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.hintColor,
+                  ),
+                ),
+              ],
             ),
           ),
           _ChangeCount(value: '+$added', added: true),
@@ -543,11 +575,13 @@ class _ReviewFileStrip extends StatelessWidget {
     required this.diffs,
     required this.selected,
     required this.onSelected,
+    required this.isViewed,
   });
 
   final List<FileDiff> diffs;
   final int selected;
   final ValueChanged<int> onSelected;
+  final bool Function(FileDiff diff) isViewed;
 
   @override
   Widget build(BuildContext context) {
@@ -566,6 +600,7 @@ class _ReviewFileStrip extends StatelessWidget {
           diff: diffs[index],
           label: _fileTabLabel(diffs, index),
           selected: selected == index,
+          viewed: isViewed(diffs[index]),
           onTap: () => onSelected(index),
         ),
       ),
@@ -579,12 +614,14 @@ class _ReviewFileTab extends StatelessWidget {
     required this.diff,
     required this.label,
     required this.selected,
+    required this.viewed,
     required this.onTap,
   });
 
   final FileDiff diff;
   final String label;
   final bool selected;
+  final bool viewed;
   final VoidCallback onTap;
 
   @override
@@ -605,9 +642,11 @@ class _ReviewFileTab extends StatelessWidget {
           constraints: const BoxConstraints(minWidth: 150, maxWidth: 220),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
+            // A filled active tab reads at a glance; unselected tabs keep a
+            // faint surface so the strip scans as tabs, not floating text.
             color: selected
-                ? theme.colorScheme.primaryContainer.withValues(alpha: .42)
-                : Colors.transparent,
+                ? theme.colorScheme.primaryContainer.withValues(alpha: .85)
+                : theme.colorScheme.surfaceContainerHigh.withValues(alpha: .35),
             borderRadius: BorderRadius.circular(10),
             border: Border(
               bottom: BorderSide(
@@ -632,14 +671,29 @@ class _ReviewFileTab extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        fontFamily: 'AppMono',
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              fontFamily: 'AppMono',
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        if (viewed && !selected) ...[
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.check_circle_rounded,
+                            size: 13,
+                            color: AppTheme.success(theme.colorScheme),
+                          ),
+                        ],
+                      ],
                     ),
                     Text(
                       '+${counts.added}  -${counts.removed}',

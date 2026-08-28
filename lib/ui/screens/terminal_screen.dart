@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../app_theme.dart';
 import '../widgets/confirm_sheet.dart';
 import 'package:flutter/services.dart';
 import 'package:xterm/xterm.dart' as xterm;
@@ -279,7 +280,19 @@ class _TerminalScreenState extends State<TerminalScreen> {
                 return ListTile(
                   minTileHeight: 68,
                   leading: _ProcessIndicator(running: process.running),
-                  title: Text(process.title),
+                  title: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          process.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      _ProcessStatusChip(running: process.running),
+                    ],
+                  ),
                   subtitle: Text(
                     process.running
                         ? '${process.command} - PID ${process.pid}'
@@ -355,19 +368,47 @@ class _ProcessIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final color = running
-        ? Theme.of(context).colorScheme.primary
-        : Theme.of(context).hintColor;
+        ? AppTheme.success(theme.colorScheme)
+        : theme.hintColor;
     return Semantics(
       label: running ? 'Running' : 'Exited',
       child: Container(
         width: 38,
         height: 38,
         decoration: BoxDecoration(
+          color: color.withValues(alpha: .12),
           border: Border.all(color: color.withValues(alpha: .55)),
           borderRadius: BorderRadius.circular(9),
         ),
         child: Icon(Icons.terminal_rounded, size: 20, color: color),
+      ),
+    );
+  }
+}
+
+/// A compact live/ended chip on terminal rows, mirroring the status-chip
+/// treatment in docs/design-inspiration.md's terminal section.
+class _ProcessStatusChip extends StatelessWidget {
+  final bool running;
+  const _ProcessStatusChip({required this.running});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = running
+        ? AppTheme.success(theme.colorScheme)
+        : theme.hintColor;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .14),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        running ? 'Running' : 'Exited',
+        style: theme.textTheme.labelSmall?.copyWith(color: color),
       ),
     );
   }
