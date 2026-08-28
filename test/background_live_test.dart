@@ -44,7 +44,7 @@ void main() {
       final preferences = await SharedPreferences.getInstance();
       final controller = BackgroundLiveController(
         preferences: preferences,
-      invoke: (method, [arguments]) async => throw PlatformException(
+        invoke: (method, [arguments]) async => throw PlatformException(
           code: 'notification_denied',
           message: 'Notification access is required.',
         ),
@@ -87,5 +87,72 @@ void main() {
     expect(controller.enabled, isTrue);
     expect(controller.active, isTrue);
     expect(controller.batteryOptimizationIgnored, isTrue);
+  });
+
+  test('coding alerts use the exact privacy-safe native contract', () async {
+    SharedPreferences.setMockInitialValues({
+      BackgroundLiveController.preferenceKey: true,
+    });
+    final preferences = await SharedPreferences.getInstance();
+    final calls = <(String, Map<String, dynamic>?)>[];
+    final controller = BackgroundLiveController(
+      preferences: preferences,
+      invoke: (method, [arguments]) async {
+        calls.add((method, arguments));
+        if (method == 'showCodingAlert') return const {'shown': true};
+        if (method == 'dismissCodingAlert') return const {'dismissed': true};
+        return const {
+          'enabled': true,
+          'active': true,
+          'notificationGranted': true,
+          'batteryOptimizationIgnored': false,
+        };
+      },
+    );
+    addTearDown(controller.dispose);
+    await controller.restore();
+
+    expect(
+      await controller.showCodingAlert(
+        kind: CodingAlertKind.question,
+        sessionID: 'session-1',
+        key: 'input:session-1',
+      ),
+      isTrue,
+    );
+    expect(await controller.dismissCodingAlert('input:session-1'), isTrue);
+
+    expect(calls[1].$1, 'showCodingAlert');
+    expect(calls[1].$2, {
+      'kind': 'question',
+      'sessionID': 'session-1',
+      'key': 'input:session-1',
+    });
+    expect(calls[2].$1, 'dismissCodingAlert');
+    expect(calls[2].$2, {'key': 'input:session-1'});
+  });
+
+  test('disabled live mode never posts a coding alert', () async {
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+    final calls = <String>[];
+    final controller = BackgroundLiveController(
+      preferences: preferences,
+      invoke: (method, [arguments]) async {
+        calls.add(method);
+        return const {'shown': true};
+      },
+    );
+    addTearDown(controller.dispose);
+
+    expect(
+      await controller.showCodingAlert(
+        kind: CodingAlertKind.complete,
+        sessionID: 'session-1',
+        key: 'status:session-1',
+      ),
+      isFalse,
+    );
+    expect(calls, isEmpty);
   });
 }

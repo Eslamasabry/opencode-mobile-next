@@ -57,6 +57,11 @@ Android foreground service with a persistent notification. It can use more
 battery. The optional battery-optimization exemption is requested only after
 you choose it in Settings.
 
+While that mode is enabled and the app is backgrounded, OpenCode can also show
+generic notifications when a coding session needs permission or an answer,
+finishes, or fails. These notifications intentionally omit prompt text, tool
+input, filenames, session titles, and server error details from the lock screen.
+
 The app uses Shorebird to check for and download compatible code updates.
 Update requests necessarily expose network information such as your IP address
 and app/update identifiers to Shorebird. Shorebird's own privacy terms govern
@@ -67,8 +72,8 @@ that processing.
 - **Internet:** connect to your server, download local voice models, open links,
   and check for app updates.
 - **Microphone:** capture audio only while you use local voice input.
-- **Notifications and foreground service:** show the persistent status required
-  by optional background mode.
+- **Notifications and foreground service:** show the persistent status and
+  privacy-safe coding alerts used by optional background mode.
 - **Battery optimization exemption:** optional request for long-running coding
   sessions.
 - **Termux command permission:** optional control of an on-device OpenCode
@@ -78,4 +83,3 @@ that processing.
 
 For privacy questions or reports, open an issue at
 [github.com/Eslamasabry/oc_app/issues](https://github.com/Eslamasabry/oc_app/issues).
-

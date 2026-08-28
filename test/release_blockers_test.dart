@@ -210,6 +210,32 @@ void main() {
     expect(themed, contains('@drawable/ic_launcher_monochrome'));
   });
 
+  test('Android background coding alerts are private and actionable', () {
+    final activity = File(
+      'android/app/src/main/kotlin/ai/opencode/opencode_mobile/MainActivity.kt',
+    ).readAsStringSync();
+    final service = File(
+      'android/app/src/main/kotlin/ai/opencode/opencode_mobile/'
+      'BackgroundConnectionService.kt',
+    ).readAsStringSync();
+
+    expect(activity, contains('"showCodingAlert"'));
+    expect(activity, contains('"dismissCodingAlert"'));
+    expect(service, contains('NotificationManager.IMPORTANCE_HIGH'));
+    expect(service, contains('NotificationManager.IMPORTANCE_DEFAULT'));
+    expect(service, contains('setVisibility(Notification.VISIBILITY_PRIVATE)'));
+    expect(
+      service,
+      contains('lockscreenVisibility = Notification.VISIBILITY_PRIVATE'),
+    );
+    expect(service, contains('OpenCode needs permission'));
+    expect(service, contains('OpenCode needs your input'));
+    expect(service, contains('OpenCode finished'));
+    expect(service, contains('OpenCode session needs attention'));
+    expect(service, isNot(contains('sessionTitle')));
+    expect(service, isNot(contains('errorMessage')));
+  });
+
   test('Shorebird updates have one app-controlled owner', () {
     final shorebird = File('shorebird.yaml').readAsStringSync();
     final main = File('lib/main.dart').readAsStringSync();

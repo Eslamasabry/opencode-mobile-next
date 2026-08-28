@@ -8,6 +8,17 @@ typedef BackgroundMethodInvoker =
       Map<String, dynamic>? arguments,
     ]);
 
+enum CodingAlertKind {
+  permission('permission'),
+  question('question'),
+  complete('complete'),
+  error('error');
+
+  const CodingAlertKind(this.wireValue);
+
+  final String wireValue;
+}
+
 /// Owns the explicit, user-controlled Android foreground-service preference.
 ///
 /// The service keeps the Flutter process important enough for a live OpenCode
@@ -75,6 +86,46 @@ class BackgroundLiveController extends ChangeNotifier {
       persist: false,
     );
     return succeeded;
+  }
+
+  /// Shows a privacy-safe Android notification for a background coding event.
+  ///
+  /// The native side owns all user-visible copy so no prompt, tool input,
+  /// filename, session title, or server error can leak onto the lock screen.
+  Future<bool> showCodingAlert({
+    required CodingAlertKind kind,
+    required String sessionID,
+    required String key,
+  }) async {
+    if (!enabled || !notificationGranted) return false;
+    try {
+      final result = await _invoke('showCodingAlert', {
+        'kind': kind.wireValue,
+        'sessionID': sessionID,
+        'key': key,
+      });
+      return result['shown'] == true;
+    } on PlatformException {
+      return false;
+    } on MissingPluginException {
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Cancels a coding notification even if live mode has since been disabled.
+  Future<bool> dismissCodingAlert(String key) async {
+    try {
+      final result = await _invoke('dismissCodingAlert', {'key': key});
+      return result['dismissed'] == true;
+    } on PlatformException {
+      return false;
+    } on MissingPluginException {
+      return false;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<bool> _run(String method, {bool persist = true}) async {

@@ -458,6 +458,34 @@ showed its completed tool call and `wake-shell-proof` output immediately after
 resume. Both paths had no fatal exception, RenderFlex, overflow, connection
 refusal, or endpoint-unavailable log. The probe session was deleted afterward.
 
+Background live mode now surfaces the events that otherwise remained invisible
+while the phone was away. OpenCode permission and question requests share one
+deduplicated per-session alert; a root session's busy-to-idle transition posts
+one completion alert; and a session error replaces completion so a later idle
+event cannot report false success. Known child sessions stay quiet. Returning to
+the app, resolving the last pending request, starting a new run, deleting a
+session, changing location, disconnecting, or disabling live mode dismisses the
+corresponding alert.
+
+Android owns fixed privacy-safe copy on separate high-importance request/error
+and default-importance completion channels. Notifications are `PRIVATE` and do
+not receive prompt text, tool input, filenames, session titles, or provider error
+details. They are posted only while `Keep coding session live` is enabled, Android
+notification access is granted, and the Activity is backgrounded. A request that
+was already visible before Home is still alerted after backgrounding.
+
+A locally signed release build was installed on the Pixel 6 emulator and connected
+through `adb reverse` to OpenCode `1.18.23`. With the app on Android Home, a real
+model-free shell session emitted busy-to-idle and produced `OpenCode finished` on
+`opencode_coding_status` with `vis=PRIVATE`; the high-importance request channel
+was also registered. Bringing the app forward removed the completion notification.
+No fatal exception, ANR, OOM, RenderFlex, or overflow was logged. The disposable
+session, server, reverse, Android install, signing key, and test APK were removed.
+This is a native baseline change and cannot be delivered to an older APK by a
+Shorebird Dart patch. Native release Kotlin compilation succeeded, final-tree
+Flutter analysis is clean, and all 323 tests pass serially. Traycer remains
+explicitly deferred.
+
 `tool/smoke_test.dart` now makes this server evidence stronger and safer. It
 accepts explicit directory/workspace scope, verifies health, session lifecycle,
 provider/agent catalogs, a model-free shell plus hydrated output, files/search,

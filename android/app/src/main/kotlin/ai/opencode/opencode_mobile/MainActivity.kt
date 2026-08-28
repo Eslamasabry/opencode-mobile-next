@@ -78,6 +78,32 @@ class MainActivity : FlutterActivity() {
                         requestBatteryOptimizationExemption()
                         result.success(backgroundStatus())
                     }
+                    "showCodingAlert" -> {
+                        val kind = call.argument<String>("kind").orEmpty()
+                        val sessionID = call.argument<String>("sessionID").orEmpty()
+                        val key = call.argument<String>("key").orEmpty()
+                        result.success(
+                            mapOf(
+                                "shown" to BackgroundConnectionService.showCodingAlert(
+                                    this,
+                                    kind = kind,
+                                    sessionID = sessionID,
+                                    key = key
+                                )
+                            )
+                        )
+                    }
+                    "dismissCodingAlert" -> {
+                        val key = call.argument<String>("key").orEmpty()
+                        result.success(
+                            mapOf(
+                                "dismissed" to BackgroundConnectionService.dismissCodingAlert(
+                                    this,
+                                    key
+                                )
+                            )
+                        )
+                    }
                     else -> result.notImplemented()
                 }
             }

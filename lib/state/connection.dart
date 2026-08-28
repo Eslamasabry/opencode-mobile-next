@@ -192,6 +192,9 @@ class ConnectionController extends ChangeNotifier {
   final Map<String, String> _v2PermissionSessions = {};
   final Map<String, String> _v2QuestionSessions = {};
   final Set<String> _resolvedQuestionIDs = {};
+  final Set<String> _attentionActiveSessions = {};
+  final Set<String> _alertedInputSessions = {};
+  final Set<String> _alertedStatusSessions = {};
   int _permissionRevision = 0;
   Timer? _permissionHydrationRetry;
   int _permissionHydrationGeneration = 0;
@@ -258,8 +261,112 @@ class ConnectionController extends ChangeNotifier {
   void _backgroundLiveChanged() {
     if (keepLiveInBackground) {
       unawaited(_ensureLocalServerWakeLock());
+    } else {
+      _dismissAllCodingAlerts(clearActive: true);
     }
     if (!_disposed) notifyListeners();
+  }
+
+  static String _inputAlertKey(String sessionID) => 'input:$sessionID';
+  static String _statusAlertKey(String sessionID) => 'status:$sessionID';
+
+  bool get _canShowCodingAlert =>
+      keepLiveInBackground &&
+      _lifecycleWasBackgrounded &&
+      backgroundLive.notificationGranted;
+
+  void _markSessionAttentionActive(String sessionID) {
+    if (sessionID.isEmpty) return;
+    _attentionActiveSessions.add(sessionID);
+    if (_alertedStatusSessions.remove(sessionID)) {
+      unawaited(backgroundLive.dismissCodingAlert(_statusAlertKey(sessionID)));
+    }
+  }
+
+  void _settleSessionAttention(String sessionID, CodingAlertKind kind) {
+    if (sessionID.isEmpty || !_attentionActiveSessions.remove(sessionID)) {
+      return;
+    }
+    if (!_canShowCodingAlert || sessionsById[sessionID]?.parentID != null) {
+      return;
+    }
+    if (!_alertedStatusSessions.add(sessionID)) return;
+    unawaited(
+      backgroundLive
+          .showCodingAlert(
+            kind: kind,
+            sessionID: sessionID,
+            key: _statusAlertKey(sessionID),
+          )
+          .then((shown) {
+            if (!shown && !_disposed && _lifecycleWasBackgrounded) {
+              _alertedStatusSessions.remove(sessionID);
+            }
+          }),
+    );
+  }
+
+  void _showInputAlert(String sessionID, CodingAlertKind kind) {
+    if (sessionID.isEmpty || !_canShowCodingAlert) return;
+    if (!_alertedInputSessions.add(sessionID)) return;
+    unawaited(
+      backgroundLive
+          .showCodingAlert(
+            kind: kind,
+            sessionID: sessionID,
+            key: _inputAlertKey(sessionID),
+          )
+          .then((shown) {
+            if (!shown && !_disposed && _lifecycleWasBackgrounded) {
+              _alertedInputSessions.remove(sessionID);
+            }
+          }),
+    );
+  }
+
+  void _syncInputAlerts() {
+    final permissionSessions = {
+      for (final permission in permissions.values) permission.sessionID,
+    }..removeWhere((id) => id.isEmpty);
+    final questionSessions = {
+      for (final question in questions.values) question.sessionID,
+    }..removeWhere((id) => id.isEmpty);
+    final pendingSessions = {...permissionSessions, ...questionSessions};
+
+    for (final sessionID in _alertedInputSessions.toList()) {
+      if (pendingSessions.contains(sessionID)) continue;
+      _alertedInputSessions.remove(sessionID);
+      unawaited(backgroundLive.dismissCodingAlert(_inputAlertKey(sessionID)));
+    }
+    if (!_canShowCodingAlert) return;
+    for (final sessionID in permissionSessions) {
+      _showInputAlert(sessionID, CodingAlertKind.permission);
+    }
+    for (final sessionID in questionSessions) {
+      _showInputAlert(sessionID, CodingAlertKind.question);
+    }
+  }
+
+  void _dismissSessionCodingAlerts(String sessionID) {
+    _attentionActiveSessions.remove(sessionID);
+    if (_alertedInputSessions.remove(sessionID)) {
+      unawaited(backgroundLive.dismissCodingAlert(_inputAlertKey(sessionID)));
+    }
+    if (_alertedStatusSessions.remove(sessionID)) {
+      unawaited(backgroundLive.dismissCodingAlert(_statusAlertKey(sessionID)));
+    }
+  }
+
+  void _dismissAllCodingAlerts({bool clearActive = false}) {
+    for (final sessionID in _alertedInputSessions.toList()) {
+      unawaited(backgroundLive.dismissCodingAlert(_inputAlertKey(sessionID)));
+    }
+    for (final sessionID in _alertedStatusSessions.toList()) {
+      unawaited(backgroundLive.dismissCodingAlert(_statusAlertKey(sessionID)));
+    }
+    _alertedInputSessions.clear();
+    _alertedStatusSessions.clear();
+    if (clearActive) _attentionActiveSessions.clear();
   }
 
   Future<void> _ensureLocalServerWakeLock() async {
@@ -757,6 +864,7 @@ class ConnectionController extends ChangeNotifier {
             _markSessionChanged(id);
             sessionsById.remove(id);
             busySessions.remove(id);
+            _dismissSessionCodingAlerts(id);
             permissions.removeWhere((_, value) => value.sessionID == id);
             final removedQuestionIDs = questions.entries
                 .where((entry) => entry.value.sessionID == id)
@@ -773,6 +881,7 @@ class ConnectionController extends ChangeNotifier {
               (_, sessionID) => sessionID == id,
             );
             _v2QuestionSessions.removeWhere((_, sessionID) => sessionID == id);
+            _syncInputAlerts();
             notifyListeners();
           }
         }
@@ -789,6 +898,7 @@ class ConnectionController extends ChangeNotifier {
                 msg.errorText == null;
             if (working) {
               busySessions.add(msg.sessionID);
+              _markSessionAttentionActive(msg.sessionID);
             } else {
               busySessions.remove(msg.sessionID);
             }
@@ -831,6 +941,7 @@ class ConnectionController extends ChangeNotifier {
           _resolvedQuestionIDs.remove(question.id);
           _v2QuestionSessions.remove(question.id);
           questions[question.id] = question;
+          _syncInputAlerts();
           notifyListeners();
         }
         break;
@@ -843,6 +954,7 @@ class ConnectionController extends ChangeNotifier {
           _resolvedQuestionIDs.remove(question.id);
           _v2QuestionSessions[question.id] = question.sessionID;
           questions[question.id] = question;
+          _syncInputAlerts();
           notifyListeners();
         }
         break;
@@ -857,7 +969,10 @@ class ConnectionController extends ChangeNotifier {
           _markQuestionChanged(id);
           _resolvedQuestionIDs.add(id);
           _v2QuestionSessions.remove(id);
-          if (questions.remove(id) != null) notifyListeners();
+          if (questions.remove(id) != null) {
+            _syncInputAlerts();
+            notifyListeners();
+          }
         }
         break;
 
@@ -872,11 +987,13 @@ class ConnectionController extends ChangeNotifier {
           switch (sessionStatus) {
             case 'idle':
               busySessions.remove(sid);
+              _settleSessionAttention(sid, CodingAlertKind.complete);
               unawaited(_refreshOneSession(sid));
               break;
             case 'busy':
             case 'retry':
               busySessions.add(sid);
+              _markSessionAttentionActive(sid);
               break;
             default:
               break;
@@ -890,6 +1007,7 @@ class ConnectionController extends ChangeNotifier {
         if (sid != null) {
           _markSessionChanged(sid);
           busySessions.remove(sid);
+          _settleSessionAttention(sid, CodingAlertKind.error);
         }
         final err = props['error'];
         if (err is Map<String, dynamic>) {
@@ -907,6 +1025,7 @@ class ConnectionController extends ChangeNotifier {
         if (sid != null) {
           _markSessionChanged(sid);
           busySessions.remove(sid);
+          _settleSessionAttention(sid, CodingAlertKind.complete);
           unawaited(_refreshOneSession(sid));
           notifyListeners();
         }
@@ -943,6 +1062,7 @@ class ConnectionController extends ChangeNotifier {
     _v2PermissionSessions.remove(permission.id);
     permissions[permission.id] = permission;
     _permissionRevision += 1;
+    _syncInputAlerts();
     notifyListeners();
   }
 
@@ -962,6 +1082,7 @@ class ConnectionController extends ChangeNotifier {
     _v2PermissionSessions[permission.id] = permission.sessionID;
     permissions[permission.id] = permission;
     _permissionRevision += 1;
+    _syncInputAlerts();
     notifyListeners();
   }
 
@@ -994,6 +1115,7 @@ class ConnectionController extends ChangeNotifier {
     permissions[id] = permission;
     _legacyPermissionIdentities[id] = (sessionID: sessionID, permissionID: id);
     _permissionRevision += 1;
+    _syncInputAlerts();
     notifyListeners();
   }
 
@@ -1010,6 +1132,7 @@ class ConnectionController extends ChangeNotifier {
     _legacyPermissionIdentities.remove(requestID);
     _v2PermissionSessions.remove(requestID);
     _permissionRevision += 1;
+    _syncInputAlerts();
     notifyListeners();
   }
 
@@ -1107,6 +1230,7 @@ class ConnectionController extends ChangeNotifier {
       }
       permissionsLoading = false;
       permissionsError = null;
+      _syncInputAlerts();
       notifyListeners();
     } catch (error) {
       if (!_isCurrentPermissionHydration(
@@ -1301,6 +1425,7 @@ class ConnectionController extends ChangeNotifier {
         }
       }
       questionsLoading = false;
+      _syncInputAlerts();
       notifyListeners();
     } catch (error) {
       if (!_isCurrentQuestionsRefresh(
@@ -1441,6 +1566,7 @@ class ConnectionController extends ChangeNotifier {
     _v2QuestionSessions.remove(requestID);
     _resolvedQuestionIDs.add(requestID);
     questions.remove(requestID);
+    _syncInputAlerts();
     notifyListeners();
   }
 
@@ -1504,6 +1630,7 @@ class ConnectionController extends ChangeNotifier {
         final session = hydrated[id];
         if (session == null) {
           sessionsById.remove(id);
+          _dismissSessionCodingAlerts(id);
         } else {
           sessionsById[id] = session;
         }
@@ -1518,8 +1645,10 @@ class ConnectionController extends ChangeNotifier {
           if ((_sessionRevisions[id] ?? 0) > revision) continue;
           if (statuses[id] != null && statuses[id] != 'idle') {
             busySessions.add(id);
+            _markSessionAttentionActive(id);
           } else {
             busySessions.remove(id);
+            _settleSessionAttention(id, CodingAlertKind.complete);
           }
         }
       }
@@ -1612,6 +1741,7 @@ class ConnectionController extends ChangeNotifier {
         final removed = busySessions.remove(entry.key);
         changed = removed || changed;
         if (removed) {
+          _settleSessionAttention(entry.key, CodingAlertKind.complete);
           _markSessionChanged(entry.key);
           unawaited(_refreshOneSession(entry.key));
         }
@@ -1629,7 +1759,11 @@ class ConnectionController extends ChangeNotifier {
   void suspendForLifecycle() {
     if (_disposed) return;
     _lifecycleWasBackgrounded = true;
-    if (keepLiveInBackground) return;
+    if (keepLiveInBackground) {
+      _attentionActiveSessions.addAll(busySessions);
+      _syncInputAlerts();
+      return;
+    }
     if (_lifecycleSuspended) return;
     _lifecycleSuspended = true;
     // A resume already in flight is invalidated by the generation change
@@ -1651,12 +1785,14 @@ class ConnectionController extends ChangeNotifier {
     if (!_lifecycleSuspended) {
       if (keepLiveInBackground && _lifecycleWasBackgrounded) {
         _lifecycleWasBackgrounded = false;
+        _dismissAllCodingAlerts(clearActive: true);
         return _trackLifecycleResume(_reconcileAfterBackground());
       }
       return Future.value();
     }
     _lifecycleSuspended = false;
     _lifecycleWasBackgrounded = false;
+    _dismissAllCodingAlerts(clearActive: true);
     final profile = _connectedProfile;
     if (profile == null) return Future.value();
     return _trackLifecycleResume(
@@ -2108,6 +2244,7 @@ class ConnectionController extends ChangeNotifier {
   }
 
   void _clearLocationData() {
+    _dismissAllCodingAlerts(clearActive: true);
     _sessionsRefreshGeneration += 1;
     _catalogRefreshGeneration += 1;
     _questionsRefreshGeneration += 1;
@@ -2163,6 +2300,7 @@ class ConnectionController extends ChangeNotifier {
   void dispose() {
     if (_disposed) return;
     _disposed = true;
+    _dismissAllCodingAlerts(clearActive: true);
     _generation += 1;
     connectionRevision = _generation;
     _retireTransport();
