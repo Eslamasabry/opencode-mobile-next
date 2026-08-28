@@ -1304,3 +1304,165 @@ class _SharedSessionBanner extends StatelessWidget {
   }
 }
 
+/// Drafts queued while the server is unreachable, shown truthfully as
+/// not-yet-sent between the transcript and the composer.
+class _QueuedPromptsStrip extends StatelessWidget {
+  const _QueuedPromptsStrip({
+    required this.entries,
+    required this.onEdit,
+    required this.onDiscard,
+  });
+
+  final List<QueuedPrompt> entries;
+  final ValueChanged<QueuedPrompt> onEdit;
+  final ValueChanged<QueuedPrompt> onDiscard;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 860, maxHeight: 180),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              for (var index = 0; index < entries.length; index++)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(48, 2, 16, 2),
+                  child: _QueuedPromptBubble(
+                    key: ValueKey('queued-send-$index'),
+                    entry: entries[index],
+                    onEdit: () => onEdit(entries[index]),
+                    onDiscard: () => onDiscard(entries[index]),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _QueuedPromptBubble extends StatelessWidget {
+  const _QueuedPromptBubble({
+    super.key,
+    required this.entry,
+    required this.onEdit,
+    required this.onDiscard,
+  });
+
+  final QueuedPrompt entry;
+  final VoidCallback onEdit;
+  final VoidCallback onDiscard;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final label = entry.error == null
+        ? 'Queued — will send when reconnected'
+        : 'Failed: ${entry.error}';
+    return Semantics(
+      button: true,
+      label: 'Queued draft. $label',
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => _showActions(context),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: entry.error == null
+                  ? theme.colorScheme.outlineVariant
+                  : theme.colorScheme.error.withValues(alpha: .6),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (entry.text.isNotEmpty)
+                Text(
+                  entry.text,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium,
+                ),
+              if (entry.attachments.isNotEmpty)
+                Text(
+                  '${entry.attachments.length} attachment'
+                  '${entry.attachments.length == 1 ? '' : 's'}',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              const SizedBox(height: 3),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    entry.error == null
+                        ? Icons.schedule_rounded
+                        : Icons.error_outline_rounded,
+                    size: 13,
+                    color: entry.error == null
+                        ? theme.hintColor
+                        : theme.colorScheme.error,
+                  ),
+                  const SizedBox(width: 5),
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: entry.error == null
+                            ? theme.hintColor
+                            : theme.colorScheme.error,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showActions(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              key: const ValueKey('queued-action-edit'),
+              leading: const Icon(Icons.edit_outlined),
+              title: const Text('Edit draft'),
+              subtitle: const Text('Move it back into the composer'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                onEdit();
+              },
+            ),
+            ListTile(
+              key: const ValueKey('queued-action-discard'),
+              leading: const Icon(Icons.delete_outline_rounded),
+              title: const Text('Discard draft'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                onDiscard();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+

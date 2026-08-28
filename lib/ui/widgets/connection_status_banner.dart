@@ -11,10 +11,14 @@ class ConnectionStatusBanner extends StatelessWidget {
     super.key,
     required this.controller,
     this.showChangeServer = true,
+    this.note,
   });
 
   final ConnectionController controller;
   final bool showChangeServer;
+
+  /// One optional extra line, e.g. how many drafts are queued for delivery.
+  final String? note;
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +47,9 @@ class ConnectionStatusBanner extends StatelessWidget {
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             : const Icon(Icons.cloud_off_outlined),
-        content: Text(message),
+        content: Text(
+          note == null || note!.isEmpty ? message : '$message\n${note!}',
+        ),
         actions: [
           TextButton(
             onPressed: manualRetry

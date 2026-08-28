@@ -13,6 +13,7 @@ import '../background/live_background.dart';
 import '../background/widget_snapshot.dart';
 import '../diagnostics/app_diagnostics.dart';
 import '../termux/bridge.dart';
+import 'offline_queue.dart';
 import 'profiles.dart';
 
 Map<String, dynamic> _catalogMap(Object? value) =>
@@ -157,6 +158,12 @@ class ConnectionController extends ChangeNotifier {
   /// should be rehydrated. This also advances after an SSE reconnection so
   /// events missed during a network handoff are reconciled from REST.
   int dataRefreshRevision = 0;
+
+  /// Prompts drafted while the server was unreachable, waiting to flush.
+  /// Loaded lazily from [OfflineQueueStore] and kept in memory afterward.
+  List<QueuedPrompt>? _offlineQueue;
+  OfflineQueueStore? _offlineQueueStore;
+  bool _flushingOfflineQueue = false;
   int locationRevision = 0;
   String? directory;
   String? workspace;
@@ -1054,6 +1061,7 @@ class ConnectionController extends ChangeNotifier {
           lastError = null;
           unawaited(refreshPendingPermissions());
           unawaited(refreshPendingQuestions());
+          unawaited(flushOfflineQueue());
           if (previousStatus == StreamStatus.reconnecting ||
               previousStatus == StreamStatus.disconnected) {
             _markDataRefreshReady(generation, currentApi);
@@ -2200,6 +2208,94 @@ class ConnectionController extends ChangeNotifier {
   ///
   /// Chat and other retained screens must not capture [api] before this
   /// future completes because a stale background transport may be replaced.
+  OfflineQueueStore get _queueStore =>
+      _offlineQueueStore ??= OfflineQueueStore(prefs: store.prefs);
+
+  List<QueuedPrompt> get _queue => _offlineQueue ??= _queueStore.load();
+
+  /// Queued prompts for one session of the active profile, oldest first.
+  List<QueuedPrompt> queuedPromptsFor(String sessionID) {
+    final profileID = profile?.id;
+    if (profileID == null) return const [];
+    return [
+      for (final entry in _queue)
+        if (entry.profileID == profileID && entry.sessionID == sessionID)
+          entry,
+    ];
+  }
+
+  /// Queued prompts across the active profile, for the connection banner.
+  int get queuedPromptCount {
+    final profileID = profile?.id;
+    if (profileID == null) return 0;
+    return _queue.where((entry) => entry.profileID == profileID).length;
+  }
+
+  /// Adds a drafted prompt to the offline queue. Returns false when the
+  /// entry exceeds the composer's aggregate attachment cap and was not
+  /// queued; the caller keeps its existing limits messaging.
+  Future<bool> queuePrompt(QueuedPrompt prompt) async {
+    if (prompt.payloadBytes > OfflineQueueStore.maxEntryBytes) return false;
+    _queue.add(prompt);
+    await _queueStore.save(_queue);
+    notifyListeners();
+    return true;
+  }
+
+  Future<void> removeQueuedPrompt(String id) async {
+    _queue.removeWhere((entry) => entry.id == id);
+    await _queueStore.save(_queue);
+    notifyListeners();
+  }
+
+  /// Sends queued prompts for the active profile, oldest first, through the
+  /// wake-reconciled transport. A connectivity failure stops the flush (the
+  /// server is still unreachable); a declared server failure keeps that
+  /// entry with its error inline and continues with the next.
+  Future<void> flushOfflineQueue() async {
+    if (_flushingOfflineQueue || _disposed) return;
+    final profileID = profile?.id;
+    if (profileID == null) return;
+    if (!_queue.any((entry) => entry.profileID == profileID)) return;
+    _flushingOfflineQueue = true;
+    var mutated = false;
+    try {
+      for (final entry in List.of(_queue)) {
+        if (entry.profileID != profileID) continue;
+        final currentApi = await prepareActionTransport();
+        if (currentApi == null || status != StreamStatus.connected) break;
+        try {
+          await currentApi.promptAsync(
+            entry.sessionID,
+            text: entry.text,
+            model: entry.model,
+            agent: entry.agent?.isNotEmpty == true ? entry.agent : null,
+            variant: entry.variant?.isNotEmpty == true ? entry.variant : null,
+            attachments: entry.attachments,
+            agentMentions: entry.mentions,
+          );
+          _queue.removeWhere((queued) => queued.id == entry.id);
+          mutated = true;
+        } on ApiException catch (error) {
+          if (error.statusCode == null) break;
+          final index = _queue.indexWhere((queued) => queued.id == entry.id);
+          if (index >= 0) {
+            _queue[index] = entry.withError(error.message);
+            mutated = true;
+          }
+        } catch (_) {
+          break;
+        }
+      }
+    } finally {
+      _flushingOfflineQueue = false;
+      if (mutated) {
+        await _queueStore.save(_queue);
+        notifyListeners();
+      }
+    }
+  }
+
   Future<OpenCodeApi?> prepareActionTransport() async {
     await resumeFromLifecycle();
     if (_disposed || _lifecycleSuspended) return null;
