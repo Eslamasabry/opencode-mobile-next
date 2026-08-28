@@ -40,6 +40,41 @@ class CodingAlertOpen {
   }
 }
 
+/// One notification-action tap delivered by Android while the app stays
+/// backgrounded: allow/deny for a permission alert, or a typed reply for a
+/// question alert.
+class CodingAlertAction {
+  const CodingAlertAction({
+    required this.kind,
+    required this.sessionID,
+    required this.decision,
+    this.reply,
+  });
+
+  final CodingAlertKind kind;
+  final String sessionID;
+
+  /// 'allow' | 'deny' for permission alerts, 'reply' for question alerts.
+  final String decision;
+
+  /// The RemoteInput text for a 'reply' decision.
+  final String? reply;
+
+  static CodingAlertAction? fromPlatform(Object? arguments) {
+    if (arguments is! Map) return null;
+    final kind = CodingAlertKind.fromWireValue(arguments['kind']);
+    final sessionID = arguments['sessionID']?.toString().trim() ?? '';
+    final decision = arguments['decision']?.toString().trim() ?? '';
+    if (kind == null || sessionID.isEmpty || decision.isEmpty) return null;
+    return CodingAlertAction(
+      kind: kind,
+      sessionID: sessionID,
+      decision: decision,
+      reply: arguments['reply']?.toString(),
+    );
+  }
+}
+
 /// Owns the explicit, user-controlled Android foreground-service preference.
 ///
 /// The service keeps the Flutter process important enough for a live OpenCode
@@ -113,10 +148,13 @@ class BackgroundLiveController extends ChangeNotifier {
   ///
   /// The native side owns all user-visible copy so no prompt, tool input,
   /// filename, session title, or server error can leak onto the lock screen.
+  /// [quickReply] is a capability bit only: it lets a question alert carry a
+  /// RemoteInput action; it never carries request content.
   Future<bool> showCodingAlert({
     required CodingAlertKind kind,
     required String sessionID,
     required String key,
+    bool quickReply = false,
   }) async {
     if (!enabled || !notificationGranted) return false;
     try {
@@ -124,6 +162,7 @@ class BackgroundLiveController extends ChangeNotifier {
         'kind': kind.wireValue,
         'sessionID': sessionID,
         'key': key,
+        'quickReply': quickReply,
       });
       return result['shown'] == true;
     } on PlatformException {
@@ -132,6 +171,33 @@ class BackgroundLiveController extends ChangeNotifier {
       return false;
     } catch (_) {
       return false;
+    }
+  }
+
+  Future<bool> Function(CodingAlertAction action)? _actionHandler;
+
+  /// Registers the resolver for notification-action taps. The platform
+  /// channel replies `{'handled': bool}`; an unhandled action makes Android
+  /// re-post the alert (and, when no engine can handle it at all, fall back
+  /// to opening the app at the request).
+  void bindActionHandler(Future<bool> Function(CodingAlertAction) handler) {
+    _actionHandler = handler;
+    _channel.setMethodCallHandler((call) async {
+      if (call.method != 'codingAlertAction') return null;
+      return handleNativeAction(call.arguments);
+    });
+  }
+
+  /// Resolves one native action delivery; also the test entry point.
+  @visibleForTesting
+  Future<Map<String, dynamic>> handleNativeAction(Object? arguments) async {
+    final action = CodingAlertAction.fromPlatform(arguments);
+    final handler = _actionHandler;
+    if (action == null || handler == null) return const {'handled': false};
+    try {
+      return {'handled': await handler(action)};
+    } catch (_) {
+      return const {'handled': false};
     }
   }
 

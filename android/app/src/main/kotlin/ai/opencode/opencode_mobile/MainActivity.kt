@@ -67,7 +67,14 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, BACKGROUND_CHANNEL_NAME)
+        val background = MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            BACKGROUND_CHANNEL_NAME
+        )
+        // Notification-action broadcasts reach Dart through this channel even
+        // while the Activity is backgrounded; see CodingActionReceiver.
+        backgroundChannel = background
+        background
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "getStatus" -> result.success(backgroundStatus())
@@ -84,13 +91,15 @@ class MainActivity : FlutterActivity() {
                         val kind = call.argument<String>("kind").orEmpty()
                         val sessionID = call.argument<String>("sessionID").orEmpty()
                         val key = call.argument<String>("key").orEmpty()
+                        val quickReply = call.argument<Boolean>("quickReply") ?: false
                         result.success(
                             mapOf(
                                 "shown" to BackgroundConnectionService.showCodingAlert(
                                     this,
                                     kind = kind,
                                     sessionID = sessionID,
-                                    key = key
+                                    key = key,
+                                    quickReply = quickReply
                                 )
                             )
                         )
@@ -114,6 +123,11 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        if (backgroundChannel != null) backgroundChannel = null
+        super.cleanUpFlutterEngine(flutterEngine)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -430,6 +444,11 @@ class MainActivity : FlutterActivity() {
     }
 
     companion object {
+        // The live background channel, readable by CodingActionReceiver while
+        // the engine survives in the backgrounded process.
+        @Volatile
+        var backgroundChannel: MethodChannel? = null
+
         private const val CHANNEL_NAME = "oc/termux"
         private const val VOICE_CHANNEL_NAME = "oc/voice"
         private const val BACKGROUND_CHANNEL_NAME = "oc/background"
