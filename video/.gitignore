@@ -1,0 +1,4 @@
+node_modules/
+out/
+public/shots/*.mp4
+public/shots/*.png
