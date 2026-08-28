@@ -54,7 +54,7 @@ class _PermissionDialogState extends State<_PermissionDialog> {
                   broader.isEmpty
                       ? '(all matching requests)'
                       : broader.join('\n'),
-                  style: const TextStyle(fontFamily: 'monospace'),
+                  style: const TextStyle(fontFamily: 'AppMono'),
                 ),
                 const SizedBox(height: 12),
                 const Text(

@@ -468,7 +468,7 @@ class _AgentPickerList extends StatelessWidget {
             title: Text(
               '@${agent.id}',
               style: theme.textTheme.bodyLarge?.copyWith(
-                fontFamily: 'monospace',
+                fontFamily: 'AppMono',
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -507,7 +507,7 @@ class _CommandRow extends StatelessWidget {
           Text(
             '/${command.slash}',
             style: theme.textTheme.bodyMedium?.copyWith(
-              fontFamily: 'monospace',
+              fontFamily: 'AppMono',
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -520,7 +520,7 @@ class _CommandRow extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
-                  fontFamily: 'monospace',
+                  fontFamily: 'AppMono',
                 ),
               ),
             ),
@@ -596,7 +596,7 @@ class _InlineCommandSuggestions extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        fontFamily: 'monospace',
+                        fontFamily: 'AppMono',
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -695,7 +695,7 @@ class _InlineAgentSuggestions extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        fontFamily: 'monospace',
+                        fontFamily: 'AppMono',
                         fontWeight: FontWeight.w600,
                       ),
                     ),

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
@@ -2729,7 +2730,7 @@ void main() {
       }),
     );
     await _pumpEvent(tester);
-    expect(find.text('thinking…'), findsOneWidget);
+    expect(find.byKey(const ValueKey('typing-indicator')), findsOneWidget);
 
     controller.handleEventForTesting(
       _event('session.error', {
@@ -2742,7 +2743,7 @@ void main() {
     );
     await _pumpEvent(tester);
 
-    expect(find.text('thinking…'), findsNothing);
+    expect(find.byKey(const ValueKey('typing-indicator')), findsNothing);
     expect(find.byKey(const ValueKey('prompt-error-banner')), findsOneWidget);
     expect(
       find.text('Sign in to the selected model provider.'),
@@ -3028,5 +3029,62 @@ void main() {
     await tester.pumpAndSettle();
     expect(remove, findsNothing);
     semantics.dispose();
+  });
+
+  testWidgets('empty transcript suggestions fill the composer', (tester) async {
+    final api = _FakeOpenCodeApi();
+    await _pumpChat(tester, api);
+
+    expect(find.text('Start coding'), findsOneWidget);
+
+    await tester.tap(
+      find.byKey(const ValueKey('empty-suggestion-Explain this project')),
+    );
+    await tester.pump();
+
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller?.text,
+      'Explain this project',
+    );
+    expect(api.promptCalls, 0);
+  });
+
+  testWidgets('long-pressing a user message offers copy and fork actions', (
+    tester,
+  ) async {
+    String? copiedText;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copiedText = (call.arguments as Map)['text'] as String?;
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('user-1', 'user', [
+          Part(type: 'text', text: 'Fix the login bug'),
+        ]),
+      ];
+    await _pumpChat(tester, api);
+
+    await tester.longPress(find.text('Fix the login bug'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('message-action-copy')), findsOneWidget);
+    expect(find.byKey(const ValueKey('message-action-fork')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('message-action-copy')));
+    await tester.pumpAndSettle();
+    expect(copiedText, 'Fix the login bug');
+    expect(find.text('Message text copied'), findsOneWidget);
   });
 }

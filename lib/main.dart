@@ -499,7 +499,7 @@ class _SavedServerConnectionView extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: scheme.onSurfaceVariant,
-                                fontFamily: 'monospace',
+                                fontFamily: 'AppMono',
                               ),
                             ),
                           ),

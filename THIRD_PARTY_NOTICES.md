@@ -48,6 +48,18 @@ verbatim in the license file referenced above.
 This package supplies stable indexed scrolling for long, mixed-height message
 timelines.
 
+## JetBrains Mono
+
+- Component: JetBrains Mono font files bundled under `assets/fonts/`
+- Version: distributed TTF builds from the upstream repository
+- Project: https://github.com/JetBrains/JetBrainsMono
+- Copyright: 2020 The JetBrains Mono Project Authors
+- License: SIL Open Font License 1.1; see
+  `LICENSES/OFL-1.1-JetBrains-Mono.txt`
+
+These font files render code, terminal output, paths, and other monospace
+content throughout the application.
+
 ## OpenAI Whisper and converted ONNX model files
 
 The downloadable INT8 ONNX files are conversions of multilingual OpenAI

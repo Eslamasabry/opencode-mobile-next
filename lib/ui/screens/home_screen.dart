@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/sse.dart';
 import '../../state/connection.dart';
+import '../app_theme.dart';
 import '../widgets/connection_status_banner.dart';
 import '../widgets/pickers.dart';
 import 'files_screen.dart';
@@ -256,11 +257,12 @@ class _StatusDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final (color, pulse) = switch (status) {
-      StreamStatus.connected => (Colors.green.shade400, false),
+      StreamStatus.connected => (AppTheme.success(theme.colorScheme), false),
       StreamStatus.connecting ||
-      StreamStatus.reconnecting => (Colors.orange.shade400, true),
-      StreamStatus.disconnected => (Colors.red.shade400, false),
+      StreamStatus.reconnecting => (theme.colorScheme.tertiary, true),
+      StreamStatus.disconnected => (theme.colorScheme.error, false),
     };
     return Tooltip(
       message: switch (status) {

@@ -4,7 +4,10 @@ import 'package:flutter/services.dart';
 import '../widgets/markdown.dart';
 
 class AboutScreen extends StatelessWidget {
-  const AboutScreen({super.key});
+  const AboutScreen({super.key, this.initialTab = 0});
+
+  /// 0 opens Privacy, 1 opens Open source.
+  final int initialTab;
 
   Future<List<String>> _loadDocuments() => Future.wait([
     rootBundle.loadString('PRIVACY.md'),
@@ -15,6 +18,7 @@ class AboutScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
+      initialIndex: initialTab.clamp(0, 1),
       child: Scaffold(
         appBar: AppBar(
           title: const Text('About and open source notices'),

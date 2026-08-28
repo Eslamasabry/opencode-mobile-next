@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../../api/models.dart';
+import '../app_theme.dart';
 import 'file_preview.dart';
 
 typedef ToolOutputFileLoader =
@@ -350,7 +351,7 @@ class _ToolCardState extends State<ToolCard> {
   Color get _statusColor {
     switch (widget.state.status) {
       case 'completed':
-        return Colors.green.shade400;
+        return AppTheme.success(Theme.of(context).colorScheme);
       case 'error':
         return Theme.of(context).colorScheme.error;
       default:
@@ -438,7 +439,7 @@ class _ToolCardState extends State<ToolCard> {
                                   style: theme.textTheme.labelSmall?.copyWith(
                                     color: theme.colorScheme.onSurfaceVariant,
                                     fontFamily: contract.kind == _ToolKind.shell
-                                        ? 'monospace'
+                                        ? 'AppMono'
                                         : null,
                                   ),
                                 ),
@@ -879,7 +880,7 @@ class _ErrorOutput extends StatelessWidget {
       message.replaceFirst(RegExp(r'^Error:\s*'), ''),
       style: Theme.of(context).textTheme.bodySmall?.copyWith(
         color: scheme.onErrorContainer,
-        fontFamily: 'monospace',
+        fontFamily: 'AppMono',
       ),
     );
     if (embedded) {
@@ -929,7 +930,7 @@ class _PathCaption extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: Theme.of(
             context,
-          ).textTheme.labelSmall?.copyWith(fontFamily: 'monospace'),
+          ).textTheme.labelSmall?.copyWith(fontFamily: 'AppMono'),
         ),
       ),
     ],
@@ -961,7 +962,7 @@ class _PathList extends StatelessWidget {
           child: SelectableText(
             entries.take(200).join('\n'),
             style: theme.textTheme.bodySmall?.copyWith(
-              fontFamily: 'monospace',
+              fontFamily: 'AppMono',
               height: 1.4,
             ),
           ),
@@ -1001,7 +1002,7 @@ class _PatchFileSection extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.labelMedium?.copyWith(
-                  fontFamily: 'monospace',
+                  fontFamily: 'AppMono',
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1009,7 +1010,9 @@ class _PatchFileSection extends StatelessWidget {
             if (additions > 0)
               Text(
                 '+$additions',
-                style: TextStyle(color: Colors.green.shade600),
+                style: TextStyle(
+                  color: AppTheme.success(Theme.of(context).colorScheme),
+                ),
               ),
             if (additions > 0 && deletions > 0) const SizedBox(width: 6),
             if (deletions > 0)
@@ -1087,15 +1090,16 @@ class _DiffPreviewLine extends StatelessWidget {
     final added = line.startsWith('+') && !line.startsWith('+++');
     final removed = line.startsWith('-') && !line.startsWith('---');
     final header = line.startsWith('@@') || line.startsWith('diff ');
+    final success = AppTheme.success(theme.colorScheme);
     final background = added
-        ? Colors.green.withValues(alpha: .12)
+        ? success.withValues(alpha: .14)
         : removed
         ? theme.colorScheme.error.withValues(alpha: .12)
         : header
         ? theme.colorScheme.primary.withValues(alpha: .1)
         : Colors.transparent;
     final foreground = added
-        ? Colors.green.shade700
+        ? success
         : removed
         ? theme.colorScheme.error
         : header
@@ -1109,7 +1113,7 @@ class _DiffPreviewLine extends StatelessWidget {
           line.isEmpty ? ' ' : line,
           style: theme.textTheme.bodySmall?.copyWith(
             color: foreground,
-            fontFamily: 'monospace',
+            fontFamily: 'AppMono',
             height: 1.35,
           ),
         ),
@@ -1141,7 +1145,7 @@ class _TodoRow extends StatelessWidget {
                 ? Icons.hourglass_top_rounded
                 : Icons.checklist_rounded,
             size: 17,
-            color: done ? Colors.green.shade500 : theme.hintColor,
+            color: done ? AppTheme.success(theme.colorScheme) : theme.hintColor,
           ),
           const SizedBox(width: 8),
           Expanded(

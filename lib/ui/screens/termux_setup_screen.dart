@@ -1025,7 +1025,7 @@ class _LiveSetupTerminal extends StatelessWidget {
                   running ? 'LIVE OUTPUT' : 'LAST OUTPUT',
                   style: const TextStyle(
                     color: Colors.white60,
-                    fontFamily: 'monospace',
+                    fontFamily: 'AppMono',
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.1,
@@ -1056,7 +1056,7 @@ class _LiveSetupTerminal extends StatelessWidget {
                     visibleOutput,
                     style: const TextStyle(
                       color: terminalText,
-                      fontFamily: 'monospace',
+                      fontFamily: 'AppMono',
                       fontSize: 11,
                       height: 1.45,
                     ),
@@ -1089,7 +1089,7 @@ class CmdPreview extends StatelessWidget {
       child: SelectableText(
         TermuxBridge.unlockCommand,
         style: theme.textTheme.bodySmall!.copyWith(
-          fontFamily: 'monospace',
+          fontFamily: 'AppMono',
           fontSize: 11,
         ),
       ),

@@ -158,7 +158,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
                         '${model.providerID}/${model.modelID}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontFamily: 'monospace'),
+                        style: const TextStyle(fontFamily: 'AppMono'),
                       ),
                     ],
                   ),
@@ -317,7 +317,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(tool.id, style: const TextStyle(fontFamily: 'monospace')),
+                Text(tool.id, style: const TextStyle(fontFamily: 'AppMono')),
                 const SizedBox(height: 4),
                 Text(
                   tool.description.isEmpty
@@ -342,7 +342,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(id, style: const TextStyle(fontFamily: 'monospace')),
+        Text(id, style: const TextStyle(fontFamily: 'AppMono')),
         const SizedBox(height: 4),
         Text(
           'Registered on this project but not returned for '
@@ -377,7 +377,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
                       tool.id,
                       style: Theme.of(
                         context,
-                      ).textTheme.titleLarge?.copyWith(fontFamily: 'monospace'),
+                      ).textTheme.titleLarge?.copyWith(fontFamily: 'AppMono'),
                     ),
                   ),
                   IconButton(
@@ -415,7 +415,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
                         schema,
                         key: const Key('tool-parameter-schema'),
                         style: const TextStyle(
-                          fontFamily: 'monospace',
+                          fontFamily: 'AppMono',
                           fontSize: 12,
                           height: 1.45,
                         ),

@@ -229,7 +229,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                 const SizedBox(height: 4),
                 SelectableText(
                   '${model.providerID}/${model.id}',
-                  style: const TextStyle(fontFamily: 'monospace'),
+                  style: const TextStyle(fontFamily: 'AppMono'),
                 ),
                 const SizedBox(height: 16),
                 Wrap(

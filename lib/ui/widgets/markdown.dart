@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'code_highlight.dart';
+
 Future<void> openMarkdownExternalLink(
   BuildContext context,
   String value, {
@@ -45,7 +47,7 @@ Future<void> openMarkdownExternalLink(
           const SizedBox(height: 4),
           SelectableText(
             uri.host,
-            style: const TextStyle(fontFamily: 'monospace'),
+            style: const TextStyle(fontFamily: 'AppMono'),
           ),
           if (scheme == 'http') ...[
             const SizedBox(height: 12),
@@ -95,11 +97,16 @@ class MarkdownText extends StatelessWidget {
   final TextStyle? baseStyle;
   final String? codeBlockLanguage;
 
+  /// Chat bubbles that own a long-press action menu render non-selectable
+  /// prose so the gesture reaches the menu instead of text selection.
+  final bool selectable;
+
   const MarkdownText(
     this.data, {
     super.key,
     this.baseStyle,
     this.codeBlockLanguage,
+    this.selectable = true,
   });
 
   @override
@@ -127,7 +134,7 @@ class MarkdownText extends StatelessWidget {
 
     void flushParagraph() {
       if (paragraph.isEmpty) return;
-      widgets.add(_RichLines(lines: List.of(paragraph)));
+      widgets.add(_RichLines(lines: List.of(paragraph), selectable: selectable));
       paragraph.clear();
     }
 
@@ -414,7 +421,8 @@ class _List extends StatelessWidget {
 /// A run of plain markdown lines rendered as one rich-text flow.
 class _RichLines extends StatelessWidget {
   final List<String> lines;
-  const _RichLines({required this.lines});
+  final bool selectable;
+  const _RichLines({required this.lines, this.selectable = true});
 
   @override
   Widget build(BuildContext context) {
@@ -424,7 +432,8 @@ class _RichLines extends StatelessWidget {
       if (i > 0) spans.add(const TextSpan(text: '\n'));
       spans.addAll(_InlineParser(lines[i]).parse(context).children!);
     }
-    return SelectableText.rich(TextSpan(children: spans));
+    final span = TextSpan(children: spans);
+    return selectable ? SelectableText.rich(span) : Text.rich(span);
   }
 }
 
@@ -536,7 +545,7 @@ class _CodeSpan extends WidgetSpan {
            child: Text(
              code,
              style: base.copyWith(
-               fontFamily: 'monospace',
+               fontFamily: 'AppMono',
                fontSize: (base.fontSize ?? 14) - 1.5,
                color: Theme.of(context).colorScheme.tertiary,
              ),
@@ -568,10 +577,10 @@ class CodeBlock extends StatelessWidget {
           ),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: SelectableText(
-              code,
+            child: SelectableText.rich(
+              highlightedCode(code, language, CodeHighlightTheme.of(context)),
               style: theme.textTheme.bodySmall!.copyWith(
-                fontFamily: 'monospace',
+                fontFamily: 'AppMono',
                 fontSize: 12.5,
                 height: 1.45,
               ),

@@ -96,7 +96,7 @@ class _SkillsScreenState extends State<SkillsScreen> {
                   skill.location,
                   style: TextStyle(
                     color: Theme.of(context).hintColor,
-                    fontFamily: 'monospace',
+                    fontFamily: 'AppMono',
                     fontSize: 11,
                   ),
                 ),

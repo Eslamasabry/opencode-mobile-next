@@ -58,11 +58,12 @@ class _PromptErrorBanner extends StatelessWidget {
   }
 }
 
+/// A terminal-style block caret that blinks while the assistant works.
 class __TypingIndicatorState extends State<_TypingIndicator>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
-    duration: const Duration(seconds: 1),
+    duration: const Duration(milliseconds: 1100),
   );
   bool _animating = false;
 
@@ -73,34 +74,46 @@ class __TypingIndicatorState extends State<_TypingIndicator>
     if (animate == _animating) return;
     _animating = animate;
     if (animate) {
-      _c.repeat(reverse: true);
+      _c.repeat();
     } else {
       _c.stop();
-      _c.value = 1;
+      _c.value = 0;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: Tween(
-        begin: .3,
-        end: 1.0,
-      ).animate(CurvedAnimation(parent: _c, curve: Curves.easeInOut)),
+    final theme = Theme.of(context);
+    return Semantics(
+      label: 'Assistant is working',
+      liveRegion: true,
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        key: const ValueKey('typing-indicator'),
+        padding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
         child: Row(
           children: [
-            Icon(
-              Icons.smart_toy_outlined,
-              size: 16,
-              color: Theme.of(context).colorScheme.primary,
+            AnimatedBuilder(
+              animation: _c,
+              builder: (context, child) => Opacity(
+                // A hard on/off blink like a terminal caret, not a pulse.
+                opacity: _c.value < .55 ? 1 : .18,
+                child: child,
+              ),
+              child: Container(
+                width: 9,
+                height: 17,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             Text(
-              'thinking…',
-              style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                color: Theme.of(context).hintColor,
+              'working',
+              style: theme.textTheme.labelMedium!.copyWith(
+                color: theme.hintColor,
+                letterSpacing: .4,
               ),
             ),
           ],
@@ -113,6 +126,161 @@ class __TypingIndicatorState extends State<_TypingIndicator>
   void dispose() {
     _c.dispose();
     super.dispose();
+  }
+}
+
+/// The first thing a new session shows: a prompt-shaped invitation to act,
+/// with suggestions that insert real starting points into the composer.
+class _EmptyTranscript extends StatelessWidget {
+  const _EmptyTranscript({required this.onSuggestion});
+
+  final ValueChanged<String> onSuggestion;
+
+  static const _suggestions = [
+    'Explain this project',
+    'What changed recently?',
+    'Find and fix a bug',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: constraints.hasBoundedHeight ? constraints.maxHeight : 0,
+          ),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(28),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 380),
+                child: _entrance(
+                  reduceMotion,
+                  Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '❯',
+                          style: theme.textTheme.headlineSmall!.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontFamily: 'AppMono',
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 11,
+                          height: 22,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: .45,
+                            ),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text('Start coding', style: theme.textTheme.titleMedium),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Describe a change, ask about this project, '
+                      'or paste an error.',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.hintColor,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final suggestion in _suggestions)
+                          ActionChip(
+                            key: ValueKey('empty-suggestion-$suggestion'),
+                            label: Text(suggestion),
+                            onPressed: () => onSuggestion(suggestion),
+                          ),
+                      ],
+                    ),
+                  ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _entrance(bool reduceMotion, Widget child) => reduceMotion
+      ? child
+      : TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: 1),
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOutCubic,
+          child: child,
+          builder: (context, t, child) => Opacity(
+            opacity: t,
+            child: Transform.translate(
+              offset: Offset(0, (1 - t) * 10),
+              child: child,
+            ),
+          ),
+        );
+}
+
+/// A floating affordance shown when the transcript is scrolled away from the
+/// newest message; tapping returns to the live end of the conversation.
+class _JumpToLatestButton extends StatelessWidget {
+  const _JumpToLatestButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final pill = Material(
+      key: const ValueKey('jump-to-latest'),
+      color: theme.colorScheme.surfaceContainerHigh,
+      elevation: 3,
+      shape: const StadiumBorder(),
+      child: InkWell(
+        customBorder: const StadiumBorder(),
+        onTap: onTap,
+        child: Tooltip(
+          message: 'Jump to latest',
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Icon(
+              Icons.arrow_downward_rounded,
+              size: 20,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+        ),
+      ),
+    );
+    if (MediaQuery.disableAnimationsOf(context)) return pill;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOutBack,
+      child: pill,
+      builder: (context, t, child) => Opacity(
+        opacity: t.clamp(0, 1),
+        child: Transform.scale(scale: .9 + t * .1, child: child),
+      ),
+    );
   }
 }
 
@@ -424,9 +592,7 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
                           size: 14,
                           color: _failed
                               ? theme.colorScheme.error
-                              : _running
-                              ? theme.colorScheme.primary
-                              : Colors.green.shade400,
+                              : theme.colorScheme.primary,
                         ),
                       const SizedBox(width: 4),
                       AnimatedRotation(
@@ -537,6 +703,7 @@ class _MessageView extends StatelessWidget {
   final bool reasoningExpanded;
   final bool showTimestamp;
   final bool highlighted;
+  final VoidCallback? onLongPress;
   final ToolOutputFileLoader filePreviewLoader;
   final ToolOutputFileAction onAttachFile;
   final ToolOutputFileAction onDownloadFile;
@@ -548,6 +715,7 @@ class _MessageView extends StatelessWidget {
     required this.reasoningExpanded,
     required this.showTimestamp,
     this.highlighted = false,
+    this.onLongPress,
     required this.filePreviewLoader,
     required this.onAttachFile,
     required this.onDownloadFile,
@@ -570,7 +738,16 @@ class _MessageView extends StatelessWidget {
       if (meta.turnCost case final cost?) '\$${cost.toStringAsFixed(4)}',
     ];
 
-    return AnimatedContainer(
+    final bubbleWidthCap = MediaQuery.of(context).size.width * .88;
+
+    return GestureDetector(
+      onLongPress: onLongPress,
+      behavior: HitTestBehavior.translucent,
+      // The long-press menu is a pointer shortcut for actions that remain
+      // reachable elsewhere (text selection, timeline fork). Excluding it
+      // keeps each message part as its own semantics node.
+      excludeFromSemantics: true,
+      child: AnimatedContainer(
       key: ValueKey('message-highlight-${m.info.id}-$highlighted'),
       duration: const Duration(milliseconds: 180),
       padding: const EdgeInsets.fromLTRB(6, 4, 6, 10),
@@ -587,7 +764,9 @@ class _MessageView extends StatelessWidget {
         children: [
           Container(
             constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * .88,
+              // Keep prompts readable on wide screens instead of stretching a
+              // bubble across a tablet.
+              maxWidth: isUser && bubbleWidthCap > 640 ? 640 : bubbleWidthCap,
             ),
             padding: isUser
                 ? const EdgeInsets.symmetric(horizontal: 14, vertical: 10)
@@ -597,7 +776,12 @@ class _MessageView extends StatelessWidget {
                     color: theme.colorScheme.primaryContainer.withValues(
                       alpha: .55,
                     ),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      topRight: Radius.circular(16),
+                      bottomLeft: Radius.circular(16),
+                      bottomRight: Radius.circular(5),
+                    ),
                   )
                 : null,
             child: isUser
@@ -635,7 +819,6 @@ class _MessageView extends StatelessWidget {
                 metaParts.join('  ·  '),
                 style: theme.textTheme.labelSmall!.copyWith(
                   color: theme.hintColor,
-                  fontSize: 10,
                 ),
               ),
             ),
@@ -650,6 +833,7 @@ class _MessageView extends StatelessWidget {
               ),
             ),
         ],
+      ),
       ),
     );
   }
@@ -734,7 +918,7 @@ class _UserMessageContent extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (text.isNotEmpty) MarkdownText(text),
+        if (text.isNotEmpty) MarkdownText(text, selectable: false),
         if (text.isNotEmpty && files.isNotEmpty) const SizedBox(height: 8),
         for (final file in files) _AttachmentPart(part: file),
       ],
@@ -775,6 +959,7 @@ class _AttachmentPart extends StatelessWidget {
     );
 
     return Semantics(
+      container: true,
       button: !reference,
       excludeSemantics: true,
       label: reference
@@ -1043,7 +1228,7 @@ class _SharedSessionBanner extends StatelessWidget {
                       url,
                       maxLines: 1,
                       style: const TextStyle(
-                        fontFamily: 'monospace',
+                        fontFamily: 'AppMono',
                         fontSize: 11,
                       ),
                     ),

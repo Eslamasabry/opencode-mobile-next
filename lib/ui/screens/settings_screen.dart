@@ -9,10 +9,12 @@ import '../../api/provider_presentation.dart';
 import '../../state/connection.dart';
 import '../../state/profiles.dart';
 import '../../termux/bridge.dart';
+import '../app_theme.dart';
 import '../../voice/notices.dart';
 import '../widgets/appearance_picker.dart';
 import '../widgets/product_states.dart';
 import '../widgets/pickers.dart';
+import 'about_screen.dart';
 import 'app_diagnostics_screen.dart';
 import 'saved_permissions_screen.dart';
 
@@ -389,7 +391,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             title: Text(profile?.name ?? 'OpenCode server'),
             subtitle: SelectableText(
               profile?.baseUrl ?? 'Not connected',
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+              style: const TextStyle(fontFamily: 'AppMono', fontSize: 12),
             ),
             trailing: IconButton(
               tooltip: 'Check server health',
@@ -408,7 +410,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                   ? Icons.check_circle_outline_rounded
                   : Icons.error_outline_rounded,
               color: _health?.healthy == true
-                  ? Colors.green.shade400
+                  ? AppTheme.success(Theme.of(context).colorScheme)
                   : Theme.of(context).colorScheme.error,
             ),
             title: Text(
@@ -567,7 +569,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                       if (controller.selectedVariant.isNotEmpty)
                         controller.selectedVariant,
                     ].join(' · '),
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+              style: const TextStyle(fontFamily: 'AppMono', fontSize: 12),
             ),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => showModelPicker(context),
@@ -624,7 +626,9 @@ class _SettingsScreenState extends State<SettingsScreen>
               'Servers, providers, voice, files, Termux, and updates',
             ),
             trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => Navigator.of(context).pushNamed('/about'),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const AboutScreen()),
+            ),
           ),
           ListTile(
             leading: const Icon(Icons.policy_outlined),
@@ -642,7 +646,11 @@ class _SettingsScreenState extends State<SettingsScreen>
               'App details, components, and license notices',
             ),
             trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => Navigator.of(context).pushNamed('/about'),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const AboutScreen(initialTab: 1),
+              ),
+            ),
           ),
           const SizedBox(height: 20),
           Padding(

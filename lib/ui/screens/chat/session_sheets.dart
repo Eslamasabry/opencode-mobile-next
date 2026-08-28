@@ -191,8 +191,10 @@ class _DiffSheetState extends State<_DiffSheet> {
                                   Text(
                                     '+${c.added}',
                                     style: TextStyle(
-                                      color: Colors.green.shade400,
-                                      fontFamily: 'monospace',
+                                      color: AppTheme.success(
+                                        Theme.of(context).colorScheme,
+                                      ),
+                                      fontFamily: 'AppMono',
                                     ),
                                   ),
                                   const SizedBox(width: 6),
@@ -200,7 +202,7 @@ class _DiffSheetState extends State<_DiffSheet> {
                                     '-${c.removed}',
                                     style: TextStyle(
                                       color: theme.colorScheme.error,
-                                      fontFamily: 'monospace',
+                                      fontFamily: 'AppMono',
                                     ),
                                   ),
                                   const SizedBox(width: 6),
@@ -286,7 +288,7 @@ class _FileDiffView extends StatelessWidget {
                       diff.file,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontFamily: 'monospace',
+                        fontFamily: 'AppMono',
                         fontSize: 13,
                       ),
                     ),
@@ -364,7 +366,7 @@ class _FileDiffView extends StatelessWidget {
                           diff.file,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontFamily: 'monospace',
+                            fontFamily: 'AppMono',
                             fontSize: 13,
                           ),
                         ),
@@ -434,7 +436,7 @@ class _FileDiffView extends StatelessWidget {
       child: Text(
         line,
         style: TextStyle(
-          fontFamily: 'monospace',
+          fontFamily: 'AppMono',
           fontSize: 12,
           height: 1.4,
           color: foreground,
@@ -460,7 +462,7 @@ class _FileDiffView extends StatelessWidget {
       child: Text(
         line,
         style: TextStyle(
-          fontFamily: 'monospace',
+          fontFamily: 'AppMono',
           fontSize: 12,
           height: 1.4,
           color: addedRemoved == false ? theme.colorScheme.error : null,

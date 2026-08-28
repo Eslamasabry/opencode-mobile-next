@@ -251,7 +251,7 @@ class _PermissionTileState extends State<_PermissionTile> {
                 broader.isEmpty
                     ? '(all matching requests)'
                     : broader.join('\n'),
-                style: const TextStyle(fontFamily: 'monospace'),
+                style: const TextStyle(fontFamily: 'AppMono'),
               ),
               const SizedBox(height: 12),
               const Text(
@@ -309,7 +309,7 @@ class _PermissionTileState extends State<_PermissionTile> {
             permission.patterns.isEmpty
                 ? 'OpenCode requested ${permission.permission} access.'
                 : permission.patterns.join('\n'),
-            style: const TextStyle(fontFamily: 'monospace', fontSize: 12.5),
+            style: const TextStyle(fontFamily: 'AppMono', fontSize: 12.5),
           ),
         ),
         if (permission.always.isNotEmpty) ...[

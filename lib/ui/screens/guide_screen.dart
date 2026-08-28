@@ -178,7 +178,7 @@ class Cmd extends StatelessWidget {
             child: SelectableText(
               text,
               style: theme.textTheme.bodySmall!.copyWith(
-                fontFamily: 'monospace',
+                fontFamily: 'AppMono',
                 fontSize: 12.5,
               ),
             ),

@@ -221,7 +221,7 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
                                 if (entry.stack.isNotEmpty) entry.stack,
                               ].join('\n\n'),
                               style: const TextStyle(
-                                fontFamily: 'monospace',
+                                fontFamily: 'AppMono',
                                 fontSize: 12,
                               ),
                             ),

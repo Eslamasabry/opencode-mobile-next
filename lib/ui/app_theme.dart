@@ -6,6 +6,16 @@ import 'package:flutter/services.dart';
 /// Keeping component defaults here prevents individual screens from drifting
 /// back to stock Material styling as the product grows.
 abstract final class AppTheme {
+  /// Bundled JetBrains Mono; code is this product's primary material.
+  static const monoFamily = 'AppMono';
+
+  /// Brightness-aware success green for status dots, done states, and diff
+  /// additions; raw material greens disappear against both scheme surfaces.
+  static Color success(ColorScheme scheme) =>
+      scheme.brightness == Brightness.dark
+      ? const Color(0xFF86D8A5)
+      : const Color(0xFF1E7A44);
+
   static const background = Color(0xFF101310);
   static const surface = Color(0xFF151A17);
   static const accent = Color(0xFF83CDAA);
@@ -116,6 +126,15 @@ abstract final class AppTheme {
       canvasColor: backgroundColor,
       materialTapTargetSize: MaterialTapTargetSize.padded,
       visualDensity: VisualDensity.standard,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          // The M3 horizontal fade-through keeps pushes light and fast and
+          // respects predictive back on current Android.
+          TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.fuchsia: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.linux: FadeForwardsPageTransitionsBuilder(),
+        },
+      ),
     );
 
     return base.copyWith(

@@ -17,11 +17,13 @@ import '../../voice/controller.dart';
 import '../../voice/voice_ui.dart';
 import '../navigation/chat_route.dart';
 import '../permission_presentation.dart';
+import '../app_theme.dart';
 import '../widgets/appearance_picker.dart';
 import '../widgets/connection_status_banner.dart';
 import '../widgets/file_preview.dart';
 import '../widgets/markdown.dart';
 import '../widgets/pickers.dart';
+import '../widgets/product_states.dart';
 import '../widgets/tool_card.dart';
 import 'app_diagnostics_screen.dart';
 import 'files_screen.dart';
@@ -226,6 +228,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   final _composer = TextEditingController();
   final _focus = FocusNode();
   final _messageScroll = ItemScrollController();
+  bool _awayFromLatest = false;
   final List<PromptAttachment> _attachments = [];
   final List<_PendingSend> _pendingSends = [];
   final Map<String, int> _messageVersions = {};
@@ -1300,6 +1303,36 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
+  bool _onTranscriptScroll(ScrollNotification notification) {
+    // The list is reversed, so pixel offset measures distance scrolled away
+    // from the newest message.
+    final away = notification.metrics.pixels > 480;
+    if (away != _awayFromLatest) {
+      setState(() => _awayFromLatest = away);
+    }
+    return false;
+  }
+
+  void _jumpToLatest() {
+    if (!_messageScroll.isAttached) return;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _messageScroll.jumpTo(index: 0);
+    } else {
+      _messageScroll.scrollTo(
+        index: 0,
+        duration: const Duration(milliseconds: 360),
+        curve: Curves.easeOutCubic,
+      );
+    }
+    setState(() => _awayFromLatest = false);
+  }
+
+  void _insertSuggestion(String text) {
+    _composer.text = text;
+    _composer.selection = TextSelection.collapsed(offset: text.length);
+    _focus.requestFocus();
+  }
+
   void _jumpToMessage(String messageID) {
     final chronologicalIndex = _messages.indexWhere(
       (message) => message.info.id == messageID,
@@ -1325,6 +1358,52 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         setState(() => _highlightedMessageID = null);
       }
     });
+  }
+
+  Future<void> _showMessageActions(MessageWithParts message) async {
+    final text = message.parts
+        .where((part) => part.type == 'text' && !part.synthetic)
+        .map((part) => part.text)
+        .where((value) => value.trim().isNotEmpty)
+        .join('\n\n');
+    final canFork = message.info.role == 'user';
+    if (text.isEmpty && !canFork) return;
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (text.isNotEmpty)
+              ListTile(
+                key: const ValueKey('message-action-copy'),
+                leading: const Icon(Icons.copy_rounded),
+                title: const Text('Copy message text'),
+                onTap: () => Navigator.pop(context, 'copy'),
+              ),
+            if (canFork)
+              ListTile(
+                key: const ValueKey('message-action-fork'),
+                leading: const Icon(Icons.fork_right_rounded),
+                title: const Text('Fork from this prompt'),
+                subtitle: const Text(
+                  'Start a new session with this prompt in the composer',
+                ),
+                onTap: () => Navigator.pop(context, 'fork'),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || action == null) return;
+    if (action == 'copy') {
+      await Clipboard.setData(ClipboardData(text: text));
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Message text copied')));
+    }
+    if (action == 'fork') await _forkFromMessage(message);
   }
 
   Future<void> _forkFromMessage(MessageWithParts message) async {
@@ -2852,25 +2931,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
             Expanded(
               child: _loading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const LoadingList(rows: 6)
                   : _error != null
-                  ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            '$_error',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: theme.colorScheme.error),
-                          ),
-                          const SizedBox(height: 8),
-                          FilledButton.tonal(
-                            onPressed: _load,
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    )
+                  ? ProductErrorState(message: '$_error', onRetry: _load)
                   : LayoutBuilder(
                       builder: (context, bodyConstraints) {
                         // Keyboard insets reduce [bodyConstraints] but do not
@@ -2885,18 +2948,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                           children: [
                             Expanded(
                               child: _messages.isEmpty
-                                  ? Center(
-                                      child: Text(
-                                        'Ask opencode to do something…',
-                                        style: TextStyle(
-                                          color: theme.hintColor,
-                                        ),
-                                      ),
+                                  ? _EmptyTranscript(
+                                      onSuggestion: _insertSuggestion,
                                     )
                                   : NotificationListener<ScrollNotification>(
-                                      onNotification: (_) => false,
-                                      child: Align(
+                                      onNotification: _onTranscriptScroll,
+                                      child: Stack(
                                         alignment: Alignment.topCenter,
+                                        children: [
+                                        ConstrainedBox(
+                                          constraints: const BoxConstraints(
+                                            maxWidth: 860,
+                                          ),
                                         child: ScrollablePositionedList.builder(
                                           reverse: true,
                                           itemScrollController: _messageScroll,
@@ -2937,6 +3000,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                               highlighted:
                                                   _highlightedMessageID ==
                                                   m.info.id,
+                                              onLongPress: () => unawaited(
+                                                _showMessageActions(m),
+                                              ),
                                               filePreviewLoader:
                                                   _loadToolOutputFile,
                                               onAttachFile:
@@ -2946,10 +3012,25 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                             );
                                           },
                                         ),
+                                        ),
+                                        if (_awayFromLatest)
+                                          Positioned(
+                                            right: 14,
+                                            bottom: 10,
+                                            child: _JumpToLatestButton(
+                                              onTap: _jumpToLatest,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                             ),
-                            _ChatComposer(
+                            Center(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 860,
+                                ),
+                                child: _ChatComposer(
                               compact: compactComposer,
                               allowInlineCommands:
                                   bodyConstraints.maxHeight >= 300,
@@ -2978,6 +3059,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               onChooseModel: () => showModelPicker(context),
                               onRemoveAttachment: (attachment) => setState(
                                 () => _attachments.remove(attachment),
+                              ),
+                                ),
                               ),
                             ),
                           ],

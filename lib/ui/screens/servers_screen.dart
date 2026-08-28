@@ -295,7 +295,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontFamily: 'monospace',
+                            fontFamily: 'AppMono',
                             fontSize: 11,
                           ),
                         ),

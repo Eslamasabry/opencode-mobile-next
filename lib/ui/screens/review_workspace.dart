@@ -529,7 +529,7 @@ class _ChangeCount extends StatelessWidget {
   Widget build(BuildContext context) => Text(
     value,
     style: TextStyle(
-      fontFamily: 'monospace',
+      fontFamily: 'AppMono',
       fontWeight: FontWeight.w600,
       color: added
           ? _additionColor(Theme.of(context))
@@ -637,14 +637,14 @@ class _ReviewFileTab extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.labelLarge?.copyWith(
-                        fontFamily: 'monospace',
+                        fontFamily: 'AppMono',
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text(
                       '+${counts.added}  -${counts.removed}',
                       style: theme.textTheme.labelSmall?.copyWith(
-                        fontFamily: 'monospace',
+                        fontFamily: 'AppMono',
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
@@ -732,7 +732,7 @@ class _ReviewFileList extends StatelessWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
-                                  fontFamily: 'monospace',
+                                  fontFamily: 'AppMono',
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -752,7 +752,7 @@ class _ReviewFileList extends StatelessWidget {
                           '+${counts.added}\n-${counts.removed}',
                           textAlign: TextAlign.right,
                           style: theme.textTheme.labelSmall?.copyWith(
-                            fontFamily: 'monospace',
+                            fontFamily: 'AppMono',
                             height: 1.35,
                           ),
                         ),
@@ -882,7 +882,7 @@ class _ReviewDiffToolbar extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleSmall?.copyWith(
-                        fontFamily: 'monospace',
+                        fontFamily: 'AppMono',
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -1001,7 +1001,7 @@ class _ReviewPhoneDiffToolbar extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.titleSmall?.copyWith(
-                            fontFamily: 'monospace',
+                            fontFamily: 'AppMono',
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -1248,7 +1248,7 @@ class _UnifiedDiffRow extends StatelessWidget {
                   overflow: TextOverflow.clip,
                   softWrap: false,
                   style: TextStyle(
-                    fontFamily: 'monospace',
+                    fontFamily: 'AppMono',
                     fontSize: 12.5,
                     height: 1.55,
                     color: _lineForeground(theme, line.kind),
@@ -1323,7 +1323,7 @@ class _SplitCell extends StatelessWidget {
               softWrap: false,
               overflow: TextOverflow.clip,
               style: TextStyle(
-                fontFamily: 'monospace',
+                fontFamily: 'AppMono',
                 fontSize: 12.5,
                 height: 1.55,
                 color: _lineForeground(theme, value.kind),
@@ -1350,7 +1350,7 @@ class _LineNumber extends StatelessWidget {
     child: Text(
       value?.toString() ?? '',
       style: TextStyle(
-        fontFamily: 'monospace',
+        fontFamily: 'AppMono',
         fontSize: 11,
         color: Theme.of(context).colorScheme.onSurfaceVariant,
       ),

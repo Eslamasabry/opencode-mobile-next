@@ -298,7 +298,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontFamily: 'monospace',
+                      fontFamily: 'AppMono',
                       fontSize: 12,
                     ),
                   ),
@@ -802,7 +802,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
                           readOnly: !canWrite,
                           padding: const EdgeInsets.all(10),
                           textStyle: const xterm.TerminalStyle(
-                            fontFamily: 'monospace',
+                            fontFamily: 'AppMono',
                             fontSize: 12.5,
                           ),
                         ),
@@ -953,7 +953,7 @@ class _AccessibleTerminal extends StatelessWidget {
                   reverse: true,
                   child: SelectableText(
                     transcript.isEmpty ? 'No terminal output yet.' : transcript,
-                    style: const TextStyle(fontFamily: 'monospace'),
+                    style: const TextStyle(fontFamily: 'AppMono'),
                   ),
                 ),
               ),

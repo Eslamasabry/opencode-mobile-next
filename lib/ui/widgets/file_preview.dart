@@ -455,7 +455,7 @@ class _FocusedSourcePreviewState extends State<_FocusedSourcePreview> {
                             '${index + 1}',
                             textAlign: TextAlign.right,
                             style: theme.textTheme.labelSmall?.copyWith(
-                              fontFamily: 'monospace',
+                              fontFamily: 'AppMono',
                               color: selected
                                   ? theme.colorScheme.primary
                                   : theme.colorScheme.onSurfaceVariant,
@@ -467,7 +467,7 @@ class _FocusedSourcePreviewState extends State<_FocusedSourcePreview> {
                           _lines[index].isEmpty ? ' ' : _lines[index],
                           maxLines: 1,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            fontFamily: 'monospace',
+                            fontFamily: 'AppMono',
                             height: 1.35,
                           ),
                         ),
