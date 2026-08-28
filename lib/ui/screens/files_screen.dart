@@ -30,10 +30,13 @@ class FilesScreen extends StatefulWidget {
 class _FilesScreenState extends State<FilesScreen> {
   List<FileNode>? _entries;
   List<WorkspaceSymbol>? _symbols;
+  Map<String, VersionControlFile> _fileStatuses = const {};
   _FileSurface _surface = _FileSurface.files;
   String _path = '';
   String? _error;
   bool _loading = false;
+  bool _fileStatusesLoading = false;
+  String? _fileStatusesError;
   String? _selectedPath;
   int? _selectedLine;
   String? _searchOriginPath;
@@ -44,6 +47,7 @@ class _FilesScreenState extends State<FilesScreen> {
   int _controllerLocationRevision = -1;
   int _dataRefreshRevision = -1;
   int _requestGeneration = 0;
+  int _fileStatusesGeneration = 0;
 
   @override
   void initState() {
@@ -83,6 +87,7 @@ class _FilesScreenState extends State<FilesScreen> {
     _controllerLocationRevision = widget.controller.locationRevision;
     _dataRefreshRevision = widget.controller.dataRefreshRevision;
     _requestGeneration++;
+    _fileStatusesGeneration++;
     if (widget.controller.lifecycleSuspended) {
       setState(() {
         _loading = false;
@@ -121,6 +126,9 @@ class _FilesScreenState extends State<FilesScreen> {
       _selectedLine = null;
       _symbols = null;
       _error = null;
+      _fileStatuses = const {};
+      _fileStatusesError = null;
+      _fileStatusesLoading = false;
     });
     if (_surface == _FileSurface.files) {
       _load('');
@@ -191,6 +199,10 @@ class _FilesScreenState extends State<FilesScreen> {
       if (api == null) {
         throw StateError('The server is not connected.');
       }
+      final repository = widget.controller.repository;
+      if (repository != null) {
+        unawaited(_loadFileStatuses(repository));
+      }
       final nodes = await api.listFiles(path);
       if (!mounted || generation != _requestGeneration) return;
       setState(() {
@@ -234,6 +246,10 @@ class _FilesScreenState extends State<FilesScreen> {
       if (api == null) {
         throw StateError('The server is not connected.');
       }
+      final repository = widget.controller.repository;
+      if (repository != null) {
+        unawaited(_loadFileStatuses(repository));
+      }
       final results = await api.findFile(q.trim());
       if (!mounted || generation != _requestGeneration) return;
       setState(() {
@@ -249,6 +265,52 @@ class _FilesScreenState extends State<FilesScreen> {
     } finally {
       if (mounted && generation == _requestGeneration) {
         setState(() => _loading = false);
+      }
+    }
+  }
+
+  Future<void> _retryFileStatuses() async {
+    final repository = await widget.controller.prepareActionRepository();
+    if (!mounted) return;
+    if (repository == null) {
+      setState(() {
+        _fileStatusesError = 'OpenCode is reconnecting. Try again shortly.';
+      });
+      return;
+    }
+    await _loadFileStatuses(repository);
+  }
+
+  Future<void> _loadFileStatuses(ProductRepository repository) async {
+    final generation = ++_fileStatusesGeneration;
+    setState(() {
+      _fileStatusesLoading = true;
+      _fileStatusesError = null;
+    });
+    try {
+      final statuses = await repository.listFileStatuses();
+      if (!mounted || generation != _fileStatusesGeneration) return;
+      setState(() {
+        _fileStatuses = {
+          for (final status in statuses)
+            _relativePath(status.path): VersionControlFile(
+              path: _relativePath(status.path),
+              status: status.status,
+              additions: status.additions,
+              deletions: status.deletions,
+            ),
+        };
+      });
+    } catch (error) {
+      if (!mounted || generation != _fileStatusesGeneration) return;
+      setState(() {
+        _fileStatusesError = _fileStatuses.isEmpty
+            ? 'File change indicators are unavailable on this server.'
+            : 'File change indicators could not refresh.';
+      });
+    } finally {
+      if (mounted && generation == _fileStatusesGeneration) {
+        setState(() => _fileStatusesLoading = false);
       }
     }
   }
@@ -476,6 +538,22 @@ class _FilesScreenState extends State<FilesScreen> {
 
   Widget _fileList(ThemeData theme) {
     if (_surface == _FileSurface.symbols) return _symbolList(theme);
+    final content = _fileListContent(theme);
+    if (_fileStatusesError == null) return content;
+    return Column(
+      children: [
+        _FileStatusNotice(
+          message: _fileStatusesError!,
+          loading: _fileStatusesLoading,
+          onRetry: _fileStatusesLoading ? null : _retryFileStatuses,
+        ),
+        Expanded(child: content),
+      ],
+    );
+  }
+
+  Widget _fileListContent(ThemeData theme) {
+    final entries = _displayEntries();
     if (_loading && _entries == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -485,7 +563,7 @@ class _FilesScreenState extends State<FilesScreen> {
         child: ProductErrorState(message: _error!, onRetry: () => _load(_path)),
       );
     }
-    if (_entries?.isEmpty == true) {
+    if (_entries != null && entries.isEmpty) {
       return RefreshIndicator(
         onRefresh: () => _load(_path),
         child: ProductEmptyState(
@@ -501,44 +579,130 @@ class _FilesScreenState extends State<FilesScreen> {
       onRefresh: () => _load(_path),
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: _entries?.length ?? 0,
+        itemCount: entries.length,
         itemBuilder: (context, i) {
-          final node = _entries![i];
+          final node = entries[i];
+          final change = node.isDir ? null : _fileStatuses[node.path];
+          final descendantChanges = node.isDir
+              ? _fileStatuses.keys
+                    .where((path) => path.startsWith('${node.path}/'))
+                    .length
+              : 0;
+          final detail = _fileDetail(node, change, descendantChanges);
           return ListTile(
+            key: ValueKey('project-file-${node.path}'),
             dense: true,
             selected: node.path == _selectedPath,
             leading: Icon(
-              node.isDir ? Icons.folder_rounded : Icons.description_outlined,
+              node.isDir
+                  ? Icons.folder_rounded
+                  : change?.status == 'deleted'
+                  ? Icons.remove_circle_outline_rounded
+                  : Icons.description_outlined,
               size: 20,
-              color: node.isDir ? theme.colorScheme.primary : theme.hintColor,
+              color: node.isDir
+                  ? theme.colorScheme.primary
+                  : change?.status == 'deleted'
+                  ? theme.colorScheme.error
+                  : theme.hintColor,
             ),
-            title: Text(
-              node.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: _search.text.isNotEmpty && node.path != node.name
-                ? Text(
-                    node.path,
+            title: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    node.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 11,
-                    ),
-                  )
-                : null,
-            onTap: () {
-              if (node.isDir) {
-                _navigateTo(node.path);
-              } else {
-                _openFile(node);
-              }
-            },
+                  ),
+                ),
+                if (change != null)
+                  _FileStatusMark(change: change)
+                else if (descendantChanges > 0)
+                  _FolderStatusMark(count: descendantChanges),
+              ],
+            ),
+            subtitle: detail == null
+                ? null
+                : Text(
+                    detail,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 11),
+                  ),
+            onTap: change?.status == 'deleted'
+                ? null
+                : () {
+                    if (node.isDir) {
+                      _navigateTo(node.path);
+                    } else {
+                      _openFile(node);
+                    }
+                  },
           );
         },
       ),
     );
+  }
+
+  List<FileNode> _displayEntries() {
+    final entries = [...?_entries];
+    final paths = entries.map((node) => node.path).toSet();
+    final searchMode = _searchOriginPath != null;
+    final query = _search.text.trim().toLowerCase();
+    final prefix = _path.isEmpty ? '' : '$_path/';
+    for (final change in _fileStatuses.values) {
+      if (change.status != 'deleted') continue;
+      if (searchMode) {
+        if (query.isNotEmpty && !change.path.toLowerCase().contains(query)) {
+          continue;
+        }
+        if (paths.add(change.path)) {
+          entries.add(
+            FileNode(
+              name: change.path.split('/').last,
+              path: change.path,
+              isDir: false,
+            ),
+          );
+        }
+        continue;
+      }
+      if (!change.path.startsWith(prefix)) continue;
+      final remainder = change.path.substring(prefix.length);
+      if (remainder.isEmpty) continue;
+      final parts = remainder.split('/');
+      final childPath = '$prefix${parts.first}';
+      if (paths.add(childPath)) {
+        entries.add(
+          FileNode(name: parts.first, path: childPath, isDir: parts.length > 1),
+        );
+      }
+    }
+    return entries;
+  }
+
+  String? _fileDetail(
+    FileNode node,
+    VersionControlFile? change,
+    int descendantChanges,
+  ) {
+    final details = <String>[];
+    if (_search.text.isNotEmpty && node.path != node.name) {
+      details.add(node.path);
+    }
+    if (change != null) {
+      details.add(_fileStatusLabel(change.status));
+      final counts = <String>[
+        if (change.additions > 0) '+${change.additions}',
+        if (change.deletions > 0) '−${change.deletions}',
+      ];
+      if (counts.isNotEmpty) details.add(counts.join(' '));
+    } else if (descendantChanges > 0) {
+      details.add(
+        '$descendantChanges changed ${descendantChanges == 1 ? 'file' : 'files'}',
+      );
+    }
+    return details.isEmpty ? null : details.join(' · ');
   }
 
   Widget _symbolList(ThemeData theme) {
@@ -643,6 +807,117 @@ class _FilesScreenState extends State<FilesScreen> {
     _search.dispose();
     super.dispose();
   }
+}
+
+String _fileStatusLabel(String status) => switch (status) {
+  'added' => 'Added',
+  'deleted' => 'Deleted',
+  'modified' => 'Modified',
+  _ => 'Changed',
+};
+
+class _FileStatusMark extends StatelessWidget {
+  final VersionControlFile change;
+
+  const _FileStatusMark({required this.change});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final code = switch (change.status) {
+      'added' => 'A',
+      'deleted' => 'D',
+      'modified' => 'M',
+      _ => '•',
+    };
+    final color = switch (change.status) {
+      'deleted' => theme.colorScheme.error,
+      'modified' => theme.colorScheme.tertiary,
+      _ => theme.colorScheme.primary,
+    };
+    return ExcludeSemantics(
+      child: Padding(
+        padding: const EdgeInsets.only(left: 8),
+        child: Text(
+          code,
+          key: ValueKey('file-change-${change.path}'),
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: color,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FolderStatusMark extends StatelessWidget {
+  final int count;
+
+  const _FolderStatusMark({required this.count});
+
+  @override
+  Widget build(BuildContext context) => ExcludeSemantics(
+    child: Padding(
+      padding: const EdgeInsets.only(left: 8),
+      child: Text(
+        '$count',
+        key: const ValueKey('folder-change-count'),
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    ),
+  );
+}
+
+class _FileStatusNotice extends StatelessWidget {
+  final String message;
+  final bool loading;
+  final Future<void> Function()? onRetry;
+
+  const _FileStatusNotice({
+    required this.message,
+    required this.loading,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) => Material(
+    key: const ValueKey('file-status-notice'),
+    color: Theme.of(context).colorScheme.surfaceContainerLow,
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
+      child: Row(
+        children: [
+          Icon(
+            Icons.info_outline_rounded,
+            size: 18,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+          TextButton(
+            onPressed: onRetry,
+            child: loading
+                ? const SizedBox.square(
+                    dimension: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Retry'),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _FileViewer extends StatefulWidget {

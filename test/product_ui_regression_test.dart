@@ -79,7 +79,23 @@ class _LocationRepository
   Future<CatalogSnapshot> loadCatalog() async => catalog;
 
   @override
+  Future<List<VersionControlFile>> listFileStatuses() async => const [];
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FileStatusRepository extends _LocationRepository {
+  List<VersionControlFile> statuses = const [];
+  Object? statusError;
+  int statusLoads = 0;
+
+  @override
+  Future<List<VersionControlFile>> listFileStatuses() async {
+    statusLoads++;
+    if (statusError case final error?) throw error;
+    return statuses;
+  }
 }
 
 class _SymbolRepository extends _LocationRepository {
@@ -403,6 +419,140 @@ void main() {
     await tester.tap(find.widgetWithText(ActionChip, 'lib'));
     await tester.pumpAndSettle();
     expect(requestedPaths.last, 'lib');
+  });
+
+  testWidgets(
+    'files show exact changes and aggregate nested changes without crowding',
+    (tester) async {
+      final api = _TestApi(
+        files: (path) async => switch (path) {
+          '' => [
+            FileNode(name: 'lib', path: 'lib', isDir: true),
+            FileNode(name: 'README.md', path: 'README.md', isDir: false),
+          ],
+          'lib' => [
+            FileNode(name: 'main.dart', path: 'lib/main.dart', isDir: false),
+          ],
+          _ => const <FileNode>[],
+        },
+      );
+      final repository = _FileStatusRepository()
+        ..statuses = const [
+          VersionControlFile(
+            path: '/README.md',
+            status: 'modified',
+            additions: 8,
+            deletions: 2,
+          ),
+          VersionControlFile(
+            path: 'lib/main.dart',
+            status: 'added',
+            additions: 34,
+            deletions: 0,
+          ),
+          VersionControlFile(
+            path: 'gone.txt',
+            status: 'deleted',
+            additions: 0,
+            deletions: 12,
+          ),
+        ];
+      final controller = await _controller(api: api, repository: repository);
+      addTearDown(controller.dispose);
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: const TextScaler.linear(2)),
+              child: Scaffold(body: FilesScreen(controller: controller)),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('folder-change-count')), findsOneWidget);
+      expect(find.text('1 changed file'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('file-change-README.md')),
+        findsOneWidget,
+      );
+      expect(find.text('Modified · +8 −2'), findsOneWidget);
+      expect(find.text('gone.txt'), findsOneWidget);
+      expect(find.text('Deleted · −12'), findsOneWidget);
+      expect(
+        tester
+            .widget<ListTile>(
+              find.byKey(const ValueKey('project-file-gone.txt')),
+            )
+            .onTap,
+        isNull,
+      );
+      expect(tester.takeException(), isNull);
+
+      await tester.tap(find.text('lib'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('file-change-lib/main.dart')),
+        findsOneWidget,
+      );
+      expect(find.text('Added · +34'), findsOneWidget);
+      expect(repository.statusLoads, greaterThanOrEqualTo(2));
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('file status failure stays scoped and retries independently', (
+    tester,
+  ) async {
+    final api = _TestApi(
+      files: (_) async => [
+        FileNode(name: 'README.md', path: 'README.md', isDir: false),
+      ],
+    );
+    final repository = _FileStatusRepository()
+      ..statusError = const ProductException('Old server');
+    final controller = await _controller(api: api, repository: repository);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: FilesScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('README.md'), findsOneWidget);
+    expect(find.byKey(const ValueKey('file-status-notice')), findsOneWidget);
+    expect(
+      find.text('File change indicators are unavailable on this server.'),
+      findsOneWidget,
+    );
+
+    repository
+      ..statusError = null
+      ..statuses = const [
+        VersionControlFile(
+          path: 'README.md',
+          status: 'modified',
+          additions: 1,
+          deletions: 0,
+        ),
+      ];
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('file-status-notice')), findsNothing);
+    expect(find.byKey(const ValueKey('file-change-README.md')), findsOneWidget);
+    expect(repository.statusLoads, 2);
   });
 
   testWidgets('foreground refresh reloads the current file directory', (

@@ -29,7 +29,7 @@ Legend:
 | Event | - | `eventSubscribe` through the shared `/event` SSE transport | Generated event transport is unused |
 | Events v2 | - | Some v2-shaped events are reduced from the legacy stream | `v2EventSubscribe` |
 | Experimental | `experimentalResourceList`, Console org list/switch | - | capabilities, console state, background sessions, global session list, tool IDs/list, worktree create/list/remove/reset |
-| File | list, read, filename search, text search, `findSymbols` | - | status |
+| File | list, read, filename search, text search, `findSymbols` | - | `status` is declared but its OpenCode 1.18.23 handler is a stub that always returns an empty list |
 | Filesystem v2 | - | - | `v2FsFind`, `v2FsList`, `v2FsRead` |
 | Global | `globalConfigGet`, `globalConfigUpdate` | health | dispose, event, upgrade |
 | Instance | `instanceDispose`, `vcsDiff`, `vcsGet`, `vcsStatus`, `lspStatus`, `formatterStatus` | - | agents, skills, command list, path, VCS raw diff/apply |
@@ -77,6 +77,11 @@ Legend:
    independently so one unavailable endpoint does not hide valid server truth.
    Files now has adjacent Files and Symbols tabs; generated LSP symbol results
    open the referenced source file at its exact one-based line and highlight it.
+   The Files browser also uses OpenCode's generated VCS status contract:
+   existing file rows show added, modified, or deleted truth with line counts,
+   while folders show the number of changed descendants. Status refreshes after
+   Android wake and file search, but a missing older-server endpoint remains a
+   small retryable notice and never replaces valid directory contents.
    Symbol queries debounce as users type, and a successful empty response states
    that some language services do not support workspace-wide symbol search
    instead of presenting a blank surface. Live OpenCode `1.18.23` returned this
@@ -143,7 +148,7 @@ Legend:
    Terminal WebSockets also retain OpenCode's authoritative stream cursor from
    binary control frames and send it on reconnect, preventing the server's PTY
    replay from duplicating accessible transcript content after Android wake.
-6. **Persistent MCP setup:** the Library now has a native remote/local MCP form
+7. **Persistent MCP setup:** the Library now has a native remote/local MCP form
    that writes either the selected project's config or the server-wide config.
    It validates URLs, commands, headers, environment variables, and timeouts;
    rejects duplicate names before patching; then rebuilds the location transport
@@ -151,20 +156,20 @@ Legend:
    `mcp.add` endpoint remains hidden because its state does not survive a server
    restart. A saved config is never offered for duplicate submission when the
    subsequent app reconnect fails.
-7. **Durable permission control:** Settings now exposes OpenCode's saved
+8. **Durable permission control:** Settings now exposes OpenCode's saved
    `Always allow` grants for the exact current project. The app resolves that
    project through `project.current`, lists grants through
    `v2.permission.saved.list`, and revokes one server-issued grant ID through
    `v2.permission.saved.remove` only after explicit confirmation. Loading and
    mutation both wait for the wake-reconciled repository; an unavailable older
    endpoint stays scoped to this screen instead of breaking Settings.
-8. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
+9. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
    worktree lifecycle are deliberately not the current implementation lane.
 
 ## Deliberate non-goals
 
 The TUI control API should not be mirrored button-for-button. Mobile should own
 its native navigation, pickers, prompts, and notifications. Arbitrary global
-config mutation, sync takeover, raw patch apply, credential removal, and
-destructive worktree operations also stay hidden until they have precise
+config mutation, sync takeover, raw patch apply, and destructive worktree
+operations also stay hidden until they have precise
 confirmation, recovery, and version-compatibility contracts.

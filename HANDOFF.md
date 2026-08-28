@@ -976,6 +976,36 @@ The generated SDK audit now counts 78 directly used operations. Final-tree
 Flutter analysis is clean, all 342 tests pass serially, and the Android release
 APK compiled successfully. Traycer remains explicitly deferred.
 
+Files now exposes authoritative working-tree truth where users browse code.
+Existing files show OpenCode's added, modified, or deleted status plus non-zero
+line counts, while each folder shows the number of changed descendants. The
+presentation stays in the existing flat list rather than adding a nested card,
+and remains usable at 320dp with 2x text. Status and directory loading fail
+independently: an unavailable status request leaves valid files visible with a
+small retryable notice, and a failed refresh retains the last known indicators.
+Wake reconciliation refreshes the selected directory and its status together.
+
+The generated `/file/status` contract was not used blindly. Live OpenCode
+`1.18.23` returned `[]` despite a dirty Git tree, and current upstream source
+shows that route's handler is an explicit empty stub. Files therefore reuses
+the already-generated, authoritative `/vcs/status` endpoint also used by
+Project health; no status, count, or provider identity is inferred locally.
+Loopback contract coverage proves the exact location query and typed mapping.
+
+Pixel 6 release-mode verification used an isolated temporary Git repository and
+isolated OpenCode config, data, and cache homes. The root Files screen rendered
+`README.md` as `Modified · +1 −1` and `lib` as `1 changed file`; inside `lib`,
+`new_feature.dart` rendered as `Added · +1`. After the app was backgrounded, a
+tracked Dart file was changed and the wake-reconciled screen rendered it as
+`Modified · +1 −1` without a manual reconnect. A tracked deletion then appeared
+as a disabled `legacy.txt` row with `Deleted · −1`, and its accessibility label
+contained the status only once. Android logged no fatal exception, ANR,
+RenderFlex overflow, or OOM. Flutter analysis is clean, all 344
+tests pass serially, and the release APK compiled successfully. The simulator
+app, reverse port, isolated server/state/worktree, disposable signing key, and
+local APK were removed after the proof; that APK was not distributed.
+Traycer remains explicitly deferred by owner request.
+
 ## Shorebird wake patch for `1.0.17+18`
 
 - Shorebird release ID: `789345`

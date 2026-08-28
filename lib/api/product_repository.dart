@@ -635,6 +635,7 @@ abstract class ProductRepository {
   Future<void> addSessionLocationReminder(String sessionID, String directory) =>
       Future.value();
   Future<VersionControlHealth> loadVersionControlHealth();
+  Future<List<VersionControlFile>> listFileStatuses();
   Future<List<LanguageServiceHealth>> listLanguageServices();
   Future<List<FormatterHealth>> listFormatters();
   Future<List<WorkspaceSymbol>> findWorkspaceSymbols(String query);
@@ -964,6 +965,25 @@ class SdkProductRepository
               )
               .toList(),
         );
+      });
+
+  @override
+  Future<List<VersionControlFile>> listFileStatuses() =>
+      _guard('Could not load file changes', () async {
+        final response = await _client.getInstanceApi().vcsStatus(
+          directory: _directory,
+          workspace: _workspace,
+        );
+        return (response.data ?? const [])
+            .map(
+              (file) => VersionControlFile(
+                path: file.file,
+                status: file.status.value.toString(),
+                additions: file.additions.toInt(),
+                deletions: file.deletions.toInt(),
+              ),
+            )
+            .toList();
       });
 
   @override

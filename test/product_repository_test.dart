@@ -884,7 +884,7 @@ void main() {
   );
 
   test(
-    'project health uses generated VCS, LSP, and formatter contracts',
+    'coding health uses generated VCS, file, LSP, and formatter contracts',
     () async {
       await HttpOverrides.runZoned(() async {
         final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
@@ -963,6 +963,7 @@ void main() {
             ..setLocation(directory: '/work/app', workspace: 'phone');
 
           final vcs = await repository.loadVersionControlHealth();
+          final files = await repository.listFileStatuses();
           final languageServices = await repository.listLanguageServices();
           final formatters = await repository.listFormatters();
           final symbols = await repository.findWorkspaceSymbols(
@@ -975,6 +976,10 @@ void main() {
           expect(vcs.deletions, 2);
           expect(vcs.changes.single.path, 'lib/main.dart');
           expect(vcs.changes.single.status, 'modified');
+          expect(files.single.path, 'lib/main.dart');
+          expect(files.single.status, 'modified');
+          expect(files.single.additions, 7);
+          expect(files.single.deletions, 2);
           expect(languageServices.single.name, 'Dart analysis server');
           expect(languageServices.single.connected, isTrue);
           expect(formatters.single.name, 'dart format');
@@ -992,6 +997,10 @@ void main() {
             '/formatter',
             '/find/symbol',
           });
+          expect(
+            requests.where((uri) => uri.path == '/vcs/status'),
+            hasLength(2),
+          );
           for (final uri in requests) {
             expect(uri.queryParameters, {
               'directory': '/work/app',
