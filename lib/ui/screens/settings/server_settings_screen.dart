@@ -145,7 +145,11 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
   Widget build(BuildContext context) {
     final controller = widget.controller;
     final profile = controller.profile;
-    final managedLocally = TermuxBridge.managesServerUrl(profile?.baseUrl);
+    // Termux management only exists on Android; desktop loopback servers
+    // follow the ordinary remote-update path.
+    final managedLocally =
+        defaultTargetPlatform == TargetPlatform.android &&
+        TermuxBridge.managesServerUrl(profile?.baseUrl);
     final availableVersion = managedLocally
         ? null
         : controller.availableServerVersion;

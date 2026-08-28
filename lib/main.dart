@@ -1,12 +1,16 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:window_manager/window_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'background/live_background.dart';
 import 'diagnostics/app_diagnostics.dart';
 import 'state/connection.dart';
 import 'state/profiles.dart';
+import 'update/desktop_release_check.dart';
 import 'update/shorebird_update_notice.dart';
 import 'ui/app_theme.dart';
 import 'ui/navigation/chat_route.dart';
@@ -19,8 +23,25 @@ import 'ui/screens/requests_screen.dart';
 import 'ui/screens/termux_setup_screen.dart';
 import 'ui/screens/app_diagnostics_screen.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (!kIsWeb &&
+      (Platform.isLinux || Platform.isWindows || Platform.isMacOS)) {
+    // Desktop windows get a sane default and floor; Android never reaches
+    // these calls.
+    await windowManager.ensureInitialized();
+    const options = WindowOptions(
+      size: Size(900, 700),
+      minimumSize: Size(480, 600),
+      title: 'OpenCode',
+    );
+    unawaited(
+      windowManager.waitUntilReadyToShow(options, () async {
+        await windowManager.show();
+        await windowManager.focus();
+      }),
+    );
+  }
   final diagnostics = AppDiagnosticsController();
   installAppErrorCapture(diagnostics);
   runApp(AppBootstrapGate(diagnostics: diagnostics));
@@ -272,7 +293,10 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
         builder: (context, child) => ShorebirdUpdateNotice(
           service: _updateService,
           messengerKey: _messengerKey,
-          child: child ?? const SizedBox.shrink(),
+          child: DesktopReleaseNotice(
+            messengerKey: _messengerKey,
+            child: child ?? const SizedBox.shrink(),
+          ),
         ),
         title: 'OpenCode',
         debugShowCheckedModeBanner: false,
