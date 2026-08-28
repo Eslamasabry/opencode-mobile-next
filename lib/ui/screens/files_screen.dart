@@ -9,6 +9,7 @@ import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../widgets/file_preview.dart';
 import '../widgets/product_states.dart';
+import 'review_workspace.dart';
 
 /// Project file browser backed by `/file`, with name search (`/find/file`)
 /// and content viewer.
@@ -16,12 +17,19 @@ enum _FileSurface { files, symbols }
 
 typedef ProjectFileAttachment =
     Future<void> Function(String path, FilePreviewData data);
+typedef ProjectReviewPrompt = void Function(String prompt);
 
 class FilesScreen extends StatefulWidget {
   final ConnectionController controller;
   final ProjectFileAttachment? onAttachFile;
+  final ProjectReviewPrompt? onReviewPrompt;
 
-  const FilesScreen({super.key, required this.controller, this.onAttachFile});
+  const FilesScreen({
+    super.key,
+    required this.controller,
+    this.onAttachFile,
+    this.onReviewPrompt,
+  });
 
   @override
   State<FilesScreen> createState() => _FilesScreenState();
@@ -413,6 +421,46 @@ class _FilesScreenState extends State<FilesScreen> {
     );
   }
 
+  Future<void> _reviewFileChange(FileNode node) async {
+    final prompt = await Navigator.of(context).push<String>(
+      MaterialPageRoute<String>(
+        builder: (_) => ReviewWorkspace(
+          initialScope: ReviewDiffScope.workingTree,
+          initialFile: node.path,
+          loadWorkingTreeDiffs: () async {
+            final repository = await widget.controller
+                .prepareActionRepository();
+            if (repository == null) {
+              throw StateError('OpenCode is reconnecting.');
+            }
+            return repository.listVcsDiffs(VcsDiffMode.workingTree);
+          },
+        ),
+      ),
+    );
+    if (!mounted || prompt == null || prompt.trim().isEmpty) return;
+    final reviewPrompt = prompt.trim();
+    final callback = widget.onReviewPrompt;
+    if (callback != null) {
+      callback(reviewPrompt);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Review comment added. Return to the chat to continue.',
+          ),
+        ),
+      );
+      return;
+    }
+    await Clipboard.setData(ClipboardData(text: reviewPrompt));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Review comment copied. Paste it into a chat.'),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -616,7 +664,10 @@ class _FilesScreenState extends State<FilesScreen> {
                   ),
                 ),
                 if (change != null)
-                  _FileStatusMark(change: change)
+                  _FileReviewAction(
+                    change: change,
+                    onPressed: () => _reviewFileChange(node),
+                  )
                 else if (descendantChanges > 0)
                   _FolderStatusMark(count: descendantChanges),
               ],
@@ -816,37 +867,25 @@ String _fileStatusLabel(String status) => switch (status) {
   _ => 'Changed',
 };
 
-class _FileStatusMark extends StatelessWidget {
+class _FileReviewAction extends StatelessWidget {
   final VersionControlFile change;
+  final VoidCallback onPressed;
 
-  const _FileStatusMark({required this.change});
+  const _FileReviewAction({required this.change, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final code = switch (change.status) {
-      'added' => 'A',
-      'deleted' => 'D',
-      'modified' => 'M',
-      _ => '•',
-    };
     final color = switch (change.status) {
       'deleted' => theme.colorScheme.error,
       'modified' => theme.colorScheme.tertiary,
       _ => theme.colorScheme.primary,
     };
-    return ExcludeSemantics(
-      child: Padding(
-        padding: const EdgeInsets.only(left: 8),
-        child: Text(
-          code,
-          key: ValueKey('file-change-${change.path}'),
-          style: theme.textTheme.labelMedium?.copyWith(
-            color: color,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ),
+    return IconButton(
+      key: ValueKey('review-file-change-${change.path}'),
+      tooltip: 'Review ${change.path} changes',
+      onPressed: onPressed,
+      icon: Icon(Icons.difference_outlined, size: 20, color: color),
     );
   }
 }

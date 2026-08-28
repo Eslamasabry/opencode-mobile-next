@@ -29,7 +29,6 @@ Future<void> _pumpReview(
         loadDiffs: loader,
         loadWorkingTreeDiffs: workingTreeLoader,
         loadBranchDiffs: branchLoader,
-        sessionID: 'session-1',
       ),
     ),
   );
@@ -212,6 +211,44 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('+session change'), findsOneWidget);
     expect(sessionLoads, 2);
+  });
+
+  testWidgets('opens one working-tree file directly without a fake session', (
+    tester,
+  ) async {
+    var loads = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark(),
+        home: ReviewWorkspace(
+          initialScope: ReviewDiffScope.workingTree,
+          initialFile: '/README.md',
+          loadWorkingTreeDiffs: () async {
+            loads++;
+            return [
+              FileDiff(
+                file: 'lib/first.dart',
+                patch: '@@ -0,0 +1 @@\n+first file',
+                additions: 1,
+                deletions: 0,
+              ),
+              FileDiff(
+                file: 'README.md',
+                patch: '@@ -1 +1 @@\n-old\n+selected readme',
+                additions: 1,
+                deletions: 1,
+              ),
+            ];
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(loads, 1);
+    expect(find.byKey(const Key('review-scope-picker')), findsNothing);
+    expect(find.text('+selected readme'), findsOneWidget);
+    expect(find.text('+first file'), findsNothing);
   });
 
   testWidgets('keeps review controls reachable at compact high text scale', (

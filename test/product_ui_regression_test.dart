@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
@@ -87,14 +88,22 @@ class _LocationRepository
 
 class _FileStatusRepository extends _LocationRepository {
   List<VersionControlFile> statuses = const [];
+  List<FileDiff> diffs = const [];
   Object? statusError;
   int statusLoads = 0;
+  int diffLoads = 0;
 
   @override
   Future<List<VersionControlFile>> listFileStatuses() async {
     statusLoads++;
     if (statusError case final error?) throw error;
     return statuses;
+  }
+
+  @override
+  Future<List<FileDiff>> listVcsDiffs(VcsDiffMode mode) async {
+    diffLoads++;
+    return diffs;
   }
 }
 
@@ -456,6 +465,27 @@ void main() {
             additions: 0,
             deletions: 12,
           ),
+        ]
+        ..diffs = [
+          FileDiff(
+            file: 'lib/main.dart',
+            patch: '@@ -0,0 +1 @@\n+library change',
+            additions: 1,
+            deletions: 0,
+          ),
+          FileDiff(
+            file: 'README.md',
+            patch: '@@ -1 +1 @@\n-old readme\n+new readme',
+            additions: 1,
+            deletions: 1,
+          ),
+          FileDiff(
+            file: 'gone.txt',
+            patch: '@@ -1 +0,0 @@\n-deleted text',
+            additions: 0,
+            deletions: 1,
+            status: 'deleted',
+          ),
         ];
       final controller = await _controller(api: api, repository: repository);
       addTearDown(controller.dispose);
@@ -481,7 +511,7 @@ void main() {
       expect(find.byKey(const ValueKey('folder-change-count')), findsOneWidget);
       expect(find.text('1 changed file'), findsOneWidget);
       expect(
-        find.byKey(const ValueKey('file-change-README.md')),
+        find.byKey(const ValueKey('review-file-change-README.md')),
         findsOneWidget,
       );
       expect(find.text('Modified · +8 −2'), findsOneWidget);
@@ -495,13 +525,32 @@ void main() {
             .onTap,
         isNull,
       );
+      expect(
+        find.byKey(const ValueKey('review-file-change-gone.txt')),
+        findsOneWidget,
+      );
       expect(tester.takeException(), isNull);
+
+      await tester.tap(
+        find.byKey(const ValueKey('review-file-change-README.md')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('review-workspace')), findsOneWidget);
+      expect(find.byKey(const Key('review-scope-picker')), findsNothing);
+      expect(find.text('+new readme'), findsOneWidget);
+      expect(find.text('+library change'), findsNothing);
+      expect(repository.diffLoads, 1);
+      expect(tester.takeException(), isNull);
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
 
       await tester.tap(find.text('lib'));
       await tester.pumpAndSettle();
 
       expect(
-        find.byKey(const ValueKey('file-change-lib/main.dart')),
+        find.byKey(const ValueKey('review-file-change-lib/main.dart')),
         findsOneWidget,
       );
       expect(find.text('Added · +34'), findsOneWidget);
@@ -509,6 +558,142 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('file review comments return to the active chat callback', (
+    tester,
+  ) async {
+    final api = _TestApi(
+      files: (_) async => [
+        FileNode(name: 'README.md', path: 'README.md', isDir: false),
+      ],
+    );
+    final repository = _FileStatusRepository()
+      ..statuses = const [
+        VersionControlFile(
+          path: 'README.md',
+          status: 'modified',
+          additions: 1,
+          deletions: 1,
+        ),
+      ]
+      ..diffs = [
+        FileDiff(
+          file: 'README.md',
+          patch: '@@ -1 +1 @@\n-old copy\n+new copy',
+          additions: 1,
+          deletions: 1,
+        ),
+      ];
+    final controller = await _controller(api: api, repository: repository);
+    addTearDown(controller.dispose);
+    String? reviewPrompt;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: FilesScreen(
+            controller: controller,
+            onReviewPrompt: (value) => reviewPrompt = value,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byKey(const ValueKey('review-file-change-README.md')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ask about file'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('review-comment-field')),
+      'Keep this wording precise.',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('review-add-to-prompt')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('review-workspace')), findsNothing);
+    expect(reviewPrompt, contains('Review `README.md`'));
+    expect(reviewPrompt, contains('Keep this wording precise.'));
+    expect(
+      find.text('Review comment added. Return to the chat to continue.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('top-level file review copies its comment for another chat', (
+    tester,
+  ) async {
+    String? copiedText;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copiedText = (call.arguments as Map)['text'] as String?;
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    final api = _TestApi(
+      files: (_) async => [
+        FileNode(name: 'README.md', path: 'README.md', isDir: false),
+      ],
+    );
+    final repository = _FileStatusRepository()
+      ..statuses = const [
+        VersionControlFile(
+          path: 'README.md',
+          status: 'modified',
+          additions: 1,
+          deletions: 1,
+        ),
+      ]
+      ..diffs = [
+        FileDiff(
+          file: 'README.md',
+          patch: '@@ -1 +1 @@\n-old copy\n+new copy',
+          additions: 1,
+          deletions: 1,
+        ),
+      ];
+    final controller = await _controller(api: api, repository: repository);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: FilesScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('review-file-change-README.md')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ask about file'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('review-comment-field')),
+      'Use the approved wording.',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('review-add-to-prompt')));
+    await tester.pumpAndSettle();
+
+    expect(copiedText, contains('Review `README.md`'));
+    expect(copiedText, contains('Use the approved wording.'));
+    expect(
+      find.text('Review comment copied. Paste it into a chat.'),
+      findsOneWidget,
+    );
+  });
 
   testWidgets('file status failure stays scoped and retries independently', (
     tester,
@@ -551,7 +736,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('file-status-notice')), findsNothing);
-    expect(find.byKey(const ValueKey('file-change-README.md')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('review-file-change-README.md')),
+      findsOneWidget,
+    );
     expect(repository.statusLoads, 2);
   });
 

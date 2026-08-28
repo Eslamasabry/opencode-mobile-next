@@ -2076,6 +2076,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 body: FilesScreen(
                   controller: _conn,
                   onAttachFile: _attachProjectFile,
+                  onReviewPrompt: _addReviewPrompt,
                 ),
               ),
             ),
@@ -2346,7 +2347,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final prompt = await Navigator.of(context).push<String>(
       MaterialPageRoute<String>(
         builder: (_) => ReviewWorkspace(
-          sessionID: widget.sessionID,
           loadDiffs: () async {
             final api = await _conn.prepareActionTransport();
             if (api == null) {
@@ -2372,8 +2372,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       ),
     );
     if (!mounted || prompt == null || prompt.trim().isEmpty) return;
+    _addReviewPrompt(prompt);
+  }
+
+  void _addReviewPrompt(String prompt) {
+    if (!mounted || prompt.trim().isEmpty) return;
     final current = _composer.text.trimRight();
-    final text = current.isEmpty ? prompt : '$current\n\n$prompt';
+    final value = prompt.trim();
+    final text = current.isEmpty ? value : '$current\n\n$value';
     setState(() {
       _composer.value = TextEditingValue(
         text: text,

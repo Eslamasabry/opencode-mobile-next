@@ -82,6 +82,11 @@ Legend:
    while folders show the number of changed descendants. Status refreshes after
    Android wake and file search, but a missing older-server endpoint remains a
    small retryable notice and never replaces valid directory contents.
+   Each changed-file row also has a distinct review action that opens the
+   authoritative Working tree diff with that exact file already selected.
+   Ordinary row taps remain file previews, deleted files remain reviewable, and
+   a review comment returns to the active chat composer or copies to the system
+   clipboard when Files was opened outside a chat.
    Symbol queries debounce as users type, and a successful empty response states
    that some language services do not support workspace-wide symbol search
    instead of presenting a blank surface. Live OpenCode `1.18.23` returned this

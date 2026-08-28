@@ -1006,6 +1006,25 @@ app, reverse port, isolated server/state/worktree, disposable signing key, and
 local APK were removed after the proof; that APK was not distributed.
 Traycer remains explicitly deferred by owner request.
 
+Changed files now lead directly from Files into the authoritative Working tree
+Review. The new trailing review action opens the exact selected file without a
+fake session or a redundant scope picker; ordinary file-row taps still open the
+preview, and deleted files remain reviewable even though they cannot be opened.
+Review comments return to the active chat composer when Files was opened from a
+chat command. From the top-level Files tab, the same comment is copied to the
+system clipboard with an explicit confirmation instead of being discarded.
+
+Widget coverage proves exact initial-file selection when the requested file is
+not the first diff, single-scope presentation, narrow 320dp/2x-text behavior,
+deleted-file review access, active-chat callback delivery, and top-level Files
+fallback behavior. Pixel 6 release-mode verification against OpenCode `1.18.23`
+used an isolated dirty Git repository with two modified files: Files showed the
+README status and review action, Review opened `README.md` rather than the first
+`lib/main.dart` diff, and rendered the expected selected README patch. Android
+logged no fatal exception, ANR, RenderFlex overflow, or OOM. The proof used no
+Traycer integration. Final-tree Flutter analysis is clean, all 347 tests pass
+serially, and the Android release APK compiled successfully.
+
 ## Shorebird wake patch for `1.0.17+18`
 
 - Shorebird release ID: `789345`

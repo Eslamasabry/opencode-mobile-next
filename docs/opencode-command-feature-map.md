@@ -56,8 +56,10 @@ The OpenCode web client registers a smaller, context-sensitive set. Mobile accep
 
 Mobile also registers `/files` with the web client's `/open` alias and
 `/references` with `/reference` and `/refs` aliases. `/files` opens project
-browsing while `/editor` edits the active draft; these are intentionally
-separate. The reference action
+browsing, including direct per-file Working tree review for files reported as
+changed by OpenCode, while `/editor` edits the active draft; these are
+intentionally separate. Review comments return to the active chat prompt when
+available and otherwise copy for use in any chat. The reference action
 opens the server-backed reference list and adds the selected item to the active
 prompt using the same `@name` directory-part contract as the upstream TUI and
 web composer.

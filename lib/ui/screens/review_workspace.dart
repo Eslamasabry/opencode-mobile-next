@@ -12,16 +12,23 @@ enum ReviewDiffScope { session, workingTree, branch }
 class ReviewWorkspace extends StatefulWidget {
   const ReviewWorkspace({
     super.key,
-    required this.loadDiffs,
-    required this.sessionID,
+    this.loadDiffs,
     this.loadWorkingTreeDiffs,
     this.loadBranchDiffs,
-  });
+    this.initialScope = ReviewDiffScope.session,
+    this.initialFile,
+  }) : assert(
+         loadDiffs != null ||
+             loadWorkingTreeDiffs != null ||
+             loadBranchDiffs != null,
+         'At least one review diff loader is required.',
+       );
 
-  final ReviewDiffLoader loadDiffs;
+  final ReviewDiffLoader? loadDiffs;
   final ReviewDiffLoader? loadWorkingTreeDiffs;
   final ReviewDiffLoader? loadBranchDiffs;
-  final String sessionID;
+  final ReviewDiffScope initialScope;
+  final String? initialFile;
 
   @override
   State<ReviewWorkspace> createState() => _ReviewWorkspaceState();
@@ -35,6 +42,7 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
   int? _selectionEnd;
   ReviewDiffMode _mode = ReviewDiffMode.unified;
   late ReviewDiffScope _scope;
+  String? _pendingInitialFile;
   int _loadGeneration = 0;
   final ScrollController _vertical = ScrollController();
   final ScrollController _horizontal = ScrollController();
@@ -42,7 +50,11 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
   @override
   void initState() {
     super.initState();
-    _scope = ReviewDiffScope.session;
+    final scopes = _availableScopes;
+    _scope = scopes.contains(widget.initialScope)
+        ? widget.initialScope
+        : scopes.first;
+    _pendingInitialFile = widget.initialFile;
     _load();
   }
 
@@ -64,7 +76,19 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
       if (!mounted || generation != _loadGeneration) return;
       setState(() {
         _diffs = diffs;
-        if (_selectedFile >= diffs.length) _selectedFile = 0;
+        final initialFile = _pendingInitialFile;
+        final initialIndex = initialFile == null
+            ? -1
+            : diffs.indexWhere(
+                (diff) =>
+                    _normalizedPath(diff.file) == _normalizedPath(initialFile),
+              );
+        if (initialIndex >= 0) {
+          _selectedFile = initialIndex;
+        } else if (_selectedFile >= diffs.length) {
+          _selectedFile = 0;
+        }
+        _pendingInitialFile = null;
         _clearSelection();
       });
     } catch (error) {
@@ -75,13 +99,13 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
   }
 
   ReviewDiffLoader _loaderFor(ReviewDiffScope scope) => switch (scope) {
-    ReviewDiffScope.session => widget.loadDiffs,
+    ReviewDiffScope.session => widget.loadDiffs!,
     ReviewDiffScope.workingTree => widget.loadWorkingTreeDiffs!,
     ReviewDiffScope.branch => widget.loadBranchDiffs!,
   };
 
   List<ReviewDiffScope> get _availableScopes => [
-    ReviewDiffScope.session,
+    if (widget.loadDiffs != null) ReviewDiffScope.session,
     if (widget.loadWorkingTreeDiffs != null) ReviewDiffScope.workingTree,
     if (widget.loadBranchDiffs != null) ReviewDiffScope.branch,
   ];
@@ -408,6 +432,9 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
       curve: Curves.easeOutCubic,
     );
   }
+
+  static String _normalizedPath(String path) =>
+      path.split('/').where((part) => part.isNotEmpty).join('/');
 }
 
 class _ReviewScopePicker extends StatelessWidget {
