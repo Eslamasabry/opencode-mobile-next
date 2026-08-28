@@ -157,12 +157,9 @@ void main() {
       find.byKey(const ValueKey('server-url-field')),
     );
     expect(url.decoration?.errorMaxLines, 3);
-    expect(
-      find.text(
-        'Enter a complete server URL, such as https://server.example:4096.',
-      ),
-      findsOneWidget,
-    );
+    // The URL field now starts empty (no https:// pre-seed), so an empty
+    // save surfaces the enter-a-URL error instead of the incomplete-URL one.
+    expect(find.text('Enter a server URL.'), findsOneWidget);
 
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('server-password-field')),

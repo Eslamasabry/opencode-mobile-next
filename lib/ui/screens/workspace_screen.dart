@@ -8,6 +8,7 @@ import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../navigation/chat_route.dart';
 import '../widgets/confirm_sheet.dart';
+import '../widgets/entrance.dart';
 import '../widgets/product_states.dart';
 import 'global_sessions_screen.dart';
 import 'managed_workspaces_screen.dart';
@@ -400,11 +401,14 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               else
                 SliverList.builder(
                   itemCount: recent.length,
-                  itemBuilder: (context, index) => _SessionRow(
-                    session: recent[index],
-                    busy: false,
-                    onOpen: _openSession,
-                    onAction: _sessionAction,
+                  itemBuilder: (context, index) => EntranceReveal(
+                    index: index,
+                    child: _SessionRow(
+                      session: recent[index],
+                      busy: false,
+                      onOpen: _openSession,
+                      onAction: _sessionAction,
+                    ),
                   ),
                 ),
               if (archived.isNotEmpty)

@@ -70,7 +70,9 @@ class SessionsTab extends StatelessWidget {
                   itemBuilder: (context, i) {
                     final s = sessions[i];
                     final busy = controller.busySessions.contains(s.id);
-                    return ListTile(
+                    return EntranceReveal(
+                      index: i,
+                      child: ListTile(
                       leading: busy
                           ? SizedBox(
                               width: 18,
@@ -104,6 +106,7 @@ class SessionsTab extends StatelessWidget {
                       ),
                       onTap: () =>
                           Navigator.of(context).pushNamed('/chat/${s.id}'),
+                      ),
                     );
                   },
                 ),
