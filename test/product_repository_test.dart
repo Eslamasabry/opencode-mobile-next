@@ -209,6 +209,85 @@ void main() {
     }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
   });
 
+  test(
+    'saved permissions use the current project and exact generated routes',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        final requests = <({String method, Uri uri})>[];
+        server.listen((request) async {
+          requests.add((method: request.method, uri: request.uri));
+          if (request.uri.path == '/project/current') {
+            request.response.headers.contentType = ContentType.json;
+            request.response.write(
+              jsonEncode({
+                'id': 'project-1',
+                'worktree': '/work/acme',
+                'vcs': 'git',
+                'time': {'created': 1, 'updated': 2},
+                'sandboxes': <String>[],
+              }),
+            );
+          } else if (request.uri.path == '/api/permission/saved') {
+            request.response.headers.contentType = ContentType.json;
+            request.response.write(
+              jsonEncode({
+                'data': [
+                  {
+                    'id': 'grant/1',
+                    'projectID': 'project-1',
+                    'action': 'bash',
+                    'resource': 'git status',
+                  },
+                  {
+                    'id': 'wrong-project',
+                    'projectID': 'project-2',
+                    'action': 'edit',
+                    'resource': '*',
+                  },
+                ],
+              }),
+            );
+          } else if (request.method == 'DELETE') {
+            request.response.statusCode = HttpStatus.noContent;
+          }
+          await request.response.close();
+        });
+
+        try {
+          final api = OpenCodeApi(
+            baseUrl: 'http://${server.address.host}:${server.port}',
+          );
+          final repository = SdkProductRepository(api.sdkClient)
+            ..setLocation(directory: '/work/acme', workspace: 'workspace-1');
+
+          final permissions = await repository.listSavedPermissions();
+          await repository.removeSavedPermission('grant/1');
+
+          expect(permissions, hasLength(1));
+          expect(permissions.single.id, 'grant/1');
+          expect(permissions.single.projectID, 'project-1');
+          expect(permissions.single.action, 'bash');
+          expect(permissions.single.resource, 'git status');
+          expect(requests, hasLength(3));
+          expect(requests[0].method, 'GET');
+          expect(requests[0].uri.path, '/project/current');
+          expect(requests[0].uri.queryParameters, {
+            'directory': '/work/acme',
+            'workspace': 'workspace-1',
+          });
+          expect(requests[1].method, 'GET');
+          expect(requests[1].uri.path, '/api/permission/saved');
+          expect(requests[1].uri.queryParameters, {'projectID': 'project-1'});
+          expect(requests[2].method, 'DELETE');
+          expect(requests[2].uri.path, '/api/permission/saved/grant%2F1');
+        } finally {
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
+
   test('generated API failures become product-facing errors', () async {
     await HttpOverrides.runZoned(() async {
       final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);

@@ -922,6 +922,27 @@ pass serially, and `:app:compileReleaseKotlin` succeeds. This requires the next 
 native APK and cannot be added to an older baseline through Shorebird. Traycer remains
 explicitly deferred.
 
+Settings now closes the safety loop created by `Always allow`. The new flat
+Access control destination resolves OpenCode's exact current project, lists only
+that project's durable grants, and revokes one server-issued permission ID after
+showing the readable action, exact resource pattern, and an explicit consequence.
+Cancellation performs no mutation; a failed delete keeps the grant visible and
+retryable. Both list and revoke wait for the wake-reconciled repository, while an
+older server without the saved-permission endpoint shows a scoped error without
+breaking Settings.
+
+Live OpenCode `1.18.23` verification created a disposable external-directory
+permission request without running a model, replied `always`, and confirmed the
+saved grant through `/api/permission/saved` for this project's ID. The release-mode
+Pixel 6 build rendered `1 grant`, the readable action and exact resource, showed the
+confirmation sheet, revoked it through the mobile UI, and then rendered the empty
+state while the server returned `{\"data\":[]}`. No fatal exception, ANR, RenderFlex,
+overflow, or OOM was logged. The grant, session, emulator install, reverse route,
+test key, and locally signed APK were removed afterward; that APK must not be
+distributed. The generated SDK audit now counts 76 directly used operations.
+Final-tree Flutter analysis is clean, all 334 tests pass serially, and
+`:app:compileReleaseKotlin` succeeds. Traycer remains explicitly deferred.
+
 ## Shorebird wake patch for `1.0.17+18`
 
 - Shorebird release ID: `789345`

@@ -9,7 +9,7 @@ Authoritative inputs:
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app
-currently calls **73 generated operations directly**. It also uses a set of
+currently calls **76 generated operations directly**. It also uses a set of
 older or compatibility routes through `OpenCodeApi` and raw `Dio`; those are
 listed separately so a working feature is not incorrectly labelled missing.
 
@@ -39,8 +39,8 @@ Legend:
 | Models v2 | - | raw `/api/model` catalog parser | `v2ModelList` generated model is unused |
 | OpenCode HTTP v2 | - | raw `/api/agent` catalog parser | agent list, credential update/remove, health, location |
 | Permission | list, reply, deprecated session reply fallback | - | - |
-| Permissions v2 | request list, session reply | - | saved permission list/remove, per-session create/get/list |
-| Project | `projectList`, `projectDirectories` | - | current project, Git init, update |
+| Permissions v2 | request list, session reply, saved permission list/remove | - | per-session create/get/list |
+| Project | `projectList`, `projectDirectories`, current project | - | Git init, update |
 | Project copy | - | - | generated name, create, refresh, remove |
 | Provider | - | provider list and configured-provider fallback | auth methods and OAuth authorize/callback |
 | Providers v2 | - | raw `/api/provider` catalog parser | provider get/list generated models are unused |
@@ -144,7 +144,14 @@ Legend:
    `mcp.add` endpoint remains hidden because its state does not survive a server
    restart. A saved config is never offered for duplicate submission when the
    subsequent app reconnect fails.
-7. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
+7. **Durable permission control:** Settings now exposes OpenCode's saved
+   `Always allow` grants for the exact current project. The app resolves that
+   project through `project.current`, lists grants through
+   `v2.permission.saved.list`, and revokes one server-issued grant ID through
+   `v2.permission.saved.remove` only after explicit confirmation. Loading and
+   mutation both wait for the wake-reconciled repository; an unavailable older
+   endpoint stays scoped to this screen instead of breaking Settings.
+8. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
    worktree lifecycle are deliberately not the current implementation lane.
 
 ## Deliberate non-goals

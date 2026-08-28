@@ -133,6 +133,20 @@ class FormatterHealth {
   });
 }
 
+class SavedPermission {
+  final String id;
+  final String projectID;
+  final String action;
+  final String resource;
+
+  const SavedPermission({
+    required this.id,
+    required this.projectID,
+    required this.action,
+    required this.resource,
+  });
+}
+
 class WorkspaceSymbol {
   final String name;
   final int kind;
@@ -641,6 +655,16 @@ abstract class ProductRepository {
   Future<List<SkillInfo>> listSkills();
   Future<List<ReferenceInfo>> listReferences();
   Future<List<PendingQuestion>> listQuestions();
+  Future<List<SavedPermission>> listSavedPermissions() => Future.error(
+    const ProductException(
+      'Saved permission management is unavailable on this server',
+    ),
+  );
+  Future<void> removeSavedPermission(String id) => Future.error(
+    const ProductException(
+      'Saved permission management is unavailable on this server',
+    ),
+  );
   Future<void> answerQuestion(String id, List<List<String>> answers);
   Future<void> rejectQuestion(String id);
   Future<String?> shareSession(String id);
@@ -1537,6 +1561,42 @@ class SdkProductRepository
         return (response.data ?? const [])
             .map((question) => PendingQuestion.fromJson(question.toJson()))
             .toList();
+      });
+
+  @override
+  Future<List<SavedPermission>> listSavedPermissions() =>
+      _guard('Could not load always allowed actions', () async {
+        final projectResponse = await _client.getProjectApi().projectCurrent(
+          directory: _directory,
+          workspace: _workspace,
+        );
+        final projectID = projectResponse.data?.id ?? '';
+        if (projectID.trim().isEmpty) {
+          throw const ProductException('OpenCode returned no current project');
+        }
+        final response = await _client
+            .getPermissionsApi()
+            .v2PermissionSavedList(projectID: projectID);
+        return (response.data?.data ?? const [])
+            .where((permission) => permission.projectID == projectID)
+            .map(
+              (permission) => SavedPermission(
+                id: permission.id,
+                projectID: permission.projectID,
+                action: permission.action,
+                resource: permission.resource,
+              ),
+            )
+            .toList();
+      });
+
+  @override
+  Future<void> removeSavedPermission(String id) =>
+      _guard('Could not revoke the always allowed action', () async {
+        if (id.trim().isEmpty) {
+          throw const ProductException('Saved permission ID is missing');
+        }
+        await _client.getPermissionsApi().v2PermissionSavedRemove(id: id);
       });
 
   @override

@@ -8,6 +8,7 @@ import '../../termux/bridge.dart';
 import '../../voice/notices.dart';
 import '../widgets/product_states.dart';
 import '../widgets/pickers.dart';
+import 'saved_permissions_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   final ConnectionController controller;
@@ -214,6 +215,21 @@ class _SettingsScreenState extends State<SettingsScreen>
                           .requestBatteryOptimizationExemption();
                     },
             ),
+          const SectionLabel('Access control'),
+          ListTile(
+            key: const ValueKey('saved-permissions-entry'),
+            leading: const Icon(Icons.admin_panel_settings_outlined),
+            title: const Text('Always allowed actions'),
+            subtitle: const Text(
+              'Review or revoke durable OpenCode permissions for this project',
+            ),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => SavedPermissionsScreen(controller: controller),
+              ),
+            ),
+          ),
           const SectionLabel('Defaults'),
           ListTile(
             leading: const Icon(Icons.model_training_outlined),
