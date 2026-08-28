@@ -10,11 +10,14 @@ replacing v1 provider auth, and WebSocket-token PTY connect.
 
 Ground truth captured in this repo:
 
-- `contracts/opencode2-openapi-beta-17823.json` — live spec dumped from
-  `opencode2 serve` v0.0.0-beta-17823 (116 operations, 240 schemas). Note
-  the event payload is opaque in the spec (`V2EventEncoded` is an encoded
-  JSON string); real event/message/part types come from the beta
-  `@opencode-ai/sdk` TypeScript definitions.
+- `contracts/opencode2-openapi-beta-18600.json` — live spec dumped from
+  `opencode2 serve` v0.0.0-beta-18600 (114 paths, 240+ schemas; strict
+  superset of the earlier 17823 dump kept alongside it). Note the event
+  payload is opaque in the spec (`V2EventEncoded` is an encoded JSON
+  string); real event/message/part types come from the v2 client stack
+  `@opencode-ai/client` → `@opencode-ai/schema` + `@opencode-ai/protocol`
+  (all `0.0.0-beta-18600`). Caution: the npm package named
+  `@opencode-ai/sdk` at 1.x is the V1 SDK — not a v2 source.
 - `docs/opencode2-protocol-notes.md` — protocol reference (agent-produced):
   auth, event union, message/part model, prompt flow, permissions, forms,
   PTY, errors, pagination.
