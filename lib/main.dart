@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'background/live_background.dart';
+import 'diagnostics/app_diagnostics.dart';
 import 'state/connection.dart';
 import 'state/profiles.dart';
 import 'update/shorebird_update_notice.dart';
@@ -15,21 +16,156 @@ import 'ui/screens/servers_screen.dart';
 import 'ui/screens/chat_screen.dart';
 import 'ui/screens/requests_screen.dart';
 import 'ui/screens/termux_setup_screen.dart';
+import 'ui/screens/app_diagnostics_screen.dart';
 
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  final bootstrap = await AppBootstrap.create();
-  final conn = ConnectionController(bootstrap.store);
+  final diagnostics = AppDiagnosticsController();
+  installAppErrorCapture(diagnostics);
+  runApp(AppBootstrapGate(diagnostics: diagnostics));
+}
 
-  runApp(
-    ProviderScope(
-      overrides: [
-        bootstrapProvider.overrideWithValue(bootstrap),
-        connProvider.overrideWithValue(conn),
-      ],
-      child: const OcApp(),
-    ),
-  );
+typedef AppBootstrapLoader = Future<AppBootstrap> Function();
+
+/// Renders immediately so a preferences or secure-storage failure can never
+/// leave Android showing a blank native window.
+class AppBootstrapGate extends StatefulWidget {
+  const AppBootstrapGate({super.key, required this.diagnostics, this.loader});
+
+  final AppDiagnosticsController diagnostics;
+  final AppBootstrapLoader? loader;
+
+  @override
+  State<AppBootstrapGate> createState() => _AppBootstrapGateState();
+}
+
+class _AppBootstrapGateState extends State<AppBootstrapGate> {
+  AppBootstrap? _bootstrap;
+  ConnectionController? _controller;
+  Object? _error;
+  bool _loading = true;
+  int _generation = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_load());
+  }
+
+  Future<void> _load() async {
+    final generation = ++_generation;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final bootstrap = await (widget.loader ?? AppBootstrap.create)();
+      if (!mounted || generation != _generation) return;
+      final controller = ConnectionController(
+        bootstrap.store,
+        diagnostics: widget.diagnostics,
+      );
+      _controller?.dispose();
+      setState(() {
+        _bootstrap = bootstrap;
+        _controller = controller;
+        _loading = false;
+      });
+    } catch (error, stack) {
+      widget.diagnostics.record(error, stack, source: 'bootstrap');
+      if (!mounted || generation != _generation) return;
+      setState(() {
+        _error = error;
+        _loading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bootstrap = _bootstrap;
+    final controller = _controller;
+    if (bootstrap != null && controller != null) {
+      return ProviderScope(
+        overrides: [
+          bootstrapProvider.overrideWithValue(bootstrap),
+          connProvider.overrideWithValue(controller),
+        ],
+        child: const OcApp(),
+      );
+    }
+    return MaterialApp(
+      title: 'OpenCode',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      home: Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(28),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: _loading
+                    ? const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 18),
+                          Text('Starting OpenCode…'),
+                        ],
+                      )
+                    : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.error_outline_rounded,
+                            size: 40,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                          const SizedBox(height: 14),
+                          Text(
+                            'OpenCode could not start',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            widget.diagnostics.sanitize(
+                              _error?.toString() ?? 'Unknown startup error',
+                              limit: 300,
+                            ),
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                          ),
+                          const SizedBox(height: 20),
+                          FilledButton.icon(
+                            key: const ValueKey('retry-app-bootstrap'),
+                            onPressed: _load,
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: const Text('Try again'),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _generation++;
+    _controller?.dispose();
+    super.dispose();
+  }
 }
 
 class OcApp extends ConsumerStatefulWidget {
@@ -154,6 +290,7 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
           '/guide': (_) => GuideScreen(embedded: false),
           '/about': (_) => const AboutScreen(),
           '/termux-setup': (_) => const TermuxSetupScreen(),
+          '/debug': (_) => AppDiagnosticsScreen(controller: _controller),
         },
         onGenerateRoute: (settings) {
           if (settings.name?.startsWith('/chat/') == true) {

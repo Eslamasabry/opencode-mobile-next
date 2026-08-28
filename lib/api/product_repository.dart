@@ -631,6 +631,14 @@ abstract interface class LocationAwareProductRepository {
 
 abstract class ProductRepository {
   void setLocation({String? directory, String? workspace});
+  Future<void> writeClientLog({
+    required String message,
+    Map<String, Object?> extra = const {},
+  }) => Future.error(
+    const ProductException(
+      'Sending app diagnostics is unavailable on this server',
+    ),
+  );
   Future<List<WorkspaceProject>> listProjects();
   Future<List<WorkspaceInfo>> listWorkspaces();
   Future<List<GlobalSessionResult>> listGlobalSessions({
@@ -784,6 +792,28 @@ class SdkProductRepository
     _workspace = workspace;
     _locationRevision++;
   }
+
+  @override
+  Future<void> writeClientLog({
+    required String message,
+    Map<String, Object?> extra = const {},
+  }) => _guard('Could not send diagnostics to OpenCode', () async {
+    final response = await _client.getControlApi().appLog(
+      directory: _directory,
+      workspace: _workspace,
+      appLogRequest: sdk.AppLogRequest(
+        service: 'opencode-mobile',
+        level: sdk.AppLogRequestLevelEnum.error,
+        message: message,
+        extra: extra,
+      ),
+    );
+    if (response.data != true) {
+      throw const ProductException(
+        'OpenCode did not accept the diagnostics report',
+      );
+    }
+  });
 
   @override
   Future<List<FileDiff>> listVcsDiffs(VcsDiffMode mode) => _guard(

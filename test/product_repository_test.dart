@@ -1806,4 +1806,71 @@ void main() {
       }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
     },
   );
+
+  test('client diagnostics use the generated redacted log contract', () async {
+    await HttpOverrides.runZoned(() async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final requests = <({Uri uri, Map<String, dynamic> body})>[];
+      server.listen((request) async {
+        requests.add((
+          uri: request.uri,
+          body: Map<String, dynamic>.from(
+            jsonDecode(await utf8.decoder.bind(request).join()) as Map,
+          ),
+        ));
+        request.response.headers.contentType = ContentType.json;
+        request.response.write(jsonEncode(requests.length == 1));
+        await request.response.close();
+      });
+
+      try {
+        final api = OpenCodeApi(
+          baseUrl: 'http://${server.address.host}:${server.port}',
+        );
+        final repository = SdkProductRepository(api.sdkClient)
+          ..setLocation(directory: '/work/acme', workspace: 'phone');
+        await repository.writeClientLog(
+          message: 'OpenCode Mobile diagnostics (1 handled errors)',
+          extra: {
+            'entryCount': 1,
+            'entries': [
+              {'source': 'flutter', 'message': 'render failed'},
+            ],
+          },
+        );
+
+        expect(requests.single.uri.path, '/log');
+        expect(requests.single.uri.queryParameters, {
+          'directory': '/work/acme',
+          'workspace': 'phone',
+        });
+        expect(requests.single.body, {
+          'service': 'opencode-mobile',
+          'level': 'error',
+          'message': 'OpenCode Mobile diagnostics (1 handled errors)',
+          'extra': {
+            'entryCount': 1,
+            'entries': [
+              {'source': 'flutter', 'message': 'render failed'},
+            ],
+          },
+        });
+
+        await expectLater(
+          repository.writeClientLog(
+            message: 'OpenCode Mobile diagnostics (1 handled errors)',
+          ),
+          throwsA(
+            isA<ProductException>().having(
+              (error) => error.toString(),
+              'message',
+              contains('did not accept'),
+            ),
+          ),
+        );
+      } finally {
+        await server.close(force: true);
+      }
+    }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+  });
 }

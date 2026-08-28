@@ -33,6 +33,7 @@ is also bundled under **Settings > Privacy and data use**.
 - Project health for branch changes, language services, and formatters
 - Smart skill previews with rendered Markdown tables, code blocks, and raw mode
 - Server-backed project references that can be copied or added to an active prompt
+- Recoverable startup and process-local, redacted app diagnostics with explicit-only reporting to OpenCode
 
 ## Requirements
 

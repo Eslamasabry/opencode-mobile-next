@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Effective date: August 27, 2026**
+**Effective date: August 28, 2026**
 
 OpenCode for Android is a client for OpenCode servers. It does not provide a
 developer-operated account, advertising, analytics, or crash-reporting service.
@@ -29,6 +29,19 @@ disabled for this app.
 You can remove a server profile in the app. You can erase all local data by
 clearing the app's storage or uninstalling it. Data retained by an OpenCode
 server or AI provider must be deleted through that service.
+
+## App diagnostics
+
+Handled app and startup errors are kept in process memory only, with a maximum
+of 20 entries, and disappear when the app process ends. The app redacts
+authorization headers, credential-like values, URL credentials and queries,
+and long token-like strings. It does not add chat messages or file contents to
+these reports.
+
+Diagnostics are never sent automatically. If you explicitly tap **Send** in
+App diagnostics, the redacted entries currently shown on that screen are sent
+to your selected OpenCode server with the active directory and workspace
+context. Copy and Clear remain local actions.
 
 ## Microphone and local voice input
 

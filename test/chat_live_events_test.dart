@@ -9,6 +9,7 @@ import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/ui/screens/app_diagnostics_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/global_sessions_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -1301,6 +1302,22 @@ void main() {
     expect(find.text('chat.dart'), findsOneWidget);
     expect(find.text('+7'), findsOneWidget);
     expect(find.text('-2'), findsOneWidget);
+  });
+
+  testWidgets('debug command opens native app diagnostics', (tester) async {
+    await _pumpChat(tester, _FakeOpenCodeApi());
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'debug',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('command-mobile-debug')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AppDiagnosticsScreen), findsOneWidget);
+    expect(find.text('Private until you send it'), findsOneWidget);
   });
 
   testWidgets('sessions command opens the all-project native finder', (

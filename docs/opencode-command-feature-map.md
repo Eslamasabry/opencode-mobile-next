@@ -25,7 +25,7 @@ The mobile launcher combines these sources. Client actions are explicitly mapped
 | `/connect` | — | Connect a provider | Adapted: provider and integration authentication |
 | `/org` | `/orgs`, `/switch-org` | Switch OpenCode Console organization when available | Native: account-grouped organization picker, server switch, instance disposal, and provider/model reload |
 | `/status` | — | View runtime status | Adapted: server health, version, connection, and background mode |
-| `/debug` | — | View TUI debug information | Adapted: server status; TUI renderer diagnostics are irrelevant on Flutter |
+| `/debug` | — | View TUI debug information | Native: process-local handled app errors with redacted copy/clear and explicit OpenCode report sending; nothing is uploaded automatically |
 | `/themes` | `/theme` | Switch TUI theme | Native: follow Android or choose the designed light or dark workspace theme |
 | `/help` | — | Open help | Native: searchable command and action map |
 | `/exit` | `/quit`, `/q` | Exit the terminal process | Intentionally omitted: Android owns app lifecycle |
@@ -91,6 +91,7 @@ Selecting a dynamic command inserts it into the composer so arguments can be edi
 - Update the app-managed local OpenCode server from Settings
 - Complete remote MCP OAuth on the phone through a state-validated loopback callback, with manual and cancel fallbacks
 - Choose OpenCode's global default shell from the server's live shell inventory, including Automatic reset and terminal-only guidance
+- Recover from bootstrap failures without a blank window and inspect redacted, process-local app diagnostics from Settings
 
 ## Next command parity work
 

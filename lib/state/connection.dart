@@ -10,6 +10,7 @@ import '../api/opencode_api.dart';
 import '../api/product_repository.dart';
 import '../api/sse.dart';
 import '../background/live_background.dart';
+import '../diagnostics/app_diagnostics.dart';
 import '../termux/bridge.dart';
 import 'profiles.dart';
 
@@ -115,6 +116,8 @@ typedef EventStreamFactory =
 class ConnectionController extends ChangeNotifier {
   final ProfileStore store;
   final BackgroundLiveController backgroundLive;
+  final AppDiagnosticsController diagnostics;
+  final bool _ownsDiagnostics;
   late final ValueNotifier<AppAppearance> appearance;
   final OpenCodeApiFactory _apiFactory;
   final ProductRepositoryFactory _repositoryFactory;
@@ -229,6 +232,7 @@ class ConnectionController extends ChangeNotifier {
     ProductRepositoryFactory? repositoryFactory,
     EventStreamFactory? eventStreamFactory,
     BackgroundLiveController? backgroundLive,
+    AppDiagnosticsController? diagnostics,
     LocalWakeLockEnsurer? localWakeLockEnsurer,
   }) : _apiFactory = apiFactory ?? _createApi,
        _repositoryFactory = repositoryFactory ?? _createRepository,
@@ -236,8 +240,9 @@ class ConnectionController extends ChangeNotifier {
        _localWakeLockEnsurer =
            localWakeLockEnsurer ?? TermuxBridge.ensureWakeLock,
        backgroundLive =
-           backgroundLive ??
-           BackgroundLiveController(preferences: store.prefs) {
+           backgroundLive ?? BackgroundLiveController(preferences: store.prefs),
+       diagnostics = diagnostics ?? AppDiagnosticsController(),
+       _ownsDiagnostics = diagnostics == null {
     appearance = ValueNotifier(store.appearance);
     transcriptReasoningExpanded = store.transcriptReasoningExpanded;
     transcriptTimestampsVisible = store.transcriptTimestampsVisible;
@@ -2379,6 +2384,7 @@ class ConnectionController extends ChangeNotifier {
     _retireTransport();
     backgroundLive.removeListener(_backgroundLiveChanged);
     backgroundLive.dispose();
+    if (_ownsDiagnostics) diagnostics.dispose();
     appearance.dispose();
     unawaited(_eventBus.close());
     super.dispose();

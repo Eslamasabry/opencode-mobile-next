@@ -13,6 +13,7 @@ import '../../voice/notices.dart';
 import '../widgets/appearance_picker.dart';
 import '../widgets/product_states.dart';
 import '../widgets/pickers.dart';
+import 'app_diagnostics_screen.dart';
 import 'saved_permissions_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -470,6 +471,30 @@ class _SettingsScreenState extends State<SettingsScreen>
               'Workspace and worktree switching is available from the Workspace tab. '
               'Availability depends on the connected server.',
             ),
+          ),
+          const SectionLabel('Diagnostics'),
+          ListenableBuilder(
+            listenable: controller.diagnostics,
+            builder: (context, _) {
+              final count = controller.diagnostics.count;
+              return ListTile(
+                key: const ValueKey('app-diagnostics-entry'),
+                leading: const Icon(Icons.health_and_safety_outlined),
+                title: const Text('App diagnostics'),
+                subtitle: Text(
+                  count == 0
+                      ? 'No captured errors'
+                      : '$count handled error${count == 1 ? '' : 's'} kept in memory',
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) =>
+                        AppDiagnosticsScreen(controller: controller),
+                  ),
+                ),
+              );
+            },
           ),
           const SectionLabel('About'),
           ListTile(

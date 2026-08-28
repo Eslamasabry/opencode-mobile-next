@@ -6,6 +6,7 @@ import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/ui/screens/app_diagnostics_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/screens/saved_permissions_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -102,6 +103,35 @@ Future<ConnectionController> _controllerFor(
 }
 
 void main() {
+  testWidgets('settings exposes process-local app diagnostics', (tester) async {
+    final controller = await _controllerFor(
+      'http://127.0.0.1:4096',
+      repository: _EmptyPermissionRepository(),
+    );
+    addTearDown(controller.dispose);
+    controller.diagnostics.record(
+      StateError('handled failure'),
+      null,
+      source: 'flutter',
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(home: SettingsScreen(controller: controller)),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('app-diagnostics-entry')),
+      320,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('1 handled error kept in memory'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('app-diagnostics-entry')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AppDiagnosticsScreen), findsOneWidget);
+  });
+
   testWidgets('managed local profile opens the in-app updater', (tester) async {
     final controller = await _controllerFor('http://127.0.0.1:4096');
     addTearDown(controller.dispose);

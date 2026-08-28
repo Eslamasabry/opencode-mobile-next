@@ -1203,6 +1203,36 @@ isolated server/state/project, disposable signing key, and local APK were
 removed afterward; that APK was not distributed. Traycer remains explicitly
 deferred.
 
+The next production-readiness slice contains failures without adding Traycer.
+App startup now renders immediately and exposes a retryable failure state if
+preferences or secure storage cannot bootstrap, preventing a blank Android
+window. Flutter framework errors, uncaught platform-dispatcher errors, failed
+widget builds, and bootstrap failures enter one bounded 20-entry in-memory ring;
+burst duplicates coalesce and every entry is truncated and scrubbed for
+authorization headers, credential-like fields, URL credentials/query data, and
+long token-like values. Chat text and file contents are not collected, the ring
+is not persisted, and no report is sent automatically.
+
+Settings -> App diagnostics and the separate `/debug` mobile action show the
+same flat report with expandable selectable details plus Copy, Clear, and an
+explicit Send action. Send resolves the wake-reconciled repository at tap time
+and uses generated `app.log` with the exact selected directory/workspace. The
+server must return `true` before mobile claims success. `/status` remains the
+server-health destination. Contract and widget tests cover redaction, bounds,
+deduplication, generic error rendering, bootstrap retry, exact `/log` payload,
+server rejection, Settings/command discoverability, explicit sending, and a
+320dp phone at 2x density. The generated SDK audit now counts 86 directly used
+operations. Final-tree Flutter analysis is clean and all 394 app tests pass
+serially; all four generated-SDK verifiers, its 46 tests/analyzer, and Android
+`lintRelease` pass. A locally test-signed release APK compiled at 161,366,751
+bytes and was installed on `emulator-5554`. Against isolated OpenCode `1.18.23`,
+the Pixel 6 reached Workspace, exposed Settings -> App diagnostics, and rendered
+the empty process-local state with disabled Send/Copy/Clear actions plus the
+exact no-auto-send explanation. Android logged no app fatal exception, ANR,
+RenderFlex overflow, or OOM. The emulator app/profile, reverse port, isolated
+server/state, disposable signing key, and local APK were removed afterward;
+that APK was not distributed. Traycer remains explicitly deferred.
+
 ## Shorebird wake patch for `1.0.17+18`
 
 - Shorebird release ID: `789345`

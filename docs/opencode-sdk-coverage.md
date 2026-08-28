@@ -9,7 +9,7 @@ Authoritative inputs:
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app
-currently calls **85 generated operations directly**. It also uses a set of
+currently calls **86 generated operations directly**. It also uses a set of
 older or compatibility routes through `OpenCodeApi` and raw `Dio`; those are
 listed separately so a working feature is not incorrectly labelled missing.
 
@@ -24,7 +24,7 @@ Legend:
 |---|---|---|---|
 | Commands | `v2CommandList` | - | - |
 | Config | `configGet`, `configUpdate` | `configProviders` | - |
-| Control | `authSet`, `authRemove` | - | `appLog` |
+| Control | `authSet`, `authRemove`, `appLog` | - | - |
 | Control plane | `experimentalControlPlaneMoveSession` | - | - |
 | Event | - | `eventSubscribe` through the shared `/event` SSE transport | Generated event transport is unused |
 | Events v2 | - | Some v2-shaped events are reduced from the legacy stream | `v2EventSubscribe` |
@@ -211,7 +211,17 @@ Legend:
    this screen. Live OpenCode `1.18.23` proved root filtering, search, archive
    inclusion, cross-location opening, and an external session appearing after
    background/resume.
-13. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
+13. **Failure containment and explicit diagnostics:** Flutter framework,
+   platform-dispatcher, widget-build, and bootstrap failures now enter one
+   bounded, process-local ring instead of leaving Android with a blank startup
+   window or raw exception surface. Reports redact credential-like fields,
+   authorization headers, URL credentials/query data, and long token-like
+   values; they never collect chat messages or file contents. Settings and
+   `/debug` show the exact retained entries with copy and clear controls.
+   Nothing is persisted or uploaded automatically. Only an explicit Send action
+   posts the currently visible redacted snapshot through generated `app.log`
+   with the selected directory/workspace context.
+14. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
    worktree lifecycle are deliberately not the current implementation lane.
 
 ## Deliberate non-goals

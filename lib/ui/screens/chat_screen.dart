@@ -22,6 +22,7 @@ import '../widgets/file_preview.dart';
 import '../widgets/markdown.dart';
 import '../widgets/pickers.dart';
 import '../widgets/tool_card.dart';
+import 'app_diagnostics_screen.dart';
 import 'files_screen.dart';
 import 'global_sessions_screen.dart';
 import 'home_screen.dart';
@@ -1879,11 +1880,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       ),
       _ChatCommand.mobile(
         slash: 'status',
-        aliases: const ['debug'],
         title: 'Server status',
         description: 'Connection health, server version, and live mode',
         group: 'OpenCode',
         action: _ChatCommandAction.status,
+      ),
+      _ChatCommand.mobile(
+        slash: 'debug',
+        title: 'App diagnostics',
+        description: 'Review handled app errors and send a redacted report',
+        group: 'OpenCode',
+        action: _ChatCommandAction.diagnostics,
       ),
       _ChatCommand.mobile(
         slash: 'themes',
@@ -2178,6 +2185,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           await Navigator.of(context).push(
             MaterialPageRoute<void>(
               builder: (_) => SettingsScreen(controller: _conn),
+            ),
+          );
+        }
+        return;
+      case _ChatCommandAction.diagnostics:
+        if (mounted) {
+          await Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => AppDiagnosticsScreen(controller: _conn),
             ),
           );
         }
@@ -3060,6 +3076,7 @@ enum _ChatCommandAction {
   skills,
   references,
   status,
+  diagnostics,
   appearance,
   diff,
   share,
