@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -144,13 +145,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: 'Coding defaults',
             onTap: () => _open(CodingSettingsScreen(controller: controller)),
           ),
-          _CategoryRow(
-            rowKey: 'settings-category-background',
-            icon: Icons.notifications_active_outlined,
-            title: 'Notifications & background',
-            onTap: () =>
-                _open(BackgroundSettingsScreen(controller: controller)),
-          ),
+          // The live background service and its notifications are Android
+          // platform features; the category hides elsewhere.
+          if (defaultTargetPlatform == TargetPlatform.android)
+            _CategoryRow(
+              rowKey: 'settings-category-background',
+              icon: Icons.notifications_active_outlined,
+              title: 'Notifications & background',
+              onTap: () =>
+                  _open(BackgroundSettingsScreen(controller: controller)),
+            ),
           _CategoryRow(
             rowKey: 'settings-category-appearance',
             icon: Icons.palette_outlined,
