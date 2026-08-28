@@ -421,19 +421,15 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             ],
           ),
         ),
+        // Composer-first home: a docked quick-ask pill opens a fresh session
+        // in the active project, replacing the New-session FAB.
         Positioned(
-          right: 16,
-          bottom: 16,
-          child: FloatingActionButton.extended(
-            heroTag: 'workspace-new-session',
-            onPressed: _creating ? null : _createSession,
-            icon: _creating
-                ? const SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.add_rounded),
-            label: const Text('New session'),
+          left: 12,
+          right: 12,
+          bottom: 12,
+          child: _QuickAskPill(
+            creating: _creating,
+            onTap: _creating ? null : _createSession,
           ),
         ),
       ],
@@ -732,5 +728,85 @@ class _SessionRow extends StatelessWidget {
     if (difference.inDays < 7) return '${difference.inDays}d ago';
     final date = DateTime.fromMillisecondsSinceEpoch(milliseconds);
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+}
+
+/// A composer-shaped invitation docked to the workspace: it looks like the
+/// chat input and opens a fresh session in the active project ready to type.
+class _QuickAskPill extends StatelessWidget {
+  const _QuickAskPill({required this.creating, required this.onTap});
+
+  final bool creating;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Semantics(
+      button: true,
+      label: 'New session',
+      child: Material(
+        key: const ValueKey('workspace-quick-ask'),
+        color: scheme.surfaceContainerLow,
+        elevation: 6,
+        shadowColor: scheme.surfaceContainerLowest,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: .85)),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 14, 12, 14),
+            child: Row(
+              children: [
+                Text(
+                  '❯',
+                  style: theme.textTheme.titleMedium!.copyWith(
+                    color: scheme.primary,
+                    fontFamily: 'AppMono',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Ask OpenCode…',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.hintColor,
+                    ),
+                  ),
+                ),
+                if (creating)
+                  const Padding(
+                    padding: EdgeInsets.all(8),
+                    child: SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                else
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: scheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.add_rounded,
+                      size: 21,
+                      color: scheme.onPrimaryContainer,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

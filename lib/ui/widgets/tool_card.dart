@@ -47,6 +47,16 @@ String _fileName(String value) {
   return parts.isEmpty ? value : parts.last;
 }
 
+/// Compact "Title · subtitle" line for the tool currently executing, used by
+/// the chat tool-group header as a live ticker while a run is active.
+String runningToolTicker(String rawName, ToolState state) {
+  final contract = _ToolContract.from(rawName, state);
+  final subtitle = contract.subtitle;
+  return subtitle == null || subtitle.isEmpty
+      ? contract.title
+      : '${contract.title} · $subtitle';
+}
+
 class _ToolContract {
   final _ToolKind kind;
   final String title;

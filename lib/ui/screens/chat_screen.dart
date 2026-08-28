@@ -3027,6 +3027,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                               onTap: _jumpToLatest,
                                             ),
                                           ),
+                                        if (_messages.length > 30)
+                                          Positioned(
+                                            top: 8,
+                                            child: _EarlierMessagesPill(
+                                              count: _messages.length,
+                                              onTap: () =>
+                                                  unawaited(_openTimeline()),
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     ),

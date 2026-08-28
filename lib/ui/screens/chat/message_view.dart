@@ -284,6 +284,49 @@ class _JumpToLatestButton extends StatelessWidget {
   }
 }
 
+/// A floating chip over long transcripts naming how much history sits above,
+/// opening the timeline for direct navigation.
+class _EarlierMessagesPill extends StatelessWidget {
+  const _EarlierMessagesPill({required this.count, required this.onTap});
+
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      key: const ValueKey('earlier-messages-pill'),
+      color: theme.colorScheme.surfaceContainerHigh,
+      elevation: 2,
+      shape: const StadiumBorder(),
+      child: InkWell(
+        customBorder: const StadiumBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 6, 8, 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '$count earlier messages',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              Icon(
+                Icons.expand_more_rounded,
+                size: 15,
+                color: theme.hintColor,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 const _contextToolNames = {'read', 'list', 'glob', 'grep'};
 
 bool _isToolPart(Part part) => part.type == 'tool';
@@ -519,7 +562,19 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final summary = _toolRunSummary(widget.parts);
+    // While running, the header names the tool actually executing instead of
+    // the static run summary, like a build log's live line.
+    Part? runningPart;
+    for (final part in widget.parts.reversed) {
+      final status = part.toolState.status;
+      if (status == 'running' || status == 'pending') {
+        runningPart = part;
+        break;
+      }
+    }
+    final summary = runningPart != null
+        ? runningToolTicker(runningPart.toolName ?? 'tool', runningPart.toolState)
+        : _toolRunSummary(widget.parts);
     final allContext = widget.parts.every(
       (part) => _contextToolNames.contains(part.toolName?.trim().toLowerCase()),
     );
