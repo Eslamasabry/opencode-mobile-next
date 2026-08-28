@@ -130,9 +130,24 @@ one-contextual-banner cap in chat. Background-task caution: long background
 harness tasks were SIGKILLed on this loaded machine while identical
 foreground runs survived — run builds/suites foreground when it recurs.
 
-Remaining facelift lanes: reconsidering Terminal's bottom-nav slot;
-list-item motion; remaining empty-state upgrades; onboarding editor
-pre-seed rethink.
+Slice six (owner feedback: "More is messy", "organize the sub-pages",
+"use visuals", "use Mobbin"): research went into docs/design-inspiration.md
+with Mobbin citations, then: More became a live setup card plus a visual
+icon-card grid; Commands/Tools/Skills/References merged into one tabbed
+Commands & tools screen via per-screen embedded modes; Integrations split
+into Providers and MCP through one mode-gated screen; Settings became
+hub-and-spoke (connection summary + seven category sub-pages under
+lib/ui/screens/settings/); Workspace's New-session FAB became the
+composer-first quick-ask pill; running tool groups show a live ticker via
+public runningToolTicker() in tool_card.dart; long transcripts get an
+earlier-messages chip opening the timeline. Full suite green: 506 tests in
+three foreground chunks (background harness tasks still get killed on this
+box — keep using foreground chunks), plus post-merge re-runs. Preview 5
+published as v1.0.25+26-preview.5.
+
+Remaining facelift lanes: Files/Review/Terminal inspiration passes (queued
+in the design doc); Terminal's bottom-nav slot; list-item motion; remaining
+empty-state upgrades; onboarding editor pre-seed rethink.
 
 ## Production Android hardening branch
 
