@@ -424,6 +424,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
   bool _lifecycleSuspended = false;
   String _transcript = '';
   final _transcriptSanitizer = _TerminalTranscriptSanitizer();
+  int? _terminalCursor;
   ProductRepository? _activeRepository;
   int _activeDataRefreshRevision = -1;
 
@@ -490,6 +491,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
       _resizeTimer = null;
       final subscription = _subscription;
       final channel = _channel;
+      _rememberCursor(channel);
       _subscription = null;
       _channel = null;
       if (mounted && !_lifecycleSuspended) {
@@ -515,6 +517,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
     });
     final previousSubscription = _subscription;
     final previousChannel = _channel;
+    _rememberCursor(previousChannel);
     _subscription = null;
     _channel = null;
     try {
@@ -529,7 +532,10 @@ class _TerminalSurfaceState extends State<TerminalSurface>
       }
       _activeRepository = repository;
       _transcriptSanitizer.reset();
-      final channel = await repository.connectTerminal(widget.process.id);
+      final channel = await repository.connectTerminal(
+        widget.process.id,
+        cursor: _terminalCursor,
+      );
       if (!mounted ||
           _lifecycleSuspended ||
           generation != _connectionGeneration) {
@@ -542,6 +548,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
           if (generation == _connectionGeneration) {
             _terminal.write(chunk);
             _appendTranscript(chunk);
+            _rememberCursor(channel);
           }
         },
         onError: (Object error) {
@@ -597,6 +604,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
     _resizeTimer = null;
     final subscription = _subscription;
     final channel = _channel;
+    _rememberCursor(channel);
     _subscription = null;
     _channel = null;
     if (mounted) {
@@ -646,6 +654,11 @@ class _TerminalSurfaceState extends State<TerminalSurface>
   void _write(String value) {
     if (!_canWrite) return;
     _channel!.write(value);
+  }
+
+  void _rememberCursor(TerminalChannel? channel) {
+    final cursor = channel?.cursor;
+    if (cursor != null && cursor >= 0) _terminalCursor = cursor;
   }
 
   void _sendControl(String value) {
@@ -1004,9 +1017,8 @@ class _TerminalTranscriptSanitizer {
   }
 
   String add(String chunk) {
-    // OpenCode prefixes binary WebSocket metadata frames with NUL. The
-    // repository decodes binary frames to strings, so keep them out of the
-    // human-readable transcript regardless of their JSON payload shape.
+    // Keep a defensive guard for older/custom transports that expose OpenCode's
+    // NUL-prefixed metadata as text instead of consuming it at the channel.
     if (chunk.isEmpty || (_state == _normal && chunk.startsWith('\x00'))) {
       return '';
     }

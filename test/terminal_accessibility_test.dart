@@ -10,9 +10,20 @@ class _MemoryTerminalChannel implements TerminalChannel {
   final outputController = StreamController<String>();
   final writes = <String>[];
   int closeCalls = 0;
+  int? _cursor;
+
+  _MemoryTerminalChannel([this._cursor]);
 
   @override
   Stream<String> get output => outputController.stream;
+
+  @override
+  int? get cursor => _cursor;
+
+  void addOutput(String value) {
+    _cursor = (_cursor ?? 0) + value.length;
+    outputController.add(value);
+  }
 
   @override
   void write(String value) => writes.add(value);
@@ -26,10 +37,12 @@ class _MemoryTerminalChannel implements TerminalChannel {
 
 class _TerminalRepository implements ProductRepository {
   final channels = <_MemoryTerminalChannel>[];
+  final cursors = <int?>[];
 
   @override
-  Future<TerminalChannel> connectTerminal(String id) async {
-    final channel = _MemoryTerminalChannel();
+  Future<TerminalChannel> connectTerminal(String id, {int? cursor}) async {
+    cursors.add(cursor);
+    final channel = _MemoryTerminalChannel(cursor);
     channels.add(channel);
     return channel;
   }
@@ -49,7 +62,7 @@ class _DelayedTerminalRepository implements ProductRepository {
   final requests = <Completer<TerminalChannel>>[];
 
   @override
-  Future<TerminalChannel> connectTerminal(String id) {
+  Future<TerminalChannel> connectTerminal(String id, {int? cursor}) {
     final request = Completer<TerminalChannel>();
     requests.add(request);
     return request.future;
@@ -133,6 +146,36 @@ void main() {
     expect(find.textContaining('\x1b'), findsNothing);
     expect(find.textContaining('\x00'), findsNothing);
   });
+
+  testWidgets(
+    'terminal reconnect resumes from its cursor without replaying transcript',
+    (tester) async {
+      final repository = await _pumpTerminal(tester);
+      await tester.tap(find.byKey(const Key('terminal-accessible-mode')));
+      await tester.pump();
+
+      const initial = 'prompt\ncommand\nresult\n';
+      repository.channels.single.addOutput(initial);
+      await tester.pump();
+      expect(find.text(initial), findsOneWidget);
+
+      final reconnect = tester.widget<IconButton>(
+        find.byKey(const Key('terminal-reconnect')),
+      );
+      await tester.runAsync(() async {
+        reconnect.onPressed!();
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      });
+      await tester.pump();
+
+      expect(repository.cursors, [null, initial.length]);
+      expect(repository.channels, hasLength(2));
+      repository.channels.last.addOutput('next\n');
+      await tester.pump();
+
+      expect(find.text('${initial}next\n'), findsOneWidget);
+    },
+  );
 
   testWidgets('terminal key strip scrolls on phones with 48dp targets', (
     tester,

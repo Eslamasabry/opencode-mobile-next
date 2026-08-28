@@ -1087,6 +1087,7 @@ void main() {
         String? tokenHeader;
         String? tokenDirectory;
         String? socketDirectory;
+        String? socketCursor;
         server.listen((request) async {
           if (request.uri.path.endsWith('/connect-token')) {
             tokenHeader = request.headers.value('x-opencode-ticket');
@@ -1099,6 +1100,7 @@ void main() {
             return;
           }
           socketDirectory = request.uri.queryParameters['directory'];
+          socketCursor = request.uri.queryParameters['cursor'];
           expect(request.uri.queryParameters['ticket'], 'single-use-ticket');
           final socket = await WebSocketTransformer.upgrade(request);
           socket.listen((data) {
@@ -1106,6 +1108,10 @@ void main() {
               receivedInput.complete(data as String);
             }
           });
+          socket.add([
+            0,
+            ...utf8.encode(jsonEncode({'cursor': 42})),
+          ]);
           socket.add('ready');
         });
 
@@ -1115,7 +1121,10 @@ void main() {
           );
           final repository = SdkProductRepository(api.sdkClient)
             ..setLocation(directory: '/work/acme');
-          final channel = await repository.connectTerminal('pty_test');
+          final channel = await repository.connectTerminal(
+            'pty_test',
+            cursor: 17,
+          );
           final output = channel.output.first;
           channel.write('pwd\r');
 
@@ -1124,6 +1133,8 @@ void main() {
           expect(tokenHeader, '1');
           expect(tokenDirectory, '/work/acme');
           expect(socketDirectory, '/work/acme');
+          expect(socketCursor, '17');
+          expect(channel.cursor, 47);
           await channel.close();
         } finally {
           await server.close(force: true);

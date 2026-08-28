@@ -550,6 +550,7 @@ class PendingQuestion {
 
 abstract class TerminalChannel {
   Stream<String> get output;
+  int? get cursor => null;
   void write(String value);
   Future<void> close();
 }
@@ -608,7 +609,7 @@ abstract class ProductRepository {
     required int cols,
   });
   Future<void> removeTerminal(String id);
-  Future<TerminalChannel> connectTerminal(String id);
+  Future<TerminalChannel> connectTerminal(String id, {int? cursor});
   Future<List<FileDiff>> listVcsDiffs(VcsDiffMode mode);
   Future<CatalogSnapshot> loadCatalog();
   Future<List<McpServerInfo>> listMcpServers();
@@ -1039,8 +1040,9 @@ class SdkProductRepository
 
   @override
   Future<TerminalChannel> connectTerminal(
-    String id,
-  ) => _guard('Could not connect to the terminal', () async {
+    String id, {
+    int? cursor,
+  }) => _guard('Could not connect to the terminal', () async {
     // A ticket is scoped to one location. Keep the socket query on that same
     // location even if the user switches workspaces while the request awaits.
     final directory = _directory;
@@ -1057,7 +1059,10 @@ class SdkProductRepository
       throw const ProductException('Terminal ticket was unavailable');
     }
     final base = Uri.parse(_client.dio.options.baseUrl);
-    final query = <String, String>{'ticket': ticket};
+    final query = <String, String>{
+      'ticket': ticket,
+      if (cursor != null) 'cursor': '$cursor',
+    };
     if (directory != null) query['directory'] = directory;
     if (workspace != null) query['workspace'] = workspace;
     final uri = base.replace(
@@ -1066,7 +1071,10 @@ class SdkProductRepository
           '${base.path.endsWith('/') ? base.path.substring(0, base.path.length - 1) : base.path}/pty/${Uri.encodeComponent(id)}/connect',
       queryParameters: query,
     );
-    return _IoTerminalChannel(await WebSocket.connect(uri.toString()));
+    return _IoTerminalChannel(
+      await WebSocket.connect(uri.toString()),
+      initialCursor: cursor ?? 0,
+    );
   });
 
   @override
@@ -1721,16 +1729,42 @@ class SdkProductRepository
 
 class _IoTerminalChannel implements TerminalChannel {
   final WebSocket _socket;
-  late final Stream<String> _output = _socket.map((data) {
-    if (data is String) return data;
-    if (data is List<int>) return utf8.decode(data, allowMalformed: true);
-    return data.toString();
-  }).asBroadcastStream();
+  int _cursor;
+  late final Stream<String> _output = _socket
+      .expand(_decodeFrame)
+      .asBroadcastStream();
 
-  _IoTerminalChannel(this._socket);
+  _IoTerminalChannel(this._socket, {required int initialCursor})
+    : _cursor = initialCursor;
+
+  Iterable<String> _decodeFrame(dynamic data) sync* {
+    if (data is List<int> && data.isNotEmpty && data.first == 0) {
+      try {
+        final metadata = jsonDecode(utf8.decode(data.sublist(1)));
+        final next = metadata is Map<String, dynamic>
+            ? metadata['cursor']
+            : null;
+        if (next is int && next >= 0) _cursor = next;
+      } catch (_) {
+        // Invalid control frames are transport metadata, never terminal text.
+      }
+      return;
+    }
+    final text = data is String
+        ? data
+        : data is List<int>
+        ? utf8.decode(data, allowMalformed: true)
+        : data.toString();
+    if (text.isEmpty) return;
+    _cursor += text.length;
+    yield text;
+  }
 
   @override
   Stream<String> get output => _output;
+
+  @override
+  int get cursor => _cursor;
 
   @override
   void write(String value) => _socket.add(value);

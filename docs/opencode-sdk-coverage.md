@@ -44,7 +44,7 @@ Legend:
 | Project copy | - | - | generated name, create, refresh, remove |
 | Provider | - | provider list and configured-provider fallback | auth methods and OAuth authorize/callback |
 | Providers v2 | - | raw `/api/provider` catalog parser | provider get/list generated models are unused |
-| PTY | create, list, update, remove, connect token | WebSocket connect uses the guarded ticket | get, shells, direct connect, and all duplicate v2 PTY operations |
+| PTY | create, list, update, remove, connect token | WebSocket connect uses the guarded ticket and OpenCode cursor resume | get, shells, direct connect, and all duplicate v2 PTY operations |
 | Question | list, reply, reject | - | - |
 | Reference | `v2ReferenceList` | - | References can be copied standalone or added to the active composer as OpenCode directory parts |
 | Session | list, create, get, delete, update/rename, status, messages, todos, diff, fork, revert, unrevert, share, unshare, summarize, async prompt including synthetic location reminder, command, abort | shell | init endpoint, children, delete/update part, delete/get one message, synchronous prompt |
@@ -133,6 +133,9 @@ Legend:
    project health, settings health, and terminal mutations. A screen may keep
    already-rendered data while Android wakes, but it cannot send a new request
    through the repository being retired.
+   Terminal WebSockets also retain OpenCode's authoritative stream cursor from
+   binary control frames and send it on reconnect, preventing the server's PTY
+   replay from duplicating accessible transcript content after Android wake.
 6. **Persistent MCP setup:** the Library now has a native remote/local MCP form
    that writes either the selected project's config or the server-wide config.
    It validates URLs, commands, headers, environment variables, and timeouts;

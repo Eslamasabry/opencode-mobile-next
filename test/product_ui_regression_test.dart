@@ -103,6 +103,9 @@ class _MemoryChannel implements TerminalChannel {
   Stream<String> get output => controller.stream;
 
   @override
+  int? get cursor => null;
+
+  @override
   void write(String value) => writes.add(value);
 
   @override
@@ -128,7 +131,7 @@ class _TerminalRepository extends _LocationRepository {
   int resizeCalls = 0;
 
   @override
-  Future<TerminalChannel> connectTerminal(String id) async {
+  Future<TerminalChannel> connectTerminal(String id, {int? cursor}) async {
     final channel = _MemoryChannel();
     channels.add(channel);
     return channel;

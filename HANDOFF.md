@@ -378,6 +378,21 @@ and all three project-health requests. Final-tree Flutter analysis is clean and
 all 298 tests pass serially. The generated SDK audit remains at 69 directly used
 operations. Traycer remains explicitly deferred.
 
+The interactive terminal is now verified end to end against OpenCode `1.18.23`.
+The release-mode Pixel 6 build created a real `/bin/bash` PTY, obtained the
+guarded single-use WebSocket ticket, rendered its prompt, sent commands, received
+output, and reconnected after Android background/wake. That run exposed a real
+resume defect: each fresh socket replayed OpenCode's complete PTY screen and the
+accessible transcript appended it again, duplicating every prior command and
+result after each wake. The client now consumes OpenCode's NUL-prefixed cursor
+metadata, retains the authoritative stream position, and supplies `cursor` on
+replacement WebSocket connections just like the upstream web terminal. Manual
+reconnect and background/wake both delivered only missed output, with each proof
+command/output pair retaining its original count instead of multiplying. The
+disposable PTY, local server, reverse route, and test signing configuration were
+removed. Device logs contained no fatal exception, RenderFlex, overflow, OOM, or
+ANR. Final-tree Flutter analysis is clean and all 313 tests pass serially.
+
 Library now includes a native persistent MCP setup flow for remote URLs and
 server-local commands. Users explicitly choose the current project or all
 projects; the form validates transport fields and writes through generated
