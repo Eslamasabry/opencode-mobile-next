@@ -2,7 +2,10 @@ part of '../library_screen.dart';
 
 class SkillsScreen extends StatefulWidget {
   final ConnectionController controller;
-  const SkillsScreen({super.key, required this.controller});
+
+  /// Embedded mode renders the body only, for the Commands & tools tabs.
+  final bool embedded;
+  const SkillsScreen({super.key, required this.controller, this.embedded = false});
 
   @override
   State<SkillsScreen> createState() => _SkillsScreenState();
@@ -33,9 +36,11 @@ class _SkillsScreenState extends State<SkillsScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Skills')),
-    body: _skills == null && _error == null
+  Widget build(BuildContext context) => widget.embedded
+      ? _body()
+      : Scaffold(appBar: AppBar(title: const Text('Skills')), body: _body());
+
+  Widget _body() => _skills == null && _error == null
         ? const LoadingList()
         : _error != null && _skills == null
         ? ProductErrorState(message: _error!, onRetry: _load)
@@ -69,8 +74,7 @@ class _SkillsScreenState extends State<SkillsScreen> {
                 );
               },
             ),
-          ),
-  );
+          );
 
   void _showSkill(SkillInfo skill) {
     showModalBottomSheet<void>(

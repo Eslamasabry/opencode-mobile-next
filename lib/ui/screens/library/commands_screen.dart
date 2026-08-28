@@ -2,7 +2,14 @@ part of '../library_screen.dart';
 
 class CommandsScreen extends StatefulWidget {
   final ConnectionController controller;
-  const CommandsScreen({super.key, required this.controller});
+
+  /// Embedded mode renders the body only, for the Commands & tools tabs.
+  final bool embedded;
+  const CommandsScreen({
+    super.key,
+    required this.controller,
+    this.embedded = false,
+  });
 
   @override
   State<CommandsScreen> createState() => _CommandsScreenState();
@@ -41,9 +48,7 @@ class _CommandsScreenState extends State<CommandsScreen> {
           command.name.toLowerCase().contains(query) ||
           (command.description ?? '').toLowerCase().contains(query);
     }).toList();
-    return Scaffold(
-      appBar: AppBar(title: const Text('Server commands')),
-      body: _commands == null && _error == null
+    final body = _commands == null && _error == null
           ? const LoadingList()
           : _error != null && _commands == null
           ? ProductErrorState(message: _error!, onRetry: _load)
@@ -99,7 +104,11 @@ class _CommandsScreenState extends State<CommandsScreen> {
                         ),
                 ),
               ],
-            ),
+            );
+    if (widget.embedded) return body;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Server commands')),
+      body: body,
     );
   }
 

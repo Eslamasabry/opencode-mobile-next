@@ -256,8 +256,12 @@ void main() {
       _app(Scaffold(body: LibraryScreen(controller: controller))),
     );
 
-    expect(find.text('Tools and capabilities'), findsOneWidget);
-    await tester.tap(find.text('Tools and capabilities'));
+    // Tools now lives inside the tabbed Commands & tools destination.
+    expect(find.text('Commands & tools'), findsOneWidget);
+    await tester.tap(find.text('Commands & tools'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(Tab, 'Tools'));
     await tester.pumpAndSettle();
 
     expect(find.byType(ToolsScreen), findsOneWidget);

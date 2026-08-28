@@ -14,7 +14,15 @@ class ToolsScreen extends StatefulWidget {
   final ConnectionController controller;
   final ModelRef? initialModel;
 
-  const ToolsScreen({super.key, required this.controller, this.initialModel});
+  /// Embedded mode renders the body only, for the Commands & tools tabs.
+  final bool embedded;
+
+  const ToolsScreen({
+    super.key,
+    required this.controller,
+    this.initialModel,
+    this.embedded = false,
+  });
 
   @override
   State<ToolsScreen> createState() => _ToolsScreenState();
@@ -105,6 +113,8 @@ class _ToolsScreenState extends State<ToolsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final body = _model == null ? _noModel() : _body();
+    if (widget.embedded) return body;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Tools and capabilities'),
@@ -116,7 +126,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
           ),
         ],
       ),
-      body: _model == null ? _noModel() : _body(),
+      body: body,
     );
   }
 
@@ -164,6 +174,12 @@ class _ToolsScreenState extends State<ToolsScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
+                if (widget.embedded)
+                  IconButton(
+                    tooltip: 'Refresh tools',
+                    onPressed: _load,
+                    icon: const Icon(Icons.refresh_rounded),
+                  ),
                 TextButton(
                   onPressed: _chooseModel,
                   child: const Text('Change'),

@@ -4,10 +4,14 @@ class ReferencesScreen extends StatefulWidget {
   final ConnectionController controller;
   final ValueChanged<ReferenceInfo>? onSelected;
 
+  /// Embedded mode renders the body only, for the Commands & tools tabs.
+  final bool embedded;
+
   const ReferencesScreen({
     super.key,
     required this.controller,
     this.onSelected,
+    this.embedded = false,
   });
 
   @override
@@ -39,9 +43,14 @@ class _ReferencesScreenState extends State<ReferencesScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('References')),
-    body: _references == null && _error == null
+  Widget build(BuildContext context) => widget.embedded
+      ? _body()
+      : Scaffold(
+          appBar: AppBar(title: const Text('References')),
+          body: _body(),
+        );
+
+  Widget _body() => _references == null && _error == null
         ? const LoadingList()
         : _error != null && _references == null
         ? ProductErrorState(message: _error!, onRetry: _load)
@@ -83,8 +92,7 @@ class _ReferencesScreenState extends State<ReferencesScreen> {
                 );
               },
             ),
-          ),
-  );
+          );
 
   Future<void> _useReference(ReferenceInfo reference) async {
     final onSelected = widget.onSelected;

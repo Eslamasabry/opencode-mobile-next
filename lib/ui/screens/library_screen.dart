@@ -13,10 +13,10 @@ import '../widgets/file_preview.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/product_states.dart';
 import '../widgets/pickers.dart';
+import 'capabilities_screen.dart';
 import 'mcp_setup_screen.dart';
 import 'requests_screen.dart';
 import 'settings_screen.dart';
-import 'tools_screen.dart';
 
 part 'library/catalog_screen.dart';
 part 'library/integrations_screen.dart';
@@ -40,80 +40,60 @@ class LibraryScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
           children: [
             _ActiveSetupCard(controller: controller),
-            const SectionLabel('Configure'),
-            _DestinationGroup(
-              tiles: [
-                _DestinationTile(
+            const SectionLabel('Library'),
+            _DestinationGrid(
+              cards: [
+                _DestinationCard(
                   icon: Icons.model_training_outlined,
-                  title: 'Models and agents',
-                  subtitle:
-                      'Availability, capabilities, variants, and selection',
+                  title: 'Models & agents',
                   onTap: () =>
                       _open(context, CatalogScreen(controller: controller)),
                 ),
-                _DestinationTile(
-                  icon: Icons.hub_outlined,
-                  title: 'MCP and integrations',
-                  subtitle: 'Connection status, authentication, and resources',
+                _DestinationCard(
+                  icon: Icons.cloud_outlined,
+                  title: 'Providers',
                   onTap: () => _open(
                     context,
-                    IntegrationsScreen(controller: controller),
+                    IntegrationsScreen(
+                      controller: controller,
+                      mode: IntegrationsMode.providers,
+                    ),
+                  ),
+                ),
+                _DestinationCard(
+                  icon: Icons.hub_outlined,
+                  title: 'MCP',
+                  onTap: () => _open(
+                    context,
+                    IntegrationsScreen(
+                      controller: controller,
+                      mode: IntegrationsMode.mcp,
+                    ),
+                  ),
+                ),
+                _DestinationCard(
+                  icon: Icons.build_circle_outlined,
+                  title: 'Commands & tools',
+                  onTap: () => _open(
+                    context,
+                    CapabilitiesScreen(controller: controller),
                   ),
                 ),
               ],
             ),
-            const SectionLabel('Discover'),
-            _DestinationGroup(
-              tiles: [
-                _DestinationTile(
-                  icon: Icons.electric_bolt_outlined,
-                  title: 'Server commands',
-                  subtitle:
-                      'Configured commands, MCP prompts, and slash-capable skills',
-                  onTap: () =>
-                      _open(context, CommandsScreen(controller: controller)),
-                ),
-                _DestinationTile(
-                  icon: Icons.build_circle_outlined,
-                  title: 'Tools and capabilities',
-                  subtitle: 'Callable tools for the active provider and model',
-                  onTap: () =>
-                      _open(context, ToolsScreen(controller: controller)),
-                ),
-                _DestinationTile(
-                  icon: Icons.extension_outlined,
-                  title: 'Skills',
-                  subtitle: 'Inspect available project and global skills',
-                  onTap: () =>
-                      _open(context, SkillsScreen(controller: controller)),
-                ),
-                _DestinationTile(
-                  icon: Icons.bookmarks_outlined,
-                  title: 'References',
-                  subtitle: 'Project context available to OpenCode',
-                  onTap: () =>
-                      _open(context, ReferencesScreen(controller: controller)),
-                ),
-              ],
-            ),
             const SectionLabel('Manage'),
-            _DestinationGroup(
-              tiles: [
-                _DestinationTile(
+            _DestinationGrid(
+              cards: [
+                _DestinationCard(
                   icon: Icons.notifications_active_outlined,
-                  title: 'Pending requests',
-                  subtitle: pending == 0
-                      ? 'Nothing needs attention'
-                      : '$pending awaiting response',
+                  title: 'Requests',
                   badge: pending == 0 ? null : '$pending',
                   onTap: () =>
                       _open(context, RequestsScreen(controller: controller)),
                 ),
-                _DestinationTile(
+                _DestinationCard(
                   icon: Icons.settings_outlined,
-                  title: 'Settings and server',
-                  subtitle:
-                      'Connection, health, version, and experimental features',
+                  title: 'Settings',
                   onTap: () =>
                       _open(context, SettingsScreen(controller: controller)),
                 ),
@@ -171,25 +151,80 @@ class _ActiveSetupCard extends StatelessWidget {
   }
 }
 
-/// One rounded card per section, so More reads as grouped surfaces rather
-/// than a continuous link list.
-class _DestinationGroup extends StatelessWidget {
-  final List<Widget> tiles;
+/// A visual, icon-forward grid of destinations; columns and card height
+/// adapt to width and text scale so accessibility settings reflow instead
+/// of overflowing.
+class _DestinationGrid extends StatelessWidget {
+  final List<Widget> cards;
 
-  const _DestinationGroup({required this.tiles});
+  const _DestinationGrid({required this.cards});
 
   @override
   Widget build(BuildContext context) {
+    final scale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 2.0);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 280 ? 2 : 1;
+        return GridView(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            mainAxisExtent: 78 + 40 * scale,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+          ),
+          children: cards,
+        );
+      },
+    );
+  }
+}
+
+class _DestinationCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? badge;
+  final VoidCallback onTap;
+
+  const _DestinationCard({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+    this.badge,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
+      margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          for (var i = 0; i < tiles.length; i++) ...[
-            if (i > 0) const Divider(height: 1, indent: 64),
-            tiles[i],
-          ],
-        ],
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  _TileIcon(icon: icon),
+                  const Spacer(),
+                  if (badge != null) Badge(label: Text(badge!)),
+                ],
+              ),
+              const Spacer(),
+              Text(
+                title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleSmall,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -206,44 +241,13 @@ class _TileIcon extends StatelessWidget {
     final theme = Theme.of(context);
     final tint = color ?? theme.colorScheme.onSurfaceVariant;
     return Container(
-      width: 40,
-      height: 40,
+      width: 36,
+      height: 36,
       decoration: BoxDecoration(
         color: tint.withValues(alpha: .12),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(11),
       ),
-      child: Icon(icon, size: 22, color: tint),
+      child: Icon(icon, size: 20, color: tint),
     );
   }
 }
-
-class _DestinationTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final String? badge;
-  final VoidCallback onTap;
-
-  const _DestinationTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-    this.badge,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      minTileHeight: 68,
-      leading: _TileIcon(icon: icon),
-      title: Text(title),
-      subtitle: Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
-      trailing: badge == null
-          ? const Icon(Icons.chevron_right_rounded)
-          : Badge(label: Text(badge!)),
-      onTap: onTap,
-    );
-  }
-}
-

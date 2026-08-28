@@ -1,13 +1,20 @@
 part of '../library_screen.dart';
 
+/// Which of the two integration domains this screen shows: LLM provider
+/// connections, MCP servers and their resources, or the legacy combined
+/// surface.
+enum IntegrationsMode { providers, mcp, all }
+
 class IntegrationsScreen extends StatefulWidget {
   final ConnectionController controller;
   final Future<bool> Function(Uri destination)? authorizationLauncher;
+  final IntegrationsMode mode;
 
   const IntegrationsScreen({
     super.key,
     required this.controller,
     this.authorizationLauncher,
+    this.mode = IntegrationsMode.all,
   });
 
   @override
@@ -68,9 +75,9 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
       return;
     }
     await Future.wait([
-      _loadServers(repository),
-      _loadResources(repository),
-      _loadIntegrations(repository),
+      if (_showMcp) _loadServers(repository),
+      if (_showMcp) _loadResources(repository),
+      if (_showProviders) _loadIntegrations(repository),
     ]);
   }
 
@@ -339,18 +346,26 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     }
   }
 
+  bool get _showMcp => widget.mode != IntegrationsMode.providers;
+  bool get _showProviders => widget.mode != IntegrationsMode.mcp;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('MCP and integrations'),
+        title: Text(switch (widget.mode) {
+          IntegrationsMode.providers => 'Providers',
+          IntegrationsMode.mcp => 'MCP',
+          IntegrationsMode.all => 'MCP and integrations',
+        }),
         actions: [
-          IconButton(
-            key: const ValueKey('add-mcp-server'),
-            tooltip: 'Add MCP server',
-            onPressed: _openMcpSetup,
-            icon: const Icon(Icons.add_rounded),
-          ),
+          if (_showMcp)
+            IconButton(
+              key: const ValueKey('add-mcp-server'),
+              tooltip: 'Add MCP server',
+              onPressed: _openMcpSetup,
+              icon: const Icon(Icons.add_rounded),
+            ),
         ],
       ),
       body: RefreshIndicator(
@@ -359,6 +374,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 24),
           children: [
+            if (_showMcp) ...[
             const SectionLabel('MCP servers'),
             if (_serverError != null)
               _SectionLoadError(message: _serverError!, onRetry: _retryServers)
@@ -400,6 +416,8 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
                     onCancel: _cancelMcpAuthentication,
                   ),
               ],
+            ],
+            if (_showProviders) ...[
             const SectionLabel('Provider connections'),
             if (_pendingOAuth case final pending?)
               _PendingOAuthTile(
@@ -432,6 +450,8 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
                   onConnect: () => _connectIntegration(presented.integration),
                   onDisconnect: () => _disconnectIntegration(presented),
                 ),
+            ],
+            if (_showMcp) ...[
             const SectionLabel('Available resources'),
             if (_resourceError != null)
               _SectionLoadError(
@@ -457,6 +477,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+            ],
           ],
         ),
       ),
