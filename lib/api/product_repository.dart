@@ -809,6 +809,18 @@ abstract class ProductRepository {
   }) => Future.error(
     const ProductException('Workspace warp is unavailable on this server'),
   );
+
+  /// Asks the server to start its sync loops for workspaces in the current
+  /// project that have active sessions. Returns the server's own boolean.
+  Future<bool> startWorkspaceSync() => Future.error(
+    const ProductException('Workspace sync is unavailable on this server'),
+  );
+
+  /// Reassigns [sessionID] to the currently selected workspace through the
+  /// server's sync event system and returns the server-confirmed session ID.
+  Future<String> stealSessionIntoWorkspace(String sessionID) => Future.error(
+    const ProductException('Session steal is unavailable on this server'),
+  );
   Future<List<ConsoleOrganization>> listConsoleOrganizations() => Future.error(
     const ProductException(
       'Organization switching is unavailable on this server',
@@ -1476,6 +1488,33 @@ class SdkProductRepository
       ),
     );
   });
+
+  @override
+  Future<bool> startWorkspaceSync() =>
+      // The detail-preserving guard: sync failures carry OpenCode's own
+      // message when the server declares one.
+      _guardWorktree('Could not start workspace sync', () async {
+        final response = await _client.getSyncApi().syncStart(
+          directory: _directory,
+          workspace: _workspace,
+        );
+        return response.data == true;
+      });
+
+  @override
+  Future<String> stealSessionIntoWorkspace(String sessionID) =>
+      _guardWorktree('Could not steal the session into this workspace', () async {
+        final response = await _client.getSyncApi().syncSteal(
+          directory: _directory,
+          workspace: _workspace,
+          syncStealRequest: sdk.SyncStealRequest(sessionID: sessionID),
+        );
+        final stolen = response.data;
+        if (stolen == null) {
+          throw const ProductException('Server confirmed no stolen session');
+        }
+        return stolen.sessionID;
+      });
 
   @override
   Future<List<ConsoleOrganization>> listConsoleOrganizations() =>
