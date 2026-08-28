@@ -336,6 +336,9 @@ void main() {
     scopedStreams.single.emitStatus(StreamStatus.connected);
     globalStreams.single.emitStatus(StreamStatus.disconnected);
     expect(controller.status, StreamStatus.connected);
+    final worktreeEvent = controller.events.firstWhere(
+      (event) => event.type == 'worktree.ready',
+    );
 
     globalStreams.single.emit(
       EventEnvelope(
@@ -354,6 +357,20 @@ void main() {
       ),
     );
     expect(controller.availableServerVersion, '1.19.0');
+
+    globalStreams.single.emit(
+      EventEnvelope(
+        type: 'worktree.ready',
+        directory: '/data/worktree/project-1/mobile-review',
+        project: 'project-1',
+        properties: const {
+          'name': 'mobile-review',
+          'branch': 'opencode/mobile-review',
+        },
+      ),
+    );
+    final forwarded = await worktreeEvent;
+    expect(forwarded.directory, '/data/worktree/project-1/mobile-review');
 
     controller.dispose();
     expect(scopedStreams.single.disposed, isTrue);
@@ -388,7 +405,9 @@ void main() {
   ) async {
     final payload = utf8.encode(
       'data: ${jsonEncode({
-        'directory': 'global',
+        'directory': '/work/app',
+        'project': 'project-1',
+        'workspace': 'workspace-1',
         'payload': {
           'type': 'installation.update-available',
           'properties': {'version': '1.19.0'},
@@ -411,6 +430,9 @@ void main() {
     expect(events, hasLength(1));
     expect(events.single.type, 'installation.update-available');
     expect(events.single.properties['version'], '1.19.0');
+    expect(events.single.directory, '/work/app');
+    expect(events.single.project, 'project-1');
+    expect(events.single.workspace, 'workspace-1');
     await stream.dispose();
     api.close();
   });

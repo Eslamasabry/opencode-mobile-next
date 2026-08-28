@@ -61,6 +61,18 @@ class WorkspaceInfo {
   });
 }
 
+class WorktreeInfo {
+  final String name;
+  final String directory;
+  final String? branch;
+
+  const WorktreeInfo({
+    required this.name,
+    required this.directory,
+    this.branch,
+  });
+}
+
 class ProjectDirectoryInfo {
   final String directory;
   final String? strategy;
@@ -658,6 +670,34 @@ abstract class ProductRepository {
     ),
   );
   Future<List<WorkspaceProject>> listProjects();
+  Future<List<WorktreeInfo>> listWorktrees({
+    required String projectDirectory,
+    String? projectID,
+  }) => Future.error(
+    const ProductException('Worktree management is unavailable on this server'),
+  );
+  Future<WorktreeInfo> createWorktree({
+    required String projectDirectory,
+    String? name,
+  }) => Future.error(
+    const ProductException('Worktree management is unavailable on this server'),
+  );
+  Future<List<VersionControlFile>> listWorktreeFileStatuses(String directory) =>
+      Future.error(
+        const ProductException('Worktree status is unavailable on this server'),
+      );
+  Future<void> resetWorktree({
+    required String projectDirectory,
+    required String directory,
+  }) => Future.error(
+    const ProductException('Worktree management is unavailable on this server'),
+  );
+  Future<void> removeWorktree({
+    required String projectDirectory,
+    required String directory,
+  }) => Future.error(
+    const ProductException('Worktree management is unavailable on this server'),
+  );
   Future<List<WorkspaceInfo>> listWorkspaces();
   Future<List<GlobalSessionResult>> listGlobalSessions({
     String? search,
@@ -929,6 +969,141 @@ class SdkProductRepository
             )
             .toList();
       });
+
+  @override
+  Future<List<WorktreeInfo>> listWorktrees({
+    required String projectDirectory,
+    String? projectID,
+  }) => _guardWorktree('Could not load worktrees', () async {
+    final root = _requiredWorktreeDirectory(projectDirectory, 'project');
+    final response = await _client.getExperimentalApi().worktreeList(
+      directory: root,
+      workspace: _workspace,
+    );
+    var directories = response.data ?? const <String>[];
+    final exactProjectID = projectID?.trim();
+    if (directories.isNotEmpty && exactProjectID?.isNotEmpty == true) {
+      try {
+        final discovered = await _client.getProjectApi().projectDirectories(
+          projectID: exactProjectID!,
+          directory: root,
+          workspace: _workspace,
+        );
+        final canonicalDirectories = (discovered.data ?? const [])
+            .where((item) => item.strategy == 'git_worktree')
+            .map((item) => item.directory)
+            .toList(growable: false);
+        final resolved = <String>[];
+        final seen = <String>{};
+        for (final directory in directories) {
+          final basename = _basename(directory);
+          final matching = canonicalDirectories
+              .where((candidate) => _basename(candidate) == basename)
+              .toList(growable: false);
+          final resolvedDirectory = matching.length == 1
+              ? matching.single
+              : directory;
+          if (seen.add(resolvedDirectory)) {
+            resolved.add(resolvedDirectory);
+          }
+        }
+        directories = resolved;
+      } catch (_) {
+        // Older servers expose only worktree.list. Keep that authoritative
+        // existence list when project directory discovery is unavailable.
+      }
+    }
+    return directories
+        .where((directory) => directory.trim().isNotEmpty)
+        .map(
+          (directory) =>
+              WorktreeInfo(name: _basename(directory), directory: directory),
+        )
+        .toList(growable: false);
+  });
+
+  @override
+  Future<WorktreeInfo> createWorktree({
+    required String projectDirectory,
+    String? name,
+  }) => _guardWorktree('Could not create worktree', () async {
+    final root = _requiredWorktreeDirectory(projectDirectory, 'project');
+    final trimmedName = name?.trim();
+    final response = await _client.getExperimentalApi().worktreeCreate(
+      directory: root,
+      workspace: _workspace,
+      worktreeCreateInput: sdk.WorktreeCreateInput(
+        name: trimmedName?.isNotEmpty == true ? trimmedName : null,
+      ),
+    );
+    final worktree = response.data;
+    if (worktree == null || worktree.directory.trim().isEmpty) {
+      throw const ProductException('OpenCode returned an invalid worktree');
+    }
+    return WorktreeInfo(
+      name: worktree.name,
+      directory: worktree.directory,
+      branch: worktree.branch,
+    );
+  });
+
+  @override
+  Future<List<VersionControlFile>> listWorktreeFileStatuses(String directory) =>
+      _guard('Could not inspect worktree changes', () async {
+        final target = _requiredWorktreeDirectory(directory, 'worktree');
+        final response = await _client.getInstanceApi().vcsStatus(
+          directory: target,
+          workspace: _workspace,
+        );
+        return (response.data ?? const [])
+            .map(
+              (file) => VersionControlFile(
+                path: file.file,
+                status: file.status.value.toString(),
+                additions: file.additions.toInt(),
+                deletions: file.deletions.toInt(),
+              ),
+            )
+            .toList(growable: false);
+      });
+
+  @override
+  Future<void> resetWorktree({
+    required String projectDirectory,
+    required String directory,
+  }) => _guardWorktree('Could not reset worktree', () async {
+    final root = _requiredWorktreeDirectory(projectDirectory, 'project');
+    final target = _requiredSandboxDirectory(root, directory);
+    final response = await _client.getExperimentalApi().worktreeReset(
+      directory: root,
+      workspace: _workspace,
+      worktreeResetInput: sdk.WorktreeResetInput(directory: target),
+    );
+    if (response.data != true) {
+      throw const ProductException(
+        'OpenCode did not confirm the worktree reset',
+      );
+    }
+  });
+
+  @override
+  Future<void> removeWorktree({
+    required String projectDirectory,
+    required String directory,
+  }) => _guardWorktree('Could not remove worktree', () async {
+    final root = _requiredWorktreeDirectory(projectDirectory, 'project');
+    final target = _requiredSandboxDirectory(root, directory);
+    final response = await _client.getExperimentalApi().worktreeRemove(
+      directory: root,
+      workspace: _workspace,
+      worktreeRemoveInput: sdk.WorktreeRemoveInput(directory: target),
+    );
+    if (response.data != true) {
+      throw const ProductException(
+        'OpenCode did not confirm the worktree removal',
+      );
+    }
+  });
 
   @override
   Future<List<WorkspaceInfo>> listWorkspaces() =>
@@ -2174,6 +2349,58 @@ class SdkProductRepository
       status: (data['status'] ?? 'unknown').toString(),
       error: data['error']?.toString(),
     );
+  }
+
+  static String _requiredWorktreeDirectory(String value, String label) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      throw ProductException('Select a valid $label directory');
+    }
+    return trimmed;
+  }
+
+  static String _requiredSandboxDirectory(String root, String value) {
+    final target = _requiredWorktreeDirectory(value, 'worktree');
+    if (target == root) {
+      throw const ProductException(
+        'The primary project directory cannot be reset or removed',
+      );
+    }
+    return target;
+  }
+
+  static Future<T> _guardWorktree<T>(
+    String message,
+    Future<T> Function() action,
+  ) async {
+    try {
+      return await action();
+    } on ProductException {
+      rethrow;
+    } on sdk.OpenCodeApiException catch (error) {
+      final detail = _deepErrorMessage(error.rawPayload);
+      if (detail?.isNotEmpty == true) throw ProductException(detail!);
+      throw ProductException(message, cause: error);
+    } catch (error) {
+      throw ProductException(message, cause: error);
+    }
+  }
+
+  static String? _deepErrorMessage(Object? value) {
+    if (value is Map) {
+      final direct = value['message']?.toString().trim();
+      if (direct?.isNotEmpty == true) return direct;
+      for (final nested in value.values) {
+        final found = _deepErrorMessage(nested);
+        if (found != null) return found;
+      }
+    } else if (value is List) {
+      for (final nested in value) {
+        final found = _deepErrorMessage(nested);
+        if (found != null) return found;
+      }
+    }
+    return null;
   }
 
   static Future<T> _guard<T>(

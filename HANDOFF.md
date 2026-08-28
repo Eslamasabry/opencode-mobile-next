@@ -105,6 +105,36 @@ retry, installed-versus-running state, and a 320dp/2x-text confirmation dialog.
 The temporary signing properties were removed; this APK was not published or
 distributed. The generated SDK audit now counts 88 directly used operations.
 
+Native Worktrees is now a complete phone workflow under Workspace. It uses the
+generated OpenCode `worktree.list`, `worktree.create`, `worktree.reset`, and
+`worktree.remove` operations, waits on the global `worktree.ready` /
+`worktree.failed` events, and can open an isolated location without duplicating
+the old horizontal worktree strip. Reset first inspects the exact target and
+warns that tracked, untracked, ignored, and submodule changes can be discarded.
+Remove first inspects the exact target, requires its name to be typed, explains
+that chats remain while the directory and branch are deleted, and switches back
+to the primary project before deleting the active worktree. The primary project
+cannot be reset or removed from this surface.
+
+OpenCode `1.18.23` was exercised end to end on a release-mode Pixel 6: create
+`proof-mobile`, receive ready, open it, make the active worktree dirty, and
+remove it after the typed confirmation. The final pass also exposed stale
+OpenCode project-directory metadata after Git had deleted the worktree. The app
+now treats `worktree.list` as existence truth and uses project metadata only to
+reconcile path aliases, so deleted worktrees cannot reappear as ghost rows.
+The corrected APK showed zero worktrees after deletion, and Android logged no
+fatal exception, ANR, RenderFlex overflow, or OOM. The disposable repository was
+moved to trash and the emulator was returned to `oc_app`.
+
+Final-tree evidence for this slice: Flutter analysis is clean and all 416 app
+tests pass; all four generated-SDK integrity verifiers pass for 188 operations;
+all 46 SDK tests and SDK analysis pass; the compiled SDK smoke binary runs; and
+Android `lintRelease` passes. The generated SDK audit now counts 92 directly
+used operations. The locally test-signed release APK is `161449043` bytes with
+SHA-256 `6d25e04152232f5872b81ca4268d4246d55fe6c9c14ad5f183d1addebb844ebe`.
+Temporary signing properties were removed, and this APK was not published or
+distributed.
+
 A live release-mode Pixel 6 check against OpenCode `1.18.23` also found and fixed
 a location-integrity defect: mounting Workspace could overwrite a directory
 selected from the global session finder with the server project root. Workspace

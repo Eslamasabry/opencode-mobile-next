@@ -136,10 +136,10 @@ class EventStream {
         try {
           final json = jsonDecode(payload);
           if (_isCurrent(generation) && json is Map<String, dynamic>) {
-            final event = global ? json['payload'] : json;
-            if (event is Map) {
-              onEvent(EventEnvelope.fromJson(Map<String, dynamic>.from(event)));
-            }
+            final event = global
+                ? EventEnvelope.fromGlobalJson(json)
+                : EventEnvelope.fromJson(json);
+            if (event.type.isNotEmpty) onEvent(event);
           }
         } catch (_) {
           // Malformed frame - skip it rather than killing the stream.

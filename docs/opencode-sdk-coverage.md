@@ -9,7 +9,7 @@ Authoritative inputs:
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app
-currently calls **88 generated operations directly**. It also uses a set of
+currently calls **92 generated operations directly**. It also uses a set of
 older or compatibility routes through `OpenCodeApi` and raw `Dio`; those are
 listed separately so a working feature is not incorrectly labelled missing.
 
@@ -28,7 +28,7 @@ Legend:
 | Control plane | `experimentalControlPlaneMoveSession` | - | - |
 | Event | - | `eventSubscribe` through the shared `/event` SSE transport | Generated event transport is unused |
 | Events v2 | - | Some v2-shaped events are reduced from the legacy stream | `v2EventSubscribe` |
-| Experimental | `experimentalResourceList`, global session list, Console org list/switch | - | capabilities, console state, background sessions, tool IDs/list, worktree create/list/remove/reset |
+| Experimental | `experimentalResourceList`, global session list, Console org list/switch, worktree create/list/remove/reset | - | capabilities, console state, background sessions, tool IDs/list |
 | File | list, read, filename search, text search, `findSymbols` | - | `status` is declared but its OpenCode 1.18.23 handler is a stub that always returns an empty list |
 | Filesystem v2 | - | - | `v2FsFind`, `v2FsList`, `v2FsRead` |
 | Global | `globalConfigGet`, `globalConfigUpdate`, `globalUpgrade` | health, update events through the shared SSE runtime | dispose |
@@ -237,13 +237,28 @@ Legend:
    health or `server.connected` response proves that process is actually
    running it. Servers without an update event keep the external command path,
    and managed loopback Termux profiles keep their safer native setup flow.
-15. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
-   worktree lifecycle are deliberately not the current implementation lane.
+15. **Native worktree lifecycle:** Workspace now opens one flat, phone-first
+   Worktrees surface for the selected Git project. Create uses the generated
+   `worktree.create` contract and retains its returned name, branch, and exact
+   directory while OpenCode prepares files and startup tasks. A separate
+   lifecycle-owned global event stream forwards only matching
+   `worktree.ready`/`worktree.failed` truth, including the outer directory and
+   project identity; it cannot mutate chat state or connection health.
+   Listing still calls generated `worktree.list`, then prefers Git-derived
+   `project.directories` entries when available so stale sandbox aliases from
+   older OpenCode metadata do not become duplicate rows. Reset and remove first
+   verify generated VCS status. Reset explicitly warns that tracked, untracked,
+   ignored, and submodule changes will be destroyed. Remove requires the exact
+   worktree name and switches an active worktree to the primary directory before
+   deleting its directory and branch. The primary directory is never offered a
+   destructive action. Older servers keep a scoped unsupported-state error.
+16. **Deferred by owner:** agent/session trees and a Traycer-style task cockpit
+   remain outside the current implementation lane.
 
 ## Deliberate non-goals
 
 The TUI control API should not be mirrored button-for-button. Mobile should own
 its native navigation, pickers, prompts, and notifications. Arbitrary global
-config mutation, sync takeover, raw patch apply, and destructive worktree
-operations also stay hidden until they have precise
-confirmation, recovery, and version-compatibility contracts.
+config mutation, sync takeover, and raw patch apply remain hidden. Destructive
+worktree operations are exposed only through the guarded native lifecycle
+above; they are not generic command shortcuts.

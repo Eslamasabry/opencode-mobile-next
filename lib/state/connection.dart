@@ -883,7 +883,9 @@ class ConnectionController extends ChangeNotifier {
       onEvent: (event) {
         if (!_isCurrentGlobalStream(generation, currentApi, stream)) return;
         if (event.type == 'installation.update-available' ||
-            event.type == 'installation.updated') {
+            event.type == 'installation.updated' ||
+            event.type == 'worktree.ready' ||
+            event.type == 'worktree.failed') {
           _onEvent(event);
         }
       },

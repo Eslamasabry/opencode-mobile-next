@@ -9,6 +9,7 @@ import '../../state/connection.dart';
 import '../widgets/product_states.dart';
 import 'global_sessions_screen.dart';
 import 'project_health_screen.dart';
+import 'worktrees_screen.dart';
 
 class WorkspaceScreen extends StatefulWidget {
   final ConnectionController controller;
@@ -171,16 +172,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     await _loadWorkspaces();
   }
 
-  Future<void> _selectWorktree(String directory) async {
-    setState(() {
-      _selectedDirectory = directory;
-      _selectedWorkspaceID = null;
-      _workspaces = const [];
-    });
-    await widget.controller.selectLocation(directory: directory);
-    await _loadWorkspaces();
-  }
-
   Future<void> _selectWorkspace(WorkspaceInfo? workspace) async {
     setState(() => _selectedWorkspaceID = workspace?.id);
     await widget.controller.selectLocation(
@@ -280,28 +271,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    if ((_selectedProject?.worktrees.isNotEmpty ?? false)) ...[
-                      const SectionLabel('Worktree'),
-                      SizedBox(
-                        height: 52,
-                        child: ListView.separated(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          scrollDirection: Axis.horizontal,
-                          itemCount: _selectedProject!.worktrees.length + 1,
-                          separatorBuilder: (_, _) => const SizedBox(width: 8),
-                          itemBuilder: (context, index) {
-                            final directory = index == 0
-                                ? _selectedProject!.directory
-                                : _selectedProject!.worktrees[index - 1];
-                            return ChoiceChip(
-                              label: Text(_basename(directory)),
-                              selected: directory == _selectedDirectory,
-                              onSelected: (_) => _selectWorktree(directory),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
                     if (_workspaces.isNotEmpty) ...[
                       const SectionLabel('Workspace'),
                       SizedBox(
@@ -343,6 +312,16 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                         ),
                       ),
                     const SectionLabel('Coding'),
+                    ListTile(
+                      key: const ValueKey('worktrees-entry'),
+                      leading: const Icon(Icons.call_split_rounded),
+                      title: const Text('Worktrees'),
+                      subtitle: const Text(
+                        'Create and manage isolated Git branches',
+                      ),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: _selectedProject == null ? null : _openWorktrees,
+                    ),
                     ListTile(
                       key: const ValueKey('project-health-entry'),
                       leading: const Icon(Icons.monitor_heart_outlined),
@@ -470,6 +449,18 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _openWorktrees() async {
+    final project = _selectedProject;
+    if (project == null) return;
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) =>
+            WorktreesScreen(controller: widget.controller, project: project),
+      ),
+    );
+    if (mounted) await _load();
   }
 
   Future<void> _sessionAction(String action, Session session) async {

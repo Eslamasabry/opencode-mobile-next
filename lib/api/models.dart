@@ -795,7 +795,17 @@ class FileDiff {
 class EventEnvelope {
   final String type;
   final Map<String, dynamic> properties;
-  EventEnvelope({required this.type, this.properties = const {}});
+  final String? directory;
+  final String? project;
+  final String? workspace;
+
+  EventEnvelope({
+    required this.type,
+    this.properties = const {},
+    this.directory,
+    this.project,
+    this.workspace,
+  });
 
   factory EventEnvelope.fromJson(Map<String, dynamic> j) => EventEnvelope(
     type: (j['type'] ?? '').toString(),
@@ -803,6 +813,20 @@ class EventEnvelope {
         ? j['properties'] as Map<String, dynamic>
         : const {},
   );
+
+  factory EventEnvelope.fromGlobalJson(Map<String, dynamic> j) {
+    final payload = j['payload'];
+    final event = payload is Map
+        ? EventEnvelope.fromJson(Map<String, dynamic>.from(payload))
+        : EventEnvelope(type: '');
+    return EventEnvelope(
+      type: event.type,
+      properties: event.properties,
+      directory: j['directory']?.toString(),
+      project: j['project']?.toString(),
+      workspace: j['workspace']?.toString(),
+    );
+  }
 }
 
 class PermissionTool {

@@ -210,6 +210,220 @@ void main() {
   });
 
   test(
+    'worktree lifecycle uses the primary project context and exact bodies',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        final requests = <({String method, Uri uri, String body})>[];
+        server.listen((request) async {
+          final body = await utf8.decoder.bind(request).join();
+          requests.add((method: request.method, uri: request.uri, body: body));
+          request.response.headers.contentType = ContentType.json;
+          if (request.uri.path == '/vcs/status') {
+            request.response.write(
+              jsonEncode([
+                {
+                  'file': 'lib/main.dart',
+                  'status': 'modified',
+                  'additions': 4,
+                  'deletions': 1,
+                },
+              ]),
+            );
+          } else if (request.uri.path == '/project/project-1/directories') {
+            request.response.write(
+              jsonEncode([
+                {
+                  'directory': '/data/worktree/project-1/mobile-review',
+                  'strategy': 'git_worktree',
+                },
+                {'directory': '/work/app'},
+              ]),
+            );
+          } else if (request.method == 'GET') {
+            request.response.write(
+              jsonEncode([
+                '/stale/alias/mobile-review',
+                '/data/worktree/project-1/mobile-review',
+              ]),
+            );
+          } else if (request.method == 'POST' &&
+              request.uri.path == '/experimental/worktree') {
+            request.response.write(
+              jsonEncode({
+                'name': 'mobile-review',
+                'branch': 'opencode/mobile-review',
+                'directory': '/data/worktree/project-1/mobile-review',
+              }),
+            );
+          } else {
+            request.response.write('true');
+          }
+          await request.response.close();
+        });
+
+        try {
+          final api = OpenCodeApi(
+            baseUrl: 'http://${server.address.host}:${server.port}',
+          );
+          final repository = SdkProductRepository(api.sdkClient)
+            ..setLocation(
+              directory: '/data/worktree/project-1/selected',
+              workspace: 'phone',
+            );
+
+          final listed = await repository.listWorktrees(
+            projectDirectory: '/work/app',
+            projectID: 'project-1',
+          );
+          final created = await repository.createWorktree(
+            projectDirectory: '/work/app',
+            name: '  mobile review  ',
+          );
+          final statuses = await repository.listWorktreeFileStatuses(
+            created.directory,
+          );
+          await repository.resetWorktree(
+            projectDirectory: '/work/app',
+            directory: created.directory,
+          );
+          await repository.removeWorktree(
+            projectDirectory: '/work/app',
+            directory: created.directory,
+          );
+
+          expect(listed.single.name, 'mobile-review');
+          expect(created.branch, 'opencode/mobile-review');
+          expect(statuses.single.path, 'lib/main.dart');
+          expect(requests.map((request) => request.method), [
+            'GET',
+            'GET',
+            'POST',
+            'GET',
+            'POST',
+            'DELETE',
+          ]);
+          expect(requests.map((request) => request.uri.path), [
+            '/experimental/worktree',
+            '/project/project-1/directories',
+            '/experimental/worktree',
+            '/vcs/status',
+            '/experimental/worktree/reset',
+            '/experimental/worktree',
+          ]);
+          for (final request in [
+            requests[0],
+            requests[1],
+            requests[2],
+            requests[4],
+            requests[5],
+          ]) {
+            expect(request.uri.queryParameters, {
+              'directory': '/work/app',
+              'workspace': 'phone',
+            });
+          }
+          expect(requests[3].uri.queryParameters, {
+            'directory': '/data/worktree/project-1/mobile-review',
+            'workspace': 'phone',
+          });
+          expect(jsonDecode(requests[2].body), {'name': 'mobile review'});
+          expect(jsonDecode(requests[4].body), {
+            'directory': '/data/worktree/project-1/mobile-review',
+          });
+          expect(jsonDecode(requests[5].body), {
+            'directory': '/data/worktree/project-1/mobile-review',
+          });
+        } finally {
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
+
+  test(
+    'stale project directory metadata cannot resurrect a worktree',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        server.listen((request) async {
+          request.response.headers.contentType = ContentType.json;
+          if (request.uri.path == '/experimental/worktree') {
+            request.response.write('[]');
+          } else if (request.uri.path == '/project/project-1/directories') {
+            request.response.write(
+              jsonEncode([
+                {
+                  'directory': '/stale/worktree/mobile-review',
+                  'strategy': 'git_worktree',
+                },
+              ]),
+            );
+          } else {
+            request.response.statusCode = HttpStatus.notFound;
+          }
+          await request.response.close();
+        });
+
+        try {
+          final api = OpenCodeApi(
+            baseUrl: 'http://${server.address.host}:${server.port}',
+          );
+          final repository = SdkProductRepository(api.sdkClient);
+
+          final listed = await repository.listWorktrees(
+            projectDirectory: '/work/app',
+            projectID: 'project-1',
+          );
+
+          expect(listed, isEmpty);
+        } finally {
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
+
+  test('worktree errors surface the typed OpenCode message', () async {
+    await HttpOverrides.runZoned(() async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      server.listen((request) async {
+        request.response.statusCode = HttpStatus.badRequest;
+        request.response.headers.contentType = ContentType.json;
+        request.response.write(
+          jsonEncode({
+            'name': 'WorktreeNotGitError',
+            'data': {
+              'message': 'Worktrees are only supported for git projects',
+            },
+          }),
+        );
+        await request.response.close();
+      });
+
+      try {
+        final api = OpenCodeApi(
+          baseUrl: 'http://${server.address.host}:${server.port}',
+        );
+        final repository = SdkProductRepository(api.sdkClient);
+
+        await expectLater(
+          repository.listWorktrees(projectDirectory: '/work/plain'),
+          throwsA(
+            isA<ProductException>().having(
+              (error) => error.message,
+              'message',
+              'Worktrees are only supported for git projects',
+            ),
+          ),
+        );
+      } finally {
+        await server.close(force: true);
+      }
+    }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+  });
+
+  test(
     'global session finder uses generated server search and cursor contract',
     () async {
       await HttpOverrides.runZoned(() async {
