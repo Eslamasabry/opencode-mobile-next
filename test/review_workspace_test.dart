@@ -313,4 +313,50 @@ void main() {
     expect(find.text('Ask about file'), findsOneWidget);
     expect(find.text('Copy patch'), findsOneWidget);
   });
+
+  testWidgets('viewed progress counts files whose diff was opened', (
+    tester,
+  ) async {
+    final diffs = [
+      FileDiff.fromJson({
+        'file': 'lib/a.dart',
+        'patch': '@@ -1 +1 @@\n-a\n+A',
+        'additions': 1,
+        'deletions': 1,
+        'status': 'modified',
+      }),
+      FileDiff.fromJson({
+        'file': 'lib/b.dart',
+        'patch': '@@ -1 +1 @@\n-b\n+B',
+        'additions': 1,
+        'deletions': 1,
+        'status': 'modified',
+      }),
+      FileDiff.fromJson({
+        'file': 'lib/c.dart',
+        'patch': '@@ -1 +1 @@\n-c\n+C',
+        'additions': 1,
+        'deletions': 1,
+        'status': 'modified',
+      }),
+    ];
+
+    await _pumpReview(tester, () async => diffs);
+
+    // The initially opened file already counts as viewed.
+    expect(
+      find.byKey(const ValueKey('review-viewed-progress')),
+      findsOneWidget,
+    );
+    expect(find.text('1 of 3 viewed'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('review-file-1')));
+    await tester.pumpAndSettle();
+    expect(find.text('2 of 3 viewed'), findsOneWidget);
+
+    // Re-opening an already viewed file does not double count.
+    await tester.tap(find.byKey(const Key('review-file-0')));
+    await tester.pumpAndSettle();
+    expect(find.text('2 of 3 viewed'), findsOneWidget);
+  });
 }

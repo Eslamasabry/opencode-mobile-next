@@ -646,7 +646,7 @@ class _FilesScreenState extends State<FilesScreen> {
                   ? Icons.folder_rounded
                   : change?.status == 'deleted'
                   ? Icons.remove_circle_outline_rounded
-                  : Icons.description_outlined,
+                  : _fileTypeIcon(node.name),
               size: 20,
               color: node.isDir
                   ? theme.colorScheme.primary
@@ -693,6 +693,53 @@ class _FilesScreenState extends State<FilesScreen> {
         },
       ),
     );
+  }
+
+  /// Type-aware glyphs so a directory scans by kind, matching the developer
+  /// file browsers cited in docs/design-inspiration.md.
+  static IconData _fileTypeIcon(String name) {
+    final dot = name.lastIndexOf('.');
+    final ext = dot < 0 ? '' : name.substring(dot + 1).toLowerCase();
+    return switch (ext) {
+      'dart' ||
+      'js' ||
+      'ts' ||
+      'tsx' ||
+      'jsx' ||
+      'py' ||
+      'go' ||
+      'rs' ||
+      'kt' ||
+      'java' ||
+      'swift' ||
+      'c' ||
+      'cc' ||
+      'cpp' ||
+      'h' ||
+      'cs' ||
+      'rb' ||
+      'php' ||
+      'sh' => Icons.code_rounded,
+      'png' ||
+      'jpg' ||
+      'jpeg' ||
+      'gif' ||
+      'webp' ||
+      'svg' ||
+      'ico' => Icons.image_outlined,
+      'md' || 'txt' || 'rst' || 'pdf' => Icons.article_outlined,
+      'json' ||
+      'yaml' ||
+      'yml' ||
+      'toml' ||
+      'xml' ||
+      'ini' ||
+      'lock' ||
+      'gradle' ||
+      'properties' => Icons.data_object_rounded,
+      'zip' || 'tar' || 'gz' || 'jar' || 'apk' => Icons.folder_zip_outlined,
+      _ => Icons.description_outlined,
+    };
   }
 
   List<FileNode> _displayEntries() {
