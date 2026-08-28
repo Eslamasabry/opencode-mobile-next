@@ -9,6 +9,7 @@ import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
+import 'package:opencode_mobile/ui/screens/global_sessions_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeOpenCodeApi extends OpenCodeApi {
@@ -1263,6 +1264,24 @@ void main() {
     expect(find.text('chat.dart'), findsOneWidget);
     expect(find.text('+7'), findsOneWidget);
     expect(find.text('-2'), findsOneWidget);
+  });
+
+  testWidgets('sessions command opens the all-project native finder', (
+    tester,
+  ) async {
+    await _pumpChat(tester, _FakeOpenCodeApi());
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'sessions',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('command-mobile-sessions')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(GlobalSessionsScreen), findsOneWidget);
+    expect(find.text('All sessions'), findsOneWidget);
   });
 
   testWidgets('themes command opens the native appearance picker', (

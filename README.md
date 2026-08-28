@@ -17,6 +17,8 @@ is also bundled under **Settings > Privacy and data use**.
   connects — automatically
 - Live SSE event stream (`/event`) with reconnect + backoff, polling fallback
 - Chats: create/rename/delete sessions, streaming responses, optimistic send, abort
+- All-project session finder with server-side title search, archived inclusion,
+  cursor pagination, and exact location switching
 - Rich rendering: markdown, fenced code blocks w/ copy, reasoning blocks,
   tool-call cards with expandable input/output
 - Permission requests surfaced as dialogs (allow once / always / reject)

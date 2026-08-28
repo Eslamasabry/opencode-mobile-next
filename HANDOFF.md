@@ -486,6 +486,31 @@ Shorebird Dart patch. Native release Kotlin compilation succeeded, final-tree
 Flutter analysis is clean, and all 323 tests pass serially. Traycer remains
 explicitly deferred.
 
+Session discovery is now global without introducing Traycer or an agent/task
+tree. Workspace and `/sessions` open one flat native finder backed by generated
+`experimental.session.list`. Server-side title search spans every OpenCode
+project, `roots=true` keeps child sessions out, archived sessions are an explicit
+filter, and older results load through the server cursor. Opening a result first
+switches to its exact directory/workspace, then hydrates the existing chat. The
+finder also re-queries through the replacement post-wake repository while
+preserving its search and archived-filter state.
+
+Live OpenCode `1.18.23` verification used two temporary projects and proved root
+filtering, server-side search, archived exclusion/inclusion, cross-project
+navigation, and wake reconciliation. A root session created externally while the
+release-mode Pixel 6 app was backgrounded appeared immediately after resume next
+to the archived search result. Both rows exposed real semantic tap actions, and
+opening the result caused OpenCode to load the exact other project directory.
+Device logs contained no fatal exception, ANR, OOM, RenderFlex, or overflow.
+Exact HTTP coverage also proves that no active directory/workspace leaks into the
+global query. Pagination, compact 320dp/2x-text layout, error/empty states, and
+replacement-repository behavior have widget regressions. The locally test-signed
+161,120,523-byte APK is verification-only and was not published. Final-tree
+Flutter analysis is clean, all 375 app tests and 46 generated-SDK tests pass, all
+four independent SDK verifiers pass, Android release lint succeeds, and the
+generated SDK audit now counts 85 directly used operations. Traycer remains
+explicitly deferred.
+
 `tool/smoke_test.dart` now makes this server evidence stronger and safer. It
 accepts explicit directory/workspace scope, verifies health, session lifecycle,
 provider/agent catalogs, a model-free shell plus hydrated output, files/search,

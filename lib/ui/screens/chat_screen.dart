@@ -21,6 +21,7 @@ import '../widgets/markdown.dart';
 import '../widgets/pickers.dart';
 import '../widgets/tool_card.dart';
 import 'files_screen.dart';
+import 'global_sessions_screen.dart';
 import 'home_screen.dart';
 import 'library_screen.dart';
 import 'review_workspace.dart';
@@ -1765,7 +1766,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         slash: 'sessions',
         aliases: const ['resume', 'continue'],
         title: 'Sessions',
-        description: 'Open recent and active sessions',
+        description: 'Find sessions across every OpenCode project',
         group: 'Navigate',
         action: _ChatCommandAction.sessions,
       ),
@@ -2067,6 +2068,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         }
         return;
       case _ChatCommandAction.sessions:
+        if (mounted) {
+          await Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => GlobalSessionsScreen(controller: _conn),
+            ),
+          );
+        }
+        return;
       case _ChatCommandAction.workspaces:
         if (mounted) {
           await Navigator.of(context).push(

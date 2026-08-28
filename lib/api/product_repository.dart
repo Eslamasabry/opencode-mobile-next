@@ -59,6 +59,18 @@ class ProjectDirectoryInfo {
   const ProjectDirectoryInfo({required this.directory, this.strategy});
 }
 
+class GlobalSessionResult {
+  final Session session;
+  final String? projectName;
+  final String? projectDirectory;
+
+  const GlobalSessionResult({
+    required this.session,
+    this.projectName,
+    this.projectDirectory,
+  });
+}
+
 class ConsoleOrganization {
   final String accountID;
   final String accountEmail;
@@ -621,6 +633,16 @@ abstract class ProductRepository {
   void setLocation({String? directory, String? workspace});
   Future<List<WorkspaceProject>> listProjects();
   Future<List<WorkspaceInfo>> listWorkspaces();
+  Future<List<GlobalSessionResult>> listGlobalSessions({
+    String? search,
+    bool includeArchived = false,
+    int? cursor,
+    int limit = 50,
+  }) => Future.error(
+    const ProductException(
+      'All-project session search is unavailable on this server',
+    ),
+  );
   Future<List<ProjectDirectoryInfo>> listProjectDirectories(String projectID) =>
       Future.error(
         const ProductException(
@@ -852,6 +874,50 @@ class SdkProductRepository
             )
             .toList();
       });
+
+  @override
+  Future<List<GlobalSessionResult>> listGlobalSessions({
+    String? search,
+    bool includeArchived = false,
+    int? cursor,
+    int limit = 50,
+  }) => _guard('Could not search sessions', () async {
+    final query = search?.trim();
+    // Deliberately omit the repository's selected directory/workspace. This
+    // endpoint is the server-wide finder; passing the active directory would
+    // silently reduce it to the list the Workspace screen already has.
+    final response = await _client.getExperimentalApi().experimentalSessionList(
+      roots: sdk.OpencodeSdkRawUnion050(true),
+      cursor: cursor,
+      search: query?.isNotEmpty == true ? query : null,
+      limit: limit,
+      archived: sdk.OpencodeSdkRawUnion051(includeArchived),
+    );
+    return (response.data ?? const [])
+        .map(
+          (item) => GlobalSessionResult(
+            session: Session(
+              id: item.id,
+              title: item.title,
+              projectID: item.projectID,
+              workspaceID: item.workspaceID,
+              parentID: item.parentID,
+              directory: item.directory,
+              path: item.path,
+              reverted: item.revert != null,
+              shareUrl: item.share?.url,
+              time: SessionTime(
+                created: item.time.created,
+                updated: item.time.updated,
+                archived: item.time.archived?.toInt(),
+              ),
+            ),
+            projectName: item.project?.name,
+            projectDirectory: item.project?.worktree,
+          ),
+        )
+        .toList();
+  });
 
   @override
   Future<List<ProjectDirectoryInfo>> listProjectDirectories(String projectID) =>

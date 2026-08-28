@@ -9,7 +9,7 @@ Authoritative inputs:
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app
-currently calls **84 generated operations directly**. It also uses a set of
+currently calls **85 generated operations directly**. It also uses a set of
 older or compatibility routes through `OpenCodeApi` and raw `Dio`; those are
 listed separately so a working feature is not incorrectly labelled missing.
 
@@ -28,7 +28,7 @@ Legend:
 | Control plane | `experimentalControlPlaneMoveSession` | - | - |
 | Event | - | `eventSubscribe` through the shared `/event` SSE transport | Generated event transport is unused |
 | Events v2 | - | Some v2-shaped events are reduced from the legacy stream | `v2EventSubscribe` |
-| Experimental | `experimentalResourceList`, Console org list/switch | - | capabilities, console state, background sessions, global session list, tool IDs/list, worktree create/list/remove/reset |
+| Experimental | `experimentalResourceList`, global session list, Console org list/switch | - | capabilities, console state, background sessions, tool IDs/list, worktree create/list/remove/reset |
 | File | list, read, filename search, text search, `findSymbols` | - | `status` is declared but its OpenCode 1.18.23 handler is a stub that always returns an empty list |
 | Filesystem v2 | - | - | `v2FsFind`, `v2FsList`, `v2FsRead` |
 | Global | `globalConfigGet`, `globalConfigUpdate` | health | dispose, event, upgrade |
@@ -200,7 +200,18 @@ Legend:
    tool, and variant metadata from that connected-provider payload. If an older
    server cannot satisfy the strict v2 envelope, the controller keeps its
    existing basic provider/agent catalog instead of clearing the selector.
-12. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
+12. **All-project session finder:** Workspace and `/sessions` now open a native
+   root-session finder backed by `experimental.session.list`. Title search runs
+   on the OpenCode server across every project rather than filtering only the
+   selected location. Results are cursor-paginated, archived sessions are an
+   explicit opt-in, and child/subagent sessions stay out of this navigation
+   surface. Opening a result switches to its exact directory/workspace before
+   hydrating the chat. The finder re-queries through the replacement repository
+   after Android wake, while unsupported older servers keep the error scoped to
+   this screen. Live OpenCode `1.18.23` proved root filtering, search, archive
+   inclusion, cross-location opening, and an external session appearing after
+   background/resume.
+13. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
    worktree lifecycle are deliberately not the current implementation lane.
 
 ## Deliberate non-goals

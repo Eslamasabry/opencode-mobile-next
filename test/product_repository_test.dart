@@ -210,6 +210,81 @@ void main() {
   });
 
   test(
+    'global session finder uses generated server search and cursor contract',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        Uri? requestUri;
+        server.listen((request) async {
+          requestUri = request.uri;
+          request.response.headers.contentType = ContentType.json;
+          request.response.write(
+            jsonEncode([
+              {
+                'id': 'ses_global_1',
+                'slug': 'brisk-river',
+                'projectID': 'project-2',
+                'workspaceID': 'workspace-2',
+                'directory': '/work/second',
+                'path': 'packages/mobile',
+                'title': 'Repair Android wake cycle',
+                'version': '1.18.23',
+                'share': {'url': 'https://example.test/share/1'},
+                'time': {
+                  'created': 1700000000000,
+                  'updated': 1700000003000,
+                  'archived': 1700000004000,
+                },
+                'project': {
+                  'id': 'project-2',
+                  'name': 'Second project',
+                  'worktree': '/work/second',
+                },
+              },
+            ]),
+          );
+          await request.response.close();
+        });
+
+        try {
+          final api = OpenCodeApi(
+            baseUrl: 'http://${server.address.host}:${server.port}',
+          );
+          final repository = SdkProductRepository(api.sdkClient)
+            ..setLocation(directory: '/work/current', workspace: 'current');
+
+          final results = await repository.listGlobalSessions(
+            search: '  wake  ',
+            includeArchived: true,
+            cursor: 1700000005000,
+            limit: 37,
+          );
+
+          expect(requestUri?.path, '/experimental/session');
+          expect(requestUri?.queryParameters, {
+            'roots': 'true',
+            'cursor': '1700000005000',
+            'search': 'wake',
+            'limit': '37',
+            'archived': 'true',
+          });
+          final result = results.single;
+          expect(result.session.id, 'ses_global_1');
+          expect(result.session.workspaceID, 'workspace-2');
+          expect(result.session.directory, '/work/second');
+          expect(result.session.path, 'packages/mobile');
+          expect(result.session.archived, isTrue);
+          expect(result.session.shareUrl, 'https://example.test/share/1');
+          expect(result.projectName, 'Second project');
+          expect(result.projectDirectory, '/work/second');
+        } finally {
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
+
+  test(
     'saved permissions use the current project and exact generated routes',
     () async {
       await HttpOverrides.runZoned(() async {

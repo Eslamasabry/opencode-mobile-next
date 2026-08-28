@@ -218,6 +218,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('project-health-entry')), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('search-all-sessions')),
+      160,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.byKey(const ValueKey('search-all-sessions')), findsOneWidget);
     await tester.ensureVisible(
       find.byKey(const ValueKey('project-health-entry')),
     );

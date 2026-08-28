@@ -7,6 +7,7 @@ import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
+import 'global_sessions_screen.dart';
 import 'project_health_screen.dart';
 
 class WorkspaceScreen extends StatefulWidget {
@@ -316,10 +317,21 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               SliverToBoxAdapter(
                 child: SectionLabel(
                   'Recent sessions',
-                  trailing: IconButton(
-                    tooltip: 'Refresh sessions',
-                    onPressed: widget.controller.refreshSessions,
-                    icon: const Icon(Icons.refresh_rounded, size: 19),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        key: const ValueKey('search-all-sessions'),
+                        tooltip: 'Search all sessions',
+                        onPressed: _openAllSessions,
+                        icon: const Icon(Icons.manage_search_rounded, size: 21),
+                      ),
+                      IconButton(
+                        tooltip: 'Refresh sessions',
+                        onPressed: widget.controller.refreshSessions,
+                        icon: const Icon(Icons.refresh_rounded, size: 19),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -382,6 +394,12 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   void _openSession(Session session) {
     Navigator.of(context).pushNamed('/chat/${session.id}');
   }
+
+  Future<void> _openAllSessions() => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => GlobalSessionsScreen(controller: widget.controller),
+    ),
+  );
 
   Future<void> _openProjectHealth() async {
     final repository = await widget.controller.prepareActionRepository();

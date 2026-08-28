@@ -15,7 +15,7 @@ The mobile launcher combines these sources. Client actions are explicitly mapped
 
 | Command | Aliases | OpenCode behavior | Mobile mapping |
 | --- | --- | --- | --- |
-| `/sessions` | `/resume`, `/continue` | Switch session | Native: open Workspace session list |
+| `/sessions` | `/resume`, `/continue` | Switch session | Native: search root sessions across all projects with server-side title filtering, cursor pagination, and optional archived results |
 | `/new` | `/clear` | New session | Native: create and open a session |
 | `/workspaces` | — | Manage experimental workspaces | Adapted: project, directory, and worktree screen |
 | `/models` | `/mo` | Switch model | Native: unified server-backed model picker |
@@ -85,6 +85,7 @@ Selecting a dynamic command inserts it into the composer so arguments can be edi
 - Group contiguous tool calls without nested cards; merge contiguous reasoning and assistant text
 - Answer permission and question requests, inspect todos, and stop active generations
 - Browse projects, workspaces, sessions, archived sessions, files, and persistent PTYs
+- Search root sessions across every project and open the exact session location
 - Reconcile chats, files, workspaces, terminals, requests, and catalogs after wake
 - Opt into foreground live-session mode and receive Shorebird update status
 - Update the app-managed local OpenCode server from Settings
