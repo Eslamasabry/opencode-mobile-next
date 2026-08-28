@@ -3154,6 +3154,22 @@ void main() {
     expect(find.byKey(const ValueKey('composer-context-meter')), findsNothing);
   });
 
+  testWidgets('Ctrl+Enter sends the drafted prompt', (tester) async {
+    final api = _FakeOpenCodeApi();
+    await _pumpChat(tester, api);
+
+    await tester.enterText(find.byKey(const Key('chat-composer-field')), 'go');
+    await tester.pump();
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await _pumpEvent(tester);
+
+    expect(api.promptCalls, 1);
+    expect(api.prompts.single.text, 'go');
+  });
+
   testWidgets('session sheets fit a 320dp phone at 2x text', (tester) async {
     await tester.binding.setSurfaceSize(const Size(320, 640));
     addTearDown(() => tester.binding.setSurfaceSize(null));

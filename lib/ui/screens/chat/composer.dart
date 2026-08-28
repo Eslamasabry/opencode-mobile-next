@@ -61,6 +61,10 @@ class _ChatComposer extends StatelessWidget {
   bool get _hasPrompt =>
       controller.text.trim().isNotEmpty || attachments.isNotEmpty;
 
+  void _submitFromKeyboard() {
+    if (_hasPrompt && !busy && !sending) onSend();
+  }
+
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
@@ -159,6 +163,7 @@ class _ChatComposer extends StatelessWidget {
           onOpenEditor: onOpenEditor,
           maxLines: 6,
           contentPadding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+          onSubmitShortcut: _submitFromKeyboard,
         ),
         _ContextMeterLine(usage: contextUsage),
         Padding(
@@ -263,6 +268,7 @@ class _ChatComposer extends StatelessWidget {
               controller: controller,
               focusNode: focusNode,
               onOpenEditor: onOpenEditor,
+              onSubmitShortcut: _submitFromKeyboard,
               maxLines: 3,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 10,
@@ -308,6 +314,7 @@ class _ComposerField extends StatelessWidget {
     required this.onOpenEditor,
     required this.maxLines,
     required this.contentPadding,
+    this.onSubmitShortcut,
   });
 
   final TextEditingController controller;
@@ -316,29 +323,46 @@ class _ComposerField extends StatelessWidget {
   final int maxLines;
   final EdgeInsets contentPadding;
 
+  /// Ctrl/Cmd+Enter sends from hardware keyboards (Android with a keyboard
+  /// attached today, desktop later) without stealing plain Enter from the
+  /// multiline field.
+  final VoidCallback? onSubmitShortcut;
+
   @override
-  Widget build(BuildContext context) => TextField(
-    key: const Key('chat-composer-field'),
-    controller: controller,
-    focusNode: focusNode,
-    minLines: 1,
-    maxLines: maxLines,
-    textCapitalization: TextCapitalization.sentences,
-    decoration: InputDecoration(
-      hintText: 'Ask OpenCode…',
-      suffixIcon: IconButton(
-        key: const Key('prompt-editor-button'),
-        tooltip: 'Open full-screen prompt editor',
-        onPressed: onOpenEditor,
-        icon: const Icon(Icons.open_in_full_rounded, size: 19),
+  Widget build(BuildContext context) {
+    final field = TextField(
+      key: const Key('chat-composer-field'),
+      controller: controller,
+      focusNode: focusNode,
+      minLines: 1,
+      maxLines: maxLines,
+      textCapitalization: TextCapitalization.sentences,
+      decoration: InputDecoration(
+        hintText: 'Ask OpenCode…',
+        suffixIcon: IconButton(
+          key: const Key('prompt-editor-button'),
+          tooltip: 'Open full-screen prompt editor',
+          onPressed: onOpenEditor,
+          icon: const Icon(Icons.open_in_full_rounded, size: 19),
+        ),
+        filled: false,
+        border: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        focusedBorder: InputBorder.none,
+        contentPadding: contentPadding,
       ),
-      filled: false,
-      border: InputBorder.none,
-      enabledBorder: InputBorder.none,
-      focusedBorder: InputBorder.none,
-      contentPadding: contentPadding,
-    ),
-  );
+    );
+    final onSubmit = onSubmitShortcut;
+    if (onSubmit == null) return field;
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.enter, control: true):
+            onSubmit,
+        const SingleActivator(LogicalKeyboardKey.enter, meta: true): onSubmit,
+      },
+      child: field,
+    );
+  }
 }
 
 class _ComposerAction extends StatelessWidget {
