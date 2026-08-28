@@ -30,6 +30,7 @@ import 'library_screen.dart';
 import 'project_health_screen.dart';
 import 'review_workspace.dart';
 import 'session_destination_sheet.dart';
+import 'session_relations_screen.dart';
 import 'settings_screen.dart';
 import 'terminal_screen.dart';
 
@@ -2409,6 +2410,46 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
+  Future<void> _showSubagents() async {
+    final target = await Navigator.of(context).push<Session>(
+      MaterialPageRoute<Session>(
+        builder: (_) => SessionRelationsScreen(
+          controller: _conn,
+          sessionID: widget.sessionID,
+        ),
+      ),
+    );
+    if (!mounted || target == null || target.id == widget.sessionID) return;
+    await _openRelatedSession(target);
+  }
+
+  Future<void> _openParentSession() async {
+    final parentID = _conn.sessionsById[widget.sessionID]?.parentID;
+    if (parentID == null) return;
+    try {
+      final repository = await _requireActionRepository();
+      final target =
+          _conn.sessionsById[parentID] ??
+          await repository.getSessionDetails(parentID);
+      if (!mounted) return;
+      await _openRelatedSession(target);
+    } catch (error) {
+      if (mounted) _showActionError(error);
+    }
+  }
+
+  Future<void> _openRelatedSession(Session target) async {
+    if (_conn.directory != target.directory ||
+        _conn.workspace != target.workspaceID) {
+      await _conn.selectLocation(
+        directory: target.directory,
+        workspace: target.workspaceID,
+      );
+      if (!mounted) return;
+    }
+    Navigator.of(context).pushReplacementNamed('/chat/${target.id}');
+  }
+
   Future<void> _showDiff() async {
     final prompt = await Navigator.of(context).push<String>(
       MaterialPageRoute<String>(
@@ -2571,6 +2612,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final session = _conn.sessionsById[widget.sessionID];
     final title = session?.title;
     final shareUrl = _shareUrl;
+    final parentID = session?.parentID;
+    final siblings = parentID == null
+        ? const <Session>[]
+        : (_conn.sessionsById.values
+              .where((candidate) => candidate.parentID == parentID)
+              .toList()
+            ..sort(
+              (a, b) => (a.time?.created ?? 0).compareTo(b.time?.created ?? 0),
+            ));
+    final siblingIndex = siblings.indexWhere(
+      (candidate) => candidate.id == widget.sessionID,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -2586,6 +2639,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               if (value == 'timeline') unawaited(_openTimeline());
               if (value == 'changes') _showDiff();
               if (value == 'todos') _showTodos();
+              if (value == 'subagents') unawaited(_showSubagents());
               if (value == 'thinking') {
                 unawaited(_runMobileCommand(_ChatCommandAction.thinking));
               }
@@ -2613,6 +2667,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 child: _SessionViewMenuItem(
                   icon: Icons.checklist_rounded,
                   label: 'Todos',
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'subagents',
+                child: _SessionViewMenuItem(
+                  icon: Icons.account_tree_outlined,
+                  label: 'Subagent sessions',
                 ),
               ),
               const PopupMenuDivider(),
@@ -2704,6 +2765,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             ConnectionStatusBanner(controller: _conn),
           if (shareUrl != null)
             _SharedSessionBanner(url: shareUrl, onStop: _stopSharing),
+          if (parentID != null)
+            _SubagentContextBanner(
+              position: siblingIndex < 0 ? null : siblingIndex + 1,
+              total: siblings.isEmpty ? null : siblings.length,
+              onParent: _openParentSession,
+              onAll: _showSubagents,
+            ),
           if (_promptError case final promptError?)
             _PromptErrorBanner(
               message: promptError,
@@ -5321,6 +5389,63 @@ class _ReasoningState extends State<_Reasoning> {
                 ),
         );
       },
+    );
+  }
+}
+
+class _SubagentContextBanner extends StatelessWidget {
+  final int? position;
+  final int? total;
+  final Future<void> Function() onParent;
+  final Future<void> Function() onAll;
+
+  const _SubagentContextBanner({
+    required this.position,
+    required this.total,
+    required this.onParent,
+    required this.onAll,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final count = position != null && total != null
+        ? '$position of $total'
+        : 'Delegated session';
+    return Material(
+      color: theme.colorScheme.surfaceContainerLow,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 16),
+        child: Row(
+          children: [
+            Icon(
+              Icons.subdirectory_arrow_right_rounded,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Subagent · $count',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium,
+              ),
+            ),
+            IconButton(
+              key: const ValueKey('subagent-parent-session'),
+              tooltip: 'Open parent session',
+              onPressed: onParent,
+              icon: const Icon(Icons.arrow_upward_rounded),
+            ),
+            IconButton(
+              key: const ValueKey('subagent-session-list'),
+              tooltip: 'Show all subagent sessions',
+              onPressed: onAll,
+              icon: const Icon(Icons.account_tree_outlined),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

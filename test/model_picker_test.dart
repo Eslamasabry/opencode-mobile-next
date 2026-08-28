@@ -147,6 +147,7 @@ Future<_RefreshCountingController> _controller() async {
       agents: [
         CatalogAgent(id: 'build', mode: 'primary', hidden: false),
         CatalogAgent(id: 'plan', mode: 'primary', hidden: false),
+        CatalogAgent(id: 'explore', mode: 'subagent', hidden: false),
       ],
     )
     ..selectedAgent = 'build'
@@ -251,6 +252,23 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(controller.selectedVariant, 'fast');
+  });
+
+  testWidgets('primary agent picker excludes subagents', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(411, 891));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(controller));
+
+    await tester.tap(find.text('Choose model'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('model-picker-agent')));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('build · primary'), findsWidgets);
+    expect(find.textContaining('plan · primary'), findsOneWidget);
+    expect(find.textContaining('explore'), findsNothing);
   });
 
   testWidgets('Z.AI aliases share a filter but retain exact backend routes', (

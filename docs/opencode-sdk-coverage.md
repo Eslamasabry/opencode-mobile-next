@@ -9,7 +9,7 @@ Authoritative inputs:
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app
-currently calls **92 generated operations directly**. It also uses a set of
+currently calls **93 generated operations directly**. It also uses a set of
 older or compatibility routes through `OpenCodeApi` and raw `Dio`; those are
 listed separately so a working feature is not incorrectly labelled missing.
 
@@ -47,7 +47,7 @@ Legend:
 | PTY | create, list, update, remove, shells, connect token | WebSocket connect uses the guarded ticket and OpenCode cursor resume | get, direct connect, and all duplicate v2 PTY operations |
 | Question | list, reply, reject | - | - |
 | Reference | `v2ReferenceList` | - | References can be copied standalone or added to the active composer as OpenCode directory parts |
-| Session | list, create, get, delete, update/rename, status, messages, todos, diff, fork, revert, unrevert, share, unshare, summarize, async prompt including synthetic location reminder, command, abort | shell | init endpoint, children, delete/update part, delete/get one message, synchronous prompt |
+| Session | list, create, get, delete, update/rename, status, messages, children, todos, diff, fork, revert, unrevert, share, unshare, summarize, async prompt including synthetic location reminder, command, abort | shell | init endpoint, delete/update part, delete/get one message, synchronous prompt |
 | Session questions v2 | global request list, session reply/reject | - | per-session list |
 | Sessions v2 | - | - | active, compact, context, create/get/list/message/prompt/history/events/wait/interrupt, model/agent switch, staged revert operations |
 | Skills | `v2SkillList` | - | Skill content uses the shared Markdown/code-aware preview with rendered and raw modes |
@@ -252,8 +252,17 @@ Legend:
    worktree name and switches an active worktree to the primary directory before
    deleting its directory and branch. The primary directory is never offered a
    destructive action. Older servers keep a scoped unsupported-state error.
-16. **Deferred by owner:** agent/session trees and a Traycer-style task cockpit
-   remain outside the current implementation lane.
+16. **Subagent session navigation:** Chat's Session views now opens a flat
+   parent/children surface backed by generated `session.children`. It keeps
+   child sessions out of the ordinary chat list while making every delegated
+   transcript reachable, including children missing from the location's cached
+   root-session list. A child transcript has a persistent parent/all-subagents
+   strip with its sibling position, so mobile does not hide the route back to
+   the main task. The primary agent selector also excludes `mode: subagent`
+   entries, matching OpenCode's own distinction between the active primary
+   agent and subagents invoked for delegated work.
+17. **Deferred by owner:** a Traycer-style task cockpit remains outside the
+   current implementation lane.
 
 ## Deliberate non-goals
 

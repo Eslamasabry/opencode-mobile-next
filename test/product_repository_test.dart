@@ -498,6 +498,75 @@ void main() {
     },
   );
 
+  test('subagent navigation uses exact generated session contracts', () async {
+    await HttpOverrides.runZoned(() async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final requests = <Uri>[];
+      Map<String, dynamic> session(
+        String id, {
+        String? parentID,
+        required int created,
+      }) => {
+        'id': id,
+        'slug': id,
+        'projectID': 'project-1',
+        'workspaceID': 'workspace-1',
+        'directory': '/work/acme',
+        'parentID': ?parentID,
+        'title': id == 'parent' ? 'Primary work' : 'Delegated $id',
+        'version': '1.18.23',
+        'time': {'created': created, 'updated': created + 1},
+      };
+
+      server.listen((request) async {
+        requests.add(request.uri);
+        request.response.headers.contentType = ContentType.json;
+        if (request.uri.path == '/session/child-2') {
+          request.response.write(
+            jsonEncode(session('child-2', parentID: 'parent', created: 30)),
+          );
+        } else if (request.uri.path == '/session/parent/children') {
+          request.response.write(
+            jsonEncode([
+              session('child-2', parentID: 'parent', created: 30),
+              session('child-1', parentID: 'parent', created: 20),
+              session('unrelated', parentID: 'other', created: 10),
+            ]),
+          );
+        } else {
+          request.response.statusCode = HttpStatus.notFound;
+        }
+        await request.response.close();
+      });
+
+      try {
+        final api = OpenCodeApi(
+          baseUrl: 'http://${server.address.host}:${server.port}',
+        );
+        final repository = SdkProductRepository(api.sdkClient)
+          ..setLocation(directory: '/work/acme', workspace: 'workspace-1');
+
+        final child = await repository.getSessionDetails('child-2');
+        final children = await repository.listSessionChildren('parent');
+
+        expect(child.parentID, 'parent');
+        expect(children.map((session) => session.id), ['child-1', 'child-2']);
+        expect(requests.map((uri) => uri.path), [
+          '/session/child-2',
+          '/session/parent/children',
+        ]);
+        for (final request in requests) {
+          expect(request.queryParameters, {
+            'directory': '/work/acme',
+            'workspace': 'workspace-1',
+          });
+        }
+      } finally {
+        await server.close(force: true);
+      }
+    }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+  });
+
   test(
     'saved permissions use the current project and exact generated routes',
     () async {

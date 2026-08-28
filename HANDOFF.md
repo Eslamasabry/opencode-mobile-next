@@ -136,6 +136,31 @@ SHA-256 `6d25e04152232f5872b81ca4268d4246d55fe6c9c14ad5f183d1addebb844ebe`.
 Temporary signing properties were removed, and this APK was not published or
 distributed.
 
+Native subagent-session navigation is now a complete phone workflow. Chat's
+Session views menu opens a flat Subagent sessions screen backed by generated
+`session.get` and `session.children` operations. It resolves the current child
+even when it is absent from the cached root list, shows its exact parent and
+chronologically ordered sibling sessions with live working state, and opens the
+selected session in its own transcript. Child chats carry a slim
+`Subagent · N of total` context strip with direct Parent and All subagents
+actions. The primary Agent picker now excludes `mode: subagent` definitions,
+matching upstream OpenCode rather than presenting agents that cannot be selected
+as the chat's primary agent.
+
+OpenCode `1.18.23` was exercised end to end on a release-mode Pixel 6 against a
+real root session with 63 children. The app opened the native 63-session list,
+opened the first child's exact persisted transcript, displayed
+`Subagent · 1 of 63`, and returned through Parent to the exact root chat. Android
+logged no fatal exception, ANR, RenderFlex overflow, or OOM. Final-tree Flutter
+analysis is clean and all 421 app tests pass; all four generated-SDK integrity
+verifiers pass for 188 operations; all 46 SDK tests and SDK analysis pass; the
+compiled SDK smoke binary runs; and Android `lintRelease` passes. The generated
+SDK audit now counts 93 directly used operations. The locally test-signed release
+APK is `161612943` bytes with SHA-256
+`4267befd8fc3ab16dce7252fee41ae446ac461fdb62cc011a1eecfbe056ddd97`.
+Temporary signing properties were removed, and this APK was not published or
+distributed.
+
 A live release-mode Pixel 6 check against OpenCode `1.18.23` also found and fixed
 a location-integrity defect: mounting Workspace could overwrite a directory
 selected from the global session finder with the server project root. Workspace

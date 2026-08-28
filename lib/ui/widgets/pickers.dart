@@ -334,7 +334,9 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
   }
 
   Widget _agentPicker(CatalogSnapshot catalog) {
-    final visible = catalog.agents.where((agent) => !agent.hidden).toList();
+    final visible = catalog.agents
+        .where((agent) => !agent.hidden && agent.mode != 'subagent')
+        .toList();
     final value =
         visible.any((agent) => agent.id == widget.controller.selectedAgent)
         ? widget.controller.selectedAgent

@@ -709,6 +709,12 @@ abstract class ProductRepository {
       'All-project session search is unavailable on this server',
     ),
   );
+  Future<Session> getSessionDetails(String id) => Future.error(
+    const ProductException('Session navigation is unavailable on this server'),
+  );
+  Future<List<Session>> listSessionChildren(String id) => Future.error(
+    const ProductException('Subagent sessions are unavailable on this server'),
+  );
   Future<List<ProjectDirectoryInfo>> listProjectDirectories(String projectID) =>
       Future.error(
         const ProductException(
@@ -1168,28 +1174,46 @@ class SdkProductRepository
     return (response.data ?? const [])
         .map(
           (item) => GlobalSessionResult(
-            session: Session(
-              id: item.id,
-              title: item.title,
-              projectID: item.projectID,
-              workspaceID: item.workspaceID,
-              parentID: item.parentID,
-              directory: item.directory,
-              path: item.path,
-              reverted: item.revert != null,
-              shareUrl: item.share?.url,
-              time: SessionTime(
-                created: item.time.created,
-                updated: item.time.updated,
-                archived: item.time.archived?.toInt(),
-              ),
-            ),
+            session: _sessionFromGlobalSdk(item),
             projectName: item.project?.name,
             projectDirectory: item.project?.worktree,
           ),
         )
         .toList();
   });
+
+  @override
+  Future<Session> getSessionDetails(String id) =>
+      _guard('Could not load this session', () async {
+        final response = await _client.getSessionApi().sessionGet(
+          sessionID: id,
+          directory: _directory,
+          workspace: _workspace,
+        );
+        final session = response.data;
+        if (session == null) {
+          throw const ProductException('OpenCode returned an invalid session');
+        }
+        return _sessionFromSdk(session);
+      });
+
+  @override
+  Future<List<Session>> listSessionChildren(String id) =>
+      _guard('Could not load subagent sessions', () async {
+        final response = await _client.getSessionApi().sessionChildren(
+          sessionID: id,
+          directory: _directory,
+          workspace: _workspace,
+        );
+        final children = (response.data ?? const [])
+            .map(_sessionFromSdk)
+            .where((session) => session.parentID == id)
+            .toList(growable: false);
+        children.sort(
+          (a, b) => (a.time?.created ?? 0).compareTo(b.time?.created ?? 0),
+        );
+        return children;
+      });
 
   @override
   Future<List<ProjectDirectoryInfo>> listProjectDirectories(String projectID) =>
@@ -2416,6 +2440,40 @@ class SdkProductRepository
     }
   }
 }
+
+Session _sessionFromSdk(sdk.Session item) => Session(
+  id: item.id,
+  title: item.title,
+  projectID: item.projectID,
+  workspaceID: item.workspaceID,
+  parentID: item.parentID,
+  directory: item.directory,
+  path: item.path,
+  reverted: item.revert != null,
+  shareUrl: item.share?.url,
+  time: SessionTime(
+    created: item.time.created,
+    updated: item.time.updated,
+    archived: item.time.archived?.toInt(),
+  ),
+);
+
+Session _sessionFromGlobalSdk(sdk.GlobalSession item) => Session(
+  id: item.id,
+  title: item.title,
+  projectID: item.projectID,
+  workspaceID: item.workspaceID,
+  parentID: item.parentID,
+  directory: item.directory,
+  path: item.path,
+  reverted: item.revert != null,
+  shareUrl: item.share?.url,
+  time: SessionTime(
+    created: item.time.created,
+    updated: item.time.updated,
+    archived: item.time.archived?.toInt(),
+  ),
+);
 
 class _IoTerminalChannel implements TerminalChannel {
   final WebSocket _socket;

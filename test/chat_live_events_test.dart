@@ -305,6 +305,20 @@ class _DestinationRepository extends _FakeProductRepository {
       const CatalogSnapshot(providers: [], models: [], agents: []);
 }
 
+class _RelationsProductRepository extends _FakeProductRepository {
+  _RelationsProductRepository(this.parent, this.children) : super(const []);
+
+  final Session parent;
+  final List<Session> children;
+
+  @override
+  Future<Session> getSessionDetails(String id) async =>
+      id == parent.id ? parent : children.singleWhere((item) => item.id == id);
+
+  @override
+  Future<List<Session>> listSessionChildren(String id) async => children;
+}
+
 Future<ConnectionController> _controller(_FakeOpenCodeApi api) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
@@ -417,6 +431,62 @@ void main() {
     });
 
     expect(info.errorText, 'The selected model is unavailable');
+  });
+
+  testWidgets('child chat exposes parent and sibling navigation', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(320, 640));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final api = _FakeOpenCodeApi();
+    final parent = Session(
+      id: 'parent',
+      title: 'Parent work',
+      directory: '/work/acme',
+      time: SessionTime(created: 1),
+    );
+    final child = Session(
+      id: 'session-1',
+      title: 'Explore mobile flow',
+      parentID: parent.id,
+      directory: '/work/acme',
+      time: SessionTime(created: 2),
+    );
+    final sibling = Session(
+      id: 'session-2',
+      title: 'Review mobile flow',
+      parentID: parent.id,
+      directory: '/work/acme',
+      time: SessionTime(created: 3),
+    );
+    final controller = await _controller(api)
+      ..directory = '/work/acme'
+      ..repository = _RelationsProductRepository(parent, [child, sibling])
+      ..sessionsById = {
+        parent.id: parent,
+        child.id: child,
+        sibling.id: sibling,
+      };
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: const MaterialApp(home: ChatScreen(sessionID: 'session-1')),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Subagent · 1 of 2'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('subagent-parent-session')),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const ValueKey('subagent-session-list')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Subagent sessions'), findsOneWidget);
+    expect(find.text('Review mobile flow'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('offline chat keeps its transcript and shows recovery actions', (
