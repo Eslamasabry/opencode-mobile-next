@@ -161,14 +161,15 @@ printf 'Certificate fingerprints:\n'
 printf '         SHA256: %s\n' "$fingerprint"
 EOF
 
-  cat >"$FIXTURE/mock-bin/apksigner" <<'EOF'
+  mkdir -p "$FIXTURE/home/Android/Sdk/build-tools/99.0.0"
+  cat >"$FIXTURE/home/Android/Sdk/build-tools/99.0.0/apksigner" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 printf 'apksigner %s\n' "$*" >>"$MOCK_COMMAND_LOG"
 printf 'Signer #1 certificate SHA-256 digest: %s\n' "${MOCK_APK_FINGERPRINT:-1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C}"
 EOF
 
-  cat >"$FIXTURE/mock-bin/aapt" <<'EOF'
+  cat >"$FIXTURE/home/Android/Sdk/build-tools/99.0.0/aapt" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 printf 'aapt %s\n' "$*" >>"$MOCK_COMMAND_LOG"
@@ -178,7 +179,8 @@ printf "package: name='%s' versionCode='%s' versionName='%s'\n" \
   "${MOCK_APK_VERSION_NAME:-1.0.12}"
 EOF
 
-  chmod +x "$FIXTURE/mock-bin/git" "$FIXTURE/mock-bin/flutter" "$FIXTURE/mock-bin/shorebird" "$FIXTURE/mock-bin/keytool" "$FIXTURE/mock-bin/apksigner" "$FIXTURE/mock-bin/aapt"
+  chmod +x "$FIXTURE/mock-bin/git" "$FIXTURE/mock-bin/flutter" "$FIXTURE/mock-bin/shorebird" "$FIXTURE/mock-bin/keytool"
+  chmod +x "$FIXTURE/home/Android/Sdk/build-tools/99.0.0/apksigner" "$FIXTURE/home/Android/Sdk/build-tools/99.0.0/aapt"
 }
 
 run_release() {
@@ -187,6 +189,8 @@ run_release() {
     env \
       HOME="$FIXTURE/home" \
       PATH="$FIXTURE/mock-bin:/usr/bin:/bin" \
+      ANDROID_HOME= \
+      ANDROID_SDK_ROOT= \
       MOCK_COMMAND_LOG="$FIXTURE/commands.log" \
       MOCK_GIT_STATUS="${MOCK_GIT_STATUS:-}" \
       MOCK_BRANCH="${MOCK_BRANCH:-master}" \

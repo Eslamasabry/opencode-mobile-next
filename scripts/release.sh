@@ -239,8 +239,17 @@ resolve_android_tool() {
     return
   fi
 
+  local local_properties_sdk=""
+  if [[ -f android/local.properties ]]; then
+    local_properties_sdk="$(read_property sdk.dir android/local.properties)"
+  fi
+
   local sdk_root candidate
-  for sdk_root in "${ANDROID_HOME:-}" "${ANDROID_SDK_ROOT:-}"; do
+  for sdk_root in \
+    "${ANDROID_HOME:-}" \
+    "${ANDROID_SDK_ROOT:-}" \
+    "$local_properties_sdk" \
+    "${HOME:-}/Android/Sdk"; do
     [[ -n "$sdk_root" && -d "$sdk_root/build-tools" ]] || continue
     candidate="$(find "$sdk_root/build-tools" -mindepth 2 -maxdepth 2 -type f -name "$tool_name" -print | sort -V | tail -n 1)"
     if [[ -n "$candidate" ]]; then
