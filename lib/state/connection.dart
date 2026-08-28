@@ -122,11 +122,13 @@ class ConnectionController extends ChangeNotifier {
   final OpenCodeApiFactory _apiFactory;
   final ProductRepositoryFactory _repositoryFactory;
   final EventStreamFactory _eventStreamFactory;
+  final EventStreamFactory? _globalEventStreamFactory;
   final LocalWakeLockEnsurer _localWakeLockEnsurer;
 
   OpenCodeApi? api;
   ProductRepository? repository;
   EventStream? _events;
+  EventStream? _globalEvents;
   Timer? _poll;
   Future<void>? _busyStatusRefresh;
   ServerProfile? _connectedProfile;
@@ -142,6 +144,8 @@ class ConnectionController extends ChangeNotifier {
 
   StreamStatus status = StreamStatus.disconnected;
   String? version;
+  String? availableServerVersion;
+  String? installedServerVersion;
   String? lastError;
 
   int connectionRevision = 0;
@@ -231,12 +235,16 @@ class ConnectionController extends ChangeNotifier {
     OpenCodeApiFactory? apiFactory,
     ProductRepositoryFactory? repositoryFactory,
     EventStreamFactory? eventStreamFactory,
+    EventStreamFactory? globalEventStreamFactory,
     BackgroundLiveController? backgroundLive,
     AppDiagnosticsController? diagnostics,
     LocalWakeLockEnsurer? localWakeLockEnsurer,
   }) : _apiFactory = apiFactory ?? _createApi,
        _repositoryFactory = repositoryFactory ?? _createRepository,
        _eventStreamFactory = eventStreamFactory ?? _createEventStream,
+       _globalEventStreamFactory =
+           globalEventStreamFactory ??
+           (eventStreamFactory == null ? _createGlobalEventStream : null),
        _localWakeLockEnsurer =
            localWakeLockEnsurer ?? TermuxBridge.ensureWakeLock,
        backgroundLive =
@@ -452,6 +460,19 @@ class ConnectionController extends ChangeNotifier {
     onError: onError,
   );
 
+  static EventStream _createGlobalEventStream({
+    required OpenCodeApi api,
+    required void Function(EventEnvelope event) onEvent,
+    required void Function(StreamStatus status) onStatus,
+    void Function(Object error)? onError,
+  }) => EventStream(
+    api: api,
+    onEvent: onEvent,
+    onStatus: onStatus,
+    onError: onError,
+    global: true,
+  );
+
   bool get isConnected => status == StreamStatus.connected && api != null;
 
   ServerProfile? get profile {
@@ -461,6 +482,22 @@ class ConnectionController extends ChangeNotifier {
       if (p.id == id) return p;
     }
     return null;
+  }
+
+  void _acceptRunningServerVersion(String? rawVersion) {
+    final next = rawVersion?.trim() ?? '';
+    if (next.isEmpty) return;
+    version = next;
+    if (availableServerVersion == next) availableServerVersion = null;
+    if (installedServerVersion == next) installedServerVersion = null;
+  }
+
+  void recordServerUpgradeInstalled(String rawVersion) {
+    final installed = rawVersion.trim();
+    if (!isExactServerVersion(installed)) return;
+    installedServerVersion = installed;
+    if (availableServerVersion == installed) availableServerVersion = null;
+    notifyListeners();
   }
 
   Future<void> connect(ServerProfile profile) async {
@@ -489,6 +526,8 @@ class ConnectionController extends ChangeNotifier {
     api = currentApi;
     repository = currentRepository;
     _connectedProfile = profile;
+    availableServerVersion = null;
+    installedServerVersion = null;
     directory = null;
     workspace = null;
     locationRevision += 1;
@@ -517,7 +556,7 @@ class ConnectionController extends ChangeNotifier {
       if (!health.healthy) {
         throw ApiException('Server health check reported unhealthy');
       }
-      version = health.version ?? '';
+      _acceptRunningServerVersion(health.version);
     } catch (e) {
       if (!_isCurrent(generation, currentApi)) return;
       _failCurrentConnection(
@@ -832,6 +871,29 @@ class ConnectionController extends ChangeNotifier {
     );
     _events = stream;
     stream.start();
+    _startGlobalEvents(generation, currentApi);
+  }
+
+  void _startGlobalEvents(int generation, OpenCodeApi currentApi) {
+    final factory = _globalEventStreamFactory;
+    if (factory == null) return;
+    late final EventStream stream;
+    stream = factory(
+      api: currentApi,
+      onEvent: (event) {
+        if (!_isCurrentGlobalStream(generation, currentApi, stream)) return;
+        if (event.type == 'installation.update-available' ||
+            event.type == 'installation.updated') {
+          _onEvent(event);
+        }
+      },
+      // The location-scoped stream owns visible connection state. A global
+      // update-notification retry must never make a healthy chat look offline.
+      onStatus: (_) {},
+      onError: (_) {},
+    );
+    _globalEvents = stream;
+    stream.start();
   }
 
   Future<void> disconnect({
@@ -846,6 +908,8 @@ class ConnectionController extends ChangeNotifier {
     _retireTransport();
     _clearLocationData();
     version = null;
+    availableServerVersion = null;
+    installedServerVersion = null;
     _connectedProfile = null;
     directory = null;
     workspace = null;
@@ -874,9 +938,23 @@ class ConnectionController extends ChangeNotifier {
       case 'server.connected':
         final v = props['version']?.toString();
         if (v != null && v.isNotEmpty) {
-          version = v;
+          _acceptRunningServerVersion(v);
           notifyListeners();
         }
+        break;
+
+      case 'installation.update-available':
+        final target = props['version']?.toString().trim() ?? '';
+        if (isExactServerVersion(target) &&
+            target != version &&
+            target != installedServerVersion) {
+          availableServerVersion = target;
+          notifyListeners();
+        }
+        break;
+
+      case 'installation.updated':
+        recordServerUpgradeInstalled(props['version']?.toString() ?? '');
         break;
 
       case 'integration.connection.updated':
@@ -1957,7 +2035,7 @@ class ConnectionController extends ChangeNotifier {
       if (!health.healthy) {
         throw ApiException('Server health check reported unhealthy');
       }
-      version = health.version ?? version ?? '';
+      _acceptRunningServerVersion(health.version ?? version);
     } catch (_) {
       if (!_isCurrent(generation, currentApi)) return;
       final profile = _connectedProfile;
@@ -2005,7 +2083,7 @@ class ConnectionController extends ChangeNotifier {
       if (!health.healthy) {
         throw ApiException('Server health check reported unhealthy');
       }
-      version = health.version ?? version ?? '';
+      _acceptRunningServerVersion(health.version ?? version);
     } catch (error) {
       if (!_isCurrent(generation, currentApi)) return;
       _failCurrentConnection(
@@ -2263,6 +2341,12 @@ class ConnectionController extends ChangeNotifier {
     EventStream stream,
   ) => _isCurrent(generation, currentApi) && identical(_events, stream);
 
+  bool _isCurrentGlobalStream(
+    int generation,
+    OpenCodeApi currentApi,
+    EventStream stream,
+  ) => _isCurrent(generation, currentApi) && identical(_globalEvents, stream);
+
   bool _isCurrentSessionsRefresh(
     int generation,
     OpenCodeApi currentApi,
@@ -2312,6 +2396,9 @@ class ConnectionController extends ChangeNotifier {
     final oldEvents = _events;
     _events = null;
     unawaited(oldEvents?.dispose());
+    final oldGlobalEvents = _globalEvents;
+    _globalEvents = null;
+    unawaited(oldGlobalEvents?.dispose());
     _poll?.cancel();
     _poll = null;
     _busyStatusRefresh = null;

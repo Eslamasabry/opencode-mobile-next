@@ -79,6 +79,32 @@ before deletion. No user session was removed. Final-tree Flutter analysis is
 clean and all 402 tests pass serially. The test-signed APK was used only on the
 emulator and was not published or distributed.
 
+Remote OpenCode updates are now a native, server-authoritative workflow rather
+than only copied shell commands. The app keeps its existing location-scoped
+`/event` stream for chat truth and owns a second lifecycle-matched
+`/global/event` stream solely for `installation.update-available` and
+`installation.updated`; other global events cannot mutate chat/session state or
+visible connection status. Settings offers generated `global.upgrade` only for
+the exact semantic version emitted by OpenCode, confirms the named server plus
+current/target versions and host-restart requirement, and sends that exact
+target. Failures remain inline and retryable. Success is labelled installed,
+not running, until later health or `server.connected` truth proves the restarted
+process is using it. Managed loopback Termux keeps its existing native updater;
+servers that emit no update continue to expose the external command fallback.
+
+The real OpenCode `1.18.23` server confirmed the `/global/event` wrapped payload
+wire shape. No upgrade request was sent to that server. A release-mode Pixel 6
+reinstall opened its existing workspace and Settings without a fatal exception,
+ANR, RenderFlex, overflow, or OOM; because that process emitted no available
+version, Settings truthfully retained the command fallback. The local emulator
+APK is `161399739` bytes with SHA-256
+`23be05c112acbae8f0e34c671cef495b0c38c288faad3c132515d085b6628458`.
+Final-tree Flutter analysis is clean and all 410 tests pass serially, including
+the real generated POST contract, dual-stream isolation/lifecycle, failure and
+retry, installed-versus-running state, and a 320dp/2x-text confirmation dialog.
+The temporary signing properties were removed; this APK was not published or
+distributed. The generated SDK audit now counts 88 directly used operations.
+
 A live release-mode Pixel 6 check against OpenCode `1.18.23` also found and fixed
 a location-integrity defect: mounting Workspace could overwrite a directory
 selected from the global session finder with the server project root. Workspace

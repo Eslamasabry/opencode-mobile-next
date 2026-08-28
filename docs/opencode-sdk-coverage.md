@@ -9,7 +9,7 @@ Authoritative inputs:
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app
-currently calls **87 generated operations directly**. It also uses a set of
+currently calls **88 generated operations directly**. It also uses a set of
 older or compatibility routes through `OpenCodeApi` and raw `Dio`; those are
 listed separately so a working feature is not incorrectly labelled missing.
 
@@ -31,7 +31,7 @@ Legend:
 | Experimental | `experimentalResourceList`, global session list, Console org list/switch | - | capabilities, console state, background sessions, tool IDs/list, worktree create/list/remove/reset |
 | File | list, read, filename search, text search, `findSymbols` | - | `status` is declared but its OpenCode 1.18.23 handler is a stub that always returns an empty list |
 | Filesystem v2 | - | - | `v2FsFind`, `v2FsList`, `v2FsRead` |
-| Global | `globalConfigGet`, `globalConfigUpdate` | health | dispose, event, upgrade |
+| Global | `globalConfigGet`, `globalConfigUpdate`, `globalUpgrade` | health, update events through the shared SSE runtime | dispose |
 | Instance | `instanceDispose`, `vcsDiff`, `vcsGet`, `vcsStatus`, `lspStatus`, `formatterStatus` | - | agents, skills, command list, path, VCS raw diff/apply |
 | Integrations | list, key connect, OAuth start, attempt status, complete, cancel | provider runtime refresh after confirmed completion | - |
 | MCP | status, connect, disconnect, auth start/callback/remove | - | runtime-only add and same-host auth authenticate |
@@ -228,7 +228,16 @@ Legend:
    Nothing is persisted or uploaded automatically. Only an explicit Send action
    posts the currently visible redacted snapshot through generated `app.log`
    with the selected directory/workspace context.
-14. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
+14. **Remote server upgrades:** Settings retains OpenCode's authoritative
+   `installation.update-available` semantic version and offers the generated
+   `global.upgrade` action only for that exact target. It confirms the server
+   profile, current and target versions, detected host-side installation, and
+   restart requirement before writing. A successful response is not mislabeled
+   as a running upgrade: the app retains the installed version until a later
+   health or `server.connected` response proves that process is actually
+   running it. Servers without an update event keep the external command path,
+   and managed loopback Termux profiles keep their safer native setup flow.
+15. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
    worktree lifecycle are deliberately not the current implementation lane.
 
 ## Deliberate non-goals

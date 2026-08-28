@@ -101,6 +101,20 @@ class _StreamApi extends OpenCodeApi {
       ),
     );
   }
+
+  @override
+  Future<Response<ResponseBody>> openGlobalEventStream({
+    CancelToken? cancelToken,
+  }) {
+    calls += 1;
+    return Future.value(
+      Response(
+        requestOptions: RequestOptions(path: '/global/event'),
+        statusCode: 200,
+        data: ResponseBody(createStream(calls), 200),
+      ),
+    );
+  }
 }
 
 class _FakeEventStream extends EventStream {
@@ -298,6 +312,54 @@ void main() {
     controller.dispose();
   });
 
+  testWidgets('global installation stream is isolated from chat state', (
+    tester,
+  ) async {
+    final api = _ControlledApi('server');
+    final scopedStreams = <_FakeEventStream>[];
+    final globalStreams = <_FakeEventStream>[];
+    final controller = ConnectionController(
+      await _store(),
+      apiFactory: (_) => api,
+      repositoryFactory: _repositoryFactory,
+      eventStreamFactory: _streamFactory(scopedStreams),
+      globalEventStreamFactory: _streamFactory(globalStreams),
+    );
+
+    final connect = controller.connect(_profile('server'));
+    await tester.pump();
+    api.healthResult.complete(Health(healthy: true, version: '1.18.23'));
+    await connect;
+
+    expect(scopedStreams, hasLength(1));
+    expect(globalStreams, hasLength(1));
+    scopedStreams.single.emitStatus(StreamStatus.connected);
+    globalStreams.single.emitStatus(StreamStatus.disconnected);
+    expect(controller.status, StreamStatus.connected);
+
+    globalStreams.single.emit(
+      EventEnvelope(
+        type: 'session.created',
+        properties: const {
+          'info': {'id': 'wrong-global-session'},
+        },
+      ),
+    );
+    expect(controller.sessionsById, isEmpty);
+
+    globalStreams.single.emit(
+      EventEnvelope(
+        type: 'installation.update-available',
+        properties: const {'version': '1.19.0'},
+      ),
+    );
+    expect(controller.availableServerVersion, '1.19.0');
+
+    controller.dispose();
+    expect(scopedStreams.single.disposed, isTrue);
+    expect(globalStreams.single.disposed, isTrue);
+  });
+
   testWidgets('disposing EventStream cancels retry and suppresses callbacks', (
     tester,
   ) async {
@@ -318,6 +380,38 @@ void main() {
 
     expect(api.calls, 1);
     expect(statuses, hasLength(statusCount));
+    api.close();
+  });
+
+  testWidgets('global event stream unwraps installation payloads', (
+    tester,
+  ) async {
+    final payload = utf8.encode(
+      'data: ${jsonEncode({
+        'directory': 'global',
+        'payload': {
+          'type': 'installation.update-available',
+          'properties': {'version': '1.19.0'},
+        },
+      })}\n\n',
+    );
+    final api = _StreamApi((_) => Stream.value(Uint8List.fromList(payload)));
+    final events = <EventEnvelope>[];
+    final stream = EventStream(
+      api: api,
+      global: true,
+      onEvent: events.add,
+      onStatus: (_) {},
+    );
+
+    stream.start();
+    await tester.pump();
+    await tester.pump();
+
+    expect(events, hasLength(1));
+    expect(events.single.type, 'installation.update-available');
+    expect(events.single.properties['version'], '1.19.0');
+    await stream.dispose();
     api.close();
   });
 
@@ -822,6 +916,50 @@ void main() {
     controller.dispose();
   });
 
+  test(
+    'installation events retain exact available and installed versions',
+    () async {
+      final controller = ConnectionController(await _store())
+        ..version = '1.18.23';
+
+      controller.handleEventForTesting(
+        EventEnvelope(
+          type: 'installation.update-available',
+          properties: const {'version': 'latest'},
+        ),
+      );
+      expect(controller.availableServerVersion, isNull);
+
+      controller.handleEventForTesting(
+        EventEnvelope(
+          type: 'installation.update-available',
+          properties: const {'version': '1.19.0'},
+        ),
+      );
+      expect(controller.availableServerVersion, '1.19.0');
+
+      controller.handleEventForTesting(
+        EventEnvelope(
+          type: 'installation.updated',
+          properties: const {'version': '1.19.0'},
+        ),
+      );
+      expect(controller.availableServerVersion, isNull);
+      expect(controller.installedServerVersion, '1.19.0');
+      expect(controller.version, '1.18.23');
+
+      controller.handleEventForTesting(
+        EventEnvelope(
+          type: 'server.connected',
+          properties: const {'version': '1.19.0'},
+        ),
+      );
+      expect(controller.version, '1.19.0');
+      expect(controller.installedServerVersion, isNull);
+      controller.dispose();
+    },
+  );
+
   testWidgets('polling runs only while SSE is unavailable', (tester) async {
     final api = _ControlledApi('poll');
     final controller = ConnectionController(await _store())..api = api;
@@ -1038,7 +1176,8 @@ void main() {
       final requests = <Uri>[];
       server.listen((request) async {
         requests.add(request.uri);
-        if (request.uri.path == '/event') {
+        if (request.uri.path == '/event' ||
+            request.uri.path == '/global/event') {
           request.response.headers.contentType = ContentType(
             'text',
             'event-stream',
@@ -1071,12 +1210,20 @@ void main() {
       try {
         final response = await api.openEventStream();
         await response.data!.stream.drain<void>();
+        final globalResponse = await api.openGlobalEventStream();
+        await globalResponse.data!.stream.drain<void>();
         await api.respondPermission('permission-1', 'once');
         await api.providers();
         await api.agents();
 
-        expect(requests, hasLength(4));
-        for (final uri in requests) {
+        expect(requests, hasLength(5));
+        final globalEvent = requests.singleWhere(
+          (uri) => uri.path == '/global/event',
+        );
+        expect(globalEvent.queryParameters, isEmpty);
+        for (final uri in requests.where(
+          (uri) => uri.path != '/global/event',
+        )) {
           expect(uri.queryParameters['directory'], '/work/acme');
           expect(uri.queryParameters['workspace'], 'workspace-1');
         }

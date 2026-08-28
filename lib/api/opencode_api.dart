@@ -114,6 +114,22 @@ class OpenCodeApi {
     );
   }
 
+  /// Opens the server-wide `/global/event` stream. Its wire envelope wraps the
+  /// actual event in `payload`, unlike the location-scoped `/event` stream.
+  Future<Response<ResponseBody>> openGlobalEventStream({
+    CancelToken? cancelToken,
+  }) {
+    return _dio.get<ResponseBody>(
+      '/global/event',
+      options: Options(
+        responseType: ResponseType.stream,
+        headers: {'Accept': 'text/event-stream'},
+        receiveTimeout: null,
+      ),
+      cancelToken: cancelToken,
+    );
+  }
+
   Future<Health> health() async {
     try {
       final r = await _dio.get('/global/health');

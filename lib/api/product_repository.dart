@@ -9,6 +9,15 @@ import 'models.dart';
 
 enum VcsDiffMode { workingTree, branch }
 
+final RegExp _exactSemanticVersion = RegExp(
+  r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)'
+  r'(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?'
+  r'(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$',
+);
+
+bool isExactServerVersion(String value) =>
+    value.isNotEmpty && _exactSemanticVersion.hasMatch(value);
+
 extension on VcsDiffMode {
   String get wireValue => switch (this) {
     VcsDiffMode.workingTree => 'git',
@@ -635,6 +644,11 @@ abstract interface class LocationAwareProductRepository {
 
 abstract class ProductRepository {
   void setLocation({String? directory, String? workspace});
+  Future<String> upgradeServer(String target) => Future.error(
+    const ProductException(
+      'Remote OpenCode upgrade is unavailable on this server',
+    ),
+  );
   Future<void> writeClientLog({
     required String message,
     Map<String, Object?> extra = const {},
@@ -799,6 +813,52 @@ class SdkProductRepository
     _workspace = workspace;
     _locationRevision++;
   }
+
+  @override
+  Future<String> upgradeServer(String target) => _guard(
+    'Could not upgrade OpenCode',
+    () async {
+      final exactTarget = target.trim();
+      if (target != exactTarget || !isExactServerVersion(exactTarget)) {
+        throw const ProductException(
+          'OpenCode supplied an invalid update version',
+        );
+      }
+      final response = await () async {
+        try {
+          return await _client.getGlobalApi().globalUpgrade(
+            globalUpgradeRequest: sdk.GlobalUpgradeRequest(target: exactTarget),
+          );
+        } on sdk.OpenCodeApiException catch (error) {
+          final payload = error.rawPayload;
+          final detail = payload is Map
+              ? payload['error']?.toString().trim()
+              : null;
+          if (detail?.isNotEmpty == true) throw ProductException(detail!);
+          rethrow;
+        }
+      }();
+      final result = response.data?.objectValue;
+      if (result == null) {
+        throw const ProductException(
+          'OpenCode returned an invalid upgrade result',
+        );
+      }
+      if (result['success'] != true) {
+        final error = result['error']?.toString().trim();
+        throw ProductException(
+          error?.isNotEmpty == true ? error! : 'OpenCode could not upgrade',
+        );
+      }
+      final installed = result['version']?.toString().trim() ?? '';
+      if (installed != exactTarget) {
+        throw const ProductException(
+          'OpenCode did not confirm the requested version',
+        );
+      }
+      return installed;
+    },
+  );
 
   @override
   Future<void> writeClientLog({

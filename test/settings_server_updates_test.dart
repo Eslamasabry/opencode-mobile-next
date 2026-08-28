@@ -51,9 +51,18 @@ class _EmptyPermissionRepository implements ProductRepository {
   int shellLoadCalls = 0;
   int shellSelectCalls = 0;
   String? selectedShell;
+  String? upgradedTarget;
+  Object? upgradeError;
 
   @override
   void setLocation({String? directory, String? workspace}) {}
+
+  @override
+  Future<String> upgradeServer(String target) async {
+    upgradedTarget = target;
+    if (upgradeError case final error?) throw error;
+    return target;
+  }
 
   @override
   Future<TerminalShellSettings> loadTerminalShellSettings() async {
@@ -169,6 +178,140 @@ void main() {
       find.textContaining('official upgrade and model-refresh commands'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('remote update event offers the exact generated upgrade', (
+    tester,
+  ) async {
+    final repository = _EmptyPermissionRepository();
+    final controller = await _controllerFor(
+      'http://100.64.0.10:4747',
+      repository: repository,
+    );
+    addTearDown(controller.dispose);
+    controller.handleEventForTesting(
+      EventEnvelope(
+        type: 'installation.update-available',
+        properties: const {'version': '1.19.0'},
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(home: SettingsScreen(controller: controller)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Update OpenCode to 1.19.0'), findsOneWidget);
+    expect(find.textContaining('Current server: 1.18.23'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('server-updates-tile')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Update remote OpenCode?'), findsOneWidget);
+    expect(
+      find.textContaining('must be restarted on its host'),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const Key('confirm-server-upgrade')));
+    await tester.pumpAndSettle();
+
+    expect(repository.upgradedTarget, '1.19.0');
+    expect(controller.availableServerVersion, isNull);
+    expect(controller.installedServerVersion, '1.19.0');
+    expect(find.text('Restart OpenCode to use 1.19.0'), findsOneWidget);
+    expect(
+      find.textContaining('Restart its server process to use it'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('failed remote upgrade remains visible and retryable', (
+    tester,
+  ) async {
+    final repository = _EmptyPermissionRepository()
+      ..upgradeError = const ProductException('Unknown installation method');
+    final controller = await _controllerFor(
+      'http://100.64.0.10:4747',
+      repository: repository,
+    );
+    addTearDown(controller.dispose);
+    controller.handleEventForTesting(
+      EventEnvelope(
+        type: 'installation.update-available',
+        properties: const {'version': '1.19.0'},
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(home: SettingsScreen(controller: controller)),
+    );
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('server-updates-tile')),
+      120,
+      scrollable: find.byType(Scrollable).first,
+    );
+    tester
+        .widget<ListTile>(find.byKey(const Key('server-updates-tile')))
+        .onTap!();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirm-server-upgrade')));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Unknown installation method'), findsOneWidget);
+    expect(controller.availableServerVersion, '1.19.0');
+    expect(controller.installedServerVersion, isNull);
+    expect(
+      tester
+          .widget<ListTile>(find.byKey(const Key('server-updates-tile')))
+          .onTap,
+      isNotNull,
+    );
+  });
+
+  testWidgets('remote update confirmation fits a compact large-text phone', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 480);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final controller = await _controllerFor(
+      'http://100.64.0.10:4747',
+      repository: _EmptyPermissionRepository(),
+    );
+    addTearDown(controller.dispose);
+    controller.handleEventForTesting(
+      EventEnvelope(
+        type: 'installation.update-available',
+        properties: const {'version': '1.19.0'},
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: const TextScaler.linear(2)),
+          child: child!,
+        ),
+        home: SettingsScreen(controller: controller),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('server-updates-tile')),
+      120,
+      scrollable: find.byType(Scrollable).first,
+    );
+    tester
+        .widget<ListTile>(find.byKey(const Key('server-updates-tile')))
+        .onTap!();
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Update remote OpenCode?'), findsOneWidget);
+    expect(find.byKey(const Key('confirm-server-upgrade')), findsOneWidget);
   });
 
   testWidgets('settings exposes current-project always allowed actions', (

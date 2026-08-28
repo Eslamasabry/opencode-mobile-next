@@ -34,11 +34,14 @@ class _SettingsScreenState extends State<SettingsScreen>
   bool _loadingShell = false;
   bool _savingShell = false;
   int _shellLoadGeneration = 0;
+  bool _upgradingServer = false;
+  String? _serverUpgradeError;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    widget.controller.addListener(_connectionChanged);
     widget.controller.backgroundLive.addListener(_backgroundChanged);
     _checkHealth();
     _loadShellSettings();
@@ -46,6 +49,10 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   void _backgroundChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _connectionChanged() {
     if (mounted) setState(() {});
   }
 
@@ -246,11 +253,131 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
+  Future<void> _showRemoteRestartNotice(String version) => showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Restart OpenCode on its host'),
+      content: Text(
+        'OpenCode $version is installed, but this server process is still '
+        'running ${widget.controller.version ?? 'the previous version'}. '
+        'Restart that process on the server host; mobile will reconnect and '
+        'confirm the running version.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Done'),
+        ),
+      ],
+    ),
+  );
+
+  Future<void> _upgradeRemoteServer(String target) async {
+    if (_upgradingServer || !isExactServerVersion(target)) return;
+    final profile = widget.controller.profile;
+    if (profile == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        scrollable: true,
+        title: const Text('Update remote OpenCode?'),
+        content: Text(
+          'Install OpenCode $target on ${profile.name} using the server\'s '
+          'detected installation method. The current process is running '
+          '${widget.controller.version ?? 'an unknown version'}.\n\n'
+          'The install keeps server data in place, but the OpenCode process '
+          'must be restarted on its host before the new version takes effect.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            key: const Key('confirm-server-upgrade'),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('Install $target'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() {
+      _upgradingServer = true;
+      _serverUpgradeError = null;
+    });
+    try {
+      final repository = await widget.controller.prepareActionRepository();
+      if (repository == null) {
+        throw const ProductException('OpenCode is reconnecting. Try again.');
+      }
+      final installed = await repository.upgradeServer(target);
+      if (!mounted) return;
+      if (widget.controller.profile?.id != profile.id) {
+        throw const ProductException(
+          'The active server changed before the upgrade completed',
+        );
+      }
+      widget.controller.recordServerUpgradeInstalled(installed);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'OpenCode $installed installed. Restart its server process to use it.',
+          ),
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    } catch (error) {
+      if (mounted) setState(() => _serverUpgradeError = error.toString());
+    } finally {
+      if (mounted) setState(() => _upgradingServer = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = widget.controller;
     final profile = controller.profile;
     final managedLocally = TermuxBridge.managesServerUrl(profile?.baseUrl);
+    final availableVersion = managedLocally
+        ? null
+        : controller.availableServerVersion;
+    final installedVersion = managedLocally
+        ? null
+        : controller.installedServerVersion;
+    late final String serverUpdateTitle;
+    late final String serverUpdateSubtitle;
+    late final IconData serverUpdateIcon;
+    VoidCallback? serverUpdateAction;
+    if (managedLocally) {
+      serverUpdateTitle = 'Update managed OpenCode';
+      serverUpdateSubtitle =
+          'Install the latest stable server, refresh models, restart safely, and reconnect.';
+      serverUpdateIcon = Icons.chevron_right_rounded;
+      serverUpdateAction = () =>
+          Navigator.of(context).pushNamed('/termux-setup');
+    } else if (installedVersion != null) {
+      serverUpdateTitle = 'Restart OpenCode to use $installedVersion';
+      serverUpdateSubtitle = _serverUpgradeError != null
+          ? '${_serverUpgradeError!} Tap to retry.'
+          : '$installedVersion is installed. The current process is still ${controller.version ?? 'the previous version'}.';
+      serverUpdateIcon = Icons.restart_alt_rounded;
+      serverUpdateAction = () => _showRemoteRestartNotice(installedVersion);
+    } else if (availableVersion != null) {
+      serverUpdateTitle = 'Update OpenCode to $availableVersion';
+      serverUpdateSubtitle = _serverUpgradeError != null
+          ? '${_serverUpgradeError!} Tap to retry.'
+          : 'Current server: ${controller.version ?? 'unknown'}. Uses OpenCode\'s official installer; host restart required.';
+      serverUpdateIcon = Icons.download_rounded;
+      serverUpdateAction = () => _upgradeRemoteServer(availableVersion);
+    } else {
+      serverUpdateTitle = 'Server updates are managed externally';
+      serverUpdateSubtitle =
+          'Copy the official upgrade and model-refresh commands to run on the server host.';
+      serverUpdateIcon = Icons.copy_rounded;
+      serverUpdateAction = _copyRemoteUpdateCommands;
+    }
     return Scaffold(
       appBar: AppBar(title: const Text('Settings and server')),
       body: ListView(
@@ -313,22 +440,15 @@ class _SettingsScreenState extends State<SettingsScreen>
           ListTile(
             key: const Key('server-updates-tile'),
             leading: const Icon(Icons.system_update_alt_rounded),
-            title: Text(
-              managedLocally
-                  ? 'Update managed OpenCode'
-                  : 'Server updates are managed externally',
-            ),
-            subtitle: Text(
-              managedLocally
-                  ? 'Install the latest stable server, refresh models, restart safely, and reconnect.'
-                  : 'Copy the official upgrade and model-refresh commands to run on the server host.',
-            ),
-            trailing: Icon(
-              managedLocally ? Icons.chevron_right_rounded : Icons.copy_rounded,
-            ),
-            onTap: managedLocally
-                ? () => Navigator.of(context).pushNamed('/termux-setup')
-                : _copyRemoteUpdateCommands,
+            title: Text(serverUpdateTitle),
+            subtitle: Text(serverUpdateSubtitle),
+            trailing: _upgradingServer
+                ? const SizedBox.square(
+                    dimension: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(serverUpdateIcon),
+            onTap: _upgradingServer ? null : serverUpdateAction,
           ),
           const SectionLabel('Background connection'),
           SwitchListTile(
@@ -552,6 +672,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   void dispose() {
     _shellLoadGeneration++;
     WidgetsBinding.instance.removeObserver(this);
+    widget.controller.removeListener(_connectionChanged);
     widget.controller.backgroundLive.removeListener(_backgroundChanged);
     super.dispose();
   }

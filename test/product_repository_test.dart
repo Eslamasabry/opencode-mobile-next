@@ -1903,6 +1903,51 @@ void main() {
     },
   );
 
+  test('server upgrade accepts only exact semantic versions', () {
+    expect(isExactServerVersion('1.19.0'), isTrue);
+    expect(isExactServerVersion('1.19.0-beta.2+mobile'), isTrue);
+    expect(isExactServerVersion('latest'), isFalse);
+    expect(isExactServerVersion('1.19'), isFalse);
+    expect(isExactServerVersion(' 1.19.0'), isFalse);
+  });
+
+  test('remote upgrade uses the generated exact-version contract', () async {
+    await HttpOverrides.runZoned(() async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      String? method;
+      Uri? uri;
+      Map<String, dynamic>? body;
+      server.listen((request) async {
+        method = request.method;
+        uri = request.uri;
+        body = Map<String, dynamic>.from(
+          jsonDecode(await utf8.decoder.bind(request).join()) as Map,
+        );
+        request.response.headers.contentType = ContentType.json;
+        request.response.write(
+          jsonEncode({'success': true, 'version': '1.19.0'}),
+        );
+        await request.response.close();
+      });
+
+      try {
+        final api = OpenCodeApi(
+          baseUrl: 'http://${server.address.host}:${server.port}',
+        );
+        final repository = SdkProductRepository(api.sdkClient)
+          ..setLocation(directory: '/work/acme', workspace: 'phone');
+
+        expect(await repository.upgradeServer('1.19.0'), '1.19.0');
+        expect(method, 'POST');
+        expect(uri?.path, '/global/upgrade');
+        expect(uri?.queryParameters, isEmpty);
+        expect(body, {'target': '1.19.0'});
+      } finally {
+        await server.close(force: true);
+      }
+    }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+  });
+
   test('client diagnostics use the generated redacted log contract', () async {
     await HttpOverrides.runZoned(() async {
       final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);

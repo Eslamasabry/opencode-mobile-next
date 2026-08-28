@@ -10,12 +10,13 @@ import 'opencode_api.dart';
 /// Connection lifecycle surfaced to the UI.
 enum StreamStatus { connecting, connected, reconnecting, disconnected }
 
-/// Server-sent events from `/event` with automatic reconnect + exponential backoff.
+/// Server-sent events with automatic reconnect + exponential backoff.
 class EventStream {
   final OpenCodeApi api;
   final void Function(EventEnvelope event) onEvent;
   final void Function(StreamStatus status) onStatus;
   final void Function(Object error)? onError;
+  final bool global;
 
   CancelToken? _cancelToken;
   StreamSubscription<Uint8List>? _subscription;
@@ -31,6 +32,7 @@ class EventStream {
     required this.onEvent,
     required this.onStatus,
     this.onError,
+    this.global = false,
   });
 
   /// After this many failed attempts we stop showing "reconnecting".
@@ -101,7 +103,9 @@ class EventStream {
       final cancelToken = CancelToken();
       requestCancelToken = cancelToken;
       _cancelToken = cancelToken;
-      final response = await api.openEventStream(cancelToken: cancelToken);
+      final response = global
+          ? await api.openGlobalEventStream(cancelToken: cancelToken)
+          : await api.openEventStream(cancelToken: cancelToken);
       if (!_isCurrent(generation)) return;
       onStatus(StreamStatus.connected);
       backoffResetTimer = Timer(_backoffResetAfter, () {
@@ -132,7 +136,10 @@ class EventStream {
         try {
           final json = jsonDecode(payload);
           if (_isCurrent(generation) && json is Map<String, dynamic>) {
-            onEvent(EventEnvelope.fromJson(json));
+            final event = global ? json['payload'] : json;
+            if (event is Map) {
+              onEvent(EventEnvelope.fromJson(Map<String, dynamic>.from(event)));
+            }
           }
         } catch (_) {
           // Malformed frame - skip it rather than killing the stream.
