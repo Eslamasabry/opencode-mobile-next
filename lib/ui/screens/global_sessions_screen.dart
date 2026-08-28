@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
+import '../widgets/confirm_sheet.dart';
 import '../widgets/product_states.dart';
 
 class GlobalSessionsScreen extends StatefulWidget {
@@ -28,6 +30,7 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
   bool _loadingMore = false;
   bool _hasMore = false;
   String? _openingSessionID;
+  String? _stealingSessionID;
   int _queryGeneration = 0;
   int _dataRefreshRevision = 0;
 
@@ -176,6 +179,57 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
     }
   }
 
+  /// True when the session lives in a different directory or workspace than
+  /// the active location, so continuing it here requires a steal.
+  bool _isElsewhere(GlobalSessionResult result) {
+    final active = widget.controller.directory?.trim() ?? '';
+    if (active.isEmpty) return false;
+    final sessionDirectory =
+        (result.session.directory ?? result.projectDirectory)?.trim() ?? '';
+    final activeWorkspace = widget.controller.workspace?.trim() ?? '';
+    final sessionWorkspace = result.session.workspaceID?.trim() ?? '';
+    if (sessionDirectory.isNotEmpty && sessionDirectory != active) return true;
+    return sessionWorkspace != activeWorkspace;
+  }
+
+  Future<void> _steal(GlobalSessionResult result) async {
+    final session = result.session;
+    if (_stealingSessionID != null || _openingSessionID != null) return;
+    final title = session.title?.trim().isNotEmpty == true
+        ? session.title!.trim()
+        : 'Untitled session';
+    final confirmed = await showConfirmSheet(
+      context,
+      icon: Icons.move_to_inbox_rounded,
+      title: 'Continue this session here?',
+      message:
+          '“$title” will belong to your current workspace through the '
+          'server’s sync system. It stops belonging to the workspace it '
+          'runs in now.',
+      confirmLabel: 'Continue here',
+    );
+    if (!confirmed || !mounted) return;
+    setState(() => _stealingSessionID = session.id);
+    try {
+      final repository = await _repository();
+      final stolenID = await repository.stealSessionIntoWorkspace(session.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('“$title” now belongs to this workspace')),
+      );
+      await Navigator.of(context).pushNamed('/chat/$stolenID');
+      if (mounted) unawaited(_reload());
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not continue the session: $error')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _stealingSessionID = null);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -320,7 +374,11 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
           return _GlobalSessionRow(
             result: _results[index],
             opening: _openingSessionID == _results[index].session.id,
+            stealing: _stealingSessionID == _results[index].session.id,
             onTap: () => _open(_results[index]),
+            onSteal: _isElsewhere(_results[index])
+                ? () => unawaited(_steal(_results[index]))
+                : null,
           );
         },
       ),
@@ -342,12 +400,18 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
 class _GlobalSessionRow extends StatelessWidget {
   final GlobalSessionResult result;
   final bool opening;
+  final bool stealing;
   final VoidCallback onTap;
+
+  /// Non-null only when the session lives outside the active location.
+  final VoidCallback? onSteal;
 
   const _GlobalSessionRow({
     required this.result,
     required this.opening,
+    this.stealing = false,
     required this.onTap,
+    this.onSteal,
   });
 
   @override
@@ -367,6 +431,10 @@ class _GlobalSessionRow extends StatelessWidget {
       button: true,
       label: 'Open $title. $details',
       onTap: opening ? null : onTap,
+      customSemanticsActions: {
+        if (onSteal != null && !opening && !stealing)
+          const CustomSemanticsAction(label: 'Continue here'): onSteal!,
+      },
       child: ExcludeSemantics(
         child: ListTile(
           key: ValueKey('global-session-${session.id}'),
@@ -383,14 +451,33 @@ class _GlobalSessionRow extends StatelessWidget {
           ),
           title: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis),
           subtitle: Text(details, maxLines: 3, overflow: TextOverflow.ellipsis),
-          trailing: opening
-              ? const SizedBox.square(
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (stealing)
+                const SizedBox.square(
                   dimension: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Icon(Icons.chevron_right_rounded),
-          enabled: !opening,
-          onTap: opening ? null : onTap,
+              else if (onSteal != null)
+                IconButton(
+                  key: ValueKey('steal-session-${session.id}'),
+                  tooltip: 'Continue here',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: opening ? null : onSteal,
+                  icon: const Icon(Icons.move_to_inbox_rounded, size: 21),
+                ),
+              if (opening)
+                const SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else
+                const Icon(Icons.chevron_right_rounded),
+            ],
+          ),
+          enabled: !opening && !stealing,
+          onTap: opening || stealing ? null : onTap,
         ),
       ),
     );

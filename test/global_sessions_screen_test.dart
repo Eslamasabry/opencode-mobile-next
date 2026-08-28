@@ -22,6 +22,16 @@ class _FinderRepository implements ProductRepository {
 
   final Future<List<GlobalSessionResult>> Function(_SessionQuery query) handler;
   final calls = <_SessionQuery>[];
+  final stealCalls = <String>[];
+  Object? stealError;
+
+  @override
+  Future<String> stealSessionIntoWorkspace(String sessionID) async {
+    stealCalls.add(sessionID);
+    final error = stealError;
+    if (error != null) throw error;
+    return sessionID;
+  }
 
   @override
   void setLocation({String? directory, String? workspace}) {}
@@ -296,6 +306,105 @@ void main() {
       findsOneWidget,
     );
     expect(find.byType(GlobalSessionsScreen), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('steal affordance appears only for sessions elsewhere', (
+    tester,
+  ) async {
+    final repository = _FinderRepository(
+      (query) async => [
+        _result(1, directory: '/work/active'),
+        _result(2, directory: '/work/other'),
+      ],
+    );
+    final controller = await _controller(repository);
+    controller.directory = '/work/active';
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('steal-session-ses_1')), findsNothing);
+    expect(find.byKey(const ValueKey('steal-session-ses_2')), findsOneWidget);
+  });
+
+  testWidgets('stealing confirms, calls the repository, and opens the chat', (
+    tester,
+  ) async {
+    final repository = _FinderRepository(
+      (query) async => [_result(2, directory: '/work/other')],
+    );
+    final controller = await _controller(repository);
+    controller.directory = '/work/active';
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      _app(
+        controller,
+        routes: {
+          '/chat/ses_2': (_) =>
+              const Scaffold(body: Text('stolen chat opened')),
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('steal-session-ses_2')));
+    await tester.pumpAndSettle();
+    expect(find.text('Continue this session here?'), findsOneWidget);
+    expect(repository.stealCalls, isEmpty);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Continue here'));
+    await tester.pumpAndSettle();
+
+    expect(repository.stealCalls, ['ses_2']);
+    expect(find.text('stolen chat opened'), findsOneWidget);
+    // Opening did not re-route through the stale stored location.
+    expect(controller.locations, isEmpty);
+  });
+
+  testWidgets('a failed steal reports inline and keeps the list', (
+    tester,
+  ) async {
+    final repository = _FinderRepository(
+      (query) async => [_result(2, directory: '/work/other')],
+    )..stealError = const ProductException('Sync is unavailable');
+    final controller = await _controller(repository);
+    controller.directory = '/work/active';
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('steal-session-ses_2')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Continue here'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('Could not continue the session'),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('global-session-ses_2')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('steal-session-ses_2')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('steal flow fits a 320dp phone at 2x text', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(320, 640));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final repository = _FinderRepository(
+      (query) async => [_result(2, directory: '/work/other')],
+    );
+    final controller = await _controller(repository);
+    controller.directory = '/work/active';
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(controller, textScale: 2));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('steal-session-ses_2')));
+    await tester.pumpAndSettle();
+    expect(find.text('Continue this session here?'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }
