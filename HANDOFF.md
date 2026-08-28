@@ -224,6 +224,32 @@ release APK is `161694863` bytes with SHA-256
 Temporary signing properties and the disposable keystore were removed; this APK
 was not published or distributed.
 
+Managed workspaces now have a complete native lifecycle instead of only a
+selector and `/warp` destination. The selected project's server-reported
+adapters and managed workspaces share one flat screen with connection status,
+refresh, adapter discovery/sync, create-and-open, direct open, and guarded
+removal. Creation sends only the exact adapter type and optional branch from the
+form; OpenCode remains responsible for adapter-specific configuration. Every
+management request is rooted explicitly to the selected local project with no
+active remote-workspace query leakage. Removing the active workspace first
+returns to Local, requires its exact server name, and warns that the adapter may
+permanently delete the environment while chat history remains.
+
+The real OpenCode `1.18.23` server reported one built-in `Worktree` adapter
+(`Create a git worktree`) and zero managed workspaces for `oc_app`. The final
+release-mode Pixel 6 rendered that exact adapter and truthful empty state,
+opened the server-derived create form, and closed it without creating or
+deleting anything. Android logged no app fatal exception, ANR, RenderFlex
+overflow, or OOM. Final Flutter analysis is clean and all 437 app tests pass
+serially; all four generated-SDK integrity verifiers pass for 188 operations;
+all 46 SDK tests and SDK analysis pass; the compiled SDK smoke binary runs; and
+Android `lintRelease` passes. The generated SDK audit now counts 97 directly
+used operations. The locally test-signed release APK is `161875359` bytes with
+SHA-256
+`2edf778dd4b756f7a70c65695d48e18745f0c12a5012dadcbc60ccd132a033c6`.
+Temporary signing properties and the disposable keystore were removed; this APK
+was not published or distributed.
+
 A live release-mode Pixel 6 check against OpenCode `1.18.23` also found and fixed
 a location-integrity defect: mounting Workspace could overwrite a directory
 selected from the global session finder with the server project root. Workspace

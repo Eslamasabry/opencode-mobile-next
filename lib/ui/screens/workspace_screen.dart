@@ -8,6 +8,7 @@ import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
 import 'global_sessions_screen.dart';
+import 'managed_workspaces_screen.dart';
 import 'project_health_screen.dart';
 import 'worktrees_screen.dart';
 
@@ -329,6 +330,18 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       onTap: _selectedProject == null ? null : _openWorktrees,
                     ),
                     ListTile(
+                      key: const ValueKey('managed-workspaces-entry'),
+                      leading: const Icon(Icons.cloud_outlined),
+                      title: const Text('Managed workspaces'),
+                      subtitle: const Text(
+                        'Create, discover, open, and remove adapter-backed environments',
+                      ),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: _selectedProject == null
+                          ? null
+                          : _openManagedWorkspaces,
+                    ),
+                    ListTile(
                       key: const ValueKey('project-health-entry'),
                       leading: const Icon(Icons.monitor_heart_outlined),
                       title: const Text('Project health'),
@@ -467,6 +480,20 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       ),
     );
     if (mounted) await _load();
+  }
+
+  Future<void> _openManagedWorkspaces() async {
+    final project = _selectedProject;
+    if (project == null) return;
+    final changed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => ManagedWorkspacesScreen(
+          controller: widget.controller,
+          project: project,
+        ),
+      ),
+    );
+    if (changed == true && mounted) await _loadWorkspaces();
   }
 
   Future<void> _sessionAction(String action, Session session) async {

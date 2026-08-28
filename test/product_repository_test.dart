@@ -1921,6 +1921,135 @@ void main() {
   });
 
   test(
+    'managed workspace lifecycle uses generated project-root contracts',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        final requests = <({String method, Uri uri, String body})>[];
+        server.listen((request) async {
+          final body = await utf8.decoder.bind(request).join();
+          requests.add((method: request.method, uri: request.uri, body: body));
+          request.response.headers.contentType = ContentType.json;
+          switch ('${request.method} ${request.uri.path}') {
+            case 'GET /experimental/workspace/adapter':
+              request.response.write(
+                jsonEncode([
+                  {
+                    'type': 'cloud',
+                    'name': 'Cloud runner',
+                    'description': 'Create an isolated remote runner',
+                  },
+                ]),
+              );
+            case 'GET /experimental/workspace':
+              request.response.write(
+                jsonEncode([
+                  {
+                    'id': 'wrk_remote',
+                    'type': 'cloud',
+                    'name': 'Remote runner',
+                    'branch': 'feature/mobile',
+                    'directory': '/remote/acme',
+                    'projectID': 'project-1',
+                    'timeUsed': 1,
+                  },
+                ]),
+              );
+            case 'GET /experimental/workspace/status':
+              request.response.write(
+                jsonEncode([
+                  {'workspaceID': 'wrk_remote', 'status': 'connected'},
+                ]),
+              );
+            case 'POST /experimental/workspace/sync-list':
+              request.response.statusCode = HttpStatus.noContent;
+            case 'POST /experimental/workspace':
+              request.response.write(
+                jsonEncode({
+                  'id': 'wrk_created',
+                  'type': 'cloud',
+                  'name': 'Created runner',
+                  'branch': 'feature/phone',
+                  'directory': '/remote/created',
+                  'projectID': 'project-1',
+                  'timeUsed': 2,
+                }),
+              );
+            case 'DELETE /experimental/workspace/wrk_remote':
+              request.response.write(
+                jsonEncode({
+                  'id': 'wrk_remote',
+                  'type': 'cloud',
+                  'name': 'Remote runner',
+                  'projectID': 'project-1',
+                  'timeUsed': 1,
+                }),
+              );
+            default:
+              request.response.statusCode = HttpStatus.notFound;
+              request.response.write(jsonEncode({'message': 'not found'}));
+          }
+          await request.response.close();
+        });
+
+        try {
+          final api = OpenCodeApi(
+            baseUrl: 'http://${server.address.host}:${server.port}',
+          );
+          final repository = SdkProductRepository(api.sdkClient)
+            ..setLocation(directory: '/remote/active', workspace: 'wrk_active');
+
+          final adapters = await repository.listWorkspaceAdapters(
+            projectDirectory: '/work/acme',
+          );
+          final workspaces = await repository.listManagedWorkspaces(
+            projectDirectory: '/work/acme',
+          );
+          await repository.syncWorkspaceList(projectDirectory: '/work/acme');
+          final created = await repository.createManagedWorkspace(
+            projectDirectory: '/work/acme',
+            type: ' cloud ',
+            branch: ' feature/phone ',
+          );
+          await repository.removeManagedWorkspace(
+            projectDirectory: '/work/acme',
+            id: 'wrk_remote',
+          );
+
+          expect(adapters.single.name, 'Cloud runner');
+          expect(workspaces.single.status, 'connected');
+          expect(created.id, 'wrk_created');
+          expect(created.directory, '/remote/created');
+          expect(
+            requests.map((request) => '${request.method} ${request.uri.path}'),
+            [
+              'GET /experimental/workspace/adapter',
+              'GET /experimental/workspace',
+              'GET /experimental/workspace/status',
+              'POST /experimental/workspace/sync-list',
+              'POST /experimental/workspace',
+              'DELETE /experimental/workspace/wrk_remote',
+            ],
+          );
+          for (final request in requests) {
+            expect(request.uri.queryParameters, {'directory': '/work/acme'});
+            expect(
+              request.uri.queryParameters.containsKey('workspace'),
+              isFalse,
+            );
+          }
+          expect(jsonDecode(requests[4].body), {
+            'type': 'cloud',
+            'branch': 'feature/phone',
+          });
+        } finally {
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
+
+  test(
     'catalog uses generated v2 transport and capability response shape',
     () async {
       await HttpOverrides.runZoned(() async {

@@ -61,6 +61,18 @@ class WorkspaceInfo {
   });
 }
 
+class WorkspaceAdapterInfo {
+  final String type;
+  final String name;
+  final String description;
+
+  const WorkspaceAdapterInfo({
+    required this.type,
+    required this.name,
+    required this.description,
+  });
+}
+
 class WorktreeInfo {
   final String name;
   final String directory;
@@ -707,6 +719,35 @@ abstract class ProductRepository {
     const ProductException('Worktree management is unavailable on this server'),
   );
   Future<List<WorkspaceInfo>> listWorkspaces();
+  Future<List<WorkspaceInfo>> listManagedWorkspaces({
+    required String projectDirectory,
+  }) => listWorkspaces();
+  Future<List<WorkspaceAdapterInfo>> listWorkspaceAdapters({
+    required String projectDirectory,
+  }) => Future.error(
+    const ProductException(
+      'Workspace management is unavailable on this server',
+    ),
+  );
+  Future<void> syncWorkspaceList({required String projectDirectory}) =>
+      Future.error(
+        const ProductException(
+          'Workspace discovery is unavailable on this server',
+        ),
+      );
+  Future<WorkspaceInfo> createManagedWorkspace({
+    required String projectDirectory,
+    required String type,
+    String? branch,
+  }) => Future.error(
+    const ProductException('Workspace creation is unavailable on this server'),
+  );
+  Future<void> removeManagedWorkspace({
+    required String projectDirectory,
+    required String id,
+  }) => Future.error(
+    const ProductException('Workspace removal is unavailable on this server'),
+  );
   Future<List<GlobalSessionResult>> listGlobalSessions({
     String? search,
     bool includeArchived = false,
@@ -1141,46 +1182,134 @@ class SdkProductRepository
   });
 
   @override
-  Future<List<WorkspaceInfo>> listWorkspaces() =>
-      _guard('Could not load workspaces', () async {
-        final response = await _client
-            .getWorkspaceApi()
-            .experimentalWorkspaceList(
-              directory: _directory,
-              workspace: _workspace,
-            );
-        List<sdk.WorkspaceEventConnectionStatus> statuses = const [];
-        try {
-          final statusResponse = await _client
-              .getWorkspaceApi()
-              .experimentalWorkspaceStatus(
-                directory: _directory,
-                workspace: _workspace,
-              );
-          statuses = statusResponse.data ?? const [];
-        } catch (_) {
-          // Workspace listing predates the status endpoint. Keep older servers
-          // useful and surface an unknown status instead of erasing the list.
-        }
-        final statusByID = <String, String>{};
-        for (final status in statuses) {
-          final id = status.workspaceID;
-          if (id != null) statusByID[id] = status.status.value.toString();
-        }
-        return (response.data ?? const [])
-            .map(
-              (workspace) => WorkspaceInfo(
-                id: workspace.id,
-                projectID: workspace.projectID,
-                name: workspace.name,
-                type: workspace.type,
-                branch: workspace.branch,
-                directory: workspace.directory,
-                status: statusByID[workspace.id],
-              ),
-            )
-            .toList();
+  Future<List<WorkspaceInfo>> listWorkspaces() => _guard(
+    'Could not load workspaces',
+    () => _loadWorkspaces(directory: _directory, workspace: _workspace),
+  );
+
+  @override
+  Future<List<WorkspaceInfo>> listManagedWorkspaces({
+    required String projectDirectory,
+  }) => _guard(
+    'Could not load managed workspaces',
+    () => _loadWorkspaces(directory: projectDirectory, workspace: null),
+  );
+
+  @override
+  Future<List<WorkspaceAdapterInfo>> listWorkspaceAdapters({
+    required String projectDirectory,
+  }) => _guard('Could not load workspace adapters', () async {
+    final response = await _client
+        .getWorkspaceApi()
+        .experimentalWorkspaceAdapterList(directory: projectDirectory);
+    return (response.data ?? const [])
+        .map(
+          (adapter) => WorkspaceAdapterInfo(
+            type: adapter.type,
+            name: adapter.name,
+            description: adapter.description,
+          ),
+        )
+        .toList(growable: false);
+  });
+
+  @override
+  Future<void> syncWorkspaceList({required String projectDirectory}) =>
+      _guard('Could not discover workspaces', () async {
+        await _client.getWorkspaceApi().experimentalWorkspaceSyncList(
+          directory: projectDirectory,
+        );
       });
+
+  @override
+  Future<WorkspaceInfo> createManagedWorkspace({
+    required String projectDirectory,
+    required String type,
+    String? branch,
+  }) => _guard('Could not create workspace', () async {
+    final adapterType = type.trim();
+    if (adapterType.isEmpty) {
+      throw const ProductException('Choose a workspace adapter');
+    }
+    final normalizedBranch = branch?.trim();
+    final response = await _client
+        .getWorkspaceApi()
+        .experimentalWorkspaceCreate(
+          directory: projectDirectory,
+          experimentalWorkspaceCreateRequest:
+              sdk.ExperimentalWorkspaceCreateRequest(
+                type: adapterType,
+                branch: normalizedBranch?.isNotEmpty == true
+                    ? normalizedBranch
+                    : null,
+              ),
+        );
+    final workspace = response.data;
+    if (workspace == null) {
+      throw const ProductException('OpenCode returned an invalid workspace');
+    }
+    return WorkspaceInfo(
+      id: workspace.id,
+      projectID: workspace.projectID,
+      name: workspace.name,
+      type: workspace.type,
+      branch: workspace.branch,
+      directory: workspace.directory,
+      status: null,
+    );
+  });
+
+  @override
+  Future<void> removeManagedWorkspace({
+    required String projectDirectory,
+    required String id,
+  }) => _guard('Could not remove workspace', () async {
+    await _client.getWorkspaceApi().experimentalWorkspaceRemove(
+      id: id,
+      directory: projectDirectory,
+    );
+  });
+
+  Future<List<WorkspaceInfo>> _loadWorkspaces({
+    required String? directory,
+    required String? workspace,
+  }) async {
+    final response = await _client.getWorkspaceApi().experimentalWorkspaceList(
+      directory: directory,
+      workspace: workspace,
+    );
+    List<sdk.WorkspaceEventConnectionStatus> statuses = const [];
+    try {
+      final statusResponse = await _client
+          .getWorkspaceApi()
+          .experimentalWorkspaceStatus(
+            directory: directory,
+            workspace: workspace,
+          );
+      statuses = statusResponse.data ?? const [];
+    } catch (_) {
+      // Workspace listing predates the status endpoint. Keep older servers
+      // useful and surface an unknown status instead of erasing the list.
+    }
+    final statusByID = <String, String>{};
+    for (final status in statuses) {
+      final id = status.workspaceID;
+      if (id != null) statusByID[id] = status.status.value.toString();
+    }
+    return (response.data ?? const [])
+        .map(
+          (workspace) => WorkspaceInfo(
+            id: workspace.id,
+            projectID: workspace.projectID,
+            name: workspace.name,
+            type: workspace.type,
+            branch: workspace.branch,
+            directory: workspace.directory,
+            status: statusByID[workspace.id],
+          ),
+        )
+        .toList(growable: false);
+  }
 
   @override
   Future<List<GlobalSessionResult>> listGlobalSessions({

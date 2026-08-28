@@ -9,7 +9,7 @@ Authoritative inputs:
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app
-currently calls **93 generated operations directly**. It also uses a set of
+currently calls **97 generated operations directly**. It also uses a set of
 older or compatibility routes through `OpenCodeApi` and raw `Dio`; those are
 listed separately so a working feature is not incorrectly labelled missing.
 
@@ -53,7 +53,7 @@ Legend:
 | Skills | `v2SkillList` | - | Skill content uses the shared Markdown/code-aware preview with rendered and raw modes |
 | Sync | - | - | history, replay, start, steal |
 | TUI control | - | - | append/clear/submit prompt, command execution, next-control flow, publish, select session, help/models/sessions/themes/toast |
-| Workspace | list, connection status, session warp | - | adapter list, create, remove, sync list |
+| Workspace | adapter list, list, connection status, create, remove, sync list, session warp | - | - |
 
 ## Product priorities derived from the audit
 
@@ -282,7 +282,18 @@ Legend:
    selecting an unrelated first project. Manual project, worktree, session,
    move, and warp navigation all converge on the same durable selection path,
    and no project or workspace inventory is hardcoded.
-19. **Deferred by owner:** a Traycer-style task cockpit remains outside the
+19. **Managed workspace lifecycle:** Workspace now opens one native management
+   surface for adapter-backed environments. It discovers only adapters returned
+   by the selected OpenCode project, lists workspace connection status, asks the
+   server to register environments already known by its adapters, and creates a
+   workspace with the adapter plus optional branch. Adapter-specific setup stays
+   on the OpenCode host; mobile does not invent an `extra` schema. Create and
+   open, discovery, listing, and removal are always rooted to the selected local
+   project instead of accidentally inheriting the currently active remote
+   workspace. Removal requires the exact server workspace name, explains that
+   the adapter may permanently delete its environment, and returns to Local
+   before deleting an active workspace.
+20. **Deferred by owner:** a Traycer-style task cockpit remains outside the
    current implementation lane.
 
 ## Deliberate non-goals
