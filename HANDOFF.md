@@ -71,6 +71,12 @@ tests and SDK analysis pass; the compiled SDK smoke binary runs; Android
 `lintRelease` passes; and the generated SDK audit counts 87 directly used
 operations. Traycer and the agent/task-tree lane remain explicitly deferred.
 
+Shorebird's direct non-publishing release dry run used Flutter `3.47.1`, APK
+artifact mode, build name `1.0.20`, and build number `21`. It resolved release
+version `1.0.20+21`, built the AAB and APK, and reported `No issues detected`.
+The Shorebird APK remained byte-for-byte identical to the candidate hash and
+retained the matching certificate above. Nothing was uploaded or published.
+
 This branch prepares the next native baseline without changing the patchable
 `1.0.19+20` release on `master`. It removes the debug signing fallback, adds a
 dedicated release signing configuration and ignored properties template, and
