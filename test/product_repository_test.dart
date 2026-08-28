@@ -251,6 +251,60 @@ void main() {
     }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
   });
 
+  test('project rename uses generated project-root patch contract', () async {
+    await HttpOverrides.runZoned(() async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      late String method;
+      late Uri uri;
+      late Object? body;
+      server.listen((request) async {
+        method = request.method;
+        uri = request.uri;
+        final text = await utf8.decoder.bind(request).join();
+        body = text.isEmpty ? null : jsonDecode(text);
+        request.response.headers.contentType = ContentType.json;
+        request.response.write(
+          jsonEncode({
+            'id': 'project/phone',
+            'worktree': '/work/acme',
+            'name': 'Phone workspace',
+            'time': {'created': 1000, 'updated': 3000},
+            'sandboxes': ['/work/acme-proof'],
+          }),
+        );
+        await request.response.close();
+      });
+
+      try {
+        final api = OpenCodeApi(
+          baseUrl: 'http://${server.address.host}:${server.port}',
+        );
+        final repository = SdkProductRepository(api.sdkClient)
+          ..setLocation(
+            directory: '/remote/active',
+            workspace: 'workspace-active',
+          );
+
+        final updated = await repository.renameProject(
+          projectID: ' project/phone ',
+          projectDirectory: ' /work/acme ',
+          name: ' Phone workspace ',
+        );
+
+        expect(updated.id, 'project/phone');
+        expect(updated.name, 'Phone workspace');
+        expect(updated.directory, '/work/acme');
+        expect(method, 'PATCH');
+        expect(uri.path, '/project/project%2Fphone');
+        expect(uri.queryParameters, {'directory': '/work/acme'});
+        expect(uri.queryParameters.containsKey('workspace'), isFalse);
+        expect(body, {'name': 'Phone workspace'});
+      } finally {
+        await server.close(force: true);
+      }
+    }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+  });
+
   test(
     'saved-location validation uses generated current-project truth',
     () async {

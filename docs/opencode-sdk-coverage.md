@@ -9,7 +9,7 @@ Authoritative inputs:
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app
-currently calls **97 generated operations directly**. It also uses a set of
+currently calls **98 generated operations directly**. It also uses a set of
 older or compatibility routes through `OpenCodeApi` and raw `Dio`; those are
 listed separately so a working feature is not incorrectly labelled missing.
 
@@ -40,7 +40,7 @@ Legend:
 | OpenCode HTTP v2 | agent list, credential remove | - | credential update, health, location |
 | Permission | list, reply, deprecated session reply fallback | - | - |
 | Permissions v2 | request list, session reply, saved permission list/remove | - | per-session create/get/list |
-| Project | `projectList`, `projectDirectories`, current project, Git init | - | update |
+| Project | `projectList`, `projectDirectories`, current project, Git init, update/rename | - | - |
 | Project copy | - | - | generated name, create, refresh, remove |
 | Provider | - | provider list and configured-provider fallback | auth methods and OAuth authorize/callback |
 | Providers v2 | provider list | - | provider get |
@@ -293,7 +293,17 @@ Legend:
    workspace. Removal requires the exact server workspace name, explains that
    the adapter may permanently delete its environment, and returns to Local
    before deleting an active workspace.
-20. **Deferred by owner:** a Traycer-style task cockpit remains outside the
+20. **Project navigation and naming:** Workspace now groups the server project
+   inventory behind one compact current-project row instead of spending a
+   horizontal rail on project chips. The native Projects screen searches exact
+   server names and directories, shows the active location and worktree count,
+   and switches the complete app transport to the selected local project.
+   Rename uses generated `project.update` rooted to that project's own directory
+   with no remote-workspace query leakage. Clearing the name or entering the
+   folder basename sends the upstream-compatible empty name so OpenCode restores
+   its derived label. The app does not invent project creation, close, icon, or
+   command editing actions that its current workflow cannot support truthfully.
+21. **Deferred by owner:** a Traycer-style task cockpit remains outside the
    current implementation lane.
 
 ## Deliberate non-goals

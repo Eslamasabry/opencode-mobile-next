@@ -689,6 +689,13 @@ abstract class ProductRepository {
     ),
   );
   Future<List<WorkspaceProject>> listProjects();
+  Future<WorkspaceProject> renameProject({
+    required String projectID,
+    required String projectDirectory,
+    required String name,
+  }) => Future.error(
+    const ProductException('Project renaming is unavailable on this server'),
+  );
   Future<WorkspaceProject?> loadCurrentProject() async => null;
   Future<List<WorktreeInfo>> listWorktrees({
     required String projectDirectory,
@@ -1011,20 +1018,31 @@ class SdkProductRepository
           directory: _directory,
           workspace: _workspace,
         );
-        return (response.data ?? const [])
-            .map(
-              (project) => WorkspaceProject(
-                id: project.id,
-                name: project.name?.trim().isNotEmpty == true
-                    ? project.name!
-                    : _basename(project.worktree),
-                directory: project.worktree,
-                worktrees: project.sandboxes,
-                updatedAt: project.time.updated,
-              ),
-            )
-            .toList();
+        return (response.data ?? const []).map(_mapProject).toList();
       });
+
+  @override
+  Future<WorkspaceProject> renameProject({
+    required String projectID,
+    required String projectDirectory,
+    required String name,
+  }) => _guard('Could not rename project', () async {
+    final exactID = projectID.trim();
+    final exactDirectory = projectDirectory.trim();
+    if (exactID.isEmpty || exactDirectory.isEmpty) {
+      throw const ProductException('The project identity is incomplete');
+    }
+    final response = await _client.getProjectApi().projectUpdate(
+      projectID: exactID,
+      directory: exactDirectory,
+      projectUpdateRequest: sdk.ProjectUpdateRequest(name: name.trim()),
+    );
+    final project = response.data;
+    if (project == null) {
+      throw const ProductException('OpenCode returned an invalid project');
+    }
+    return _mapProject(project);
+  });
 
   @override
   Future<WorkspaceProject?> loadCurrentProject() =>
@@ -1035,16 +1053,18 @@ class SdkProductRepository
         );
         final project = response.data;
         if (project == null || project.worktree.trim().isEmpty) return null;
-        return WorkspaceProject(
-          id: project.id,
-          name: project.name?.trim().isNotEmpty == true
-              ? project.name!
-              : _basename(project.worktree),
-          directory: project.worktree,
-          worktrees: project.sandboxes,
-          updatedAt: project.time.updated,
-        );
+        return _mapProject(project);
       });
+
+  static WorkspaceProject _mapProject(sdk.Project project) => WorkspaceProject(
+    id: project.id,
+    name: project.name?.trim().isNotEmpty == true
+        ? project.name!
+        : _basename(project.worktree),
+    directory: project.worktree,
+    worktrees: project.sandboxes,
+    updatedAt: project.time.updated,
+  );
 
   @override
   Future<List<WorktreeInfo>> listWorktrees({

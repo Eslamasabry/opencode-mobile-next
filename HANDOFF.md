@@ -250,6 +250,38 @@ SHA-256
 Temporary signing properties and the disposable keystore were removed; this APK
 was not published or distributed.
 
+Project navigation now uses one compact current-project row on Workspace rather
+than a horizontally scrolling chip rail. It opens a flat searchable Projects
+screen populated only from generated `project.list` truth, shows the active
+project plus exact directory and worktree count, and switches every
+location-scoped surface through the existing durable controller. Project rename
+uses generated `project.update` rooted to the selected project's own directory
+without inheriting an active remote workspace. Clearing the name or entering the
+folder basename sends an empty name, matching upstream OpenCode's reset
+semantics. Mobile does not invent create, close, icon, or command actions.
+
+The real OpenCode `1.18.23` server returned nine projects. A release-mode Pixel
+6 opened the native list, searched `oc_app` down to `1 of 9`, opened the rename
+dialog with the exact `/home/eslam/Storage/Code/oc_app` path, cancelled without
+mutating server state, then selected that row and returned to Workspace with
+`oc_app` active. Android logged no app fatal exception, ANR, RenderFlex overflow,
+OOM, or Flutter error. Aggregate Android lint also exposed
+`flutter_secure_storage` 10.0.0 linting its optional biometric implementation
+even though this app uses the default non-biometric constructor and requests no
+biometric permission. The exception is now limited to that dependency and only
+the `MissingPermission` detector; a release-blocker test locks those assumptions
+so biometric adoption cannot silently inherit it.
+
+Final-tree Flutter analysis is clean and all 443 app tests pass serially. All
+four generated-SDK integrity verifiers pass for 188 operations; all 46 SDK tests
+and SDK analysis pass; the compiled SDK smoke binary runs; and aggregate Android
+`lintRelease` passes. The generated SDK audit now counts 98 directly used
+operations. The locally test-signed release APK is `161973663` bytes with
+SHA-256
+`27d2883334eba0f3f21bd007bbc77f7e143c74f641359971b7afbdf67db417dd`.
+Temporary signing properties and the disposable keystore were removed; this APK
+was not published or distributed.
+
 A live release-mode Pixel 6 check against OpenCode `1.18.23` also found and fixed
 a location-integrity defect: mounting Workspace could overwrite a directory
 selected from the global session finder with the server project root. Workspace

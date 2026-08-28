@@ -193,6 +193,24 @@ void main() {
     expect(launch, isNot(contains('@android:color/white')));
   });
 
+  test('secure storage biometric lint exception stays narrow and truthful', () {
+    final manifest = File(
+      'android/app/src/main/AndroidManifest.xml',
+    ).readAsStringSync();
+    final profiles = File('lib/state/profiles.dart').readAsStringSync();
+    final rootGradle = File('android/build.gradle.kts').readAsStringSync();
+
+    expect(profiles, contains('const FlutterSecureStorage()'));
+    expect(profiles, isNot(contains('AndroidOptions.biometric')));
+    expect(manifest, isNot(contains('android.permission.USE_BIOMETRIC')));
+    expect(rootGradle, contains('project.name == "flutter_secure_storage"'));
+    expect(rootGradle, contains('disable += "MissingPermission"'));
+    expect(
+      'disable += "MissingPermission"'.allMatches(rootGradle),
+      hasLength(1),
+    );
+  });
+
   test('Android launcher supports adaptive, round, and themed icons', () {
     final manifest = File(
       'android/app/src/main/AndroidManifest.xml',

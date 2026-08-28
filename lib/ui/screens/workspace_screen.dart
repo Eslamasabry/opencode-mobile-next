@@ -10,6 +10,7 @@ import '../widgets/product_states.dart';
 import 'global_sessions_screen.dart';
 import 'managed_workspaces_screen.dart';
 import 'project_health_screen.dart';
+import 'projects_screen.dart';
 import 'worktrees_screen.dart';
 
 class WorkspaceScreen extends StatefulWidget {
@@ -162,17 +163,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         !project.worktrees.contains(directory);
   }
 
-  Future<void> _selectProject(WorkspaceProject project) async {
-    setState(() {
-      _selectedProjectID = project.id;
-      _selectedWorkspaceID = null;
-      _selectedDirectory = project.directory;
-      _workspaces = const [];
-    });
-    await widget.controller.selectLocation(directory: project.directory);
-    await _loadWorkspaces();
-  }
-
   Future<void> _selectWorkspace(WorkspaceInfo? workspace) async {
     setState(() => _selectedWorkspaceID = workspace?.id);
     await widget.controller.selectLocation(
@@ -248,24 +238,23 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                         leading: const Icon(Icons.info_outline_rounded),
                         title: Text(widget.controller.locationNotice!),
                       ),
-                    const SectionLabel('Project'),
-                    SizedBox(
-                      height: 52,
-                      child: ListView.separated(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        scrollDirection: Axis.horizontal,
-                        itemCount: _projects!.length,
-                        separatorBuilder: (_, _) => const SizedBox(width: 8),
-                        itemBuilder: (context, index) {
-                          final project = _projects![index];
-                          return ChoiceChip(
-                            avatar: const Icon(Icons.folder_outlined, size: 17),
-                            label: Text(project.name),
-                            selected: project.id == _selectedProjectID,
-                            onSelected: (_) => _selectProject(project),
-                          );
-                        },
-                      ),
+                    SectionLabel(
+                      'Project',
+                      trailing: Text('${_projects!.length} open'),
+                    ),
+                    ListTile(
+                      key: const ValueKey('current-project-entry'),
+                      leading: const Icon(Icons.folder_rounded),
+                      title: Text(_selectedProject?.name ?? 'Choose a project'),
+                      subtitle: _selectedProject == null
+                          ? null
+                          : Text(
+                              _selectedProject!.directory,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: _openProjects,
                     ),
                     if (_hasExternalSessionDirectory)
                       ListTile(
@@ -455,6 +444,18 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       builder: (_) => GlobalSessionsScreen(controller: widget.controller),
     ),
   );
+
+  Future<void> _openProjects() async {
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => ProjectsScreen(
+          controller: widget.controller,
+          selectedProjectID: _selectedProjectID,
+        ),
+      ),
+    );
+    if (mounted) await _load();
+  }
 
   Future<void> _openProjectHealth() async {
     final repository = await widget.controller.prepareActionRepository();
