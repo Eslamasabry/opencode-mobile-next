@@ -1656,7 +1656,10 @@ class _ReviewNotice extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Center(
-      child: ConstrainedBox(
+      // Scrollable so short viewports (Review opened inside chat) degrade
+      // instead of overflowing when surrounding chrome grows.
+      child: SingleChildScrollView(
+        child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 360),
         child: Padding(
           padding: const EdgeInsets.all(28),
@@ -1683,6 +1686,7 @@ class _ReviewNotice extends StatelessWidget {
               if (action != null) ...[const SizedBox(height: 12), action!],
             ],
           ),
+        ),
         ),
       ),
     );
