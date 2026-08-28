@@ -11,6 +11,7 @@ import '../../state/connection.dart';
 import '../../state/profiles.dart';
 import '../../termux/bridge.dart';
 import '../app_theme.dart';
+import '../theme_packs.dart';
 import '../../voice/notices.dart';
 import '../widgets/appearance_picker.dart';
 import '../widgets/product_states.dart';
@@ -104,7 +105,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: _CategoryIcon(
                 icon: Icons.dns_outlined,
                 color: healthy
-                    ? AppTheme.success(theme.colorScheme)
+                    ? AppTheme.successOf(theme)
                     : _healthError != null
                     ? theme.colorScheme.error
                     : null,

@@ -119,6 +119,7 @@ class ConnectionController extends ChangeNotifier {
   final AppDiagnosticsController diagnostics;
   final bool _ownsDiagnostics;
   late final ValueNotifier<AppAppearance> appearance;
+  late final ValueNotifier<ThemePackId> themePack;
   final OpenCodeApiFactory _apiFactory;
   final ProductRepositoryFactory _repositoryFactory;
   final EventStreamFactory _eventStreamFactory;
@@ -254,6 +255,7 @@ class ConnectionController extends ChangeNotifier {
        diagnostics = diagnostics ?? AppDiagnosticsController(),
        _ownsDiagnostics = diagnostics == null {
     appearance = ValueNotifier(store.appearance);
+    themePack = ValueNotifier(store.themePack);
     transcriptReasoningExpanded = store.transcriptReasoningExpanded;
     transcriptTimestampsVisible = store.transcriptTimestampsVisible;
     this.backgroundLive.addListener(_backgroundLiveChanged);
@@ -370,6 +372,11 @@ class ConnectionController extends ChangeNotifier {
     if (_disposed) return;
     transcriptTimestampsVisible = visible;
     notifyListeners();
+  }
+
+  Future<void> setThemePack(ThemePackId value) async {
+    await store.setThemePack(value);
+    themePack.value = value;
   }
 
   Future<void> setAppearance(AppAppearance value) async {
@@ -2732,6 +2739,7 @@ class ConnectionController extends ChangeNotifier {
     backgroundLive.dispose();
     if (_ownsDiagnostics) diagnostics.dispose();
     appearance.dispose();
+    themePack.dispose();
     unawaited(_eventBus.close());
     super.dispose();
   }

@@ -907,9 +907,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: result.ok
-                          ? AppTheme.success(
-                              theme.colorScheme,
-                            ).withValues(alpha: .14)
+                          ? AppTheme.successOf(theme).withValues(alpha: .14)
                           : theme.colorScheme.errorContainer,
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -922,7 +920,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                               : Icons.error_outline_rounded,
                           size: 20,
                           color: result.ok
-                              ? AppTheme.success(theme.colorScheme)
+                              ? AppTheme.successOf(theme)
                               : theme.colorScheme.onErrorContainer,
                         ),
                         const SizedBox(width: 10),

@@ -217,7 +217,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                   ? Icons.check_circle_outline_rounded
                   : Icons.error_outline_rounded,
               color: _health?.healthy == true
-                  ? AppTheme.success(Theme.of(context).colorScheme)
+                  ? AppTheme.successOf(Theme.of(context))
                   : Theme.of(context).colorScheme.error,
             ),
             title: Text(
