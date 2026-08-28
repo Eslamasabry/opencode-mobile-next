@@ -4,10 +4,12 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.RemoteInput
 import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.IBinder
 
@@ -114,7 +116,8 @@ class BackgroundConnectionService : Service() {
             context: Context,
             kind: String,
             sessionID: String,
-            key: String
+            key: String,
+            quickReply: Boolean = false
         ): Boolean {
             if (sessionID.isBlank() || key.isBlank()) return false
             val manager = context.getSystemService(NotificationManager::class.java)
@@ -182,7 +185,7 @@ class BackgroundConnectionService : Service() {
                 @Suppress("DEPRECATION")
                 Notification.Builder(context).setPriority(content.priority)
             }
-            val notification = builder
+            builder
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(content.title)
                 .setContentText(content.text)
@@ -192,9 +195,80 @@ class BackgroundConnectionService : Service() {
                 .setCategory(content.category)
                 .setVisibility(Notification.VISIBILITY_PRIVATE)
                 .setGroup(CODING_ALERT_GROUP)
-                .build()
-            manager.notify(notificationID, notification)
+            for (action in codingAlertActions(
+                context, kind, sessionID, key, quickReply, notificationID
+            )) {
+                builder.addAction(action)
+            }
+            manager.notify(notificationID, builder.build())
             return true
+        }
+
+        // Fixed-copy notification actions; the intents carry only routing
+        // identifiers, never request content.
+        private fun codingAlertActions(
+            context: Context,
+            kind: String,
+            sessionID: String,
+            key: String,
+            quickReply: Boolean,
+            notificationID: Int
+        ): List<Notification.Action> {
+            fun actionIntent(decision: String): Intent =
+                Intent(context, CodingActionReceiver::class.java).apply {
+                    action = "$ACTION_CODING_ALERT.$decision"
+                    data = android.net.Uri.parse("opencode://coding-alert/$key/$decision")
+                    putExtra(EXTRA_CODING_ALERT_KIND, kind)
+                    putExtra(EXTRA_CODING_ALERT_SESSION_ID, sessionID)
+                    putExtra(EXTRA_CODING_ALERT_KEY, key)
+                    putExtra(EXTRA_CODING_ALERT_DECISION, decision)
+                }
+
+            val icon = Icon.createWithResource(context, R.mipmap.ic_launcher)
+            return when {
+                kind == "permission" -> listOf(
+                    Notification.Action.Builder(
+                        icon,
+                        "Allow once",
+                        PendingIntent.getBroadcast(
+                            context,
+                            notificationID * 4 + 1,
+                            actionIntent("allow"),
+                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                        )
+                    ).build(),
+                    Notification.Action.Builder(
+                        icon,
+                        "Deny",
+                        PendingIntent.getBroadcast(
+                            context,
+                            notificationID * 4 + 2,
+                            actionIntent("deny"),
+                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                        )
+                    ).build()
+                )
+                kind == "question" && quickReply -> listOf(
+                    Notification.Action.Builder(
+                        icon,
+                        "Reply",
+                        PendingIntent.getBroadcast(
+                            context,
+                            notificationID * 4 + 3,
+                            actionIntent("reply"),
+                            // RemoteInput requires a mutable PendingIntent.
+                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+                        )
+                    )
+                        .addRemoteInput(
+                            RemoteInput.Builder(REMOTE_INPUT_REPLY)
+                                .setLabel("Reply")
+                                .build()
+                        )
+                        .build()
+                )
+                else -> emptyList()
+            }
         }
 
         fun dismissCodingAlert(context: Context, key: String): Boolean {
@@ -240,5 +314,12 @@ class BackgroundConnectionService : Service() {
             "ai.opencode.opencode_mobile.extra.CODING_ALERT_KIND"
         const val EXTRA_CODING_ALERT_SESSION_ID =
             "ai.opencode.opencode_mobile.extra.CODING_ALERT_SESSION_ID"
+        const val EXTRA_CODING_ALERT_KEY =
+            "ai.opencode.opencode_mobile.extra.CODING_ALERT_KEY"
+        const val EXTRA_CODING_ALERT_DECISION =
+            "ai.opencode.opencode_mobile.extra.CODING_ALERT_DECISION"
+        const val ACTION_CODING_ALERT =
+            "ai.opencode.opencode_mobile.action.CODING_ALERT"
+        const val REMOTE_INPUT_REPLY = "oc.codingAlertReply"
     }
 }

@@ -256,6 +256,70 @@ class ConnectionController extends ChangeNotifier {
     transcriptReasoningExpanded = store.transcriptReasoningExpanded;
     transcriptTimestampsVisible = store.transcriptTimestampsVisible;
     this.backgroundLive.addListener(_backgroundLiveChanged);
+    this.backgroundLive.bindActionHandler(_handleCodingAlertAction);
+  }
+
+  /// Resolves an Android notification action while the app stays
+  /// backgrounded. Alerts exist only while live mode keeps the transport
+  /// alive, so replies go through that live transport directly; running the
+  /// foreground wake path here would count as an app resume and clear every
+  /// alert. Returns false so Android re-posts the alert when the reply cannot
+  /// be delivered.
+  Future<bool> _handleCodingAlertAction(CodingAlertAction action) async {
+    if (_disposed || _lifecycleSuspended) return false;
+    final currentApi = api;
+    final current = repository;
+    try {
+      switch (action.decision) {
+        case 'allow':
+        case 'deny':
+          final permission = permissionForSession(action.sessionID);
+          if (permission == null) {
+            // Already resolved elsewhere; refresh the alert lifecycle so a
+            // stale notification cannot outlive its request.
+            _syncInputAlerts();
+            return true;
+          }
+          if (currentApi == null) return false;
+          await _sendPermissionReply(
+            currentApi,
+            permission.id,
+            action.decision == 'allow' ? 'once' : 'reject',
+          );
+          return true;
+        case 'reply':
+          final text = action.reply?.trim() ?? '';
+          if (text.isEmpty) return false;
+          final question = _quickReplyQuestionForSession(action.sessionID);
+          if (question == null) {
+            _syncInputAlerts();
+            return true;
+          }
+          await _sendQuestionAnswer(currentApi, current, question.id, [
+            [text],
+          ]);
+          return true;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// A question qualifies for a notification quick reply only when one typed
+  /// answer can truthfully satisfy it: a single prompt that accepts custom
+  /// text.
+  static bool _questionSupportsQuickReply(PendingQuestion question) =>
+      question.prompts.length == 1 && question.prompts.single.custom;
+
+  PendingQuestion? _quickReplyQuestionForSession(String sessionID) {
+    for (final question in questions.values) {
+      if (question.sessionID == sessionID &&
+          _questionSupportsQuickReply(question)) {
+        return question;
+      }
+    }
+    return null;
   }
 
   bool get keepLiveInBackground => backgroundLive.enabled;
@@ -361,6 +425,9 @@ class ConnectionController extends ChangeNotifier {
             kind: kind,
             sessionID: sessionID,
             key: _inputAlertKey(sessionID),
+            quickReply:
+                kind == CodingAlertKind.question &&
+                _quickReplyQuestionForSession(sessionID) != null,
           )
           .then((shown) {
             if (!shown &&
@@ -1557,13 +1624,25 @@ class ConnectionController extends ChangeNotifier {
   }
 
   Future<void> answerPermission(String requestID, String response) async {
-    var permission = permissions[requestID];
+    final permission = permissions[requestID];
     if (permission == null) {
       if (_resolvedPermissionIDs.contains(requestID)) return;
       throw StateError('Permission request $requestID is no longer pending');
     }
     final currentApi = await _requireActionTransport();
-    permission = permissions[requestID];
+    await _sendPermissionReply(currentApi, requestID, response);
+  }
+
+  /// Sends one permission reply on an already-resolved transport. Notification
+  /// actions use this directly with the live background transport because the
+  /// foreground path's wake reconciliation doubles as an app resume, which
+  /// would clear every posted alert.
+  Future<void> _sendPermissionReply(
+    OpenCodeApi currentApi,
+    String requestID,
+    String response,
+  ) async {
+    final permission = permissions[requestID];
     if (permission == null) {
       if (_resolvedPermissionIDs.contains(requestID)) return;
       throw StateError('Permission request $requestID is no longer pending');
@@ -1730,8 +1809,18 @@ class ConnectionController extends ChangeNotifier {
     List<List<String>> answers,
   ) async {
     await prepareActionTransport();
-    final currentApi = api;
-    final current = repository;
+    await _sendQuestionAnswer(api, repository, requestID, answers);
+  }
+
+  /// Sends one question answer on already-resolved transport objects; the
+  /// notification-action path passes the live background transport directly
+  /// to avoid resume semantics (see [_sendPermissionReply]).
+  Future<void> _sendQuestionAnswer(
+    OpenCodeApi? currentApi,
+    ProductRepository? current,
+    String requestID,
+    List<List<String>> answers,
+  ) async {
     final generation = _generation;
     if (current == null) throw StateError('Not connected to OpenCode');
     if (!questions.containsKey(requestID)) {

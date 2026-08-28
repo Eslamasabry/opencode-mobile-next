@@ -127,6 +127,7 @@ void main() {
       'kind': 'question',
       'sessionID': 'session-1',
       'key': 'input:session-1',
+      'quickReply': false,
     });
     expect(calls[2].$1, 'dismissCodingAlert');
     expect(calls[2].$2, {'key': 'input:session-1'});

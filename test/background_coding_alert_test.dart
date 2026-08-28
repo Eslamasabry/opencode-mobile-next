@@ -82,6 +82,7 @@ void main() {
         'kind': 'permission',
         'sessionID': 'session-1',
         'key': 'input:session-1',
+        'quickReply': false,
       });
 
       harness.controller.handleEventForTesting(
@@ -106,6 +107,7 @@ void main() {
         'kind': 'question',
         'sessionID': 'session-1',
         'key': 'input:session-1',
+        'quickReply': true,
       });
 
       harness.controller.handleEventForTesting(
@@ -149,6 +151,8 @@ void main() {
         'kind': 'question',
         'sessionID': 'session-1',
         'key': 'input:session-1',
+        // No prompts means no single custom prompt to quick-reply to.
+        'quickReply': false,
       });
     },
   );
@@ -204,6 +208,7 @@ void main() {
         'kind': 'complete',
         'sessionID': 'session-1',
         'key': 'status:session-1',
+        'quickReply': false,
       });
     },
   );
@@ -254,6 +259,7 @@ void main() {
         'kind': 'error',
         'sessionID': 'session-1',
         'key': 'status:session-1',
+        'quickReply': false,
       });
       expect(
         shown.single.arguments.toString(),
