@@ -1,5 +1,12 @@
 # Showcase video plan — "Your coding agent, in your pocket"
 
+> **Owner direction (locked):** the video focuses on MOBILE throughout —
+> every body act is phone footage. Desktop appears exactly once, as a brief
+> tease near the close ("…and it's coming to your desktop" over the Linux
+> window still, REC-13), never as a second protagonist. Scenes that gave
+> desktop more than tease-weight are trimmed to this rule at execution time.
+
+
 Planning date: 2026-08-28. Sources: `.claude/skills/motion-design/` and
 `.claude/skills/remotion-motion-graphics/` (rules cited per scene),
 HANDOFF.md Operation Facelift records, docs/design-inspiration.md.
