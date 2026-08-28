@@ -9,7 +9,7 @@ Authoritative inputs:
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app
-currently calls **98 generated operations directly**. It also uses a set of
+currently calls **101 generated operations directly**. It also uses a set of
 older or compatibility routes through `OpenCodeApi` and raw `Dio`; those are
 listed separately so a working feature is not incorrectly labelled missing.
 
@@ -28,7 +28,7 @@ Legend:
 | Control plane | `experimentalControlPlaneMoveSession` | - | - |
 | Event | - | `eventSubscribe` through the shared `/event` SSE transport | Generated event transport is unused |
 | Events v2 | - | Some v2-shaped events are reduced from the legacy stream | `v2EventSubscribe` |
-| Experimental | `experimentalResourceList`, global session list, Console org list/switch, worktree create/list/remove/reset | - | capabilities, console state, background sessions, tool IDs/list |
+| Experimental | capabilities, `experimentalResourceList`, global session list, Console org list/switch, worktree create/list/remove/reset, tool IDs/list | - | console state, background sessions |
 | File | list, read, filename search, text search, `findSymbols` | - | `status` is declared but its OpenCode 1.18.23 handler is a stub that always returns an empty list |
 | Filesystem v2 | - | - | `v2FsFind`, `v2FsList`, `v2FsRead` |
 | Global | `globalConfigGet`, `globalConfigUpdate`, `globalUpgrade` | health, update events through the shared SSE runtime | dispose |
@@ -303,7 +303,16 @@ Legend:
    folder basename sends the upstream-compatible empty name so OpenCode restores
    its derived label. The app does not invent project creation, close, icon, or
    command editing actions that its current workflow cannot support truthfully.
-21. **Deferred by owner:** a Traycer-style task cockpit remains outside the
+21. **Model-scoped tools and capability truth:** Library and mobile `/tools`
+   now open one native inventory backed by `experimental.capabilities.get`,
+   `tool.ids`, and `tool.list`. It uses the active provider/model pair and exact
+   location, distinguishes tools callable by that model from IDs registered on
+   the project but omitted by the model-specific response, and preserves every
+   server description plus its JSON parameter schema. Long descriptions and
+   schemas share one scroll surface instead of nesting cards or making the
+   schema unreachable. Capability and registered-ID failures stay scoped, so an
+   older optional endpoint cannot hide a valid callable-tool response.
+22. **Deferred by owner:** a Traycer-style task cockpit remains outside the
    current implementation lane.
 
 ## Deliberate non-goals

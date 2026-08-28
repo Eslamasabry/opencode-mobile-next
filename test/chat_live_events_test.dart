@@ -2173,6 +2173,13 @@ void main() {
     expect(find.byKey(const Key('inline-command-suggestions')), findsOneWidget);
     expect(find.byKey(const Key('inline-command-review')), findsOneWidget);
     expect(find.text('/models'), findsNothing);
+
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      '/too',
+    );
+    await tester.pump();
+    expect(find.byKey(const Key('inline-command-tools')), findsOneWidget);
   });
 
   testWidgets('composer tools delegates only to visible server subagents', (

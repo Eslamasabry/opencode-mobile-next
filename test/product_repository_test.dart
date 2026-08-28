@@ -2232,6 +2232,88 @@ void main() {
     },
   );
 
+  test(
+    'tool inventory uses exact generated model and location contracts',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        final requests = <HttpRequest>[];
+        server.listen((request) async {
+          requests.add(request);
+          final data = switch (request.uri.path) {
+            '/experimental/capabilities' => {'backgroundSubagents': true},
+            '/experimental/tool/ids' => ['bash', 'read', 'mcp_docs'],
+            '/experimental/tool' => [
+              {
+                'id': 'mcp_docs',
+                'description': 'Search project documentation',
+                'parameters': {
+                  'type': 'object',
+                  'properties': {
+                    'query': {'type': 'string'},
+                  },
+                  'required': ['query'],
+                },
+              },
+            ],
+            _ => <Object>[],
+          };
+          request.response.headers.contentType = ContentType.json;
+          request.response.write(jsonEncode(data));
+          await request.response.close();
+        });
+
+        try {
+          final api = OpenCodeApi(
+            baseUrl: 'http://${server.address.host}:${server.port}',
+          );
+          final repository = SdkProductRepository(api.sdkClient)
+            ..setLocation(directory: '/work/acme', workspace: 'phone');
+
+          final capabilities = await repository.loadExperimentalCapabilities();
+          final ids = await repository.listCodingToolIDs();
+          final tools = await repository.listCodingTools(
+            providerID: ' openai ',
+            modelID: ' gpt-5.6-sol ',
+          );
+
+          expect(capabilities.backgroundSubagents, isTrue);
+          expect(ids, ['bash', 'read', 'mcp_docs']);
+          expect(tools.single.id, 'mcp_docs');
+          expect(tools.single.description, 'Search project documentation');
+          expect(tools.single.parameters, {
+            'type': 'object',
+            'properties': {
+              'query': {'type': 'string'},
+            },
+            'required': ['query'],
+          });
+          expect(requests.map((request) => request.uri.path), [
+            '/experimental/capabilities',
+            '/experimental/tool/ids',
+            '/experimental/tool',
+          ]);
+          expect(requests[0].uri.queryParameters, {
+            'directory': '/work/acme',
+            'workspace': 'phone',
+          });
+          expect(requests[1].uri.queryParameters, {
+            'directory': '/work/acme',
+            'workspace': 'phone',
+          });
+          expect(requests[2].uri.queryParameters, {
+            'directory': '/work/acme',
+            'workspace': 'phone',
+            'provider': 'openai',
+            'model': 'gpt-5.6-sol',
+          });
+        } finally {
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
+
   test('fork session sends the selected OpenCode message point', () async {
     await HttpOverrides.runZoned(() async {
       final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);

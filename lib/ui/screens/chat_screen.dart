@@ -33,6 +33,7 @@ import 'session_destination_sheet.dart';
 import 'session_relations_screen.dart';
 import 'settings_screen.dart';
 import 'terminal_screen.dart';
+import 'tools_screen.dart';
 
 const _maxAttachmentCount = 5;
 const _maxAttachmentBytes = 10 * 1024 * 1024;
@@ -1982,6 +1983,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         action: _ChatCommandAction.skills,
       ),
       _ChatCommand.mobile(
+        slash: 'tools',
+        title: 'Tools and capabilities',
+        description: 'Inspect tools callable by the active provider and model',
+        group: 'OpenCode',
+        action: _ChatCommandAction.tools,
+      ),
+      _ChatCommand.mobile(
         slash: 'references',
         aliases: const ['reference', 'refs'],
         title: 'Project references',
@@ -2303,6 +2311,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           await Navigator.of(context).push(
             MaterialPageRoute<void>(
               builder: (_) => SkillsScreen(controller: _conn),
+            ),
+          );
+        }
+        return;
+      case _ChatCommandAction.tools:
+        if (mounted) {
+          await Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => ToolsScreen(controller: _conn),
             ),
           );
         }
@@ -3286,6 +3303,7 @@ enum _ChatCommandAction {
   integrations,
   organization,
   skills,
+  tools,
   references,
   status,
   diagnostics,

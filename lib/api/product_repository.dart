@@ -351,6 +351,24 @@ class CatalogSnapshot {
   });
 }
 
+class ExperimentalServerCapabilities {
+  final bool backgroundSubagents;
+
+  const ExperimentalServerCapabilities({required this.backgroundSubagents});
+}
+
+class CodingToolInfo {
+  final String id;
+  final String description;
+  final Object? parameters;
+
+  const CodingToolInfo({
+    required this.id,
+    required this.description,
+    required this.parameters,
+  });
+}
+
 class ChatDefaults {
   final ModelRef? model;
   final String? agent;
@@ -830,6 +848,21 @@ abstract class ProductRepository {
   Future<TerminalChannel> connectTerminal(String id, {int? cursor});
   Future<List<FileDiff>> listVcsDiffs(VcsDiffMode mode);
   Future<CatalogSnapshot> loadCatalog();
+  Future<ExperimentalServerCapabilities> loadExperimentalCapabilities() =>
+      Future.error(
+        const ProductException(
+          'Experimental capability discovery is unavailable on this server',
+        ),
+      );
+  Future<List<String>> listCodingToolIDs() => Future.error(
+    const ProductException('Tool discovery is unavailable on this server'),
+  );
+  Future<List<CodingToolInfo>> listCodingTools({
+    required String providerID,
+    required String modelID,
+  }) => Future.error(
+    const ProductException('Tool discovery is unavailable on this server'),
+  );
   Future<ChatDefaults> loadChatDefaults() async => const ChatDefaults();
   Future<List<McpServerInfo>> listMcpServers();
   Future<List<McpResourceInfo>> listMcpResources();
@@ -1906,6 +1939,67 @@ class SdkProductRepository
           agents: agents,
         );
       });
+
+  @override
+  Future<ExperimentalServerCapabilities> loadExperimentalCapabilities() =>
+      _guard('Could not load server capabilities', () async {
+        final response = await _client
+            .getExperimentalApi()
+            .experimentalCapabilitiesGet(
+              directory: _directory,
+              workspace: _workspace,
+            );
+        final capabilities = response.data;
+        if (capabilities == null) {
+          throw const ProductException(
+            'OpenCode returned no capability information',
+          );
+        }
+        return ExperimentalServerCapabilities(
+          backgroundSubagents: capabilities.backgroundSubagents,
+        );
+      });
+
+  @override
+  Future<List<String>> listCodingToolIDs() =>
+      _guard('Could not load registered tools', () async {
+        final response = await _client.getExperimentalApi().toolIds(
+          directory: _directory,
+          workspace: _workspace,
+        );
+        final seen = <String>{};
+        return [
+          for (final rawID in response.data ?? const <String>[])
+            if (rawID.trim().isNotEmpty && seen.add(rawID.trim())) rawID.trim(),
+        ];
+      });
+
+  @override
+  Future<List<CodingToolInfo>> listCodingTools({
+    required String providerID,
+    required String modelID,
+  }) => _guard('Could not load model tools', () async {
+    final provider = providerID.trim();
+    final model = modelID.trim();
+    if (provider.isEmpty || model.isEmpty) {
+      throw const ProductException('Choose a valid provider and model');
+    }
+    final response = await _client.getExperimentalApi().toolList(
+      provider: provider,
+      model: model,
+      directory: _directory,
+      workspace: _workspace,
+    );
+    return [
+      for (final tool in response.data ?? const <sdk.ToolListItem>[])
+        if (tool.id.trim().isNotEmpty)
+          CodingToolInfo(
+            id: tool.id.trim(),
+            description: tool.description.trim(),
+            parameters: tool.parameters,
+          ),
+    ];
+  });
 
   @override
   Future<List<McpServerInfo>> listMcpServers() =>

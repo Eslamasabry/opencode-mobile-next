@@ -33,7 +33,7 @@ byte-for-byte. Flutter analysis was clean and all 213 tests passed.
 
 - Branch: `production/android-release-hardening`
 - Last pushed commit before the `1.0.20+21` candidate: `c17f4f63ae14e3ab676da440df44fc23e1116356`
-- Latest app-completeness implementation: `b2b26d6104d64dc40cf04ee067d7a0682191a02b`
+- Latest app-completeness implementation: `PENDING_TOOL_CAPABILITY_COMMIT`
 - Compare/PR: <https://github.com/Eslamasabry/oc_app/pull/new/production/android-release-hardening>
 
 ### Verified `1.0.20+21` candidate
@@ -279,6 +279,35 @@ and SDK analysis pass; the compiled SDK smoke binary runs; and aggregate Android
 operations. The locally test-signed release APK is `161973663` bytes with
 SHA-256
 `27d2883334eba0f3f21bd007bbc77f7e143c74f641359971b7afbdf67db417dd`.
+Temporary signing properties and the disposable keystore were removed; this APK
+was not published or distributed.
+
+Native tool discovery now uses OpenCode's generated
+`experimental.capabilities.get`, `tool.ids`, and `tool.list` contracts. Library
+and mobile `/tools` open one flat searchable surface scoped to the active
+project, workspace, provider, and model. It distinguishes tools callable by the
+selected model from IDs that are registered on the project but absent from the
+model-specific response, so plugin and MCP inventory is not inferred or hidden.
+Every callable row opens the exact server description and pretty-printed JSON
+parameter schema. Long descriptions and schemas share one continuous scroll
+surface, while capability and registered-ID failures stay independent from a
+valid model-tool response.
+
+The real OpenCode `1.18.23` server reported 15 registered tool IDs, 12 callable
+by configured `openai/gpt-5.6-sol`, and `backgroundSubagents: false`. A
+release-mode Pixel 6 rendered those exact counts, exposed `edit`, `write`, and
+`websearch` as registered but not callable, found the still-server-registered
+`mgrep` tool through search, and scrolled the long `apply_patch` description
+into its real JSON schema. Android logged no app fatal exception, ANR,
+RenderFlex overflow, OOM, or Flutter error.
+
+Final-tree Flutter analysis is clean and all 449 app tests pass serially. All
+four generated-SDK integrity verifiers pass for 188 operations; all 46 SDK
+tests and SDK analysis pass; the compiled SDK smoke binary runs; and aggregate
+Android `lintRelease` passes. The generated SDK audit now counts 101 directly
+used operations. The locally test-signed release APK is `162006503` bytes with
+SHA-256
+`6333e4845c023d60f5cc91c111d48bb2608a35af78181f9403cd3e8d69fab6e6`.
 Temporary signing properties and the disposable keystore were removed; this APK
 was not published or distributed.
 

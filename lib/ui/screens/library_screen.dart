@@ -15,6 +15,7 @@ import '../widgets/pickers.dart';
 import 'mcp_setup_screen.dart';
 import 'requests_screen.dart';
 import 'settings_screen.dart';
+import 'tools_screen.dart';
 
 class LibraryScreen extends StatelessWidget {
   final ConnectionController controller;
@@ -47,6 +48,12 @@ class LibraryScreen extends StatelessWidget {
           subtitle:
               'Configured commands, MCP prompts, and slash-capable skills',
           onTap: () => _open(context, CommandsScreen(controller: controller)),
+        ),
+        _DestinationTile(
+          icon: Icons.build_circle_outlined,
+          title: 'Tools and capabilities',
+          subtitle: 'Callable tools for the active provider and model',
+          onTap: () => _open(context, ToolsScreen(controller: controller)),
         ),
         _DestinationTile(
           icon: Icons.extension_outlined,
