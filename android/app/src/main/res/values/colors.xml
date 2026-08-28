@@ -2,4 +2,9 @@
 <resources>
     <color name="launch_background">#0F1115</color>
     <color name="launcher_background">#0F1115</color>
+    <!-- Home-screen widget palette; night variants in values-night. -->
+    <color name="widgetBackground">#F6F9F6</color>
+    <color name="widgetText">#172019</color>
+    <color name="widgetHint">#68776E</color>
+    <color name="widgetAccent">#176B4B</color>
 </resources>

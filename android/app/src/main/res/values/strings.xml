@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_new_session">+ New</string>
+    <string name="widget_empty">Open the app to connect. Sessions appear here.</string>
+    <string name="widget_description">Your newest OpenCode sessions, one tap from their chats.</string>
+</resources>

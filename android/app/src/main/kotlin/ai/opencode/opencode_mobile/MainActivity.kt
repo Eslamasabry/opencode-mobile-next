@@ -122,6 +122,10 @@ class MainActivity : FlutterActivity() {
                         pendingCodingAlertOpen = null
                         result.success(pending ?: emptyMap<String, String>())
                     }
+                    "refreshHomeWidget" -> {
+                        SessionsWidgetProvider.refreshAll(this)
+                        result.success(mapOf("refreshed" to true))
+                    }
                     else -> result.notImplemented()
                 }
             }
