@@ -35,6 +35,14 @@ void main() {
           model: ModelRef(providerID: 'zai-coding-plan', modelID: 'glm-5.2'),
           agent: 'build',
           variant: 'high',
+          agentMentions: const [
+            PromptAgentMention(
+              name: 'explore',
+              value: '@explore',
+              start: 7,
+              end: 15,
+            ),
+          ],
           attachments: [
             const PromptAttachment(
               mime: 'text/plain',
@@ -57,6 +65,11 @@ void main() {
           'variant': 'high',
           'parts': [
             {'type': 'text', 'text': 'Review these files'},
+            {
+              'type': 'agent',
+              'name': 'explore',
+              'source': {'value': '@explore', 'start': 7, 'end': 15},
+            },
             {
               'type': 'file',
               'mime': 'text/plain',

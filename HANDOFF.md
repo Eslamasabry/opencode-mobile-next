@@ -161,6 +161,43 @@ APK is `161612943` bytes with SHA-256
 Temporary signing properties were removed, and this APK was not published or
 distributed.
 
+Native subagent invocation now completes the workflow from the composer. The
+lightning launcher is a flat two-tab Composer tools surface: Commands retains
+mobile and server slash actions, while Delegate lists only visible subagents
+returned by the connected OpenCode server. Selecting a row inserts its exact
+`@name` at the cursor; typing `@` provides the same runtime autocomplete. Send
+serializes a real generated async-prompt agent part with exact UTF-16 source
+offsets, so OpenCode creates the child through its native task path rather than
+through a mobile-only command or hardcoded agent list.
+
+Fresh and automatically selected models now follow the active project's
+generated `config.get` model and default agent instead of whichever connected
+provider happens to be first. Explicit user model choices remain pinned. This
+also repairs existing installs whose saved selection came from the old
+automatic provider-order fallback. A release-mode Pixel 6 clean install against
+OpenCode `1.18.23` proved the configured `openai/gpt-5.6-sol` default while the
+349-model catalog began with Google. It then invoked real `@explore`; the server
+persisted the agent part with source `{value: @explore, start: 0, end: 8}`, made
+the child session, completed it on `gpt-5.6-sol`, and returned
+`opencode_mobile` from `pubspec.yaml` to the parent transcript. The exact two
+disposable roots and child were verified before deletion, and no user session
+was removed.
+
+The same visual pass removed the remaining literal Markdown markers from short
+reasoning by routing reasoning through the shared Markdown renderer with its
+muted style. The composer tools fit a 320dp/2x-text fixture without overflow,
+and the release-mode emulator logged no app fatal exception, ANR, RenderFlex,
+overflow, or OOM. Final-tree Flutter analysis is clean and all 426 app tests
+pass serially; all four generated-SDK integrity verifiers pass for 188
+operations; all 46 SDK tests and SDK analysis pass; the compiled SDK smoke
+binary runs; and Android `lintRelease` passes. The generated SDK audit remains
+at 93 directly used operations because `configGet` was already in use. The
+locally test-signed release APK is `161629327` bytes with SHA-256
+`2dc0ef71b5daa2980cc2c5b082351d6e4fead1e6d666fa27ebaaf8e494116c67`.
+That exact final artifact clean-installed and launched on `emulator-5554`.
+Temporary signing properties were removed, and this APK was not published or
+distributed.
+
 A live release-mode Pixel 6 check against OpenCode `1.18.23` also found and fixed
 a location-integrity defect: mounting Workspace could overwrite a directory
 selected from the global session finder with the server project root. Workspace

@@ -126,11 +126,13 @@ class _QuestionRepository implements ProductRepository {
     this.legacyUnavailable = true,
     this.catalog,
     this.integrations = const [],
+    this.defaults = const ChatDefaults(),
   });
 
   final bool legacyUnavailable;
   final CatalogSnapshot? catalog;
   final List<IntegrationInfo> integrations;
+  final ChatDefaults defaults;
   List<PendingQuestion> questions = const [];
   Completer<List<PendingQuestion>>? questionsCompleter;
   Object? answerError;
@@ -167,6 +169,9 @@ class _QuestionRepository implements ProductRepository {
   @override
   Future<CatalogSnapshot> loadCatalog() async =>
       catalog ?? (throw StateError('detailed catalog unavailable'));
+
+  @override
+  Future<ChatDefaults> loadChatDefaults() async => defaults;
 
   @override
   Future<List<IntegrationInfo>> listIntegrations() async => integrations;
@@ -978,6 +983,70 @@ void main() {
   });
 
   testWidgets(
+    'fresh catalog follows project chat defaults, not provider order',
+    (tester) async {
+      final api = _V2Api(
+        providersResult: ProvidersResponse(
+          providers: [
+            ProviderInfo(
+              id: 'google',
+              name: 'Google',
+              modelIDs: const ['image-default'],
+            ),
+            ProviderInfo(
+              id: 'openai',
+              name: 'OpenAI',
+              modelIDs: const ['gpt-5.6-sol'],
+            ),
+          ],
+          defaultProviderID: 'google',
+          defaultModelID: 'image-default',
+        ),
+        agentsResult: [
+          AgentInfo(name: 'build', mode: 'primary'),
+          AgentInfo(name: 'plan', mode: 'primary'),
+          AgentInfo(name: 'explore', mode: 'subagent'),
+        ],
+      );
+      final controller = ConnectionController(
+        await _store(),
+        apiFactory: (_) => api,
+        repositoryFactory: (_) => _QuestionRepository(
+          legacyUnavailable: false,
+          defaults: ChatDefaults(
+            model: ModelRef(providerID: 'openai', modelID: 'gpt-5.6-sol'),
+            agent: 'plan',
+          ),
+        ),
+        eventStreamFactory:
+            ({required api, required onEvent, required onStatus, onError}) =>
+                _FakeEventStream(
+                  api: api,
+                  onEvent: onEvent,
+                  onStatus: onStatus,
+                  onError: onError,
+                ),
+      );
+      addTearDown(controller.dispose);
+
+      await controller.connect(
+        ServerProfile(
+          id: 'server',
+          name: 'Server',
+          baseUrl: 'http://127.0.0.1:1',
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(controller.selectedModel?.providerID, 'openai');
+      expect(controller.selectedModel?.modelID, 'gpt-5.6-sol');
+      expect(controller.selectedAgent, 'plan');
+      controller.dispose();
+    },
+  );
+
+  testWidgets(
     'connected catalog prunes a model exposed only by the active v2 surface',
     (tester) async {
       final api = _V2Api(
@@ -1408,6 +1477,69 @@ void main() {
     expect(store.modelWasExplicitlySelected('termux'), isTrue);
     controller.dispose();
   });
+
+  testWidgets(
+    'project default replaces an old automatic provider-order fallback',
+    (tester) async {
+      final store = await _store({
+        'oc.model.termux': 'google|image-default',
+        'oc.modelExplicit.termux': false,
+      });
+      final api = _V2Api(
+        providersResult: ProvidersResponse(
+          providers: [
+            ProviderInfo(
+              id: 'google',
+              name: 'Google',
+              modelIDs: const ['image-default'],
+            ),
+            ProviderInfo(
+              id: 'openai',
+              name: 'OpenAI',
+              modelIDs: const ['gpt-5.6-sol'],
+            ),
+          ],
+          defaultProviderID: 'google',
+          defaultModelID: 'image-default',
+        ),
+      );
+      final controller = ConnectionController(
+        store,
+        apiFactory: (_) => api,
+        repositoryFactory: (_) => _QuestionRepository(
+          legacyUnavailable: false,
+          defaults: ChatDefaults(
+            model: ModelRef(providerID: 'openai', modelID: 'gpt-5.6-sol'),
+          ),
+        ),
+        eventStreamFactory:
+            ({required api, required onEvent, required onStatus, onError}) =>
+                _FakeEventStream(
+                  api: api,
+                  onEvent: onEvent,
+                  onStatus: onStatus,
+                  onError: onError,
+                ),
+      );
+      addTearDown(controller.dispose);
+
+      await controller.connect(
+        ServerProfile(
+          id: 'termux',
+          name: 'This device (Termux)',
+          baseUrl: 'http://127.0.0.1:4096',
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(controller.selectedModel?.providerID, 'openai');
+      expect(controller.selectedModel?.modelID, 'gpt-5.6-sol');
+      expect(store.modelFor('termux'), ('openai', 'gpt-5.6-sol'));
+      expect(store.modelWasExplicitlySelected('termux'), isFalse);
+      controller.dispose();
+    },
+  );
 
   testWidgets(
     'health false and active-profile persistence failure fail closed',

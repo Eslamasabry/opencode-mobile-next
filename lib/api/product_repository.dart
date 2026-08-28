@@ -339,6 +339,13 @@ class CatalogSnapshot {
   });
 }
 
+class ChatDefaults {
+  final ModelRef? model;
+  final String? agent;
+
+  const ChatDefaults({this.model, this.agent});
+}
+
 class McpServerInfo {
   final String name;
   final String status;
@@ -774,6 +781,7 @@ abstract class ProductRepository {
   Future<TerminalChannel> connectTerminal(String id, {int? cursor});
   Future<List<FileDiff>> listVcsDiffs(VcsDiffMode mode);
   Future<CatalogSnapshot> loadCatalog();
+  Future<ChatDefaults> loadChatDefaults() async => const ChatDefaults();
   Future<List<McpServerInfo>> listMcpServers();
   Future<List<McpResourceInfo>> listMcpResources();
   Future<void> connectMcp(String name);
@@ -1624,6 +1632,32 @@ class SdkProductRepository
       initialCursor: cursor ?? 0,
     );
   });
+
+  @override
+  Future<ChatDefaults> loadChatDefaults() =>
+      _guard('Could not load chat defaults', () async {
+        final response = await _client.getConfigApi().configGet(
+          directory: _directory,
+          workspace: _workspace,
+        );
+        final config = response.data;
+        final wireModel = config?.model?.trim();
+        ModelRef? model;
+        if (wireModel?.isNotEmpty == true) {
+          final slash = wireModel!.indexOf('/');
+          if (slash > 0 && slash < wireModel.length - 1) {
+            model = ModelRef(
+              providerID: wireModel.substring(0, slash),
+              modelID: wireModel.substring(slash + 1),
+            );
+          }
+        }
+        final agent = config?.defaultAgent?.trim();
+        return ChatDefaults(
+          model: model,
+          agent: agent?.isNotEmpty == true ? agent : null,
+        );
+      });
 
   @override
   Future<CatalogSnapshot> loadCatalog() =>

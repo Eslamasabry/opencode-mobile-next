@@ -47,7 +47,7 @@ Legend:
 | PTY | create, list, update, remove, shells, connect token | WebSocket connect uses the guarded ticket and OpenCode cursor resume | get, direct connect, and all duplicate v2 PTY operations |
 | Question | list, reply, reject | - | - |
 | Reference | `v2ReferenceList` | - | References can be copied standalone or added to the active composer as OpenCode directory parts |
-| Session | list, create, get, delete, update/rename, status, messages, children, todos, diff, fork, revert, unrevert, share, unshare, summarize, async prompt including synthetic location reminder, command, abort | shell | init endpoint, delete/update part, delete/get one message, synchronous prompt |
+| Session | list, create, get, delete, update/rename, status, messages, children, todos, diff, fork, revert, unrevert, share, unshare, summarize, async prompt including native agent mention parts and synthetic location reminder, command, abort | shell | init endpoint, delete/update part, delete/get one message, synchronous prompt |
 | Session questions v2 | global request list, session reply/reject | - | per-session list |
 | Sessions v2 | - | - | active, compact, context, create/get/list/message/prompt/history/events/wait/interrupt, model/agent switch, staged revert operations |
 | Skills | `v2SkillList` | - | Skill content uses the shared Markdown/code-aware preview with rendered and raw modes |
@@ -261,7 +261,18 @@ Legend:
    the main task. The primary agent selector also excludes `mode: subagent`
    entries, matching OpenCode's own distinction between the active primary
    agent and subagents invoked for delegated work.
-17. **Deferred by owner:** a Traycer-style task cockpit remains outside the
+17. **Native delegation and configured defaults:** Composer tools now places
+   Commands and Delegate in adjacent tabs. Delegate is populated only by
+   visible `mode: subagent` definitions returned by the connected OpenCode
+   server. Selecting or typing an `@agent` emits the generated async-prompt
+   agent part with exact UTF-16 source offsets; no subagent inventory is
+   hardcoded. The model and primary-agent defaults come from generated
+   `config.get` at the active location, ahead of provider-list order. A valid
+   explicit user model remains pinned, while an older automatic fallback is
+   migrated to the current project default. Short and expanded reasoning use
+   the same Markdown-aware renderer as assistant text while retaining their
+   distinct muted presentation.
+18. **Deferred by owner:** a Traycer-style task cockpit remains outside the
    current implementation lane.
 
 ## Deliberate non-goals

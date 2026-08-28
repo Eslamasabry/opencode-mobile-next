@@ -147,6 +147,9 @@ class _TestRepository extends SdkProductRepository {
   _TestRepository(OpenCodeApi api) : super(api.sdkClient);
 
   @override
+  Future<ChatDefaults> loadChatDefaults() async => const ChatDefaults();
+
+  @override
   Future<List<PendingQuestion>> listQuestions() async => const [];
 
   @override

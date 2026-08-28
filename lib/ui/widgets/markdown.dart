@@ -105,7 +105,7 @@ class MarkdownText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final blocks = _splitBlocks(data);
-    return Column(
+    final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (var i = 0; i < blocks.length; i++) ...[
@@ -114,6 +114,9 @@ class MarkdownText extends StatelessWidget {
         ],
       ],
     );
+    return baseStyle == null
+        ? content
+        : DefaultTextStyle.merge(style: baseStyle, child: content);
   }
 
   List<Widget> _splitBlocks(String src) {

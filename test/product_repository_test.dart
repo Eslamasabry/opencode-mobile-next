@@ -84,6 +84,48 @@ void main() {
     expect(response.defaultModelID, 'glm-5.2');
   });
 
+  test(
+    'chat defaults use the exact generated project config contract',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        Uri? requestUri;
+        server.listen((request) async {
+          requestUri = request.uri;
+          request.response.headers.contentType = ContentType.json;
+          request.response.write(
+            jsonEncode({
+              'model': 'openai/gpt-5.6-sol',
+              'default_agent': 'plan',
+            }),
+          );
+          await request.response.close();
+        });
+
+        try {
+          final api = OpenCodeApi(
+            baseUrl: 'http://${server.address.host}:${server.port}',
+          );
+          final repository = SdkProductRepository(api.sdkClient)
+            ..setLocation(directory: '/work/acme', workspace: 'workspace-1');
+
+          final defaults = await repository.loadChatDefaults();
+
+          expect(requestUri?.path, '/config');
+          expect(requestUri?.queryParameters, {
+            'directory': '/work/acme',
+            'workspace': 'workspace-1',
+          });
+          expect(defaults.model?.providerID, 'openai');
+          expect(defaults.model?.modelID, 'gpt-5.6-sol');
+          expect(defaults.agent, 'plan');
+        } finally {
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
+
   test('project reference uses the upstream directory file-part contract', () {
     final attachment = PromptAttachment.reference(
       name: 'docs',

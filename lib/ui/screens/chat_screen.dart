@@ -341,6 +341,67 @@ class _PendingSend {
   });
 }
 
+bool _mentionBoundaryBefore(String value) =>
+    RegExp(r'''[\s\(\[\{"']''').hasMatch(value);
+
+bool _mentionBoundaryAfter(String value) =>
+    RegExp(r'''[\s\.,!\?;:\)\}\]"']''').hasMatch(value);
+
+({int start, int end, String query})? _activeAgentQuery(
+  TextEditingValue value,
+) {
+  final selection = value.selection;
+  if (!selection.isValid || !selection.isCollapsed) return null;
+  final cursor = selection.baseOffset;
+  if (cursor < 1 || cursor > value.text.length) return null;
+  final at = value.text.lastIndexOf('@', cursor - 1);
+  if (at < 0) return null;
+  if (at > 0 && !_mentionBoundaryBefore(value.text.substring(at - 1, at))) {
+    return null;
+  }
+  final query = value.text.substring(at + 1, cursor);
+  if (query.contains(RegExp(r'\s'))) return null;
+  return (start: at, end: cursor, query: query);
+}
+
+List<PromptAgentMention> _promptAgentMentions(
+  String text,
+  Iterable<CatalogAgent> agents,
+) {
+  final visible =
+      agents
+          .where((agent) => !agent.hidden && agent.mode == 'subagent')
+          .map((agent) => agent.id)
+          .where((name) => name.isNotEmpty)
+          .toSet()
+          .toList()
+        ..sort((a, b) => b.length.compareTo(a.length));
+  final mentions = <PromptAgentMention>[];
+  for (final name in visible) {
+    final value = '@$name';
+    var offset = 0;
+    while (offset < text.length) {
+      final start = text.indexOf(value, offset);
+      if (start < 0) break;
+      final end = start + value.length;
+      final validBefore =
+          start == 0 ||
+          _mentionBoundaryBefore(text.substring(start - 1, start));
+      final validAfter =
+          end == text.length ||
+          _mentionBoundaryAfter(text.substring(end, end + 1));
+      if (validBefore && validAfter) {
+        mentions.add(
+          PromptAgentMention(name: name, value: value, start: start, end: end),
+        );
+      }
+      offset = end;
+    }
+  }
+  mentions.sort((a, b) => a.start.compareTo(b.start));
+  return mentions;
+}
+
 class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   late final ConnectionController _conn;
   late final StreamSubscription<EventEnvelope> _sub;
@@ -379,6 +440,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   String? get _shareUrl =>
       _conn.sessionsById[widget.sessionID]?.shareUrl ?? _localShareUrl;
+
+  List<CatalogAgent> get _subagents {
+    final agents = (_conn.catalog?.agents ?? const <CatalogAgent>[])
+        .where((agent) => !agent.hidden && agent.mode == 'subagent')
+        .toList();
+    agents.sort((a, b) => a.id.compareTo(b.id));
+    return agents;
+  }
 
   @override
   void initState() {
@@ -950,6 +1019,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       return;
     }
     final attachments = List<PromptAttachment>.from(_attachments);
+    final agentMentions = _promptAgentMentions(text, _subagents);
     final createdAt = DateTime.now().millisecondsSinceEpoch;
     final localID = 'local-$createdAt-${DateTime.now().microsecondsSinceEpoch}';
     final pending = _PendingSend(
@@ -995,6 +1065,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         agent: _conn.selectedAgent.isNotEmpty ? _conn.selectedAgent : null,
         variant: _conn.selectedVariant.isEmpty ? null : _conn.selectedVariant,
         attachments: attachments,
+        agentMentions: agentMentions,
       );
       if (!mounted) return;
       setState(() {
@@ -1025,6 +1096,36 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         context,
       ).showSnackBar(SnackBar(content: Text('Send failed: $e')));
     }
+  }
+
+  void _insertAgentMention(CatalogAgent agent) {
+    final current = _composer.value;
+    final query = _activeAgentQuery(current);
+    final selection = current.selection;
+    final fallback = selection.isValid
+        ? selection.start.clamp(0, current.text.length)
+        : current.text.length;
+    final start = query?.start ?? fallback;
+    final end =
+        query?.end ??
+        (selection.isValid
+            ? selection.end.clamp(start, current.text.length)
+            : start);
+    final needsLeadingSpace =
+        query == null &&
+        start > 0 &&
+        !RegExp(r'\s').hasMatch(current.text.substring(start - 1, start));
+    final needsTrailingSpace =
+        end == current.text.length ||
+        !RegExp(r'\s').hasMatch(current.text.substring(end, end + 1));
+    final replacement =
+        '${needsLeadingSpace ? ' ' : ''}@${agent.id}${needsTrailingSpace ? ' ' : ''}';
+    final nextText = current.text.replaceRange(start, end, replacement);
+    _composer.value = TextEditingValue(
+      text: nextText,
+      selection: TextSelection.collapsed(offset: start + replacement.length),
+    );
+    _focus.requestFocus();
   }
 
   ({_ChatCommand command, String arguments})? _typedChatCommand(String text) {
@@ -2030,7 +2131,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     return [...builtins, ...dynamic];
   }
 
-  Future<void> _openCommandLauncher() async {
+  Future<void> _openCommandLauncher({
+    _ComposerToolTab initialTab = _ComposerToolTab.commands,
+  }) async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    unawaited(_conn.refreshCatalog());
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -2038,7 +2143,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       showDragHandle: false,
       constraints: const BoxConstraints(maxWidth: 720),
       builder: (sheetContext) => _CommandLauncherSheet(
+        controller: _conn,
+        initialTab: initialTab,
         commands: () => _chatCommands,
+        agents: () => _subagents,
         loading: () => _serverCommandsLoading,
         error: () => _serverCommandsError,
         onRefresh: _loadServerCommands,
@@ -2046,6 +2154,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           FocusManager.instance.primaryFocus?.unfocus();
           Navigator.pop(sheetContext);
           _selectChatCommand(command);
+        },
+        onAgentSelected: (agent) {
+          FocusManager.instance.primaryFocus?.unfocus();
+          Navigator.pop(sheetContext);
+          _insertAgentMention(agent);
         },
       ),
     );
@@ -2880,8 +2993,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                             controller: _composer,
                             focusNode: _focus,
                             commands: _chatCommands,
+                            agents: _subagents,
                             onSelectCommand: _selectChatCommand,
+                            onSelectAgent: _insertAgentMention,
                             onOpenCommands: _openCommandLauncher,
+                            onOpenAgents: () => _openCommandLauncher(
+                              initialTab: _ComposerToolTab.agents,
+                            ),
                             onOpenEditor: _openPromptEditor,
                             attachments: _attachments,
                             busy: busy,
@@ -3269,48 +3387,82 @@ class _ChatCommand {
   }
 }
 
+enum _ComposerToolTab { commands, agents }
+
 class _CommandLauncherSheet extends StatefulWidget {
   const _CommandLauncherSheet({
+    required this.controller,
+    required this.initialTab,
     required this.commands,
+    required this.agents,
     required this.loading,
     required this.error,
     required this.onRefresh,
     required this.onSelected,
+    required this.onAgentSelected,
   });
 
+  final ConnectionController controller;
+  final _ComposerToolTab initialTab;
   final List<_ChatCommand> Function() commands;
+  final List<CatalogAgent> Function() agents;
   final bool Function() loading;
   final Object? Function() error;
   final Future<void> Function() onRefresh;
   final ValueChanged<_ChatCommand> onSelected;
+  final ValueChanged<CatalogAgent> onAgentSelected;
 
   @override
   State<_CommandLauncherSheet> createState() => _CommandLauncherSheetState();
 }
 
-class _CommandLauncherSheetState extends State<_CommandLauncherSheet> {
+class _CommandLauncherSheetState extends State<_CommandLauncherSheet>
+    with SingleTickerProviderStateMixin {
   final _search = TextEditingController();
+  late final TabController _tabs;
 
   @override
   void initState() {
     super.initState();
+    _tabs = TabController(
+      length: _ComposerToolTab.values.length,
+      vsync: this,
+      initialIndex: widget.initialTab.index,
+    )..addListener(_onTabChanged);
     if (widget.loading()) _refresh();
   }
 
+  void _onTabChanged() {
+    if (_tabs.indexIsChanging) return;
+    _search.clear();
+    setState(() {});
+  }
+
   Future<void> _refresh() async {
-    await widget.onRefresh();
+    if (_tabs.index == _ComposerToolTab.commands.index) {
+      await widget.onRefresh();
+    } else {
+      await widget.controller.refreshCatalog();
+    }
     if (mounted) setState(() {});
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: widget.controller,
+    builder: (context, _) => _buildSheet(context),
+  );
+
+  Widget _buildSheet(BuildContext context) {
     final theme = Theme.of(context);
-    final visible = widget
+    final largeText = MediaQuery.textScalerOf(context).scale(1) >= 1.5;
+    final agentTab = _tabs.index == _ComposerToolTab.agents.index;
+    final commands = widget
         .commands()
         .where((command) => command.matchesQuery(_search.text))
         .toList();
     if (_search.text.trim().isNotEmpty) {
-      visible.sort((a, b) {
+      commands.sort((a, b) {
         final score = a
             .scoreFor(_search.text)
             .compareTo(b.scoreFor(_search.text));
@@ -3318,13 +3470,19 @@ class _CommandLauncherSheetState extends State<_CommandLauncherSheet> {
       });
     }
     final groups = <String, List<_ChatCommand>>{};
-    for (final command in visible) {
+    for (final command in commands) {
       groups.putIfAbsent(command.group, () => []).add(command);
     }
+    final query = _search.text.trim().toLowerCase().replaceFirst('@', '');
+    final agents = widget.agents().where((agent) {
+      return query.isEmpty ||
+          agent.id.toLowerCase().contains(query) ||
+          (agent.description?.toLowerCase().contains(query) ?? false);
+    }).toList()..sort((a, b) => a.id.compareTo(b.id));
     return DraggableScrollableSheet(
       expand: false,
       minChildSize: .58,
-      initialChildSize: .86,
+      initialChildSize: largeText ? .96 : .86,
       maxChildSize: .96,
       snap: true,
       snapSizes: const [.86, .96],
@@ -3341,36 +3499,67 @@ class _CommandLauncherSheetState extends State<_CommandLauncherSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'OpenCode commands',
+                          'Composer tools',
                           style: theme.textTheme.titleLarge,
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Mobile actions and commands from this server',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                        if (!largeText) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            agentTab
+                                ? 'Delegate this prompt to a server subagent'
+                                : 'Mobile actions and commands from this server',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),
                   IconButton(
-                    tooltip: 'Close commands',
+                    tooltip: 'Close composer tools',
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.close_rounded),
                   ),
                 ],
               ),
             ),
+            TabBar(
+              controller: _tabs,
+              tabs: largeText
+                  ? const [
+                      Tab(
+                        key: Key('composer-tools-commands-tab'),
+                        text: 'Commands',
+                      ),
+                      Tab(
+                        key: Key('composer-tools-agents-tab'),
+                        text: 'Delegate',
+                      ),
+                    ]
+                  : const [
+                      Tab(
+                        key: Key('composer-tools-commands-tab'),
+                        icon: Icon(Icons.electric_bolt_outlined),
+                        text: 'Commands',
+                      ),
+                      Tab(
+                        key: Key('composer-tools-agents-tab'),
+                        icon: Icon(Icons.smart_toy_outlined),
+                        text: 'Delegate',
+                      ),
+                    ],
+            ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
               child: TextField(
                 key: const Key('command-launcher-search'),
                 controller: _search,
-                autofocus: true,
                 onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
-                  hintText: 'Type a command or action',
+                  hintText: agentTab
+                      ? 'Find a subagent'
+                      : 'Find a command or action',
                   prefixIcon: const Icon(Icons.search_rounded),
                   suffixIcon: _search.text.isEmpty
                       ? null
@@ -3388,12 +3577,23 @@ class _CommandLauncherSheetState extends State<_CommandLauncherSheet> {
               ),
             ),
             const Divider(height: 1),
-            if (widget.loading()) const LinearProgressIndicator(minHeight: 2),
-            if (widget.error() != null)
+            if (agentTab && widget.controller.catalogLoading)
+              const LinearProgressIndicator(minHeight: 2),
+            if (!agentTab && widget.loading())
+              const LinearProgressIndicator(minHeight: 2),
+            if (!agentTab && widget.error() != null)
               ListTile(
                 dense: true,
-                title: const Text('Server commands could not be refreshed'),
-                subtitle: Text('${widget.error()}'),
+                title: const Text(
+                  'Server commands could not be refreshed',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(
+                  '${widget.error()}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 trailing: IconButton(
                   tooltip: 'Retry server commands',
                   onPressed: _refresh,
@@ -3401,7 +3601,16 @@ class _CommandLauncherSheetState extends State<_CommandLauncherSheet> {
                 ),
               ),
             Expanded(
-              child: visible.isEmpty
+              child: agentTab
+                  ? _AgentPickerList(
+                      agents: agents,
+                      loading: widget.controller.catalogLoading,
+                      error: widget.controller.catalogError,
+                      scrollController: scrollController,
+                      onRefresh: _refresh,
+                      onSelected: widget.onAgentSelected,
+                    )
+                  : commands.isEmpty
                   ? Center(
                       child: Text(
                         'No matching commands',
@@ -3443,8 +3652,107 @@ class _CommandLauncherSheetState extends State<_CommandLauncherSheet> {
 
   @override
   void dispose() {
+    _tabs
+      ..removeListener(_onTabChanged)
+      ..dispose();
     _search.dispose();
     super.dispose();
+  }
+}
+
+class _AgentPickerList extends StatelessWidget {
+  const _AgentPickerList({
+    required this.agents,
+    required this.loading,
+    required this.error,
+    required this.scrollController,
+    required this.onRefresh,
+    required this.onSelected,
+  });
+
+  final List<CatalogAgent> agents;
+  final bool loading;
+  final Object? error;
+  final ScrollController scrollController;
+  final Future<void> Function() onRefresh;
+  final ValueChanged<CatalogAgent> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    if (agents.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: onRefresh,
+        child: ListView(
+          controller: scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(height: MediaQuery.sizeOf(context).height * .12),
+            Icon(
+              loading ? Icons.sync_rounded : Icons.smart_toy_outlined,
+              size: 36,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              loading
+                  ? 'Loading subagents…'
+                  : error == null
+                  ? 'No subagents available from this server'
+                  : 'Subagents could not be loaded',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            if (!loading)
+              Center(
+                child: TextButton.icon(
+                  onPressed: onRefresh,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Refresh'),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: ListView.separated(
+        key: const Key('composer-agent-list'),
+        controller: scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.only(top: 6, bottom: 24),
+        itemCount: agents.length,
+        separatorBuilder: (_, _) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          final agent = agents[index];
+          return ListTile(
+            key: Key('composer-agent-${agent.id}'),
+            minTileHeight: 64,
+            leading: Icon(
+              Icons.smart_toy_outlined,
+              color: theme.colorScheme.primary,
+            ),
+            title: Text(
+              '@${agent.id}',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontFamily: 'monospace',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            subtitle: Text(
+              agent.description ?? 'Delegate this prompt',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: const Icon(Icons.add_rounded),
+            onTap: () => onSelected(agent),
+          );
+        },
+      ),
+    );
   }
 }
 
@@ -3583,6 +3891,107 @@ class _InlineCommandSuggestions extends StatelessWidget {
             child: TextButton(
               onPressed: onShowAll,
               child: const Text('Show all commands'),
+            ),
+          ),
+        Divider(
+          height: 1,
+          color: theme.colorScheme.outlineVariant.withValues(alpha: .55),
+        ),
+      ],
+    );
+  }
+}
+
+class _InlineAgentSuggestions extends StatelessWidget {
+  const _InlineAgentSuggestions({
+    required this.agents,
+    required this.query,
+    required this.compact,
+    required this.onSelected,
+    required this.onShowAll,
+  });
+
+  final List<CatalogAgent> agents;
+  final String query;
+  final bool compact;
+  final ValueChanged<CatalogAgent> onSelected;
+  final VoidCallback onShowAll;
+
+  @override
+  Widget build(BuildContext context) {
+    final normalized = query.toLowerCase();
+    final matches = agents.where((agent) {
+      return normalized.isEmpty ||
+          agent.id.toLowerCase().contains(normalized) ||
+          (agent.description?.toLowerCase().contains(normalized) ?? false);
+    }).toList();
+    matches.sort((a, b) {
+      final aPrefix = a.id.toLowerCase().startsWith(normalized) ? 0 : 1;
+      final bPrefix = b.id.toLowerCase().startsWith(normalized) ? 0 : 1;
+      final prefix = aPrefix.compareTo(bPrefix);
+      return prefix != 0 ? prefix : a.id.compareTo(b.id);
+    });
+    final limit = compact ? 1 : 5;
+    final visible = matches.take(limit).toList();
+    if (visible.isEmpty) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    return Column(
+      key: const Key('inline-agent-suggestions'),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final agent in visible)
+          InkWell(
+            key: Key('inline-agent-${agent.id}'),
+            onTap: () => onSelected(agent),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                14,
+                compact ? 6 : 8,
+                12,
+                compact ? 6 : 8,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.smart_toy_outlined,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 10),
+                  SizedBox(
+                    width: compact ? 92 : 112,
+                    child: Text(
+                      '@${agent.id}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontFamily: 'monospace',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      compact
+                          ? 'Delegate'
+                          : agent.description ?? 'Delegate this prompt',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        if (!compact && matches.length > limit)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              onPressed: onShowAll,
+              child: const Text('Show all subagents'),
             ),
           ),
         Divider(
@@ -3806,8 +4215,11 @@ class _ChatComposer extends StatelessWidget {
     required this.controller,
     required this.focusNode,
     required this.commands,
+    required this.agents,
     required this.onSelectCommand,
+    required this.onSelectAgent,
     required this.onOpenCommands,
+    required this.onOpenAgents,
     required this.onOpenEditor,
     required this.attachments,
     required this.busy,
@@ -3829,8 +4241,11 @@ class _ChatComposer extends StatelessWidget {
   final TextEditingController controller;
   final FocusNode focusNode;
   final List<_ChatCommand> commands;
+  final List<CatalogAgent> agents;
   final ValueChanged<_ChatCommand> onSelectCommand;
+  final ValueChanged<CatalogAgent> onSelectAgent;
   final VoidCallback onOpenCommands;
+  final VoidCallback onOpenAgents;
   final VoidCallback onOpenEditor;
   final List<PromptAttachment> attachments;
   final bool busy;
@@ -3896,6 +4311,14 @@ class _ChatComposer extends StatelessWidget {
                     compact: compact,
                     onSelected: onSelectCommand,
                     onShowAll: onOpenCommands,
+                  ),
+                if (allowInlineCommands && _agentQuery != null)
+                  _InlineAgentSuggestions(
+                    agents: agents,
+                    query: _agentQuery!.query,
+                    compact: compact,
+                    onSelected: onSelectAgent,
+                    onShowAll: onOpenAgents,
                   ),
                 if (attachments.isNotEmpty)
                   Padding(
@@ -4081,6 +4504,9 @@ class _ChatComposer extends StatelessWidget {
     final match = RegExp(r'^/(\S*)$').firstMatch(controller.text.trimLeft());
     return match?.group(1);
   }
+
+  ({int start, int end, String query})? get _agentQuery =>
+      _activeAgentQuery(controller.value);
 }
 
 class _ComposerField extends StatelessWidget {
@@ -5335,7 +5761,7 @@ class _ReasoningState extends State<_Reasoning> {
                   key: const Key('reasoning-inline'),
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(8, 5, 4, 5),
-                    child: Text(widget.text, style: textStyle),
+                    child: MarkdownText(widget.text, baseStyle: textStyle),
                   ),
                 )
               : Column(
@@ -5383,7 +5809,7 @@ class _ReasoningState extends State<_Reasoning> {
                     if (_open)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 4, 4, 4),
-                        child: Text(widget.text, style: textStyle),
+                        child: MarkdownText(widget.text, baseStyle: textStyle),
                       ),
                   ],
                 ),

@@ -338,6 +338,7 @@ class OpenCodeApi {
     String? agent,
     String? variant,
     List<PromptAttachment> attachments = const [],
+    List<PromptAgentMention> agentMentions = const [],
   }) async {
     try {
       await sdkClient.getSessionApi().sessionPromptAsync(
@@ -355,6 +356,19 @@ class OpenCodeApi {
           variant: variant,
           parts: [
             sdk.OpencodeSdkRawUnion085({'type': 'text', 'text': text}),
+            ...agentMentions.map(
+              (mention) => sdk.OpencodeSdkRawUnion085(
+                sdk.AgentPartInput(
+                  type: sdk.AgentPartInputTypeEnum.agent,
+                  name: mention.name,
+                  source_: sdk.AgentPartSource(
+                    value: mention.value,
+                    start: mention.start,
+                    end: mention.end,
+                  ),
+                ).toJson(),
+              ),
+            ),
             ...attachments.map(
               (attachment) => sdk.OpencodeSdkRawUnion085(attachment.toJson()),
             ),

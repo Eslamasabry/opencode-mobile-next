@@ -626,11 +626,21 @@ class ConnectionController extends ChangeNotifier {
         }
       }
 
+      Future<ChatDefaults?> loadChatDefaults() async {
+        if (currentRepository == null) return null;
+        try {
+          return await currentRepository.loadChatDefaults();
+        } catch (_) {
+          return null;
+        }
+      }
+
       final results = await Future.wait<Object?>([
         currentApi.providers(),
         currentApi.agents(),
         loadDetailedCatalog(),
         loadIntegrations(),
+        loadChatDefaults(),
       ]);
       if (!_isCurrentCatalogRefresh(
         generation,
@@ -643,6 +653,7 @@ class ConnectionController extends ChangeNotifier {
       final nextAgents = results[1] as List<AgentInfo>;
       final detailedCatalog = results[2] as CatalogSnapshot?;
       final integrations = results[3] as List<IntegrationInfo>;
+      final chatDefaults = results[4] as ChatDefaults?;
       final hasConnectedIntegration = integrations.any(
         (integration) => integration.connectionCount > 0,
       );
@@ -747,12 +758,20 @@ class ConnectionController extends ChangeNotifier {
                 candidate.providerID == model.providerID &&
                 candidate.id == model.modelID,
           );
-      if (!validModel(nextModel)) {
-        final defaultModel = ModelRef(
+      final configuredModel = chatDefaults?.model;
+      final modelWasExplicitlySelected =
+          profileID != null && store.modelWasExplicitlySelected(profileID);
+      if (!validModel(nextModel) ||
+          (!modelWasExplicitlySelected && validModel(configuredModel))) {
+        final providerDefaultModel = ModelRef(
           providerID: nextProviders.defaultProviderID ?? '',
           modelID: nextProviders.defaultModelID ?? '',
         );
-        nextModel = validModel(defaultModel) ? defaultModel : null;
+        nextModel = validModel(configuredModel)
+            ? configuredModel
+            : validModel(providerDefaultModel)
+            ? providerDefaultModel
+            : null;
         if (nextModel == null) {
           for (final model in nextCatalog.models) {
             nextModel = ModelRef(
@@ -778,7 +797,18 @@ class ConnectionController extends ChangeNotifier {
       }
       var nextAgent = selectedAgent;
       if (!nextAgents.any((agent) => agent.name == nextAgent)) {
-        nextAgent = nextAgents.isEmpty ? '' : nextAgents.first.name;
+        final configuredAgent = chatDefaults?.agent;
+        final validConfiguredAgent = nextAgents.any(
+          (agent) => agent.name == configuredAgent && agent.mode != 'subagent',
+        );
+        final primaryAgents = nextAgents.where(
+          (agent) => agent.mode != 'subagent',
+        );
+        nextAgent = validConfiguredAgent
+            ? configuredAgent!
+            : primaryAgents.isEmpty
+            ? ''
+            : primaryAgents.first.name;
       }
       if (profileID != null) {
         final modelChanged =

@@ -27,6 +27,7 @@ class _FakeOpenCodeApi extends OpenCodeApi {
       ModelRef? model,
       String? variant,
       List<PromptAttachment> attachments,
+      List<PromptAgentMention> agentMentions,
     })
   >
   prompts = [];
@@ -92,6 +93,7 @@ class _FakeOpenCodeApi extends OpenCodeApi {
     String? agent,
     String? variant,
     List<PromptAttachment> attachments = const [],
+    List<PromptAgentMention> agentMentions = const [],
   }) {
     promptCalls += 1;
     prompts.add((
@@ -99,6 +101,7 @@ class _FakeOpenCodeApi extends OpenCodeApi {
       model: model,
       variant: variant,
       attachments: attachments,
+      agentMentions: agentMentions,
     ));
     return promptCompleter?.future ?? Future.value();
   }
@@ -344,6 +347,13 @@ class _DelayedRepositoryController extends ConnectionController {
   @override
   Future<ProductRepository?> prepareActionRepository() =>
       readyRepository.future;
+}
+
+class _StaticCatalogController extends ConnectionController {
+  _StaticCatalogController(super.store);
+
+  @override
+  Future<void> refreshCatalog() async {}
 }
 
 MessageWithParts _message(
@@ -1277,8 +1287,8 @@ void main() {
 
     delta('text-1', 'text', 'Hel');
     delta('text-1', 'text', 'lo');
-    delta('reasoning-1', 'text', 'why ');
-    delta('reasoning-1', 'text', 'this works');
+    delta('reasoning-1', 'text', '**why ');
+    delta('reasoning-1', 'text', 'this works**');
     delta('tool-1', 'input', '{"query":');
     delta('tool-1', 'input', '"chat"}');
     await _pumpEvent(tester);
@@ -1287,6 +1297,7 @@ void main() {
     expect(find.byKey(const Key('reasoning-inline')), findsOneWidget);
     expect(find.byKey(const Key('reasoning-toggle')), findsNothing);
     expect(find.text('why this works'), findsOneWidget);
+    expect(find.text('**why this works**'), findsNothing);
     await tester.tap(find.text('search'));
     await _pumpEvent(tester);
     expect(find.textContaining('"query": "chat"'), findsOneWidget);
@@ -2162,6 +2173,107 @@ void main() {
     expect(find.byKey(const Key('inline-command-suggestions')), findsOneWidget);
     expect(find.byKey(const Key('inline-command-review')), findsOneWidget);
     expect(find.text('/models'), findsNothing);
+  });
+
+  testWidgets('composer tools delegates only to visible server subagents', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(320, 640));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final controller = _StaticCatalogController(ProfileStore(prefs: prefs))
+      ..api = _FakeOpenCodeApi()
+      ..status = StreamStatus.connected
+      ..catalog = const CatalogSnapshot(
+        providers: [],
+        models: [],
+        agents: [
+          CatalogAgent(id: 'build', mode: 'primary', hidden: false),
+          CatalogAgent(
+            id: 'explore',
+            mode: 'subagent',
+            hidden: false,
+            description: 'Find code and explain how it works',
+          ),
+          CatalogAgent(id: 'internal', mode: 'subagent', hidden: true),
+        ],
+      );
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: const MediaQuery(
+          data: MediaQueryData(textScaler: TextScaler.linear(2)),
+          child: MaterialApp(home: ChatScreen(sessionID: 'session-1')),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    expect(find.text('Composer tools'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.byKey(const Key('composer-tools-agents-tab')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('@explore'), findsOneWidget);
+    expect(find.text('@build'), findsNothing);
+    expect(find.text('@internal'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.byKey(const Key('composer-agent-explore')));
+    await tester.pumpAndSettle();
+
+    final composer = tester.widget<TextField>(
+      find.byKey(const Key('chat-composer-field')),
+    );
+    expect(composer.controller?.text, '@explore ');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('typed agent autocomplete sends exact OpenCode agent parts', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi();
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final controller = _StaticCatalogController(ProfileStore(prefs: prefs))
+      ..api = api
+      ..status = StreamStatus.connected
+      ..catalog = const CatalogSnapshot(
+        providers: [],
+        models: [],
+        agents: [
+          CatalogAgent(id: 'build', mode: 'primary', hidden: false),
+          CatalogAgent(id: 'general', mode: 'subagent', hidden: false),
+        ],
+      );
+    await _pumpChat(tester, api, controller: controller);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      'Please ask @gen',
+    );
+    await tester.pump();
+    expect(find.byKey(const Key('inline-agent-general')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('inline-agent-general')));
+    await tester.pump();
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      'Please ask @general to inspect this.',
+    );
+    await tester.tap(find.byTooltip('Send'));
+    await tester.pumpAndSettle();
+
+    expect(api.prompts.single.text, 'Please ask @general to inspect this.');
+    expect(api.prompts.single.agentMentions, hasLength(1));
+    final mention = api.prompts.single.agentMentions.single;
+    expect(mention.name, 'general');
+    expect(mention.value, '@general');
+    expect(mention.start, 11);
+    expect(mention.end, 19);
   });
 
   testWidgets('removes individual parts and complete messages', (tester) async {

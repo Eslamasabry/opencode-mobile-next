@@ -519,6 +519,24 @@ class PromptAttachment {
   };
 }
 
+/// A server-authored subagent mention embedded in the prompt text.
+///
+/// [start] and [end] are UTF-16 code-unit offsets, matching both Dart strings
+/// and OpenCode's JavaScript wire contract.
+class PromptAgentMention {
+  final String name;
+  final String value;
+  final int start;
+  final int end;
+
+  const PromptAgentMention({
+    required this.name,
+    required this.value,
+    required this.start,
+    required this.end,
+  });
+}
+
 Map<String, dynamic> shellRequestBody(
   String command, {
   String agent = 'build',
