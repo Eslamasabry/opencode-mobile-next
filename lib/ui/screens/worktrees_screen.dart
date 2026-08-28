@@ -404,13 +404,12 @@ class _WorktreesScreenState extends State<WorktreesScreen> {
             else if (_loadError != null)
               ProductErrorState(message: _loadError!, onRetry: _load)
             else if (worktrees!.isEmpty)
-              const ListTile(
+              const ProductInlineEmpty(
                 key: ValueKey('no-worktrees'),
-                leading: Icon(Icons.account_tree_outlined),
-                title: Text('No isolated worktrees yet'),
-                subtitle: Text(
-                  'Create one when you want OpenCode to work on a separate branch.',
-                ),
+                icon: Icons.account_tree_outlined,
+                title: 'No isolated worktrees yet',
+                message:
+                    'Create one when you want OpenCode to work on a separate branch.',
               )
             else
               for (var index = 0; index < worktrees.length; index++) ...[

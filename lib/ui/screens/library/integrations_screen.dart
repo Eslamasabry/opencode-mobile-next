@@ -365,16 +365,13 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
             else if (_servers == null)
               const _SectionLoading(label: 'Loading MCP servers')
             else if (_servers!.isEmpty)
-              ListTile(
-                leading: const Icon(Icons.hub_outlined),
-                title: const Text('No MCP servers configured'),
-                subtitle: const Text(
-                  'Save one for this project or every project on the server.',
-                ),
-                trailing: TextButton(
-                  onPressed: _openMcpSetup,
-                  child: const Text('Add'),
-                ),
+              ProductInlineEmpty(
+                icon: Icons.hub_outlined,
+                title: 'No MCP servers configured',
+                message:
+                    'Save one for this project or every project on the server.',
+                actionLabel: 'Add',
+                onAction: _openMcpSetup,
               )
             else
               for (final server in _servers!) ...[
@@ -421,12 +418,10 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
             else if (_integrations == null)
               const _SectionLoading(label: 'Loading provider connections')
             else if (_integrations!.isEmpty)
-              const ListTile(
-                leading: Icon(Icons.link_off_rounded),
-                title: Text('No provider connections available'),
-                subtitle: Text(
-                  'This server did not return any provider integrations.',
-                ),
+              const ProductInlineEmpty(
+                icon: Icons.link_off_rounded,
+                title: 'No provider connections available',
+                message: 'This server did not return any provider integrations.',
               )
             else
               for (final presented in presentIntegrations(_integrations!))
@@ -446,12 +441,10 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
             else if (_resources == null)
               const _SectionLoading(label: 'Loading available resources')
             else if (_resources!.isEmpty)
-              const ListTile(
-                leading: Icon(Icons.description_outlined),
-                title: Text('No resources available'),
-                subtitle: Text(
-                  'Connected MCP servers have not exposed any resources.',
-                ),
+              const ProductInlineEmpty(
+                icon: Icons.description_outlined,
+                title: 'No resources available',
+                message: 'Connected MCP servers have not exposed any resources.',
               )
             else
               for (final resource in _resources!)
@@ -556,31 +549,20 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   Future<void> _disconnectIntegration(PresentedIntegration presented) async {
     final integration = presented.integration;
     final environmentRemains = integration.hasEnvironmentConnection;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        scrollable: true,
-        title: Text('Disconnect ${presented.name}?'),
-        content: Text(
+    final confirmed = await showConfirmSheet(
+      context,
+      icon: Icons.link_off_rounded,
+      title: 'Disconnect ${presented.name}?',
+      message:
           'The stored credential will be removed from this OpenCode server. '
           'New prompts will stop using it after the provider runtime refreshes. '
           'An active response is not stopped.'
           '${environmentRemains ? '\n\nThis provider also uses the server environment, which mobile cannot remove and which will remain active.' : ''}',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            key: const ValueKey('confirm-provider-disconnect'),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Disconnect provider'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Disconnect provider',
+      confirmKey: const ValueKey('confirm-provider-disconnect'),
+      destructive: true,
     );
-    if (confirmed != true || !mounted) return;
+    if (!confirmed || !mounted) return;
 
     await _runIntegrationAction(integration.id, () async {
       final repository = await _requireActionRepository();

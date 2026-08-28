@@ -86,27 +86,18 @@ class _PromptEditorScreenState extends State<_PromptEditorScreen> {
       return;
     }
     _closing = true;
-    final discard = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Discard prompt changes?'),
-        content: const Text(
+    final discard = await showConfirmSheet(
+      context,
+      icon: Icons.delete_sweep_outlined,
+      title: 'Discard prompt changes?',
+      message:
           'Your original composer draft and attachments will stay unchanged.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Keep editing'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Discard'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Discard',
+      cancelLabel: 'Keep editing',
+      destructive: true,
     );
     _closing = false;
-    if (discard == true && mounted) Navigator.pop(context);
+    if (discard && mounted) Navigator.pop(context);
   }
 
   @override

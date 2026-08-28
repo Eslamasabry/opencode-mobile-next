@@ -291,13 +291,12 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
                 ),
               )
             else if (adapters?.isEmpty == true)
-              const ListTile(
+              const ProductInlineEmpty(
                 key: ValueKey('workspace-adapters-empty'),
-                leading: Icon(Icons.extension_off_outlined),
-                title: Text('No workspace adapters'),
-                subtitle: Text(
-                  'This OpenCode project does not expose managed workspace creation.',
-                ),
+                icon: Icons.extension_off_outlined,
+                title: 'No workspace adapters',
+                message:
+                    'This OpenCode project does not expose managed workspace creation.',
               )
             else
               for (final adapter in adapters ?? const <WorkspaceAdapterInfo>[])

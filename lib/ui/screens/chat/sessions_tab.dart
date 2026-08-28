@@ -153,31 +153,16 @@ class SessionsTab extends StatelessWidget {
     }
   }
 
-  Future<bool> _confirmDelete(BuildContext context, Session session) async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Delete chat?'),
-            content: Text(
-              '“${session.title?.isNotEmpty == true ? session.title : 'Untitled chat'}” and its history will be permanently removed.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                ),
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Delete'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-  }
+  Future<bool> _confirmDelete(BuildContext context, Session session) =>
+      showConfirmSheet(
+        context,
+        icon: Icons.delete_outline_rounded,
+        title: 'Delete chat?',
+        message:
+            '“${session.title?.isNotEmpty == true ? session.title : 'Untitled chat'}” and its history will be permanently removed.',
+        confirmLabel: 'Delete',
+        destructive: true,
+      );
 
   Future<void> _sessionAction(
     BuildContext context,

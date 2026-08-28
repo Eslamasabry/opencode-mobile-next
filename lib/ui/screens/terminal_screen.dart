@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../widgets/confirm_sheet.dart';
 import 'package:flutter/services.dart';
 import 'package:xterm/xterm.dart' as xterm;
 
@@ -212,31 +213,19 @@ class _TerminalScreenState extends State<TerminalScreen> {
 
   Future<void> _remove(TerminalProcess process) async {
     final locationRevision = widget.controller.locationRevision;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(process.running ? 'Stop terminal?' : 'Remove terminal?'),
-        content: Text(
-          process.running
-              ? 'The running process and its child processes will be terminated.'
-              : 'This terminal record will be removed.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(process.running ? 'Stop' : 'Remove'),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmSheet(
+      context,
+      icon: process.running
+          ? Icons.stop_circle_outlined
+          : Icons.delete_outline_rounded,
+      title: process.running ? 'Stop terminal?' : 'Remove terminal?',
+      message: process.running
+          ? 'The running process and its child processes will be terminated.'
+          : 'This terminal record will be removed.',
+      confirmLabel: process.running ? 'Stop' : 'Remove',
+      destructive: true,
     );
-    if (confirmed != true ||
+    if (!confirmed ||
         locationRevision != widget.controller.locationRevision) {
       return;
     }

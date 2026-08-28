@@ -7,6 +7,7 @@ import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../navigation/chat_route.dart';
+import '../widgets/confirm_sheet.dart';
 import '../widgets/product_states.dart';
 import 'global_sessions_screen.dart';
 import 'managed_workspaces_screen.dart';
@@ -573,78 +574,34 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     }
   }
 
-  Future<bool> _confirmArchive(Session session) async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Archive session?'),
-            content: Text(
-              '“${session.title?.isNotEmpty == true ? session.title : 'Untitled session'}” will be hidden from recent sessions.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Archive'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-  }
+  Future<bool> _confirmArchive(Session session) => showConfirmSheet(
+    context,
+    icon: Icons.archive_outlined,
+    title: 'Archive session?',
+    message:
+        '“${session.title?.isNotEmpty == true ? session.title : 'Untitled session'}” will be hidden from recent sessions.',
+    confirmLabel: 'Archive',
+  );
 
-  Future<bool> _confirmShare(Session session) async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Share this session?'),
-            content: Text(
-              'Anyone with the link can view “${session.title?.isNotEmpty == true ? session.title : 'Untitled session'}”, '
-              'including its conversation and shared context. Do not share secrets, credentials, or private files.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Share session'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-  }
+  Future<bool> _confirmShare(Session session) => showConfirmSheet(
+    context,
+    icon: Icons.public_rounded,
+    title: 'Share this session?',
+    message:
+        'Anyone with the link can view “${session.title?.isNotEmpty == true ? session.title : 'Untitled session'}”, '
+        'including its conversation and shared context. Do not share secrets, credentials, or private files.',
+    confirmLabel: 'Share session',
+  );
 
-  Future<bool> _confirmDelete(Session session) async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Delete session?'),
-            content: Text(
-              '“${session.title?.isNotEmpty == true ? session.title : 'Untitled session'}” and its history will be permanently removed.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                ),
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Delete'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-  }
+  Future<bool> _confirmDelete(Session session) => showConfirmSheet(
+    context,
+    icon: Icons.delete_outline_rounded,
+    title: 'Delete session?',
+    message:
+        '“${session.title?.isNotEmpty == true ? session.title : 'Untitled session'}” and its history will be permanently removed.',
+    confirmLabel: 'Delete',
+    destructive: true,
+  );
 
   void _showArchived(List<Session> sessions) {
     showModalBottomSheet<void>(

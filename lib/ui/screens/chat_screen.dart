@@ -20,6 +20,7 @@ import '../permission_presentation.dart';
 import '../app_theme.dart';
 import '../widgets/appearance_picker.dart';
 import '../widgets/connection_status_banner.dart';
+import '../widgets/confirm_sheet.dart';
 import '../widgets/file_preview.dart';
 import '../widgets/markdown.dart';
 import '../widgets/pickers.dart';
@@ -1169,27 +1170,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _share() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Share this session?'),
-        content: const Text(
+    final confirmed = await showConfirmSheet(
+      context,
+      icon: Icons.public_rounded,
+      title: 'Share this session?',
+      message:
           'Anyone with the link can view this session’s conversation and shared context. '
           'Do not share sessions containing secrets, credentials, or private files.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Share session'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Share session',
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     try {
       final repository = await _requireActionRepository();
       final url = await repository.shareSession(widget.sessionID);
@@ -1491,26 +1481,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       }
     }
     if (target == null) return;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Revert from this prompt?'),
-        content: const Text(
+    final confirmed = await showConfirmSheet(
+      context,
+      icon: Icons.history_rounded,
+      title: 'Revert from this prompt?',
+      message:
           'Messages and file changes after the most recent prompt will be rolled back.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Revert'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Revert',
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     try {
       final repository = await _requireActionRepository();
       await repository.revertSession(widget.sessionID, target.info.id);
@@ -2652,30 +2631,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool get _hasUnsentDraft =>
       _composer.text.isNotEmpty || _attachments.isNotEmpty;
 
-  Future<bool> _confirmDiscardDraft() async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        key: const ValueKey('discard-chat-draft-dialog'),
-        scrollable: true,
-        title: const Text('Discard unsent draft?'),
-        content: const Text(
-          'Your text and attachments have not been sent to OpenCode.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Keep editing'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Discard draft'),
-          ),
-        ],
-      ),
-    );
-    return result == true;
-  }
+  Future<bool> _confirmDiscardDraft() => showConfirmSheet(
+    context,
+    sheetKey: const ValueKey('discard-chat-draft-dialog'),
+    icon: Icons.delete_sweep_outlined,
+    title: 'Discard unsent draft?',
+    message: 'Your text and attachments have not been sent to OpenCode.',
+    confirmLabel: 'Discard draft',
+    cancelLabel: 'Keep editing',
+    destructive: true,
+  );
 
   Future<String?> _discardUntouchedMobileSession() async {
     if (!widget.discardIfUntouched ||
