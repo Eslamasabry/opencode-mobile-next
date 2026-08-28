@@ -1108,6 +1108,36 @@ at 161,022,083 bytes. The emulator app, reverse port, isolated server/config/pro
 disposable signing key, and local APK were removed afterward; that APK was not
 distributed. Traycer remains explicitly deferred.
 
+The detailed model/provider/agent catalog now uses the generated
+`v2.provider.list`, `v2.model.list`, and `v2.agent.list` operations instead of
+three handwritten `/api/*` parsers. This required repairing a real generator
+collision: OpenAPI Generator named the inline legacy `Model.capabilities` object
+`ModelCapabilities`, overwriting the canonical v2 component of the same name.
+Normalization now gives the canonical shape the stable `ModelV2Capabilities`
+name, records the ninth component/ref rewrite in the manifest, and pins the new
+generated-model tree hash. The regenerated package retained all 188 operations,
+passed its 46 tests, independent parity verifier, analysis, and compiled smoke
+test before the atomic package swap.
+
+The app keeps connected-provider truth authoritative: v2 details enrich matching
+rows but cannot hide a provider missing from the location-scoped v2 response.
+The merge also cannot erase richer reasoning, attachment, tool, or variant
+metadata returned with the connected provider, preserving the Z.AI-versus-Zen
+fix and the thinking/fast-mode picker filters. Exact loopback coverage proves
+all three generated paths, bracketed directory/workspace queries, strict response
+envelopes, provider integration identity, model capabilities/limits/variants,
+and agent descriptions. On the release-mode Pixel 6 against isolated OpenCode
+`1.18.23`, the picker showed the six connected Zen models, all six under
+Reasoning, two under Fast modes, exact context/output limits, and the visible
+build/plan/general/explore agents with their server modes. Android logged no
+fatal exception, ANR, RenderFlex overflow, or OOM. The generated SDK audit now
+counts 84 directly used operations. Final-tree Flutter analysis is clean, all
+367 tests pass serially, Android `lintRelease` passes, and the isolated release
+APK compiled at 161,022,083 bytes. The emulator app/profile, reverse port,
+isolated server/state/project, disposable signing key, and local APK were
+removed afterward; that APK was not distributed. Traycer remains explicitly
+deferred.
+
 ## Shorebird wake patch for `1.0.17+18`
 
 - Shorebird release ID: `789345`

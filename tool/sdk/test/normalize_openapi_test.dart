@@ -283,6 +283,7 @@ Future<void> main(List<String> arguments) async {
   );
 
   const expectedRenames = {
+    'ModelCapabilities': 'ModelV2Capabilities',
     'Event.tui.command.execute': 'EventTuiCommandExecuteSchema2',
     'Event.tui.prompt.append': 'EventTuiPromptAppendSchema2',
     'Event.tui.session.select': 'EventTuiSessionSelectSchema2',
@@ -296,7 +297,7 @@ Future<void> main(List<String> arguments) async {
     jsonEncode(report.componentRenames) == jsonEncode(expectedRenames),
     'unexpected collision renames: ${report.componentRenames}',
   );
-  expect(report.componentRefsRewritten == 8, 'component ref rewrite count');
+  expect(report.componentRefsRewritten == 9, 'component ref rewrite count');
   final dartNames = schemas.keys
       .map((name) => dartTypeName(name as String))
       .toList();

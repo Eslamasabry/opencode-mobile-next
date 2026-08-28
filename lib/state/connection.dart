@@ -60,7 +60,6 @@ CatalogModel _catalogModelFromProvider(ProviderInfo provider, String modelID) {
 }
 
 CatalogModel _mergeCatalogModel(CatalogModel detailed, CatalogModel base) {
-  if (detailed.variants.isNotEmpty || base.variants.isEmpty) return detailed;
   return CatalogModel(
     id: detailed.id,
     providerID: detailed.providerID,
@@ -70,10 +69,10 @@ CatalogModel _mergeCatalogModel(CatalogModel detailed, CatalogModel base) {
     status: detailed.status,
     contextLimit: detailed.contextLimit,
     outputLimit: detailed.outputLimit,
-    reasoning: detailed.reasoning,
-    attachments: detailed.attachments,
-    tools: detailed.tools,
-    variants: base.variants,
+    reasoning: detailed.reasoning || base.reasoning,
+    attachments: detailed.attachments || base.attachments,
+    tools: detailed.tools || base.tools,
+    variants: detailed.variants.isEmpty ? base.variants : detailed.variants,
   );
 }
 

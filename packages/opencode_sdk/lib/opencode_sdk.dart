@@ -311,6 +311,7 @@ export 'package:opencode_sdk/src/model/model_cost_tiers_inner.dart';
 export 'package:opencode_sdk/src/model/model_cost_tiers_inner_tier.dart';
 export 'package:opencode_sdk/src/model/model_part.dart';
 export 'package:opencode_sdk/src/model/model_ref.dart';
+export 'package:opencode_sdk/src/model/model_v2_capabilities.dart';
 export 'package:opencode_sdk/src/model/model_v2_info.dart';
 export 'package:opencode_sdk/src/model/model_v2_info_limit.dart';
 export 'package:opencode_sdk/src/model/model_v2_info_request.dart';

@@ -1232,115 +1232,82 @@ class SdkProductRepository
   });
 
   @override
-  Future<CatalogSnapshot> loadCatalog() => _guard(
-    'Could not load models and agents',
-    () async {
-      final query = <String, dynamic>{
-        if (_directory != null) 'location[directory]': _directory,
-        if (_workspace != null) 'location[workspace]': _workspace,
-      };
-      final results = await Future.wait([
-        _client.dio.get('/api/provider', queryParameters: query),
-        _client.dio.get('/api/model', queryParameters: query),
-        _client.dio.get('/api/agent', queryParameters: query),
-      ]);
-      final providers = _catalogData(results[0].data)
-          .map((provider) {
-            return CatalogProvider(
-              id: provider['id']?.toString() ?? '',
-              name:
-                  provider['name']?.toString() ??
-                  provider['id']?.toString() ??
-                  '',
-              enabled: provider['disabled'] != true,
-              integrationID: provider['integrationID']?.toString(),
-            );
-          })
-          .where((provider) => provider.id.isNotEmpty)
-          .toList();
-      final models = _catalogData(results[1].data)
-          .map((model) {
-            final capabilities = _stringMap(model['capabilities']);
-            final limit = _stringMap(model['limit']);
-            final inputs = capabilities['input'];
-            final attachments =
-                capabilities['attachment'] == true ||
-                (inputs is List && inputs.any((value) => value != 'text')) ||
-                (inputs is Map &&
-                    inputs.entries.any(
-                      (entry) => entry.key != 'text' && entry.value == true,
-                    ));
-            final rawVariants = model['variants'];
-            final variants = <CatalogVariant>[];
-            if (rawVariants is Map) {
-              for (final entry in rawVariants.entries) {
-                final metadata = _stringMap(entry.value);
-                final body = _stringMap(metadata['body']);
-                variants.add(
-                  CatalogVariant(
-                    id: entry.key.toString(),
-                    disabled: metadata['disabled'] == true,
-                    options: body.isEmpty ? metadata : body,
-                  ),
-                );
-              }
-            } else if (rawVariants is List) {
-              for (final value in rawVariants) {
-                if (value is Map) {
-                  final metadata = _stringMap(value);
-                  final id = metadata['id']?.toString() ?? '';
-                  if (id.isEmpty) continue;
-                  final body = _stringMap(metadata['body']);
-                  variants.add(
-                    CatalogVariant(
-                      id: id,
-                      disabled: metadata['disabled'] == true,
-                      options: body.isEmpty ? metadata : body,
+  Future<CatalogSnapshot> loadCatalog() =>
+      _guard('Could not load models and agents', () async {
+        final providersRequest = _client.getProvidersApi().v2ProviderList(
+          locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
+          locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
+        );
+        final modelsRequest = _client.getModelsApi().v2ModelList(
+          locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
+          locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
+        );
+        final agentsRequest = _client.getOpencodeHttpApiApi().v2AgentList(
+          locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
+          locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
+        );
+        final providerResponse = await providersRequest;
+        final modelResponse = await modelsRequest;
+        final agentResponse = await agentsRequest;
+        final providers = (providerResponse.data?.data ?? const [])
+            .map((provider) {
+              return CatalogProvider(
+                id: provider.id,
+                name: provider.name,
+                enabled: provider.disabled != true,
+                integrationID: provider.integrationID,
+              );
+            })
+            .where((provider) => provider.id.isNotEmpty)
+            .toList();
+        final models = (modelResponse.data?.data ?? const [])
+            .map((model) {
+              final variants = model.variants
+                  .where((variant) => variant.id.isNotEmpty)
+                  .map(
+                    (variant) => CatalogVariant(
+                      id: variant.id,
+                      options: _stringMap(variant.body),
                     ),
-                  );
-                } else if (value != null) {
-                  variants.add(CatalogVariant(id: value.toString()));
-                }
-              }
-            }
-            return CatalogModel(
-              id: model['id']?.toString() ?? '',
-              providerID: model['providerID']?.toString() ?? '',
-              name: model['name']?.toString() ?? model['id']?.toString() ?? '',
-              family: model['family']?.toString(),
-              enabled: model['enabled'] != false,
-              status: model['status']?.toString() ?? 'unknown',
-              contextLimit: (limit['context'] as num?)?.toInt() ?? 0,
-              outputLimit: (limit['output'] as num?)?.toInt() ?? 0,
-              reasoning: capabilities['reasoning'] == true,
-              attachments: attachments,
-              tools:
-                  capabilities['toolcall'] == true ||
-                  capabilities['tools'] == true,
-              variants: variants,
-            );
-          })
-          .where((model) => model.id.isNotEmpty)
-          .toList();
-      final agents = _catalogData(results[2].data)
-          .map((agent) {
-            return CatalogAgent(
-              id: agent['id']?.toString() ?? '',
-              mode: agent['mode']?.toString() ?? 'unknown',
-              description: agent['description']?.toString(),
-              hidden: agent['hidden'] == true,
-              maxSteps: (agent['steps'] as num?)?.toInt(),
-            );
-          })
-          .where((agent) => agent.id.isNotEmpty)
-          .toList();
-      return CatalogSnapshot(
-        providers: providers,
-        models: models,
-        agents: agents,
-      );
-    },
-  );
+                  )
+                  .toList();
+              return CatalogModel(
+                id: model.id,
+                providerID: model.providerID,
+                name: model.name,
+                family: model.family,
+                enabled: model.enabled,
+                status: model.status.value.toString(),
+                contextLimit: model.limit.context,
+                outputLimit: model.limit.output,
+                reasoning: false,
+                attachments: model.capabilities.input.any(
+                  (input) => input != 'text',
+                ),
+                tools: model.capabilities.tools,
+                variants: variants,
+              );
+            })
+            .where((model) => model.id.isNotEmpty)
+            .toList();
+        final agents = (agentResponse.data?.data ?? const [])
+            .map((agent) {
+              return CatalogAgent(
+                id: agent.id,
+                mode: agent.mode.value.toString(),
+                description: agent.description,
+                hidden: agent.hidden,
+                maxSteps: agent.steps,
+              );
+            })
+            .where((agent) => agent.id.isNotEmpty)
+            .toList();
+        return CatalogSnapshot(
+          providers: providers,
+          models: models,
+          agents: agents,
+        );
+      });
 
   @override
   Future<List<McpServerInfo>> listMcpServers() =>
@@ -1966,15 +1933,6 @@ class SdkProductRepository
   static String _basename(String path) {
     final segments = path.split('/').where((part) => part.isNotEmpty).toList();
     return segments.isEmpty ? path : segments.last;
-  }
-
-  static List<Map<String, dynamic>> _catalogData(Object? response) {
-    final data = response is Map && response.containsKey('data')
-        ? response['data']
-        : response;
-    return data is List
-        ? data.whereType<Map>().map(_stringMap).toList()
-        : const [];
   }
 
   static Map<String, dynamic> _stringMap(Object? value) =>

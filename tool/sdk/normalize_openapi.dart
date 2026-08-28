@@ -12,6 +12,14 @@ const httpMethods = {
   'trace',
 };
 
+// OpenAPI Generator names the inline `Model.capabilities` object
+// `ModelCapabilities`, which collides with the canonical v2 catalog component
+// of the same name. Preserve both declarations under truthful, stable names so
+// `v2.model.list` can deserialize its actual `tools`/`input`/`output` shape.
+const componentRenameOverrides = <String, String>{
+  'ModelCapabilities': 'ModelV2Capabilities',
+};
+
 class NormalizationReport {
   NormalizationReport({required this.componentRenames});
 
@@ -91,8 +99,17 @@ Map<String, String> _componentRenameMap(Map<String, dynamic> document) {
     }
   }
 
-  final renames = <String, String>{};
   final occupied = schemas.keys.toSet();
+  final renames = <String, String>{};
+  for (final entry in componentRenameOverrides.entries) {
+    if (!schemas.containsKey(entry.key)) continue;
+    if (!occupied.add(entry.value)) {
+      throw FormatException(
+        'Component rename target already exists: ${entry.value}',
+      );
+    }
+    renames[entry.key] = entry.value;
+  }
   final sortedGroups = groups.entries.toList()
     ..sort((left, right) => left.key.compareTo(right.key));
   for (final entry in sortedGroups) {

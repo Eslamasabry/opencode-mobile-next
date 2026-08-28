@@ -35,7 +35,7 @@ ModelV2Info _$ModelV2InfoFromJson(Map<String, dynamic> json) => $checkedCreate(
       api: $checkedConvert('api', (v) => ModelApi.fromJson(v)),
       capabilities: $checkedConvert(
         'capabilities',
-        (v) => ModelCapabilities.fromJson(v as Map<String, dynamic>),
+        (v) => ModelV2Capabilities.fromJson(v as Map<String, dynamic>),
       ),
       request: $checkedConvert(
         'request',

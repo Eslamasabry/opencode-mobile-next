@@ -1075,6 +1075,18 @@ void main() {
             id: 'opencode',
             name: 'OpenCode Zen',
             modelIDs: const ['nemotron'],
+            modelData: const {
+              'nemotron': {
+                'capabilities': {
+                  'reasoning': true,
+                  'attachment': true,
+                  'toolcall': true,
+                },
+                'variants': {
+                  'fast': {'reasoningEffort': 'low'},
+                },
+              },
+            },
           ),
           ProviderInfo(
             id: 'zai-coding-plan',
@@ -1100,9 +1112,9 @@ void main() {
           status: 'active',
           contextLimit: 262144,
           outputLimit: 262144,
-          reasoning: true,
+          reasoning: false,
           attachments: false,
-          tools: true,
+          tools: false,
           variants: [],
         ),
       ],
@@ -1146,6 +1158,13 @@ void main() {
     );
     expect(controller.selectedModel?.providerID, 'zai-coding-plan');
     expect(controller.selectedModel?.modelID, 'glm-5.2');
+    final zenModel = controller.catalog!.models.singleWhere(
+      (model) => model.providerID == 'opencode' && model.id == 'nemotron',
+    );
+    expect(zenModel.reasoning, isTrue);
+    expect(zenModel.attachments, isTrue);
+    expect(zenModel.tools, isTrue);
+    expect(zenModel.variants.single.id, 'fast');
     controller.dispose();
   });
 

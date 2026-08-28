@@ -530,6 +530,7 @@ Class | Method | HTTP request | Description
  - [ModelCostTiersInnerTier](doc/ModelCostTiersInnerTier.md)
  - [ModelPart](doc/ModelPart.md)
  - [ModelRef](doc/ModelRef.md)
+ - [ModelV2Capabilities](doc/ModelV2Capabilities.md)
  - [ModelV2Info](doc/ModelV2Info.md)
  - [ModelV2InfoLimit](doc/ModelV2InfoLimit.md)
  - [ModelV2InfoRequest](doc/ModelV2InfoRequest.md)

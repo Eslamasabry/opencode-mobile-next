@@ -1376,75 +1376,134 @@ void main() {
     }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
   });
 
-  test('catalog accepts the current v2 capability response shape', () async {
-    await HttpOverrides.runZoned(() async {
-      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
-      final locations = <String?>[];
-      server.listen((request) async {
-        locations.add(request.uri.queryParameters['location[directory]']);
-        final data = switch (request.uri.path) {
-          '/api/provider' => [
-            {'id': 'opencode', 'name': 'OpenCode Zen'},
-          ],
-          '/api/model' => [
-            {
-              'id': 'model-1',
-              'providerID': 'opencode',
-              'name': 'Current model',
-              'capabilities': {
-                'tools': true,
-                'input': ['text', 'image'],
-                'output': ['text'],
-              },
-              'variants': {
-                'fast': {
-                  'body': {'reasoningEffort': 'low'},
+  test(
+    'catalog uses generated v2 transport and capability response shape',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        final requests = <Uri>[];
+        server.listen((request) async {
+          requests.add(request.uri);
+          final location = {
+            'directory': '/work/acme',
+            'workspaceID': 'phone',
+            'project': {'id': 'project-1', 'directory': '/work/acme'},
+          };
+          final data = switch (request.uri.path) {
+            '/api/provider' => [
+              {
+                'id': 'opencode',
+                'integrationID': 'zen',
+                'name': 'OpenCode Zen',
+                'disabled': false,
+                'api': {
+                  'id': 'opencode',
+                  'type': 'aisdk',
+                  'package': '@ai-sdk/openai-compatible',
+                },
+                'request': {
+                  'headers': <String, String>{},
+                  'body': <String, Object?>{},
                 },
               },
-              'status': 'active',
-              'enabled': true,
-              'limit': {'context': 200000, 'output': 32000},
-            },
-          ],
-          '/api/agent' => [
-            {
-              'id': 'build',
-              'mode': 'primary',
-              'hidden': false,
-              'description': 'Default agent',
-            },
-          ],
-          _ => <Object>[],
-        };
-        request.response.headers.contentType = ContentType.json;
-        request.response.write(
-          jsonEncode(request.uri.path == '/api/model' ? data : {'data': data}),
-        );
-        await request.response.close();
-      });
+            ],
+            '/api/model' => [
+              {
+                'id': 'model-1',
+                'providerID': 'opencode',
+                'family': 'test',
+                'name': 'Current model',
+                'api': {
+                  'id': 'model-1',
+                  'type': 'aisdk',
+                  'package': '@ai-sdk/openai-compatible',
+                },
+                'capabilities': {
+                  'tools': true,
+                  'input': ['text', 'image'],
+                  'output': ['text'],
+                },
+                'request': {
+                  'headers': <String, String>{},
+                  'body': <String, Object?>{},
+                },
+                'variants': [
+                  {
+                    'id': 'fast',
+                    'headers': <String, String>{},
+                    'body': {'reasoningEffort': 'low'},
+                  },
+                ],
+                'time': {'released': 1},
+                'cost': [
+                  {
+                    'input': 0,
+                    'output': 0,
+                    'cache': {'read': 0, 'write': 0},
+                  },
+                ],
+                'status': 'active',
+                'enabled': true,
+                'limit': {'context': 200000, 'output': 32000},
+              },
+            ],
+            '/api/agent' => [
+              {
+                'id': 'build',
+                'mode': 'primary',
+                'hidden': false,
+                'description': 'Default agent',
+                'request': {
+                  'headers': <String, String>{},
+                  'body': <String, Object?>{},
+                },
+                'permissions': <Object?>[],
+              },
+            ],
+            _ => <Object>[],
+          };
+          request.response.headers.contentType = ContentType.json;
+          request.response.write(
+            jsonEncode({'location': location, 'data': data}),
+          );
+          await request.response.close();
+        });
 
-      try {
-        final api = OpenCodeApi(
-          baseUrl: 'http://${server.address.host}:${server.port}',
-        );
-        final repository = SdkProductRepository(api.sdkClient)
-          ..setLocation(directory: '/work/acme');
-        final catalog = await repository.loadCatalog();
+        try {
+          final api = OpenCodeApi(
+            baseUrl: 'http://${server.address.host}:${server.port}',
+          );
+          final repository = SdkProductRepository(api.sdkClient)
+            ..setLocation(directory: '/work/acme', workspace: 'phone');
+          final catalog = await repository.loadCatalog();
 
-        expect(catalog.providers.single.name, 'OpenCode Zen');
-        expect(catalog.models.single.tools, isTrue);
-        expect(catalog.models.single.attachments, isTrue);
-        expect(catalog.models.single.contextLimit, 200000);
-        expect(catalog.models.single.variants.single.id, 'fast');
-        expect(catalog.models.single.variants.single.reasoningEffort, 'low');
-        expect(catalog.models.single.variants.single.isFast, isTrue);
-        expect(catalog.agents.single.id, 'build');
-        expect(locations, everyElement('/work/acme'));
-      } finally {
-        await server.close(force: true);
-      }
-    }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
-  });
+          expect(catalog.providers.single.name, 'OpenCode Zen');
+          expect(catalog.providers.single.integrationID, 'zen');
+          expect(catalog.models.single.tools, isTrue);
+          expect(catalog.models.single.attachments, isTrue);
+          expect(catalog.models.single.contextLimit, 200000);
+          expect(catalog.models.single.variants.single.id, 'fast');
+          expect(catalog.models.single.variants.single.reasoningEffort, 'low');
+          expect(catalog.models.single.variants.single.isFast, isTrue);
+          expect(catalog.agents.single.id, 'build');
+          expect(catalog.agents.single.description, 'Default agent');
+          expect(requests.map((request) => request.path).toSet(), {
+            '/api/provider',
+            '/api/model',
+            '/api/agent',
+          });
+          for (final request in requests) {
+            expect(request.queryParameters, {
+              'location[directory]': '/work/acme',
+              'location[workspace]': 'phone',
+            });
+          }
+        } finally {
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
 
   test('fork session sends the selected OpenCode message point', () async {
     await HttpOverrides.runZoned(() async {

@@ -9,7 +9,7 @@ Authoritative inputs:
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app
-currently calls **81 generated operations directly**. It also uses a set of
+currently calls **84 generated operations directly**. It also uses a set of
 older or compatibility routes through `OpenCodeApi` and raw `Dio`; those are
 listed separately so a working feature is not incorrectly labelled missing.
 
@@ -36,14 +36,14 @@ Legend:
 | Integrations | list, key connect, OAuth start, attempt status, complete, cancel | provider runtime refresh after confirmed completion | - |
 | MCP | status, connect, disconnect, auth start/callback/remove | - | runtime-only add and same-host auth authenticate |
 | Messages v2 | - | legacy session message list | `v2SessionMessages` |
-| Models v2 | - | raw `/api/model` catalog parser | `v2ModelList` generated model is unused |
-| OpenCode HTTP v2 | credential remove | raw `/api/agent` catalog parser | agent list, credential update, health, location |
+| Models v2 | `v2ModelList` | - | - |
+| OpenCode HTTP v2 | agent list, credential remove | - | credential update, health, location |
 | Permission | list, reply, deprecated session reply fallback | - | - |
 | Permissions v2 | request list, session reply, saved permission list/remove | - | per-session create/get/list |
 | Project | `projectList`, `projectDirectories`, current project | - | Git init, update |
 | Project copy | - | - | generated name, create, refresh, remove |
 | Provider | - | provider list and configured-provider fallback | auth methods and OAuth authorize/callback |
-| Providers v2 | - | raw `/api/provider` catalog parser | provider get/list generated models are unused |
+| Providers v2 | provider list | - | provider get |
 | PTY | create, list, update, remove, shells, connect token | WebSocket connect uses the guarded ticket and OpenCode cursor resume | get, direct connect, and all duplicate v2 PTY operations |
 | Question | list, reply, reject | - | - |
 | Reference | `v2ReferenceList` | - | References can be copied standalone or added to the active composer as OpenCode directory parts |
@@ -188,7 +188,19 @@ Legend:
    `config.update` route writes a legacy project `config.json` that its current
    loader does not read. Every mutation is read back from global config before
    mobile claims success, and shell actions use the wake-reconciled repository.
-11. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
+11. **Generated catalog transport:** detailed providers, models, and agents now
+   use `v2.provider.list`, `v2.model.list`, and `v2.agent.list` rather than three
+   handwritten `/api/*` parsers. The SDK generator now protects the canonical
+   v2 `ModelCapabilities` component from an OpenAPI Generator inline-name
+   collision that previously replaced its `tools`/`input`/`output` shape with
+   the legacy model schema and made valid OpenCode `1.18.23` responses fail
+   deserialization. Detailed v2 rows still only enrich the authoritative
+   connected-provider catalog, so a location that reports only Zen cannot hide
+   a connected Z.AI plan. The merge also retains richer reasoning, attachment,
+   tool, and variant metadata from that connected-provider payload. If an older
+   server cannot satisfy the strict v2 envelope, the controller keeps its
+   existing basic provider/agent catalog instead of clearing the selector.
+12. **Deferred by owner:** agent/session trees, a Traycer-style task cockpit, and
    worktree lifecycle are deliberately not the current implementation lane.
 
 ## Deliberate non-goals

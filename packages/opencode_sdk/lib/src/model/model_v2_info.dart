@@ -5,11 +5,11 @@
 // ignore_for_file: unused_element
 import 'package:opencode_sdk/src/model/model_api.dart';
 import 'package:opencode_sdk/src/model/model_v2_info_request.dart';
+import 'package:opencode_sdk/src/model/model_v2_capabilities.dart';
 import 'package:opencode_sdk/src/model/model_v2_info_time.dart';
 import 'package:opencode_sdk/src/model/model_v2_info_variants_inner.dart';
 import 'package:opencode_sdk/src/model/model_v2_info_limit.dart';
 import 'package:opencode_sdk/src/model/model_cost.dart';
-import 'package:opencode_sdk/src/model/model_capabilities.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:equatable/src/equatable_utils.dart';
 
@@ -67,7 +67,7 @@ class ModelV2Info {
   final ModelApi api;
 
   @JsonKey(name: r'capabilities', required: true, includeIfNull: false)
-  final ModelCapabilities capabilities;
+  final ModelV2Capabilities capabilities;
 
   @JsonKey(name: r'request', required: true, includeIfNull: false)
   final ModelV2InfoRequest request;
