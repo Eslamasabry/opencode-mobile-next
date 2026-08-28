@@ -310,6 +310,24 @@ class _DestinationRepository extends _FakeProductRepository {
       const CatalogSnapshot(providers: [], models: [], agents: []);
 }
 
+class _MessageDeleteRepository extends _FakeProductRepository {
+  _MessageDeleteRepository(this.serverMessages) : super(const []);
+
+  final List<MessageWithParts> serverMessages;
+  final List<(String, String)> deleted = [];
+  Object? failure;
+
+  @override
+  Future<void> deleteMessage({
+    required String sessionID,
+    required String messageID,
+  }) async {
+    if (failure case final error?) throw error;
+    deleted.add((sessionID, messageID));
+    serverMessages.removeWhere((message) => message.info.id == messageID);
+  }
+}
+
 class _RelationsProductRepository extends _FakeProductRepository {
   _RelationsProductRepository(this.parent, this.children) : super(const []);
 
@@ -3086,6 +3104,62 @@ void main() {
     await tester.pumpAndSettle();
     expect(copiedText, 'Fix the login bug');
     expect(find.text('Message text copied'), findsOneWidget);
+  });
+
+  testWidgets('deleting a message confirms, calls the server, and prunes it', (
+    tester,
+  ) async {
+    final serverMessages = <MessageWithParts>[
+      _message('user-1', 'user', [Part(type: 'text', text: 'first prompt')]),
+      _message('user-2', 'user', [
+        Part(type: 'text', text: 'second prompt'),
+      ], created: 2),
+    ];
+    final repository = _MessageDeleteRepository(serverMessages);
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => List.of(serverMessages);
+    await _pumpChat(tester, api, repository: repository);
+
+    await tester.longPress(find.text('first prompt'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('message-action-delete')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Delete this message?'), findsOneWidget);
+    expect(find.textContaining('File changes it made'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete message'));
+    await tester.pumpAndSettle();
+
+    expect(repository.deleted, [('session-1', 'user-1')]);
+    expect(find.text('first prompt'), findsNothing);
+    expect(find.text('second prompt'), findsOneWidget);
+  });
+
+  testWidgets('a failed message delete keeps the transcript intact', (
+    tester,
+  ) async {
+    final serverMessages = <MessageWithParts>[
+      _message('user-1', 'user', [Part(type: 'text', text: 'only prompt')]),
+    ];
+    final repository = _MessageDeleteRepository(serverMessages)
+      ..failure = const ProductException('Message deletion is unavailable');
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => List.of(serverMessages);
+    await _pumpChat(tester, api, repository: repository);
+
+    await tester.longPress(find.text('only prompt'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('message-action-delete')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete message'));
+    await tester.pumpAndSettle();
+
+    expect(repository.deleted, isEmpty);
+    expect(find.text('only prompt'), findsOneWidget);
+    expect(
+      find.textContaining('Message deletion is unavailable'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('composer divider doubles as the context window meter', (

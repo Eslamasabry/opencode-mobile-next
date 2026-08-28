@@ -1378,7 +1378,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         .where((value) => value.trim().isNotEmpty)
         .join('\n\n');
     final canFork = message.info.role == 'user';
-    if (text.isEmpty && !canFork) return;
+    final theme = Theme.of(context);
     final action = await showModalBottomSheet<String>(
       context: context,
       builder: (context) => SafeArea(
@@ -1402,6 +1402,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 ),
                 onTap: () => Navigator.pop(context, 'fork'),
               ),
+            ListTile(
+              key: const ValueKey('message-action-delete'),
+              leading: Icon(
+                Icons.delete_outline_rounded,
+                color: theme.colorScheme.error,
+              ),
+              title: Text(
+                'Delete message',
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+              subtitle: const Text(
+                'Removes it from the conversation permanently',
+              ),
+              onTap: () => Navigator.pop(context, 'delete'),
+            ),
           ],
         ),
       ),
@@ -1415,6 +1430,39 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       ).showSnackBar(const SnackBar(content: Text('Message text copied')));
     }
     if (action == 'fork') await _forkFromMessage(message);
+    if (action == 'delete') await _deleteMessage(message);
+  }
+
+  Future<void> _deleteMessage(MessageWithParts message) async {
+    final confirmed = await showConfirmSheet(
+      context,
+      icon: Icons.delete_outline_rounded,
+      title: 'Delete this message?',
+      message:
+          'The message and all of its parts are permanently removed from the '
+          'conversation, so future replies no longer see them. File changes '
+          'it made are not reverted.',
+      confirmLabel: 'Delete message',
+      destructive: true,
+    );
+    if (!confirmed || !mounted) return;
+    try {
+      final repository = await _requireActionRepository();
+      await repository.deleteMessage(
+        sessionID: widget.sessionID,
+        messageID: message.info.id,
+      );
+      if (!mounted) return;
+      setState(() {
+        _messages.removeWhere((entry) => entry.info.id == message.info.id);
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Message deleted')));
+      await _load();
+    } catch (error) {
+      if (mounted) _showActionError(error);
+    }
   }
 
   Future<void> _forkFromMessage(MessageWithParts message) async {
