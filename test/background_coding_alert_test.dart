@@ -98,6 +98,15 @@ void main() {
         harness.calls.where((call) => call.method == 'dismissCodingAlert'),
         isEmpty,
       );
+      final updated = harness.calls
+          .where((call) => call.method == 'showCodingAlert')
+          .toList();
+      expect(updated, hasLength(2));
+      expect(updated.last.arguments, {
+        'kind': 'question',
+        'sessionID': 'session-1',
+        'key': 'input:session-1',
+      });
 
       harness.controller.handleEventForTesting(
         EventEnvelope(

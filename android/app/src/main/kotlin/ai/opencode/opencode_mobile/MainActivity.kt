@@ -26,9 +26,11 @@ class MainActivity : FlutterActivity() {
     private var permissionResult: MethodChannel.Result? = null
     private var microphonePermissionResult: MethodChannel.Result? = null
     private var backgroundPermissionResult: MethodChannel.Result? = null
+    private var pendingCodingAlertOpen: Map<String, String>? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        captureCodingAlertOpen(intent)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL_NAME)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
@@ -104,9 +106,38 @@ class MainActivity : FlutterActivity() {
                             )
                         )
                     }
+                    "consumeCodingAlertOpen" -> {
+                        val pending = pendingCodingAlertOpen
+                        pendingCodingAlertOpen = null
+                        result.success(pending ?: emptyMap<String, String>())
+                    }
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        captureCodingAlertOpen(intent)
+    }
+
+    private fun captureCodingAlertOpen(intent: Intent?) {
+        if (intent == null) return
+        val kind = intent.getStringExtra(
+            BackgroundConnectionService.EXTRA_CODING_ALERT_KIND
+        ).orEmpty()
+        val sessionID = intent.getStringExtra(
+            BackgroundConnectionService.EXTRA_CODING_ALERT_SESSION_ID
+        ).orEmpty()
+        if (kind.isNotBlank() && sessionID.isNotBlank()) {
+            pendingCodingAlertOpen = mapOf(
+                "kind" to kind,
+                "sessionID" to sessionID
+            )
+        }
+        intent.removeExtra(BackgroundConnectionService.EXTRA_CODING_ALERT_KIND)
+        intent.removeExtra(BackgroundConnectionService.EXTRA_CODING_ALERT_SESSION_ID)
     }
 
     override fun onRequestPermissionsResult(

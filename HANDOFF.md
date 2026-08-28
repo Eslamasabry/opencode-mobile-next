@@ -901,6 +901,27 @@ version code 18 to 19, and no fatal exception was logged. Android 15+ limits
 `dataSync` foreground-service use to six background hours per rolling 24-hour period;
 the battery exemption does not bypass that platform limit.
 
+Background coding alerts now retain OpenCode's exact event kind and session ID in
+their Android content intent. Tapping a completion or error opens that chat; tapping
+a permission opens the chat and its queued permission dialog; tapping a question
+opens Pending requests and the exact answer sheet. The destination is consumed once
+across both warm `onNewIntent` delivery and cold Activity launch. If one session's
+permission resolves while a question remains, Android updates the existing input
+notification in place instead of leaving stale permission copy or creating a second
+card. Permission names use the same readable mobile copy in chat and Pending requests.
+
+This was proven on the Pixel 6 against local OpenCode `1.18.23`. With the app on the
+Home screen and its foreground service active, a disposable `sleep 2` session posted
+the private `OpenCode finished` notification. Tapping it opened the uniquely titled
+`Background alert tap proof` chat and its completed shell card. A separate cold
+Activity launch with the same notification extras also opened that exact session.
+The run logged no fatal exception, ANR, overflow, or crash. The disposable session,
+emulator app, reverse port, test key, and locally signed APK were removed afterward;
+that APK must not be distributed. Final-tree Flutter analysis is clean, all 326 tests
+pass serially, and `:app:compileReleaseKotlin` succeeds. This requires the next full
+native APK and cannot be added to an older baseline through Shorebird. Traycer remains
+explicitly deferred.
+
 ## Shorebird wake patch for `1.0.17+18`
 
 - Shorebird release ID: `789345`

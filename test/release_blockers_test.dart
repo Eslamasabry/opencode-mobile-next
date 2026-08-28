@@ -221,6 +221,9 @@ void main() {
 
     expect(activity, contains('"showCodingAlert"'));
     expect(activity, contains('"dismissCodingAlert"'));
+    expect(activity, contains('"consumeCodingAlertOpen"'));
+    expect(activity, contains('override fun onNewIntent(intent: Intent)'));
+    expect(activity, contains('captureCodingAlertOpen(intent)'));
     expect(service, contains('NotificationManager.IMPORTANCE_HIGH'));
     expect(service, contains('NotificationManager.IMPORTANCE_DEFAULT'));
     expect(service, contains('setVisibility(Notification.VISIBILITY_PRIVATE)'));
@@ -232,6 +235,11 @@ void main() {
     expect(service, contains('OpenCode needs your input'));
     expect(service, contains('OpenCode finished'));
     expect(service, contains('OpenCode session needs attention'));
+    expect(service, contains('putExtra(EXTRA_CODING_ALERT_KIND, kind)'));
+    expect(
+      service,
+      contains('putExtra(EXTRA_CODING_ALERT_SESSION_ID, sessionID)'),
+    );
     expect(service, isNot(contains('sessionTitle')));
     expect(service, isNot(contains('errorMessage')));
   });

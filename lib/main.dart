@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'background/live_background.dart';
 import 'state/connection.dart';
 import 'update/shorebird_update_notice.dart';
 import 'ui/app_theme.dart';
@@ -11,6 +12,7 @@ import 'ui/screens/about_screen.dart';
 import 'ui/screens/home_screen.dart';
 import 'ui/screens/servers_screen.dart';
 import 'ui/screens/chat_screen.dart';
+import 'ui/screens/requests_screen.dart';
 import 'ui/screens/termux_setup_screen.dart';
 
 Future<void> main() async {
@@ -41,12 +43,15 @@ class OcApp extends ConsumerStatefulWidget {
 class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
   late final ConnectionController _controller;
   late final AppUpdateService _updateService;
+  final _navigatorKey = GlobalKey<NavigatorState>();
   final _messengerKey = GlobalKey<ScaffoldMessengerState>();
+  bool _codingAlertRouteScheduled = false;
 
   @override
   void initState() {
     super.initState();
     _controller = ref.read(connProvider);
+    _controller.addListener(_controllerChanged);
     _updateService = widget.updateService ?? ShorebirdAppUpdateService();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -58,7 +63,7 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
       case AppLifecycleState.resumed:
-        _controller.resumeFromLifecycle();
+        unawaited(_resumeAndConsumeCodingAlert());
       case AppLifecycleState.hidden:
       case AppLifecycleState.paused:
       case AppLifecycleState.detached:
@@ -68,9 +73,61 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _resumeAndConsumeCodingAlert() async {
+    // Start destination capture before wake reconciliation performs any
+    // potentially slow health or catalog requests, while allowing transport
+    // recovery to proceed in parallel. Routing still waits for a usable
+    // transport when the background connection had been suspended.
+    await Future.wait<void>([
+      _controller.consumeCodingAlertOpen(),
+      _controller.resumeFromLifecycle(),
+    ]);
+  }
+
+  void _controllerChanged() => _scheduleCodingAlertRoute();
+
+  void _scheduleCodingAlertRoute() {
+    if (_codingAlertRouteScheduled ||
+        _controller.pendingCodingAlertOpen == null ||
+        _controller.api == null ||
+        _controller.repository == null ||
+        _controller.version == null) {
+      return;
+    }
+    _codingAlertRouteScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _codingAlertRouteScheduled = false;
+      if (!mounted) return;
+      final navigator = _navigatorKey.currentState;
+      if (navigator == null) {
+        _scheduleCodingAlertRoute();
+        return;
+      }
+      final target = _controller.takePendingCodingAlertOpen();
+      if (target == null) return;
+      if (target.kind == CodingAlertKind.question) {
+        navigator.push(
+          MaterialPageRoute<void>(
+            builder: (_) => RequestsScreen(
+              controller: _controller,
+              initialQuestionSessionID: target.sessionID,
+            ),
+          ),
+        );
+        return;
+      }
+      navigator.push(
+        MaterialPageRoute<void>(
+          builder: (_) => ChatScreen(sessionID: target.sessionID),
+        ),
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: _navigatorKey,
       scaffoldMessengerKey: _messengerKey,
       builder: (context, child) => ShorebirdUpdateNotice(
         service: _updateService,
@@ -103,6 +160,7 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _controller.removeListener(_controllerChanged);
     super.dispose();
   }
 }

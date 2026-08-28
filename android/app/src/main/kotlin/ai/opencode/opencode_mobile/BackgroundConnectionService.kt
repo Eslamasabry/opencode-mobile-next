@@ -167,6 +167,8 @@ class BackgroundConnectionService : Service() {
             val notificationID = codingAlertNotificationID(key)
             val openApp = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                putExtra(EXTRA_CODING_ALERT_KIND, kind)
+                putExtra(EXTRA_CODING_ALERT_SESSION_ID, sessionID)
             }
             val pendingIntent = PendingIntent.getActivity(
                 context,
@@ -233,5 +235,10 @@ class BackgroundConnectionService : Service() {
             val category: String,
             val priority: Int
         )
+
+        const val EXTRA_CODING_ALERT_KIND =
+            "ai.opencode.opencode_mobile.extra.CODING_ALERT_KIND"
+        const val EXTRA_CODING_ALERT_SESSION_ID =
+            "ai.opencode.opencode_mobile.extra.CODING_ALERT_SESSION_ID"
     }
 }

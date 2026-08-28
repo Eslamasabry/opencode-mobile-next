@@ -17,6 +17,27 @@ enum CodingAlertKind {
   const CodingAlertKind(this.wireValue);
 
   final String wireValue;
+
+  static CodingAlertKind? fromWireValue(Object? value) {
+    for (final kind in values) {
+      if (kind.wireValue == value) return kind;
+    }
+    return null;
+  }
+}
+
+class CodingAlertOpen {
+  const CodingAlertOpen({required this.kind, required this.sessionID});
+
+  final CodingAlertKind kind;
+  final String sessionID;
+
+  static CodingAlertOpen? fromPlatform(Map<String, dynamic> value) {
+    final kind = CodingAlertKind.fromWireValue(value['kind']);
+    final sessionID = value['sessionID']?.toString().trim() ?? '';
+    if (kind == null || sessionID.isEmpty) return null;
+    return CodingAlertOpen(kind: kind, sessionID: sessionID);
+  }
 }
 
 /// Owns the explicit, user-controlled Android foreground-service preference.
@@ -125,6 +146,20 @@ class BackgroundLiveController extends ChangeNotifier {
       return false;
     } catch (_) {
       return false;
+    }
+  }
+
+  /// Consumes one Android notification destination after a cold or warm open.
+  Future<CodingAlertOpen?> consumeCodingAlertOpen() async {
+    try {
+      final result = await _invoke('consumeCodingAlertOpen');
+      return CodingAlertOpen.fromPlatform(result);
+    } on PlatformException {
+      return null;
+    } on MissingPluginException {
+      return null;
+    } catch (_) {
+      return null;
     }
   }
 

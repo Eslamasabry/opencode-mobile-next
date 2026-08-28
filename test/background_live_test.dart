@@ -155,4 +155,29 @@ void main() {
     );
     expect(calls, isEmpty);
   });
+
+  test(
+    'consumes a typed notification destination once Android provides it',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final preferences = await SharedPreferences.getInstance();
+      var consumed = false;
+      final controller = BackgroundLiveController(
+        preferences: preferences,
+        invoke: (method, [arguments]) async {
+          if (method == 'consumeCodingAlertOpen' && !consumed) {
+            consumed = true;
+            return const {'kind': 'complete', 'sessionID': 'session-1'};
+          }
+          return const {};
+        },
+      );
+      addTearDown(controller.dispose);
+
+      final target = await controller.consumeCodingAlertOpen();
+      expect(target?.kind, CodingAlertKind.complete);
+      expect(target?.sessionID, 'session-1');
+      expect(await controller.consumeCodingAlertOpen(), isNull);
+    },
+  );
 }

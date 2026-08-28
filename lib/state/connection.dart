@@ -193,8 +193,9 @@ class ConnectionController extends ChangeNotifier {
   final Map<String, String> _v2QuestionSessions = {};
   final Set<String> _resolvedQuestionIDs = {};
   final Set<String> _attentionActiveSessions = {};
-  final Set<String> _alertedInputSessions = {};
+  final Map<String, CodingAlertKind> _alertedInputKinds = {};
   final Set<String> _alertedStatusSessions = {};
+  CodingAlertOpen? _pendingCodingAlertOpen;
   int _permissionRevision = 0;
   Timer? _permissionHydrationRetry;
   int _permissionHydrationGeneration = 0;
@@ -242,7 +243,25 @@ class ConnectionController extends ChangeNotifier {
   Future<bool> setKeepLiveInBackground(bool enabled) =>
       backgroundLive.setEnabled(enabled);
 
-  Future<void> restoreBackgroundLiveMode() => backgroundLive.restore();
+  CodingAlertOpen? get pendingCodingAlertOpen => _pendingCodingAlertOpen;
+
+  CodingAlertOpen? takePendingCodingAlertOpen() {
+    final value = _pendingCodingAlertOpen;
+    _pendingCodingAlertOpen = null;
+    return value;
+  }
+
+  Future<void> restoreBackgroundLiveMode() async {
+    await backgroundLive.restore();
+    await consumeCodingAlertOpen();
+  }
+
+  Future<void> consumeCodingAlertOpen() async {
+    final value = await backgroundLive.consumeCodingAlertOpen();
+    if (_disposed || value == null) return;
+    _pendingCodingAlertOpen = value;
+    notifyListeners();
+  }
 
   Future<void> setTranscriptReasoningExpanded(bool expanded) async {
     await store.setTranscriptReasoningExpanded(expanded);
@@ -308,7 +327,8 @@ class ConnectionController extends ChangeNotifier {
 
   void _showInputAlert(String sessionID, CodingAlertKind kind) {
     if (sessionID.isEmpty || !_canShowCodingAlert) return;
-    if (!_alertedInputSessions.add(sessionID)) return;
+    if (_alertedInputKinds[sessionID] == kind) return;
+    _alertedInputKinds[sessionID] = kind;
     unawaited(
       backgroundLive
           .showCodingAlert(
@@ -317,8 +337,11 @@ class ConnectionController extends ChangeNotifier {
             key: _inputAlertKey(sessionID),
           )
           .then((shown) {
-            if (!shown && !_disposed && _lifecycleWasBackgrounded) {
-              _alertedInputSessions.remove(sessionID);
+            if (!shown &&
+                !_disposed &&
+                _lifecycleWasBackgrounded &&
+                _alertedInputKinds[sessionID] == kind) {
+              _alertedInputKinds.remove(sessionID);
             }
           }),
     );
@@ -333,23 +356,25 @@ class ConnectionController extends ChangeNotifier {
     }..removeWhere((id) => id.isEmpty);
     final pendingSessions = {...permissionSessions, ...questionSessions};
 
-    for (final sessionID in _alertedInputSessions.toList()) {
+    for (final sessionID in _alertedInputKinds.keys.toList()) {
       if (pendingSessions.contains(sessionID)) continue;
-      _alertedInputSessions.remove(sessionID);
+      _alertedInputKinds.remove(sessionID);
       unawaited(backgroundLive.dismissCodingAlert(_inputAlertKey(sessionID)));
     }
     if (!_canShowCodingAlert) return;
-    for (final sessionID in permissionSessions) {
-      _showInputAlert(sessionID, CodingAlertKind.permission);
-    }
-    for (final sessionID in questionSessions) {
-      _showInputAlert(sessionID, CodingAlertKind.question);
+    for (final sessionID in pendingSessions) {
+      _showInputAlert(
+        sessionID,
+        permissionSessions.contains(sessionID)
+            ? CodingAlertKind.permission
+            : CodingAlertKind.question,
+      );
     }
   }
 
   void _dismissSessionCodingAlerts(String sessionID) {
     _attentionActiveSessions.remove(sessionID);
-    if (_alertedInputSessions.remove(sessionID)) {
+    if (_alertedInputKinds.remove(sessionID) != null) {
       unawaited(backgroundLive.dismissCodingAlert(_inputAlertKey(sessionID)));
     }
     if (_alertedStatusSessions.remove(sessionID)) {
@@ -358,13 +383,13 @@ class ConnectionController extends ChangeNotifier {
   }
 
   void _dismissAllCodingAlerts({bool clearActive = false}) {
-    for (final sessionID in _alertedInputSessions.toList()) {
+    for (final sessionID in _alertedInputKinds.keys.toList()) {
       unawaited(backgroundLive.dismissCodingAlert(_inputAlertKey(sessionID)));
     }
     for (final sessionID in _alertedStatusSessions.toList()) {
       unawaited(backgroundLive.dismissCodingAlert(_statusAlertKey(sessionID)));
     }
-    _alertedInputSessions.clear();
+    _alertedInputKinds.clear();
     _alertedStatusSessions.clear();
     if (clearActive) _attentionActiveSessions.clear();
   }

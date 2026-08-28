@@ -3,11 +3,18 @@ import 'package:flutter/material.dart';
 import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
+import '../permission_presentation.dart';
 import '../widgets/product_states.dart';
 
 class RequestsScreen extends StatefulWidget {
   final ConnectionController controller;
-  const RequestsScreen({super.key, required this.controller});
+  final String? initialQuestionSessionID;
+
+  const RequestsScreen({
+    super.key,
+    required this.controller,
+    this.initialQuestionSessionID,
+  });
 
   @override
   State<RequestsScreen> createState() => _RequestsScreenState();
@@ -16,17 +23,61 @@ class RequestsScreen extends StatefulWidget {
 class _RequestsScreenState extends State<RequestsScreen> {
   bool _loading = true;
   String? _error;
+  bool _initialQuestionScheduled = false;
+  bool _initialQuestionHandled = false;
 
   @override
   void initState() {
     super.initState();
     widget.controller.addListener(_changed);
-    _refresh();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _refresh();
+      _scheduleInitialQuestion();
+    });
   }
 
   void _changed() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    setState(() {});
+    _scheduleInitialQuestion();
   }
+
+  void _scheduleInitialQuestion() {
+    final sessionID = widget.initialQuestionSessionID;
+    if (!mounted ||
+        sessionID == null ||
+        _initialQuestionHandled ||
+        _initialQuestionScheduled) {
+      return;
+    }
+    PendingQuestion? target;
+    for (final question in widget.controller.questions.values) {
+      if (question.sessionID == sessionID) {
+        target = question;
+        break;
+      }
+    }
+    if (target == null) return;
+    _initialQuestionScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initialQuestionScheduled = false;
+      if (!mounted || _initialQuestionHandled) return;
+      final current = widget.controller.questions[target!.id];
+      if (current == null || current.sessionID != sessionID) return;
+      _initialQuestionHandled = true;
+      _showQuestion(current);
+    });
+  }
+
+  Future<void> _showQuestion(PendingQuestion question) =>
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        showDragHandle: true,
+        builder: (_) =>
+            _QuestionSheet(question: question, controller: widget.controller),
+      );
 
   Future<void> _refresh() async {
     setState(() {
@@ -48,7 +99,14 @@ class _RequestsScreenState extends State<RequestsScreen> {
   @override
   Widget build(BuildContext context) {
     final permissions = widget.controller.permissions.values.toList();
-    final questions = widget.controller.questions.values.toList();
+    final questions = widget.controller.questions.values.toList()
+      ..sort((a, b) {
+        final selected = widget.initialQuestionSessionID;
+        if (selected == null) return 0;
+        final aSelected = a.sessionID == selected;
+        final bSelected = b.sessionID == selected;
+        return aSelected == bSelected ? 0 : (aSelected ? -1 : 1);
+      });
     final loading =
         _loading ||
         widget.controller.permissionsLoading ||
@@ -183,7 +241,7 @@ class _PermissionTileState extends State<_PermissionTile> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Context: ${_permissionTitle(widget.permission.permission)} for '
+                'Context: ${permissionRequestTitle(widget.permission.permission)} for '
                 '${_sessionTitle(widget.controller, widget.permission.sessionID)}',
               ),
               const SizedBox(height: 12),
@@ -234,7 +292,7 @@ class _PermissionTileState extends State<_PermissionTile> {
     final theme = Theme.of(context);
     final title = permission.permission.isEmpty
         ? 'Permission required'
-        : _permissionTitle(permission.permission);
+        : permissionRequestTitle(permission.permission);
     return ExpansionTile(
       leading: Icon(Icons.shield_outlined, color: theme.colorScheme.tertiary),
       title: Text(title),
@@ -304,15 +362,6 @@ class _PermissionTileState extends State<_PermissionTile> {
       ],
     );
   }
-
-  static String _permissionTitle(String permission) => switch (permission) {
-    'bash' => 'Run a shell command',
-    'edit' => 'Edit a file',
-    'read' => 'Read a file',
-    'external_directory' => 'Access an external directory',
-    'doom_loop' => 'Continue after repeated failures',
-    _ => 'Use $permission',
-  };
 }
 
 class _QuestionTile extends StatelessWidget {

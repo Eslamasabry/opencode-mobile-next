@@ -14,6 +14,7 @@ import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../../voice/controller.dart';
 import '../../voice/voice_ui.dart';
+import '../permission_presentation.dart';
 import '../widgets/file_preview.dart';
 import '../widgets/markdown.dart';
 import '../widgets/pickers.dart';
@@ -4239,11 +4240,7 @@ class _PermissionDialogState extends State<_PermissionDialog> {
     return AlertDialog(
       scrollable: true,
       icon: const Icon(Icons.admin_panel_settings_outlined),
-      title: Text(
-        permission.permission.isEmpty
-            ? 'Permission needed'
-            : permission.permission,
-      ),
+      title: Text(permissionRequestTitle(permission.permission)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
