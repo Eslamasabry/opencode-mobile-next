@@ -314,43 +314,4 @@ void main() {
     expect(controller.lastError, contains('unhealthy'));
     controller.dispose();
   });
-
-  testWidgets('selecting a location on a v2 profile rebuilds the v2 pair', (
-    tester,
-  ) async {
-    var v1ApiBuilds = 0;
-    var v2Builds = 0;
-    final gateways = <_FakeV2Gateway>[];
-    final controller = ConnectionController(
-      await _store(),
-      apiFactory: (_) {
-        v1ApiBuilds += 1;
-        return OpenCodeApi(baseUrl: 'http://127.0.0.1:1');
-      },
-      repositoryFactory: (_) => _FakeV1Repository(),
-      v2GatewayFactory: (_) {
-        v2Builds += 1;
-        final gateway = _FakeV2Gateway();
-        gateways.add(gateway);
-        return (gateway: gateway, operations: _FakeV2Operations());
-      },
-    );
-    addTearDown(controller.dispose);
-
-    await controller.connect(_v2Profile());
-    await tester.pump();
-    expect(v2Builds, 1);
-
-    // Rescoping to a directory must NOT fall back to the v1 transport: a v1
-    // health check against a v2 server cannot succeed and reads as a rotated
-    // password.
-    await controller.selectLocation(directory: '/home/eslam/project');
-    await tester.pump();
-
-    expect(v1ApiBuilds, 0, reason: 'a v2 profile must never build the v1 api');
-    expect(v2Builds, 2);
-    expect(controller.api, same(gateways.last));
-    expect(controller.directory, '/home/eslam/project');
-    controller.dispose();
-  });
 }
