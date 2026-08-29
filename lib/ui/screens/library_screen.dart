@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../api/models.dart' show ModelRef;
 import '../../api/mcp_oauth.dart';
+import '../../l10n/app_localizations.dart';
 import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
@@ -36,19 +37,20 @@ class LibraryScreen extends StatelessWidget {
     return ListenableBuilder(
       listenable: controller,
       builder: (context, _) {
+        final l10n = AppLocalizations.of(context);
         final pending =
             controller.permissions.length + controller.questions.length;
         return ListView(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
           children: [
             _ActiveSetupCard(controller: controller),
-            const SectionLabel('Browse'),
+            SectionLabel(l10n.libraryBrowseSection),
             _DestinationGrid(
               cards: [
                 _DestinationCard(
                   key: const ValueKey('library-mission-control'),
                   icon: Icons.space_dashboard_outlined,
-                  title: 'Mission Control',
+                  title: l10n.libraryMissionControlTitle,
                   badge: pending == 0 ? null : '$pending',
                   onTap: () => _open(
                     context,
@@ -57,13 +59,13 @@ class LibraryScreen extends StatelessWidget {
                 ),
                 _DestinationCard(
                   icon: Icons.model_training_outlined,
-                  title: 'Models & agents',
+                  title: l10n.libraryModelsAgentsTitle,
                   onTap: () =>
                       _open(context, CatalogScreen(controller: controller)),
                 ),
                 _DestinationCard(
                   icon: Icons.cloud_outlined,
-                  title: 'Providers',
+                  title: l10n.libraryProvidersTitle,
                   onTap: () => _open(
                     context,
                     IntegrationsScreen(
@@ -74,7 +76,7 @@ class LibraryScreen extends StatelessWidget {
                 ),
                 _DestinationCard(
                   icon: Icons.hub_outlined,
-                  title: 'MCP',
+                  title: l10n.libraryMcpTitle,
                   onTap: () => _open(
                     context,
                     IntegrationsScreen(
@@ -85,7 +87,7 @@ class LibraryScreen extends StatelessWidget {
                 ),
                 _DestinationCard(
                   icon: Icons.build_circle_outlined,
-                  title: 'Commands & tools',
+                  title: l10n.libraryCommandsToolsTitle,
                   onTap: () => _open(
                     context,
                     CapabilitiesScreen(controller: controller),
@@ -93,19 +95,19 @@ class LibraryScreen extends StatelessWidget {
                 ),
               ],
             ),
-            const SectionLabel('Manage'),
+            SectionLabel(l10n.libraryManageSection),
             _DestinationGrid(
               cards: [
                 _DestinationCard(
                   icon: Icons.notifications_active_outlined,
-                  title: 'Requests',
+                  title: l10n.libraryRequestsTitle,
                   badge: pending == 0 ? null : '$pending',
                   onTap: () =>
                       _open(context, RequestsScreen(controller: controller)),
                 ),
                 _DestinationCard(
                   icon: Icons.settings_outlined,
-                  title: 'Settings',
+                  title: l10n.librarySettingsTitle,
                   onTap: () =>
                       _open(context, SettingsScreen(controller: controller)),
                 ),

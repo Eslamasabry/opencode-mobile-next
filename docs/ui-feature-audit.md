@@ -123,3 +123,33 @@ Full list: `docs/opencode2-port-matrix.md` §3.
 3. **Strategic:** A3 localization groundwork, then the OpenCode 2 port
    (Phase 0/1 first: dual-stack transport + flavor detection + SSE — it
    blocks everything else and holds the riskiest unknowns).
+
+## 7. Localization groundwork (A3 — landed 2026-08-29)
+
+The rails for l10n are in place; the app itself remains English-hardcoded
+except for one pilot surface (the More hub's destination grid + the app
+title). To continue converting a surface:
+
+- **Where strings live:** `lib/l10n/app_en.arb` (template locale; add
+  `app_<locale>.arb` siblings for new languages). Keys follow
+  `<surface><Thing>` camelCase (e.g. `libraryRequestsTitle`) with an
+  `@key` description for translators.
+- **Generation:** `flutter gen-l10n` (config in `l10n.yaml`; also runs
+  automatically on build via `generate: true` in `pubspec.yaml`).
+  Output is committed at `lib/l10n/app_localizations*.dart` — it is not
+  gitignored on this Flutter (3.47) since synthetic packages are gone.
+- **Pattern in widgets:** import
+  `package:opencode_mobile/l10n/app_localizations.dart` (or the relative
+  path), then `final l10n = AppLocalizations.of(context);` and replace the
+  literal with `l10n.yourKey`. The getter is non-nullable
+  (`nullable-getter: false`), so any widget test that pumps the converted
+  surface in a bare `MaterialApp` must add
+  `localizationsDelegates: AppLocalizations.localizationsDelegates` and
+  `supportedLocales: AppLocalizations.supportedLocales` (see
+  `test/library_screen_test.dart`).
+- **MaterialApp wiring:** delegates, `supportedLocales`, and
+  `onGenerateTitle` are already on the app in `lib/main.dart`; new locales
+  only need an arb file and a regen.
+- **Suggested order:** convert per-surface (screen by screen), starting
+  with low-churn chrome (Settings, Servers, Guide) and leaving
+  `chat_screen.dart` until after the OpenCode 2 port to avoid double work.

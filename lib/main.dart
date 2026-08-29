@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'background/live_background.dart';
 import 'diagnostics/app_diagnostics.dart';
+import 'l10n/app_localizations.dart';
 import 'state/connection.dart';
 import 'state/profiles.dart';
 import 'update/desktop_release_check.dart';
@@ -27,8 +28,7 @@ import 'ui/screens/app_diagnostics_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (!kIsWeb &&
-      (Platform.isLinux || Platform.isWindows || Platform.isMacOS)) {
+  if (!kIsWeb && (Platform.isLinux || Platform.isWindows || Platform.isMacOS)) {
     // Desktop windows get a sane default and floor; Android never reaches
     // these calls.
     await windowManager.ensureInitialized();
@@ -298,61 +298,64 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
         builder: (context, _) {
           final pack = effectiveThemePack(_controller.themePack.value);
           return MaterialApp(
-        navigatorKey: _navigatorKey,
-        scaffoldMessengerKey: _messengerKey,
-        builder: (context, child) {
-          // Global text-scale safety net: honor the system setting up to
-          // 2.0x so unguarded screens cannot overflow at extreme scales.
-          // Screens with their own tighter clamps still apply them on top.
-          final scale = MediaQuery.textScalerOf(context).scale(1);
-          return MediaQuery(
-            data: MediaQuery.of(context).copyWith(
-              textScaler: TextScaler.linear(scale.clamp(1.0, 2.0)),
-            ),
-            child: ShorebirdUpdateNotice(
-              service: _updateService,
-              messengerKey: _messengerKey,
-              child: DesktopReleaseNotice(
-                messengerKey: _messengerKey,
-                child: child ?? const SizedBox.shrink(),
-              ),
-            ),
-          );
-        },
-        title: 'OpenCode',
-        debugShowCheckedModeBanner: false,
-        themeMode: switch (appearance) {
-          AppAppearance.system => ThemeMode.system,
-          AppAppearance.light => ThemeMode.light,
-          AppAppearance.dark => ThemeMode.dark,
-        },
-        theme: AppTheme.light(pack),
-        darkTheme: AppTheme.dark(pack),
-        initialRoute: '/',
-        routes: {
-          '/': (_) => _Root(),
-          '/servers': (_) => const ServersScreen(),
-          '/home': (_) => const HomeScreen(),
-          '/guide': (_) => GuideScreen(embedded: false),
-          '/about': (_) => const AboutScreen(),
-          '/termux-setup': (_) => const TermuxSetupScreen(),
-          '/debug': (_) => AppDiagnosticsScreen(controller: _controller),
-        },
-        onGenerateRoute: (settings) {
-          if (settings.name?.startsWith('/chat/') == true) {
-            final id = settings.name!.substring('/chat/'.length);
-            final arguments = settings.arguments;
-            return MaterialPageRoute(
-              builder: (_) => ChatScreen(
-                sessionID: id,
-                discardIfUntouched:
-                    arguments is ChatRouteArguments &&
-                    arguments.discardIfUntouched,
-              ),
-            );
-          }
-          return null;
-        },
+            navigatorKey: _navigatorKey,
+            scaffoldMessengerKey: _messengerKey,
+            builder: (context, child) {
+              // Global text-scale safety net: honor the system setting up to
+              // 2.0x so unguarded screens cannot overflow at extreme scales.
+              // Screens with their own tighter clamps still apply them on top.
+              final scale = MediaQuery.textScalerOf(context).scale(1);
+              return MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  textScaler: TextScaler.linear(scale.clamp(1.0, 2.0)),
+                ),
+                child: ShorebirdUpdateNotice(
+                  service: _updateService,
+                  messengerKey: _messengerKey,
+                  child: DesktopReleaseNotice(
+                    messengerKey: _messengerKey,
+                    child: child ?? const SizedBox.shrink(),
+                  ),
+                ),
+              );
+            },
+            title: 'OpenCode',
+            onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            debugShowCheckedModeBanner: false,
+            themeMode: switch (appearance) {
+              AppAppearance.system => ThemeMode.system,
+              AppAppearance.light => ThemeMode.light,
+              AppAppearance.dark => ThemeMode.dark,
+            },
+            theme: AppTheme.light(pack),
+            darkTheme: AppTheme.dark(pack),
+            initialRoute: '/',
+            routes: {
+              '/': (_) => _Root(),
+              '/servers': (_) => const ServersScreen(),
+              '/home': (_) => const HomeScreen(),
+              '/guide': (_) => GuideScreen(embedded: false),
+              '/about': (_) => const AboutScreen(),
+              '/termux-setup': (_) => const TermuxSetupScreen(),
+              '/debug': (_) => AppDiagnosticsScreen(controller: _controller),
+            },
+            onGenerateRoute: (settings) {
+              if (settings.name?.startsWith('/chat/') == true) {
+                final id = settings.name!.substring('/chat/'.length);
+                final arguments = settings.arguments;
+                return MaterialPageRoute(
+                  builder: (_) => ChatScreen(
+                    sessionID: id,
+                    discardIfUntouched:
+                        arguments is ChatRouteArguments &&
+                        arguments.discardIfUntouched,
+                  ),
+                );
+              }
+              return null;
+            },
           );
         },
       ),

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
+import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/library_screen.dart';
@@ -25,8 +26,11 @@ Future<ConnectionController> _controller() async {
     ..status = StreamStatus.connected;
 }
 
-Widget _app(ConnectionController controller) =>
-    MaterialApp(home: Scaffold(body: LibraryScreen(controller: controller)));
+Widget _app(ConnectionController controller) => MaterialApp(
+  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  supportedLocales: AppLocalizations.supportedLocales,
+  home: Scaffold(body: LibraryScreen(controller: controller)),
+);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -104,9 +108,6 @@ void main() {
 
     final card = find.byKey(const ValueKey('library-mission-control'));
     expect(card, findsOneWidget);
-    expect(
-      find.descendant(of: card, matching: find.text('2')),
-      findsOneWidget,
-    );
+    expect(find.descendant(of: card, matching: find.text('2')), findsOneWidget);
   });
 }

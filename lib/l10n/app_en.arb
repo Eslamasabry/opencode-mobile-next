@@ -1,0 +1,43 @@
+{
+  "@@locale": "en",
+  "appTitle": "OpenCode",
+  "@appTitle": {
+    "description": "Application title shown in the task switcher / window title"
+  },
+  "libraryBrowseSection": "Browse",
+  "@libraryBrowseSection": {
+    "description": "Section label above the More hub's browse destination grid"
+  },
+  "libraryManageSection": "Manage",
+  "@libraryManageSection": {
+    "description": "Section label above the More hub's manage destination grid"
+  },
+  "libraryMissionControlTitle": "Mission Control",
+  "@libraryMissionControlTitle": {
+    "description": "More hub card: fleet overview of pending requests and running sessions"
+  },
+  "libraryModelsAgentsTitle": "Models & agents",
+  "@libraryModelsAgentsTitle": {
+    "description": "More hub card: model and agent catalog"
+  },
+  "libraryProvidersTitle": "Providers",
+  "@libraryProvidersTitle": {
+    "description": "More hub card: provider integrations"
+  },
+  "libraryMcpTitle": "MCP",
+  "@libraryMcpTitle": {
+    "description": "More hub card: Model Context Protocol server integrations"
+  },
+  "libraryCommandsToolsTitle": "Commands & tools",
+  "@libraryCommandsToolsTitle": {
+    "description": "More hub card: commands, skills, and native tools"
+  },
+  "libraryRequestsTitle": "Requests",
+  "@libraryRequestsTitle": {
+    "description": "More hub card: pending permission and question requests"
+  },
+  "librarySettingsTitle": "Settings",
+  "@librarySettingsTitle": {
+    "description": "More hub card: app settings"
+  }
+}
