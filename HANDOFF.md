@@ -237,11 +237,16 @@ have WIP commits; they were told to commit everything durable):
    forms wiring to FormRenderer, permission bottom sheet with
    reject-with-message (§3), PendingSendsStrip unifying offline drafts +
    v2 inbox (§5, tap=steer / long-press=queue).
-3. `port/v2-transcript` — mapper un-flattening (shell/compaction/switch
-   markers, interleaved tool content), transcript marker pills + new rows
-   (§4/§6), picker "Use for this session" label seam.
+3. ~~`port/v2-transcript`~~ — DONE and MERGED (b29ec48): tagged part
+   types (`v2:switch`/`v2:notice`/`v2:compaction`), TranscriptMarker
+   pills, notices, compaction rows, shell status chips, interleaved tool
+   segments, ModelPickerApplyScope (session-scope label derives from
+   capabilities via a TODO(connect-flow) seam; "Use for new sessions"
+   call-site wiring belongs to the connect-flow lane). Live-event
+   synthesis of these rows mid-turn is NOT done — they appear on
+   hydration/refetch, per §6.
 
-Merge order when they land: connect → interaction → transcript (or any,
+Merge order for the remaining two: connect → interaction (or any,
 resolving conflicts in connection.dart / message_view.dart; every merge so
 far verified with analyze + affected suites before push).
 
