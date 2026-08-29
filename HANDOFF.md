@@ -179,6 +179,130 @@ queue branch on a `wakeTransportPending` getter
 (`_lifecycleSuspended || _lifecycleResume != null`) — designed and
 test-verified once, easy to rebuild.
 
+## SESSION HANDOFF — OpenCode 2 port + lens overhaul (2026-08-29)
+
+Written at ~93% session usage so a fresh agent can continue. Branch tip at
+write time: `314f31f` on `production/android-release-hardening` (pushed).
+
+### What is DONE and merged on the tip
+
+- **OpenCode 2 port, Phases 0–2 core** (docs/opencode2-port-plan.md):
+  - Research pair: docs/opencode2-protocol-notes.md (91-event union, no-parts
+    message model, inbox prompts, forms, ticketed PTY WS, Basic auth) and
+    docs/opencode2-port-matrix.md (~110 app ops mapped; §6 deferred seams).
+    Specs: contracts/opencode2-openapi-beta-18600.json (authoritative; the
+    17823 file is historical). TRAP: npm `@opencode-ai/sdk` 1.x is the V1
+    SDK; v2 truth is `@opencode-ai/client`→`schema`+`protocol` (beta-18600),
+    installed under the session scratchpad's `oc2client/node_modules/`.
+  - lib/api2/ typed v2 client (transport/models/events/sse2/client) —
+    live-verified 30 steps.
+  - lib/domain/server_gateway.dart — protocol-neutral interfaces (109 ops,
+    25 ServerCapabilities flags); v1 implements everything; all state/UI
+    consumers switched (zero behavior change).
+  - lib/api2/gateway*.dart — Api2Gateway/Api2OperationsGateway/events
+    adapter implementing the domain over v2; live smoke 40/40 incl.
+    streamed prompt round-trip and PTY echo; lossy message mappings
+    documented at mapAdapter (`mapApi2Message` doc comment); interface
+    frictions listed in the merge message of 3f31dbe.
+  - docs/opencode2-ui-design.md — LOCKED design for all v2 UI (§ numbers
+    are referenced by the in-flight agent briefs). docs/opencode2-termux.md
+    — Termux path survives v2 via the existing proot-distro bridge.
+  - lib/ui/widgets/form_renderer.dart — complete tested v2 forms UI
+    (standalone; wiring is in flight, see below).
+- **UI overhaul** from three audits (docs/ui-feature-audit.md,
+  docs/ui-audit-lenses.md, docs/stack-gaps-and-desktop.md — all committed):
+  quick wins F1–F3/E1/E2; widget tap-through with profile guard; shell
+  polish (Mission Control card, global text-scale clamp, l10n groundwork
+  with More-hub pilot); composer trio (per-session drafts, image paste via
+  contentInsertionConfiguration, flush announcements); chat transcript pass
+  (streaming delta batching ~20 rebuilds/s, markdown memoization, copy
+  cluster C2+T1, expansion persistence, C4–C14); ergonomics pass (review
+  workspace overhaul, swipe-delete sessions, sheet keyboard behavior, tap
+  targets, ChipTheme); onboarding pass (O1–O9); error pipeline
+  (productErrorText + showProductError funnel, S1–S12). Clickable validated
+  file paths in chat (MarkdownFileLinks; negative-TTL revalidation).
+  Both formerly-broken tests are FIXED on tip (see "Test-history
+  corrections" above).
+- Repo is public-ready: README rewritten, MIT LICENSE, release audit clean
+  (docs/public-release-audit.md), screenshots force-added. Showcase videos
+  attached to release v1.0.27+28-preview.7.
+
+### IN FLIGHT at handoff — three worktree agents (branches may already
+have WIP commits; they were told to commit everything durable):
+
+1. `port/v2-connect` — probe flavor detection (v2 = 401-with-empty-body on
+   /api/health), password step in servers_screen/first-run per design §1,
+   v2 gateway construction in connection.dart's wiring seams, 401 banner.
+2. `port/v2-interaction` — additive FormGateway/InboxGateway in the domain,
+   forms wiring to FormRenderer, permission bottom sheet with
+   reject-with-message (§3), PendingSendsStrip unifying offline drafts +
+   v2 inbox (§5, tap=steer / long-press=queue).
+3. `port/v2-transcript` — mapper un-flattening (shell/compaction/switch
+   markers, interleaved tool content), transcript marker pills + new rows
+   (§4/§6), picker "Use for this session" label seam.
+
+Merge order when they land: connect → interaction → transcript (or any,
+resolving conflicts in connection.dart / message_view.dart; every merge so
+far verified with analyze + affected suites before push).
+
+### NOT started (queued, in order)
+
+4. **Gating sweep**: consume ServerCapabilities across the 26-row table in
+   design §7 (hide tiles/menu actions, disable-with-explainer settings
+   rows). Was deliberately held until error-pipeline merged (done now).
+5. **Lens-4 design-system sweep** (docs/ui-audit-lenses.md V1–V15 + C12):
+   status-color helper, hintColor→onSurfaceVariant, hairline/type/radius/
+   spacing normalization, icon aliases, mono helper. Run LAST — it sweeps
+   files every other lane touches.
+6. **Integrations & credentials screens** (design §8) — v2-native, phase 4.
+7. Full suite in 6 foreground chunks + emulator E2E against the live v2
+   server (headless Pixel_6 recipe in slice seven above; `opencode2 serve`
+   + adb reverse; app connects with the password step) + **preview 8 APK**
+   via the established channel (temp android/key.properties from
+   ~/.android/debug.keystore androiddebugkey/android, chmod 600, DELETE
+   after; signer sha256 must equal
+   1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c;
+   gh release create v{version}-preview.N on Eslamasabry/oc_app targeting
+   this branch; verify apksigner+aapt+sha256; post the link).
+8. Later lanes: drift/FTS5 local database (stack-gaps doc §1), voice loop +
+   tablet two-pane (wave 2b), Traycer-style agent cockpit (owner-gated),
+   message-list pagination seam, OAuth-attempt persistence friction.
+
+### Operational hazards (ALL verified this session)
+
+- Long BACKGROUND harness tasks get SIGKILLed on this machine. Everything
+  runs FOREGROUND in chunks under the 600s cap. Tests:
+  `ls test/*.dart | split -n l/6 - /tmp/chunk_` then
+  `flutter test --concurrency=1 $(cat /tmp/chunk_aa)` per chunk.
+- Pinned Flutter ONLY:
+  `~/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter`
+  (PATH flutter 3.38.5 cannot resolve the pubspec). Debug APK builds are
+  impossible (Shorebird mirror hosts release engine jars only) — compile
+  checks and releases use `--release`; a keystoreless release build fails
+  only at validateSigningRelease, which still proves Kotlin compiles.
+- Worktree agents spawn on stale bases — every brief must order
+  `git log --oneline -1` verification + reset to the named base.
+- flutter_animate is BANNED (pending-timer test failures).
+- Local opencode2 beta server for live verification:
+  `~/.bun/bin/opencode2 serve --port 4097 --hostname 127.0.0.1`
+  (v0.0.0-beta-18600; per-run password printed on the "server password"
+  line — NEVER commit/echo it; HTTP Basic user `opencode`). Bun blocks the
+  CLI postinstall — run `node ~/node_modules/@opencode-ai/cli/postinstall.mjs`
+  after upgrades. Beta quirk: the experimental session log endpoint replays
+  nothing on 18600 — transcripts reconcile via refetch.
+- Never echo provider API keys from /config/providers; notification copy
+  stays privacy-fixed; test-signed APKs only through the release channel.
+
+### Owner-side open items
+
+- GitHub Actions billing block (owner-only fix), PR #1 merge decision →
+  then Shorebird release from master + flip the Ubuntu-script raw URLs.
+- Decide repo-public flip timing (audit SHOULDs: merge/close PR #1, fix or
+  disable the red workflow, HANDOFF tone check, release-notes wording).
+- Waiting on Dax (OpenCode founder): app trial before public; v2 port
+  progress can be shared — one real beta bug to report upstream: the dead
+  durable session log (above).
+
 ## Production Android hardening branch
 
 - Branch: `production/android-release-hardening`
