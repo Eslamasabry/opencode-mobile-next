@@ -106,6 +106,7 @@ List<ShortcutHelpEntry> shortcutHelp() {
     ShortcutHelpEntry('$mod + ,', 'Settings'),
     ShortcutHelpEntry('$mod + W', 'Close this screen'),
     ShortcutHelpEntry('$mod + Enter', 'Send the prompt'),
+    ShortcutHelpEntry('$mod + C', 'Copy the selected transcript text'),
     ShortcutHelpEntry('$mod + /', 'This list'),
     const ShortcutHelpEntry('Esc', 'Close a sheet, dialog, or menu'),
     const ShortcutHelpEntry(

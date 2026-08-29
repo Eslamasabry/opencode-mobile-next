@@ -21,6 +21,7 @@ import '../../voice/voice_ui.dart';
 import '../navigation/chat_route.dart';
 import '../app_theme.dart';
 import '../desktop/context_menu.dart';
+import '../desktop/desktop_interaction.dart';
 import '../desktop/shortcuts.dart';
 import '../widgets/appearance_picker.dart';
 import '../widgets/connection_status_banner.dart';
@@ -3653,7 +3654,8 @@ class _ChatScreenState extends State<ChatScreen>
                                   ? _EmptyTranscript(
                                       onSuggestion: _insertSuggestion,
                                     )
-                                  : MarkdownFileLinks(
+                                  : DesktopSelectionArea(
+                                      child: MarkdownFileLinks(
                                       validate: _validatePathLink,
                                       open: _openPathLink,
                                       child: NotificationListener<ScrollNotification>(
@@ -3791,6 +3793,7 @@ class _ChatScreenState extends State<ChatScreen>
                                           ],
                                         ),
                                       ),
+                                    ),
                                     ),
                             ),
                             // §7 rule 5: v2-only surfaces stay silent on v1.

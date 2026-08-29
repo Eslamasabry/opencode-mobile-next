@@ -94,6 +94,31 @@ class DesktopScrollbar extends StatelessWidget {
   }
 }
 
+/// Makes the transcript selectable with a mouse on desktop.
+///
+/// Chat bubbles render `MarkdownText(selectable: false)` so that a long press
+/// reaches the message actions sheet instead of starting a text selection.
+/// That trade is right for touch and wrong for a mouse — on desktop the
+/// actions live on the right button, and the primary button is what people
+/// select text with. A [SelectionArea] restores that, and spans messages, so
+/// a whole exchange can be dragged over and copied with Ctrl+C.
+///
+/// Right-click still opens the message menu rather than the selection
+/// toolbar: the per-message [ContextMenuRegion] sits deeper in the hit-test
+/// path and wins the gesture arena. Copying a partial selection is Ctrl+C;
+/// copying a whole message is the menu's first entry.
+class DesktopSelectionArea extends StatelessWidget {
+  const DesktopSelectionArea({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!desktopInteractions) return child;
+    return SelectionArea(child: child);
+  }
+}
+
 /// Gives a tappable that is not already an [InkWell]/[ListTile] the pointer
 /// cursor desktop users read as "this is clickable". A no-op off desktop, and
 /// a no-op when [enabled] is false so a disabled row does not lie.
