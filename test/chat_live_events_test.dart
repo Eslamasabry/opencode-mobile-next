@@ -501,6 +501,19 @@ Future<void> _pumpEvent(WidgetTester tester) async {
   await tester.pump();
 }
 
+/// UX-P0-03: Commands, Attach, and Voice are collapsed behind one leading
+/// tools button, so tests reach them through the tools sheet instead of
+/// tapping three separate composer icons.
+Future<void> _useComposerTool(WidgetTester tester, String tool) async {
+  await tester.tap(find.byKey(const Key('composer-tools-button')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(Key('composer-tool-$tool')));
+  // The sheet resolves its choice on dismissal, so the tool it launches
+  // needs a second settle.
+  await tester.pumpAndSettle();
+  await tester.pumpAndSettle();
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -623,7 +636,7 @@ void main() {
       ],
     );
 
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('command-mobile-new')));
     await tester.pumpAndSettle();
@@ -1627,7 +1640,7 @@ void main() {
     expect(find.text(reasoning), findsNothing);
     expect(find.byKey(const Key('message-meta-user-display')), findsNothing);
 
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
@@ -1755,7 +1768,7 @@ void main() {
       ];
 
     await _pumpChat(tester, api);
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
@@ -1793,7 +1806,7 @@ void main() {
 
     await _pumpChat(tester, api);
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
@@ -1809,7 +1822,7 @@ void main() {
 
   testWidgets('debug command opens native app diagnostics', (tester) async {
     await _pumpChat(tester, _FakeOpenCodeApi());
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
@@ -1826,7 +1839,7 @@ void main() {
   testWidgets('health command opens native project health', (tester) async {
     final repository = _DestinationRepository();
     await _pumpChat(tester, _FakeOpenCodeApi(), repository: repository);
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
@@ -1844,7 +1857,7 @@ void main() {
     tester,
   ) async {
     await _pumpChat(tester, _FakeOpenCodeApi());
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
@@ -1862,7 +1875,7 @@ void main() {
     tester,
   ) async {
     final controller = await _pumpChat(tester, _FakeOpenCodeApi());
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
@@ -1962,7 +1975,7 @@ void main() {
     ]);
 
     await _pumpChat(tester, api, repository: repository);
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
 
     await tester.enterText(
@@ -2004,7 +2017,7 @@ void main() {
       );
 
     await _pumpChat(tester, api);
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
@@ -2066,7 +2079,7 @@ void main() {
     await tester.pumpAndSettle();
 
     Future<void> openCommand(String command) async {
-      await tester.tap(find.byKey(const Key('command-launcher-button')));
+      await _useComposerTool(tester, 'commands');
       await tester.pumpAndSettle();
       await tester.enterText(
         find.byKey(const Key('command-launcher-search')),
@@ -2138,7 +2151,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
@@ -2196,7 +2209,7 @@ void main() {
     await tester.pump();
 
     expect(find.byKey(const Key('prompt-editor-button')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
@@ -2428,7 +2441,7 @@ void main() {
 
     await _pumpChat(tester, api, repository: repository);
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
@@ -2518,7 +2531,7 @@ void main() {
       );
 
       await _pumpChat(tester, api, repository: repository);
-      await tester.tap(find.byKey(const Key('command-launcher-button')));
+      await _useComposerTool(tester, 'commands');
       await tester.pumpAndSettle();
       await tester.enterText(
         find.byKey(const Key('command-launcher-search')),
@@ -2728,7 +2741,7 @@ void main() {
       await tester.tap(find.byTooltip('Close timeline'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('command-launcher-button')));
+      await _useComposerTool(tester, 'commands');
       await tester.pumpAndSettle();
       expect(
         tester.widget<BottomSheet>(find.byType(BottomSheet)).showDragHandle,
@@ -2780,7 +2793,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     expect(find.text('Composer tools'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -3362,7 +3375,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Attach file'));
+    await _useComposerTool(tester, 'attach');
     await tester.pumpAndSettle();
 
     expect(find.textContaining('attach up to 5 files'), findsOneWidget);

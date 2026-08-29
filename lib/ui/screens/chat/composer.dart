@@ -1,5 +1,9 @@
 part of '../chat_screen.dart';
 
+/// UX-P0-03: the three secondary prompt tools that used to sit as equal
+/// icons around the field. They now live behind one leading affordance.
+enum _PromptTool { commands, attach, voice }
+
 class _ChatComposer extends StatelessWidget {
   const _ChatComposer({
     required this.compact,
@@ -147,6 +151,23 @@ class _ChatComposer extends StatelessWidget {
                     onSelected: onSelectAgent,
                     onShowAll: onOpenAgents,
                   ),
+                // UX-P0-03: on the compact (short) layout the field shares
+                // its row with the leading tools button and Send, so the
+                // model/agent context sits above the field as a header chip
+                // instead of competing for that row's width. The wide layout
+                // keeps it on the action row under the field, where it is
+                // already secondary to the full-width field.
+                if (compact)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: _ModelContextChip(
+                        label: _contextLabel,
+                        onPressed: onChooseModel,
+                      ),
+                    ),
+                  ),
                 // UX-P0-04: while a run is active the consequence of Send
                 // changes, so the choice is stated in words rather than
                 // hidden behind a long press on an unchanged arrow. The
@@ -203,7 +224,6 @@ class _ChatComposer extends StatelessWidget {
   }
 
   Widget _standardComposer(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -221,47 +241,20 @@ class _ChatComposer extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
           child: Row(
             children: [
-              _ComposerAction(
-                key: const Key('command-launcher-button'),
-                tooltip: 'Commands',
-                onPressed: onOpenCommands,
-                icon: const Icon(AppIcons.run),
-              ),
-              const SizedBox(width: 2),
-              _ComposerAction(
-                tooltip: 'Attach file',
-                onPressed: busy || sending ? null : onAttach,
-                icon: const Icon(Icons.attach_file_rounded),
-              ),
-              const SizedBox(width: 2),
-              _ComposerAction(
-                key: const Key('voice-input-button'),
-                tooltip: 'Local voice input',
-                onPressed: busy || sending ? null : onVoice,
-                icon: voiceOpening
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.mic_none_rounded),
+              _PromptToolsButton(
+                voiceOpening: voiceOpening,
+                onSelected: _openTool,
               ),
               const SizedBox(width: 6),
+              // The model/agent reads as context, not as a fifth equal
+              // action: it flexes and ellipsizes so the row never pushes
+              // Send off the edge at large text scales.
               Expanded(
                 child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    key: const Key('composer-model-context'),
+                  alignment: AlignmentDirectional.centerStart,
+                  child: _ModelContextChip(
+                    label: _contextLabel,
                     onPressed: onChooseModel,
-                    icon: const Icon(Icons.tune_rounded, size: 17),
-                    label: Text(
-                      _contextLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    style: TextButton.styleFrom(
-                      foregroundColor: scheme.onSurfaceVariant,
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                    ),
                   ),
                 ),
               ),
@@ -290,34 +283,8 @@ class _ChatComposer extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          _ComposerAction(
-            key: const Key('command-launcher-button'),
-            tooltip: 'Commands',
-            onPressed: onOpenCommands,
-            icon: const Icon(AppIcons.run),
-          ),
-          _ComposerAction(
-            key: const Key('composer-model-context'),
-            tooltip: _contextLabel,
-            onPressed: onChooseModel,
-            icon: const Icon(Icons.tune_rounded),
-          ),
-          _ComposerAction(
-            tooltip: 'Attach file',
-            onPressed: busy || sending ? null : onAttach,
-            icon: const Icon(Icons.attach_file_rounded),
-          ),
-          _ComposerAction(
-            key: const Key('voice-input-button'),
-            tooltip: 'Local voice input',
-            onPressed: busy || sending ? null : onVoice,
-            icon: voiceOpening
-                ? const SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.mic_none_rounded),
-          ),
+          _PromptToolsButton(voiceOpening: voiceOpening, onSelected: _openTool),
+          const SizedBox(width: 4),
           Expanded(
             child: _ComposerField(
               controller: controller,
@@ -347,6 +314,35 @@ class _ChatComposer extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Opens the tools sheet and runs the chosen action once the sheet has
+  /// closed, so a tool that opens its own sheet (Commands, Voice) never
+  /// races the dismissal of this one.
+  Future<void> _openTool(BuildContext context) async {
+    final tool = await showModalBottomSheet<_PromptTool>(
+      context: context,
+      useSafeArea: true,
+      showDragHandle: true,
+      // Three tiles at a 2.5x text scale outgrow the default half-screen
+      // sheet on a short phone, so the surface may grow and scroll.
+      isScrollControlled: true,
+      constraints: const BoxConstraints(maxWidth: 720),
+      builder: (_) => _PromptToolsSheet(
+        blocked: busy || sending,
+        attachmentCount: attachments.length,
+      ),
+    );
+    switch (tool) {
+      case null:
+        return;
+      case _PromptTool.commands:
+        onOpenCommands();
+      case _PromptTool.attach:
+        onAttach();
+      case _PromptTool.voice:
+        onVoice();
+    }
   }
 
   String get _contextLabel {
@@ -428,6 +424,147 @@ class _ComposerField extends StatelessWidget {
         const SingleActivator(LogicalKeyboardKey.enter, meta: true): onSubmit,
       },
       child: field,
+    );
+  }
+}
+
+/// UX-P0-03: one leading affordance for Commands, Attach, and Voice. It is
+/// a plain [IconButton], so it keeps the 48 dp target, the tooltip, and the
+/// keyboard/TalkBack behaviour the three separate buttons had.
+class _PromptToolsButton extends StatelessWidget {
+  const _PromptToolsButton({
+    required this.voiceOpening,
+    required this.onSelected,
+  });
+
+  /// Voice opening is the one tool with a visible pending state, so the
+  /// collapsed button reports it rather than hiding it behind the sheet.
+  final bool voiceOpening;
+  final Future<void> Function(BuildContext context) onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return _ComposerAction(
+      key: const Key('composer-tools-button'),
+      tooltip: 'Prompt tools: commands, attach, voice',
+      onPressed: () => unawaited(onSelected(context)),
+      icon: voiceOpening
+          ? const SizedBox.square(
+              dimension: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.add_rounded),
+    );
+  }
+}
+
+/// The compact tools surface behind [_PromptToolsButton]. Every entry is a
+/// full-width [ListTile]: labelled, focusable, and comfortably past the
+/// 48 dp minimum at any text scale.
+class _PromptToolsSheet extends StatelessWidget {
+  const _PromptToolsSheet({
+    required this.blocked,
+    required this.attachmentCount,
+  });
+
+  /// Attach and Voice stay unavailable while a turn is in flight, exactly as
+  /// they were when they had their own buttons.
+  final bool blocked;
+  final int attachmentCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SafeArea(
+      top: false,
+      child: SingleChildScrollView(
+        child: Column(
+          key: const Key('composer-tools-sheet'),
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+              child: Text('Prompt tools', style: theme.textTheme.titleMedium),
+            ),
+            ListTile(
+              key: const Key('composer-tool-commands'),
+              leading: const Icon(AppIcons.run),
+              title: const Text('Commands'),
+              subtitle: const Text('Slash commands and agents'),
+              onTap: () => Navigator.pop(context, _PromptTool.commands),
+            ),
+            ListTile(
+              key: const Key('composer-tool-attach'),
+              enabled: !blocked,
+              leading: const Icon(Icons.attach_file_rounded),
+              title: const Text('Attach file'),
+              subtitle: Text(
+                blocked
+                    ? 'Available when the current run finishes'
+                    : attachmentCount == 0
+                    ? 'Add an image or file to the prompt'
+                    : '$attachmentCount attached',
+              ),
+              onTap: blocked
+                  ? null
+                  : () => Navigator.pop(context, _PromptTool.attach),
+            ),
+            ListTile(
+              key: const Key('composer-tool-voice'),
+              enabled: !blocked,
+              leading: const Icon(Icons.mic_none_rounded),
+              title: const Text('Voice input'),
+              subtitle: Text(
+                blocked
+                    ? 'Available when the current run finishes'
+                    : 'Records and transcribes on this device',
+              ),
+              onTap: blocked
+                  ? null
+                  : () => Navigator.pop(context, _PromptTool.voice),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// UX-P0-03: the model/agent/variant reads as context chrome — a chip that
+/// states the current selection and opens the picker — rather than another
+/// icon button with the same weight as Send.
+class _ModelContextChip extends StatelessWidget {
+  const _ModelContextChip({required this.label, required this.onPressed});
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Tooltip(
+      message: 'Model and agent: $label. Tap to change.',
+      child: ActionChip(
+        key: const Key('composer-model-context'),
+        avatar: Icon(
+          Icons.tune_rounded,
+          size: 16,
+          color: scheme.onSurfaceVariant,
+        ),
+        label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+        labelStyle: theme.textTheme.labelLarge?.copyWith(
+          color: scheme.onSurfaceVariant,
+        ),
+        backgroundColor: Colors.transparent,
+        side: BorderSide(color: scheme.outlineVariant),
+        // The chip reads as chrome, but its target still has to clear the
+        // 48 dp Android minimum, so the tap area stays padded.
+        materialTapTargetSize: MaterialTapTargetSize.padded,
+        onPressed: onPressed,
+      ),
     );
   }
 }

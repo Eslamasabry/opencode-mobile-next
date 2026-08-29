@@ -106,6 +106,19 @@ _voice() async {
   );
 }
 
+/// UX-P0-03: voice moved behind the single leading tools button, so tests
+/// open the tools sheet and choose it. The tool runs once the sheet has
+/// finished dismissing, hence the explicit pumps rather than a settle: the
+/// voice sheet animates its own recording indicator forever.
+Future<void> _openVoiceTool(WidgetTester tester) async {
+  await tester.tap(find.byKey(const Key('composer-tools-button')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(const Key('composer-tool-voice')));
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 400));
+  await tester.pump();
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -139,7 +152,7 @@ void main() {
       await tester.enterText(find.byType(TextField).first, 'typed first');
       expect(find.text('notes.txt'), findsOneWidget);
 
-      await tester.tap(find.byKey(const Key('voice-input-button')));
+      await _openVoiceTool(tester);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
       expect(find.text('Audio stays on this device'), findsOneWidget);
@@ -332,7 +345,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('voice-input-button')));
+    await _openVoiceTool(tester);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
