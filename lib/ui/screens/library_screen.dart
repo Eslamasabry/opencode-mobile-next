@@ -16,6 +16,7 @@ import '../widgets/product_states.dart';
 import '../widgets/pickers.dart';
 import 'capabilities_screen.dart';
 import 'mcp_setup_screen.dart';
+import 'mission_control_screen.dart';
 import 'requests_screen.dart';
 import 'settings_screen.dart';
 
@@ -44,6 +45,16 @@ class LibraryScreen extends StatelessWidget {
             const SectionLabel('Browse'),
             _DestinationGrid(
               cards: [
+                _DestinationCard(
+                  key: const ValueKey('library-mission-control'),
+                  icon: Icons.space_dashboard_outlined,
+                  title: 'Mission Control',
+                  badge: pending == 0 ? null : '$pending',
+                  onTap: () => _open(
+                    context,
+                    MissionControlScreen(controller: controller),
+                  ),
+                ),
                 _DestinationCard(
                   icon: Icons.model_training_outlined,
                   title: 'Models & agents',
@@ -193,6 +204,7 @@ class _DestinationCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const _DestinationCard({
+    super.key,
     required this.icon,
     required this.title,
     required this.onTap,
