@@ -90,14 +90,22 @@ The workflow design is useful, but the recorded runs are blocked before meaningf
 
 **Required fix**
 
+> Verified 2026-08-30 against `.github/workflows/android-quality.yml`: five of
+> the items originally listed here were already satisfied when this audit was
+> written — `workflow_dispatch` (line 21), all three actions pinned to 40-char
+> SHAs, `permissions: contents: read`, `concurrency` with
+> `cancel-in-progress`, and `:app:lintRelease`. They are struck through below
+> so the remaining work is not overstated: the only blocker is account
+> eligibility, not the workflow file.
+
 - restore account/runner eligibility;
-- add `workflow_dispatch`;
+- ~~add `workflow_dispatch`~~ (already present);
 - run the exact launch commit;
-- pin actions by immutable SHA;
-- use least-privilege permissions;
+- ~~pin actions by immutable SHA~~ (already pinned);
+- ~~use least-privilege permissions~~ (already `contents: read`);
 - publish test, analysis, lint, and build evidence;
 - require stable check names on `master` through branch protection;
-- add concurrency cancellation for superseded runs.
+- ~~add concurrency cancellation for superseded runs~~ (already present).
 
 The public launch commit must be green for dependency resolution, generated-contract checks, `flutter analyze`, full tests, Android lint, signed release compilation, and provenance/license checks.
 
