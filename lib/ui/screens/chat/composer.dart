@@ -504,7 +504,9 @@ class _PromptToolsButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return _ComposerAction(
       key: const Key('composer-tools-button'),
-      tooltip: 'Prompt tools: commands, attach, voice',
+      tooltip: platformCapabilities.supportsVoice
+          ? 'Prompt tools: commands, attach, voice'
+          : 'Prompt tools: commands, attach',
       onPressed: () => unawaited(onSelected(context)),
       icon: voiceOpening
           ? const SizedBox.square(
@@ -568,20 +570,25 @@ class _PromptToolsSheet extends StatelessWidget {
                   ? null
                   : () => Navigator.pop(context, _PromptTool.attach),
             ),
-            ListTile(
-              key: const Key('composer-tool-voice'),
-              enabled: !blocked,
-              leading: const Icon(Icons.mic_none_rounded),
-              title: const Text('Voice input'),
-              subtitle: Text(
-                blocked
-                    ? 'Available when the current run finishes'
-                    : 'Records and transcribes on this device',
+            // Speech capture and the on-device recognizer are Android-only:
+            // the `oc/voice` channel exists in the Android runner alone, and
+            // the recorder writes into Android-shaped paths. Offering the row
+            // on desktop promised a transcript nothing could produce.
+            if (platformCapabilities.supportsVoice)
+              ListTile(
+                key: const Key('composer-tool-voice'),
+                enabled: !blocked,
+                leading: const Icon(Icons.mic_none_rounded),
+                title: const Text('Voice input'),
+                subtitle: Text(
+                  blocked
+                      ? 'Available when the current run finishes'
+                      : 'Records and transcribes on this device',
+                ),
+                onTap: blocked
+                    ? null
+                    : () => Navigator.pop(context, _PromptTool.voice),
               ),
-              onTap: blocked
-                  ? null
-                  : () => Navigator.pop(context, _PromptTool.voice),
-            ),
             const SizedBox(height: 8),
           ],
         ),

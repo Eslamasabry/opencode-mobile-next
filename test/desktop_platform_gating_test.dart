@@ -1,13 +1,60 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/api/models.dart';
+import 'package:opencode_mobile/api/opencode_api.dart';
+import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/guide_screen.dart';
 import 'package:opencode_mobile/ui/screens/servers_screen.dart';
+import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/screens/termux_setup_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+class _FakeApi extends OpenCodeApi {
+  _FakeApi() : super(baseUrl: 'http://localhost');
+
+  @override
+  Future<List<Session>> sessions() async => const [];
+
+  @override
+  Future<Map<String, String>> sessionStatuses() async => const {};
+
+  @override
+  Future<List<MessageWithParts>> messages(String id) async => [];
+
+  @override
+  Future<Session> session(String id) async => Session(id: id);
+
+  @override
+  Future<Health> health() async => Health(healthy: true);
+}
+
+Future<ConnectionController> _chatController() async {
+  SharedPreferences.setMockInitialValues({
+    'oc.profiles': jsonEncode([
+      {
+        'id': 'profile-1',
+        'name': 'Test server',
+        'baseUrl': 'http://localhost',
+        'username': '',
+      },
+    ]),
+    'oc.activeProfile': 'profile-1',
+  });
+  final prefs = await SharedPreferences.getInstance();
+  final store = ProfileStore(prefs: prefs);
+  await store.load();
+  return ConnectionController(store)
+    ..api = _FakeApi()
+    ..status = StreamStatus.connected;
+}
 
 /// Presents saved profiles without touching the real secure-storage channel,
 /// which is unmocked in widget tests and would hang a real upsert.
@@ -57,6 +104,15 @@ Widget _servers(ProfileStore store, ConnectionController controller) =>
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    // ProfileStore reaches for secure storage; an unmocked channel hangs.
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
+          (_) async => null,
+        );
+  });
 
   tearDown(() => debugPlatformCapabilities = null);
 
@@ -180,5 +236,93 @@ void main() {
       expect(find.text('Get Termux'), findsNothing);
       expect(tester.takeException(), isNull);
     });
+  });
+
+  group('the composer prompt tools', () {
+    Future<void> pumpChat(WidgetTester tester) async {
+      final controller = await _chatController();
+      addTearDown(controller.dispose);
+      await tester.binding.setSurfaceSize(const Size(400, 800));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [connProvider.overrideWithValue(controller)],
+          child: const MaterialApp(home: ChatScreen(sessionID: 'session-1')),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> openTools(WidgetTester tester) async {
+      await tester.tap(find.byKey(const Key('composer-tools-button')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('composer-tools-sheet')), findsOneWidget);
+    }
+
+    testWidgets('offer voice input on Android', (tester) async {
+      await pumpChat(tester);
+      expect(
+        find.byTooltip('Prompt tools: commands, attach, voice'),
+        findsOneWidget,
+      );
+      await openTools(tester);
+      expect(find.byKey(const Key('composer-tool-voice')), findsOneWidget);
+    });
+
+    testWidgets('drop voice input on desktop', (tester) async {
+      onDesktop();
+      await pumpChat(tester);
+      // The collapsed button no longer advertises a tool that is not there.
+      expect(find.byTooltip('Prompt tools: commands, attach'), findsOneWidget);
+      await openTools(tester);
+      expect(find.byKey(const Key('composer-tool-voice')), findsNothing);
+      expect(find.text('Voice input'), findsNothing);
+      // Commands and Attach are untouched.
+      expect(find.byKey(const Key('composer-tool-commands')), findsOneWidget);
+      expect(find.byKey(const Key('composer-tool-attach')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('the settings hub', () {
+    Future<void> pumpSettings(WidgetTester tester) async {
+      final controller = await _chatController();
+      addTearDown(controller.dispose);
+      await tester.binding.setSurfaceSize(const Size(500, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [connProvider.overrideWithValue(controller)],
+          child: MaterialApp(home: SettingsScreen(controller: controller)),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('shows the background category on Android', (tester) async {
+      await pumpSettings(tester);
+      expect(
+        find.byKey(const ValueKey('settings-category-background')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets(
+      'hides the foreground-service category on desktop',
+      (tester) async {
+        onDesktop();
+        await pumpSettings(tester);
+        expect(
+          find.byKey(const ValueKey('settings-category-background')),
+          findsNothing,
+        );
+        expect(find.text('Notifications & background'), findsNothing);
+        // The rest of the hub is untouched.
+        expect(
+          find.byKey(const ValueKey('settings-category-privacy')),
+          findsOneWidget,
+        );
+      },
+    );
   });
 }

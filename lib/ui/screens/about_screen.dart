@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../platform/platform_capabilities.dart';
 import '../widgets/markdown.dart';
 import '../widgets/product_states.dart';
 
@@ -84,12 +85,23 @@ class _DocumentView extends StatelessWidget {
           const _NonAffiliationNotice(),
           const SizedBox(height: 16),
           if (showAppSummary) ...[
-            const ListTile(
+            ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.terminal_rounded, size: 34),
-              title: Text('OpenCode for Android'),
+              leading: const Icon(Icons.terminal_rounded, size: 34),
+              // The desktop bundle is the same app, but naming it "for
+              // Android" and promising local voice recognition describes a
+              // build the reader is not running.
+              title: Text(
+                platformCapabilities.supportsVoice
+                    ? 'OpenCode for Android'
+                    : 'OpenCode for desktop',
+              ),
               subtitle: Text(
-                'A mobile client for an OpenCode server. Voice recognition runs locally after optional model downloads.',
+                platformCapabilities.supportsVoice
+                    ? 'A mobile client for an OpenCode server. Voice '
+                          'recognition runs locally after optional model '
+                          'downloads.'
+                    : 'A desktop client for an OpenCode server.',
               ),
             ),
             const Divider(height: 28),
