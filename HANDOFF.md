@@ -233,10 +233,30 @@ have WIP commits; they were told to commit everything durable):
 1. `port/v2-connect` — probe flavor detection (v2 = 401-with-empty-body on
    /api/health), password step in servers_screen/first-run per design §1,
    v2 gateway construction in connection.dart's wiring seams, 401 banner.
+   Committed so far at last check: `abf4c87` (probe flavor detection),
+   `b07716b` (v2 gateway pair wired into the connection controller) —
+   likely REMAINING: the password-step UI in servers_screen/first-run,
+   the 401 banner, live proof, tests. Check the branch tip and the last
+   commit body's CONTINUATION note before resuming.
 2. `port/v2-interaction` — additive FormGateway/InboxGateway in the domain,
    forms wiring to FormRenderer, permission bottom sheet with
    reject-with-message (§3), PendingSendsStrip unifying offline drafts +
    v2 inbox (§5, tap=steer / long-press=queue).
+   Committed so far at last check: `c0cfb2b` (forms/inbox gateways in
+   domain + v2 transport), `291cbc9` (pending forms/inbox in connection
+   state), `3f4c682` (permission bottom sheet) — likely REMAINING: forms
+   surfacing in chat + Mission Control/Requests counts, the
+   PendingSendsStrip + steer/queue send affordance, notification Reply
+   mapping, tests, live smoke. Check the branch tip and CONTINUATION
+   notes before resuming.
+
+If the agents finished after this note was written, their branches will
+have more commits and a final report in their transcripts; merge
+whatever exists (verify analyze + affected suites per merge, as every
+merge this session did). Both agents were instructed to leave
+CONTINUATION sections in final commit messages. Expect conflicts in
+lib/state/connection.dart (both branches touch it; wiring vs
+forms/inbox regions) and in message_view.dart's strip region.
 3. ~~`port/v2-transcript`~~ — DONE and MERGED (b29ec48): tagged part
    types (`v2:switch`/`v2:notice`/`v2:compaction`), TranscriptMarker
    pills, notices, compaction rows, shell status chips, interleaved tool
