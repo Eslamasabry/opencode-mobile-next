@@ -18,29 +18,27 @@ class CapabilitiesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // §7 rule 4: a tab whose screen has no backend is dropped and the screen
+    // it sits in survives. The tool inventory is the only gated catalog here.
+    final tools = controller.capabilities.toolInventory;
+    final tabs = <(String, Widget)>[
+      ('Commands', CommandsScreen(controller: controller, embedded: true)),
+      if (tools)
+        ('Tools', ToolsScreen(controller: controller, embedded: true)),
+      ('Skills', SkillsScreen(controller: controller, embedded: true)),
+      ('References', ReferencesScreen(controller: controller, embedded: true)),
+    ];
     return DefaultTabController(
-      length: 4,
-      initialIndex: initialTab.clamp(0, 3),
+      length: tabs.length,
+      initialIndex: initialTab.clamp(0, tabs.length - 1),
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Commands & tools'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Commands'),
-              Tab(text: 'Tools'),
-              Tab(text: 'Skills'),
-              Tab(text: 'References'),
-            ],
+          bottom: TabBar(
+            tabs: [for (final tab in tabs) Tab(key: ValueKey('capabilities-tab-${tab.$1}'), text: tab.$1)],
           ),
         ),
-        body: TabBarView(
-          children: [
-            CommandsScreen(controller: controller, embedded: true),
-            ToolsScreen(controller: controller, embedded: true),
-            SkillsScreen(controller: controller, embedded: true),
-            ReferencesScreen(controller: controller, embedded: true),
-          ],
-        ),
+        body: TabBarView(children: [for (final tab in tabs) tab.$2]),
       ),
     );
   }

@@ -111,12 +111,19 @@ class _RequestsScreenState extends State<RequestsScreen> {
         final bSelected = b.sessionID == selected;
         return aSelected == bSelected ? 0 : (aSelected ? -1 : 1);
       });
-    final sessionForms = widget.controller.forms.values
-        .where((form) => form.sessionID != 'global')
-        .toList();
-    final globalForms = widget.controller.forms.values
-        .where((form) => form.sessionID == 'global')
-        .toList();
+    // §7 rule 5: forms are v2-only, so a v1 connection never lists them even
+    // if a stale entry survived a server switch.
+    final formsAvailable = widget.controller.capabilities.forms;
+    final sessionForms = !formsAvailable
+        ? const <Api2FormInfo>[]
+        : widget.controller.forms.values
+              .where((form) => form.sessionID != 'global')
+              .toList();
+    final globalForms = !formsAvailable
+        ? const <Api2FormInfo>[]
+        : widget.controller.forms.values
+              .where((form) => form.sessionID == 'global')
+              .toList();
     final loading =
         _loading ||
         widget.controller.permissionsLoading ||

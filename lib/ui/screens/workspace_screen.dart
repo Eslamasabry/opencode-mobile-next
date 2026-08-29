@@ -345,18 +345,21 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       trailing: const Icon(Icons.chevron_right_rounded),
                       onTap: _selectedProject == null ? null : _openWorktrees,
                     ),
-                    ListTile(
-                      key: const ValueKey('managed-workspaces-entry'),
-                      leading: const Icon(Icons.cloud_outlined),
-                      title: const Text('Managed workspaces'),
-                      subtitle: const Text(
-                        'Create, discover, open, and remove adapter-backed environments',
+                    // §7 rows 1–4: no workspace inventory, adapter discovery
+                    // or sync on v2, so the whole destination goes.
+                    if (widget.controller.capabilities.managedWorkspaces)
+                      ListTile(
+                        key: const ValueKey('managed-workspaces-entry'),
+                        leading: const Icon(Icons.cloud_outlined),
+                        title: const Text('Managed workspaces'),
+                        subtitle: const Text(
+                          'Create, discover, open, and remove adapter-backed environments',
+                        ),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: _selectedProject == null
+                            ? null
+                            : _openManagedWorkspaces,
                       ),
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: _selectedProject == null
-                          ? null
-                          : _openManagedWorkspaces,
-                    ),
                     ListTile(
                       key: const ValueKey('project-health-entry'),
                       leading: const Icon(Icons.monitor_heart_outlined),
@@ -383,6 +386,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     busy: true,
                     onOpen: _openSession,
                     onAction: _sessionAction,
+                    sharingAvailable:
+                        widget.controller.capabilities.sessionShare,
+                    archiveAvailable:
+                        widget.controller.capabilities.sessionArchive,
                   ),
                 ),
               SliverToBoxAdapter(
@@ -429,6 +436,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       busy: false,
                       onOpen: _openSession,
                       onAction: _sessionAction,
+                      sharingAvailable:
+                          widget.controller.capabilities.sessionShare,
+                      archiveAvailable:
+                          widget.controller.capabilities.sessionArchive,
                     ),
                   ),
                 ),
@@ -492,6 +503,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         builder: (_) => ProjectHealthScreen(
           repository: repository,
           repositoryResolver: widget.controller.prepareActionRepository,
+          capabilities: widget.controller.capabilities,
         ),
       ),
     );
@@ -677,11 +689,17 @@ class _SessionRow extends StatelessWidget {
   final ValueChanged<Session> onOpen;
   final Future<void> Function(String, Session) onAction;
 
+  /// §7 rows 10–12: menus list possible actions only.
+  final bool sharingAvailable;
+  final bool archiveAvailable;
+
   const _SessionRow({
     required this.session,
     required this.busy,
     required this.onOpen,
     required this.onAction,
+    this.sharingAvailable = true,
+    this.archiveAvailable = true,
   });
 
   @override
@@ -733,11 +751,15 @@ class _SessionRow extends StatelessWidget {
           onSelected: (value) => onAction(value, session),
           itemBuilder: (context) => [
             const PopupMenuItem(value: 'rename', child: Text('Rename')),
-            PopupMenuItem(
-              value: session.shareUrl == null ? 'share' : 'unshare',
-              child: Text(session.shareUrl == null ? 'Share' : 'Stop sharing'),
-            ),
-            const PopupMenuItem(value: 'archive', child: Text('Archive')),
+            if (sharingAvailable)
+              PopupMenuItem(
+                value: session.shareUrl == null ? 'share' : 'unshare',
+                child: Text(
+                  session.shareUrl == null ? 'Share' : 'Stop sharing',
+                ),
+              ),
+            if (archiveAvailable)
+              const PopupMenuItem(value: 'archive', child: Text('Archive')),
             PopupMenuItem(
               value: 'delete',
               child: Text(

@@ -14,10 +14,15 @@ class _SessionViewsSheet extends StatelessWidget {
   const _SessionViewsSheet({
     required this.reasoningExpanded,
     required this.timestampsVisible,
+    this.todosAvailable = true,
   });
 
   final bool reasoningExpanded;
   final bool timestampsVisible;
+
+  /// §7 row 13: menus list possible actions only, so the Todos destination
+  /// leaves the sheet on a server that cannot serve it.
+  final bool todosAvailable;
 
   @override
   Widget build(BuildContext context) {
@@ -42,11 +47,12 @@ class _SessionViewsSheet extends StatelessWidget {
               label: 'Changes',
               value: 'changes',
             ),
-            _SessionSheetRow(
-              icon: Icons.checklist_rounded,
-              label: 'Todos',
-              value: 'todos',
-            ),
+            if (todosAvailable)
+              _SessionSheetRow(
+                icon: Icons.checklist_rounded,
+                label: 'Todos',
+                value: 'todos',
+              ),
             _SessionSheetRow(
               icon: Icons.account_tree_outlined,
               label: 'Subagent sessions',
@@ -80,10 +86,18 @@ class _SessionViewsSheet extends StatelessWidget {
 
 /// Bottom sheet grouping the session's mutation and utility actions.
 class _SessionActionsSheet extends StatelessWidget {
-  const _SessionActionsSheet({required this.reverted, required this.shared});
+  const _SessionActionsSheet({
+    required this.reverted,
+    required this.shared,
+    this.sharingAvailable = true,
+  });
 
   final bool reverted;
   final bool shared;
+
+  /// §7 rows 10–11: the whole Sharing group goes when the server has no
+  /// share/unshare endpoints.
+  final bool sharingAvailable;
 
   @override
   Widget build(BuildContext context) {
@@ -116,12 +130,14 @@ class _SessionActionsSheet extends StatelessWidget {
               label: 'Compact context',
               value: 'compact',
             ),
-            const SectionLabel('Sharing'),
-            _SessionSheetRow(
-              icon: shared ? Icons.public_off_rounded : Icons.public_rounded,
-              label: shared ? 'Stop sharing' : 'Share session',
-              value: shared ? 'unshare' : 'share',
-            ),
+            if (sharingAvailable) ...[
+              const SectionLabel('Sharing'),
+              _SessionSheetRow(
+                icon: shared ? Icons.public_off_rounded : Icons.public_rounded,
+                label: shared ? 'Stop sharing' : 'Share session',
+                value: shared ? 'unshare' : 'share',
+              ),
+            ],
             const SectionLabel('Advanced'),
             _SessionSheetRow(
               icon: Icons.terminal_rounded,

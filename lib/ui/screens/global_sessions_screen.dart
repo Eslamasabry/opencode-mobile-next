@@ -373,7 +373,11 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
             opening: _openingSessionID == _results[index].session.id,
             stealing: _stealingSessionID == _results[index].session.id,
             onTap: () => _open(_results[index]),
-            onSteal: _isElsewhere(_results[index])
+            // §7 row 7: "Continue here" is steal + sync-start, neither of
+            // which v2 has. A future rebuild is export+import+move.
+            onSteal:
+                widget.controller.capabilities.sessionSteal &&
+                    _isElsewhere(_results[index])
                 ? () => unawaited(_steal(_results[index]))
                 : null,
           );

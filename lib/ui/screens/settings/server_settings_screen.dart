@@ -260,19 +260,29 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                 ),
               ),
             ),
-          ListTile(
-            key: const Key('server-updates-tile'),
-            leading: const Icon(Icons.system_update_alt_rounded),
-            title: Text(serverUpdateTitle),
-            subtitle: Text(serverUpdateSubtitle),
-            trailing: _upgradingServer
-                ? const SizedBox.square(
-                    dimension: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Icon(serverUpdateIcon),
-            onTap: _upgradingServer ? null : serverUpdateAction,
-          ),
+          // §7 row 23. A Termux-managed server is upgraded by this device, so
+          // that path is never gated — only the remote-host one is.
+          if (!managedLocally && !controller.capabilities.remoteUpgrade)
+            const GatedRowTile(
+              feature: 'remote-upgrade',
+              title: 'Server updates',
+              explainer: 'Upgrade from the machine running the server',
+              leading: Icon(Icons.system_update_alt_rounded),
+            )
+          else
+            ListTile(
+              key: const Key('server-updates-tile'),
+              leading: const Icon(Icons.system_update_alt_rounded),
+              title: Text(serverUpdateTitle),
+              subtitle: Text(serverUpdateSubtitle),
+              trailing: _upgradingServer
+                  ? const SizedBox.square(
+                      dimension: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(serverUpdateIcon),
+              onTap: _upgradingServer ? null : serverUpdateAction,
+            ),
         ],
       ),
     );

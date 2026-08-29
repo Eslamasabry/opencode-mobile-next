@@ -7,29 +7,47 @@ class _McpServerTile extends StatelessWidget {
   final bool busy;
   final VoidCallback? onAction;
 
+  /// §7 row 9: this server generation has no MCP OAuth endpoints, so a server
+  /// waiting on authorization says where the work has to happen instead of
+  /// offering a button that cannot do it.
+  final bool authGated;
+
   const _McpServerTile({
     required this.server,
     required this.subtitle,
     required this.actionLabel,
     required this.busy,
     required this.onAction,
+    this.authGated = false,
   });
 
-  Widget _action() => busy
-      ? const Padding(
-          padding: EdgeInsets.all(14),
-          child: SizedBox.square(
-            dimension: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        )
-      : TextButton(onPressed: onAction, child: Text(actionLabel));
+  Widget _action() {
+    if (authGated) {
+      return const Chip(
+        key: ValueKey('gated-mcp-oauth'),
+        label: Text('Authenticate from the server machine'),
+        visualDensity: VisualDensity.compact,
+      );
+    }
+    return busy
+        ? const Padding(
+            padding: EdgeInsets.all(14),
+            child: SizedBox.square(
+              dimension: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          )
+        : TextButton(onPressed: onAction, child: Text(actionLabel));
+  }
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final scaledBody = MediaQuery.textScalerOf(context).scale(14);
-      final stackAction = constraints.maxWidth < 420 || scaledBody > 20;
+      // The gated explainer chip is far wider than a "Connect" button, so it
+      // always takes the stacked layout rather than a cramped trailing slot.
+      final stackAction =
+          authGated || constraints.maxWidth < 420 || scaledBody > 20;
       if (!stackAction) {
         return ListTile(
           leading: _McpStatus(status: server.status),
