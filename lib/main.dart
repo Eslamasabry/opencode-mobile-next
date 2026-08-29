@@ -32,6 +32,13 @@ Future<void> main() async {
   if (!kIsWeb && (Platform.isLinux || Platform.isWindows || Platform.isMacOS)) {
     // Desktop windows get a sane default and floor; Android never reaches
     // these calls.
+    //
+    // The one platform branch that deliberately stays on dart:io rather than
+    // PlatformCapabilities: this is about the process that is actually
+    // running — whether a native window exists to size — not about a feature
+    // a test needs to pump both ways. `main` is never entered by the suite,
+    // so routing it through an overridable seam would only add a way for a
+    // stray override to leave a real desktop window unshown.
     await windowManager.ensureInitialized();
     const options = WindowOptions(
       size: Size(900, 700),
