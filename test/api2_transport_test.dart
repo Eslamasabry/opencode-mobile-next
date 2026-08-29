@@ -42,27 +42,20 @@ void main() {
     transport.close();
   });
 
-  test('auth_token query fallback carries the Basic token url-encoded', () {
-    final transport = Api2Transport(
-      baseUrl: 'http://host:4097',
-      password: 'p+w/d==',
-    );
-    final uri = transport.authTokenUri(
-      '/event',
-      query: {'location[directory]': '/work/app'},
-    );
-    expect(uri.path, '/api/event');
-    expect(uri.queryParameters['auth_token'], transport.basicToken);
-    expect(uri.queryParameters['location[directory]'], '/work/app');
-    expect(uri.toString(), contains('auth_token='));
-    expect(uri.toString(), isNot(contains(transport.password)));
-
-    final upgraded = transport.withAuthToken(
-      Uri.parse('ws://host:4097/api/pty/pty_1/connect?cursor=-1'),
-    );
-    expect(upgraded.queryParameters['cursor'], '-1');
-    expect(upgraded.queryParameters['auth_token'], transport.basicToken);
-    transport.close();
+  test('the transport offers no way to put credentials in a URL', () {
+    // The `?auth_token=` helpers are gone: a URL is logged by proxies and
+    // servers, kept in crash reports, and readable in a screenshot, and
+    // base64 of `opencode:<password>` is trivially reversible. The PTY
+    // WebSocket upgrade — the one caller that would have wanted this — uses
+    // a single-use ticket instead. This guards the source itself, because
+    // the risk is a helper being reintroduced, not one being called.
+    final code = File('lib/api2/transport.dart')
+        .readAsLinesSync()
+        .where((line) => !line.trimLeft().startsWith('//'))
+        .join('\n');
+    expect(code, isNot(contains('auth_token')));
+    expect(code, isNot(contains('withAuthToken')));
+    expect(code, isNot(contains('authTokenUri')));
   });
 
   test('401 maps to Api2AuthRequired even with an empty body', () async {
