@@ -11,7 +11,9 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.graphics.drawable.Icon
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 
 class BackgroundConnectionService : Service() {
     override fun onCreate() {
@@ -41,9 +43,37 @@ class BackgroundConnectionService : Service() {
         super.onDestroy()
     }
 
+    /**
+     * Android 15+ stops a dataSync foreground service once it has used its
+     * daily budget. Stopping is required; staying silent is not. Dart's
+     * "keep live in background" preference would otherwise stay true over a
+     * service the system has already killed, so the user believes live mode
+     * is running while events and terminals are disconnected.
+     *
+     * The notification goes first, then the push: whatever happens to the
+     * channel, the ongoing "session is live" notification must not outlive
+     * the session it claims is live.
+     */
     override fun onTimeout(startId: Int, fgsType: Int) {
         stopForeground(STOP_FOREGROUND_REMOVE)
+        notifyDartOfTimeout()
         stopSelf(startId)
+    }
+
+    private fun notifyDartOfTimeout() {
+        val channel = MainActivity.backgroundChannel ?: return
+        // invokeMethod is main-thread only; onTimeout is not guaranteed to
+        // arrive there.
+        Handler(Looper.getMainLooper()).post {
+            channel.invokeMethod(
+                METHOD_TIMEOUT,
+                mapOf(
+                    "enabled" to false,
+                    "active" to false,
+                    "reason" to "systemTimeout"
+                )
+            )
+        }
     }
 
     private fun createLiveNotificationChannel() {
@@ -93,6 +123,10 @@ class BackgroundConnectionService : Service() {
         private const val STATUS_CHANNEL_ID = "opencode_coding_status"
         private const val CODING_ALERT_ID_BASE = 6000
         private const val CODING_ALERT_GROUP = "opencode_coding_alerts"
+
+        /// Pushed to Dart when Android's foreground-service time limit stops
+        /// this service. Handled in lib/background/live_background.dart.
+        const val METHOD_TIMEOUT = "backgroundServiceTimeout"
 
         @Volatile
         var active: Boolean = false

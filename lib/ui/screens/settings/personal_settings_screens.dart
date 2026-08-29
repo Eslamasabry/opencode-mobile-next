@@ -136,10 +136,75 @@ class _ThemePackTile extends StatelessWidget {
   }
 }
 
-/// Privacy & permissions category: durable OpenCode grants.
-class PrivacySettingsScreen extends StatelessWidget {
+/// Privacy & permissions category: durable OpenCode grants, and the unsent
+/// work this device is holding on the user's behalf.
+class PrivacySettingsScreen extends StatefulWidget {
   final ConnectionController controller;
   const PrivacySettingsScreen({super.key, required this.controller});
+
+  @override
+  State<PrivacySettingsScreen> createState() => _PrivacySettingsScreenState();
+}
+
+class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
+  bool _busy = false;
+
+  ConnectionController get _controller => widget.controller;
+
+  /// Rounded the way a phone's storage screens round: one decimal past a
+  /// kilobyte, and never "0 B" for something that exists.
+  static String formatBytes(int bytes) {
+    if (bytes <= 0) return '0 B';
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) {
+      return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    }
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+
+  Future<void> _confirmAndClear({
+    required String title,
+    required String body,
+    required Future<bool> Function() clear,
+    required String cleared,
+    required String failed,
+  }) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        scrollable: true,
+        title: Text(title),
+        content: Text(body),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    setState(() => _busy = true);
+    final succeeded = await clear();
+    if (!mounted) return;
+    setState(() => _busy = false);
+    final messenger = ScaffoldMessenger.of(context)..hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(succeeded ? cleared : failed),
+        backgroundColor: succeeded
+            ? null
+            : Theme.of(context).colorScheme.error,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -158,9 +223,95 @@ class PrivacySettingsScreen extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
-                builder: (_) => SavedPermissionsScreen(controller: controller),
+                builder: (_) =>
+                    SavedPermissionsScreen(controller: _controller),
               ),
             ),
+          ),
+          const SectionLabel('On this device'),
+          // Queued prompts carry attachment data URLs and drafts carry
+          // whatever was typed but never sent. Both are the user's content,
+          // held indefinitely until a server answers, so both get a size and
+          // a way out that does not require deleting the server.
+          ListenableBuilder(
+            listenable: _controller,
+            builder: (context, _) {
+              final queued = _controller.totalQueuedPromptCount;
+              final drafts = _controller.totalSessionDraftCount;
+              final queuedBytes = _controller.queuedPromptBytes;
+              final draftBytes = _controller.sessionDraftBytes;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ListTile(
+                    key: const ValueKey('local-storage-usage'),
+                    leading: const Icon(Icons.sd_storage_outlined),
+                    title: const Text('Storage used'),
+                    subtitle: Text(
+                      '${formatBytes(queuedBytes + draftBytes)} of unsent '
+                      'work — $queued queued '
+                      '${queued == 1 ? 'prompt' : 'prompts'} '
+                      '(${formatBytes(queuedBytes)}) and $drafts '
+                      '${drafts == 1 ? 'draft' : 'drafts'} '
+                      '(${formatBytes(draftBytes)}). Queued prompts are '
+                      'discarded after '
+                      '${OfflineQueueStore.maxAge.inDays} days.',
+                    ),
+                  ),
+                  ListTile(
+                    key: const ValueKey('clear-queued-prompts'),
+                    leading: const Icon(Icons.outbox_outlined),
+                    title: const Text('Clear queued prompts'),
+                    subtitle: Text(
+                      queued == 0
+                          ? 'Nothing is waiting to send'
+                          : 'Deletes all $queued unsent '
+                                '${queued == 1 ? 'prompt' : 'prompts'} and '
+                                'their attachments, for every server',
+                    ),
+                    enabled: queued > 0 && !_busy,
+                    onTap: () => _confirmAndClear(
+                      title: 'Delete queued prompts?',
+                      body:
+                          'This deletes $queued unsent '
+                          '${queued == 1 ? 'prompt' : 'prompts'} and any '
+                          'attachments they carry, for every server. They '
+                          'will never be sent. Nothing on the server is '
+                          'affected.',
+                      clear: _controller.clearAllQueuedPrompts,
+                      cleared: 'Queued prompts deleted',
+                      failed:
+                          'Could not delete the queued prompts. Check device '
+                          'storage and try again.',
+                    ),
+                  ),
+                  ListTile(
+                    key: const ValueKey('clear-session-drafts'),
+                    leading: const Icon(Icons.edit_note_outlined),
+                    title: const Text('Clear drafts'),
+                    subtitle: Text(
+                      drafts == 0
+                          ? 'No saved composer text'
+                          : 'Deletes composer text saved for $drafts '
+                                '${drafts == 1 ? 'session' : 'sessions'}',
+                    ),
+                    enabled: drafts > 0 && !_busy,
+                    onTap: () => _confirmAndClear(
+                      title: 'Delete drafts?',
+                      body:
+                          'This deletes the composer text saved for $drafts '
+                          '${drafts == 1 ? 'session' : 'sessions'}. Nothing '
+                          'on the server is affected.',
+                      clear: _controller.clearAllSessionDrafts,
+                      cleared: 'Drafts deleted',
+                      failed:
+                          'Could not delete the drafts. Check device storage '
+                          'and try again.',
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),

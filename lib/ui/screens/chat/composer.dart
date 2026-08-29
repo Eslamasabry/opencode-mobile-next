@@ -220,10 +220,15 @@ class _ChatComposer extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(14, 6, 14, 0),
                     child: Text(
                       key: const Key('composer-reference-note'),
+                      // §7.4 again: staged references live in memory only, so
+                      // say so here rather than letting a restart lose them
+                      // silently — same promise the attachment note makes.
                       references.length == 1
-                          ? '1 reference is added as text when you send.'
+                          ? '1 reference is added as text when you send. '
+                                'Not saved with your draft.'
                           : '${references.length} references are added as '
-                                'text when you send.',
+                                'text when you send. Not saved with your '
+                                'draft.',
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: AppTheme.mutedOf(theme),
                       ),

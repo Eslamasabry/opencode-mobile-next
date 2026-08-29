@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -115,6 +117,14 @@ class BackgroundLiveController extends ChangeNotifier {
   bool busy = false;
   String? lastError;
 
+  /// Set when Android's foreground-service time limit stopped the service,
+  /// and cleared the next time the user turns live mode back on.
+  ///
+  /// Distinct from [lastError]: nothing failed and nothing can be retried
+  /// right now — the daily budget is spent. The screens read it so the user
+  /// learns live mode ended from the app rather than from missing events.
+  bool stoppedByAndroidTimeout = false;
+
   BackgroundLiveController({
     required this.preferences,
     BackgroundMethodInvoker? invoke,
@@ -142,6 +152,9 @@ class BackgroundLiveController extends ChangeNotifier {
     }
     final previous = enabled;
     enabled = value;
+    // Turning it back on is the user answering the timeout notice; the
+    // banner has served its purpose.
+    if (value) stoppedByAndroidTimeout = false;
     notifyListeners();
     final succeeded = await _run(value ? 'enable' : 'disable');
     if (!succeeded) {
@@ -205,9 +218,32 @@ class BackgroundLiveController extends ChangeNotifier {
   void bindActionHandler(Future<bool> Function(CodingAlertAction) handler) {
     _actionHandler = handler;
     _channel.setMethodCallHandler((call) async {
+      if (call.method == timeoutMethod) {
+        handleNativeTimeout(call.arguments);
+        return null;
+      }
       if (call.method != 'codingAlertAction') return null;
       return handleNativeAction(call.arguments);
     });
+  }
+
+  /// The push BackgroundConnectionService.onTimeout sends. Must match
+  /// `METHOD_TIMEOUT` in BackgroundConnectionService.kt.
+  static const timeoutMethod = 'backgroundServiceTimeout';
+
+  /// Applies the native "Android stopped the service" event.
+  ///
+  /// The persisted preference used to stay true over a dead service, so the
+  /// switch read "on" while nothing was connected. Status is corrected the
+  /// moment the event lands rather than at the next foreground poll — which
+  /// is exactly when the user would have noticed anyway.
+  @visibleForTesting
+  void handleNativeTimeout([Object? arguments]) {
+    stoppedByAndroidTimeout = true;
+    enabled = false;
+    active = false;
+    unawaited(preferences.setBool(preferenceKey, false));
+    notifyListeners();
   }
 
   /// Resolves one native action delivery; also the test entry point.

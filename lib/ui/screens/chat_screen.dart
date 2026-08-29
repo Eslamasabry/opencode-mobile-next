@@ -940,12 +940,25 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
     if (!mounted) return queued;
     if (queued) {
+      // The queue evicts on age and size. Whatever it dropped to make room
+      // is said here, in the same breath as the confirmation, rather than
+      // leaving the user to notice a missing draft later.
+      final evicted = _conn.takeQueueEvictionNotice();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Queued — will send when reconnected')),
+        SnackBar(
+          key: const Key('queued-draft-notice'),
+          content: Text(
+            evicted == null
+                ? 'Queued — will send when reconnected'
+                : 'Queued — will send when reconnected. $evicted',
+          ),
+          duration: Duration(seconds: evicted == null ? 4 : 6),
+        ),
       );
     } else {
       _showActionError(
-        'This draft exceeds the attachment size limits and cannot be queued.',
+        'This draft is too large to queue, or the queue is full of newer '
+        'drafts. Remove an attachment, or clear queued prompts in Settings.',
       );
     }
     return queued;
@@ -1058,8 +1071,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _send({PromptDelivery? delivery}) async {
     delivery ??= _activeDelivery;
     await _voice?.cancel();
-    if (!_sending) _applyStagedReferences(); // UX-103 review handoff
-    if (_sending || (_composer.text.trim().isEmpty && _attachments.isEmpty)) {
+    // UX-103 review handoff: the command grammar is matched against the text
+    // the *user* typed, before any staged reference is folded in. Folding
+    // first appended a multi-line reference block that `_typedChatCommand`
+    // could never match, so a composer holding `/new` plus a staged reference
+    // silently sent the command as a chat message.
+    final hasStagedReferences = _handoff.references.isNotEmpty;
+    if (_sending ||
+        (_composer.text.trim().isEmpty &&
+            _attachments.isEmpty &&
+            !hasStagedReferences)) {
       return;
     }
     unawaited(HapticFeedback.lightImpact());
@@ -1071,9 +1092,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
     final typedCommand = _typedChatCommand(_composer.text.trim());
     if (_attachments.isEmpty && typedCommand != null) {
+      // A command is not a prompt: a server command's arguments feed its own
+      // template and a mobile command takes none, so references cannot ride
+      // along. They stay staged for the next prompt rather than being
+      // rewritten into arguments the command never asked for — and the user
+      // is told, so nothing looks lost.
+      if (hasStagedReferences) _noteReferencesKeptForNextPrompt();
       await _submitTypedCommand(typedCommand);
       return;
     }
+    _applyStagedReferences(); // UX-103 review handoff
+    if (_composer.text.trim().isEmpty && _attachments.isEmpty) return;
     if (_conn.status != StreamStatus.connected) {
       // Offline compose: the draft queues instead of failing, and flushes
       // through the same send path when the connection returns.
@@ -3153,6 +3182,26 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       selection: TextSelection.collapsed(offset: text.length),
     );
     _handoff.store.clear(widget.sessionID);
+  }
+
+  /// Says why the chips are still there after a slash command ran, so the
+  /// user does not read a surviving reference as a send that failed.
+  void _noteReferencesKeptForNextPrompt() {
+    if (!mounted) return;
+    final count = _handoff.references.length;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        key: const Key('references-kept-notice'),
+        content: Text(
+          count == 1
+              ? 'Slash commands do not carry references. It stays on the '
+                    'composer for your next prompt.'
+              : 'Slash commands do not carry references. They stay on the '
+                    'composer for your next prompt.',
+        ),
+        duration: const Duration(seconds: 4),
+      ),
+    );
   }
 
   void _removeStagedReference(ReviewReference reference) =>

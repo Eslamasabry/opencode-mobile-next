@@ -88,14 +88,18 @@ class WidgetSessionSnapshot {
   /// Drops the snapshot when it belongs to [profileID], so removing a server
   /// also removes the session titles its widget was still showing on the home
   /// screen. A snapshot written before rows carried a profile has no
-  /// identifiable owner and is dropped too. Returns whether anything was
-  /// cleared.
+  /// identifiable owner and is dropped too.
+  ///
+  /// The three outcomes are kept apart deliberately: "there was nothing of
+  /// yours to clear" and "the write refused" look identical to a caller that
+  /// only gets a bool, and a deletion flow has to tell the user the
+  /// difference.
   ///
   /// Runs on every platform: the stored payload is the privacy-relevant
   /// artifact, and only the native redraw is Android-specific.
-  Future<bool> clearForProfile(String profileID) async {
+  Future<WidgetSnapshotClear> clearForProfile(String profileID) async {
     final raw = prefs.getString(prefsKey);
-    if (raw == null) return false;
+    if (raw == null) return WidgetSnapshotClear.nothingToClear;
     String? owner;
     try {
       final decoded = jsonDecode(raw);
@@ -105,10 +109,29 @@ class WidgetSessionSnapshot {
       // treat it as removable rather than leaving it behind.
       owner = '';
     }
-    if (owner == null || (owner.isNotEmpty && owner != profileID)) return false;
-    await prefs.remove(prefsKey);
+    if (owner == null || (owner.isNotEmpty && owner != profileID)) {
+      return WidgetSnapshotClear.nothingToClear;
+    }
+    try {
+      if (!await prefs.remove(prefsKey)) return WidgetSnapshotClear.failed;
+    } catch (_) {
+      return WidgetSnapshotClear.failed;
+    }
     _lastWritten = null;
     if (_isAndroid) await _refreshNative();
-    return true;
+    return WidgetSnapshotClear.cleared;
   }
+}
+
+/// What [WidgetSessionSnapshot.clearForProfile] actually did.
+enum WidgetSnapshotClear {
+  /// No snapshot, or one belonging to another profile: nothing was at risk.
+  nothingToClear,
+
+  /// The profile's snapshot is gone from disk.
+  cleared,
+
+  /// A snapshot belonging to the profile is still on disk — the store
+  /// refused the write. The caller must not report the data as deleted.
+  failed,
 }

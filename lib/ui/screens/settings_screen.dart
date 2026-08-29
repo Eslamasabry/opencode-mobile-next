@@ -8,6 +8,7 @@ import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../api/provider_presentation.dart';
 import '../../state/connection.dart';
+import '../../state/offline_queue.dart';
 import '../../state/profiles.dart';
 import '../../termux/bridge.dart';
 import '../app_theme.dart';

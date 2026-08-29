@@ -137,6 +137,10 @@ class ConnectionController extends ChangeNotifier {
 
   /// The most recent home-screen widget write started by [notifyListeners].
   Future<void>? _pendingWidgetSnapshotWrite;
+
+  /// Set while [deleteProfileAndLocalData] runs, so a notification cannot
+  /// republish the sessions of the profile being erased.
+  bool _widgetSnapshotSuspended = false;
   final AppDiagnosticsController diagnostics;
   final bool _ownsDiagnostics;
   late final ValueNotifier<AppAppearance> appearance;
@@ -632,9 +636,9 @@ class ConnectionController extends ChangeNotifier {
 
   static bool _isLoopbackUrl(String value) {
     final uri = Uri.tryParse(value);
-    if (uri == null) return false;
-    final host = uri.host.toLowerCase();
-    return host == '127.0.0.1' || host == 'localhost' || host == '::1';
+    // One shared predicate, so this cannot drift from what the URL
+    // normalizer and the profile validator consider local.
+    return uri != null && isLoopbackHost(uri.host);
   }
 
   static OpenCodeApi _createApi(ServerProfile profile) => OpenCodeApi(
@@ -2763,7 +2767,65 @@ class ConnectionController extends ChangeNotifier {
   OfflineQueueStore get _queueStore =>
       _offlineQueueStore ??= OfflineQueueStore(prefs: store.prefs);
 
-  List<QueuedPrompt> get _queue => _offlineQueue ??= _queueStore.load();
+  /// Set when the queue dropped entries on its own — expiry or a limit —
+  /// and cleared once a screen has shown it. A prompt the user asked to send
+  /// never disappears silently.
+  String? _queueEvictionNotice;
+
+  /// Reads and clears the pending eviction notice.
+  String? takeQueueEvictionNotice() {
+    final notice = _queueEvictionNotice;
+    _queueEvictionNotice = null;
+    return notice;
+  }
+
+  /// The queue, with its age/count/byte limits already applied.
+  ///
+  /// A queue written by an older build — or left to sit while the server
+  /// stayed away — is trimmed on first read and written back, so the limits
+  /// hold for existing installs and not only for new sends.
+  List<QueuedPrompt> get _queue {
+    final cached = _offlineQueue;
+    if (cached != null) return cached;
+    final eviction = OfflineQueueStore.enforceLimits(_queueStore.load());
+    _offlineQueue = eviction.kept;
+    if (eviction.removed > 0) {
+      _queueEvictionNotice = eviction.notice;
+      unawaited(_queueStore.save(eviction.kept));
+    }
+    return eviction.kept;
+  }
+
+  /// Bytes this device is holding for unsent work, for the settings readout.
+  int get queuedPromptBytes => _queueStore.storedBytes();
+
+  int get sessionDraftBytes => _draftStore.storedBytes();
+
+  /// Drops every queued prompt, for every profile. Returns whether the
+  /// store accepted the write; a refusal leaves the queue intact rather
+  /// than reporting a clear that did not happen.
+  Future<bool> clearAllQueuedPrompts() async {
+    if (_queue.isEmpty) return true;
+    if (!await _queueStore.save(const [])) return false;
+    _offlineQueue = [];
+    notifyListeners();
+    return true;
+  }
+
+  /// Drops every saved composer draft, for every session.
+  Future<bool> clearAllSessionDrafts() async {
+    if (_drafts.isEmpty) return true;
+    if (!await _draftStore.save(const {})) return false;
+    _sessionDrafts = {};
+    notifyListeners();
+    return true;
+  }
+
+  /// Queued prompts across every profile, for the settings readout.
+  int get totalQueuedPromptCount => _queue.length;
+
+  /// Saved composer drafts across every session, for the settings readout.
+  int get totalSessionDraftCount => _drafts.length;
 
   /// Queued prompts for one session of the active profile, oldest first.
   List<QueuedPrompt> queuedPromptsFor(String sessionID) {
@@ -2814,8 +2876,14 @@ class ConnectionController extends ChangeNotifier {
   /// queued; the caller keeps its existing limits messaging.
   Future<bool> queuePrompt(QueuedPrompt prompt) async {
     if (prompt.payloadBytes > OfflineQueueStore.maxEntryBytes) return false;
-    _queue.add(prompt);
-    await _queueStore.save(_queue);
+    final eviction = OfflineQueueStore.enforceLimits([..._queue, prompt]);
+    // The new entry losing its own eviction pass means the queue could not
+    // make room for it; say so rather than reporting a queue that silently
+    // dropped what the user just wrote.
+    if (!eviction.kept.any((entry) => entry.id == prompt.id)) return false;
+    _offlineQueue = eviction.kept;
+    await _queueStore.save(eviction.kept);
+    if (eviction.removed > 0) _queueEvictionNotice = eviction.notice;
     notifyListeners();
     return true;
   }
@@ -2873,10 +2941,19 @@ class ConnectionController extends ChangeNotifier {
   /// surviving cache would write deleted prompts straight back on the next
   /// save.
   ///
-  /// The profile itself is removed first and its failure propagates, because
-  /// a server that is still saved must keep its data. Once it is gone the
-  /// dependent data is orphaned either way, so the rest runs to completion and
-  /// reports what it cleared.
+  /// The order is a transaction, and it runs backwards from the obvious one.
+  /// Every dependent blob — queued prompts, drafts, the widget snapshot,
+  /// the scoped preferences — is rewritten and *verified* first, while the
+  /// profile is still saved and the operation is still abortable. Only once
+  /// all of that is confirmed gone does the profile row and its Keystore
+  /// password go.
+  ///
+  /// Deleting the profile first, as this used to, meant a later failed write
+  /// left prompts and drafts on disk with no server row to attribute them to
+  /// while the user was told the server had been removed. Every store here
+  /// answers with a success flag; none of them is ignored, and anything that
+  /// refuses is reported through [DeleteProfileResult.failures] rather than
+  /// being rounded up to success.
   ///
   /// Server-side and provider-side data is untouched; only this device is
   /// cleared.
@@ -2884,34 +2961,95 @@ class ConnectionController extends ChangeNotifier {
     String profileId,
   ) async {
     final scopedKeys = store.profileScopedPreferenceKeys(profileId);
-    await store.remove(profileId);
+    final failures = <String>[];
 
-    final queuedBefore = _queue.length;
-    _queue.removeWhere((entry) => entry.profileID == profileId);
-    final removedQueued = queuedBefore - _queue.length;
-    if (removedQueued > 0) await _queueStore.save(_queue);
+    // Snapshot writes stay suspended for the whole transaction: any
+    // notification would republish the deleted profile's session titles
+    // straight back over the snapshot this method just cleared.
+    _widgetSnapshotSuspended = true;
+    try {
+      // 1. Queued prompts — the largest and most sensitive blob, holding
+      //    prompt text and attachment data URLs.
+      final keptQueue = [
+        for (final entry in _queue)
+          if (entry.profileID != profileId) entry,
+      ];
+      final removedQueued = _queue.length - keptQueue.length;
+      var clearedQueued = 0;
+      if (removedQueued > 0) {
+        if (await _queueStore.save(keptQueue)) {
+          _offlineQueue = keptQueue;
+          clearedQueued = removedQueued;
+        } else {
+          failures.add(
+            '$removedQueued queued '
+            '${removedQueued == 1 ? 'prompt' : 'prompts'}',
+          );
+        }
+      }
 
-    final draftsBefore = _drafts.length;
-    final keptDrafts = SessionDraftStore.withoutProfile(_drafts, profileId);
-    final removedDrafts = draftsBefore - keptDrafts.length;
-    if (removedDrafts > 0) {
-      _sessionDrafts = keptDrafts;
-      await _draftStore.save(keptDrafts);
+      // 2. Composer drafts.
+      final keptDrafts = SessionDraftStore.withoutProfile(_drafts, profileId);
+      final removedDrafts = _drafts.length - keptDrafts.length;
+      var clearedDrafts = 0;
+      if (removedDrafts > 0) {
+        if (await _draftStore.save(keptDrafts)) {
+          _sessionDrafts = keptDrafts;
+          clearedDrafts = removedDrafts;
+        } else {
+          failures.add(
+            '$removedDrafts unsent '
+            '${removedDrafts == 1 ? 'draft' : 'drafts'}',
+          );
+        }
+      }
+
+      // 3. The home-screen widget's session titles.
+      await _pendingWidgetSnapshotWrite;
+      final widgetOutcome = await _widgetSnapshot.clearForProfile(profileId);
+      if (widgetOutcome == WidgetSnapshotClear.failed) {
+        failures.add('the home-screen widget’s sessions');
+      }
+
+      // 4. Profile-scoped preferences: model, agent, variant, location.
+      final unclearedKeys = await store.removeScopedPreferences(profileId);
+      if (unclearedKeys.isNotEmpty) {
+        failures.add(
+          '${unclearedKeys.length} saved '
+          '${unclearedKeys.length == 1 ? 'setting' : 'settings'}',
+        );
+      }
+
+      // 5. Only now the profile row and the Keystore password. A server
+      //    whose data is still on disk keeps its row, so the user is never
+      //    told a deletion happened that did not.
+      if (failures.isNotEmpty) {
+        return DeleteProfileResult(
+          removedPreferenceKeys: scopedKeys.difference(unclearedKeys),
+          removedQueuedPrompts: clearedQueued,
+          removedDrafts: clearedDrafts,
+          clearedWidgetSnapshot:
+              widgetOutcome == WidgetSnapshotClear.cleared,
+          removedProfile: false,
+          failures: List.unmodifiable(failures),
+        );
+      }
+      await store.remove(profileId);
+
+      return DeleteProfileResult(
+        removedPreferenceKeys: scopedKeys,
+        removedQueuedPrompts: clearedQueued,
+        removedDrafts: clearedDrafts,
+        clearedWidgetSnapshot: widgetOutcome == WidgetSnapshotClear.cleared,
+      );
+    } finally {
+      // Notify while republishing is still suspended, then lift it: this
+      // controller keeps the deleted profile's sessions in memory until the
+      // caller disconnects, and a republish would put their titles straight
+      // back onto the home screen.
+      notifyListeners();
+      _widgetSnapshotSuspended = false;
     }
-
-    // Notify before clearing the widget snapshot: the notification itself
-    // republishes that snapshot, so clearing first would let the republish
-    // write the deleted profile's rows back.
-    notifyListeners();
-    await _pendingWidgetSnapshotWrite;
-    final clearedWidget = await _widgetSnapshot.clearForProfile(profileId);
-
-    return DeleteProfileResult(
-      removedPreferenceKeys: scopedKeys,
-      removedQueuedPrompts: removedQueued,
-      removedDrafts: removedDrafts,
-      clearedWidgetSnapshot: clearedWidget,
-    );
   }
 
   /// Sends queued prompts for the active profile, oldest first, through the
@@ -3104,8 +3242,10 @@ class ConnectionController extends ChangeNotifier {
   void notifyListeners() {
     super.notifyListeners();
     // Keep the Android home-screen widget's snapshot in step with session
-    // truth; the writer itself skips unchanged payloads.
-    if (!_disposed) {
+    // truth; the writer itself skips unchanged payloads. Profile deletion
+    // suspends this: the sessions it would republish belong to the profile
+    // being erased.
+    if (!_disposed && !_widgetSnapshotSuspended) {
       // Retained so a caller that must observe the settled snapshot — profile
       // deletion — can wait for this write instead of racing it.
       final write = _widgetSnapshot.update(

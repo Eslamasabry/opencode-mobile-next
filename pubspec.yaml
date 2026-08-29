@@ -41,6 +41,10 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  # Lets tests substitute a preferences store that refuses writes, so the
+  # fail-closed paths (profile deletion, queue eviction) can be proven rather
+  # than assumed. Already present transitively via shared_preferences.
+  shared_preferences_platform_interface: ^2.4.1
 
 flutter:
   generate: true

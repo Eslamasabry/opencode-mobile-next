@@ -174,6 +174,45 @@ void main() {
     expect(validateServerProfileUrl('https://server.example:4096/'), isNull);
   });
 
+  test('IPv6 loopback is loopback everywhere', () {
+    // `[::1]` is this device as much as `127.0.0.1` is, and the three
+    // loopback checks used to disagree about it. HTTP to it is allowed...
+    expect(validateServerProfileUrl('http://[::1]:4096'), isNull);
+    expect(validateServerProfileUrl('http://[::1]'), isNull);
+    // ...and every other IPv6 address is still remote.
+    expect(
+      validateServerProfileUrl('http://[2001:db8::1]:4096'),
+      contains('HTTP is allowed only'),
+    );
+    expect(validateServerProfileUrl('https://[2001:db8::1]:4096'), isNull);
+    // The message names the form the user has to type.
+    expect(
+      validateServerProfileUrl('http://[2001:db8::1]:4096'),
+      contains('[::1]'),
+    );
+    expect(isLoopbackHost('::1'), isTrue);
+    expect(isLoopbackHost('::2'), isFalse);
+  });
+
+  test('bare IPv6 addresses normalize into usable URLs', () {
+    // Splitting on ':' read the host of `[::1]:4096` as '[', so IPv6
+    // loopback was silently sent to HTTPS, which the local server does not
+    // serve.
+    expect(normalizeServerProfileUrl('[::1]:4096'), 'http://[::1]:4096');
+    expect(normalizeServerProfileUrl('[::1]'), 'http://[::1]');
+    // An unbracketed literal gains brackets: `http://::1` does not parse.
+    expect(normalizeServerProfileUrl('::1'), 'http://[::1]');
+    expect(Uri.parse(normalizeServerProfileUrl('::1')).host, '::1');
+    expect(
+      normalizeServerProfileUrl('[2001:db8::1]:4096'),
+      'https://[2001:db8::1]:4096',
+    );
+    expect(normalizeServerProfileUrl('fe80::1'), 'https://[fe80::1]');
+    // And the IPv4 and hostname behavior is unchanged.
+    expect(normalizeServerProfileUrl('127.0.0.1:4096'), 'http://127.0.0.1:4096');
+    expect(normalizeServerProfileUrl(':4096'), ':4096');
+  });
+
   test('Android cleartext and launch resources are release-safe', () {
     final manifest = File(
       'android/app/src/main/AndroidManifest.xml',
@@ -189,6 +228,9 @@ void main() {
     expect(network, contains('<base-config cleartextTrafficPermitted="false"'));
     expect(network, contains('>localhost</domain>'));
     expect(network, contains('>127.0.0.1</domain>'));
+    // Every host the Dart layer will speak HTTP to has to be here too, or
+    // Android blocks the connect after the app has already allowed it.
+    expect(network, contains('>::1</domain>'));
     expect(network, isNot(contains('192.168.')));
     expect(launch, contains('@color/launch_background'));
     expect(launch, isNot(contains('@android:color/white')));

@@ -112,7 +112,12 @@ class ReviewReference {
   /// The block this reference contributes to the sent prompt. Structured
   /// markdown so the agent can act on it without guessing what the user
   /// was looking at.
-  String toPromptText() {
+  ///
+  /// [snippetBudget] caps this reference's share of the send-wide snippet
+  /// budget (see [ReviewReference.maxSnippetChars]); null means unbounded.
+  /// Anything cut is *stated in the rendered text*: a diff the agent
+  /// believes is complete when it is not is worse than no diff at all.
+  String toPromptText({int? snippetBudget}) {
     final out = StringBuffer('`$path`');
     final detail = <String>[
       if (lineLabel != null && lineLabel!.isNotEmpty) lineLabel!,
@@ -125,9 +130,52 @@ class ReviewReference {
     if (note != null && note.isNotEmpty) out.write('\n$note');
     final body = snippet?.trimRight();
     if (body != null && body.isNotEmpty) {
-      out.write('\n\n```diff\n$body\n```');
+      final trimmed = _truncateSnippet(body, snippetBudget);
+      final fence = _fenceFor(trimmed.text);
+      if (trimmed.text.isNotEmpty) {
+        out.write('\n\n${fence}diff\n${trimmed.text}\n$fence');
+      }
+      if (trimmed.omitted > 0) {
+        final lines = '\n'.allMatches(body).length + 1;
+        final shownLines = trimmed.text.isEmpty
+            ? 0
+            : '\n'.allMatches(trimmed.text).length + 1;
+        out.write(
+          '\n[Snippet truncated to fit the prompt: showing $shownLines of '
+          '$lines lines; ${trimmed.omitted} characters omitted. Read '
+          '`$path` for the rest.]',
+        );
+      }
     }
     return out.toString();
+  }
+
+  /// Keeps whole lines and reports what it dropped.
+  static ({String text, int omitted}) _truncateSnippet(
+    String body,
+    int? budget,
+  ) {
+    if (budget == null || body.length <= budget) {
+      return (text: body, omitted: 0);
+    }
+    if (budget <= 0) return (text: '', omitted: body.length);
+    final breakAt = body.lastIndexOf('\n', budget);
+    final kept = body.substring(0, breakAt > 0 ? breakAt : budget).trimRight();
+    return (text: kept, omitted: body.length - kept.length);
+  }
+
+  /// A fence long enough that the snippet's own backticks cannot close it.
+  /// Diff hunks of markdown routinely contain ``` runs, and a three-backtick
+  /// fence around one breaks the block in half — the tail of the diff then
+  /// reads as prose the agent may act on.
+  static String _fenceFor(String body) {
+    var longest = 0;
+    var run = 0;
+    for (final unit in body.codeUnits) {
+      run = unit == 0x60 ? run + 1 : 0;
+      if (run > longest) longest = run;
+    }
+    return '`' * (longest < 3 ? 3 : longest + 1);
   }
 
   static String? scopeName(ReviewReferenceScope scope) => switch (scope) {
@@ -137,15 +185,75 @@ class ReviewReference {
     ReviewReferenceScope.branch => 'branch changes',
   };
 
+  /// Characters of snippet body one send may carry across every staged
+  /// reference.
+  ///
+  /// [ReviewHandoffStore.maxPerSession] bounds how *many* references a send
+  /// carries but not how large they are: ten whole-file diffs is a prompt
+  /// the model never gets to answer, and the user is given no hint that the
+  /// context window is where their question went. Roughly 24k characters is
+  /// several screens of diff — far more than a review pass needs — while
+  /// still leaving room for the conversation around it. Comments and paths
+  /// are not counted: they are typed by hand and bounded in practice.
+  static const maxSnippetChars = 24000;
+
   /// Renders a staged set as the prompt preamble the composer sends.
-  static String format(Iterable<ReviewReference> references) {
-    final blocks = references
-        .map((reference) => reference.toPromptText())
-        .where((text) => text.trim().isNotEmpty)
-        .toList();
+  ///
+  /// Snippet bodies share [budget] max-min fairly: every reference that fits
+  /// its equal share is sent whole, and what they leave unused is
+  /// redistributed to the large ones. So one huge diff is trimmed rather
+  /// than starving the nine small references staged beside it.
+  static String format(
+    Iterable<ReviewReference> references, {
+    int budget = maxSnippetChars,
+  }) {
+    final staged = references.toList();
+    final budgets = _snippetBudgets(staged, budget);
+    final blocks = <String>[];
+    for (var i = 0; i < staged.length; i++) {
+      final text = staged[i].toPromptText(snippetBudget: budgets[i]);
+      if (text.trim().isNotEmpty) blocks.add(text);
+    }
     if (blocks.isEmpty) return '';
     final heading = blocks.length == 1 ? 'Reference:' : 'References:';
     return '$heading\n\n${blocks.join('\n\n')}';
+  }
+
+  /// Per-reference snippet allowances; null means "send it whole".
+  static List<int?> _snippetBudgets(
+    List<ReviewReference> references,
+    int total,
+  ) {
+    final budgets = List<int?>.filled(references.length, null);
+    final sizes = [
+      for (final reference in references)
+        reference.snippet?.trimRight().length ?? 0,
+    ];
+    final pending = [
+      for (var i = 0; i < sizes.length; i++)
+        if (sizes[i] > 0) i,
+    ];
+    if (pending.isEmpty) return budgets;
+    var remaining = total < 0 ? 0 : total;
+    while (pending.isNotEmpty) {
+      final share = remaining ~/ pending.length;
+      final fits = [
+        for (final index in pending)
+          if (sizes[index] <= share) index,
+      ];
+      if (fits.isEmpty) {
+        for (final index in pending) {
+          budgets[index] = share;
+        }
+        break;
+      }
+      for (final index in fits) {
+        budgets[index] = sizes[index];
+        remaining -= sizes[index];
+      }
+      pending.removeWhere(fits.contains);
+    }
+    return budgets;
   }
 }
 
@@ -157,8 +265,14 @@ enum ReviewStageOutcome { staged, duplicate, full }
 ///
 /// Every add-to-prompt affordance writes here and the originating chat's
 /// composer reads from here, so a review finding reaches the prompt without
-/// a round trip through the clipboard. References are held per session and
-/// only in memory: they are pointers, not content, and are cheap to restage.
+/// a round trip through the clipboard.
+///
+/// References are held per session and **only in memory**: they are pointers
+/// into a diff the server still holds, cheap to restage, and stale the
+/// moment the working tree moves — persisting them would resurrect chips
+/// aimed at line ranges that no longer exist. That choice is not left for
+/// the user to discover: the composer's reference note says the chips are
+/// not saved with the draft, matching the note attachments already carry.
 class ReviewHandoffStore extends ChangeNotifier {
   ReviewHandoffStore();
 

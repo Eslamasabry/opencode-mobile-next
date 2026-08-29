@@ -56,14 +56,56 @@ class ServerProfile {
   );
 }
 
+/// The hosts this app will speak cleartext HTTP to: this device, by every
+/// name it has.
+///
+/// Kept as one predicate on purpose. The app used to have three loopback
+/// checks that disagreed — the URL normalizer split on `:` and so read the
+/// host of `[::1]:4096` as `[`, the validator's allowlist had no IPv6 entry
+/// at all, and the connection controller's did. `::1` reached different
+/// verdicts depending on which one you hit. Anything added here must also be
+/// added to `android/app/src/main/res/xml/network_security_config.xml`, or
+/// Android blocks the request after this code has allowed it.
+bool isLoopbackHost(String host) {
+  final normalized = host.toLowerCase();
+  return normalized == 'localhost' ||
+      normalized == '127.0.0.1' ||
+      normalized == '::1';
+}
+
+/// Splits a bare `host[:port]` into the host to judge and the authority to
+/// put in a URL, or null when it is not a plausible single address.
+///
+/// IPv6 needs both halves: `[::1]:4096` carries its port outside the
+/// brackets, while a bare `::1` has to gain brackets before it can appear in
+/// a URL at all — `http://::1` does not parse.
+({String host, String authority})? _bareAuthority(String raw) {
+  if (raw.startsWith('[')) {
+    final close = raw.indexOf(']');
+    if (close < 2) return null;
+    final rest = raw.substring(close + 1);
+    if (rest.isNotEmpty && !RegExp(r'^:\d{1,5}$').hasMatch(rest)) return null;
+    return (host: raw.substring(1, close), authority: raw);
+  }
+  final colons = ':'.allMatches(raw).length;
+  if (colons >= 2) {
+    // An unbracketed IPv6 literal: its last group cannot be told apart from
+    // a port, so the whole value is the address and the brackets are ours.
+    return (host: raw, authority: '[$raw]');
+  }
+  final host = colons == 1 ? raw.substring(0, raw.indexOf(':')) : raw;
+  if (host.isEmpty) return null;
+  return (host: host, authority: raw);
+}
+
 /// Validates the transport boundary used by both profile editing and connect.
-/// Android only permits cleartext traffic to the two Termux loopback names.
-/// Expands a pasted bare address into a full server URL so setup does not
-/// require knowing URL syntax. `host[:port]` and bare IPs gain a scheme:
-/// loopback becomes `http://` (the only place HTTP is allowed) and everything
-/// else becomes `https://`. Values that already carry a scheme, and values
-/// that are not a plausible single address, come back unchanged for the
-/// validator to explain.
+/// Android only permits cleartext traffic to the Termux loopback names in
+/// [isLoopbackHost]. Expands a pasted bare address into a full server URL so
+/// setup does not require knowing URL syntax. `host[:port]` and bare IPs
+/// (v4 and v6) gain a scheme: loopback becomes `http://` (the only place
+/// HTTP is allowed) and everything else becomes `https://`. Values that
+/// already carry a scheme, and values that are not a plausible single
+/// address, come back unchanged for the validator to explain.
 String normalizeServerProfileUrl(String value) {
   final raw = value.trim();
   if (raw.isEmpty || raw.contains('://')) return raw;
@@ -71,9 +113,10 @@ String normalizeServerProfileUrl(String value) {
     r'^\[?[A-Za-z0-9._\-:]+\]?(:\d{1,5})?$',
   );
   if (!bare.hasMatch(raw)) return raw;
-  final host = raw.split(':').first.toLowerCase();
-  final loopback = host == 'localhost' || host == '127.0.0.1';
-  return '${loopback ? 'http' : 'https'}://$raw';
+  final parsed = _bareAuthority(raw);
+  if (parsed == null) return raw;
+  final scheme = isLoopbackHost(parsed.host) ? 'http' : 'https';
+  return '$scheme://${parsed.authority}';
 }
 
 String? validateServerProfileUrl(
@@ -84,7 +127,8 @@ String? validateServerProfileUrl(
   final raw = value.trim();
   if (raw.isEmpty) return 'Enter a server URL.';
   if (!raw.contains('://')) {
-    return 'Include https://. Use http:// only for localhost or 127.0.0.1.';
+    return 'Include https://. Use http:// only for localhost, 127.0.0.1, '
+        'or [::1].';
   }
   final uri = Uri.tryParse(raw);
   if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
@@ -102,15 +146,12 @@ String? validateServerProfileUrl(
   if (uri.path.isNotEmpty && uri.path != '/') {
     return 'Remove the path from the server URL. Enter only its origin.';
   }
-  if (uri.scheme == 'http') {
-    final host = uri.host.toLowerCase();
-    final loopback = host == 'localhost' || host == '127.0.0.1';
-    if (!loopback) {
-      if (username.trim().isNotEmpty || password.isNotEmpty) {
-        return 'HTTPS is required outside this device. Basic credentials must never be sent over HTTP.';
-      }
-      return 'HTTP is allowed only for localhost or 127.0.0.1. Use HTTPS for LAN and remote servers.';
+  if (uri.scheme == 'http' && !isLoopbackHost(uri.host)) {
+    if (username.trim().isNotEmpty || password.isNotEmpty) {
+      return 'HTTPS is required outside this device. Basic credentials must never be sent over HTTP.';
     }
+    return 'HTTP is allowed only for localhost, 127.0.0.1, or [::1]. Use '
+        'HTTPS for LAN and remote servers.';
   }
   return null;
 }
@@ -136,12 +177,44 @@ class DeleteProfileResult {
   /// Whether the home-screen widget's session snapshot was cleared.
   final bool clearedWidgetSnapshot;
 
+  /// Whether the server profile itself and its Keystore password are gone.
+  ///
+  /// False means the deletion stopped before touching them: the local data
+  /// this profile owns could not be erased, so the server stays saved rather
+  /// than leaving orphaned prompts and drafts behind a removed row.
+  final bool removedProfile;
+
+  /// Plain-language descriptions of what could not be deleted, in the order
+  /// the deletion tried. Empty means the promise the UI makes — "this
+  /// server's data leaves the device" — was actually kept.
+  final List<String> failures;
+
   const DeleteProfileResult({
     this.removedPreferenceKeys = const {},
     this.removedQueuedPrompts = 0,
     this.removedDrafts = 0,
     this.clearedWidgetSnapshot = false,
+    this.removedProfile = true,
+    this.failures = const [],
   });
+
+  /// Whether every piece of local data this app knows about is gone.
+  bool get complete => failures.isEmpty && removedProfile;
+
+  /// One sentence naming what survived, for a message the user can act on.
+  /// Null when the deletion was complete.
+  String? get partialDeletionMessage {
+    if (complete) return null;
+    final kept = failures.isEmpty
+        ? 'some of its local data'
+        : failures.join(', ');
+    return removedProfile
+        ? 'The server was removed, but $kept could not be deleted from this '
+              'device. Free up storage and remove it again.'
+        : 'The server was kept: $kept could not be deleted from this device, '
+              'and removing the server would have left that data behind. '
+              'Free up storage and try again.';
+  }
 }
 
 class ProfileLocation {
@@ -268,6 +341,26 @@ class ProfileStore {
     };
   }
 
+  /// Removes every preference scoped to [profileId], reporting the keys the
+  /// store refused to drop.
+  ///
+  /// `SharedPreferences.remove` answers with a bool that the old deletion
+  /// path threw away, so a full disk or a broken store left a profile's
+  /// model, agent, and location on the device while the user was told the
+  /// server had been removed. The caller decides what to do about a
+  /// non-empty result; this method only refuses to lie about it.
+  Future<Set<String>> removeScopedPreferences(String profileId) async {
+    final failed = <String>{};
+    for (final key in profileScopedPreferenceKeys(profileId)) {
+      try {
+        if (!await prefs.remove(key)) failed.add(key);
+      } catch (_) {
+        failed.add(key);
+      }
+    }
+    return failed;
+  }
+
   /// Removes the profile, its active-profile pointer, its Keystore password,
   /// and every preference key scoped to it.
   ///
@@ -275,7 +368,9 @@ class ProfileStore {
   /// delete fails, the saved profiles come back exactly as they were. The
   /// scoped preference sweep runs only once that succeeded, at which point
   /// the keys are orphaned regardless, so a failure there cannot resurrect a
-  /// deleted server.
+  /// deleted server. [ConnectionController.deleteProfileAndLocalData] sweeps
+  /// them *before* calling this and verifies the result, so on that path the
+  /// sweep below finds nothing left to do.
   ///
   /// This clears only what [ProfileStore] owns. Queued prompts, drafts, and
   /// the home-screen widget snapshot live in shared blobs; the full cascade
@@ -299,9 +394,7 @@ class ProfileStore {
       rethrow;
     }
     _cache = next;
-    for (final key in profileScopedPreferenceKeys(id)) {
-      await prefs.remove(key);
-    }
+    await removeScopedPreferences(id);
   }
 
   String? get activeId => prefs.getString(_activeKey);

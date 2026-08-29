@@ -8,6 +8,27 @@ import 'package:opencode_mobile/state/offline_queue.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/state/session_drafts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
+
+/// A preferences store that refuses to write the keys it is told to refuse,
+/// the way a full disk or a broken store does: `setValue`/`remove` answer
+/// false and the value stays put. Keys are given unprefixed; the store sees
+/// them with the plugin's `flutter.` prefix.
+class _RefusingStore extends InMemorySharedPreferencesStore {
+  _RefusingStore(super.data, this.refused) : super.withData();
+
+  final Set<String> refused;
+
+  bool _blocks(String key) => refused.contains(key.replaceFirst('flutter.', ''));
+
+  @override
+  Future<bool> remove(String key) async =>
+      _blocks(key) ? false : super.remove(key);
+
+  @override
+  Future<bool> setValue(String valueType, String key, Object value) async =>
+      _blocks(key) ? false : super.setValue(valueType, key, value);
+}
 
 /// Everything the app persists for `doomed`, alongside a second profile whose
 /// identically shaped data must survive.
@@ -145,6 +166,22 @@ void main() {
 
   Future<(ConnectionController, SharedPreferences)> boot() async {
     SharedPreferences.setMockInitialValues(_seed());
+    final prefs = await SharedPreferences.getInstance();
+    final store = ProfileStore(prefs: prefs);
+    await store.load();
+    final controller = ConnectionController(store);
+    addTearDown(controller.dispose);
+    return (controller, prefs);
+  }
+
+  /// Boots the same fixture behind a store that refuses [refused].
+  Future<(ConnectionController, SharedPreferences)> bootRefusing(
+    Set<String> refused,
+  ) async {
+    SharedPreferences.setMockInitialValues(_seed());
+    final seeded = await SharedPreferencesStorePlatform.instance.getAll();
+    SharedPreferencesStorePlatform.instance = _RefusingStore(seeded, refused);
+    SharedPreferences.resetStatic();
     final prefs = await SharedPreferences.getInstance();
     final store = ProfileStore(prefs: prefs);
     await store.load();
@@ -308,10 +345,126 @@ void main() {
       isAndroid: true,
     );
 
-    expect(await snapshot.clearForProfile('doomed'), isTrue);
+    expect(
+      await snapshot.clearForProfile('doomed'),
+      WidgetSnapshotClear.cleared,
+    );
     expect(prefs.getString(WidgetSessionSnapshot.prefsKey), isNull);
     // Idempotent: a second delete has nothing to report.
-    expect(await snapshot.clearForProfile('doomed'), isFalse);
+    expect(
+      await snapshot.clearForProfile('doomed'),
+      WidgetSnapshotClear.nothingToClear,
+    );
+  });
+
+  group('a store that refuses writes', () {
+    // SharedPreferences drops a value from its in-memory cache before asking
+    // the store and never puts it back when the store says no, so only the
+    // durable store answers "is this still on the device?" honestly.
+    Future<Object?> onDisk(String key) async =>
+        (await SharedPreferencesStorePlatform.instance.getAll())['flutter.$key'];
+
+    test('keeps the server when its queued prompts cannot be deleted', () async {
+      final (controller, _) = await bootRefusing({'oc.offlineQueue'});
+
+      final result = await controller.deleteProfileAndLocalData('doomed');
+
+      // The prompts are still on the device, so the server that owns them
+      // stays too — an orphaned queue behind a deleted row is exactly what
+      // "remove server" promises will not happen.
+      expect(result.complete, isFalse);
+      expect(result.removedProfile, isFalse);
+      expect(result.failures, ['2 queued prompts']);
+      expect(result.removedQueuedPrompts, 0);
+      expect(
+        result.partialDeletionMessage,
+        allOf(
+          contains('The server was kept'),
+          contains('2 queued prompts'),
+          contains('Free up storage'),
+        ),
+      );
+
+      expect(controller.store.profiles.map((p) => p.id), ['doomed', 'keeper']);
+      expect(await onDisk('oc.profiles'), contains('doomed'));
+      expect(await onDisk('oc.activeProfile'), 'doomed');
+      expect(secureDeletes, isEmpty, reason: 'the Keystore entry must stay');
+      expect(await onDisk('oc.offlineQueue'), contains('secret prompt'));
+    });
+
+    test('keeps the server when a draft write is refused', () async {
+      final (controller, _) = await bootRefusing({'oc.sessionDrafts'});
+
+      final result = await controller.deleteProfileAndLocalData('doomed');
+
+      expect(result.removedProfile, isFalse);
+      expect(result.failures, ['2 unsent drafts']);
+      // The queue write ran first and succeeded, so it is reported as done
+      // rather than folded into the failure — the retry only has to redo
+      // what actually refused.
+      expect(result.removedQueuedPrompts, 2);
+      expect(await onDisk('oc.sessionDrafts'), contains('half-written'));
+      expect(controller.store.profiles.map((p) => p.id), ['doomed', 'keeper']);
+      expect(secureDeletes, isEmpty);
+    });
+
+    test('keeps the server when a scoped setting will not go', () async {
+      final (controller, _) = await bootRefusing({'oc.agent.doomed'});
+
+      final result = await controller.deleteProfileAndLocalData('doomed');
+
+      expect(result.removedProfile, isFalse);
+      expect(result.failures, ['1 saved setting']);
+      // The five keys that did go are reported; the sixth is not claimed.
+      expect(result.removedPreferenceKeys, hasLength(5));
+      expect(result.removedPreferenceKeys, isNot(contains('oc.agent.doomed')));
+      expect(await onDisk('oc.agent.doomed'), 'build');
+      expect(controller.store.profiles.map((p) => p.id), ['doomed', 'keeper']);
+      expect(secureDeletes, isEmpty);
+      expect(result.partialDeletionMessage, contains('1 saved setting'));
+    });
+
+    test('keeps the server when the widget snapshot will not clear', () async {
+      final (controller, _) = await bootRefusing({'oc.widgetSessions'});
+
+      final result = await controller.deleteProfileAndLocalData('doomed');
+
+      expect(result.removedProfile, isFalse);
+      expect(result.failures, ['the home-screen widget’s sessions']);
+      expect(result.clearedWidgetSnapshot, isFalse);
+      expect(await onDisk('oc.widgetSessions'), isNotNull);
+      expect(controller.store.profiles.map((p) => p.id), ['doomed', 'keeper']);
+      expect(secureDeletes, isEmpty);
+    });
+
+    test('reports every refusal, not just the first', () async {
+      final (controller, _) = await bootRefusing({
+        'oc.offlineQueue',
+        'oc.sessionDrafts',
+        'oc.location.doomed',
+      });
+
+      final result = await controller.deleteProfileAndLocalData('doomed');
+
+      expect(result.failures, [
+        '2 queued prompts',
+        '2 unsent drafts',
+        '1 saved setting',
+      ]);
+      expect(result.removedProfile, isFalse);
+    });
+
+    test('a clean run still reports a complete deletion', () async {
+      final (controller, _) = await bootRefusing(const {});
+
+      final result = await controller.deleteProfileAndLocalData('doomed');
+
+      expect(result.complete, isTrue);
+      expect(result.failures, isEmpty);
+      expect(result.removedProfile, isTrue);
+      expect(result.partialDeletionMessage, isNull);
+      expect(secureDeletes, contains('pw.doomed'));
+    });
   });
 
   test('drafts record the profile that owns them', () async {
