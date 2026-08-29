@@ -1,0 +1,64 @@
+{
+  "data": [
+    {
+      "id": "msg_04acb562a001AVrRyQ0SN5T20D",
+      "time": {
+        "created": 1787961237069,
+        "streamed": 1787961237707,
+        "completed": 1787961237716
+      },
+      "type": "assistant",
+      "agent": "build",
+      "model": {
+        "id": "gpt-5.6-sol",
+        "providerID": "openai"
+      },
+      "content": [
+        {
+          "type": "reasoning",
+          "text": "",
+          "state": {
+            "itemId": "rs_0122e05649ee457d016a921f94f33087d2bb9de980b473cd52",
+            "reasoningEncryptedContent": "redacted"
+          },
+          "time": {
+            "created": 1787961237077,
+            "completed": 1787961237672
+          }
+        },
+        {
+          "type": "text",
+          "text": "pong.",
+          "state": {
+            "itemId": "msg_0122e05649ee457d016a921f957e5087d2936c77d3ad05913e",
+            "phase": "final_answer"
+          }
+        }
+      ],
+      "snapshot": {
+        "start": "59785f455ee0e35afacfc27ec31ae20efab265a6",
+        "end": "59785f455ee0e35afacfc27ec31ae20efab265a6",
+        "files": []
+      },
+      "finish": "stop",
+      "providerState": {
+        "responseId": "resp_0122e05649ee457d016a921f9357d087d2a7e679c6a877fe22",
+        "serviceTier": "default"
+      },
+      "cost": 0,
+      "tokens": {
+        "input": 617,
+        "output": 8,
+        "reasoning": 23,
+        "cache": {
+          "read": 10752,
+          "write": 0
+        }
+      }
+    }
+  ],
+  "cursor": {
+    "previous": "eyJpZCI6Im1zZ18wNGFjYjU2MmEwMDFBVnJSeVEwU041VDIwRCIsIm9yZGVyIjoiZGVzYyIsImRpcmVjdGlvbiI6InByZXZpb3VzIn0",
+    "next": "eyJpZCI6Im1zZ18wNGFjYjU2MmEwMDFBVnJSeVEwU041VDIwRCIsIm9yZGVyIjoiZGVzYyIsImRpcmVjdGlvbiI6Im5leHQifQ"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "data": {
+    "id": "ses_fb534b6a0ffeJ5pNlwiesRdWV2",
+    "projectID": "5e625357c202857bf3cd6f591d76b2bec8b5093d",
+    "cost": 0,
+    "tokens": {
+      "input": 0,
+      "output": 0,
+      "reasoning": 0,
+      "cache": {
+        "read": 0,
+        "write": 0
+      }
+    },
+    "time": {
+      "created": 1787961231720,
+      "updated": 1787961231720
+    },
+    "title": "api2 fixture probe",
+    "location": {
+      "directory": "/home/eslam/Storage/Code/oc_app"
+    }
+  }
+}

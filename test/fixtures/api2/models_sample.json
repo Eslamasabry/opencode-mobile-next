@@ -1,0 +1,252 @@
+{
+  "location": {
+    "directory": "/home/eslam/Storage/Code/oc_app",
+    "project": {
+      "id": "5e625357c202857bf3cd6f591d76b2bec8b5093d",
+      "directory": "/home/eslam/Storage/Code/oc_app",
+      "canonical": "/home/eslam/Storage/Code/oc_app"
+    }
+  },
+  "data": [
+    {
+      "id": "hy4-preview",
+      "modelID": "hy4-preview",
+      "providerID": "opencode-go",
+      "family": "Hy",
+      "name": "Hy4 preview",
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "settings": {
+        "baseURL": "https://opencode.ai/zen/go/v1"
+      },
+      "capabilities": {
+        "tools": true,
+        "input": [
+          "text"
+        ],
+        "output": [
+          "text"
+        ]
+      },
+      "variants": [
+        {
+          "id": "none",
+          "settings": {
+            "reasoningEffort": "none"
+          }
+        },
+        {
+          "id": "high",
+          "settings": {
+            "reasoningEffort": "high"
+          }
+        }
+      ],
+      "time": {
+        "released": 1787875200000
+      },
+      "cost": [
+        {
+          "input": 0.834,
+          "output": 2.501,
+          "cache": {
+            "read": 0.042,
+            "write": 0
+          }
+        }
+      ],
+      "status": "active",
+      "enabled": true,
+      "limit": {
+        "context": 1024000,
+        "output": 64000
+      }
+    },
+    {
+      "id": "ling-3.0-flash-fin-free",
+      "modelID": "ling-3.0-flash-fin-free",
+      "providerID": "opencode",
+      "family": "ling",
+      "name": "Ling 3.0 Flash Fin Free",
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "settings": {
+        "baseURL": "https://opencode.ai/zen/v1"
+      },
+      "capabilities": {
+        "tools": true,
+        "input": [
+          "text"
+        ],
+        "output": [
+          "text"
+        ]
+      },
+      "variants": [],
+      "time": {
+        "released": 1787788800000
+      },
+      "cost": [
+        {
+          "input": 0,
+          "output": 0,
+          "cache": {
+            "read": 0,
+            "write": 0
+          }
+        }
+      ],
+      "status": "active",
+      "enabled": true,
+      "limit": {
+        "context": 262144,
+        "output": 32768
+      }
+    },
+    {
+      "id": "glm-5.3-flash",
+      "modelID": "glm-5.3-flash",
+      "providerID": "zai",
+      "family": "glm",
+      "name": "GLM-5.3-Flash",
+      "compatibility": {
+        "reasoningField": "reasoning_content"
+      },
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "settings": {
+        "baseURL": "https://api.z.ai/api/coding/paas/v4",
+        "apiKey": ""
+      },
+      "capabilities": {
+        "tools": true,
+        "input": [
+          "text",
+          "image",
+          "video",
+          "pdf"
+        ],
+        "output": [
+          "text"
+        ]
+      },
+      "variants": [
+        {
+          "id": "low",
+          "settings": {
+            "reasoningEffort": "low"
+          }
+        },
+        {
+          "id": "high",
+          "settings": {
+            "reasoningEffort": "high"
+          }
+        },
+        {
+          "id": "max",
+          "settings": {
+            "reasoningEffort": "max"
+          }
+        }
+      ],
+      "time": {
+        "released": 1787702400000
+      },
+      "cost": [
+        {
+          "input": 0.075,
+          "output": 0.25,
+          "cache": {
+            "read": 0.015,
+            "write": 0
+          }
+        }
+      ],
+      "status": "active",
+      "enabled": true,
+      "limit": {
+        "context": 1000000,
+        "output": 131072
+      }
+    },
+    {
+      "id": "qwen3.8-flash",
+      "modelID": "qwen3.8-flash",
+      "providerID": "opencode-go",
+      "family": "qwen",
+      "name": "Qwen3.8 Flash",
+      "package": "aisdk:@ai-sdk/anthropic",
+      "settings": {
+        "baseURL": "https://opencode.ai/zen/go/v1"
+      },
+      "capabilities": {
+        "tools": true,
+        "input": [
+          "text",
+          "image",
+          "video"
+        ],
+        "output": [
+          "text"
+        ]
+      },
+      "variants": [
+        {
+          "id": "none",
+          "settings": {
+            "thinking": {
+              "type": "disabled"
+            }
+          }
+        },
+        {
+          "id": "low",
+          "settings": {
+            "thinking": {
+              "type": "adaptive",
+              "display": "summarized"
+            },
+            "effort": "low"
+          }
+        },
+        {
+          "id": "medium",
+          "settings": {
+            "thinking": {
+              "type": "adaptive",
+              "display": "summarized"
+            },
+            "effort": "medium"
+          }
+        },
+        {
+          "id": "xhigh",
+          "settings": {
+            "thinking": {
+              "type": "adaptive",
+              "display": "summarized"
+            },
+            "effort": "xhigh"
+          }
+        }
+      ],
+      "time": {
+        "released": 1787702400000
+      },
+      "cost": [
+        {
+          "input": 0.15,
+          "output": 0.47,
+          "cache": {
+            "read": 0.016,
+            "write": 0.2
+          }
+        }
+      ],
+      "status": "active",
+      "enabled": true,
+      "limit": {
+        "context": 1000000,
+        "output": 131072
+      }
+    }
+  ]
+}
