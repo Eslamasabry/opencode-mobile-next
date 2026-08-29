@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
@@ -77,13 +78,14 @@ Future<ConnectionController> _controller(
 
 QueuedPrompt _entry(
   String id, {
+  String profileID = 'profile-1',
   String sessionID = 'session-1',
   String text = 'queued text',
   String? error,
   List<PromptAttachment> attachments = const [],
 }) => QueuedPrompt(
   id: id,
-  profileID: 'profile-1',
+  profileID: profileID,
   sessionID: sessionID,
   text: text,
   attachments: attachments,
@@ -104,6 +106,19 @@ Future<void> _pumpChat(WidgetTester tester, ConnectionController conn) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    // ProfileStore.load restores passwords through flutter_secure_storage,
+    // whose unmocked platform channel never answers inside testWidgets (in
+    // plain tests it throws MissingPluginException, which load catches).
+    // Answer reads with null so widget tests that load a stored profile
+    // cannot hang.
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
+          (_) async => null,
+        );
+  });
 
   test('queued prompts persist and reload with attachments intact', () async {
     SharedPreferences.setMockInitialValues({});
@@ -214,6 +229,106 @@ void main() {
     await controller.flushOfflineQueue();
     expect(controller.queuedPromptCount, 0);
     expect(api.prompts.map((p) => p.text).toList(), ['second', 'first']);
+  });
+
+  test('a flush cycle reports how many drafts it sent', () async {
+    final api = _FakeApi();
+    final controller = await _controller(api);
+    addTearDown(controller.dispose);
+    await controller.queuePrompt(_entry('q1', text: 'first'));
+    await controller.queuePrompt(_entry('q2', text: 'second'));
+
+    final before = controller.offlineFlushRevision;
+    await controller.flushOfflineQueue();
+    expect(controller.offlineFlushRevision, before + 1);
+    expect(controller.lastFlushedPromptCount, 2);
+    expect(controller.lastFlushSkippedForOtherProfiles, 0);
+
+    // A flush that delivers nothing announces nothing.
+    await controller.flushOfflineQueue();
+    expect(controller.offlineFlushRevision, before + 1);
+  });
+
+  test('drafts for other profiles stay queued and are counted', () async {
+    final api = _FakeApi();
+    final controller = await _controller(api);
+    addTearDown(controller.dispose);
+    await controller.queuePrompt(_entry('mine', text: 'active server'));
+    await controller.queuePrompt(
+      _entry(
+        'other',
+        profileID: 'profile-2',
+        sessionID: 'session-9',
+        text: 'other server',
+      ),
+    );
+
+    await controller.flushOfflineQueue();
+
+    expect(api.prompts.map((p) => p.text).toList(), ['active server']);
+    expect(controller.queuedPromptCount, 0);
+    expect(controller.queuedPromptCountForOtherProfiles, 1);
+    expect(controller.lastFlushedPromptCount, 1);
+    expect(controller.lastFlushSkippedForOtherProfiles, 1);
+    // The skipped draft persists for its own profile's next connection.
+    final prefs = await SharedPreferences.getInstance();
+    expect(OfflineQueueStore(prefs: prefs).load().single.id, 'other');
+  });
+
+  testWidgets('a completed flush surfaces a sent confirmation', (
+    tester,
+  ) async {
+    final api = _FakeApi();
+    final controller = await _controller(api);
+    addTearDown(controller.dispose);
+    await controller.queuePrompt(_entry('q1', text: 'first'));
+    await controller.queuePrompt(
+      _entry(
+        'other',
+        profileID: 'profile-2',
+        sessionID: 'session-9',
+        text: 'other server',
+      ),
+    );
+    await _pumpChat(tester, controller);
+
+    await controller.flushOfflineQueue();
+    await tester.pump();
+    await tester.pump();
+
+    expect(
+      find.text('Sent 1 queued prompt · 1 draft waiting for other servers'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('the offline banner counts drafts waiting for other servers', (
+    tester,
+  ) async {
+    final api = _FakeApi();
+    final controller = await _controller(
+      api,
+      status: StreamStatus.disconnected,
+    );
+    addTearDown(controller.dispose);
+    await controller.queuePrompt(_entry('mine', text: 'active server'));
+    await controller.queuePrompt(
+      _entry(
+        'other',
+        profileID: 'profile-2',
+        sessionID: 'session-9',
+        text: 'other server',
+      ),
+    );
+    await _pumpChat(tester, controller);
+
+    expect(
+      find.textContaining(
+        '1 draft queued to send on reconnect. '
+        '1 draft waiting for other servers.',
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('sending while disconnected queues a visible draft', (

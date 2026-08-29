@@ -15,6 +15,7 @@ import '../diagnostics/app_diagnostics.dart';
 import '../termux/bridge.dart';
 import 'offline_queue.dart';
 import 'profiles.dart';
+import 'session_drafts.dart';
 
 Map<String, dynamic> _catalogMap(Object? value) =>
     value is Map ? Map<String, dynamic>.from(value) : const {};
@@ -164,6 +165,12 @@ class ConnectionController extends ChangeNotifier {
   List<QueuedPrompt>? _offlineQueue;
   OfflineQueueStore? _offlineQueueStore;
   bool _flushingOfflineQueue = false;
+
+  /// Composer text typed in a chat but never sent, kept per session so
+  /// navigating between sessions loses nothing. Loaded lazily from
+  /// [SessionDraftStore] and kept in memory afterward.
+  Map<String, SessionDraft>? _sessionDrafts;
+  SessionDraftStore? _sessionDraftStore;
   int locationRevision = 0;
   String? directory;
   String? workspace;
@@ -2238,6 +2245,22 @@ class ConnectionController extends ChangeNotifier {
     return _queue.where((entry) => entry.profileID == profileID).length;
   }
 
+  /// Queued prompts that belong to profiles other than the active one. A
+  /// flush never sends these; the count lets banners and the flush notice
+  /// say "N drafts waiting for other servers" instead of staying silent.
+  int get queuedPromptCountForOtherProfiles {
+    final profileID = profile?.id;
+    return _queue.where((entry) => entry.profileID != profileID).length;
+  }
+
+  /// Advances after a flush cycle that delivered at least one queued
+  /// prompt; [lastFlushedPromptCount] and [lastFlushSkippedForOtherProfiles]
+  /// describe that cycle. Screens compare revisions in their listener to
+  /// show a one-shot "Sent N queued prompts" confirmation.
+  int offlineFlushRevision = 0;
+  int lastFlushedPromptCount = 0;
+  int lastFlushSkippedForOtherProfiles = 0;
+
   /// Adds a drafted prompt to the offline queue. Returns false when the
   /// entry exceeds the composer's aggregate attachment cap and was not
   /// queued; the caller keeps its existing limits messaging.
@@ -2255,6 +2278,38 @@ class ConnectionController extends ChangeNotifier {
     notifyListeners();
   }
 
+  SessionDraftStore get _draftStore =>
+      _sessionDraftStore ??= SessionDraftStore(prefs: store.prefs);
+
+  Map<String, SessionDraft> get _drafts =>
+      _sessionDrafts ??= _draftStore.load();
+
+  /// The unsent composer text remembered for [sessionID], if any.
+  String? sessionDraft(String sessionID) => _drafts[sessionID]?.text;
+
+  /// Remembers (or, when [text] is blank, forgets) the composer draft for
+  /// one session. No [notifyListeners]: drafts drive nothing outside the
+  /// chat screen that saved them.
+  Future<void> saveSessionDraft(String sessionID, String text) async {
+    if (text.trim().isEmpty) {
+      if (_drafts.remove(sessionID) == null) return;
+    } else {
+      _drafts[sessionID] = SessionDraft(
+        sessionID: sessionID,
+        text: text,
+        updatedAt: DateTime.now().millisecondsSinceEpoch,
+      );
+      // Mirror the store's cap in memory: oldest drafts fall off first.
+      if (_drafts.length > SessionDraftStore.maxDrafts) {
+        final oldest = _drafts.values.reduce(
+          (a, b) => a.updatedAt <= b.updatedAt ? a : b,
+        );
+        _drafts.remove(oldest.sessionID);
+      }
+    }
+    await _draftStore.save(_drafts);
+  }
+
   /// Sends queued prompts for the active profile, oldest first, through the
   /// wake-reconciled transport. A connectivity failure stops the flush (the
   /// server is still unreachable); a declared server failure keeps that
@@ -2266,6 +2321,7 @@ class ConnectionController extends ChangeNotifier {
     if (!_queue.any((entry) => entry.profileID == profileID)) return;
     _flushingOfflineQueue = true;
     var mutated = false;
+    var sent = 0;
     try {
       for (final entry in List.of(_queue)) {
         if (entry.profileID != profileID) continue;
@@ -2283,6 +2339,7 @@ class ConnectionController extends ChangeNotifier {
           );
           _queue.removeWhere((queued) => queued.id == entry.id);
           mutated = true;
+          sent += 1;
         } on ApiException catch (error) {
           if (error.statusCode == null) break;
           final index = _queue.indexWhere((queued) => queued.id == entry.id);
@@ -2296,6 +2353,11 @@ class ConnectionController extends ChangeNotifier {
       }
     } finally {
       _flushingOfflineQueue = false;
+      if (sent > 0) {
+        lastFlushedPromptCount = sent;
+        lastFlushSkippedForOtherProfiles = queuedPromptCountForOtherProfiles;
+        offlineFlushRevision += 1;
+      }
       if (mutated) {
         await _queueStore.save(_queue);
         notifyListeners();

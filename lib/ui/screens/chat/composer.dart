@@ -21,6 +21,7 @@ class _ChatComposer extends StatelessWidget {
     required this.selectedModel,
     required this.selectedVariant,
     required this.onAttach,
+    required this.onContentInserted,
     required this.onVoice,
     required this.onSend,
     required this.onStop,
@@ -48,6 +49,10 @@ class _ChatComposer extends StatelessWidget {
   final ModelRef? selectedModel;
   final String selectedVariant;
   final VoidCallback onAttach;
+
+  /// Receives images committed by the IME (keyboard image insertions and
+  /// Android clipboard-image paste chips). See `_handleInsertedContent`.
+  final ValueChanged<KeyboardInsertedContent> onContentInserted;
   final VoidCallback onVoice;
   final VoidCallback onSend;
   final VoidCallback onStop;
@@ -161,6 +166,7 @@ class _ChatComposer extends StatelessWidget {
           controller: controller,
           focusNode: focusNode,
           onOpenEditor: onOpenEditor,
+          onContentInserted: onContentInserted,
           maxLines: 6,
           contentPadding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
           onSubmitShortcut: _submitFromKeyboard,
@@ -268,6 +274,7 @@ class _ChatComposer extends StatelessWidget {
               controller: controller,
               focusNode: focusNode,
               onOpenEditor: onOpenEditor,
+              onContentInserted: onContentInserted,
               onSubmitShortcut: _submitFromKeyboard,
               maxLines: 3,
               contentPadding: const EdgeInsets.symmetric(
@@ -312,6 +319,7 @@ class _ComposerField extends StatelessWidget {
     required this.controller,
     required this.focusNode,
     required this.onOpenEditor,
+    required this.onContentInserted,
     required this.maxLines,
     required this.contentPadding,
     this.onSubmitShortcut,
@@ -320,6 +328,7 @@ class _ComposerField extends StatelessWidget {
   final TextEditingController controller;
   final FocusNode focusNode;
   final VoidCallback onOpenEditor;
+  final ValueChanged<KeyboardInsertedContent> onContentInserted;
   final int maxLines;
   final EdgeInsets contentPadding;
 
@@ -336,6 +345,11 @@ class _ComposerField extends StatelessWidget {
       focusNode: focusNode,
       minLines: 1,
       maxLines: maxLines,
+      // Accepts images committed by the IME (Android commitContent): the
+      // default allowed mime types cover the common raster image formats.
+      contentInsertionConfiguration: ContentInsertionConfiguration(
+        onContentInserted: onContentInserted,
+      ),
       textCapitalization: TextCapitalization.sentences,
       decoration: InputDecoration(
         hintText: 'Ask OpenCode…',

@@ -257,6 +257,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   int _eventVersion = 0;
   int _loadGeneration = 0;
   int _dataRefreshRevision = 0;
+  int _offlineFlushRevision = 0;
   bool _sending = false;
   bool _aborting = false;
   bool _permissionDialogScheduled = false;
@@ -295,6 +296,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _composer.text = widget.initialText;
     _attachments.addAll(widget.initialAttachments);
     _conn = _readConn();
+    _offlineFlushRevision = _conn.offlineFlushRevision;
+    if (widget.initialText.isEmpty) {
+      final draft = _conn.sessionDraft(widget.sessionID);
+      if (draft != null) {
+        _composer.text = draft;
+        _composer.selection = TextSelection.collapsed(offset: draft.length);
+      }
+    }
     _dataRefreshRevision = _conn.dataRefreshRevision;
     _conn.addListener(_onConnectionChanged);
     _load();
@@ -319,7 +328,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) {
       unawaited(_voice?.handleLifecyclePause());
+      _persistDraft();
     }
+  }
+
+  /// Saves the composer text as this session's draft (or clears the draft
+  /// when the composer is empty). Runs on navigation away, app pause, and
+  /// after sends so the persisted draft always mirrors the composer.
+  void _persistDraft() {
+    unawaited(_conn.saveSessionDraft(widget.sessionID, _composer.text));
   }
 
   ConnectionController _readConn() {
@@ -956,6 +973,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         if (!mounted) return;
         setState(() => _attachments.clear());
         _composer.clear();
+        _persistDraft();
         _focus.requestFocus();
       }
       return;
@@ -989,6 +1007,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       createdAt: createdAt,
     );
     _composer.clear();
+    _persistDraft();
     _focus.requestFocus();
 
     // Optimistic user bubble.
@@ -1183,6 +1202,39 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (attachment != null && mounted) {
         setState(() => _attachments.add(attachment));
       }
+    } catch (error) {
+      if (mounted) _showActionError(error);
+    }
+  }
+
+  /// Attaches an image committed into the composer by the IME — keyboard
+  /// GIF/sticker insertions and Android's clipboard-image paste chip both
+  /// arrive here via InputConnection.commitContent.
+  ///
+  /// This is the only zero-dependency image-paste path on Android: the
+  /// framework's [Clipboard] service API reads `text/plain` exclusively, so
+  /// a manual "Paste image" menu action cannot read image bytes without a
+  /// platform plugin. Content without inline bytes (a URI-only commit) is
+  /// ignored rather than half-attached.
+  Future<void> _handleInsertedContent(KeyboardInsertedContent content) async {
+    final bytes = content.data;
+    if (bytes == null || bytes.isEmpty) return;
+    final mime = content.mimeType.isEmpty ? 'image/png' : content.mimeType;
+    final extension = switch (mime.toLowerCase()) {
+      'image/jpeg' || 'image/jpg' => 'jpg',
+      'image/gif' => 'gif',
+      'image/webp' => 'webp',
+      'image/bmp' => 'bmp',
+      _ => 'png',
+    };
+    final name =
+        'pasted-image-${DateTime.now().millisecondsSinceEpoch}.$extension';
+    try {
+      await _addPreviewAttachment(
+        filename: name,
+        mimeType: mime,
+        data: FilePreviewData(name: name, mimeType: mime, bytes: bytes),
+      );
     } catch (error) {
       if (mounted) _showActionError(error);
     }
@@ -1826,6 +1878,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   void _onConnectionChanged() {
     if (!mounted) return;
+    _announceCompletedFlush();
     final shouldRehydrate =
         _dataRefreshRevision != _conn.dataRefreshRevision && _conn.api != null;
     _dataRefreshRevision = _conn.dataRefreshRevision;
@@ -1833,6 +1886,29 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     setState(() {});
     if (shouldRehydrate) unawaited(_load());
     _schedulePermissionDialog();
+  }
+
+  /// Confirms a reconnect flush that delivered queued drafts, closing the
+  /// loop the "Queued — will send when reconnected" snackbar opened. Also
+  /// names drafts the flush deliberately left for other servers.
+  void _announceCompletedFlush() {
+    if (_offlineFlushRevision == _conn.offlineFlushRevision) return;
+    _offlineFlushRevision = _conn.offlineFlushRevision;
+    final sent = _conn.lastFlushedPromptCount;
+    if (sent <= 0) return;
+    final waiting = _conn.lastFlushSkippedForOtherProfiles;
+    final message = StringBuffer(
+      'Sent $sent queued prompt${sent == 1 ? '' : 's'}',
+    );
+    if (waiting > 0) {
+      message.write(
+        ' · $waiting draft${waiting == 1 ? '' : 's'} waiting for other '
+        'servers',
+      );
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message.toString())));
   }
 
   void _dismissResolvedPermissionDialog() {
@@ -2333,10 +2409,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _executeMobileCommand(_ChatCommandAction action) async {
     switch (action) {
       case _ChatCommandAction.newSession:
-        if (_hasUnsentDraft) {
+        if (_attachments.isNotEmpty) {
           final discard = await _confirmDiscardDraft();
           if (!mounted || !discard) return;
         }
+        _persistDraft();
         final session = await _conn.createSession();
         if (mounted) {
           final cleanupWarning = await _discardUntouchedMobileSession();
@@ -3035,16 +3112,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     setState(() => _attachments.add(attachment));
   }
 
-  bool get _hasUnsentDraft =>
-      _composer.text.isNotEmpty || _attachments.isNotEmpty;
-
+  // Composer text needs no leave-time confirmation: it persists as a
+  // per-session draft and is restored when the chat reopens. Attachments
+  // are not persisted (their bytes are too heavy for the draft store), so
+  // losing them still asks first.
   Future<bool> _confirmDiscardDraft() => showConfirmSheet(
     context,
     sheetKey: const ValueKey('discard-chat-draft-dialog'),
     icon: Icons.delete_sweep_outlined,
-    title: 'Discard unsent draft?',
-    message: 'Your text and attachments have not been sent to OpenCode.',
-    confirmLabel: 'Discard draft',
+    title: 'Discard unsent attachments?',
+    message:
+        'Attachments are not kept with your draft text and have not been '
+        'sent to OpenCode.',
+    confirmLabel: 'Discard attachments',
     cancelLabel: 'Keep editing',
     destructive: true,
   );
@@ -3054,6 +3134,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         _messages.isNotEmpty ||
         _pendingSends.isNotEmpty ||
         _sending ||
+        // A typed draft persists per session, so the session must survive
+        // to give that draft a home to be restored into.
+        _composer.text.trim().isNotEmpty ||
         _conn.busySessions.contains(widget.sessionID)) {
       return null;
     }
@@ -3077,10 +3160,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _leaveChat() async {
     if (_leavingProvisionalSession) return;
-    if (_hasUnsentDraft) {
+    if (_attachments.isNotEmpty) {
       final discard = await _confirmDiscardDraft();
       if (!mounted || !discard) return;
     }
+    _persistDraft();
     _leavingProvisionalSession = true;
     final messenger = ScaffoldMessenger.maybeOf(context);
     final warning = await _discardUntouchedMobileSession();
@@ -3112,6 +3196,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('${file.displayName} saved to your device.')),
     );
+  }
+
+  /// The offline banner's queue line: drafts the next flush will send,
+  /// plus drafts a flush will deliberately skip for other servers.
+  String? _queuedNote() {
+    final mine = _conn.queuedPromptCount;
+    final others = _conn.queuedPromptCountForOtherProfiles;
+    final parts = <String>[
+      if (mine > 0)
+        '$mine draft${mine == 1 ? '' : 's'} queued to send on reconnect.',
+      if (others > 0)
+        '$others draft${others == 1 ? '' : 's'} waiting for other servers.',
+    ];
+    return parts.isEmpty ? null : parts.join(' ');
   }
 
   @override
@@ -3178,14 +3276,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         body: Column(
           children: [
             if (_conn.status != StreamStatus.connected)
-              ConnectionStatusBanner(
-                controller: _conn,
-                note: _conn.queuedPromptCount > 0
-                    ? '${_conn.queuedPromptCount} draft'
-                          '${_conn.queuedPromptCount == 1 ? '' : 's'} queued '
-                          'to send on reconnect.'
-                    : null,
-              ),
+              ConnectionStatusBanner(controller: _conn, note: _queuedNote()),
             // At most one contextual strip below the connection truth, so
             // banners cannot stack three deep over the transcript: a prompt
             // error outranks subagent context, which outranks the share
@@ -3388,6 +3479,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                   selectedModel: _conn.selectedModel,
                                   selectedVariant: _conn.selectedVariant,
                                   onAttach: _pickAttachment,
+                                  onContentInserted: (content) => unawaited(
+                                    _handleInsertedContent(content),
+                                  ),
                                   onVoice: _openVoice,
                                   onSend: _send,
                                   onStop: _abort,
@@ -3412,6 +3506,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _persistDraft();
     WidgetsBinding.instance.removeObserver(this);
     _conn.removeListener(_onConnectionChanged);
     _sub.cancel();
