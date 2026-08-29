@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/server_probe.dart';
@@ -18,6 +19,30 @@ class ServersScreen extends ConsumerStatefulWidget {
 
 class _ServersScreenState extends ConsumerState<ServersScreen> {
   bool _busy = false;
+  bool _handledRouteArgument = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_handledRouteArgument) return;
+    _handledRouteArgument = true;
+    // The connection banner's "Update password" action routes here with this
+    // argument: open the active profile's editor with the password focused so
+    // a rotated serve password is one paste away (never a modal).
+    if (ModalRoute.of(context)?.settings.arguments == 'edit-active') {
+      final store = ref.read(bootstrapProvider).store;
+      ServerProfile? active;
+      for (final p in store.profiles) {
+        if (p.id == store.activeId) active = p;
+      }
+      final target = active;
+      if (target != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) unawaited(_edit(existing: target, focusPassword: true));
+        });
+      }
+    }
+  }
 
   void _showFailure(String message) {
     if (!mounted) return;
@@ -34,7 +59,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
   Future<void> _connect(ServerProfile p) async {
     if (_busy) return;
     if (p.requiresPasswordReentry) {
-      await _edit(p);
+      await _edit(existing: p);
       return;
     }
     setState(() => _busy = true);
@@ -58,10 +83,16 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     }
   }
 
-  Future<void> _edit([ServerProfile? existing]) async {
+  Future<void> _edit({
+    ServerProfile? existing,
+    bool focusPassword = false,
+  }) async {
     final result = await Navigator.of(context).push<ServerProfile>(
       MaterialPageRoute<ServerProfile>(
-        builder: (_) => _ProfileEditorScreen(existing: existing),
+        builder: (_) => _ProfileEditorScreen(
+          existing: existing,
+          focusPassword: focusPassword,
+        ),
       ),
     );
     if (result == null || !mounted) return;
@@ -330,7 +361,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                     trailing: PopupMenuButton<String>(
                       enabled: !_busy,
                       onSelected: (v) {
-                        if (v == 'edit') _edit(p);
+                        if (v == 'edit') _edit(existing: p);
                         if (v == 'del') _delete(p);
                         if (v == 'conn') _connect(p);
                       },
@@ -547,7 +578,11 @@ class _WelcomeCard extends StatelessWidget {
 
 class _ProfileEditorScreen extends StatefulWidget {
   final ServerProfile? existing;
-  const _ProfileEditorScreen({this.existing});
+
+  /// Focus the password field on open — the path taken from the connection
+  /// banner after a mid-session 401 (the serve password rotated).
+  final bool focusPassword;
+  const _ProfileEditorScreen({this.existing, this.focusPassword = false});
 
   @override
   State<_ProfileEditorScreen> createState() => _ProfileEditorScreenState();
@@ -647,6 +682,36 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
       _testing = false;
       _testResult = result;
     });
+    // Per the v2 auth taxonomy: a 401 without a password sends the user to
+    // the password field; a rejected password selects it for a clean repaste.
+    if (result.flavor == ServerFlavor.v2 && result.needsPassword) {
+      if (_pass.text.isNotEmpty) {
+        _pass.selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: _pass.text.length,
+        );
+      }
+      _passFocus.requestFocus();
+    }
+  }
+
+  /// Paste-first entry for the per-run serve password: nobody types a random
+  /// 32-byte base64url string. Trims whitespace and a copied
+  /// `server password ` line prefix.
+  Future<void> _pastePassword() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    var text = data?.text?.trim() ?? '';
+    const prefix = 'server password';
+    if (text.toLowerCase().startsWith(prefix)) {
+      text = text.substring(prefix.length).trim();
+    }
+    if (text.isEmpty || !mounted) return;
+    setState(() {
+      _pass.text = text;
+      _error = null;
+      _testResult = null;
+    });
+    _passFocus.requestFocus();
   }
 
   bool get _dirty =>
@@ -710,6 +775,13 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
     }
     final uri = Uri.parse(url);
     url = uri.replace(scheme: uri.scheme.toLowerCase()).toString();
+    // Cache what Test connection detected; the connection layer re-verifies
+    // on every cold connect and a failed connect re-probes, so a save without
+    // a test (default v1) still self-corrects.
+    final probed = _testResult;
+    final detected = probed != null && probed.flavor != ServerFlavor.unknown
+        ? probed.flavor
+        : widget.existing?.flavor ?? ServerFlavor.v1;
     Navigator.pop(
       context,
       ServerProfile(
@@ -720,6 +792,8 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
         baseUrl: url.endsWith('/') ? url.substring(0, url.length - 1) : url,
         username: _user.text.trim(),
         password: _pass.text,
+        flavor: detected,
+        serverVersion: probed?.version ?? widget.existing?.serverVersion,
       ),
     );
   }
@@ -857,34 +931,57 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                 key: const ValueKey('server-password-field'),
                 controller: _pass,
                 focusNode: _passFocus,
-                autofocus: _needsPassword,
+                autofocus: _needsPassword || widget.focusPassword,
                 onChanged: (_) => setState(() {
                   _error = null;
                   _testResult = null;
                 }),
                 obscureText: _obscurePassword,
+                autocorrect: false,
+                enableSuggestions: false,
+                keyboardType: TextInputType.visiblePassword,
+                style: _obscurePassword
+                    ? null
+                    : const TextStyle(fontFamily: AppTheme.monoFamily),
                 textInputAction: TextInputAction.done,
                 onSubmitted: (_) => _save(),
                 decoration: InputDecoration(
                   labelText: _needsPassword
                       ? 'Re-enter password'
-                      : 'Password (optional)',
+                      : 'Server password',
                   helperText: _needsPassword
                       ? 'Leave empty only if this server no longer uses a password.'
-                      : 'Matches OPENCODE_SERVER_PASSWORD on the server.',
-                  helperMaxLines: 2,
-                  suffixIcon: IconButton(
-                    key: const ValueKey('toggle-server-password'),
-                    tooltip: _obscurePassword
-                        ? 'Show server password'
-                        : 'Hide server password',
-                    onPressed: () =>
-                        setState(() => _obscurePassword = !_obscurePassword),
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                    ),
+                      : 'Printed by opencode2 serve at startup '
+                            '("server password …"). Optional for servers '
+                            'without one.',
+                  helperMaxLines: 3,
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        key: const ValueKey('server-password-visibility'),
+                        tooltip: _obscurePassword
+                            ? 'Show server password'
+                            : 'Hide server password',
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                        ),
+                      ),
+                      // Paste is the primary affordance for the per-run
+                      // random serve password, so it sits closest to the
+                      // field edge.
+                      IconButton(
+                        key: const ValueKey('server-password-paste'),
+                        tooltip: 'Paste server password',
+                        onPressed: () => unawaited(_pastePassword()),
+                        icon: const Icon(Icons.content_paste_rounded),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -903,6 +1000,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
               if (_testResult case final result?) ...[
                 const SizedBox(height: 12),
                 Semantics(
+                  key: const ValueKey('server-probe-verdict'),
                   container: true,
                   liveRegion: true,
                   child: Container(
@@ -935,19 +1033,58 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                result.ok
-                                    ? 'Connected — OpenCode '
-                                          '${result.version ?? 'server'} '
-                                          'answered. Save to finish.'
-                                    : result.message!,
-                                style: TextStyle(
-                                  color: result.ok
-                                      ? theme.colorScheme.onSurface
-                                      : theme.colorScheme.onErrorContainer,
-                                  height: 1.35,
+                              if (result.ok) ...[
+                                Text(
+                                  result.flavor == ServerFlavor.v2
+                                      ? 'OpenCode 2 · '
+                                            '${result.version ?? 'unknown version'}'
+                                      : 'OpenCode 1 · '
+                                            '${result.version ?? 'unknown version'}'
+                                            ' — limited feature set',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    height: 1.35,
+                                  ),
                                 ),
-                              ),
+                                if (result.flavor == ServerFlavor.v1) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'This app targets OpenCode 2; some '
+                                    'features are unavailable on v1 servers.',
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                      height: 1.35,
+                                    ),
+                                  ),
+                                ],
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Connected — save to finish.',
+                                  style: TextStyle(
+                                    color: theme.colorScheme.onSurface,
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ] else ...[
+                                if (result.flavor == ServerFlavor.v2) ...[
+                                  Text(
+                                    'This is an OpenCode 2 server.',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: theme.colorScheme.onErrorContainer,
+                                      fontWeight: FontWeight.w600,
+                                      height: 1.35,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                ],
+                                Text(
+                                  result.message!,
+                                  style: TextStyle(
+                                    color: theme.colorScheme.onErrorContainer,
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ],
                               if (!result.ok &&
                                   result.suggestsMissingServer) ...[
                                 const SizedBox(height: 6),

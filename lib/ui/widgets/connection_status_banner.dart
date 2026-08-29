@@ -26,6 +26,34 @@ class ConnectionStatusBanner extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    // A rotated v2 serve password cannot self-heal through retries: surface
+    // the one action that fixes it and keep it a banner, never a modal.
+    if (controller.passwordRejected) {
+      return Semantics(
+        container: true,
+        liveRegion: true,
+        label: 'The server password changed',
+        child: MaterialBanner(
+          key: const ValueKey('connection-status-banner'),
+          leading: const Icon(Icons.key_off_outlined),
+          content: Text(
+            note == null || note!.isEmpty
+                ? 'Server password changed — reconnect.'
+                : 'Server password changed — reconnect.\n${note!}',
+          ),
+          actions: [
+            TextButton(
+              key: const ValueKey('banner-update-password'),
+              onPressed: () => Navigator.of(
+                context,
+              ).pushNamed('/servers', arguments: 'edit-active'),
+              child: const Text('Update password'),
+            ),
+          ],
+        ),
+      );
+    }
+
     final manualRetry = controller.manualReconnectInProgress;
     final reconnecting = controller.connectionLoading || manualRetry;
     final error = controller.connectionError?.trim();

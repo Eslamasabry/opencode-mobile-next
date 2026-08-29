@@ -794,7 +794,7 @@ class ConnectionController extends ChangeNotifier {
       _acceptRunningServerVersion(health.version);
     } catch (e) {
       if (!_isCurrent(generation, currentApi)) return;
-      if (redetectOnFailure) {
+      if (redetectOnFailure && _suggestsWrongFlavor(e)) {
         final corrected = await _redetectFlavor(profile);
         if (!_isCurrent(generation, currentApi)) return;
         if (corrected != null) {
@@ -1232,6 +1232,17 @@ class ConnectionController extends ChangeNotifier {
       passwordRejected = true;
     }
   }
+
+  /// True for connect failures shaped like talking to the wrong server
+  /// generation: a 401 (v1 client meeting v2's Basic-auth gate) or a 404/405
+  /// (v2 client asking a v1 server for `/api/...`). Unreachable addresses and
+  /// unhealthy servers are not flavor problems, so they never trigger a
+  /// re-probe.
+  static bool _suggestsWrongFlavor(Object error) =>
+      error is ApiException &&
+      (error.statusCode == 401 ||
+          error.statusCode == 404 ||
+          error.statusCode == 405);
 
   /// After a failed connect, asks the probe which protocol generation the
   /// address actually speaks. Returns the probe result when it disagrees with
