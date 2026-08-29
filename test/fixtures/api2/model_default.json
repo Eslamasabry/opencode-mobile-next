@@ -1,0 +1,115 @@
+{
+  "location": {
+    "directory": "/home/eslam/Storage/Code/oc_app",
+    "project": {
+      "id": "5e625357c202857bf3cd6f591d76b2bec8b5093d",
+      "directory": "/home/eslam/Storage/Code/oc_app",
+      "canonical": "/home/eslam/Storage/Code/oc_app"
+    }
+  },
+  "data": {
+    "id": "gpt-5.6-sol",
+    "modelID": "gpt-5.6-sol",
+    "providerID": "openai",
+    "family": "gpt-sol",
+    "name": "GPT-5.6 Sol 1M (OAuth)",
+    "package": "aisdk:@ai-sdk/openai",
+    "settings": {
+      "baseURL": "https://chatgpt.com/backend-api/codex",
+      "reasoningEffort": "medium",
+      "reasoningSummary": "auto",
+      "textVerbosity": "medium",
+      "include": [
+        "reasoning.encrypted_content"
+      ],
+      "store": false
+    },
+    "headers": {
+      "originator": "opencode",
+      "chatgpt-account-id": "00000000-0000-0000-0000-000000000000"
+    },
+    "capabilities": {
+      "tools": true,
+      "input": [
+        "text",
+        "image"
+      ],
+      "output": [
+        "text"
+      ]
+    },
+    "variants": [
+      {
+        "id": "none",
+        "settings": {
+          "reasoningEffort": "none",
+          "reasoningSummary": "auto",
+          "include": [
+            "reasoning.encrypted_content"
+          ]
+        }
+      },
+      {
+        "id": "low",
+        "settings": {
+          "reasoningEffort": "low",
+          "reasoningSummary": "auto",
+          "include": [
+            "reasoning.encrypted_content"
+          ]
+        }
+      },
+      {
+        "id": "medium",
+        "settings": {
+          "reasoningEffort": "medium",
+          "reasoningSummary": "auto",
+          "include": [
+            "reasoning.encrypted_content"
+          ]
+        }
+      },
+      {
+        "id": "high",
+        "settings": {
+          "reasoningEffort": "high",
+          "reasoningSummary": "auto",
+          "include": [
+            "reasoning.encrypted_content"
+          ]
+        }
+      },
+      {
+        "id": "xhigh",
+        "settings": {
+          "reasoningEffort": "xhigh",
+          "reasoningSummary": "auto",
+          "include": [
+            "reasoning.encrypted_content"
+          ]
+        }
+      },
+      {
+        "id": "max",
+        "settings": {
+          "reasoningEffort": "max",
+          "reasoningSummary": "auto",
+          "include": [
+            "reasoning.encrypted_content"
+          ]
+        }
+      }
+    ],
+    "time": {
+      "released": 1783555200000
+    },
+    "cost": [],
+    "status": "active",
+    "enabled": true,
+    "limit": {
+      "context": 1050000,
+      "input": 922000,
+      "output": 128000
+    }
+  }
+}

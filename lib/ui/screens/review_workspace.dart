@@ -2,20 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../api/models.dart';
+import '../app_theme.dart';
+import '../widgets/product_states.dart';
 
 typedef ReviewDiffLoader = Future<List<FileDiff>> Function();
 
 enum ReviewDiffMode { unified, split }
 
+enum ReviewDiffScope { session, workingTree, branch }
+
 class ReviewWorkspace extends StatefulWidget {
   const ReviewWorkspace({
     super.key,
-    required this.loadDiffs,
-    required this.sessionID,
-  });
+    this.loadDiffs,
+    this.loadWorkingTreeDiffs,
+    this.loadBranchDiffs,
+    this.initialScope = ReviewDiffScope.session,
+    this.initialFile,
+  }) : assert(
+         loadDiffs != null ||
+             loadWorkingTreeDiffs != null ||
+             loadBranchDiffs != null,
+         'At least one review diff loader is required.',
+       );
 
-  final ReviewDiffLoader loadDiffs;
-  final String sessionID;
+  final ReviewDiffLoader? loadDiffs;
+  final ReviewDiffLoader? loadWorkingTreeDiffs;
+  final ReviewDiffLoader? loadBranchDiffs;
+  final ReviewDiffScope initialScope;
+  final String? initialFile;
 
   @override
   State<ReviewWorkspace> createState() => _ReviewWorkspaceState();
@@ -25,15 +40,27 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
   List<FileDiff>? _diffs;
   Object? _error;
   int _selectedFile = 0;
+
+  /// Files whose diff was opened this session, per scope — the GitHub
+  /// "Viewed" pattern, session-local only.
+  final Set<String> _viewedFiles = {};
   int? _selectionStart;
   int? _selectionEnd;
   ReviewDiffMode _mode = ReviewDiffMode.unified;
+  late ReviewDiffScope _scope;
+  String? _pendingInitialFile;
+  int _loadGeneration = 0;
   final ScrollController _vertical = ScrollController();
   final ScrollController _horizontal = ScrollController();
 
   @override
   void initState() {
     super.initState();
+    final scopes = _availableScopes;
+    _scope = scopes.contains(widget.initialScope)
+        ? widget.initialScope
+        : scopes.first;
+    _pendingInitialFile = widget.initialFile;
     _load();
   }
 
@@ -45,21 +72,68 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
   }
 
   Future<void> _load() async {
+    final generation = ++_loadGeneration;
     setState(() {
       _error = null;
       _diffs = null;
     });
     try {
-      final diffs = await widget.loadDiffs();
-      if (!mounted) return;
+      final diffs = await _loaderFor(_scope)();
+      if (!mounted || generation != _loadGeneration) return;
       setState(() {
         _diffs = diffs;
-        if (_selectedFile >= diffs.length) _selectedFile = 0;
+        final initialFile = _pendingInitialFile;
+        final initialIndex = initialFile == null
+            ? -1
+            : diffs.indexWhere(
+                (diff) =>
+                    _normalizedPath(diff.file) == _normalizedPath(initialFile),
+              );
+        if (initialIndex >= 0) {
+          _selectedFile = initialIndex;
+        } else if (_selectedFile >= diffs.length) {
+          _selectedFile = 0;
+        }
+        _markViewed(_selectedFile);
+        _pendingInitialFile = null;
         _clearSelection();
       });
     } catch (error) {
-      if (mounted) setState(() => _error = error);
+      if (mounted && generation == _loadGeneration) {
+        setState(() => _error = error);
+      }
     }
+  }
+
+  void _markViewed(int index) {
+    final diffs = _diffs;
+    if (diffs == null || index < 0 || index >= diffs.length) return;
+    _viewedFiles.add('$_scope:${diffs[index].file}');
+  }
+
+  bool _isViewed(FileDiff diff) =>
+      _viewedFiles.contains('$_scope:${diff.file}');
+
+  ReviewDiffLoader _loaderFor(ReviewDiffScope scope) => switch (scope) {
+    ReviewDiffScope.session => widget.loadDiffs!,
+    ReviewDiffScope.workingTree => widget.loadWorkingTreeDiffs!,
+    ReviewDiffScope.branch => widget.loadBranchDiffs!,
+  };
+
+  List<ReviewDiffScope> get _availableScopes => [
+    if (widget.loadDiffs != null) ReviewDiffScope.session,
+    if (widget.loadWorkingTreeDiffs != null) ReviewDiffScope.workingTree,
+    if (widget.loadBranchDiffs != null) ReviewDiffScope.branch,
+  ];
+
+  void _selectScope(ReviewDiffScope scope) {
+    if (_scope == scope) return;
+    setState(() {
+      _scope = scope;
+      _selectedFile = 0;
+      _clearSelection();
+    });
+    _load();
   }
 
   void _clearSelection() {
@@ -71,6 +145,7 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
     if (_selectedFile == index) return;
     setState(() {
       _selectedFile = index;
+      _markViewed(index);
       _clearSelection();
     });
     if (_vertical.hasClients) _vertical.jumpTo(0);
@@ -122,12 +197,32 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
   }
 
   Widget _body(BuildContext context) {
+    final content = _reviewContent(context);
+    if (_availableScopes.length == 1) return content;
+    return Column(
+      children: [
+        _ReviewScopePicker(
+          scopes: _availableScopes,
+          selected: _scope,
+          onSelected: _selectScope,
+        ),
+        Expanded(child: content),
+      ],
+    );
+  }
+
+  Widget _reviewContent(BuildContext context) {
     if (_diffs == null) {
       return _error == null
           ? const _ReviewLoadingState()
           : _ReviewErrorState(error: _error!, onRetry: _load);
     }
-    if (_diffs!.isEmpty) return const _ReviewEmptyState();
+    if (_diffs!.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: _load,
+        child: const _ReviewEmptyState(),
+      );
+    }
 
     final diffs = _diffs!;
     final totalAdded = diffs.fold<int>(
@@ -138,10 +233,12 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
       0,
       (sum, diff) => sum + diff.counts.removed,
     );
+    final viewedCount = diffs.where(_isViewed).length;
     final summary = _ReviewSummary(
       files: diffs.length,
       added: totalAdded,
       removed: totalRemoved,
+      viewed: viewedCount,
     );
     final selected = diffs[_selectedFile];
     final lines = _parseDiff(selected);
@@ -166,7 +263,7 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
                       ),
                     ),
                     const VerticalDivider(width: 1),
-                    Expanded(child: _diffPane(selected, lines)),
+                    Expanded(child: _diffPane(selected, lines, wide: true)),
                   ],
                 ),
               ),
@@ -181,6 +278,7 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
               diffs: diffs,
               selected: _selectedFile,
               onSelected: _selectFile,
+              isViewed: _isViewed,
             ),
             const Divider(height: 1),
             Expanded(
@@ -196,15 +294,20 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
     FileDiff diff,
     List<_ReviewDiffLine> lines, {
     bool compactToolbar = false,
+    bool wide = false,
   }) {
     final selectedCount = _selectionStart == null
         ? 0
         : _selectionEnd! - _selectionStart! + 1;
+    final hunks = [
+      for (final entry in lines.asMap().entries)
+        if (entry.value.kind == _ReviewLineKind.hunk) entry.key,
+    ];
     return Column(
       children: [
         _ReviewDiffToolbar(
           diff: diff,
-          lines: lines,
+          hunks: hunks,
           mode: _mode,
           onModeChanged: (mode) => setState(() {
             _mode = mode;
@@ -217,16 +320,23 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
         ),
         const Divider(height: 1),
         Expanded(
-          child: lines.isEmpty
-              ? const _NoDiffContent()
-              : _ReviewDiffCanvas(
-                  lines: lines,
-                  mode: _mode,
-                  vertical: _vertical,
-                  horizontal: _horizontal,
-                  isSelected: _isSelected,
-                  onSelect: _selectLine,
-                ),
+          // Pull-to-refresh mirrors the app-wide idiom; the top-right refresh
+          // icon remains for pointer users.
+          child: RefreshIndicator(
+            onRefresh: _load,
+            notificationPredicate: (notification) =>
+                notification.metrics.axis == Axis.vertical,
+            child: lines.isEmpty
+                ? const _NoDiffContent()
+                : _ReviewDiffCanvas(
+                    lines: lines,
+                    mode: _mode,
+                    vertical: _vertical,
+                    horizontal: _horizontal,
+                    isSelected: _isSelected,
+                    onSelect: _selectLine,
+                  ),
+          ),
         ),
         if (selectedCount > 0)
           _ReviewSelectionBar(
@@ -234,7 +344,11 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
             onClear: () => setState(_clearSelection),
             onCopy: () => _copyText(_selectedSnippet(lines)),
             onComment: () => _openCommentComposer(diff, lines),
-          ),
+          )
+        else if (!wide && !compactToolbar && hunks.isNotEmpty)
+          // Mirror hunk navigation into the thumb-reachable bottom slot so
+          // one-handed review does not require repeated top-corner reaches.
+          _ReviewHunkBar(hunks: hunks, onHunk: _jumpToHunk),
       ],
     );
   }
@@ -359,6 +473,55 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
       curve: Curves.easeOutCubic,
     );
   }
+
+  static String _normalizedPath(String path) =>
+      path.split('/').where((part) => part.isNotEmpty).join('/');
+}
+
+class _ReviewScopePicker extends StatelessWidget {
+  const _ReviewScopePicker({
+    required this.scopes,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final List<ReviewDiffScope> scopes;
+  final ReviewDiffScope selected;
+  final ValueChanged<ReviewDiffScope> onSelected;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+    child: SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: SegmentedButton<ReviewDiffScope>(
+        key: const Key('review-scope-picker'),
+        showSelectedIcon: false,
+        segments: [
+          for (final scope in scopes)
+            ButtonSegment(
+              value: scope,
+              label: Text(_scopeLabel(scope)),
+              tooltip: _scopeDescription(scope),
+            ),
+        ],
+        selected: {selected},
+        onSelectionChanged: (value) => onSelected(value.single),
+      ),
+    ),
+  );
+
+  static String _scopeLabel(ReviewDiffScope scope) => switch (scope) {
+    ReviewDiffScope.session => 'Session',
+    ReviewDiffScope.workingTree => 'Working tree',
+    ReviewDiffScope.branch => 'Branch',
+  };
+
+  static String _scopeDescription(ReviewDiffScope scope) => switch (scope) {
+    ReviewDiffScope.session => 'Changes attributed to this OpenCode session',
+    ReviewDiffScope.workingTree => 'Current uncommitted Git changes',
+    ReviewDiffScope.branch => 'Changes against the default branch',
+  };
 }
 
 class _ReviewSummary extends StatelessWidget {
@@ -366,11 +529,13 @@ class _ReviewSummary extends StatelessWidget {
     required this.files,
     required this.added,
     required this.removed,
+    required this.viewed,
   });
 
   final int files;
   final int added;
   final int removed;
+  final int viewed;
 
   @override
   Widget build(BuildContext context) {
@@ -380,12 +545,24 @@ class _ReviewSummary extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              '$files changed ${files == 1 ? 'file' : 'files'}',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                letterSpacing: -.2,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$files changed ${files == 1 ? 'file' : 'files'}',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -.2,
+                  ),
+                ),
+                Text(
+                  key: const ValueKey('review-viewed-progress'),
+                  '$viewed of $files viewed',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.hintColor,
+                  ),
+                ),
+              ],
             ),
           ),
           _ChangeCount(value: '+$added', added: true),
@@ -407,10 +584,10 @@ class _ChangeCount extends StatelessWidget {
   Widget build(BuildContext context) => Text(
     value,
     style: TextStyle(
-      fontFamily: 'monospace',
+      fontFamily: 'AppMono',
       fontWeight: FontWeight.w600,
       color: added
-          ? const Color(0xff78c59d)
+          ? _additionColor(Theme.of(context))
           : Theme.of(context).colorScheme.error,
     ),
   );
@@ -421,11 +598,13 @@ class _ReviewFileStrip extends StatelessWidget {
     required this.diffs,
     required this.selected,
     required this.onSelected,
+    required this.isViewed,
   });
 
   final List<FileDiff> diffs;
   final int selected;
   final ValueChanged<int> onSelected;
+  final bool Function(FileDiff diff) isViewed;
 
   @override
   Widget build(BuildContext context) {
@@ -442,7 +621,9 @@ class _ReviewFileStrip extends StatelessWidget {
         itemBuilder: (context, index) => _ReviewFileTab(
           key: Key('review-file-$index'),
           diff: diffs[index],
+          label: _fileTabLabel(diffs, index),
           selected: selected == index,
+          viewed: isViewed(diffs[index]),
           onTap: () => onSelected(index),
         ),
       ),
@@ -454,12 +635,16 @@ class _ReviewFileTab extends StatelessWidget {
   const _ReviewFileTab({
     super.key,
     required this.diff,
+    required this.label,
     required this.selected,
+    required this.viewed,
     required this.onTap,
   });
 
   final FileDiff diff;
+  final String label;
   final bool selected;
+  final bool viewed;
   final VoidCallback onTap;
 
   @override
@@ -470,7 +655,7 @@ class _ReviewFileTab extends StatelessWidget {
       selected: selected,
       button: true,
       label:
-          '${_basename(diff.file)}, ${_status(diff)}, '
+          '${diff.file}, ${_status(diff)}, '
           '${counts.added} additions, ${counts.removed} deletions',
       child: InkWell(
         onTap: onTap,
@@ -480,9 +665,11 @@ class _ReviewFileTab extends StatelessWidget {
           constraints: const BoxConstraints(minWidth: 150, maxWidth: 220),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
+            // A filled active tab reads at a glance; unselected tabs keep a
+            // faint surface so the strip scans as tabs, not floating text.
             color: selected
-                ? theme.colorScheme.primaryContainer.withValues(alpha: .42)
-                : Colors.transparent,
+                ? theme.colorScheme.primaryContainer.withValues(alpha: .85)
+                : theme.colorScheme.surfaceContainerHigh.withValues(alpha: .35),
             borderRadius: BorderRadius.circular(10),
             border: Border(
               bottom: BorderSide(
@@ -507,19 +694,34 @@ class _ReviewFileTab extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      _basename(diff.file),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        fontFamily: 'monospace',
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              fontFamily: 'AppMono',
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        if (viewed && !selected) ...[
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.check_circle_rounded,
+                            size: 13,
+                            color: AppTheme.success(theme.colorScheme),
+                          ),
+                        ],
+                      ],
                     ),
                     Text(
                       '+${counts.added}  -${counts.removed}',
                       style: theme.textTheme.labelSmall?.copyWith(
-                        fontFamily: 'monospace',
+                        fontFamily: 'AppMono',
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
@@ -607,7 +809,7 @@ class _ReviewFileList extends StatelessWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
-                                  fontFamily: 'monospace',
+                                  fontFamily: 'AppMono',
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -627,7 +829,7 @@ class _ReviewFileList extends StatelessWidget {
                           '+${counts.added}\n-${counts.removed}',
                           textAlign: TextAlign.right,
                           style: theme.textTheme.labelSmall?.copyWith(
-                            fontFamily: 'monospace',
+                            fontFamily: 'AppMono',
                             height: 1.35,
                           ),
                         ),
@@ -647,7 +849,7 @@ class _ReviewFileList extends StatelessWidget {
 class _ReviewDiffToolbar extends StatelessWidget {
   const _ReviewDiffToolbar({
     required this.diff,
-    required this.lines,
+    required this.hunks,
     required this.mode,
     required this.onModeChanged,
     required this.onCopy,
@@ -657,7 +859,7 @@ class _ReviewDiffToolbar extends StatelessWidget {
   });
 
   final FileDiff diff;
-  final List<_ReviewDiffLine> lines;
+  final List<int> hunks;
   final ReviewDiffMode mode;
   final ValueChanged<ReviewDiffMode> onModeChanged;
   final VoidCallback onCopy;
@@ -669,10 +871,30 @@ class _ReviewDiffToolbar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final counts = diff.counts;
-    final hunks = [
-      for (final entry in lines.asMap().entries)
-        if (entry.value.kind == _ReviewLineKind.hunk) entry.key,
-    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (!compact && constraints.maxWidth < 560) {
+          return _ReviewPhoneDiffToolbar(
+            diff: diff,
+            hunks: hunks,
+            mode: mode,
+            onModeChanged: onModeChanged,
+            onCopy: onCopy,
+            onAsk: onAsk,
+            onHunk: onHunk,
+          );
+        }
+        return _wideToolbar(context, theme, counts, hunks);
+      },
+    );
+  }
+
+  Widget _wideToolbar(
+    BuildContext context,
+    ThemeData theme,
+    ({int added, int removed}) counts,
+    List<int> hunks,
+  ) {
     if (compact) {
       return SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -733,7 +955,7 @@ class _ReviewDiffToolbar extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleSmall?.copyWith(
-                        fontFamily: 'monospace',
+                        fontFamily: 'AppMono',
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -797,6 +1019,162 @@ class _ReviewDiffToolbar extends StatelessWidget {
   }
 }
 
+enum _ReviewFileAction { ask, copy }
+
+class _ReviewPhoneDiffToolbar extends StatelessWidget {
+  const _ReviewPhoneDiffToolbar({
+    required this.diff,
+    required this.hunks,
+    required this.mode,
+    required this.onModeChanged,
+    required this.onCopy,
+    required this.onAsk,
+    required this.onHunk,
+  });
+
+  final FileDiff diff;
+  final List<int> hunks;
+  final ReviewDiffMode mode;
+  final ValueChanged<ReviewDiffMode> onModeChanged;
+  final VoidCallback onCopy;
+  final VoidCallback onAsk;
+  final void Function(int direction, List<int> hunks) onHunk;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final counts = diff.counts;
+    final canCopy = (diff.patch ?? diff.after ?? '').isNotEmpty;
+    return Semantics(
+      container: true,
+      label: 'Reviewing ${diff.file}',
+      child: Padding(
+        key: const Key('review-phone-toolbar'),
+        padding: const EdgeInsets.fromLTRB(12, 7, 4, 6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 3,
+                  height: 34,
+                  color: _statusColor(context, diff),
+                ),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Tooltip(
+                    message: diff.file,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _basename(diff.file),
+                          key: const Key('review-current-file-name'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontFamily: 'AppMono',
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          '${_status(diff)}  +${counts.added} -${counts.removed}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                PopupMenuButton<_ReviewFileAction>(
+                  key: const Key('review-file-actions'),
+                  tooltip: 'File review actions',
+                  onSelected: (action) {
+                    switch (action) {
+                      case _ReviewFileAction.ask:
+                        onAsk();
+                      case _ReviewFileAction.copy:
+                        onCopy();
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: _ReviewFileAction.ask,
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(Icons.chat_bubble_outline_rounded),
+                        title: Text('Ask about file'),
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: _ReviewFileAction.copy,
+                      enabled: canCopy,
+                      child: const ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(Icons.content_copy_rounded),
+                        title: Text('Copy patch'),
+                      ),
+                    ),
+                  ],
+                  icon: const Icon(Icons.more_horiz_rounded),
+                ),
+              ],
+            ),
+            const SizedBox(height: 5),
+            Row(
+              children: [
+                Expanded(
+                  child: _ModeButton(
+                    key: const Key('review-mode-unified'),
+                    label: 'Unified',
+                    selected: mode == ReviewDiffMode.unified,
+                    onPressed: () => onModeChanged(ReviewDiffMode.unified),
+                  ),
+                ),
+                Expanded(
+                  child: _ModeButton(
+                    key: const Key('review-mode-split'),
+                    label: 'Split',
+                    selected: mode == ReviewDiffMode.split,
+                    onPressed: () => onModeChanged(ReviewDiffMode.split),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                SizedBox(
+                  width: 36,
+                  child: Text(
+                    '${hunks.length}',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.labelMedium,
+                    semanticsLabel:
+                        '${hunks.length} ${hunks.length == 1 ? 'hunk' : 'hunks'}',
+                  ),
+                ),
+                IconButton(
+                  key: const Key('review-previous-hunk'),
+                  tooltip: 'Previous hunk',
+                  onPressed: hunks.isEmpty ? null : () => onHunk(-1, hunks),
+                  icon: const Icon(Icons.arrow_upward_rounded, size: 20),
+                ),
+                IconButton(
+                  key: const Key('review-next-hunk'),
+                  tooltip: 'Next hunk',
+                  onPressed: hunks.isEmpty ? null : () => onHunk(1, hunks),
+                  icon: const Icon(Icons.arrow_downward_rounded, size: 20),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _ModeButton extends StatelessWidget {
   const _ModeButton({
     super.key,
@@ -822,6 +1200,9 @@ class _ModeButton extends StatelessWidget {
             ? scheme.primaryContainer
             : Colors.transparent,
         shape: const RoundedRectangleBorder(),
+        // 44dp minimum keeps the densest review control row comfortably
+        // tappable on phones.
+        minimumSize: const Size(64, 44),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
       child: Text(label),
@@ -872,6 +1253,9 @@ class _ReviewDiffCanvas extends StatelessWidget {
                 controller: vertical,
                 child: ListView.builder(
                   controller: vertical,
+                  // Always scrollable so pull-to-refresh works even when the
+                  // diff fits the viewport.
+                  physics: const AlwaysScrollableScrollPhysics(),
                   itemExtent: rowExtent,
                   itemCount: splitRows?.length ?? lines.length,
                   itemBuilder: (context, index) {
@@ -943,7 +1327,7 @@ class _UnifiedDiffRow extends StatelessWidget {
                   overflow: TextOverflow.clip,
                   softWrap: false,
                   style: TextStyle(
-                    fontFamily: 'monospace',
+                    fontFamily: 'AppMono',
                     fontSize: 12.5,
                     height: 1.55,
                     color: _lineForeground(theme, line.kind),
@@ -1018,7 +1402,7 @@ class _SplitCell extends StatelessWidget {
               softWrap: false,
               overflow: TextOverflow.clip,
               style: TextStyle(
-                fontFamily: 'monospace',
+                fontFamily: 'AppMono',
                 fontSize: 12.5,
                 height: 1.55,
                 color: _lineForeground(theme, value.kind),
@@ -1045,7 +1429,7 @@ class _LineNumber extends StatelessWidget {
     child: Text(
       value?.toString() ?? '',
       style: TextStyle(
-        fontFamily: 'monospace',
+        fontFamily: 'AppMono',
         fontSize: 11,
         color: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
@@ -1098,6 +1482,53 @@ class _ReviewSelectionBar extends StatelessWidget {
   }
 }
 
+/// Bottom-slot mirror of the toolbar's hunk navigation for one-handed phone
+/// review; hidden while a selection is active so the selection bar keeps its
+/// slot.
+class _ReviewHunkBar extends StatelessWidget {
+  const _ReviewHunkBar({required this.hunks, required this.onHunk});
+
+  final List<int> hunks;
+  final void Function(int direction, List<int> hunks) onHunk;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      key: const Key('review-hunk-bar'),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHigh,
+        border: Border(top: BorderSide(color: theme.dividerColor)),
+      ),
+      padding: const EdgeInsets.fromLTRB(14, 2, 6, 2),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              '${hunks.length} ${hunks.length == 1 ? 'hunk' : 'hunks'}',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          IconButton(
+            key: const Key('review-hunk-bar-previous'),
+            tooltip: 'Previous hunk',
+            onPressed: () => onHunk(-1, hunks),
+            icon: const Icon(Icons.arrow_upward_rounded, size: 20),
+          ),
+          IconButton(
+            key: const Key('review-hunk-bar-next'),
+            tooltip: 'Next hunk',
+            onPressed: () => onHunk(1, hunks),
+            icon: const Icon(Icons.arrow_downward_rounded, size: 20),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ReviewCommentComposer extends StatefulWidget {
   const _ReviewCommentComposer({
     required this.file,
@@ -1124,61 +1555,74 @@ class _ReviewCommentComposerState extends State<_ReviewCommentComposer> {
   Widget build(BuildContext context) {
     final keyboard = MediaQuery.viewInsetsOf(context).bottom;
     final theme = Theme.of(context);
-    return Padding(
-      padding: EdgeInsets.fromLTRB(18, 12, 18, 18 + keyboard),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Comment on change',
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-              letterSpacing: -.3,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${widget.file} · ${widget.selectionLabel}',
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 14),
-          TextField(
-            key: const Key('review-comment-field'),
-            controller: _controller,
-            autofocus: true,
-            minLines: 3,
-            maxLines: 7,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(
-              hintText: 'What should OpenCode inspect or change?',
-            ),
-            onSubmitted: (_) => _submit(),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+    // Cap the sheet and let it scroll: at short heights or large text the
+    // autofocused field plus keyboard would otherwise overflow and push
+    // "Add to prompt" off screen.
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * .9,
+      ),
+      child: SingleChildScrollView(
+        key: const Key('review-comment-composer-scroll'),
+        padding: EdgeInsets.fromLTRB(18, 12, 18, 18 + keyboard),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Comment on change',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+                letterSpacing: -.3,
               ),
-              const SizedBox(width: 8),
-              ListenableBuilder(
-                listenable: _controller,
-                builder: (context, _) => FilledButton(
-                  key: const Key('review-add-to-prompt'),
-                  onPressed: _controller.text.trim().isEmpty ? null : _submit,
-                  child: const Text('Add to prompt'),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${widget.file} · ${widget.selectionLabel}',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              key: const Key('review-comment-field'),
+              controller: _controller,
+              autofocus: true,
+              minLines: 3,
+              maxLines: 7,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(
+                hintText: 'What should OpenCode inspect or change?',
+              ),
+              onSubmitted: (_) => _submit(),
+            ),
+            const SizedBox(height: 12),
+            // OverflowBar wraps the actions when large text scales make the
+            // pair wider than the sheet, instead of overflowing the Row.
+            OverflowBar(
+              alignment: MainAxisAlignment.end,
+              overflowAlignment: OverflowBarAlignment.end,
+              spacing: 8,
+              overflowSpacing: 4,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
                 ),
-              ),
-            ],
-          ),
-        ],
+                ListenableBuilder(
+                  listenable: _controller,
+                  builder: (context, _) => FilledButton(
+                    key: const Key('review-add-to-prompt'),
+                    onPressed: _controller.text.trim().isEmpty ? null : _submit,
+                    child: const Text('Add to prompt'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1238,11 +1682,14 @@ class _Skeleton extends StatelessWidget {
   );
 }
 
+// The review empty/error/notice states delegate to the shared product-state
+// components so padding, icon treatment, and the "Try again" action match the
+// rest of the app.
 class _ReviewEmptyState extends StatelessWidget {
   const _ReviewEmptyState();
 
   @override
-  Widget build(BuildContext context) => const _ReviewNotice(
+  Widget build(BuildContext context) => const ProductEmptyState(
     key: Key('review-empty'),
     icon: Icons.difference_outlined,
     title: 'No changes to review',
@@ -1254,15 +1701,13 @@ class _ReviewErrorState extends StatelessWidget {
   const _ReviewErrorState({required this.error, required this.onRetry});
 
   final Object error;
-  final VoidCallback onRetry;
+  final Future<void> Function() onRetry;
 
   @override
-  Widget build(BuildContext context) => _ReviewNotice(
+  Widget build(BuildContext context) => ProductErrorState(
     key: const Key('review-error'),
-    icon: Icons.error_outline_rounded,
-    title: 'Could not load changes',
     message: error.toString(),
-    action: TextButton(onPressed: onRetry, child: const Text('Try again')),
+    onRetry: onRetry,
   );
 }
 
@@ -1270,64 +1715,13 @@ class _NoDiffContent extends StatelessWidget {
   const _NoDiffContent();
 
   @override
-  Widget build(BuildContext context) => const _ReviewNotice(
+  Widget build(BuildContext context) => const ProductEmptyState(
     key: Key('review-no-content'),
     icon: Icons.description_outlined,
     title: 'Diff content unavailable',
     message:
         'The server reported this file but did not include a patch or file contents.',
   );
-}
-
-class _ReviewNotice extends StatelessWidget {
-  const _ReviewNotice({
-    super.key,
-    required this.icon,
-    required this.title,
-    required this.message,
-    this.action,
-  });
-
-  final IconData icon;
-  final String title;
-  final String message;
-  final Widget? action;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 360),
-        child: Padding(
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 34, color: theme.colorScheme.onSurfaceVariant),
-              const SizedBox(height: 14),
-              Text(
-                title,
-                style: theme.textTheme.titleMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 7),
-              Text(
-                message,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 5,
-                overflow: TextOverflow.ellipsis,
-              ),
-              if (action != null) ...[const SizedBox(height: 12), action!],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 enum _ReviewLineKind { context, added, removed, hunk, metadata }
@@ -1533,7 +1927,7 @@ List<_ReviewSplitRow> _splitRows(List<_ReviewDiffLine> lines) {
 }
 
 Color? _lineBackground(ThemeData theme, _ReviewLineKind kind) => switch (kind) {
-  _ReviewLineKind.added => const Color(0xff174b35).withValues(alpha: .42),
+  _ReviewLineKind.added => _additionBackground(theme),
   _ReviewLineKind.removed => theme.colorScheme.errorContainer.withValues(
     alpha: .38,
   ),
@@ -1545,7 +1939,7 @@ Color? _lineBackground(ThemeData theme, _ReviewLineKind kind) => switch (kind) {
 };
 
 Color _lineAccent(ThemeData theme, _ReviewLineKind kind) => switch (kind) {
-  _ReviewLineKind.added => const Color(0xff78c59d),
+  _ReviewLineKind.added => _additionColor(theme),
   _ReviewLineKind.removed => theme.colorScheme.error,
   _ReviewLineKind.hunk => theme.colorScheme.primary,
   _ => Colors.transparent,
@@ -1575,6 +1969,32 @@ String _basename(String path) {
   return normalized.split('/').last;
 }
 
+String _fileTabLabel(List<FileDiff> diffs, int index) {
+  final target = diffs[index].file.replaceAll('\\', '/');
+  final segments = target.split('/').where((part) => part.isNotEmpty).toList();
+  if (segments.isEmpty) return target;
+  final basename = segments.last;
+  final duplicates = diffs
+      .map((diff) => diff.file.replaceAll('\\', '/'))
+      .where((path) => _basename(path) == basename)
+      .toList();
+  if (duplicates.length == 1) return basename;
+
+  for (var depth = 1; depth < segments.length; depth++) {
+    final start = segments.length - 1 - depth;
+    final qualifier = segments.sublist(start, segments.length - 1).join('/');
+    final collision = duplicates.any((path) {
+      if (path == target) return false;
+      final other = path.split('/').where((part) => part.isNotEmpty).toList();
+      if (other.length <= depth) return false;
+      final otherStart = other.length - 1 - depth;
+      return other.sublist(otherStart, other.length - 1).join('/') == qualifier;
+    });
+    if (!collision) return '$basename · $qualifier';
+  }
+  return target;
+}
+
 String _directory(String path) {
   final normalized = path.replaceAll('\\', '/');
   final slash = normalized.lastIndexOf('/');
@@ -1597,7 +2017,16 @@ String _status(FileDiff diff) {
 
 Color _statusColor(BuildContext context, FileDiff diff) =>
     switch (_status(diff)) {
-      'added' => const Color(0xff78c59d),
+      'added' => _additionColor(Theme.of(context)),
       'deleted' => Theme.of(context).colorScheme.error,
       _ => Theme.of(context).colorScheme.primary,
     };
+
+Color _additionColor(ThemeData theme) => theme.brightness == Brightness.dark
+    ? const Color(0xff78c59d)
+    : const Color(0xff176b4b);
+
+Color _additionBackground(ThemeData theme) =>
+    theme.brightness == Brightness.dark
+    ? const Color(0xff174b35).withValues(alpha: .42)
+    : const Color(0xffd0f2df).withValues(alpha: .7);

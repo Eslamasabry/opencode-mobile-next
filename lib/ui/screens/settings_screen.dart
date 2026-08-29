@@ -1,14 +1,35 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../api/models.dart';
+import '../../api/product_repository.dart';
 import '../../api/provider_presentation.dart';
 import '../../state/connection.dart';
+import '../../state/profiles.dart';
 import '../../termux/bridge.dart';
+import '../app_theme.dart';
+import '../theme_packs.dart';
 import '../../voice/notices.dart';
+import '../widgets/appearance_picker.dart';
 import '../widgets/product_states.dart';
 import '../widgets/pickers.dart';
+import 'about_screen.dart';
+import 'app_diagnostics_screen.dart';
+import 'guide_screen.dart';
+import 'host_management_screen.dart';
+import 'saved_permissions_screen.dart';
 
+part 'settings/server_settings_screen.dart';
+part 'settings/coding_settings_screen.dart';
+part 'settings/background_settings_screen.dart';
+part 'settings/personal_settings_screens.dart';
+
+/// Settings hub: a connection summary plus one row per category, following
+/// the hub-and-spoke pattern in docs/design-inspiration.md. Every detail
+/// lives one level deeper in a focused sub-page.
 class SettingsScreen extends StatefulWidget {
   final ConnectionController controller;
   const SettingsScreen({super.key, required this.controller});
@@ -17,8 +38,7 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen>
-    with WidgetsBindingObserver {
+class _SettingsScreenState extends State<SettingsScreen> {
   Health? _health;
   String? _healthError;
   bool _checking = false;
@@ -26,255 +46,148 @@ class _SettingsScreenState extends State<SettingsScreen>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    widget.controller.backgroundLive.addListener(_backgroundChanged);
+    widget.controller.addListener(_connectionChanged);
     _checkHealth();
-    widget.controller.backgroundLive.refreshStatus();
   }
 
-  void _backgroundChanged() {
+  void _connectionChanged() {
     if (mounted) setState(() {});
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      widget.controller.backgroundLive.refreshStatus();
-    }
-  }
-
   Future<void> _checkHealth() async {
-    final api = widget.controller.api;
-    if (api == null || _checking) return;
+    if (_checking) return;
     setState(() {
       _checking = true;
       _healthError = null;
     });
     try {
+      final api = await widget.controller.prepareActionTransport();
+      if (api == null) throw const ProductException('OpenCode is reconnecting.');
       final health = await api.health();
       if (mounted) setState(() => _health = health);
     } catch (error) {
-      if (mounted) setState(() => _healthError = error.toString());
+      if (mounted) setState(() => _healthError = productErrorText(error));
     } finally {
       if (mounted) setState(() => _checking = false);
     }
   }
 
-  Future<void> _copyRemoteUpdateCommands() async {
-    await Clipboard.setData(
-      const ClipboardData(text: 'opencode upgrade\nopencode models --refresh'),
-    );
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Server update commands copied'),
-        duration: Duration(seconds: 2),
-      ),
+  void _open(Widget screen) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => screen),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final controller = widget.controller;
+    final theme = Theme.of(context);
     final profile = controller.profile;
-    final managedLocally = TermuxBridge.managesServerUrl(profile?.baseUrl);
+    final healthy = _health?.healthy == true;
+    final healthLine = _checking
+        ? 'Checking server health…'
+        : _healthError != null
+        ? 'Health unavailable — $_healthError'
+        : healthy
+        ? 'Server healthy · ${_health?.version ?? controller.version ?? 'unknown'}'
+        : 'Version ${controller.version ?? 'unknown'}';
     return Scaffold(
       appBar: AppBar(title: const Text('Settings and server')),
       body: ListView(
-        padding: const EdgeInsets.only(bottom: 24),
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
         children: [
-          const SectionLabel('Connection'),
-          ListTile(
-            leading: const Icon(Icons.dns_outlined),
-            title: Text(profile?.name ?? 'OpenCode server'),
-            subtitle: SelectableText(
-              profile?.baseUrl ?? 'Not connected',
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
-            ),
-            trailing: IconButton(
-              tooltip: 'Check server health',
-              onPressed: _checking ? null : _checkHealth,
-              icon: _checking
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.refresh_rounded),
-            ),
-          ),
-          ListTile(
-            leading: Icon(
-              _health?.healthy == true
-                  ? Icons.check_circle_outline_rounded
-                  : Icons.error_outline_rounded,
-              color: _health?.healthy == true
-                  ? Colors.green.shade400
-                  : Theme.of(context).colorScheme.error,
-            ),
-            title: Text(
-              _health?.healthy == true
-                  ? 'Server healthy'
-                  : 'Health unavailable',
-            ),
-            subtitle: Text(
-              _healthError ??
-                  'Version ${_health?.version ?? controller.version ?? 'unknown'}',
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.person_outline_rounded),
-            title: const Text('Authentication'),
-            subtitle: Text(
-              profile?.password.isNotEmpty == true
-                  ? 'Basic authentication enabled as ${profile?.username.isNotEmpty == true ? profile!.username : 'opencode'}'
-                  : 'No server password saved',
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.storage_outlined),
-            title: const Text('Manage server profiles'),
-            subtitle: const Text('Add, edit, or switch OpenCode servers'),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => Navigator.of(context).pushNamed('/servers'),
-          ),
-          ListTile(
-            key: const Key('server-updates-tile'),
-            leading: const Icon(Icons.system_update_alt_rounded),
-            title: Text(
-              managedLocally
-                  ? 'Update managed OpenCode'
-                  : 'Server updates are managed externally',
-            ),
-            subtitle: Text(
-              managedLocally
-                  ? 'Install the latest stable server, refresh models, restart safely, and reconnect.'
-                  : 'Copy the official upgrade and model-refresh commands to run on the server host.',
-            ),
-            trailing: Icon(
-              managedLocally ? Icons.chevron_right_rounded : Icons.copy_rounded,
-            ),
-            onTap: managedLocally
-                ? () => Navigator.of(context).pushNamed('/termux-setup')
-                : _copyRemoteUpdateCommands,
-          ),
-          const SectionLabel('Background connection'),
-          SwitchListTile(
-            secondary: const Icon(Icons.sync_lock_rounded),
-            title: const Text('Keep coding session live'),
-            subtitle: const Text(
-              'Keeps server events and terminals connected while this app is in the background. '
-              'Uses more battery and shows a persistent Android notification.',
-            ),
-            value: controller.keepLiveInBackground,
-            onChanged: controller.backgroundLive.busy
-                ? null
-                : (value) async {
-                    final enabled = await controller.setKeepLiveInBackground(
-                      value,
-                    );
-                    if (!context.mounted) return;
-                    final error = controller.backgroundLive.lastError;
-                    if (error != null || enabled != value) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            error ?? 'Android did not enable background mode.',
-                          ),
-                        ),
-                      );
-                    }
-                  },
-          ),
-          if (controller.keepLiveInBackground)
-            ListTile(
-              leading: Icon(
-                controller.backgroundLive.batteryOptimizationIgnored
-                    ? Icons.battery_charging_full_rounded
-                    : Icons.battery_alert_outlined,
+          Card(
+            key: const ValueKey('settings-connection-summary'),
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            clipBehavior: Clip.antiAlias,
+            child: ListTile(
+              minTileHeight: 72,
+              leading: _CategoryIcon(
+                icon: Icons.dns_outlined,
+                color: healthy
+                    ? AppTheme.successOf(theme)
+                    : _healthError != null
+                    ? theme.colorScheme.error
+                    : null,
               ),
               title: Text(
-                controller.backgroundLive.batteryOptimizationIgnored
-                    ? 'Unrestricted battery access allowed'
-                    : 'Allow unrestricted battery access',
+                profile?.name ?? 'OpenCode server',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
               subtitle: Text(
-                controller.backgroundLive.batteryOptimizationIgnored
-                    ? 'Android may still apply its foreground-service time limit.'
-                    : 'Optional. Helps preserve the live connection during Doze. '
-                          'Android 15+ limits data-sync background work to six hours per 24 hours.',
+                '${profile?.baseUrl ?? 'Not connected'}\n$healthLine',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontFamily: 'AppMono', fontSize: 11),
               ),
-              trailing: controller.backgroundLive.batteryOptimizationIgnored
-                  ? const Icon(Icons.check_rounded)
-                  : const Icon(Icons.open_in_new_rounded),
-              onTap: controller.backgroundLive.batteryOptimizationIgnored
-                  ? null
-                  : () async {
-                      await controller.backgroundLive
-                          .requestBatteryOptimizationExemption();
-                    },
-            ),
-          const SectionLabel('Defaults'),
-          ListTile(
-            leading: const Icon(Icons.model_training_outlined),
-            title: const Text('Selected model'),
-            subtitle: Text(
-              controller.selectedModel == null
-                  ? 'Server default'
-                  : [
-                      '${presentedProviderName(controller.selectedModel!.providerID, controller.catalog?.providers ?? const [])} · ${controller.selectedModel!.modelID}',
-                      if (controller.selectedVariant.isNotEmpty)
-                        controller.selectedVariant,
-                    ].join(' · '),
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
-            ),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => showModelPicker(context),
-          ),
-          ListTile(
-            leading: const Icon(Icons.support_agent_outlined),
-            title: const Text('Selected agent'),
-            subtitle: Text(
-              controller.selectedAgent.isEmpty
-                  ? 'Server default'
-                  : controller.selectedAgent,
-            ),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => showModelPicker(context),
-          ),
-          const SectionLabel('Experimental'),
-          const ListTile(
-            leading: Icon(Icons.science_outlined),
-            title: Text('Workspaces'),
-            subtitle: Text(
-              'Workspace and worktree switching is available from the Workspace tab. '
-              'Availability depends on the connected server.',
+              trailing: IconButton(
+                tooltip: 'Check again',
+                onPressed: _checking ? null : _checkHealth,
+                icon: _checking
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh_rounded),
+              ),
             ),
           ),
-          const SectionLabel('About'),
-          ListTile(
-            leading: const Icon(Icons.policy_outlined),
-            title: const Text('Voice licenses and provenance'),
-            subtitle: const Text(
-              'Whisper models, sherpa-onnx, ONNX Runtime, and record',
-            ),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => showVoiceNotices(context),
+          const SizedBox(height: 8),
+          _CategoryRow(
+            rowKey: 'settings-category-server',
+            icon: Icons.dns_outlined,
+            title: 'Server',
+            onTap: () => _open(ServerSettingsScreen(controller: controller)),
           ),
-          ListTile(
-            leading: const Icon(Icons.info_outline_rounded),
-            title: const Text('About and open source notices'),
-            subtitle: const Text(
-              'App details, components, and license notices',
+          _CategoryRow(
+            rowKey: 'settings-category-coding',
+            icon: Icons.terminal_rounded,
+            title: 'Coding defaults',
+            onTap: () => _open(CodingSettingsScreen(controller: controller)),
+          ),
+          // The live background service and its notifications are Android
+          // platform features; the category hides elsewhere.
+          if (defaultTargetPlatform == TargetPlatform.android)
+            _CategoryRow(
+              rowKey: 'settings-category-background',
+              icon: Icons.notifications_active_outlined,
+              title: 'Notifications & background',
+              onTap: () =>
+                  _open(BackgroundSettingsScreen(controller: controller)),
             ),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => Navigator.of(context).pushNamed('/about'),
+          _CategoryRow(
+            rowKey: 'settings-category-appearance',
+            icon: Icons.palette_outlined,
+            title: 'Appearance',
+            onTap: () =>
+                _open(AppearanceSettingsScreen(controller: controller)),
+          ),
+          _CategoryRow(
+            rowKey: 'settings-category-privacy',
+            icon: Icons.admin_panel_settings_outlined,
+            title: 'Privacy & permissions',
+            onTap: () => _open(PrivacySettingsScreen(controller: controller)),
+          ),
+          _CategoryRow(
+            rowKey: 'settings-category-diagnostics',
+            icon: Icons.health_and_safety_outlined,
+            title: 'Diagnostics',
+            onTap: () =>
+                _open(DiagnosticsSettingsScreen(controller: controller)),
+          ),
+          _CategoryRow(
+            rowKey: 'settings-category-about',
+            icon: Icons.info_outline_rounded,
+            title: 'About',
+            onTap: () => _open(AboutSettingsScreen(controller: controller)),
           ),
           const SizedBox(height: 20),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.error,
+                foregroundColor: theme.colorScheme.error,
               ),
               onPressed: () async {
                 await controller.disconnect();
@@ -295,8 +208,69 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    widget.controller.backgroundLive.removeListener(_backgroundChanged);
+    widget.controller.removeListener(_connectionChanged);
     super.dispose();
   }
+}
+
+class _CategoryRow extends StatelessWidget {
+  final String rowKey;
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
+
+  const _CategoryRow({
+    required this.rowKey,
+    required this.icon,
+    required this.title,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      key: ValueKey(rowKey),
+      minTileHeight: 56,
+      leading: _CategoryIcon(icon: icon),
+      title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+      trailing: const Icon(Icons.chevron_right_rounded),
+      onTap: onTap,
+    );
+  }
+}
+
+class _CategoryIcon extends StatelessWidget {
+  final IconData icon;
+  final Color? color;
+
+  const _CategoryIcon({required this.icon, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tint = color ?? theme.colorScheme.onSurfaceVariant;
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: tint.withValues(alpha: .12),
+        borderRadius: BorderRadius.circular(11),
+      ),
+      child: Icon(icon, size: 20, color: tint),
+    );
+  }
+}
+
+class _ShellChoice {
+  final String id;
+  final String value;
+  final String label;
+  final bool terminalOnly;
+
+  const _ShellChoice({
+    required this.id,
+    required this.value,
+    required this.label,
+    required this.terminalOnly,
+  });
 }

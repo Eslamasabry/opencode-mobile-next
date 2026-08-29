@@ -7,11 +7,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/models.dart';
 import '../api/opencode_api.dart';
+import '../api2/models.dart' show Api2Delivery, Api2FormInfo, Api2InboxItem;
 import '../api/product_repository.dart';
+import '../api/server_probe.dart';
 import '../api/sse.dart';
+import '../api2/client.dart';
+import '../api2/gateway.dart';
+import '../api2/gateway_operations.dart';
+import '../api2/transport.dart' show Api2AuthRequired;
 import '../background/live_background.dart';
+import '../background/widget_snapshot.dart';
+import '../diagnostics/app_diagnostics.dart';
 import '../termux/bridge.dart';
+import 'offline_queue.dart';
 import 'profiles.dart';
+import 'session_drafts.dart';
 
 Map<String, dynamic> _catalogMap(Object? value) =>
     value is Map ? Map<String, dynamic>.from(value) : const {};
@@ -60,7 +70,6 @@ CatalogModel _catalogModelFromProvider(ProviderInfo provider, String modelID) {
 }
 
 CatalogModel _mergeCatalogModel(CatalogModel detailed, CatalogModel base) {
-  if (detailed.variants.isNotEmpty || base.variants.isEmpty) return detailed;
   return CatalogModel(
     id: detailed.id,
     providerID: detailed.providerID,
@@ -70,10 +79,10 @@ CatalogModel _mergeCatalogModel(CatalogModel detailed, CatalogModel base) {
     status: detailed.status,
     contextLimit: detailed.contextLimit,
     outputLimit: detailed.outputLimit,
-    reasoning: detailed.reasoning,
-    attachments: detailed.attachments,
-    tools: detailed.tools,
-    variants: base.variants,
+    reasoning: detailed.reasoning || base.reasoning,
+    attachments: detailed.attachments || base.attachments,
+    tools: detailed.tools || base.tools,
+    variants: detailed.variants.isEmpty ? base.variants : detailed.variants,
   );
 }
 
@@ -103,6 +112,14 @@ final connProvider = Provider<ConnectionController>(
 
 typedef OpenCodeApiFactory = OpenCodeApi Function(ServerProfile profile);
 typedef ProductRepositoryFactory = ProductRepository Function(OpenCodeApi api);
+
+/// Builds the OpenCode 2 gateway pair for a profile whose detected flavor is
+/// [ServerFlavor.v2]. Injected by tests; production uses the Api2Transport →
+/// Api2Client → Api2Gateway/Api2OperationsGateway stack.
+typedef V2GatewayPairFactory =
+    ({ServerGateway gateway, ServerOperationsGateway operations}) Function(
+      ServerProfile profile,
+    );
 typedef LocalWakeLockEnsurer = Future<void> Function();
 typedef EventStreamFactory =
     EventStream Function({
@@ -116,14 +133,22 @@ typedef EventStreamFactory =
 class ConnectionController extends ChangeNotifier {
   final ProfileStore store;
   final BackgroundLiveController backgroundLive;
+  final WidgetSessionSnapshot _widgetSnapshot;
+  final AppDiagnosticsController diagnostics;
+  final bool _ownsDiagnostics;
+  late final ValueNotifier<AppAppearance> appearance;
+  late final ValueNotifier<ThemePackId> themePack;
   final OpenCodeApiFactory _apiFactory;
   final ProductRepositoryFactory _repositoryFactory;
+  final V2GatewayPairFactory _v2GatewayFactory;
   final EventStreamFactory _eventStreamFactory;
+  final EventStreamFactory? _globalEventStreamFactory;
   final LocalWakeLockEnsurer _localWakeLockEnsurer;
 
-  OpenCodeApi? api;
-  ProductRepository? repository;
-  EventStream? _events;
+  ServerGateway? api;
+  ServerOperationsGateway? repository;
+  LiveEventChannel? _events;
+  LiveEventChannel? _globalEvents;
   Timer? _poll;
   Future<void>? _busyStatusRefresh;
   ServerProfile? _connectedProfile;
@@ -139,7 +164,17 @@ class ConnectionController extends ChangeNotifier {
 
   StreamStatus status = StreamStatus.disconnected;
   String? version;
+  String? availableServerVersion;
+  String? installedServerVersion;
   String? lastError;
+
+  /// True after the connected v2 server answered 401 mid-session — the serve
+  /// password rotated (it changes on every restart unless OPENCODE_PASSWORD
+  /// is set). Basic auth cannot self-heal, so retry loops stay off and the
+  /// connection banner offers "Update password" instead (never a modal).
+  /// Cleared when a new connect starts, on disconnect, and when the stream
+  /// recovers.
+  bool passwordRejected = false;
 
   int connectionRevision = 0;
 
@@ -147,11 +182,24 @@ class ConnectionController extends ChangeNotifier {
   /// should be rehydrated. This also advances after an SSE reconnection so
   /// events missed during a network handoff are reconciled from REST.
   int dataRefreshRevision = 0;
+
+  /// Prompts drafted while the server was unreachable, waiting to flush.
+  /// Loaded lazily from [OfflineQueueStore] and kept in memory afterward.
+  List<QueuedPrompt>? _offlineQueue;
+  OfflineQueueStore? _offlineQueueStore;
+  bool _flushingOfflineQueue = false;
+
+  /// Composer text typed in a chat but never sent, kept per session so
+  /// navigating between sessions loses nothing. Loaded lazily from
+  /// [SessionDraftStore] and kept in memory afterward.
+  Map<String, SessionDraft>? _sessionDrafts;
+  SessionDraftStore? _sessionDraftStore;
   int locationRevision = 0;
   String? directory;
   String? workspace;
   bool locationLoading = false;
   String? locationError;
+  String? locationNotice;
   bool sessionsLoading = false;
   String? sessionsError;
   bool catalogLoading = false;
@@ -175,6 +223,8 @@ class ConnectionController extends ChangeNotifier {
   ModelRef? selectedModel;
   String selectedAgent = '';
   String selectedVariant = '';
+  bool transcriptReasoningExpanded = false;
+  bool transcriptTimestampsVisible = false;
 
   Map<String, Session> sessionsById = {};
   Set<String> busySessions = {};
@@ -182,6 +232,20 @@ class ConnectionController extends ChangeNotifier {
   /// Outstanding permission asks keyed by request ID.
   Map<String, PermissionRequest> permissions = {};
   Map<String, PendingQuestion> questions = {};
+
+  /// Outstanding OpenCode 2 form requests keyed by form ID. Includes global
+  /// (MCP elicitation) forms whose `sessionID` is the `"global"` sentinel.
+  /// Always empty on v1 (capability `forms` is false).
+  Map<String, Api2FormInfo> forms = {};
+  bool formsLoading = false;
+  String? formsError;
+
+  /// Pending OpenCode 2 inbox items (admitted, not-yet-delivered sends) per
+  /// session, keyed by inbox ID. Feeds the pending-sends strip; empty on v1.
+  final Map<String, Map<String, Api2InboxItem>> _inboxBySession = {};
+
+  /// Bumps whenever the inbox slice of any session changes.
+  int inboxRevision = 0;
   int ptyRevision = 0;
   EventEnvelope? lastPtyEvent;
   final Set<String> _resolvedPermissionIDs = {};
@@ -190,6 +254,14 @@ class ConnectionController extends ChangeNotifier {
   final Map<String, String> _v2PermissionSessions = {};
   final Map<String, String> _v2QuestionSessions = {};
   final Set<String> _resolvedQuestionIDs = {};
+  final Set<String> _resolvedFormIDs = {};
+  int _formRevision = 0;
+  int _formRefreshGeneration = 0;
+  final Set<String> _attentionActiveSessions = {};
+  final Map<String, ({CodingAlertKind kind, String requestID})>
+  _alertedInputKinds = {};
+  final Set<String> _alertedStatusSessions = {};
+  CodingAlertOpen? _pendingCodingAlertOpen;
   int _permissionRevision = 0;
   Timer? _permissionHydrationRetry;
   int _permissionHydrationGeneration = 0;
@@ -197,10 +269,15 @@ class ConnectionController extends ChangeNotifier {
   bool _lifecycleSuspended = false;
   bool _lifecycleWasBackgrounded = false;
   Future<void>? _lifecycleResume;
+  Future<void>? _manualReconnect;
 
   /// True only while the app intentionally has its transport retired in the
   /// background. UI must not treat this as a user-initiated disconnect.
   bool get lifecycleSuspended => _lifecycleSuspended;
+
+  /// True while a user-requested reconnect is rebuilding the transport for
+  /// the retained server and location.
+  bool get manualReconnectInProgress => _manualReconnect != null;
 
   static const _permissionHydrationRetryDelays = [
     Duration(milliseconds: 250),
@@ -216,18 +293,127 @@ class ConnectionController extends ChangeNotifier {
     this.store, {
     OpenCodeApiFactory? apiFactory,
     ProductRepositoryFactory? repositoryFactory,
+    V2GatewayPairFactory? v2GatewayFactory,
     EventStreamFactory? eventStreamFactory,
+    EventStreamFactory? globalEventStreamFactory,
     BackgroundLiveController? backgroundLive,
+    AppDiagnosticsController? diagnostics,
     LocalWakeLockEnsurer? localWakeLockEnsurer,
   }) : _apiFactory = apiFactory ?? _createApi,
        _repositoryFactory = repositoryFactory ?? _createRepository,
+       _v2GatewayFactory = v2GatewayFactory ?? _createV2GatewayPair,
        _eventStreamFactory = eventStreamFactory ?? _createEventStream,
+       _globalEventStreamFactory =
+           globalEventStreamFactory ??
+           (eventStreamFactory == null ? _createGlobalEventStream : null),
        _localWakeLockEnsurer =
            localWakeLockEnsurer ?? TermuxBridge.ensureWakeLock,
        backgroundLive =
-           backgroundLive ??
-           BackgroundLiveController(preferences: store.prefs) {
+           backgroundLive ?? BackgroundLiveController(preferences: store.prefs),
+       _widgetSnapshot = WidgetSessionSnapshot(prefs: store.prefs),
+       diagnostics = diagnostics ?? AppDiagnosticsController(),
+       _ownsDiagnostics = diagnostics == null {
+    appearance = ValueNotifier(store.appearance);
+    themePack = ValueNotifier(store.themePack);
+    transcriptReasoningExpanded = store.transcriptReasoningExpanded;
+    transcriptTimestampsVisible = store.transcriptTimestampsVisible;
     this.backgroundLive.addListener(_backgroundLiveChanged);
+    this.backgroundLive.bindActionHandler(_handleCodingAlertAction);
+  }
+
+  /// Resolves an Android notification action while the app stays
+  /// backgrounded. Alerts exist only while live mode keeps the transport
+  /// alive, so replies go through that live transport directly; running the
+  /// foreground wake path here would count as an app resume and clear every
+  /// alert. Returns false so Android re-posts the alert when the reply cannot
+  /// be delivered.
+  Future<bool> _handleCodingAlertAction(CodingAlertAction action) async {
+    if (_disposed || _lifecycleSuspended) return false;
+    final currentApi = api;
+    final current = repository;
+    try {
+      switch (action.decision) {
+        case 'allow':
+        case 'deny':
+          // Resolution is bound to the exact request the notification
+          // represented; a stale or missing ID refreshes the alert instead
+          // of resolving whichever request happens to be pending now.
+          final permission = permissions[action.requestID];
+          if (permission == null || permission.sessionID != action.sessionID) {
+            _syncInputAlerts();
+            return true;
+          }
+          if (currentApi == null) return false;
+          await _sendPermissionReply(
+            currentApi,
+            permission.id,
+            action.decision == 'allow' ? 'once' : 'reject',
+          );
+          return true;
+        case 'reply':
+          final text = action.reply?.trim() ?? '';
+          if (text.isEmpty) return false;
+          if (action.kind == CodingAlertKind.permission) {
+            // On OpenCode 2 permissions, Reply maps to reject-with-message
+            // (the message is shown to the model — steering by rejection).
+            // RequestID binding rules stay exactly as for allow/deny: the
+            // reply resolves only the exact request this notification
+            // represented, otherwise the alert refreshes.
+            final permission = permissions[action.requestID];
+            if (permission == null ||
+                permission.sessionID != action.sessionID ||
+                !_v2PermissionSessions.containsKey(action.requestID)) {
+              _syncInputAlerts();
+              return true;
+            }
+            if (currentApi == null) return false;
+            await _sendPermissionReply(
+              currentApi,
+              permission.id,
+              'reject',
+              message: text,
+            );
+            return true;
+          }
+          final question = questions[action.requestID];
+          if (question == null ||
+              question.sessionID != action.sessionID ||
+              !_questionSupportsQuickReply(question)) {
+            _syncInputAlerts();
+            return true;
+          }
+          await _sendQuestionAnswer(currentApi, current, question.id, [
+            [text],
+          ]);
+          return true;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// A question qualifies for a notification quick reply only when one typed
+  /// answer can truthfully satisfy it: a single prompt that accepts custom
+  /// text.
+  static bool _questionSupportsQuickReply(PendingQuestion question) =>
+      question.prompts.length == 1 && question.prompts.single.custom;
+
+  PendingQuestion? questionForSession(String sessionID) {
+    for (final question in questions.values) {
+      if (question.sessionID == sessionID) return question;
+    }
+    return null;
+  }
+
+  PendingQuestion? _quickReplyQuestionForSession(String sessionID) {
+    for (final question in questions.values) {
+      if (question.sessionID == sessionID &&
+          _questionSupportsQuickReply(question)) {
+        return question;
+      }
+    }
+    return null;
   }
 
   bool get keepLiveInBackground => backgroundLive.enabled;
@@ -235,13 +421,197 @@ class ConnectionController extends ChangeNotifier {
   Future<bool> setKeepLiveInBackground(bool enabled) =>
       backgroundLive.setEnabled(enabled);
 
-  Future<void> restoreBackgroundLiveMode() => backgroundLive.restore();
+  CodingAlertOpen? get pendingCodingAlertOpen => _pendingCodingAlertOpen;
+
+  CodingAlertOpen? takePendingCodingAlertOpen() {
+    final value = _pendingCodingAlertOpen;
+    _pendingCodingAlertOpen = null;
+    return value;
+  }
+
+  Future<void> restoreBackgroundLiveMode() async {
+    await backgroundLive.restore();
+    await consumeCodingAlertOpen();
+  }
+
+  Future<void> consumeCodingAlertOpen() async {
+    final value = await backgroundLive.consumeCodingAlertOpen();
+    if (_disposed || value == null) return;
+    // Home-screen widget rows outlive profile switches: a tap stamped with
+    // another profile's ID opens the app normally rather than silently
+    // routing into (or switching to) that profile's chat. Notification taps
+    // carry no profile ID and keep routing as before.
+    if (value.profileID.isNotEmpty && value.profileID != store.activeId) {
+      return;
+    }
+    _pendingCodingAlertOpen = value;
+    notifyListeners();
+  }
+
+  Future<void> setTranscriptReasoningExpanded(bool expanded) async {
+    await store.setTranscriptReasoningExpanded(expanded);
+    if (_disposed) return;
+    transcriptReasoningExpanded = expanded;
+    notifyListeners();
+  }
+
+  Future<void> setTranscriptTimestampsVisible(bool visible) async {
+    await store.setTranscriptTimestampsVisible(visible);
+    if (_disposed) return;
+    transcriptTimestampsVisible = visible;
+    notifyListeners();
+  }
+
+  Future<void> setThemePack(ThemePackId value) async {
+    await store.setThemePack(value);
+    themePack.value = value;
+  }
+
+  Future<void> setAppearance(AppAppearance value) async {
+    await store.setAppearance(value);
+    if (_disposed) return;
+    appearance.value = value;
+  }
 
   void _backgroundLiveChanged() {
     if (keepLiveInBackground) {
       unawaited(_ensureLocalServerWakeLock());
+    } else {
+      _dismissAllCodingAlerts(clearActive: true);
     }
     if (!_disposed) notifyListeners();
+  }
+
+  static String _inputAlertKey(String sessionID) => 'input:$sessionID';
+  static String _statusAlertKey(String sessionID) => 'status:$sessionID';
+
+  bool get _canShowCodingAlert =>
+      keepLiveInBackground &&
+      _lifecycleWasBackgrounded &&
+      backgroundLive.notificationGranted;
+
+  void _markSessionAttentionActive(String sessionID) {
+    if (sessionID.isEmpty) return;
+    _attentionActiveSessions.add(sessionID);
+    if (_alertedStatusSessions.remove(sessionID)) {
+      unawaited(backgroundLive.dismissCodingAlert(_statusAlertKey(sessionID)));
+    }
+  }
+
+  void _settleSessionAttention(String sessionID, CodingAlertKind kind) {
+    if (sessionID.isEmpty || !_attentionActiveSessions.remove(sessionID)) {
+      return;
+    }
+    if (!_canShowCodingAlert || sessionsById[sessionID]?.parentID != null) {
+      return;
+    }
+    if (!_alertedStatusSessions.add(sessionID)) return;
+    unawaited(
+      backgroundLive
+          .showCodingAlert(
+            kind: kind,
+            sessionID: sessionID,
+            key: _statusAlertKey(sessionID),
+          )
+          .then((shown) {
+            if (!shown && !_disposed && _lifecycleWasBackgrounded) {
+              _alertedStatusSessions.remove(sessionID);
+            }
+          }),
+    );
+  }
+
+  void _showInputAlert(String sessionID, CodingAlertKind kind) {
+    if (sessionID.isEmpty || !_canShowCodingAlert) return;
+    // The alert represents one exact request: the front permission, or the
+    // quick-reply-eligible question (falling back to the front question).
+    final quickReplyQuestion = kind == CodingAlertKind.question
+        ? _quickReplyQuestionForSession(sessionID)
+        : null;
+    // Forms deliberately never quick-reply (multi-field forms cannot be
+    // answered from a RemoteInput); their alert deep-links into the app.
+    final requestID = kind == CodingAlertKind.permission
+        ? permissionForSession(sessionID)?.id
+        : (quickReplyQuestion ?? questionForSession(sessionID))?.id ??
+              formForSession(sessionID)?.id;
+    if (requestID == null || requestID.isEmpty) return;
+    // v2 permission alerts carry the RemoteInput Reply action: its text
+    // maps to reject-with-message (see _handleCodingAlertAction).
+    final permissionReply =
+        kind == CodingAlertKind.permission &&
+        _v2PermissionSessions.containsKey(requestID);
+    final alerted = (kind: kind, requestID: requestID);
+    if (_alertedInputKinds[sessionID] == alerted) return;
+    _alertedInputKinds[sessionID] = alerted;
+    unawaited(
+      backgroundLive
+          .showCodingAlert(
+            kind: kind,
+            sessionID: sessionID,
+            key: _inputAlertKey(sessionID),
+            quickReply: quickReplyQuestion != null || permissionReply,
+            requestID: requestID,
+          )
+          .then((shown) {
+            if (!shown &&
+                !_disposed &&
+                _lifecycleWasBackgrounded &&
+                _alertedInputKinds[sessionID] == alerted) {
+              _alertedInputKinds.remove(sessionID);
+            }
+          }),
+    );
+  }
+
+  void _syncInputAlerts() {
+    final permissionSessions = {
+      for (final permission in permissions.values) permission.sessionID,
+    }..removeWhere((id) => id.isEmpty);
+    final questionSessions = {
+      for (final question in questions.values) question.sessionID,
+      // Pending forms alert like questions (kind `question`, no quick
+      // reply); global forms have no session to alert on.
+      for (final form in forms.values)
+        if (form.sessionID != 'global') form.sessionID,
+    }..removeWhere((id) => id.isEmpty);
+    final pendingSessions = {...permissionSessions, ...questionSessions};
+
+    for (final sessionID in _alertedInputKinds.keys.toList()) {
+      if (pendingSessions.contains(sessionID)) continue;
+      _alertedInputKinds.remove(sessionID);
+      unawaited(backgroundLive.dismissCodingAlert(_inputAlertKey(sessionID)));
+    }
+    if (!_canShowCodingAlert) return;
+    for (final sessionID in pendingSessions) {
+      _showInputAlert(
+        sessionID,
+        permissionSessions.contains(sessionID)
+            ? CodingAlertKind.permission
+            : CodingAlertKind.question,
+      );
+    }
+  }
+
+  void _dismissSessionCodingAlerts(String sessionID) {
+    _attentionActiveSessions.remove(sessionID);
+    if (_alertedInputKinds.remove(sessionID) != null) {
+      unawaited(backgroundLive.dismissCodingAlert(_inputAlertKey(sessionID)));
+    }
+    if (_alertedStatusSessions.remove(sessionID)) {
+      unawaited(backgroundLive.dismissCodingAlert(_statusAlertKey(sessionID)));
+    }
+  }
+
+  void _dismissAllCodingAlerts({bool clearActive = false}) {
+    for (final sessionID in _alertedInputKinds.keys.toList()) {
+      unawaited(backgroundLive.dismissCodingAlert(_inputAlertKey(sessionID)));
+    }
+    for (final sessionID in _alertedStatusSessions.toList()) {
+      unawaited(backgroundLive.dismissCodingAlert(_statusAlertKey(sessionID)));
+    }
+    _alertedInputKinds.clear();
+    _alertedStatusSessions.clear();
+    if (clearActive) _attentionActiveSessions.clear();
   }
 
   Future<void> _ensureLocalServerWakeLock() async {
@@ -273,6 +643,32 @@ class ConnectionController extends ChangeNotifier {
   static ProductRepository _createRepository(OpenCodeApi api) =>
       SdkProductRepository(api.sdkClient);
 
+  /// Production wiring for an OpenCode 2 profile: one Basic-auth transport
+  /// and client shared by both gateway halves. Username stays `opencode` on
+  /// the wire (protocol notes §1); the profile's stored password rides every
+  /// request.
+  static ({ServerGateway gateway, ServerOperationsGateway operations})
+  _createV2GatewayPair(ServerProfile profile) {
+    final client = Api2Client.connect(
+      baseUrl: profile.baseUrl,
+      password: profile.password,
+    );
+    return (
+      gateway: Api2Gateway(client: client),
+      operations: Api2OperationsGateway(client: client),
+    );
+  }
+
+  /// Constructs the transport pair for [profile]'s cached flavor. The two
+  /// v1 factories stay the injected test seams; v2 goes through
+  /// [_v2GatewayFactory].
+  ({ServerGateway gateway, ServerOperationsGateway operations})
+  _buildTransportPair(ServerProfile profile) {
+    if (profile.flavor == ServerFlavor.v2) return _v2GatewayFactory(profile);
+    final v1Api = _apiFactory(profile);
+    return (gateway: v1Api, operations: _repositoryFactory(v1Api));
+  }
+
   static EventStream _createEventStream({
     required OpenCodeApi api,
     required void Function(EventEnvelope event) onEvent,
@@ -283,6 +679,19 @@ class ConnectionController extends ChangeNotifier {
     onEvent: onEvent,
     onStatus: onStatus,
     onError: onError,
+  );
+
+  static EventStream _createGlobalEventStream({
+    required OpenCodeApi api,
+    required void Function(EventEnvelope event) onEvent,
+    required void Function(StreamStatus status) onStatus,
+    void Function(Object error)? onError,
+  }) => EventStream(
+    api: api,
+    onEvent: onEvent,
+    onStatus: onStatus,
+    onError: onError,
+    global: true,
   );
 
   bool get isConnected => status == StreamStatus.connected && api != null;
@@ -296,7 +705,99 @@ class ConnectionController extends ChangeNotifier {
     return null;
   }
 
-  Future<void> connect(ServerProfile profile) async {
+  /// The protocol the live transport speaks. Reads the profile the connection
+  /// actually opened, not the selected one, so a switch mid-connection cannot
+  /// make screens describe the wrong server.
+  ServerFlavor get serverFlavor =>
+      _connectedProfile?.flavor ?? profile?.flavor ?? ServerFlavor.v1;
+
+  /// Feature switches for the live transport. Screens gate on these — never on
+  /// [serverFlavor], which is only ever copy ("OpenCode 2 servers"). Before a
+  /// connection exists we report the v1 superset so nothing flickers away while
+  /// connecting; the gateway narrows them once attached.
+  ServerCapabilities get capabilities =>
+      api?.capabilities ?? ServerCapabilities.allV1;
+
+  void _acceptRunningServerVersion(String? rawVersion) {
+    final next = rawVersion?.trim() ?? '';
+    if (next.isEmpty) return;
+    version = next;
+    if (availableServerVersion == next) availableServerVersion = null;
+    if (installedServerVersion == next) installedServerVersion = null;
+  }
+
+  void recordServerUpgradeInstalled(String rawVersion) {
+    final installed = rawVersion.trim();
+    if (!isExactServerVersion(installed)) return;
+    installedServerVersion = installed;
+    if (availableServerVersion == installed) availableServerVersion = null;
+    notifyListeners();
+  }
+
+  Future<ProfileLocation?> _validatedSavedLocation(
+    ServerProfile profile,
+    ServerOperationsGateway currentRepository,
+    int generation,
+    ServerGateway currentApi,
+  ) async {
+    final saved = store.locationFor(profile.id);
+    if (saved == null) return null;
+    var workspace = saved.workspace;
+    try {
+      if (saved.directory != null) {
+        currentRepository.setLocation(
+          directory: saved.directory,
+          workspace: null,
+        );
+        final project = await currentRepository.loadCurrentProject();
+        if (!_isCurrent(generation, currentApi)) return null;
+        if (project == null) {
+          try {
+            await store.clearLocation(profile.id);
+          } catch (_) {
+            // The current connection can still recover to its server root.
+          }
+          locationNotice =
+              'The last project is no longer available. '
+              'OpenCode Mobile returned to the server workspace.';
+          return null;
+        }
+      }
+      if (workspace != null) {
+        currentRepository.setLocation(
+          directory: saved.directory,
+          workspace: null,
+        );
+        final workspaces = await currentRepository.listWorkspaces();
+        if (!_isCurrent(generation, currentApi)) return null;
+        if (!workspaces.any((candidate) => candidate.id == workspace)) {
+          workspace = null;
+          locationNotice =
+              'The last remote workspace is no longer available. '
+              'The project was opened locally.';
+        }
+      }
+      return ProfileLocation(directory: saved.directory, workspace: workspace);
+    } catch (_) {
+      if (_isCurrent(generation, currentApi)) {
+        locationNotice =
+            'The last project could not be verified. '
+            'OpenCode Mobile opened the server workspace instead.';
+      }
+      return null;
+    } finally {
+      currentRepository.setLocation(directory: null, workspace: null);
+    }
+  }
+
+  /// [redetectOnFailure] lets one failed connect re-probe the address and
+  /// correct a stale cached [ServerProfile.flavor] (a server swapped between
+  /// `opencode serve` generations) before giving up; the corrected retry runs
+  /// with it false so detection can never loop.
+  Future<void> connect(
+    ServerProfile profile, {
+    bool redetectOnFailure = true,
+  }) async {
     _lifecycleSuspended = false;
     _lifecycleWasBackgrounded = false;
     _lifecycleResume = null;
@@ -315,20 +816,25 @@ class ConnectionController extends ChangeNotifier {
     }
     final generation = _beginGeneration();
     _retireTransport();
-    final currentApi = _apiFactory(profile)
+    final pair = _buildTransportPair(profile);
+    final currentApi = pair.gateway
       ..setLocation(directory: null, workspace: null);
-    final currentRepository = _repositoryFactory(currentApi)
+    final currentRepository = pair.operations
       ..setLocation(directory: null, workspace: null);
     api = currentApi;
     repository = currentRepository;
     _connectedProfile = profile;
+    availableServerVersion = null;
+    installedServerVersion = null;
     directory = null;
     workspace = null;
     locationRevision += 1;
     _clearLocationData();
     status = StreamStatus.connecting;
     lastError = null;
+    passwordRejected = false;
     locationError = null;
+    locationNotice = null;
     notifyListeners();
     enablePollingFallback();
 
@@ -350,9 +856,23 @@ class ConnectionController extends ChangeNotifier {
       if (!health.healthy) {
         throw ApiException('Server health check reported unhealthy');
       }
-      version = health.version ?? '';
+      _acceptRunningServerVersion(health.version);
     } catch (e) {
       if (!_isCurrent(generation, currentApi)) return;
+      if (redetectOnFailure && _suggestsWrongFlavor(e)) {
+        final corrected = await _redetectFlavor(profile);
+        if (!_isCurrent(generation, currentApi)) return;
+        if (corrected != null) {
+          if (corrected.ok) {
+            await connect(profile, redetectOnFailure: false);
+          } else {
+            _failCurrentConnection(
+              corrected.message ?? 'Cannot reach ${profile.baseUrl}: $e',
+            );
+          }
+          return;
+        }
+      }
       _failCurrentConnection(
         e is ApiException ? e.message : 'Cannot reach ${profile.baseUrl}: $e',
       );
@@ -366,6 +886,22 @@ class ConnectionController extends ChangeNotifier {
         : null;
     selectedAgent = store.agentFor(profile.id);
     selectedVariant = store.variantFor(profile.id);
+
+    final savedLocation = await _validatedSavedLocation(
+      profile,
+      currentRepository,
+      generation,
+      currentApi,
+    );
+    if (!_isCurrent(generation, currentApi)) return;
+    if (savedLocation != null) {
+      await _selectLocation(
+        directory: savedLocation.directory,
+        workspace: savedLocation.workspace,
+        preserveNotice: true,
+      );
+      return;
+    }
 
     await _refreshPreexistingProviderRuntime(
       generation: generation,
@@ -420,11 +956,21 @@ class ConnectionController extends ChangeNotifier {
         }
       }
 
+      Future<ChatDefaults?> loadChatDefaults() async {
+        if (currentRepository == null) return null;
+        try {
+          return await currentRepository.loadChatDefaults();
+        } catch (_) {
+          return null;
+        }
+      }
+
       final results = await Future.wait<Object?>([
         currentApi.providers(),
         currentApi.agents(),
         loadDetailedCatalog(),
         loadIntegrations(),
+        loadChatDefaults(),
       ]);
       if (!_isCurrentCatalogRefresh(
         generation,
@@ -437,6 +983,7 @@ class ConnectionController extends ChangeNotifier {
       final nextAgents = results[1] as List<AgentInfo>;
       final detailedCatalog = results[2] as CatalogSnapshot?;
       final integrations = results[3] as List<IntegrationInfo>;
+      final chatDefaults = results[4] as ChatDefaults?;
       final hasConnectedIntegration = integrations.any(
         (integration) => integration.connectionCount > 0,
       );
@@ -541,12 +1088,20 @@ class ConnectionController extends ChangeNotifier {
                 candidate.providerID == model.providerID &&
                 candidate.id == model.modelID,
           );
-      if (!validModel(nextModel)) {
-        final defaultModel = ModelRef(
+      final configuredModel = chatDefaults?.model;
+      final modelWasExplicitlySelected =
+          profileID != null && store.modelWasExplicitlySelected(profileID);
+      if (!validModel(nextModel) ||
+          (!modelWasExplicitlySelected && validModel(configuredModel))) {
+        final providerDefaultModel = ModelRef(
           providerID: nextProviders.defaultProviderID ?? '',
           modelID: nextProviders.defaultModelID ?? '',
         );
-        nextModel = validModel(defaultModel) ? defaultModel : null;
+        nextModel = validModel(configuredModel)
+            ? configuredModel
+            : validModel(providerDefaultModel)
+            ? providerDefaultModel
+            : null;
         if (nextModel == null) {
           for (final model in nextCatalog.models) {
             nextModel = ModelRef(
@@ -572,7 +1127,18 @@ class ConnectionController extends ChangeNotifier {
       }
       var nextAgent = selectedAgent;
       if (!nextAgents.any((agent) => agent.name == nextAgent)) {
-        nextAgent = nextAgents.isEmpty ? '' : nextAgents.first.name;
+        final configuredAgent = chatDefaults?.agent;
+        final validConfiguredAgent = nextAgents.any(
+          (agent) => agent.name == configuredAgent && agent.mode != 'subagent',
+        );
+        final primaryAgents = nextAgents.where(
+          (agent) => agent.mode != 'subagent',
+        );
+        nextAgent = validConfiguredAgent
+            ? configuredAgent!
+            : primaryAgents.isEmpty
+            ? ''
+            : primaryAgents.first.name;
       }
       if (profileID != null) {
         final modelChanged =
@@ -631,40 +1197,146 @@ class ConnectionController extends ChangeNotifier {
     }
   }
 
-  void _startEvents(int generation, OpenCodeApi currentApi) {
-    late final EventStream stream;
-    stream = _eventStreamFactory(
-      api: currentApi,
-      onEvent: (event) {
-        if (!_isCurrentStream(generation, currentApi, stream)) return;
-        _onEvent(event);
-      },
-      onStatus: (s) {
-        if (!_isCurrentStream(generation, currentApi, stream)) return;
-        final previousStatus = status;
-        status = s;
-        if (s == StreamStatus.connected) {
-          lastError = null;
-          unawaited(refreshPendingPermissions());
-          unawaited(refreshPendingQuestions());
-          if (previousStatus == StreamStatus.reconnecting ||
-              previousStatus == StreamStatus.disconnected) {
-            _markDataRefreshReady(generation, currentApi);
-            unawaited(refreshSessions());
-          }
-        } else {
-          _cancelPermissionHydration();
+  void _startEvents(int generation, ServerGateway currentApi) {
+    late final LiveEventChannel stream;
+    void handleEvent(EventEnvelope event) {
+      if (!_isCurrentStream(generation, currentApi, stream)) return;
+      _onEvent(event);
+    }
+
+    void handleStatus(StreamStatus s) {
+      if (!_isCurrentStream(generation, currentApi, stream)) return;
+      final previousStatus = status;
+      status = s;
+      if (s == StreamStatus.connected) {
+        lastError = null;
+        passwordRejected = false;
+        unawaited(refreshPendingPermissions());
+        unawaited(refreshPendingQuestions());
+        // Form events are ephemeral: re-poll the pending list after
+        // every (re)connect. No-op on servers without forms.
+        unawaited(refreshPendingForms());
+        unawaited(flushOfflineQueue());
+        if (previousStatus == StreamStatus.reconnecting ||
+            previousStatus == StreamStatus.disconnected) {
+          _markDataRefreshReady(generation, currentApi);
+          unawaited(refreshSessions());
         }
-        notifyListeners();
-      },
-      onError: (e) {
-        if (!_isCurrentStream(generation, currentApi, stream)) return;
-        lastError = e.toString();
-        notifyListeners();
-      },
-    );
+      } else {
+        _cancelPermissionHydration();
+      }
+      notifyListeners();
+    }
+
+    void handleError(Object e) {
+      if (!_isCurrentStream(generation, currentApi, stream)) return;
+      _noteAuthFailure(e);
+      lastError = e.toString();
+      notifyListeners();
+    }
+
+    // The v1 factory stays the injected test seam (typed on OpenCodeApi);
+    // every other gateway supplies its own channel through the EventGateway
+    // interface — the v2 SSE consumer lives behind that seam.
+    stream = currentApi is OpenCodeApi
+        ? _eventStreamFactory(
+            api: currentApi,
+            onEvent: handleEvent,
+            onStatus: handleStatus,
+            onError: handleError,
+          )
+        : currentApi.openEventChannel(
+            onEvent: handleEvent,
+            onStatus: handleStatus,
+            onError: handleError,
+          );
     _events = stream;
     stream.start();
+    _startGlobalEvents(generation, currentApi);
+  }
+
+  void _startGlobalEvents(int generation, ServerGateway currentApi) {
+    late final LiveEventChannel stream;
+    void handleEvent(EventEnvelope event) {
+      if (!_isCurrentGlobalStream(generation, currentApi, stream)) return;
+      if (event.type == 'installation.update-available' ||
+          event.type == 'installation.updated' ||
+          event.type == 'worktree.ready' ||
+          event.type == 'worktree.failed') {
+        _onEvent(event);
+      }
+    }
+
+    if (currentApi is OpenCodeApi) {
+      final factory = _globalEventStreamFactory;
+      if (factory == null) return;
+      stream = factory(
+        api: currentApi,
+        onEvent: handleEvent,
+        // The location-scoped stream owns visible connection state. A global
+        // update-notification retry must never make a healthy chat look
+        // offline.
+        onStatus: (_) {},
+        onError: (_) {},
+      );
+    } else {
+      stream = currentApi.openGlobalEventChannel(
+        onEvent: handleEvent,
+        onStatus: (_) {},
+        onError: (_) {},
+      );
+    }
+    _globalEvents = stream;
+    stream.start();
+  }
+
+  /// Marks a mid-session Basic-auth rejection from the v2 transport so the
+  /// connection banner can offer "Update password" instead of retry loops.
+  void _noteAuthFailure(Object error) {
+    if (error is Api2AuthRequired ||
+        (error is ApiException &&
+            error.statusCode == 401 &&
+            _connectedProfile?.flavor == ServerFlavor.v2)) {
+      passwordRejected = true;
+    }
+  }
+
+  /// True for connect failures shaped like talking to the wrong server
+  /// generation: a 401 (v1 client meeting v2's Basic-auth gate) or a 404/405
+  /// (v2 client asking a v1 server for `/api/...`). Unreachable addresses and
+  /// unhealthy servers are not flavor problems, so they never trigger a
+  /// re-probe.
+  static bool _suggestsWrongFlavor(Object error) =>
+      error is ApiException &&
+      (error.statusCode == 401 ||
+          error.statusCode == 404 ||
+          error.statusCode == 405);
+
+  /// After a failed connect, asks the probe which protocol generation the
+  /// address actually speaks. Returns the probe result when it disagrees with
+  /// the profile's cached flavor (persisting the correction), null otherwise.
+  Future<ServerProbeResult?> _redetectFlavor(ServerProfile profile) async {
+    try {
+      final result = await serverProbe(
+        baseUrl: profile.baseUrl,
+        username: profile.username,
+        password: profile.password,
+      );
+      final detected = result.flavor;
+      if (detected == ServerFlavor.unknown || detected == profile.flavor) {
+        return null;
+      }
+      profile.flavor = detected;
+      if (result.version != null) profile.serverVersion = result.version;
+      try {
+        await store.upsert(profile);
+      } catch (_) {
+        // The corrected flavor still applies to this in-memory connect.
+      }
+      return result;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> disconnect({
@@ -674,16 +1346,21 @@ class ConnectionController extends ChangeNotifier {
     _lifecycleSuspended = false;
     _lifecycleWasBackgrounded = false;
     _lifecycleResume = null;
+    _manualReconnect = null;
     final generation = _beginGeneration();
     _retireTransport();
     _clearLocationData();
     version = null;
+    availableServerVersion = null;
+    installedServerVersion = null;
     _connectedProfile = null;
     directory = null;
     workspace = null;
     locationRevision += 1;
     locationLoading = false;
     locationError = null;
+    locationNotice = null;
+    passwordRejected = false;
     status = StreamStatus.disconnected;
     if (!silent) notifyListeners();
     if (!keepActive) {
@@ -706,9 +1383,23 @@ class ConnectionController extends ChangeNotifier {
       case 'server.connected':
         final v = props['version']?.toString();
         if (v != null && v.isNotEmpty) {
-          version = v;
+          _acceptRunningServerVersion(v);
           notifyListeners();
         }
+        break;
+
+      case 'installation.update-available':
+        final target = props['version']?.toString().trim() ?? '';
+        if (isExactServerVersion(target) &&
+            target != version &&
+            target != installedServerVersion) {
+          availableServerVersion = target;
+          notifyListeners();
+        }
+        break;
+
+      case 'installation.updated':
+        recordServerUpgradeInstalled(props['version']?.toString() ?? '');
         break;
 
       case 'integration.connection.updated':
@@ -739,6 +1430,7 @@ class ConnectionController extends ChangeNotifier {
             _markSessionChanged(id);
             sessionsById.remove(id);
             busySessions.remove(id);
+            _dismissSessionCodingAlerts(id);
             permissions.removeWhere((_, value) => value.sessionID == id);
             final removedQuestionIDs = questions.entries
                 .where((entry) => entry.value.sessionID == id)
@@ -755,6 +1447,16 @@ class ConnectionController extends ChangeNotifier {
               (_, sessionID) => sessionID == id,
             );
             _v2QuestionSessions.removeWhere((_, sessionID) => sessionID == id);
+            final removedFormIDs = forms.values
+                .where((form) => form.sessionID == id)
+                .map((form) => form.id)
+                .toList();
+            if (removedFormIDs.isNotEmpty) _formRevision += 1;
+            for (final formID in removedFormIDs) {
+              forms.remove(formID);
+            }
+            if (_inboxBySession.remove(id) != null) inboxRevision += 1;
+            _syncInputAlerts();
             notifyListeners();
           }
         }
@@ -771,6 +1473,7 @@ class ConnectionController extends ChangeNotifier {
                 msg.errorText == null;
             if (working) {
               busySessions.add(msg.sessionID);
+              _markSessionAttentionActive(msg.sessionID);
             } else {
               busySessions.remove(msg.sessionID);
             }
@@ -804,6 +1507,38 @@ class ConnectionController extends ChangeNotifier {
         _handlePermissionReply(props);
         break;
 
+      // ---- OpenCode 2 interaction envelopes ----
+      // Emitted by the v2 event adapter (lib/api2/gateway_events.dart):
+      //   form.v2.created                 {form: Form.Info (raw v2 JSON)}
+      //   form.v2.replied                 {id, sessionID}
+      //   form.v2.cancelled               {id, sessionID}
+      //   session.inbox.enqueued          {sessionID, inboxID, item}
+      //   session.inbox.delivered         {sessionID, inboxID}
+      //   session.inbox.cancelled         {sessionID, inboxID}
+      //   session.inbox.delivery.changed  {sessionID, inboxID, delivery}
+      case 'form.v2.created':
+        _handleFormCreated(props);
+        break;
+
+      case 'form.v2.replied':
+      case 'form.v2.cancelled':
+        final formID = props['id']?.toString() ?? '';
+        if (formID.isNotEmpty) _resolveForm(formID);
+        break;
+
+      case 'session.inbox.enqueued':
+        _handleInboxEnqueued(props);
+        break;
+
+      case 'session.inbox.delivered':
+      case 'session.inbox.cancelled':
+        _handleInboxRemoved(props);
+        break;
+
+      case 'session.inbox.delivery.changed':
+        _handleInboxDeliveryChanged(props);
+        break;
+
       case 'question.asked':
       case 'question.updated':
         questionsLoading = false;
@@ -813,6 +1548,7 @@ class ConnectionController extends ChangeNotifier {
           _resolvedQuestionIDs.remove(question.id);
           _v2QuestionSessions.remove(question.id);
           questions[question.id] = question;
+          _syncInputAlerts();
           notifyListeners();
         }
         break;
@@ -825,6 +1561,7 @@ class ConnectionController extends ChangeNotifier {
           _resolvedQuestionIDs.remove(question.id);
           _v2QuestionSessions[question.id] = question.sessionID;
           questions[question.id] = question;
+          _syncInputAlerts();
           notifyListeners();
         }
         break;
@@ -839,7 +1576,10 @@ class ConnectionController extends ChangeNotifier {
           _markQuestionChanged(id);
           _resolvedQuestionIDs.add(id);
           _v2QuestionSessions.remove(id);
-          if (questions.remove(id) != null) notifyListeners();
+          if (questions.remove(id) != null) {
+            _syncInputAlerts();
+            notifyListeners();
+          }
         }
         break;
 
@@ -854,11 +1594,13 @@ class ConnectionController extends ChangeNotifier {
           switch (sessionStatus) {
             case 'idle':
               busySessions.remove(sid);
+              _settleSessionAttention(sid, CodingAlertKind.complete);
               unawaited(_refreshOneSession(sid));
               break;
             case 'busy':
             case 'retry':
               busySessions.add(sid);
+              _markSessionAttentionActive(sid);
               break;
             default:
               break;
@@ -872,6 +1614,7 @@ class ConnectionController extends ChangeNotifier {
         if (sid != null) {
           _markSessionChanged(sid);
           busySessions.remove(sid);
+          _settleSessionAttention(sid, CodingAlertKind.error);
         }
         final err = props['error'];
         if (err is Map<String, dynamic>) {
@@ -889,6 +1632,7 @@ class ConnectionController extends ChangeNotifier {
         if (sid != null) {
           _markSessionChanged(sid);
           busySessions.remove(sid);
+          _settleSessionAttention(sid, CodingAlertKind.complete);
           unawaited(_refreshOneSession(sid));
           notifyListeners();
         }
@@ -925,6 +1669,7 @@ class ConnectionController extends ChangeNotifier {
     _v2PermissionSessions.remove(permission.id);
     permissions[permission.id] = permission;
     _permissionRevision += 1;
+    _syncInputAlerts();
     notifyListeners();
   }
 
@@ -936,6 +1681,7 @@ class ConnectionController extends ChangeNotifier {
       'patterns': props['resources'],
       'metadata': props['metadata'],
       'always': props['save'],
+      'message': props['message'],
       if (props['source'] is Map) 'tool': props['source'],
     });
     if (permission.sessionID.isEmpty || permission.id.isEmpty) return;
@@ -944,6 +1690,7 @@ class ConnectionController extends ChangeNotifier {
     _v2PermissionSessions[permission.id] = permission.sessionID;
     permissions[permission.id] = permission;
     _permissionRevision += 1;
+    _syncInputAlerts();
     notifyListeners();
   }
 
@@ -976,6 +1723,7 @@ class ConnectionController extends ChangeNotifier {
     permissions[id] = permission;
     _legacyPermissionIdentities[id] = (sessionID: sessionID, permissionID: id);
     _permissionRevision += 1;
+    _syncInputAlerts();
     notifyListeners();
   }
 
@@ -992,6 +1740,7 @@ class ConnectionController extends ChangeNotifier {
     _legacyPermissionIdentities.remove(requestID);
     _v2PermissionSessions.remove(requestID);
     _permissionRevision += 1;
+    _syncInputAlerts();
     notifyListeners();
   }
 
@@ -1026,7 +1775,7 @@ class ConnectionController extends ChangeNotifier {
   }
 
   Future<void> _hydratePendingPermissions(
-    OpenCodeApi currentApi,
+    ServerGateway currentApi,
     int connectionGeneration,
     int generation,
     int attempt,
@@ -1089,6 +1838,7 @@ class ConnectionController extends ChangeNotifier {
       }
       permissionsLoading = false;
       permissionsError = null;
+      _syncInputAlerts();
       notifyListeners();
     } catch (error) {
       if (!_isCurrentPermissionHydration(
@@ -1126,7 +1876,7 @@ class ConnectionController extends ChangeNotifier {
   Future<
     ({List<PermissionRequest> pending, Set<String> v2IDs, bool v2Succeeded})
   >
-  _loadPendingPermissions(OpenCodeApi currentApi) async {
+  _loadPendingPermissions(ServerGateway currentApi) async {
     List<PermissionRequest>? legacy;
     List<PermissionRequest>? v2;
     Object? legacyError;
@@ -1172,7 +1922,7 @@ class ConnectionController extends ChangeNotifier {
   }
 
   bool _isCurrentPermissionHydration(
-    OpenCodeApi currentApi,
+    ServerGateway currentApi,
     int connectionGeneration,
     int generation,
   ) =>
@@ -1186,17 +1936,44 @@ class ConnectionController extends ChangeNotifier {
     permissionsLoading = false;
   }
 
-  Future<void> answerPermission(String requestID, String response) async {
+  /// [message] rides only on v2 rejections (steering-by-rejection); the v1
+  /// reply shape has no field for it and ignores it.
+  Future<void> answerPermission(
+    String requestID,
+    String response, {
+    String? message,
+  }) async {
     final permission = permissions[requestID];
-    final currentApi = api;
-    final generation = _generation;
     if (permission == null) {
       if (_resolvedPermissionIDs.contains(requestID)) return;
       throw StateError('Permission request $requestID is no longer pending');
     }
-    if (currentApi == null) {
-      throw StateError('Not connected to OpenCode');
+    final currentApi = await _requireActionTransport();
+    await _sendPermissionReply(currentApi, requestID, response, message: message);
+  }
+
+  /// True when [requestID] arrived over the OpenCode 2 permission contract,
+  /// whose reject reply accepts an optional message shown to the model. The
+  /// permission sheet omits its reject-message field otherwise.
+  bool permissionSupportsRejectMessage(String requestID) =>
+      _v2PermissionSessions.containsKey(requestID);
+
+  /// Sends one permission reply on an already-resolved transport. Notification
+  /// actions use this directly with the live background transport because the
+  /// foreground path's wake reconciliation doubles as an app resume, which
+  /// would clear every posted alert.
+  Future<void> _sendPermissionReply(
+    ServerGateway currentApi,
+    String requestID,
+    String response, {
+    String? message,
+  }) async {
+    final permission = permissions[requestID];
+    if (permission == null) {
+      if (_resolvedPermissionIDs.contains(requestID)) return;
+      throw StateError('Permission request $requestID is no longer pending');
     }
+    final generation = _generation;
     try {
       final legacyIdentity = _legacyPermissionIdentities[requestID];
       final v2SessionID = _v2PermissionSessions[requestID];
@@ -1205,6 +1982,7 @@ class ConnectionController extends ChangeNotifier {
           v2SessionID,
           permission.id,
           response,
+          message: message,
         );
       } else {
         await currentApi.respondPermission(
@@ -1212,6 +1990,7 @@ class ConnectionController extends ChangeNotifier {
           response,
           legacySessionID: legacyIdentity?.sessionID,
           legacyPermissionID: legacyIdentity?.permissionID,
+          message: message,
         );
       }
       if (!_isCurrent(generation, currentApi)) return;
@@ -1281,6 +2060,7 @@ class ConnectionController extends ChangeNotifier {
         }
       }
       questionsLoading = false;
+      _syncInputAlerts();
       notifyListeners();
     } catch (error) {
       if (!_isCurrentQuestionsRefresh(
@@ -1300,8 +2080,8 @@ class ConnectionController extends ChangeNotifier {
 
   Future<({List<PendingQuestion> pending, Set<String> v2IDs, bool v2Succeeded})>
   _loadPendingQuestions(
-    OpenCodeApi? currentApi,
-    ProductRepository currentRepository,
+    ServerGateway? currentApi,
+    ServerOperationsGateway currentRepository,
   ) async {
     List<PendingQuestion>? legacy;
     List<PendingQuestion>? v2;
@@ -1356,10 +2136,25 @@ class ConnectionController extends ChangeNotifier {
     String requestID,
     List<List<String>> answers,
   ) async {
-    final current = repository;
-    final currentApi = api;
+    await prepareActionTransport();
+    await _sendQuestionAnswer(api, repository, requestID, answers);
+  }
+
+  /// Sends one question answer on already-resolved transport objects; the
+  /// notification-action path passes the live background transport directly
+  /// to avoid resume semantics (see [_sendPermissionReply]).
+  Future<void> _sendQuestionAnswer(
+    ServerGateway? currentApi,
+    ServerOperationsGateway? current,
+    String requestID,
+    List<List<String>> answers,
+  ) async {
     final generation = _generation;
     if (current == null) throw StateError('Not connected to OpenCode');
+    if (!questions.containsKey(requestID)) {
+      if (_resolvedQuestionIDs.contains(requestID)) return;
+      throw StateError('Question request $requestID is no longer pending');
+    }
     final v2SessionID = _v2QuestionSessions[requestID];
     try {
       if (v2SessionID != null) {
@@ -1381,10 +2176,15 @@ class ConnectionController extends ChangeNotifier {
   }
 
   Future<void> rejectQuestion(String requestID) async {
-    final current = repository;
+    await prepareActionTransport();
     final currentApi = api;
+    final current = repository;
     final generation = _generation;
     if (current == null) throw StateError('Not connected to OpenCode');
+    if (!questions.containsKey(requestID)) {
+      if (_resolvedQuestionIDs.contains(requestID)) return;
+      throw StateError('Question request $requestID is no longer pending');
+    }
     final v2SessionID = _v2QuestionSessions[requestID];
     try {
       if (v2SessionID != null) {
@@ -1411,6 +2211,7 @@ class ConnectionController extends ChangeNotifier {
     _v2QuestionSessions.remove(requestID);
     _resolvedQuestionIDs.add(requestID);
     questions.remove(requestID);
+    _syncInputAlerts();
     notifyListeners();
   }
 
@@ -1428,6 +2229,265 @@ class ConnectionController extends ChangeNotifier {
           raw['requestID']?.toString() == requestID;
     }
     return false;
+  }
+
+  // ---------------- Forms (OpenCode 2) ----------------
+
+  /// True when the connected server speaks the v2 forms contract.
+  bool get supportsForms => api?.capabilities.forms ?? false;
+
+  /// True when the connected server exposes the v2 session inbox.
+  bool get supportsInbox => api?.capabilities.inbox ?? false;
+
+  List<Api2FormInfo> formsForSession(String sessionID) => forms.values
+      .where((form) => form.sessionID == sessionID)
+      .toList(growable: false);
+
+  Api2FormInfo? formForSession(String sessionID) {
+    for (final form in forms.values) {
+      if (form.sessionID == sessionID) return form;
+    }
+    return null;
+  }
+
+  void _handleFormCreated(Map<String, dynamic> props) {
+    final raw = props['form'];
+    if (raw is! Map) return;
+    final form = Api2FormInfo.fromJson(Map<String, dynamic>.from(raw));
+    if (form == null || form.id.isEmpty) return;
+    formsLoading = false;
+    _resolvedFormIDs.remove(form.id);
+    forms[form.id] = form;
+    _formRevision += 1;
+    _syncInputAlerts();
+    notifyListeners();
+  }
+
+  void _resolveForm(String formID) {
+    formsLoading = false;
+    _resolvedFormIDs.add(formID);
+    _formRevision += 1;
+    if (forms.remove(formID) != null) {
+      _syncInputAlerts();
+    }
+    notifyListeners();
+  }
+
+  /// Re-polls the pending form lists. Form events are ephemeral, so this
+  /// runs after every SSE (re)connect; it is a no-op on v1 servers.
+  Future<void> refreshPendingForms() async {
+    final currentApi = api;
+    final generation = _generation;
+    if (currentApi == null || !currentApi.capabilities.forms) return;
+    final refreshGeneration = ++_formRefreshGeneration;
+    final revision = _formRevision;
+    formsLoading = true;
+    formsError = null;
+    notifyListeners();
+    try {
+      final pending = await currentApi.pendingForms();
+      if (!_isCurrent(generation, currentApi) ||
+          refreshGeneration != _formRefreshGeneration) {
+        return;
+      }
+      final hydrated = {
+        for (final form in pending)
+          if (!_resolvedFormIDs.contains(form.id)) form.id: form,
+      };
+      if (revision != _formRevision) {
+        // Events moved the set mid-fetch; they are fresher than the poll.
+        hydrated.addAll(forms);
+        hydrated.removeWhere((id, _) => _resolvedFormIDs.contains(id));
+      }
+      forms = hydrated;
+      formsLoading = false;
+      _syncInputAlerts();
+      notifyListeners();
+    } catch (error) {
+      if (!_isCurrent(generation, currentApi) ||
+          refreshGeneration != _formRefreshGeneration) {
+        return;
+      }
+      formsLoading = false;
+      formsError = error.toString();
+      _recordLocationError(formsError!);
+      notifyListeners();
+    }
+  }
+
+  /// Sends the assembled answer of a pending form. Rethrows transport
+  /// failures for the presenter (400 invalid-answer keeps the form open with
+  /// a banner); a 409 already-settled also resolves the form locally so the
+  /// presenter can toast-and-close.
+  Future<void> replyForm(String formID, Map<String, dynamic> answer) async {
+    final form = forms[formID];
+    if (form == null) {
+      if (_resolvedFormIDs.contains(formID)) return;
+      throw StateError('Form request $formID is no longer pending');
+    }
+    final currentApi = await _requireActionTransport();
+    try {
+      await currentApi.replyForm(form.sessionID, formID, answer);
+    } on ApiException catch (error) {
+      if (error.errorTag == 'FormAlreadySettledError' ||
+          error.errorTag == 'FormNotFoundError') {
+        _resolveForm(formID);
+      }
+      rethrow;
+    }
+    _resolveForm(formID);
+  }
+
+  /// Cancels (dismisses) a pending form; the agent continues unanswered.
+  Future<void> cancelForm(String formID) async {
+    final form = forms[formID];
+    if (form == null) {
+      if (_resolvedFormIDs.contains(formID)) return;
+      throw StateError('Form request $formID is no longer pending');
+    }
+    final currentApi = await _requireActionTransport();
+    try {
+      await currentApi.cancelForm(form.sessionID, formID);
+    } on ApiException catch (error) {
+      if (error.errorTag == 'FormAlreadySettledError' ||
+          error.errorTag == 'FormNotFoundError') {
+        _resolveForm(formID);
+        return;
+      }
+      rethrow;
+    }
+    _resolveForm(formID);
+  }
+
+  // ---------------- Inbox (OpenCode 2) ----------------
+
+  /// Pending (admitted, undelivered) sends of one session, oldest first.
+  List<Api2InboxItem> inboxItemsFor(String sessionID) {
+    final items = _inboxBySession[sessionID];
+    if (items == null || items.isEmpty) return const [];
+    final sorted = items.values.toList()
+      ..sort((a, b) => (a.timeCreated ?? 0).compareTo(b.timeCreated ?? 0));
+    return sorted;
+  }
+
+  void _handleInboxEnqueued(Map<String, dynamic> props) {
+    final sessionID = props['sessionID']?.toString() ?? '';
+    final inboxID = props['inboxID']?.toString() ?? '';
+    final rawItem = props['item'];
+    if (sessionID.isEmpty || inboxID.isEmpty || rawItem is! Map) return;
+    final item = Api2InboxItem.fromJson({
+      'id': inboxID,
+      'sessionID': sessionID,
+      'timeCreated': DateTime.now().millisecondsSinceEpoch,
+      ...Map<String, dynamic>.from(rawItem),
+    });
+    if (item == null) return;
+    (_inboxBySession[sessionID] ??= {})[inboxID] = item;
+    inboxRevision += 1;
+    notifyListeners();
+  }
+
+  void _handleInboxRemoved(Map<String, dynamic> props) {
+    final sessionID = props['sessionID']?.toString() ?? '';
+    final inboxID = props['inboxID']?.toString() ?? '';
+    final items = _inboxBySession[sessionID];
+    if (items == null || items.remove(inboxID) == null) return;
+    if (items.isEmpty) _inboxBySession.remove(sessionID);
+    inboxRevision += 1;
+    notifyListeners();
+  }
+
+  void _handleInboxDeliveryChanged(Map<String, dynamic> props) {
+    final sessionID = props['sessionID']?.toString() ?? '';
+    final inboxID = props['inboxID']?.toString() ?? '';
+    final delivery = Api2Delivery.parse(props['delivery']);
+    final item = _inboxBySession[sessionID]?[inboxID];
+    if (item == null || delivery == null) return;
+    _inboxBySession[sessionID]![inboxID] = Api2InboxItem(
+      id: item.id,
+      sessionID: item.sessionID,
+      timeCreated: item.timeCreated,
+      type: item.type,
+      payload: item.payload,
+      delivery: delivery,
+    );
+    inboxRevision += 1;
+    notifyListeners();
+  }
+
+  /// Reconciles one session's pending sends from REST (events are volatile).
+  /// No-op on servers without an inbox.
+  Future<void> refreshInbox(String sessionID) async {
+    final currentApi = api;
+    final generation = _generation;
+    if (currentApi == null || !currentApi.capabilities.inbox) return;
+    final revisionAtStart = inboxRevision;
+    List<Api2InboxItem> items;
+    try {
+      items = await currentApi.inboxItems(sessionID);
+    } catch (_) {
+      // The strip is a convenience surface; a failed reconcile keeps the
+      // event-projected state rather than erroring the chat.
+      return;
+    }
+    if (!_isCurrent(generation, currentApi) ||
+        revisionAtStart != inboxRevision) {
+      return;
+    }
+    final next = {for (final item in items) item.id: item};
+    if (next.isEmpty) {
+      if (_inboxBySession.remove(sessionID) == null) return;
+    } else {
+      _inboxBySession[sessionID] = next;
+    }
+    inboxRevision += 1;
+    notifyListeners();
+  }
+
+  /// Cancels a pending send. Returns its text so the composer can restore
+  /// it as a draft (cancel-back-to-composer is the edit affordance for
+  /// immutable server items). A 409 already-delivered rethrows after
+  /// dropping the item locally.
+  Future<String?> cancelInboxItem(String sessionID, String inboxID) async {
+    final text = _inboxBySession[sessionID]?[inboxID]?.promptText;
+    final currentApi = await _requireActionTransport();
+    try {
+      await currentApi.cancelInboxItem(sessionID, inboxID);
+    } on ApiException catch (error) {
+      if (error.statusCode == 409 || error.statusCode == 404) {
+        _handleInboxRemoved({'sessionID': sessionID, 'inboxID': inboxID});
+      }
+      rethrow;
+    }
+    _handleInboxRemoved({'sessionID': sessionID, 'inboxID': inboxID});
+    return text;
+  }
+
+  /// Flips a pending send between steer and queue delivery. A 409
+  /// already-delivered drops the local item and rethrows for the toast.
+  Future<void> setInboxDelivery(
+    String sessionID,
+    String inboxID, {
+    required Api2Delivery delivery,
+  }) async {
+    final currentApi = await _requireActionTransport();
+    try {
+      if (delivery == Api2Delivery.queue) {
+        await currentApi.queueInboxItem(sessionID, inboxID);
+      } else {
+        await currentApi.steerInboxItem(sessionID, inboxID);
+      }
+    } on ApiException catch (error) {
+      if (error.statusCode == 409 || error.statusCode == 404) {
+        _handleInboxRemoved({'sessionID': sessionID, 'inboxID': inboxID});
+      }
+      rethrow;
+    }
+    _handleInboxDeliveryChanged({
+      'sessionID': sessionID,
+      'inboxID': inboxID,
+      'delivery': delivery.wire,
+    });
   }
 
   @visibleForTesting
@@ -1474,6 +2534,7 @@ class ConnectionController extends ChangeNotifier {
         final session = hydrated[id];
         if (session == null) {
           sessionsById.remove(id);
+          _dismissSessionCodingAlerts(id);
         } else {
           sessionsById[id] = session;
         }
@@ -1488,8 +2549,10 @@ class ConnectionController extends ChangeNotifier {
           if ((_sessionRevisions[id] ?? 0) > revision) continue;
           if (statuses[id] != null && statuses[id] != 'idle') {
             busySessions.add(id);
+            _markSessionAttentionActive(id);
           } else {
             busySessions.remove(id);
+            _settleSessionAttention(id, CodingAlertKind.complete);
           }
         }
       }
@@ -1582,6 +2645,7 @@ class ConnectionController extends ChangeNotifier {
         final removed = busySessions.remove(entry.key);
         changed = removed || changed;
         if (removed) {
+          _settleSessionAttention(entry.key, CodingAlertKind.complete);
           _markSessionChanged(entry.key);
           unawaited(_refreshOneSession(entry.key));
         }
@@ -1599,7 +2663,11 @@ class ConnectionController extends ChangeNotifier {
   void suspendForLifecycle() {
     if (_disposed) return;
     _lifecycleWasBackgrounded = true;
-    if (keepLiveInBackground) return;
+    if (keepLiveInBackground) {
+      _attentionActiveSessions.addAll(busySessions);
+      _syncInputAlerts();
+      return;
+    }
     if (_lifecycleSuspended) return;
     _lifecycleSuspended = true;
     // A resume already in flight is invalidated by the generation change
@@ -1621,12 +2689,14 @@ class ConnectionController extends ChangeNotifier {
     if (!_lifecycleSuspended) {
       if (keepLiveInBackground && _lifecycleWasBackgrounded) {
         _lifecycleWasBackgrounded = false;
+        _dismissAllCodingAlerts(clearActive: true);
         return _trackLifecycleResume(_reconcileAfterBackground());
       }
       return Future.value();
     }
     _lifecycleSuspended = false;
     _lifecycleWasBackgrounded = false;
+    _dismissAllCodingAlerts(clearActive: true);
     final profile = _connectedProfile;
     if (profile == null) return Future.value();
     return _trackLifecycleResume(
@@ -1636,6 +2706,41 @@ class ConnectionController extends ChangeNotifier {
         workspace: workspace,
       ),
     );
+  }
+
+  /// Reconnects the active profile without discarding the selected location
+  /// or already-rendered product data. Repeated taps share one operation.
+  Future<void> retryConnection() {
+    if (_disposed) return Future.value();
+    final inFlight = _manualReconnect ?? _lifecycleResume;
+    if (inFlight != null) return inFlight;
+
+    final retainedProfile = _connectedProfile ?? profile;
+    if (retainedProfile == null) {
+      lastError = 'Choose an OpenCode server before retrying.';
+      status = StreamStatus.disconnected;
+      notifyListeners();
+      return Future.value();
+    }
+
+    _lifecycleSuspended = false;
+    _lifecycleWasBackgrounded = false;
+    _dismissAllCodingAlerts(clearActive: true);
+
+    late final Future<void> tracked;
+    tracked =
+        _resumeLifecycleTransport(
+          retainedProfile,
+          directory: directory,
+          workspace: workspace,
+        ).whenComplete(() {
+          if (identical(_manualReconnect, tracked)) {
+            _manualReconnect = null;
+            if (!_disposed) notifyListeners();
+          }
+        });
+    _manualReconnect = tracked;
+    return tracked;
   }
 
   Future<void> _trackLifecycleResume(Future<void> operation) {
@@ -1652,10 +2757,196 @@ class ConnectionController extends ChangeNotifier {
   ///
   /// Chat and other retained screens must not capture [api] before this
   /// future completes because a stale background transport may be replaced.
-  Future<OpenCodeApi?> prepareActionTransport() async {
+  OfflineQueueStore get _queueStore =>
+      _offlineQueueStore ??= OfflineQueueStore(prefs: store.prefs);
+
+  List<QueuedPrompt> get _queue => _offlineQueue ??= _queueStore.load();
+
+  /// Queued prompts for one session of the active profile, oldest first.
+  List<QueuedPrompt> queuedPromptsFor(String sessionID) {
+    final profileID = profile?.id;
+    if (profileID == null) return const [];
+    return [
+      for (final entry in _queue)
+        if (entry.profileID == profileID && entry.sessionID == sessionID)
+          entry,
+    ];
+  }
+
+  /// Queued prompts across the active profile, for the connection banner.
+  int get queuedPromptCount {
+    final profileID = profile?.id;
+    if (profileID == null) return 0;
+    return _queue.where((entry) => entry.profileID == profileID).length;
+  }
+
+  /// Queued prompts that belong to profiles other than the active one. A
+  /// flush never sends these; the count lets banners and the flush notice
+  /// say "N drafts waiting for other servers" instead of staying silent.
+  int get queuedPromptCountForOtherProfiles {
+    final profileID = profile?.id;
+    return _queue.where((entry) => entry.profileID != profileID).length;
+  }
+
+  /// Advances after a flush cycle that delivered at least one queued
+  /// prompt; [lastFlushedPromptCount] and [lastFlushSkippedForOtherProfiles]
+  /// describe that cycle. Screens compare revisions in their listener to
+  /// show a one-shot "Sent N queued prompts" confirmation.
+  int offlineFlushRevision = 0;
+  int lastFlushedPromptCount = 0;
+  int lastFlushSkippedForOtherProfiles = 0;
+
+  /// Adds a drafted prompt to the offline queue. Returns false when the
+  /// entry exceeds the composer's aggregate attachment cap and was not
+  /// queued; the caller keeps its existing limits messaging.
+  Future<bool> queuePrompt(QueuedPrompt prompt) async {
+    if (prompt.payloadBytes > OfflineQueueStore.maxEntryBytes) return false;
+    _queue.add(prompt);
+    await _queueStore.save(_queue);
+    notifyListeners();
+    return true;
+  }
+
+  Future<void> removeQueuedPrompt(String id) async {
+    _queue.removeWhere((entry) => entry.id == id);
+    await _queueStore.save(_queue);
+    notifyListeners();
+  }
+
+  SessionDraftStore get _draftStore =>
+      _sessionDraftStore ??= SessionDraftStore(prefs: store.prefs);
+
+  Map<String, SessionDraft> get _drafts =>
+      _sessionDrafts ??= _draftStore.load();
+
+  /// The unsent composer text remembered for [sessionID], if any.
+  String? sessionDraft(String sessionID) => _drafts[sessionID]?.text;
+
+  /// Remembers (or, when [text] is blank, forgets) the composer draft for
+  /// one session. No [notifyListeners]: drafts drive nothing outside the
+  /// chat screen that saved them.
+  Future<void> saveSessionDraft(String sessionID, String text) async {
+    if (text.trim().isEmpty) {
+      if (_drafts.remove(sessionID) == null) return;
+    } else {
+      _drafts[sessionID] = SessionDraft(
+        sessionID: sessionID,
+        text: text,
+        updatedAt: DateTime.now().millisecondsSinceEpoch,
+      );
+      // Mirror the store's cap in memory: oldest drafts fall off first.
+      if (_drafts.length > SessionDraftStore.maxDrafts) {
+        final oldest = _drafts.values.reduce(
+          (a, b) => a.updatedAt <= b.updatedAt ? a : b,
+        );
+        _drafts.remove(oldest.sessionID);
+      }
+    }
+    await _draftStore.save(_drafts);
+  }
+
+  /// Sends queued prompts for the active profile, oldest first, through the
+  /// wake-reconciled transport. A connectivity failure stops the flush (the
+  /// server is still unreachable); a declared server failure keeps that
+  /// entry with its error inline and continues with the next.
+  Future<void> flushOfflineQueue() async {
+    if (_flushingOfflineQueue || _disposed) return;
+    final profileID = profile?.id;
+    if (profileID == null) return;
+    if (!_queue.any((entry) => entry.profileID == profileID)) return;
+    _flushingOfflineQueue = true;
+    var mutated = false;
+    var sent = 0;
+    try {
+      for (final entry in List.of(_queue)) {
+        if (entry.profileID != profileID) continue;
+        final currentApi = await prepareActionTransport();
+        if (currentApi == null || status != StreamStatus.connected) break;
+        try {
+          await currentApi.promptAsync(
+            entry.sessionID,
+            text: entry.text,
+            model: entry.model,
+            agent: entry.agent?.isNotEmpty == true ? entry.agent : null,
+            variant: entry.variant?.isNotEmpty == true ? entry.variant : null,
+            attachments: entry.attachments,
+            agentMentions: entry.mentions,
+          );
+          _queue.removeWhere((queued) => queued.id == entry.id);
+          mutated = true;
+          sent += 1;
+        } on ApiException catch (error) {
+          if (error.statusCode == null) break;
+          final index = _queue.indexWhere((queued) => queued.id == entry.id);
+          if (index >= 0) {
+            _queue[index] = entry.withError(error.message);
+            mutated = true;
+          }
+        } catch (_) {
+          break;
+        }
+      }
+    } finally {
+      _flushingOfflineQueue = false;
+      if (sent > 0) {
+        lastFlushedPromptCount = sent;
+        lastFlushSkippedForOtherProfiles = queuedPromptCountForOtherProfiles;
+        offlineFlushRevision += 1;
+      }
+      if (mutated) {
+        await _queueStore.save(_queue);
+        notifyListeners();
+      }
+    }
+  }
+
+  Future<ServerGateway?> prepareActionTransport() async {
     await resumeFromLifecycle();
     if (_disposed || _lifecycleSuspended) return null;
     return api;
+  }
+
+  /// Returns the product repository paired with the wake-reconciled API.
+  ///
+  /// Retained screens must resolve this after [prepareActionTransport]
+  /// completes because lifecycle recovery can replace both objects together.
+  Future<ServerOperationsGateway?> prepareActionRepository() async {
+    await prepareActionTransport();
+    if (_disposed || _lifecycleSuspended) return null;
+    return repository;
+  }
+
+  /// Rebuilds the selected location after a configuration patch invalidates
+  /// the OpenCode instance that served it.
+  Future<void> reloadAfterConfigurationChange() async {
+    final currentProfile = _connectedProfile;
+    if (currentProfile == null) {
+      throw StateError('OpenCode is not connected.');
+    }
+    await _resumeLifecycleTransport(
+      currentProfile,
+      directory: directory,
+      workspace: workspace,
+    );
+  }
+
+  Future<ServerGateway> _requireActionTransport() async {
+    final actionApi = await prepareActionTransport();
+    if (actionApi != null) return actionApi;
+    throw ApiException(
+      connectionError ?? 'OpenCode is reconnecting. Try again shortly.',
+    );
+  }
+
+  Future<Session> createSession() async =>
+      (await _requireActionTransport()).createSession();
+
+  Future<void> renameSession(String sessionID, String title) async {
+    await (await _requireActionTransport()).renameSession(sessionID, title);
+  }
+
+  Future<void> deleteSession(String sessionID) async {
+    await (await _requireActionTransport()).deleteSession(sessionID);
   }
 
   Future<void> _reconcileAfterBackground() async {
@@ -1670,7 +2961,7 @@ class ConnectionController extends ChangeNotifier {
       if (!health.healthy) {
         throw ApiException('Server health check reported unhealthy');
       }
-      version = health.version ?? version ?? '';
+      _acceptRunningServerVersion(health.version ?? version);
     } catch (_) {
       if (!_isCurrent(generation, currentApi)) return;
       final profile = _connectedProfile;
@@ -1699,9 +2990,11 @@ class ConnectionController extends ChangeNotifier {
   }) async {
     final generation = _beginGeneration();
     _retireTransport();
-    final currentApi = _apiFactory(profile)
+    _connectedProfile = profile;
+    final pair = _buildTransportPair(profile);
+    final currentApi = pair.gateway
       ..setLocation(directory: directory, workspace: workspace);
-    final currentRepository = _repositoryFactory(currentApi)
+    final currentRepository = pair.operations
       ..setLocation(directory: directory, workspace: workspace);
     api = currentApi;
     repository = currentRepository;
@@ -1717,9 +3010,10 @@ class ConnectionController extends ChangeNotifier {
       if (!health.healthy) {
         throw ApiException('Server health check reported unhealthy');
       }
-      version = health.version ?? version ?? '';
+      _acceptRunningServerVersion(health.version ?? version);
     } catch (error) {
       if (!_isCurrent(generation, currentApi)) return;
+      _noteAuthFailure(error);
       _failCurrentConnection(
         error is ApiException
             ? error.message
@@ -1735,6 +3029,23 @@ class ConnectionController extends ChangeNotifier {
       refreshPendingPermissions(),
       refreshPendingQuestions(),
     ]);
+  }
+
+  @override
+  void notifyListeners() {
+    super.notifyListeners();
+    // Keep the Android home-screen widget's snapshot in step with session
+    // truth; the writer itself skips unchanged payloads.
+    if (!_disposed) {
+      unawaited(
+        _widgetSnapshot.update(
+          sessions: sortedSessions(),
+          busySessions: busySessions,
+          connected: status == StreamStatus.connected,
+          profileID: _connectedProfile?.id ?? store.activeId ?? '',
+        ),
+      );
+    }
   }
 
   List<Session> sortedSessions() {
@@ -1758,10 +3069,39 @@ class ConnectionController extends ChangeNotifier {
     return list;
   }
 
-  Future<void> selectLocation({String? directory, String? workspace}) async {
+  Future<void> selectLocation({String? directory, String? workspace}) =>
+      _selectLocation(directory: directory, workspace: workspace);
+
+  Future<void> selectInitialLocation({String? directory, String? workspace}) =>
+      _selectLocation(
+        directory: directory,
+        workspace: workspace,
+        preserveNotice: true,
+      );
+
+  Future<void> _selectLocation({
+    String? directory,
+    String? workspace,
+    bool preserveNotice = false,
+  }) async {
     final profile = _connectedProfile;
     if (profile == null || api == null) return;
-    if (this.directory == directory && this.workspace == workspace) return;
+    if (!preserveNotice) locationNotice = null;
+    if (this.directory == directory && this.workspace == workspace) {
+      try {
+        await store.setLocation(
+          profile.id,
+          directory: directory,
+          workspace: workspace,
+        );
+      } catch (_) {
+        locationNotice =
+            'This location is active, but it could not be remembered '
+            'for the next launch.';
+      }
+      notifyListeners();
+      return;
+    }
 
     final generation = _beginGeneration();
     final previousVersion = version;
@@ -1800,8 +3140,92 @@ class ConnectionController extends ChangeNotifier {
       refreshPendingQuestions(),
     ]);
     if (!_isCurrent(generation, currentApi)) return;
+    if (locationError == null) {
+      try {
+        await store.setLocation(
+          profile.id,
+          directory: directory,
+          workspace: workspace,
+        );
+      } catch (_) {
+        locationNotice =
+            'This location is active, but it could not be remembered '
+            'for the next launch.';
+      }
+    }
+    if (!_isCurrent(generation, currentApi)) return;
     locationLoading = false;
     notifyListeners();
+  }
+
+  Future<void> moveSessionToDirectory(
+    String sessionID, {
+    required String directory,
+    required bool moveChanges,
+  }) async {
+    await prepareActionTransport();
+    final currentRepository = repository;
+    if (currentRepository == null) {
+      throw StateError('OpenCode is reconnecting.');
+    }
+    await currentRepository.moveSession(
+      sessionID,
+      directory: directory,
+      moveChanges: moveChanges,
+    );
+    await selectLocation(directory: directory);
+    try {
+      await repository?.addSessionLocationReminder(sessionID, directory);
+    } catch (_) {
+      // The move itself succeeded. An older server may not support the
+      // synthetic no-reply reminder used by newer OpenCode clients.
+    }
+  }
+
+  Future<void> warpSessionToWorkspace(
+    String sessionID, {
+    required String directory,
+    required String? workspaceID,
+    required bool copyChanges,
+  }) async {
+    await prepareActionTransport();
+    final currentRepository = repository;
+    if (currentRepository == null) {
+      throw StateError('OpenCode is reconnecting.');
+    }
+    await currentRepository.warpSession(
+      sessionID,
+      workspaceID: workspaceID,
+      copyChanges: copyChanges,
+    );
+    await selectLocation(directory: directory, workspace: workspaceID);
+    try {
+      await repository?.addSessionLocationReminder(sessionID, directory);
+    } catch (_) {
+      // Keep a successful warp successful when only the contextual reminder
+      // is unavailable on an older server.
+    }
+  }
+
+  Future<void> switchConsoleOrganization(
+    ConsoleOrganization organization,
+  ) async {
+    await prepareActionTransport();
+    final currentRepository = repository;
+    if (currentRepository == null) {
+      throw StateError('OpenCode is reconnecting.');
+    }
+    await currentRepository.switchConsoleOrganization(organization);
+    final currentProfile = _connectedProfile;
+    if (currentProfile == null) {
+      await refreshCatalog();
+      return;
+    }
+    await _resumeLifecycleTransport(
+      currentProfile,
+      directory: directory,
+      workspace: workspace,
+    );
   }
 
   // ---------------- Selection persistence ----------------
@@ -1850,10 +3274,13 @@ class ConnectionController extends ChangeNotifier {
 
   Future<void> _refreshPreexistingProviderRuntime({
     required int generation,
-    required OpenCodeApi currentApi,
-    required ProductRepository currentRepository,
+    required ServerGateway currentApi,
+    required ServerOperationsGateway currentRepository,
     required ServerProfile profile,
   }) async {
+    // §7 row 25: v2 hot-reloads provider config, so there is no runtime to
+    // kick — skip the probe entirely instead of failing it once per connect.
+    if (!currentApi.capabilities.providerRuntimeRefresh) return;
     if (store.providerRuntimeWasRefreshed(
       profile.id,
       directory: directory,
@@ -1886,7 +3313,7 @@ class ConnectionController extends ChangeNotifier {
     return _generation;
   }
 
-  void _markDataRefreshReady(int generation, OpenCodeApi currentApi) {
+  void _markDataRefreshReady(int generation, ServerGateway currentApi) {
     if (_isCurrent(generation, currentApi)) dataRefreshRevision += 1;
   }
 
@@ -1896,18 +3323,24 @@ class ConnectionController extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool _isCurrent(int generation, OpenCodeApi? currentApi) =>
+  bool _isCurrent(int generation, ServerGateway? currentApi) =>
       !_disposed && generation == _generation && identical(api, currentApi);
 
   bool _isCurrentStream(
     int generation,
-    OpenCodeApi currentApi,
-    EventStream stream,
+    ServerGateway currentApi,
+    LiveEventChannel stream,
   ) => _isCurrent(generation, currentApi) && identical(_events, stream);
+
+  bool _isCurrentGlobalStream(
+    int generation,
+    ServerGateway currentApi,
+    LiveEventChannel stream,
+  ) => _isCurrent(generation, currentApi) && identical(_globalEvents, stream);
 
   bool _isCurrentSessionsRefresh(
     int generation,
-    OpenCodeApi currentApi,
+    ServerGateway currentApi,
     int refreshGeneration,
   ) =>
       _isCurrent(generation, currentApi) &&
@@ -1915,7 +3348,7 @@ class ConnectionController extends ChangeNotifier {
 
   bool _isCurrentCatalogRefresh(
     int generation,
-    OpenCodeApi currentApi,
+    ServerGateway currentApi,
     int refreshGeneration,
   ) =>
       _isCurrent(generation, currentApi) &&
@@ -1923,8 +3356,8 @@ class ConnectionController extends ChangeNotifier {
 
   bool _isCurrentQuestionsRefresh(
     int generation,
-    OpenCodeApi? currentApi,
-    ProductRepository currentRepository,
+    ServerGateway? currentApi,
+    ServerOperationsGateway currentRepository,
     int refreshGeneration,
   ) =>
       _isCurrent(generation, currentApi) &&
@@ -1943,7 +3376,6 @@ class ConnectionController extends ChangeNotifier {
 
   void _failCurrentConnection(String error) {
     _retireTransport();
-    _connectedProfile = null;
     version = null;
     status = StreamStatus.disconnected;
     lastError = error;
@@ -1955,6 +3387,9 @@ class ConnectionController extends ChangeNotifier {
     final oldEvents = _events;
     _events = null;
     unawaited(oldEvents?.dispose());
+    final oldGlobalEvents = _globalEvents;
+    _globalEvents = null;
+    unawaited(oldGlobalEvents?.dispose());
     _poll?.cancel();
     _poll = null;
     _busyStatusRefresh = null;
@@ -1965,6 +3400,7 @@ class ConnectionController extends ChangeNotifier {
   }
 
   void _clearLocationData() {
+    _dismissAllCodingAlerts(clearActive: true);
     _sessionsRefreshGeneration += 1;
     _catalogRefreshGeneration += 1;
     _questionsRefreshGeneration += 1;
@@ -1976,6 +3412,14 @@ class ConnectionController extends ChangeNotifier {
     busySessions = {};
     permissions = {};
     questions = {};
+    forms = {};
+    _resolvedFormIDs.clear();
+    _formRevision = 0;
+    _formRefreshGeneration += 1;
+    formsLoading = false;
+    formsError = null;
+    _inboxBySession.clear();
+    inboxRevision += 1;
     _resolvedPermissionIDs.clear();
     _legacyPermissionIdentities.clear();
     _v2PermissionSessions.clear();
@@ -2020,11 +3464,15 @@ class ConnectionController extends ChangeNotifier {
   void dispose() {
     if (_disposed) return;
     _disposed = true;
+    _dismissAllCodingAlerts(clearActive: true);
     _generation += 1;
     connectionRevision = _generation;
     _retireTransport();
     backgroundLive.removeListener(_backgroundLiveChanged);
     backgroundLive.dispose();
+    if (_ownsDiagnostics) diagnostics.dispose();
+    appearance.dispose();
+    themePack.dispose();
     unawaited(_eventBus.close());
     super.dispose();
   }

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../../api/models.dart';
+import '../app_theme.dart';
 import 'file_preview.dart';
 
 typedef ToolOutputFileLoader =
@@ -44,6 +45,16 @@ String _fileName(String value) {
   final normalized = value.replaceAll('\\', '/');
   final parts = normalized.split('/').where((part) => part.isNotEmpty);
   return parts.isEmpty ? value : parts.last;
+}
+
+/// Compact "Title · subtitle" line for the tool currently executing, used by
+/// the chat tool-group header as a live ticker while a run is active.
+String runningToolTicker(String rawName, ToolState state) {
+  final contract = _ToolContract.from(rawName, state);
+  final subtitle = contract.subtitle;
+  return subtitle == null || subtitle.isEmpty
+      ? contract.title
+      : '${contract.title} · $subtitle';
 }
 
 class _ToolContract {
@@ -122,6 +133,12 @@ class _ToolContract {
         subtitle = _valueString(input['command']);
         final exit = _valueNumber(metadata['exit']);
         if (exit != null) details.add('exit $exit');
+        // v2 shell messages surface their terminal status when the command
+        // did not run to completion.
+        final shellStatus = _valueString(metadata['shellStatus']) ?? '';
+        if (shellStatus == 'timeout' || shellStatus == 'killed') {
+          details.add(shellStatus);
+        }
         if (metadata['truncated'] == true) details.add('truncated');
         break;
       case 'edit':
@@ -244,6 +261,12 @@ class ToolCard extends StatefulWidget {
   final String toolName;
   final ToolState state;
   final bool embedded;
+
+  /// Optional longer-lived store (e.g. session-scoped) keyed by
+  /// [expansionKey], so expansion survives list recycling in a virtualized
+  /// transcript instead of resetting when the item State is rebuilt.
+  final Map<String, bool>? expansionStore;
+  final String? expansionKey;
   final ToolOutputFileLoader? filePreviewLoader;
   final ToolOutputFileAction? onAttachFile;
   final ToolOutputFileAction? onDownloadFile;
@@ -252,6 +275,8 @@ class ToolCard extends StatefulWidget {
     required this.toolName,
     required this.state,
     this.embedded = false,
+    this.expansionStore,
+    this.expansionKey,
     this.filePreviewLoader,
     this.onAttachFile,
     this.onDownloadFile,
@@ -269,10 +294,40 @@ class _ToolCardState extends State<ToolCard> {
   List<ToolOutputFile> get _images =>
       _files.where((file) => file.isImage).toList();
 
+  /// The ordered v2 content segments, but only when their order carries
+  /// information a joined string loses — a text run after a file. Trivial
+  /// orders (all text, or text followed only by trailing files) keep the
+  /// existing v1 rendering exactly.
+  List<ToolResultSegment>? get _interleavedSegments {
+    final segments = widget.state.segments;
+    var seenFile = false;
+    for (final segment in segments) {
+      if (segment.isFile) {
+        seenFile = true;
+      } else if (seenFile) {
+        return segments;
+      }
+    }
+    return null;
+  }
+
+  bool? get _storedExpansion => widget.expansionKey == null
+      ? null
+      : widget.expansionStore?[widget.expansionKey!];
+
+  void _toggleExpanded() {
+    setState(() {
+      _expanded = !_expanded;
+      if (widget.expansionKey case final key?) {
+        widget.expansionStore?[key] = _expanded;
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-    _expanded = widget.state.status == 'error';
+    _expanded = _storedExpansion ?? (widget.state.status == 'error');
     _syncPreviewLoads();
   }
 
@@ -350,7 +405,7 @@ class _ToolCardState extends State<ToolCard> {
   Color get _statusColor {
     switch (widget.state.status) {
       case 'completed':
-        return Colors.green.shade400;
+        return AppTheme.successOf(Theme.of(context));
       case 'error':
         return Theme.of(context).colorScheme.error;
       default:
@@ -360,6 +415,30 @@ class _ToolCardState extends State<ToolCard> {
 
   bool get _running =>
       widget.state.status == 'pending' || widget.state.status == 'running';
+
+  /// One ordered v2 content segment: a mono text run, an image preview, or a
+  /// file tile.
+  Widget _segmentWidget(ToolResultSegment segment) {
+    final file = segment.file;
+    if (file == null) {
+      return _Mono(text: segment.text!, name: 'tool-output.txt', maxLines: 220);
+    }
+    if (file.isImage) {
+      return _ToolOutputPreview(
+        file: file,
+        load: _loadCached(file),
+        onRetry: () => _retryPreview(file),
+        onAttach: widget.onAttachFile,
+        onDownload: widget.onDownloadFile,
+      );
+    }
+    return _ToolOutputFileTile(
+      file: file,
+      load: () => _loadCached(file),
+      onAttach: widget.onAttachFile,
+      onDownload: widget.onDownloadFile,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -396,9 +475,7 @@ class _ToolCardState extends State<ToolCard> {
             expanded: hasBody ? _expanded : null,
             label: '${contract.title}, ${widget.state.status}',
             child: InkWell(
-              onTap: hasBody
-                  ? () => setState(() => _expanded = !_expanded)
-                  : null,
+              onTap: hasBody ? _toggleExpanded : null,
               borderRadius: widget.embedded
                   ? BorderRadius.zero
                   : BorderRadius.circular(8),
@@ -438,7 +515,7 @@ class _ToolCardState extends State<ToolCard> {
                                   style: theme.textTheme.labelSmall?.copyWith(
                                     color: theme.colorScheme.onSurfaceVariant,
                                     fontFamily: contract.kind == _ToolKind.shell
-                                        ? 'monospace'
+                                        ? 'AppMono'
                                         : null,
                                   ),
                                 ),
@@ -503,7 +580,22 @@ class _ToolCardState extends State<ToolCard> {
               ),
             ),
           ),
-          if (_files.isNotEmpty)
+          if (_interleavedSegments case final segments?)
+            Padding(
+              key: const Key('tool-interleaved-output'),
+              padding: const EdgeInsets.fromLTRB(10, 2, 10, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final segment in segments)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: _segmentWidget(segment),
+                    ),
+                ],
+              ),
+            )
+          else if (_files.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 2, 10, 10),
               child: Column(
@@ -532,8 +624,17 @@ class _ToolCardState extends State<ToolCard> {
           if (_expanded && hasBody)
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(10, 4, 10, 10),
-              child: _ToolContractBody(contract: contract, state: widget.state),
+              padding: widget.embedded
+                  ? const EdgeInsets.fromLTRB(34, 0, 10, 8)
+                  : const EdgeInsets.fromLTRB(10, 4, 10, 10),
+              child: _ToolContractBody(
+                contract: contract,
+                state: widget.state,
+                embedded: widget.embedded,
+                // Output already rendered in order above; the expanded body
+                // keeps input/metadata only.
+                suppressOutput: _interleavedSegments != null,
+              ),
             ),
         ],
       ),
@@ -542,10 +643,20 @@ class _ToolCardState extends State<ToolCard> {
 }
 
 class _ToolContractBody extends StatelessWidget {
-  const _ToolContractBody({required this.contract, required this.state});
+  const _ToolContractBody({
+    required this.contract,
+    required this.state,
+    required this.embedded,
+    this.suppressOutput = false,
+  });
 
   final _ToolContract contract;
   final ToolState state;
+  final bool embedded;
+
+  /// True when the ordered segment rendering already shows the output; the
+  /// expanded body then only adds the input JSON.
+  final bool suppressOutput;
 
   Map<String, dynamic> get _metadata =>
       state.metadata ?? const <String, dynamic>{};
@@ -553,8 +664,12 @@ class _ToolContractBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (state.status == 'error') {
-      return _ErrorOutput(message: state.output ?? 'Tool failed.');
+      return _ErrorOutput(
+        message: state.output ?? 'Tool failed.',
+        embedded: embedded,
+      );
     }
+    if (suppressOutput) return _genericInput();
     return switch (contract.kind) {
       _ToolKind.read => _readBody(),
       _ToolKind.shell => _shellBody(),
@@ -853,14 +968,39 @@ class _ToolContractBody extends StatelessWidget {
 }
 
 class _ErrorOutput extends StatelessWidget {
-  const _ErrorOutput({required this.message});
+  const _ErrorOutput({required this.message, required this.embedded});
 
   final String message;
+  final bool embedded;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final text = SelectableText(
+      message.replaceFirst(RegExp(r'^Error:\s*'), ''),
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+        color: scheme.onErrorContainer,
+        fontFamily: 'AppMono',
+      ),
+    );
+    if (embedded) {
+      return Container(
+        key: const Key('embedded-tool-error-output'),
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(9, 5, 0, 5),
+        decoration: BoxDecoration(
+          border: Border(
+            left: BorderSide(
+              width: 2,
+              color: scheme.error.withValues(alpha: .72),
+            ),
+          ),
+        ),
+        child: text,
+      );
+    }
     return Container(
+      key: const Key('standalone-tool-error-output'),
       width: double.infinity,
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -868,13 +1008,7 @@ class _ErrorOutput extends StatelessWidget {
         borderRadius: BorderRadius.circular(7),
         border: Border.all(color: scheme.error.withValues(alpha: .28)),
       ),
-      child: SelectableText(
-        message.replaceFirst(RegExp(r'^Error:\s*'), ''),
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: scheme.onErrorContainer,
-          fontFamily: 'monospace',
-        ),
-      ),
+      child: text,
     );
   }
 }
@@ -896,7 +1030,7 @@ class _PathCaption extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: Theme.of(
             context,
-          ).textTheme.labelSmall?.copyWith(fontFamily: 'monospace'),
+          ).textTheme.labelSmall?.copyWith(fontFamily: 'AppMono'),
         ),
       ),
     ],
@@ -928,7 +1062,7 @@ class _PathList extends StatelessWidget {
           child: SelectableText(
             entries.take(200).join('\n'),
             style: theme.textTheme.bodySmall?.copyWith(
-              fontFamily: 'monospace',
+              fontFamily: 'AppMono',
               height: 1.4,
             ),
           ),
@@ -968,7 +1102,7 @@ class _PatchFileSection extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.labelMedium?.copyWith(
-                  fontFamily: 'monospace',
+                  fontFamily: 'AppMono',
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -976,7 +1110,9 @@ class _PatchFileSection extends StatelessWidget {
             if (additions > 0)
               Text(
                 '+$additions',
-                style: TextStyle(color: Colors.green.shade600),
+                style: TextStyle(
+                  color: AppTheme.successOf(Theme.of(context)),
+                ),
               ),
             if (additions > 0 && deletions > 0) const SizedBox(width: 6),
             if (deletions > 0)
@@ -1004,41 +1140,56 @@ class _DiffPreview extends StatelessWidget {
 
   final String diff;
 
+  /// Inline rows before "See all" takes over; small enough (~240px) that the
+  /// old IntrinsicWidth-over-500-lines layout cost is gone and the body
+  /// never becomes a nested vertical scroll trap.
+  static const _inlineLineCap = 13;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final lines = diff.split('\n');
-    final visible = lines.take(500).toList();
-    return Container(
-      constraints: const BoxConstraints(maxHeight: 420),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: .35)),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) => SingleChildScrollView(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: IntrinsicWidth(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minWidth: constraints.maxWidth),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (final line in visible) _DiffPreviewLine(line: line),
-                    if (lines.length > visible.length)
-                      const Padding(
-                        padding: EdgeInsets.all(8),
-                        child: Text('… diff truncated in preview'),
-                      ),
-                  ],
+    final visible = lines.take(_inlineLineCap).toList();
+    final truncated = lines.length > visible.length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: theme.dividerColor.withValues(alpha: .35),
+            ),
+          ),
+          child: LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: IntrinsicWidth(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (final line in visible) _DiffPreviewLine(line: line),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ),
+        if (truncated)
+          _SeeAllButton(
+            label: 'See all · ${lines.length} lines',
+            onPressed: () => showFilePreviewSheet(
+              context,
+              FilePreviewData(name: 'changes.diff', text: diff),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -1054,15 +1205,16 @@ class _DiffPreviewLine extends StatelessWidget {
     final added = line.startsWith('+') && !line.startsWith('+++');
     final removed = line.startsWith('-') && !line.startsWith('---');
     final header = line.startsWith('@@') || line.startsWith('diff ');
+    final success = AppTheme.successOf(theme);
     final background = added
-        ? Colors.green.withValues(alpha: .12)
+        ? success.withValues(alpha: .14)
         : removed
         ? theme.colorScheme.error.withValues(alpha: .12)
         : header
         ? theme.colorScheme.primary.withValues(alpha: .1)
         : Colors.transparent;
     final foreground = added
-        ? Colors.green.shade700
+        ? success
         : removed
         ? theme.colorScheme.error
         : header
@@ -1076,7 +1228,7 @@ class _DiffPreviewLine extends StatelessWidget {
           line.isEmpty ? ' ' : line,
           style: theme.textTheme.bodySmall?.copyWith(
             color: foreground,
-            fontFamily: 'monospace',
+            fontFamily: 'AppMono',
             height: 1.35,
           ),
         ),
@@ -1108,7 +1260,7 @@ class _TodoRow extends StatelessWidget {
                 ? Icons.hourglass_top_rounded
                 : Icons.checklist_rounded,
             size: 17,
-            color: done ? Colors.green.shade500 : theme.hintColor,
+            color: done ? AppTheme.successOf(theme) : theme.hintColor,
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -1294,10 +1446,23 @@ class _ToolOutputPreview extends StatelessWidget {
                       maxHeight: 260,
                     ),
                     color: theme.colorScheme.surfaceContainerLowest,
-                    child: Image.memory(
-                      imageBytes,
-                      key: const Key('tool-output-image'),
-                      fit: BoxFit.contain,
+                    child: LayoutBuilder(
+                      builder: (context, imageConstraints) {
+                        // Decode at the preview's own pixel size: a full
+                        // screenshot otherwise decodes at native resolution
+                        // (tens of MB) for a ~260px-tall thumbnail.
+                        final dpr = MediaQuery.devicePixelRatioOf(context);
+                        final cacheWidth = imageConstraints.maxWidth.isFinite
+                            ? (imageConstraints.maxWidth * dpr).round()
+                            : null;
+                        return Image.memory(
+                          imageBytes,
+                          key: const Key('tool-output-image'),
+                          fit: BoxFit.contain,
+                          cacheWidth: cacheWidth,
+                          gaplessPlayback: true,
+                        );
+                      },
                     ),
                   ),
                   Positioned(
@@ -1448,6 +1613,34 @@ class _ToolOutputFileTileState extends State<_ToolOutputFileTile> {
   }
 }
 
+/// Inline caps for expanded tool bodies (~240px of monospace) so they never
+/// become nested vertical scroll traps inside the transcript; anything
+/// longer routes through "See all" to the file preview sheet.
+const _monoInlineLineCap = 13;
+const _monoInlineCharCap = 4000;
+
+class _SeeAllButton extends StatelessWidget {
+  const _SeeAllButton({required this.label, required this.onPressed});
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => Align(
+    alignment: Alignment.centerLeft,
+    child: TextButton.icon(
+      key: const Key('tool-body-see-all'),
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        visualDensity: VisualDensity.compact,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+      ),
+      icon: const Icon(Icons.open_in_full_rounded, size: 14),
+      label: Text(label, style: Theme.of(context).textTheme.labelSmall),
+    ),
+  );
+}
+
 class _Mono extends StatelessWidget {
   final String text;
   final String name;
@@ -1457,26 +1650,44 @@ class _Mono extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(8),
-      constraints: BoxConstraints(maxHeight: maxLines * 18.0),
-      decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark
-            ? Colors.black.withValues(alpha: .4)
-            : Colors.black.withValues(alpha: .04),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: SingleChildScrollView(
-        child: SmartTextPreview(
-          data: FilePreviewData(
-            name: name,
-            text: text.length > 8000
-                ? '${text.substring(0, 8000)}\n… truncated'
-                : text,
+    final lines = text.split('\n');
+    final lineCap = maxLines < _monoInlineLineCap ? maxLines : _monoInlineLineCap;
+    var visible = lines.length > lineCap
+        ? lines.take(lineCap).join('\n')
+        : text;
+    if (visible.length > _monoInlineCharCap) {
+      visible = visible.substring(0, _monoInlineCharCap);
+    }
+    final truncated = visible.length < text.length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: theme.brightness == Brightness.dark
+                ? Colors.black.withValues(alpha: .4)
+                : Colors.black.withValues(alpha: .04),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: SmartTextPreview(
+            data: FilePreviewData(
+              name: name,
+              text: truncated ? '$visible\n…' : visible,
+            ),
           ),
         ),
-      ),
+        if (truncated)
+          _SeeAllButton(
+            label: 'See all · ${lines.length} lines',
+            onPressed: () => showFilePreviewSheet(
+              context,
+              FilePreviewData(name: name, text: text),
+            ),
+          ),
+      ],
     );
   }
 }

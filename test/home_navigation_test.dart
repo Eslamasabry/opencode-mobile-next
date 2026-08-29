@@ -5,6 +5,7 @@ import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
+import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
@@ -79,7 +80,11 @@ Future<void> _pumpShell(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [connProvider.overrideWithValue(controller)],
-      child: const MaterialApp(home: HomeScreen()),
+      child: const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: HomeScreen(),
+      ),
     ),
   );
   await tester.pumpAndSettle();
@@ -106,6 +111,114 @@ void main() {
     expect(find.text('More'), findsOneWidget);
     expect(find.text('API'), findsNothing);
     expect(find.text('Guide'), findsNothing);
+  });
+
+  testWidgets('failed reconnect keeps the product shell and location visible', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final controller = await _controller(profileName: 'This device (Termux)')
+      ..api = null
+      ..repository = null
+      ..status = StreamStatus.disconnected
+      ..lastError = 'Endpoint is unavailable';
+    addTearDown(controller.dispose);
+
+    await _pumpShell(tester, controller);
+
+    expect(find.byType(HomeScreen), findsOneWidget);
+    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('connection-status-banner')),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Endpoint is unavailable'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('connection-status-banner')),
+        matching: find.text('Try again'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Change server'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    controller.dispose();
+  });
+
+  testWidgets('recovery banner fits a 320dp phone with 2x text', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final controller = await _controller(profileName: 'This device (Termux)')
+      ..api = null
+      ..repository = null
+      ..status = StreamStatus.disconnected
+      ..lastError = 'Endpoint is unavailable';
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: const TextScaler.linear(2)),
+              child: const HomeScreen(),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('connection-status-banner')),
+        matching: find.text('Try again'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Change server'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    controller.dispose();
+  });
+
+  testWidgets('automatic SSE reconnect still offers a manual retry', (
+    tester,
+  ) async {
+    final controller = await _controller(profileName: 'This device (Termux)')
+      ..status = StreamStatus.reconnecting;
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: HomeScreen(),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final retry = tester.widget<TextButton>(
+      find.widgetWithText(TextButton, 'Try again'),
+    );
+    expect(retry.onPressed, isNotNull);
+    expect(find.text('Change server'), findsOneWidget);
   });
 
   testWidgets('phone header separates long local server and workspace labels', (

@@ -2,12 +2,22 @@ import 'package:flutter/material.dart';
 
 import '../../api/models.dart';
 import '../../api/product_repository.dart';
+import '../../api2/models.dart' show Api2FormInfo;
 import '../../state/connection.dart';
+import '../permission_presentation.dart';
 import '../widgets/product_states.dart';
+import 'chat/form_flow.dart';
+import 'chat/permission_sheet.dart';
 
 class RequestsScreen extends StatefulWidget {
   final ConnectionController controller;
-  const RequestsScreen({super.key, required this.controller});
+  final String? initialQuestionSessionID;
+
+  const RequestsScreen({
+    super.key,
+    required this.controller,
+    this.initialQuestionSessionID,
+  });
 
   @override
   State<RequestsScreen> createState() => _RequestsScreenState();
@@ -16,17 +26,61 @@ class RequestsScreen extends StatefulWidget {
 class _RequestsScreenState extends State<RequestsScreen> {
   bool _loading = true;
   String? _error;
+  bool _initialQuestionScheduled = false;
+  bool _initialQuestionHandled = false;
 
   @override
   void initState() {
     super.initState();
     widget.controller.addListener(_changed);
-    _refresh();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _refresh();
+      _scheduleInitialQuestion();
+    });
   }
 
   void _changed() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    setState(() {});
+    _scheduleInitialQuestion();
   }
+
+  void _scheduleInitialQuestion() {
+    final sessionID = widget.initialQuestionSessionID;
+    if (!mounted ||
+        sessionID == null ||
+        _initialQuestionHandled ||
+        _initialQuestionScheduled) {
+      return;
+    }
+    PendingQuestion? target;
+    for (final question in widget.controller.questions.values) {
+      if (question.sessionID == sessionID) {
+        target = question;
+        break;
+      }
+    }
+    if (target == null) return;
+    _initialQuestionScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initialQuestionScheduled = false;
+      if (!mounted || _initialQuestionHandled) return;
+      final current = widget.controller.questions[target!.id];
+      if (current == null || current.sessionID != sessionID) return;
+      _initialQuestionHandled = true;
+      _showQuestion(current);
+    });
+  }
+
+  Future<void> _showQuestion(PendingQuestion question) =>
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        showDragHandle: true,
+        builder: (_) =>
+            _QuestionSheet(question: question, controller: widget.controller),
+      );
 
   Future<void> _refresh() async {
     setState(() {
@@ -37,9 +91,10 @@ class _RequestsScreenState extends State<RequestsScreen> {
       await Future.wait([
         widget.controller.refreshPendingPermissions(),
         widget.controller.refreshPendingQuestions(),
+        widget.controller.refreshPendingForms(),
       ]);
     } catch (error) {
-      if (mounted) setState(() => _error = error.toString());
+      if (mounted) setState(() => _error = productErrorText(error));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -48,25 +103,52 @@ class _RequestsScreenState extends State<RequestsScreen> {
   @override
   Widget build(BuildContext context) {
     final permissions = widget.controller.permissions.values.toList();
-    final questions = widget.controller.questions.values.toList();
+    final questions = widget.controller.questions.values.toList()
+      ..sort((a, b) {
+        final selected = widget.initialQuestionSessionID;
+        if (selected == null) return 0;
+        final aSelected = a.sessionID == selected;
+        final bSelected = b.sessionID == selected;
+        return aSelected == bSelected ? 0 : (aSelected ? -1 : 1);
+      });
+    // §7 rule 5: forms are v2-only, so a v1 connection never lists them even
+    // if a stale entry survived a server switch.
+    final formsAvailable = widget.controller.capabilities.forms;
+    final sessionForms = !formsAvailable
+        ? const <Api2FormInfo>[]
+        : widget.controller.forms.values
+              .where((form) => form.sessionID != 'global')
+              .toList();
+    final globalForms = !formsAvailable
+        ? const <Api2FormInfo>[]
+        : widget.controller.forms.values
+              .where((form) => form.sessionID == 'global')
+              .toList();
     final loading =
         _loading ||
         widget.controller.permissionsLoading ||
-        widget.controller.questionsLoading;
+        widget.controller.questionsLoading ||
+        widget.controller.formsLoading;
     final error =
         _error ??
         widget.controller.permissionsError ??
-        widget.controller.questionsError;
+        widget.controller.questionsError ??
+        widget.controller.formsError;
+    final nothingPending =
+        permissions.isEmpty &&
+        questions.isEmpty &&
+        sessionForms.isEmpty &&
+        globalForms.isEmpty;
     return Scaffold(
       appBar: AppBar(title: const Text('Pending requests')),
-      body: loading && permissions.isEmpty && questions.isEmpty
+      body: loading && nothingPending
           ? const LoadingList()
-          : error != null && permissions.isEmpty && questions.isEmpty
+          : error != null && nothingPending
           ? RefreshIndicator(
               onRefresh: _refresh,
               child: ProductErrorState(message: error, onRetry: _refresh),
             )
-          : permissions.isEmpty && questions.isEmpty
+          : nothingPending
           ? RefreshIndicator(
               onRefresh: _refresh,
               child: ListView(
@@ -98,7 +180,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
                       title: Text(error),
                       trailing: TextButton(
                         onPressed: _refresh,
-                        child: const Text('Retry'),
+                        child: const Text('Try again'),
                       ),
                     ),
                   if (permissions.isNotEmpty) ...[
@@ -117,6 +199,16 @@ class _RequestsScreenState extends State<RequestsScreen> {
                         controller: widget.controller,
                       ),
                   ],
+                  if (sessionForms.isNotEmpty) ...[
+                    SectionLabel('Forms (${sessionForms.length})'),
+                    for (final form in sessionForms)
+                      _FormTile(form: form, controller: widget.controller),
+                  ],
+                  if (globalForms.isNotEmpty) ...[
+                    const SectionLabel('Server requests'),
+                    for (final form in globalForms)
+                      _FormTile(form: form, controller: widget.controller),
+                  ],
                 ],
               ),
             ),
@@ -130,189 +222,48 @@ class _RequestsScreenState extends State<RequestsScreen> {
   }
 }
 
-class _PermissionTile extends StatefulWidget {
+class _PermissionTile extends StatelessWidget {
   final PermissionRequest permission;
   final ConnectionController controller;
 
   const _PermissionTile({required this.permission, required this.controller});
 
   @override
-  State<_PermissionTile> createState() => _PermissionTileState();
-}
-
-class _PermissionTileState extends State<_PermissionTile> {
-  bool _busy = false;
-  String? _error;
-
-  Future<void> _reply(String value) async {
-    if (_busy) return;
-    if (value == 'reject') {
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Reject permission?'),
-          content: const Text(
-            'The current OpenCode action will not receive this permission.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Reject'),
-            ),
-          ],
-        ),
-      );
-      if (confirmed != true) return;
-    } else if (value == 'always') {
-      final broader = widget.permission.always.isNotEmpty
-          ? widget.permission.always
-          : widget.permission.patterns;
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          scrollable: true,
-          title: const Text('Confirm broader access'),
-          content: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Context: ${_permissionTitle(widget.permission.permission)} for '
-                '${_sessionTitle(widget.controller, widget.permission.sessionID)}',
-              ),
-              const SizedBox(height: 12),
-              const Text('Always allow patterns:'),
-              const SizedBox(height: 4),
-              SelectableText(
-                broader.isEmpty
-                    ? '(all matching requests)'
-                    : broader.join('\n'),
-                style: const TextStyle(fontFamily: 'monospace'),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Future matching actions can run without another prompt until OpenCode restarts. Allow once is safer.',
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Keep asking'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Confirm always allow'),
-            ),
-          ],
-        ),
-      );
-      if (confirmed != true) return;
-    }
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-    try {
-      await widget.controller.answerPermission(widget.permission.id, value);
-    } catch (error) {
-      if (mounted) setState(() => _error = error.toString());
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final permission = widget.permission;
     final theme = Theme.of(context);
     final title = permission.permission.isEmpty
         ? 'Permission required'
-        : _permissionTitle(permission.permission);
-    return ExpansionTile(
+        : permissionRequestTitle(permission.permission);
+    return ListTile(
+      minTileHeight: 66,
       leading: Icon(Icons.shield_outlined, color: theme.colorScheme.tertiary),
       title: Text(title),
       subtitle: Text(
-        _sessionTitle(widget.controller, permission.sessionID),
+        permission.patterns.isNotEmpty
+            ? permission.patterns.first
+            : _sessionTitle(controller, permission.sessionID),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
+        style: permission.patterns.isNotEmpty
+            ? const TextStyle(fontFamily: 'AppMono', fontSize: 12.5)
+            : null,
       ),
-      childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: SelectableText(
-            permission.patterns.isEmpty
-                ? 'OpenCode requested ${permission.permission} access.'
-                : permission.patterns.join('\n'),
-            style: const TextStyle(fontFamily: 'monospace', fontSize: 12.5),
-          ),
+      trailing: const Icon(Icons.chevron_right_rounded),
+      // One permission component, three entry points: the tile opens the
+      // same sheet the chat auto-presents.
+      onTap: () => showPermissionSheet(
+        context,
+        permission: permission,
+        supportsRejectMessage: controller.permissionSupportsRejectMessage(
+          permission.id,
         ),
-        if (permission.always.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'Always allow scope: ${permission.always.join(', ')}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.hintColor,
-              ),
-            ),
-          ),
-        ],
-        if (_error != null) ...[
-          const SizedBox(height: 10),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              _error!,
-              style: TextStyle(color: theme.colorScheme.error),
-            ),
-          ),
-        ],
-        const SizedBox(height: 14),
-        Wrap(
-          alignment: WrapAlignment.end,
-          spacing: 6,
-          runSpacing: 8,
-          children: [
-            TextButton(
-              onPressed: _busy ? null : () => _reply('reject'),
-              child: const Text('Reject'),
-            ),
-            OutlinedButton(
-              onPressed: _busy ? null : () => _reply('always'),
-              child: const Text('Always'),
-            ),
-            FilledButton(
-              onPressed: _busy ? null : () => _reply('once'),
-              child: _busy
-                  ? const SizedBox.square(
-                      dimension: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Allow once'),
-            ),
-          ],
-        ),
-      ],
+        contextLabel:
+            'for ${_sessionTitle(controller, permission.sessionID)}',
+        onReply: (reply, {message}) =>
+            controller.answerPermission(permission.id, reply, message: message),
+      ),
     );
   }
-
-  static String _permissionTitle(String permission) => switch (permission) {
-    'bash' => 'Run a shell command',
-    'edit' => 'Edit a file',
-    'read' => 'Read a file',
-    'external_directory' => 'Access an external directory',
-    'doom_loop' => 'Continue after repeated failures',
-    _ => 'Use $permission',
-  };
 }
 
 class _QuestionTile extends StatelessWidget {
@@ -349,6 +300,37 @@ class _QuestionTile extends StatelessWidget {
         builder: (_) =>
             _QuestionSheet(question: question, controller: controller),
       ),
+    );
+  }
+}
+
+class _FormTile extends StatelessWidget {
+  final Api2FormInfo form;
+  final ConnectionController controller;
+
+  const _FormTile({required this.form, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    final count = form.fields.length;
+    return ListTile(
+      key: ValueKey('form-request-tile-${form.id}'),
+      minTileHeight: 66,
+      leading: Icon(
+        Icons.fact_check_outlined,
+        color: Theme.of(context).colorScheme.primary,
+      ),
+      title: Text(form.title ?? 'Input requested'),
+      subtitle: Text(
+        form.sessionID == 'global'
+            ? 'Asked by an MCP server'
+            : '$count question${count == 1 ? '' : 's'} · '
+                  '${_sessionTitle(controller, form.sessionID)}',
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: const Icon(Icons.chevron_right_rounded),
+      onTap: () => presentConnectionForm(context, controller, form),
     );
   }
 }
@@ -410,7 +392,7 @@ class _QuestionSheetState extends State<_QuestionSheet> {
       await widget.controller.answerQuestion(widget.question.id, answers);
       if (mounted) Navigator.pop(context);
     } catch (error) {
-      if (mounted) setState(() => _error = error.toString());
+      if (mounted) setState(() => _error = productErrorText(error));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -445,7 +427,7 @@ class _QuestionSheetState extends State<_QuestionSheet> {
       await widget.controller.rejectQuestion(widget.question.id);
       if (mounted) Navigator.pop(context);
     } catch (error) {
-      if (mounted) setState(() => _error = error.toString());
+      if (mounted) setState(() => _error = productErrorText(error));
     } finally {
       if (mounted) setState(() => _busy = false);
     }

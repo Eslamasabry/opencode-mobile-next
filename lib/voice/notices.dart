@@ -40,7 +40,7 @@ class VoiceNoticesView extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Text(
             snapshot.data!,
-            style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+            style: const TextStyle(fontFamily: 'AppMono', fontSize: 12),
           ),
         ),
       );

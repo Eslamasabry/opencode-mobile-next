@@ -36,6 +36,30 @@ The license file distributed in the 6.2.1 pub package carries the notice
 "Copyright 2022 openapi4j authors. All rights reserved." It is reproduced
 verbatim in the license file referenced above.
 
+## scrollable_positioned_list
+
+- Component: `scrollable_positioned_list` Flutter package
+- Version: 0.3.8
+- Project: https://github.com/google/flutter.widgets/tree/master/packages/scrollable_positioned_list
+- Copyright: 2018 the Dart project authors, Inc.
+- License: BSD 3-Clause; see
+  `LICENSES/BSD-3-Clause-scrollable-positioned-list.txt`
+
+This package supplies stable indexed scrolling for long, mixed-height message
+timelines.
+
+## JetBrains Mono
+
+- Component: JetBrains Mono font files bundled under `assets/fonts/`
+- Version: distributed TTF builds from the upstream repository
+- Project: https://github.com/JetBrains/JetBrainsMono
+- Copyright: 2020 The JetBrains Mono Project Authors
+- License: SIL Open Font License 1.1; see
+  `LICENSES/OFL-1.1-JetBrains-Mono.txt`
+
+These font files render code, terminal output, paths, and other monospace
+content throughout the application.
+
 ## OpenAI Whisper and converted ONNX model files
 
 The downloadable INT8 ONNX files are conversions of multilingual OpenAI

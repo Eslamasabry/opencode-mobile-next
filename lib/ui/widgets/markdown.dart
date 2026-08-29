@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import 'code_highlight.dart';
 
 Future<void> openMarkdownExternalLink(
   BuildContext context,
@@ -45,7 +49,7 @@ Future<void> openMarkdownExternalLink(
           const SizedBox(height: 4),
           SelectableText(
             uri.host,
-            style: const TextStyle(fontFamily: 'monospace'),
+            style: const TextStyle(fontFamily: 'AppMono'),
           ),
           if (scheme == 'http') ...[
             const SizedBox(height: 12),
@@ -87,25 +91,108 @@ Future<void> openMarkdownExternalLink(
   }
 }
 
+/// Installed by screens that can resolve server file paths. Inline code
+/// spans that look like paths stay plain until [validate] confirms the file
+/// is actually readable on the connected server; only then do they render
+/// as tappable links routed through [open].
+class MarkdownFileLinks extends InheritedWidget {
+  const MarkdownFileLinks({
+    super.key,
+    required this.validate,
+    required this.open,
+    required super.child,
+  });
+
+  /// Must be memoized by the provider: spans re-request on every rebuild.
+  final Future<bool> Function(String path) validate;
+  final void Function(String path) open;
+
+  static MarkdownFileLinks? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<MarkdownFileLinks>();
+
+  @override
+  bool updateShouldNotify(MarkdownFileLinks oldWidget) =>
+      validate != oldWidget.validate || open != oldWidget.open;
+}
+
+final _pathLikePattern = RegExp(
+  r'^(?:~/|\.{0,2}/)?[A-Za-z0-9_.@+-]+(?:/[A-Za-z0-9_.@+-]+)+(?::\d{1,6})?$',
+);
+
+/// Conservative: multi-segment, no spaces, no scheme, and either anchored
+/// (`/`, `~/`, `./`) or ending in a file extension — `lib/a/b.dart:12` and
+/// `/tmp/shots/home.png` match; `and/or`, URLs and lone words do not.
+bool looksLikeFilePath(String code) {
+  if (code.length < 4 || code.length > 300) return false;
+  if (code.contains('://')) return false;
+  if (!_pathLikePattern.hasMatch(code)) return false;
+  if (code.startsWith('/') || code.startsWith('~/') || code.startsWith('./')) {
+    return true;
+  }
+  final path = stripPathLineSuffix(code);
+  final name = path.substring(path.lastIndexOf('/') + 1);
+  final dot = name.lastIndexOf('.');
+  return dot > 0 && dot < name.length - 1 && name.length - dot <= 9;
+}
+
+/// `lib/a.dart:120` -> `lib/a.dart`.
+String stripPathLineSuffix(String code) =>
+    code.replaceFirst(RegExp(r':\d{1,6}$'), '');
+
 /// Lightweight markdown renderer tuned for LLM chat output:
 /// headings, bold/italic/strikethrough, inline code, fenced code blocks,
 /// bullet/ordered lists, blockquotes, horizontal rules and links.
-class MarkdownText extends StatelessWidget {
+class MarkdownText extends StatefulWidget {
   final String data;
   final TextStyle? baseStyle;
   final String? codeBlockLanguage;
+
+  /// Chat bubbles that own a long-press action menu render non-selectable
+  /// prose so the gesture reaches the menu instead of text selection.
+  final bool selectable;
 
   const MarkdownText(
     this.data, {
     super.key,
     this.baseStyle,
     this.codeBlockLanguage,
+    this.selectable = true,
   });
+
+  /// Counts full block re-parses. Tests use it to assert that streaming
+  /// rebuilds do not re-parse unchanged markdown.
+  @visibleForTesting
+  static int debugParseCount = 0;
+
+  @override
+  State<MarkdownText> createState() => _MarkdownTextState();
+}
+
+class _MarkdownTextState extends State<MarkdownText> {
+  /// Parsed block widgets, reused verbatim while [MarkdownText.data] is
+  /// unchanged so transcript-wide rebuilds during streaming skip re-parsing
+  /// (and therefore re-highlighting) every other message.
+  List<Widget>? _blocks;
+  String? _parsedData;
+  bool? _parsedSelectable;
+
+  List<Widget> _blocksFor() {
+    final cached = _blocks;
+    if (cached != null &&
+        _parsedData == widget.data &&
+        _parsedSelectable == widget.selectable) {
+      return cached;
+    }
+    MarkdownText.debugParseCount++;
+    _parsedData = widget.data;
+    _parsedSelectable = widget.selectable;
+    return _blocks = _splitBlocks(widget.data);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final blocks = _splitBlocks(data);
-    return Column(
+    final blocks = _blocksFor();
+    final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (var i = 0; i < blocks.length; i++) ...[
@@ -114,9 +201,13 @@ class MarkdownText extends StatelessWidget {
         ],
       ],
     );
+    return widget.baseStyle == null
+        ? content
+        : DefaultTextStyle.merge(style: widget.baseStyle, child: content);
   }
 
   List<Widget> _splitBlocks(String src) {
+    final selectable = widget.selectable;
     final widgets = <Widget>[];
     final lines = src.replaceAll('\r\n', '\n').split('\n');
     var i = 0;
@@ -124,7 +215,9 @@ class MarkdownText extends StatelessWidget {
 
     void flushParagraph() {
       if (paragraph.isEmpty) return;
-      widgets.add(_RichLines(lines: List.of(paragraph)));
+      widgets.add(
+        _RichLines(lines: List.of(paragraph), selectable: selectable),
+      );
       paragraph.clear();
     }
 
@@ -164,8 +257,19 @@ class MarkdownText extends StatelessWidget {
           code.add(lines[i]);
           i++;
         }
+        // While a fence is still open (streaming), the block re-parses on
+        // every delta flush — defer syntax highlighting until it closes so
+        // `highlight.parse` never runs per token on a growing buffer. The
+        // code still appears streamed, as plain monospace.
+        final closed = i < lines.length;
         i++; // skip closing fence
-        widgets.add(CodeBlock(code: code.join('\n'), language: lang));
+        widgets.add(
+          CodeBlock(
+            code: code.join('\n'),
+            language: lang,
+            highlightEnabled: closed,
+          ),
+        );
         continue;
       }
 
@@ -411,7 +515,8 @@ class _List extends StatelessWidget {
 /// A run of plain markdown lines rendered as one rich-text flow.
 class _RichLines extends StatelessWidget {
   final List<String> lines;
-  const _RichLines({required this.lines});
+  final bool selectable;
+  const _RichLines({required this.lines, this.selectable = true});
 
   @override
   Widget build(BuildContext context) {
@@ -421,7 +526,8 @@ class _RichLines extends StatelessWidget {
       if (i > 0) spans.add(const TextSpan(text: '\n'));
       spans.addAll(_InlineParser(lines[i]).parse(context).children!);
     }
-    return SelectableText.rich(TextSpan(children: spans));
+    final span = TextSpan(children: spans);
+    return selectable ? SelectableText.rich(span) : Text.rich(span);
   }
 }
 
@@ -471,7 +577,18 @@ class _InlineParser {
           ),
         );
       } else if (m.group(6) != null) {
-        spans.add(_CodeSpan(m.group(6)!, base: base, context: context));
+        final code = m.group(6)!;
+        final links = MarkdownFileLinks.maybeOf(context);
+        if (links != null && looksLikeFilePath(code)) {
+          spans.add(
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: _PathCodeChip(code: code, links: links, base: base),
+            ),
+          );
+        } else {
+          spans.add(_CodeSpan(code, base: base, context: context));
+        }
       } else if (m.group(5) != null) {
         spans.add(
           TextSpan(
@@ -510,6 +627,127 @@ class _InlineParser {
   }
 }
 
+/// An inline code chip whose text looks like a file path. Renders exactly
+/// like [_CodeSpan] until the server confirms the file is readable, then
+/// gains link styling and a tap target. Invalid or unreachable paths keep
+/// the plain chip — no dead affordances.
+class _PathCodeChip extends StatefulWidget {
+  const _PathCodeChip({
+    required this.code,
+    required this.links,
+    required this.base,
+  });
+
+  final String code;
+  final MarkdownFileLinks links;
+  final TextStyle base;
+
+  @override
+  State<_PathCodeChip> createState() => _PathCodeChipState();
+}
+
+class _PathCodeChipState extends State<_PathCodeChip> {
+  bool _readable = false;
+  Timer? _retry;
+  int _retriesLeft = 5;
+
+  @override
+  void initState() {
+    super.initState();
+    _check();
+  }
+
+  @override
+  void didUpdateWidget(_PathCodeChip oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.code != widget.code || oldWidget.links != widget.links) {
+      _readable = false;
+      _retriesLeft = 5;
+    }
+    // Re-validate on every rebuild: the provider memoizes positives forever
+    // and misses for a short TTL, so this is free until a miss expires —
+    // which is exactly when a file the agent just created should light up.
+    if (!_readable) _check();
+  }
+
+  @override
+  void dispose() {
+    _retry?.cancel();
+    super.dispose();
+  }
+
+  void _check() {
+    final code = widget.code;
+    widget.links.validate(stripPathLineSuffix(code)).then((ok) {
+      if (!mounted || code != widget.code) return;
+      if (ok) {
+        _retry?.cancel();
+        setState(() => _readable = true);
+        return;
+      }
+      // An idle transcript never rebuilds, so poll a few times on the
+      // provider's cadence before giving up; any later rebuild retries too.
+      if (_retriesLeft > 0 && (_retry == null || !_retry!.isActive)) {
+        _retriesLeft--;
+        _retry = Timer(const Duration(seconds: 22), () {
+          if (mounted) _check();
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final chip = Container(
+      margin: const EdgeInsets.symmetric(horizontal: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: .6),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: _readable
+              ? theme.colorScheme.primary.withValues(alpha: .45)
+              : theme.dividerColor.withValues(alpha: .4),
+          width: _readable ? .8 : .5,
+        ),
+      ),
+      child: Text.rich(
+        TextSpan(
+          text: widget.code,
+          children: [
+            if (_readable)
+              WidgetSpan(
+                alignment: PlaceholderAlignment.middle,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 3),
+                  child: Icon(
+                    Icons.open_in_new_rounded,
+                    size: (widget.base.fontSize ?? 14) - 2,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        style: widget.base.copyWith(
+          fontFamily: 'AppMono',
+          fontSize: (widget.base.fontSize ?? 14) - 1.5,
+          color: _readable
+              ? theme.colorScheme.primary
+              : theme.colorScheme.tertiary,
+        ),
+      ),
+    );
+    if (!_readable) return chip;
+    return GestureDetector(
+      key: Key('path-link-${widget.code}'),
+      onTap: () => widget.links.open(widget.code),
+      child: chip,
+    );
+  }
+}
+
 class _CodeSpan extends WidgetSpan {
   _CodeSpan(
     String code, {
@@ -533,7 +771,7 @@ class _CodeSpan extends WidgetSpan {
            child: Text(
              code,
              style: base.copyWith(
-               fontFamily: 'monospace',
+               fontFamily: 'AppMono',
                fontSize: (base.fontSize ?? 14) - 1.5,
                color: Theme.of(context).colorScheme.tertiary,
              ),
@@ -542,49 +780,80 @@ class _CodeSpan extends WidgetSpan {
        );
 }
 
-/// Scrollable, selectable monospace block with a copy button.
+/// Scrollable, selectable monospace block with a header row carrying the
+/// language chip and copy button — a real row instead of an overlay, so the
+/// first code lines are never covered and a top-right tap cannot copy by
+/// accident.
 class CodeBlock extends StatelessWidget {
   final String code;
   final String? language;
-  const CodeBlock({super.key, required this.code, this.language});
+
+  /// Streaming callers pass false while the fence is still open so the
+  /// grammar never re-parses a growing buffer per delta.
+  final bool highlightEnabled;
+
+  const CodeBlock({
+    super.key,
+    required this.code,
+    this.language,
+    this.highlightEnabled = true,
+  });
+
+  /// Hard-wraps pathological single lines (minified payloads) so a streamed
+  /// 100k-char line cannot become a ~100k-px layout/selection surface. Copy
+  /// still uses the original [code].
+  static String _displayCode(String source) {
+    const limit = 1000;
+    var needsWrap = false;
+    var runLength = 0;
+    for (var i = 0; i < source.length; i++) {
+      if (source.codeUnitAt(i) == 0x0A) {
+        runLength = 0;
+      } else if (++runLength > limit) {
+        needsWrap = true;
+        break;
+      }
+    }
+    if (!needsWrap) return source;
+    final out = StringBuffer();
+    for (final line in source.split('\n')) {
+      if (out.isNotEmpty) out.write('\n');
+      if (line.length <= limit) {
+        out.write(line);
+        continue;
+      }
+      for (var start = 0; start < line.length; start += limit) {
+        if (start > 0) out.write('\n');
+        final end = start + limit < line.length ? start + limit : line.length;
+        out.write(line.substring(start, end));
+      }
+    }
+    return out.toString();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Stack(
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-          decoration: BoxDecoration(
-            color: theme.brightness == Brightness.dark
-                ? Colors.black.withValues(alpha: .45)
-                : Colors.black.withValues(alpha: .05),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: theme.dividerColor.withValues(alpha: .5)),
-          ),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: SelectableText(
-              code,
-              style: theme.textTheme.bodySmall!.copyWith(
-                fontFamily: 'monospace',
-                fontSize: 12.5,
-                height: 1.45,
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          top: 2,
-          right: 2,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (language != null && language!.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(right: 4),
-                  child: Container(
+    final muted = theme.colorScheme.onSurfaceVariant;
+    final display = _displayCode(code);
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: theme.brightness == Brightness.dark
+            ? Colors.black.withValues(alpha: .45)
+            : Colors.black.withValues(alpha: .05),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: .5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 2, 2, 0),
+            child: Row(
+              children: [
+                if (language != null && language!.isNotEmpty)
+                  Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 6,
                       vertical: 1,
@@ -598,32 +867,53 @@ class CodeBlock extends StatelessWidget {
                       language!,
                       style: theme.textTheme.labelSmall!.copyWith(
                         fontSize: 10,
-                        color: theme.hintColor,
+                        color: muted,
                       ),
                     ),
                   ),
+                const Spacer(),
+                IconButton(
+                  tooltip: 'Copy code',
+                  visualDensity: VisualDensity.compact,
+                  iconSize: 16,
+                  icon: Icon(Icons.copy_rounded, color: muted),
+                  onPressed: () async {
+                    await Clipboard.setData(ClipboardData(text: code));
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Copied ${language ?? 'code'}'),
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
+                    }
+                  },
                 ),
-              IconButton(
-                tooltip: 'Copy code',
-                visualDensity: VisualDensity.compact,
-                iconSize: 16,
-                icon: Icon(Icons.copy_rounded, color: theme.hintColor),
-                onPressed: () async {
-                  await Clipboard.setData(ClipboardData(text: code));
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Copied ${language ?? 'code'}'),
-                        duration: const Duration(seconds: 1),
-                      ),
-                    );
-                  }
-                },
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SelectableText.rich(
+                highlightEnabled
+                    ? highlightedCode(
+                        display,
+                        language,
+                        CodeHighlightTheme.of(context),
+                      )
+                    : TextSpan(text: display),
+                style: theme.textTheme.bodySmall!.copyWith(
+                  fontFamily: 'AppMono',
+                  fontSize: 12.5,
+                  height: 1.45,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

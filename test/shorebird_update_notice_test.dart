@@ -61,4 +61,37 @@ void main() {
     );
     expect(find.text('Got it'), findsOneWidget);
   });
+
+  testWidgets('never claims restart readiness after a failed update', (
+    tester,
+  ) async {
+    final service = _FakeUpdateService(AppUpdateState.available);
+    final messengerKey = GlobalKey<ScaffoldMessengerState>();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        scaffoldMessengerKey: messengerKey,
+        builder: (context, child) => ShorebirdUpdateNotice(
+          service: service,
+          messengerKey: messengerKey,
+          child: child ?? const SizedBox.shrink(),
+        ),
+        home: const Scaffold(body: Text('OpenCode')),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Receiving Shorebird update…'), findsOneWidget);
+    service.download.completeError(Exception('patch hash mismatch'));
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Receiving Shorebird update…'), findsNothing);
+    expect(
+      find.text('Shorebird update ready — restart to apply.'),
+      findsNothing,
+    );
+    expect(tester.takeException(), isNull);
+  });
 }

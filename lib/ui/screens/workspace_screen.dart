@@ -6,7 +6,15 @@ import 'package:flutter/services.dart';
 import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
+import '../navigation/chat_route.dart';
+import '../widgets/confirm_sheet.dart';
+import '../widgets/entrance.dart';
 import '../widgets/product_states.dart';
+import 'global_sessions_screen.dart';
+import 'managed_workspaces_screen.dart';
+import 'project_health_screen.dart';
+import 'projects_screen.dart';
+import 'worktrees_screen.dart';
 
 class WorkspaceScreen extends StatefulWidget {
   final ConnectionController controller;
@@ -28,8 +36,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   int _loadGeneration = 0;
   int _dataRefreshRevision = 0;
 
-  ProductRepository? get _repository => widget.controller.repository;
-
   @override
   void initState() {
     super.initState();
@@ -50,7 +56,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
   Future<void> _load() async {
     final generation = ++_loadGeneration;
-    final repository = _repository;
+    final repository = await widget.controller.prepareActionRepository();
+    if (!mounted || generation != _loadGeneration) return;
     if (repository == null) {
       setState(() => _projectError = 'The server is not connected.');
       return;
@@ -63,22 +70,47 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       final projects = await repository.listProjects();
       if (!mounted || generation != _loadGeneration) return;
       projects.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      var shouldSelectInitialLocation = false;
       setState(() {
         _projects = projects;
-        if (_selectedProjectID == null && projects.isNotEmpty) {
-          _selectedProjectID = projects.first.id;
-          _selectedDirectory = projects.first.directory;
+        if (projects.isEmpty) {
+          _selectedProjectID = null;
+          _selectedDirectory = null;
+          _selectedWorkspaceID = null;
+          return;
+        }
+        final controllerDirectory = widget.controller.directory;
+        if (controllerDirectory != null) {
+          _selectedDirectory = controllerDirectory;
+          _selectedWorkspaceID = widget.controller.workspace;
+          final matching = _projectForDirectory(projects, controllerDirectory);
+          if (matching != null) {
+            _selectedProjectID = matching.id;
+          } else if (!projects.any(
+            (project) => project.id == _selectedProjectID,
+          )) {
+            _selectedProjectID = projects.first.id;
+          }
+        } else {
+          final retained = projects.where(
+            (project) => project.id == _selectedProjectID,
+          );
+          final selected = retained.isEmpty ? projects.first : retained.first;
+          _selectedProjectID = selected.id;
+          _selectedDirectory = selected.directory;
+          _selectedWorkspaceID = null;
+          shouldSelectInitialLocation = true;
         }
       });
       final selected = _selectedProject;
-      if (selected != null) {
-        await widget.controller.selectLocation(
+      if (shouldSelectInitialLocation && selected != null) {
+        await widget.controller.selectInitialLocation(
           directory: _selectedDirectory ?? selected.directory,
         );
       }
     } catch (error) {
       if (mounted && generation == _loadGeneration) {
-        setState(() => _projectError = error.toString());
+        setState(() => _projectError = productErrorText(error));
       }
     }
     if (generation != _loadGeneration) return;
@@ -86,7 +118,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   }
 
   Future<void> _loadWorkspaces() async {
-    final repository = _repository;
+    final repository = await widget.controller.prepareActionRepository();
+    if (!mounted) return;
     if (repository == null) return;
     try {
       final workspaces = await repository.listWorkspaces();
@@ -101,7 +134,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             .toList();
       });
     } catch (error) {
-      if (mounted) setState(() => _workspaceError = error.toString());
+      if (mounted) setState(() => _workspaceError = productErrorText(error));
     }
   }
 
@@ -112,25 +145,25 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     return null;
   }
 
-  Future<void> _selectProject(WorkspaceProject project) async {
-    setState(() {
-      _selectedProjectID = project.id;
-      _selectedWorkspaceID = null;
-      _selectedDirectory = project.directory;
-      _workspaces = const [];
-    });
-    await widget.controller.selectLocation(directory: project.directory);
-    await _loadWorkspaces();
+  static WorkspaceProject? _projectForDirectory(
+    List<WorkspaceProject> projects,
+    String directory,
+  ) {
+    for (final project in projects) {
+      if (project.directory == directory ||
+          project.worktrees.contains(directory)) {
+        return project;
+      }
+    }
+    return null;
   }
 
-  Future<void> _selectWorktree(String directory) async {
-    setState(() {
-      _selectedDirectory = directory;
-      _selectedWorkspaceID = null;
-      _workspaces = const [];
-    });
-    await widget.controller.selectLocation(directory: directory);
-    await _loadWorkspaces();
+  bool get _hasExternalSessionDirectory {
+    final directory = _selectedDirectory;
+    final project = _selectedProject;
+    if (directory == null || project == null) return false;
+    return project.directory != directory &&
+        !project.worktrees.contains(directory);
   }
 
   Future<void> _selectWorkspace(WorkspaceInfo? workspace) async {
@@ -147,13 +180,15 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   }
 
   Future<void> _createSession() async {
-    final api = widget.controller.api;
-    if (api == null || _creating) return;
+    if (_creating) return;
     setState(() => _creating = true);
     try {
-      final session = await api.createSession();
+      final session = await widget.controller.createSession();
       if (!mounted) return;
-      await Navigator.of(context).pushNamed('/chat/${session.id}');
+      await Navigator.of(context).pushNamed(
+        '/chat/${session.id}',
+        arguments: const ChatRouteArguments.newlyCreated(),
+      );
       await widget.controller.refreshSessions();
     } catch (error) {
       if (mounted) _showError('Could not create a session: $error');
@@ -171,12 +206,33 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       return ProductErrorState(message: _projectError!, onRetry: _load);
     }
     if (_projects?.isEmpty == true) {
-      return ProductEmptyState(
-        icon: Icons.folder_off_outlined,
-        title: 'No projects opened',
-        message: 'Open a project on this OpenCode server, then refresh here.',
-        actionLabel: 'Refresh',
-        onAction: _load,
+      // A fresh server has no projects yet, but it can still host a session:
+      // with no directory selected the session-create call omits the
+      // directory parameter and the server scopes the session to its own
+      // default directory. Keep the quick-ask pill so the first prompt is
+      // never a dead end.
+      return Stack(
+        children: [
+          ProductEmptyState(
+            icon: Icons.folder_off_outlined,
+            title: 'No projects opened',
+            message:
+                'Open a project on this OpenCode server, then refresh here — '
+                'or ask below to start a session in the server’s default '
+                'directory.',
+            actionLabel: 'Refresh',
+            onAction: _load,
+          ),
+          Positioned(
+            left: 12,
+            right: 12,
+            bottom: 12,
+            child: _QuickAskPill(
+              creating: _creating,
+              onTap: _creating ? null : _createSession,
+            ),
+          ),
+        ],
       );
     }
 
@@ -203,47 +259,41 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SectionLabel('Project'),
-                    SizedBox(
-                      height: 52,
-                      child: ListView.separated(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        scrollDirection: Axis.horizontal,
-                        itemCount: _projects!.length,
-                        separatorBuilder: (_, _) => const SizedBox(width: 8),
-                        itemBuilder: (context, index) {
-                          final project = _projects![index];
-                          return ChoiceChip(
-                            avatar: const Icon(Icons.folder_outlined, size: 17),
-                            label: Text(project.name),
-                            selected: project.id == _selectedProjectID,
-                            onSelected: (_) => _selectProject(project),
-                          );
-                        },
+                    if (widget.controller.locationNotice != null)
+                      ListTile(
+                        key: const ValueKey('location-recovery-notice'),
+                        leading: const Icon(Icons.info_outline_rounded),
+                        title: Text(widget.controller.locationNotice!),
                       ),
+                    SectionLabel(
+                      'Project',
+                      trailing: Text('${_projects!.length} open'),
                     ),
-                    if ((_selectedProject?.worktrees.isNotEmpty ?? false)) ...[
-                      const SectionLabel('Worktree'),
-                      SizedBox(
-                        height: 52,
-                        child: ListView.separated(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          scrollDirection: Axis.horizontal,
-                          itemCount: _selectedProject!.worktrees.length + 1,
-                          separatorBuilder: (_, _) => const SizedBox(width: 8),
-                          itemBuilder: (context, index) {
-                            final directory = index == 0
-                                ? _selectedProject!.directory
-                                : _selectedProject!.worktrees[index - 1];
-                            return ChoiceChip(
-                              label: Text(_basename(directory)),
-                              selected: directory == _selectedDirectory,
-                              onSelected: (_) => _selectWorktree(directory),
-                            );
-                          },
+                    ListTile(
+                      key: const ValueKey('current-project-entry'),
+                      leading: const Icon(Icons.folder_rounded),
+                      title: Text(_selectedProject?.name ?? 'Choose a project'),
+                      subtitle: _selectedProject == null
+                          ? null
+                          : Text(
+                              _selectedProject!.directory,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: _openProjects,
+                    ),
+                    if (_hasExternalSessionDirectory)
+                      ListTile(
+                        key: const ValueKey('active-session-directory'),
+                        leading: const Icon(Icons.subdirectory_arrow_right),
+                        title: Text(_basename(_selectedDirectory!)),
+                        subtitle: Text(
+                          'Active session directory · $_selectedDirectory',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    ],
                     if (_workspaces.isNotEmpty) ...[
                       const SectionLabel('Workspace'),
                       SizedBox(
@@ -284,6 +334,42 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           ),
                         ),
                       ),
+                    const SectionLabel('Coding'),
+                    ListTile(
+                      key: const ValueKey('worktrees-entry'),
+                      leading: const Icon(Icons.call_split_rounded),
+                      title: const Text('Worktrees'),
+                      subtitle: const Text(
+                        'Create and manage isolated Git branches',
+                      ),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: _selectedProject == null ? null : _openWorktrees,
+                    ),
+                    // §7 rows 1–4: no workspace inventory, adapter discovery
+                    // or sync on v2, so the whole destination goes.
+                    if (widget.controller.capabilities.managedWorkspaces)
+                      ListTile(
+                        key: const ValueKey('managed-workspaces-entry'),
+                        leading: const Icon(Icons.cloud_outlined),
+                        title: const Text('Managed workspaces'),
+                        subtitle: const Text(
+                          'Create, discover, open, and remove adapter-backed environments',
+                        ),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: _selectedProject == null
+                            ? null
+                            : _openManagedWorkspaces,
+                      ),
+                    ListTile(
+                      key: const ValueKey('project-health-entry'),
+                      leading: const Icon(Icons.monitor_heart_outlined),
+                      title: const Text('Project health'),
+                      subtitle: const Text(
+                        'Branch, changed files, language services, and formatters',
+                      ),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: _openProjectHealth,
+                    ),
                     if (active.isNotEmpty)
                       SectionLabel(
                         'Active',
@@ -300,15 +386,30 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     busy: true,
                     onOpen: _openSession,
                     onAction: _sessionAction,
+                    sharingAvailable:
+                        widget.controller.capabilities.sessionShare,
+                    archiveAvailable:
+                        widget.controller.capabilities.sessionArchive,
                   ),
                 ),
               SliverToBoxAdapter(
                 child: SectionLabel(
                   'Recent sessions',
-                  trailing: IconButton(
-                    tooltip: 'Refresh sessions',
-                    onPressed: widget.controller.refreshSessions,
-                    icon: const Icon(Icons.refresh_rounded, size: 19),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        key: const ValueKey('search-all-sessions'),
+                        tooltip: 'Search all sessions',
+                        onPressed: _openAllSessions,
+                        icon: const Icon(Icons.manage_search_rounded, size: 21),
+                      ),
+                      IconButton(
+                        tooltip: 'Refresh sessions',
+                        onPressed: widget.controller.refreshSessions,
+                        icon: const Icon(Icons.refresh_rounded, size: 19),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -328,11 +429,18 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
               else
                 SliverList.builder(
                   itemCount: recent.length,
-                  itemBuilder: (context, index) => _SessionRow(
-                    session: recent[index],
-                    busy: false,
-                    onOpen: _openSession,
-                    onAction: _sessionAction,
+                  itemBuilder: (context, index) => EntranceReveal(
+                    index: index,
+                    child: _SessionRow(
+                      session: recent[index],
+                      busy: false,
+                      onOpen: _openSession,
+                      onAction: _sessionAction,
+                      sharingAvailable:
+                          widget.controller.capabilities.sessionShare,
+                      archiveAvailable:
+                          widget.controller.capabilities.sessionArchive,
+                    ),
                   ),
                 ),
               if (archived.isNotEmpty)
@@ -349,19 +457,15 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             ],
           ),
         ),
+        // Composer-first home: a docked quick-ask pill opens a fresh session
+        // in the active project, replacing the New-session FAB.
         Positioned(
-          right: 16,
-          bottom: 16,
-          child: FloatingActionButton.extended(
-            heroTag: 'workspace-new-session',
-            onPressed: _creating ? null : _createSession,
-            icon: _creating
-                ? const SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.add_rounded),
-            label: const Text('New session'),
+          left: 12,
+          right: 12,
+          bottom: 12,
+          child: _QuickAskPill(
+            creating: _creating,
+            onTap: _creating ? null : _createSession,
           ),
         ),
       ],
@@ -372,6 +476,65 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     Navigator.of(context).pushNamed('/chat/${session.id}');
   }
 
+  Future<void> _openAllSessions() => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => GlobalSessionsScreen(controller: widget.controller),
+    ),
+  );
+
+  Future<void> _openProjects() async {
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => ProjectsScreen(
+          controller: widget.controller,
+          selectedProjectID: _selectedProjectID,
+        ),
+      ),
+    );
+    if (mounted) await _load();
+  }
+
+  Future<void> _openProjectHealth() async {
+    final repository = await widget.controller.prepareActionRepository();
+    if (!mounted) return;
+    if (repository == null) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ProjectHealthScreen(
+          repository: repository,
+          repositoryResolver: widget.controller.prepareActionRepository,
+          capabilities: widget.controller.capabilities,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openWorktrees() async {
+    final project = _selectedProject;
+    if (project == null) return;
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) =>
+            WorktreesScreen(controller: widget.controller, project: project),
+      ),
+    );
+    if (mounted) await _load();
+  }
+
+  Future<void> _openManagedWorkspaces() async {
+    final project = _selectedProject;
+    if (project == null) return;
+    final changed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => ManagedWorkspacesScreen(
+          controller: widget.controller,
+          project: project,
+        ),
+      ),
+    );
+    if (changed == true && mounted) await _loadWorkspaces();
+  }
+
   Future<void> _sessionAction(String action, Session session) async {
     try {
       switch (action) {
@@ -380,29 +543,39 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           break;
         case 'share':
           if (!await _confirmShare(session)) return;
-          final url = await _repository?.shareSession(session.id);
-          if (url != null) {
-            await Clipboard.setData(ClipboardData(text: url));
-            if (mounted) _showMessage('Share link copied');
+          final shareRepository = await _requireActionRepository();
+          final url = await shareRepository.shareSession(session.id);
+          if (url == null || url.isEmpty) {
+            throw const ProductException('No share link was returned.');
           }
+          await Clipboard.setData(ClipboardData(text: url));
+          if (mounted) _showMessage('Share link copied');
           break;
         case 'unshare':
-          await _repository?.unshareSession(session.id);
+          final unshareRepository = await _requireActionRepository();
+          await unshareRepository.unshareSession(session.id);
           if (mounted) _showMessage('Session is no longer shared');
           break;
         case 'archive':
           if (!await _confirmArchive(session)) return;
-          await _repository?.archiveSession(session.id);
+          final archiveRepository = await _requireActionRepository();
+          await archiveRepository.archiveSession(session.id);
           break;
         case 'delete':
           if (!await _confirmDelete(session)) return;
-          await widget.controller.api?.deleteSession(session.id);
+          await widget.controller.deleteSession(session.id);
           break;
       }
       await widget.controller.refreshSessions();
     } catch (error) {
       if (mounted) _showError(error.toString());
     }
+  }
+
+  Future<ServerOperationsGateway> _requireActionRepository() async {
+    final repository = await widget.controller.prepareActionRepository();
+    if (repository != null) return repository;
+    throw const ProductException('OpenCode is reconnecting. Try again shortly.');
   }
 
   Future<void> _rename(Session session) async {
@@ -430,82 +603,38 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     );
     controller.dispose();
     if (title?.isNotEmpty == true) {
-      await widget.controller.api?.renameSession(session.id, title!);
+      await widget.controller.renameSession(session.id, title!);
     }
   }
 
-  Future<bool> _confirmArchive(Session session) async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Archive session?'),
-            content: Text(
-              '“${session.title?.isNotEmpty == true ? session.title : 'Untitled session'}” will be hidden from recent sessions.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Archive'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-  }
+  Future<bool> _confirmArchive(Session session) => showConfirmSheet(
+    context,
+    icon: Icons.archive_outlined,
+    title: 'Archive session?',
+    message:
+        '“${session.title?.isNotEmpty == true ? session.title : 'Untitled session'}” will be hidden from recent sessions.',
+    confirmLabel: 'Archive',
+  );
 
-  Future<bool> _confirmShare(Session session) async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Share this session?'),
-            content: Text(
-              'Anyone with the link can view “${session.title?.isNotEmpty == true ? session.title : 'Untitled session'}”, '
-              'including its conversation and shared context. Do not share secrets, credentials, or private files.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Share session'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-  }
+  Future<bool> _confirmShare(Session session) => showConfirmSheet(
+    context,
+    icon: Icons.public_rounded,
+    title: 'Share this session?',
+    message:
+        'Anyone with the link can view “${session.title?.isNotEmpty == true ? session.title : 'Untitled session'}”, '
+        'including its conversation and shared context. Do not share secrets, credentials, or private files.',
+    confirmLabel: 'Share session',
+  );
 
-  Future<bool> _confirmDelete(Session session) async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Delete session?'),
-            content: Text(
-              '“${session.title?.isNotEmpty == true ? session.title : 'Untitled session'}” and its history will be permanently removed.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                ),
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Delete'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-  }
+  Future<bool> _confirmDelete(Session session) => showConfirmSheet(
+    context,
+    icon: Icons.delete_outline_rounded,
+    title: 'Delete session?',
+    message:
+        '“${session.title?.isNotEmpty == true ? session.title : 'Untitled session'}” and its history will be permanently removed.',
+    confirmLabel: 'Delete',
+    destructive: true,
+  );
 
   void _showArchived(List<Session> sessions) {
     showModalBottomSheet<void>(
@@ -560,64 +689,88 @@ class _SessionRow extends StatelessWidget {
   final ValueChanged<Session> onOpen;
   final Future<void> Function(String, Session) onAction;
 
+  /// §7 rows 10–12: menus list possible actions only.
+  final bool sharingAvailable;
+  final bool archiveAvailable;
+
   const _SessionRow({
     required this.session,
     required this.busy,
     required this.onOpen,
     required this.onAction,
+    this.sharingAvailable = true,
+    this.archiveAvailable = true,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final updated = session.time?.updated ?? session.time?.created;
-    return ListTile(
-      minTileHeight: 64,
-      leading: busy
-          ? SizedBox.square(
-              dimension: 22,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: theme.colorScheme.primary,
+    return Dismissible(
+      key: ValueKey('session-dismiss-${session.id}'),
+      direction: DismissDirection.endToStart,
+      // Runs the existing confirm-and-delete flow, then resolves false: the
+      // refreshed session list removes the row, so a cancelled or failed
+      // delete simply snaps back.
+      confirmDismiss: (_) async {
+        await onAction('delete', session);
+        return false;
+      },
+      background: const SwipeDeleteBackground(),
+      child: ListTile(
+        minTileHeight: 64,
+        leading: busy
+            ? SizedBox.square(
+                dimension: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: theme.colorScheme.primary,
+                ),
+              )
+            : const Icon(Icons.chat_bubble_outline_rounded, size: 21),
+        title: Text(
+          session.title?.isNotEmpty == true
+              ? session.title!
+              : 'Untitled session',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        subtitle: Text(
+          [
+            if (session.shareUrl != null) 'Shared: ${session.shareUrl}',
+            if (busy) 'Working',
+            if (updated != null) _relativeTime(updated),
+            if (session.directory?.isNotEmpty == true)
+              _basename(session.directory!),
+          ].join(' · '),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        trailing: PopupMenuButton<String>(
+          tooltip: 'Session actions',
+          onSelected: (value) => onAction(value, session),
+          itemBuilder: (context) => [
+            const PopupMenuItem(value: 'rename', child: Text('Rename')),
+            if (sharingAvailable)
+              PopupMenuItem(
+                value: session.shareUrl == null ? 'share' : 'unshare',
+                child: Text(
+                  session.shareUrl == null ? 'Share' : 'Stop sharing',
+                ),
               ),
-            )
-          : const Icon(Icons.chat_bubble_outline_rounded, size: 21),
-      title: Text(
-        session.title?.isNotEmpty == true ? session.title! : 'Untitled session',
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Text(
-        [
-          if (session.shareUrl != null) 'Shared: ${session.shareUrl}',
-          if (busy) 'Working',
-          if (updated != null) _relativeTime(updated),
-          if (session.directory?.isNotEmpty == true)
-            _basename(session.directory!),
-        ].join(' · '),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      trailing: PopupMenuButton<String>(
-        tooltip: 'Session actions',
-        onSelected: (value) => onAction(value, session),
-        itemBuilder: (context) => [
-          const PopupMenuItem(value: 'rename', child: Text('Rename')),
-          PopupMenuItem(
-            value: session.shareUrl == null ? 'share' : 'unshare',
-            child: Text(session.shareUrl == null ? 'Share' : 'Stop sharing'),
-          ),
-          const PopupMenuItem(value: 'archive', child: Text('Archive')),
-          PopupMenuItem(
-            value: 'delete',
-            child: Text(
-              'Delete',
-              style: TextStyle(color: theme.colorScheme.error),
+            if (archiveAvailable)
+              const PopupMenuItem(value: 'archive', child: Text('Archive')),
+            PopupMenuItem(
+              value: 'delete',
+              child: Text(
+                'Delete',
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
+        onTap: () => onOpen(session),
       ),
-      onTap: () => onOpen(session),
     );
   }
 
@@ -636,5 +789,85 @@ class _SessionRow extends StatelessWidget {
     if (difference.inDays < 7) return '${difference.inDays}d ago';
     final date = DateTime.fromMillisecondsSinceEpoch(milliseconds);
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+}
+
+/// A composer-shaped invitation docked to the workspace: it looks like the
+/// chat input and opens a fresh session in the active project ready to type.
+class _QuickAskPill extends StatelessWidget {
+  const _QuickAskPill({required this.creating, required this.onTap});
+
+  final bool creating;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Semantics(
+      button: true,
+      label: 'New session',
+      child: Material(
+        key: const ValueKey('workspace-quick-ask'),
+        color: scheme.surfaceContainerLow,
+        elevation: 6,
+        shadowColor: scheme.surfaceContainerLowest,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: .85)),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 14, 12, 14),
+            child: Row(
+              children: [
+                Text(
+                  '❯',
+                  style: theme.textTheme.titleMedium!.copyWith(
+                    color: scheme.primary,
+                    fontFamily: 'AppMono',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Ask OpenCode…',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.hintColor,
+                    ),
+                  ),
+                ),
+                if (creating)
+                  const Padding(
+                    padding: EdgeInsets.all(8),
+                    child: SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                else
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: scheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.add_rounded,
+                      size: 21,
+                      color: scheme.onPrimaryContainer,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

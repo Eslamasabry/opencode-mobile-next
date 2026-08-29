@@ -1,0 +1,418 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../../api/product_repository.dart';
+import '../../state/connection.dart';
+
+class McpSetupScreen extends StatefulWidget {
+  final ConnectionController controller;
+
+  const McpSetupScreen({super.key, required this.controller});
+
+  @override
+  State<McpSetupScreen> createState() => _McpSetupScreenState();
+}
+
+class _McpSetupScreenState extends State<McpSetupScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _name = TextEditingController();
+  final _url = TextEditingController();
+  final _command = TextEditingController();
+  final _cwd = TextEditingController();
+  final _headers = TextEditingController();
+  final _environment = TextEditingController();
+  final _timeout = TextEditingController();
+
+  late McpConfigScope _scope;
+  McpServerKind _kind = McpServerKind.remote;
+  bool _detectOAuth = true;
+  bool _saving = false;
+  bool _configurationSaved = false;
+  String? _saveError;
+
+  bool get _hasProject =>
+      widget.controller.directory?.trim().isNotEmpty == true;
+
+  @override
+  void initState() {
+    super.initState();
+    _scope = _hasProject ? McpConfigScope.project : McpConfigScope.global;
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _url.dispose();
+    _command.dispose();
+    _cwd.dispose();
+    _headers.dispose();
+    _environment.dispose();
+    _timeout.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    if (_saving || _configurationSaved || !_formKey.currentState!.validate()) {
+      return;
+    }
+    setState(() {
+      _saving = true;
+      _saveError = null;
+    });
+    try {
+      final timeoutText = _timeout.text.trim();
+      final draft = McpServerDraft(
+        name: _name.text,
+        kind: _kind,
+        url: _kind == McpServerKind.remote ? _url.text : null,
+        command: _kind == McpServerKind.local
+            ? _lines(_command.text)
+            : const [],
+        cwd: _kind == McpServerKind.local ? _cwd.text : null,
+        headers: _kind == McpServerKind.remote
+            ? _pairs(_headers.text, 'HTTP header')
+            : const {},
+        environment: _kind == McpServerKind.local
+            ? _pairs(_environment.text, 'environment variable')
+            : const {},
+        detectOAuth: _detectOAuth,
+        timeoutMs: timeoutText.isEmpty ? null : int.parse(timeoutText),
+      );
+      // Keep repository validation authoritative even if a field validator is
+      // changed later.
+      draft.toConfigJson();
+      final repository = await widget.controller.prepareActionRepository();
+      if (repository == null) {
+        throw const ProductException(
+          'OpenCode is reconnecting. Try again shortly.',
+        );
+      }
+      await repository.addMcpServer(draft, scope: _scope);
+      _configurationSaved = true;
+      await widget.controller.reloadAfterConfigurationChange();
+      if (mounted) Navigator.pop(context, true);
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _saveError = _configurationSaved
+              ? 'Saved in OpenCode, but the app could not reconnect: $error'
+              : error.toString();
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Add MCP server')),
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_saveError case final error?) ...[
+              Semantics(
+                liveRegion: true,
+                child: Text(
+                  error,
+                  key: const ValueKey('mcp-save-error'),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+            FilledButton.icon(
+              key: const ValueKey('mcp-save'),
+              onPressed: _saving
+                  ? null
+                  : _configurationSaved
+                  ? () => Navigator.pop(context, true)
+                  : _save,
+              icon: _saving
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(
+                      _configurationSaved
+                          ? Icons.check_rounded
+                          : Icons.save_outlined,
+                    ),
+              label: Text(
+                _saving
+                    ? 'Saving configuration'
+                    : _configurationSaved
+                    ? 'Close'
+                    : 'Save MCP server',
+              ),
+            ),
+          ],
+        ),
+      ),
+      body: Form(
+        key: _formKey,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        child: ListView(
+          key: const ValueKey('mcp-setup-form'),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          children: [
+            Text('Persisted configuration', style: theme.textTheme.titleMedium),
+            const SizedBox(height: 4),
+            Text(
+              'Saved by OpenCode on the server. It remains available after the app or server restarts.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 16),
+            SegmentedButton<McpConfigScope>(
+              key: const ValueKey('mcp-scope'),
+              showSelectedIcon: false,
+              segments: [
+                ButtonSegment(
+                  value: McpConfigScope.project,
+                  enabled: _hasProject,
+                  icon: const Icon(Icons.folder_outlined),
+                  label: const Text('This project'),
+                ),
+                const ButtonSegment(
+                  value: McpConfigScope.global,
+                  icon: Icon(Icons.public_outlined),
+                  label: Text('All projects'),
+                ),
+              ],
+              selected: {_scope},
+              onSelectionChanged: _saving || _configurationSaved
+                  ? null
+                  : (value) => setState(() => _scope = value.single),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _scope == McpConfigScope.project
+                  ? 'Writes only to ${widget.controller.directory}.'
+                  : 'Writes to this OpenCode server’s global configuration.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Divider(),
+            const SizedBox(height: 12),
+            TextFormField(
+              key: const ValueKey('mcp-name'),
+              controller: _name,
+              enabled: !_saving && !_configurationSaved,
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(
+                labelText: 'Server name',
+                hintText: 'docs or browser-tools',
+                helperText: 'Unique within the selected configuration.',
+              ),
+              validator: (value) =>
+                  value?.trim().isEmpty == true ? 'Enter a server name' : null,
+            ),
+            const SizedBox(height: 20),
+            SegmentedButton<McpServerKind>(
+              key: const ValueKey('mcp-kind'),
+              showSelectedIcon: false,
+              segments: const [
+                ButtonSegment(
+                  value: McpServerKind.remote,
+                  icon: Icon(Icons.cloud_outlined),
+                  label: Text('Remote URL'),
+                ),
+                ButtonSegment(
+                  value: McpServerKind.local,
+                  icon: Icon(Icons.terminal_rounded),
+                  label: Text('Local command'),
+                ),
+              ],
+              selected: {_kind},
+              onSelectionChanged: _saving || _configurationSaved
+                  ? null
+                  : (value) => setState(() {
+                      _kind = value.single;
+                      _saveError = null;
+                    }),
+            ),
+            const SizedBox(height: 16),
+            if (_kind == McpServerKind.remote) ..._remoteFields(),
+            if (_kind == McpServerKind.local) ..._localFields(),
+            const SizedBox(height: 16),
+            TextFormField(
+              key: const ValueKey('mcp-timeout'),
+              controller: _timeout,
+              enabled: !_saving && !_configurationSaved,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: const InputDecoration(
+                labelText: 'Timeout in milliseconds',
+                hintText: 'Optional',
+              ),
+              validator: (value) {
+                final text = value?.trim() ?? '';
+                if (text.isEmpty) return null;
+                final timeout = int.tryParse(text);
+                return timeout == null || timeout <= 0
+                    ? 'Enter a value greater than zero'
+                    : null;
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _remoteFields() => [
+    TextFormField(
+      key: const ValueKey('mcp-url'),
+      controller: _url,
+      enabled: !_saving && !_configurationSaved,
+      keyboardType: TextInputType.url,
+      textInputAction: TextInputAction.next,
+      autocorrect: false,
+      decoration: const InputDecoration(
+        labelText: 'MCP endpoint URL',
+        hintText: 'https://server.example/mcp',
+        helperText: 'HTTP is accepted for local development servers.',
+      ),
+      validator: (value) {
+        final uri = Uri.tryParse(value?.trim() ?? '');
+        if (uri == null ||
+            !uri.hasAuthority ||
+            (uri.scheme != 'https' && uri.scheme != 'http') ||
+            uri.userInfo.isNotEmpty) {
+          return 'Enter a valid HTTP or HTTPS URL without credentials';
+        }
+        return null;
+      },
+    ),
+    const SizedBox(height: 16),
+    TextFormField(
+      key: const ValueKey('mcp-headers'),
+      controller: _headers,
+      enabled: !_saving && !_configurationSaved,
+      minLines: 2,
+      maxLines: 5,
+      keyboardType: TextInputType.multiline,
+      autocorrect: false,
+      decoration: const InputDecoration(
+        labelText: 'HTTP headers',
+        hintText: 'Authorization=Bearer token',
+        helperText: 'Optional. Enter one KEY=VALUE pair per line.',
+        alignLabelWithHint: true,
+      ),
+      validator: (value) => _pairError(value ?? '', 'HTTP header'),
+    ),
+    const SizedBox(height: 8),
+    SwitchListTile.adaptive(
+      key: const ValueKey('mcp-oauth-detection'),
+      contentPadding: EdgeInsets.zero,
+      title: const Text('Detect OAuth automatically'),
+      subtitle: const Text(
+        'Turn this off when the server uses headers and should never start OAuth.',
+      ),
+      value: _detectOAuth,
+      onChanged: _saving || _configurationSaved
+          ? null
+          : (value) => setState(() => _detectOAuth = value),
+    ),
+  ];
+
+  List<Widget> _localFields() => [
+    TextFormField(
+      key: const ValueKey('mcp-command'),
+      controller: _command,
+      enabled: !_saving && !_configurationSaved,
+      minLines: 4,
+      maxLines: 8,
+      keyboardType: TextInputType.multiline,
+      autocorrect: false,
+      decoration: const InputDecoration(
+        labelText: 'Command and arguments',
+        hintText: 'npx\n-y\n@package/mcp-server',
+        helperText:
+            'Runs on the OpenCode server, not this phone. Enter one argument per line.',
+        alignLabelWithHint: true,
+      ),
+      validator: (value) =>
+          _lines(value ?? '').isEmpty ? 'Enter a command' : null,
+    ),
+    const SizedBox(height: 16),
+    TextFormField(
+      key: const ValueKey('mcp-cwd'),
+      controller: _cwd,
+      enabled: !_saving && !_configurationSaved,
+      textInputAction: TextInputAction.next,
+      decoration: const InputDecoration(
+        labelText: 'Working directory',
+        hintText: 'Optional server path',
+      ),
+    ),
+    const SizedBox(height: 16),
+    TextFormField(
+      key: const ValueKey('mcp-environment'),
+      controller: _environment,
+      enabled: !_saving && !_configurationSaved,
+      minLines: 2,
+      maxLines: 5,
+      keyboardType: TextInputType.multiline,
+      autocorrect: false,
+      decoration: const InputDecoration(
+        labelText: 'Environment variables',
+        hintText: 'LOG_LEVEL=warn',
+        helperText: 'Optional. Enter one KEY=VALUE pair per line.',
+        alignLabelWithHint: true,
+      ),
+      validator: (value) => _pairError(value ?? '', 'environment variable'),
+    ),
+  ];
+
+  static List<String> _lines(String value) => value
+      .split('\n')
+      .map((line) => line.trim())
+      .where((line) => line.isNotEmpty)
+      .toList();
+
+  static Map<String, String> _pairs(String value, String label) {
+    final result = <String, String>{};
+    final lines = value.split('\n');
+    for (var index = 0; index < lines.length; index++) {
+      final line = lines[index].trim();
+      if (line.isEmpty) continue;
+      final separator = line.indexOf('=');
+      if (separator < 1) {
+        throw ProductException(
+          'Invalid $label on line ${index + 1}. Use KEY=VALUE.',
+        );
+      }
+      final key = line.substring(0, separator).trim();
+      final content = line.substring(separator + 1).trim();
+      if (key.isEmpty || key.contains(RegExp(r'[\r\n=]'))) {
+        throw ProductException('Invalid $label name on line ${index + 1}.');
+      }
+      if (result.containsKey(key)) {
+        throw ProductException('Duplicate $label name "$key".');
+      }
+      result[key] = content;
+    }
+    return result;
+  }
+
+  static String? _pairError(String value, String label) {
+    try {
+      _pairs(value, label);
+      return null;
+    } on ProductException catch (error) {
+      return error.message;
+    }
+  }
+}

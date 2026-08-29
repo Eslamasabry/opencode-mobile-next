@@ -43,7 +43,10 @@ class _LocalConnectionController extends ConnectionController {
   _LocalConnectionController(super.store);
 
   @override
-  Future<void> connect(ServerProfile profile) async {
+  Future<void> connect(
+    ServerProfile profile, {
+    bool redetectOnFailure = true,
+  }) async {
     await store.setActiveId(profile.id);
     api = OpenCodeApi(baseUrl: profile.baseUrl);
     version = '1.18.21';
@@ -361,6 +364,9 @@ __OC_SETUP_OUTPUT__
       find.textContaining('SSL_set_quic_tls_transport_params'),
       findsWidgets,
     );
-    expect(find.text('Stop & retry'), findsOneWidget);
+    expect(
+      find.text('Retry — resumes where setup left off'),
+      findsOneWidget,
+    );
   });
 }

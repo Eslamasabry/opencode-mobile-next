@@ -8,6 +8,93 @@ typedef BackgroundMethodInvoker =
       Map<String, dynamic>? arguments,
     ]);
 
+enum CodingAlertKind {
+  permission('permission'),
+  question('question'),
+  complete('complete'),
+  error('error');
+
+  const CodingAlertKind(this.wireValue);
+
+  final String wireValue;
+
+  static CodingAlertKind? fromWireValue(Object? value) {
+    for (final kind in values) {
+      if (kind.wireValue == value) return kind;
+    }
+    return null;
+  }
+}
+
+class CodingAlertOpen {
+  const CodingAlertOpen({
+    required this.kind,
+    required this.sessionID,
+    this.profileID = '',
+  });
+
+  final CodingAlertKind kind;
+  final String sessionID;
+
+  /// The server profile the session belongs to, stamped by home-screen
+  /// widget taps so a stale row never routes into another profile's chat.
+  /// Notification taps leave it empty.
+  final String profileID;
+
+  static CodingAlertOpen? fromPlatform(Map<String, dynamic> value) {
+    final kind = CodingAlertKind.fromWireValue(value['kind']);
+    final sessionID = value['sessionID']?.toString().trim() ?? '';
+    if (kind == null || sessionID.isEmpty) return null;
+    return CodingAlertOpen(
+      kind: kind,
+      sessionID: sessionID,
+      profileID: value['profileID']?.toString().trim() ?? '',
+    );
+  }
+}
+
+/// One notification-action tap delivered by Android while the app stays
+/// backgrounded: allow/deny for a permission alert, or a typed reply for a
+/// question alert.
+class CodingAlertAction {
+  const CodingAlertAction({
+    required this.kind,
+    required this.sessionID,
+    required this.decision,
+    this.requestID = '',
+    this.reply,
+  });
+
+  final CodingAlertKind kind;
+  final String sessionID;
+
+  /// The exact pending request this notification represented. Resolution is
+  /// bound to this ID; an empty or stale ID never resolves a different
+  /// request for the same session.
+  final String requestID;
+
+  /// 'allow' | 'deny' for permission alerts, 'reply' for question alerts.
+  final String decision;
+
+  /// The RemoteInput text for a 'reply' decision.
+  final String? reply;
+
+  static CodingAlertAction? fromPlatform(Object? arguments) {
+    if (arguments is! Map) return null;
+    final kind = CodingAlertKind.fromWireValue(arguments['kind']);
+    final sessionID = arguments['sessionID']?.toString().trim() ?? '';
+    final decision = arguments['decision']?.toString().trim() ?? '';
+    if (kind == null || sessionID.isEmpty || decision.isEmpty) return null;
+    return CodingAlertAction(
+      kind: kind,
+      sessionID: sessionID,
+      decision: decision,
+      requestID: arguments['requestID']?.toString().trim() ?? '',
+      reply: arguments['reply']?.toString(),
+    );
+  }
+}
+
 /// Owns the explicit, user-controlled Android foreground-service preference.
 ///
 /// The service keeps the Flutter process important enough for a live OpenCode
@@ -75,6 +162,93 @@ class BackgroundLiveController extends ChangeNotifier {
       persist: false,
     );
     return succeeded;
+  }
+
+  /// Shows a privacy-safe Android notification for a background coding event.
+  ///
+  /// The native side owns all user-visible copy so no prompt, tool input,
+  /// filename, session title, or server error can leak onto the lock screen.
+  /// [quickReply] is a capability bit only: it lets a question alert carry a
+  /// RemoteInput action; it never carries request content.
+  Future<bool> showCodingAlert({
+    required CodingAlertKind kind,
+    required String sessionID,
+    required String key,
+    bool quickReply = false,
+    String requestID = '',
+  }) async {
+    if (!enabled || !notificationGranted) return false;
+    try {
+      final result = await _invoke('showCodingAlert', {
+        'kind': kind.wireValue,
+        'sessionID': sessionID,
+        'key': key,
+        'quickReply': quickReply,
+        'requestID': requestID,
+      });
+      return result['shown'] == true;
+    } on PlatformException {
+      return false;
+    } on MissingPluginException {
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> Function(CodingAlertAction action)? _actionHandler;
+
+  /// Registers the resolver for notification-action taps. The platform
+  /// channel replies `{'handled': bool}`; an unhandled action makes Android
+  /// re-post the alert (and, when no engine can handle it at all, fall back
+  /// to opening the app at the request).
+  void bindActionHandler(Future<bool> Function(CodingAlertAction) handler) {
+    _actionHandler = handler;
+    _channel.setMethodCallHandler((call) async {
+      if (call.method != 'codingAlertAction') return null;
+      return handleNativeAction(call.arguments);
+    });
+  }
+
+  /// Resolves one native action delivery; also the test entry point.
+  @visibleForTesting
+  Future<Map<String, dynamic>> handleNativeAction(Object? arguments) async {
+    final action = CodingAlertAction.fromPlatform(arguments);
+    final handler = _actionHandler;
+    if (action == null || handler == null) return const {'handled': false};
+    try {
+      return {'handled': await handler(action)};
+    } catch (_) {
+      return const {'handled': false};
+    }
+  }
+
+  /// Cancels a coding notification even if live mode has since been disabled.
+  Future<bool> dismissCodingAlert(String key) async {
+    try {
+      final result = await _invoke('dismissCodingAlert', {'key': key});
+      return result['dismissed'] == true;
+    } on PlatformException {
+      return false;
+    } on MissingPluginException {
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Consumes one Android notification destination after a cold or warm open.
+  Future<CodingAlertOpen?> consumeCodingAlertOpen() async {
+    try {
+      final result = await _invoke('consumeCodingAlertOpen');
+      return CodingAlertOpen.fromPlatform(result);
+    } on PlatformException {
+      return null;
+    } on MissingPluginException {
+      return null;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<bool> _run(String method, {bool persist = true}) async {

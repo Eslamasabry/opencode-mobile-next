@@ -1,5 +1,39 @@
 import 'package:flutter/material.dart';
 
+import '../../api/mcp_oauth.dart' show McpOAuthCallbackException;
+import '../../api/opencode_api.dart';
+import '../../api/product_repository.dart';
+
+/// Maps any thrown object onto copy that is safe to show users.
+///
+/// - [ProductException], [ApiException], and [McpOAuthCallbackException]
+///   carry product-facing messages and pass through unchanged.
+/// - A [String] is treated as already-composed product copy.
+/// - Everything else — [StateError]s, socket/transport failures, and other
+///   internals — collapses to one generic connectivity line instead of leaking
+///   `Bad state:` prefixes or raw exception dumps.
+String productErrorText(Object error) {
+  if (error is ProductException) return error.message;
+  if (error is ApiException) return error.message;
+  if (error is McpOAuthCallbackException) return error.message;
+  if (error is String && error.trim().isNotEmpty) return error;
+  return 'OpenCode is unreachable. Try again.';
+}
+
+/// The one styled error snackbar for mutation failures: error-red background,
+/// replaces any snackbar currently showing, and routes the thrown object
+/// through [productErrorText] so raw exceptions never reach users.
+void showProductError(BuildContext context, Object error) {
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        content: Text(productErrorText(error)),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ),
+    );
+}
+
 class LoadingList extends StatelessWidget {
   final int rows;
   const LoadingList({super.key, this.rows = 5});
@@ -154,6 +188,172 @@ class ProductErrorState extends StatelessWidget {
     );
   }
 }
+
+/// A compact, intentionally designed empty state for one section of a longer
+/// scrolling surface, where the full-screen [ProductEmptyState] is too tall
+/// and a bare [ListTile] reads as a broken list row.
+class ProductInlineEmpty extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String message;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  const ProductInlineEmpty({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.message,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(16, 18, 16, 14),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow.withValues(alpha: .6),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: .5),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 22, color: theme.hintColor),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.hintColor,
+              ),
+            ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 6),
+              TextButton(onPressed: onAction, child: Text(actionLabel!)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The one explainer row for a feature the connected server cannot do.
+///
+/// Settings are where users go looking for a thing they remember, so a
+/// vanished row reads as a bug (`docs/opencode2-ui-design.md` §7, rule 2).
+/// This renders the row it replaces at 55% opacity with `enabled: false` and
+/// the [explainer] swapped in for the subtitle; tapping says which server
+/// generation the feature needs. Capability gating, not plan gating — no
+/// upsell styling, no call to action.
+///
+/// Menu actions, nav destinations and More-grid tiles are *hidden* instead;
+/// this widget is only for surviving settings/health surfaces.
+class GatedRow extends StatelessWidget {
+  /// Feature id; the row's key is `gated-<feature>`.
+  final String feature;
+
+  /// The title the enabled row would have carried.
+  final String title;
+
+  /// One honest line saying why the row is dead, e.g.
+  /// "Not available on OpenCode 2 servers".
+  final String explainer;
+
+  final Widget? leading;
+
+  /// Server generation named in the tap snackbar. 1 for v1-only features
+  /// (the usual case), 2 for the rare v2-only row we choose to show.
+  final int requiresGeneration;
+
+  const GatedRow({
+    super.key,
+    required this.feature,
+    required this.title,
+    required this.explainer,
+    this.leading,
+    this.requiresGeneration = 1,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: .55,
+      child: ListTile(
+        key: ValueKey('gated-$feature'),
+        enabled: false,
+        leading: leading,
+        title: Text(title),
+        subtitle: Text(explainer),
+        // `enabled: false` swallows ListTile.onTap, so the explanation tap
+        // target lives outside it.
+        onTap: null,
+      ),
+    );
+  }
+}
+
+/// [GatedRow] plus the tap-to-explain snackbar. Split out so the row itself
+/// stays a pure `ListTile` for callers that embed it in their own gesture
+/// handling.
+class GatedRowTile extends StatelessWidget {
+  final String feature;
+  final String title;
+  final String explainer;
+  final Widget? leading;
+  final int requiresGeneration;
+
+  const GatedRowTile({
+    super.key,
+    required this.feature,
+    required this.title,
+    required this.explainer,
+    this.leading,
+    this.requiresGeneration = 1,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text('Requires an OpenCode $requiresGeneration server'),
+            ),
+          );
+      },
+      child: GatedRow(
+        feature: feature,
+        title: title,
+        explainer: explainer,
+        leading: leading,
+        requiresGeneration: requiresGeneration,
+      ),
+    );
+  }
+}
+
+/// The stock explainer for a v1 feature with no OpenCode 2 endpoint.
+const String gatedOnV2Explainer = 'Not available on OpenCode 2 servers';
 
 class SectionLabel extends StatelessWidget {
   final String text;

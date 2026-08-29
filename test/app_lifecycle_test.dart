@@ -5,6 +5,7 @@ import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/background/live_background.dart';
+import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/main.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
@@ -77,6 +78,39 @@ void main() {
     expect(connection.resumes, 1);
   });
 
+  testWidgets('app restores and applies appearance without a restart', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({'oc.appearance': 'light'});
+    final store = ProfileStore(prefs: await SharedPreferences.getInstance());
+    final connection = ConnectionController(store);
+    addTearDown(connection.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          bootstrapProvider.overrideWithValue(AppBootstrap(store)),
+          connProvider.overrideWithValue(connection),
+        ],
+        child: const OcApp(),
+      ),
+    );
+    await tester.pump();
+
+    expect(
+      tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+      ThemeMode.light,
+    );
+
+    await connection.setAppearance(AppAppearance.dark);
+    await tester.pump();
+
+    expect(
+      tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+      ThemeMode.dark,
+    );
+  });
+
   testWidgets('background suspension keeps Home on its current route', (
     tester,
   ) async {
@@ -93,6 +127,8 @@ void main() {
       ProviderScope(
         overrides: [connProvider.overrideWithValue(connection)],
         child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: const HomeScreen(),
           routes: {'/servers': (_) => const ServersScreen()},
         ),

@@ -1,6 +1,6 @@
 # oc_app handoff
 
-Last updated: 2026-08-27 (Asia/Dubai)
+Last updated: 2026-08-28 (Asia/Dubai)
 
 ## Current GitHub APK
 
@@ -28,6 +28,1312 @@ installed on `emulator-5554`, and verified as version code 20/version name
 `1.0.19`. An existing real chat rendered without repeated model metadata or a
 Flutter/render failure. The GitHub-downloaded asset matched the local tested APK
 byte-for-byte. Flutter analysis was clean and all 213 tests passed.
+
+## Operation Facelift (UI/UX revamp lane)
+
+The owner opened a dedicated UI/UX lane on this branch with explicit license
+to use any packages and to publish preview APKs with links. The first slice
+is complete and verified:
+
+- **Structure first:** `chat_screen.dart` (6,557 lines) is now a library with
+  eight part files under `lib/ui/screens/chat/`, and `library_screen.dart`
+  (2,376 lines) six part files under `lib/ui/screens/library/`. Pure moves;
+  private cross-references survive through part files.
+- **Chat surface:** streaming shows a terminal-style blinking block caret
+  (reduce-motion renders it solid); empty sessions show a prompt-glyph
+  invitation with suggestion chips that fill the composer; a jump-to-latest
+  pill appears once the reversed transcript scrolls past ~480px, using the
+  previously dead scroll listener; long-pressing a message opens Copy and,
+  for user prompts, Fork-from-this-prompt backed by the existing
+  `_forkFromMessage`; chat loading/error use `LoadingList`/`ProductErrorState`;
+  transcript and composer cap at 860dp and user bubbles at 640dp on wide
+  screens. User-bubble prose is deliberately non-selectable so the long-press
+  menu wins the gesture arena; `_AttachmentPart` became `container: true`
+  semantics so mixed messages keep distinct labels.
+- **Typography and code:** JetBrains Mono TTFs are bundled as the `AppMono`
+  family (OFL text in `LICENSES/`, notice added) and replace every
+  `'monospace'` site. Fenced code blocks highlight through the `highlight`
+  package via `lib/ui/widgets/code_highlight.dart`: colors derive from the
+  active `ColorScheme`, unknown languages and blocks over 20k chars fall back
+  to plain text, and `file_preview` inherits it through `CodeBlock`.
+- **System polish:** M3 fade-forwards page transitions; a brightness-aware
+  `AppTheme.success` green replaces raw `Colors.green/orange/red` at status
+  dots, done states, and diff additions; Settings' two `/about` tiles now open
+  distinct Privacy and Open source tabs; the never-committed empty
+  `lib/ui/sdk_explorer/` scaffold is gone.
+- **Motion caution:** `flutter_animate` was added and then removed — its
+  internal timers trip `flutter_test`'s pending-timer invariant whenever a
+  test disposes an animating tree. Entrances use ticker-driven
+  `TweenAnimationBuilder` instead. Do not reintroduce `flutter_animate` in
+  widgets that tests can dispose mid-animation.
+- Flutter analysis is clean and all 468 tests pass serially with the pinned
+  Shorebird Flutter `3.47.1` (local `flutter` on PATH is 3.38.5 and cannot
+  resolve packages; use `~/.shorebird/bin/cache/flutter/91f8bd7…/bin/flutter`).
+
+Slice two (also verified): simple yes/no confirms now share one
+`showConfirmSheet` bottom sheet (typed-name worktree/workspace guards keep
+their dialogs); More opens with a live model/agent/variant card plus grouped
+destination cards; section-level empties use `ProductInlineEmpty` instead of
+bare list rows.
+
+Slice three, after the owner reported the model picker "clumsy": the catalog
+sheet now builds rows lazily (`ListView.builder` — it previously built the
+entire ~350-model list eagerly), pins the search field above the list, and
+replaces the inline expand-under-the-row options with one pinned bottom apply
+bar that always shows the drafted model, its variant chips, and `Use model
+and mode`. The current model is drafted on open, so the bar test contract
+(`model-picker-apply-bar`) holds immediately. Both pinned regions cap at a
+share of the sheet height and scroll internally so 320dp/2x text degrades
+without RenderFlex overflow. All original keys survive.
+
+Slice four (owner-directed, partly built by three parallel worktree agents):
+- **Context window meter:** the composer's divider under *Ask OpenCode…* is
+  now an ambient meter filling with the newest assistant message's
+  `tokens.total` against the catalog's `contextLimit` for that exact model
+  (escalating colors at 70%/90%; unknown limit keeps the plain divider).
+  Live pixel-verification on the emulator caught a real bug the widget test
+  missed: inside `FractionallySizedBox(widthFactor:)`, the loose height
+  collapsed the fill to zero — both factors must be tight, and the test now
+  asserts the painted fill size, not just presence.
+- **Chat session sheets:** the app bar's two PopupMenuButtons became grouped
+  bottom sheets (Views + Transcript switches; Prompt/Context/Sharing/Advanced
+  actions), route-constraint capped for accessibility scales.
+- **Sync backbone:** generated `sync.start`/`sync.steal` wired through the
+  wake-safe repository with loopback contract tests; `history`/`replay`
+  documented as deliberately unused (client-held event log). Steal UI is the
+  next feature slice.
+- **Sweep:** files browser/viewer skeletons, shared retry surface, text-scale
+  fix.
+- Worktree-agent caution: fork worktrees may be created from a stale base;
+  every agent must verify its base commit before editing (all three did or
+  were corrected this run).
+- Live verification used a local `opencode serve` on 4096 with `adb reverse`
+  (plus legacy 4747 mapped) against the user's real emulator profile;
+  read-only — no prompts sent, no sessions mutated.
+
+Slice five (owner-directed parallel build): session-steal UI (workspace-
+scoped after live 1.18.23 proof that `/sync/steal` rejects plain
+cross-directory sessions with BadRequest even after `sync.start` — plain
+directory transfer stays `/move`; a positive live steal needs a managed
+workspace, which this server does not expose), first-run welcome flow with
+URL normalization and a live Test-connection verdict (device-verified end to
+end: bare `127.0.0.1:4096` normalized to http on Test, `Connected — OpenCode
+1.18.23 answered`, saved, connected; note the editor still pre-seeds
+`https://` so typed-over text keeps that scheme — follow-up polish), Ubuntu
+host management (script + copy-only Settings surface), message deletion
+(part-patching deliberately skipped as invisible history rewriting),
+notification permission/question actions (Dart-tested and lint-clean; full
+device proof deferred — it needs a permission-gated model run), Linux
+desktop scaffold + feasibility study (unmodified app builds a working Linux
+binary; Shorebird is the only desktop gap), Ctrl/Cmd+Enter send, and a
+one-contextual-banner cap in chat. Background-task caution: long background
+harness tasks were SIGKILLed on this loaded machine while identical
+foreground runs survived — run builds/suites foreground when it recurs.
+
+Slice six (owner feedback: "More is messy", "organize the sub-pages",
+"use visuals", "use Mobbin"): research went into docs/design-inspiration.md
+with Mobbin citations, then: More became a live setup card plus a visual
+icon-card grid; Commands/Tools/Skills/References merged into one tabbed
+Commands & tools screen via per-screen embedded modes; Integrations split
+into Providers and MCP through one mode-gated screen; Settings became
+hub-and-spoke (connection summary + seven category sub-pages under
+lib/ui/screens/settings/); Workspace's New-session FAB became the
+composer-first quick-ask pill; running tool groups show a live ticker via
+public runningToolTicker() in tool_card.dart; long transcripts get an
+earlier-messages chip opening the timeline. Full suite green: 506 tests in
+three foreground chunks (background harness tasks still get killed on this
+box — keep using foreground chunks), plus post-merge re-runs. Preview 5
+published as v1.0.25+26-preview.5.
+
+Remaining facelift lanes: Files/Review/Terminal inspiration passes (queued
+in the design doc); Terminal's bottom-nav slot; list-item motion; remaining
+empty-state upgrades; onboarding editor pre-seed rethink.
+
+Slice seven (showcase video, owner-directed): the 2.5-minute showcase is
+DONE and published. Plan in docs/showcase-video-plan.md; Remotion project
+in `video/` (150s @30fps, ShowcaseLandscape 1920x1080 + ShowcaseVertical
+1080x1920); 11 real emulator recordings + stills in video/public/shots/
+(headless Pixel_6, opencode serve on 4096 via adb reverse). Renders MUST
+run foreground in 4 chunks of 1125 frames (`--frames A-B`, ~3–5 min each)
+then ffmpeg concat (`out/concat.txt` / `out/vconcat.txt`) — full renders
+in background get killed. Every scene passed the skill's still-extraction
+verification loop; two offset fixes came from it (S05 1150, S11 780 —
+rec11's PTY connects at ~26s). Both masters are attached to release
+v1.0.27+28-preview.7 with links in its notes. Video source is committed;
+out/ artifacts are not.
+
+Test-history corrections (bisect-verified): the offline-compose-queue merge
+(7c0e757 via 8297076) silently broke chat_live_events' wake-transport test —
+the suite was never actually green between that merge and the fixes; the
+"524 green" preview-7 claim predates the break's discovery. Both breakages
+are fixed on this branch: the fake controller now connects in that test's
+setup (ecbee06), and offline_queue's three widget tests hung on the unmocked
+flutter_secure_storage channel inside testWidgets — the harness registers a
+null-returning mock handler (merged dcd47f4). Behavior note the fixes
+encode: a send tapped while the stream is disconnected (including the
+suspended-wake reconnect window) becomes a queued draft — deliberate
+offline-compose UX; the no-stale-transport guarantee holds because
+flushOfflineQueue resolves prepareActionTransport per entry. If the owner
+ever wants wake-window sends to wait-and-send instead of queue, gate the
+queue branch on a `wakeTransportPending` getter
+(`_lifecycleSuspended || _lifecycleResume != null`) — designed and
+test-verified once, easy to rebuild.
+
+## SESSION HANDOFF — OpenCode 2 port + lens overhaul (2026-08-29)
+
+Written at ~93% session usage so a fresh agent can continue. Branch tip at
+write time: `314f31f` on `production/android-release-hardening` (pushed).
+
+### What is DONE and merged on the tip
+
+- **OpenCode 2 port, Phases 0–2 core** (docs/opencode2-port-plan.md):
+  - Research pair: docs/opencode2-protocol-notes.md (91-event union, no-parts
+    message model, inbox prompts, forms, ticketed PTY WS, Basic auth) and
+    docs/opencode2-port-matrix.md (~110 app ops mapped; §6 deferred seams).
+    Specs: contracts/opencode2-openapi-beta-18600.json (authoritative; the
+    17823 file is historical). TRAP: npm `@opencode-ai/sdk` 1.x is the V1
+    SDK; v2 truth is `@opencode-ai/client`→`schema`+`protocol` (beta-18600),
+    installed under the session scratchpad's `oc2client/node_modules/`.
+  - lib/api2/ typed v2 client (transport/models/events/sse2/client) —
+    live-verified 30 steps.
+  - lib/domain/server_gateway.dart — protocol-neutral interfaces (109 ops,
+    25 ServerCapabilities flags); v1 implements everything; all state/UI
+    consumers switched (zero behavior change).
+  - lib/api2/gateway*.dart — Api2Gateway/Api2OperationsGateway/events
+    adapter implementing the domain over v2; live smoke 40/40 incl.
+    streamed prompt round-trip and PTY echo; lossy message mappings
+    documented at mapAdapter (`mapApi2Message` doc comment); interface
+    frictions listed in the merge message of 3f31dbe.
+  - docs/opencode2-ui-design.md — LOCKED design for all v2 UI (§ numbers
+    are referenced by the in-flight agent briefs). docs/opencode2-termux.md
+    — Termux path survives v2 via the existing proot-distro bridge.
+  - lib/ui/widgets/form_renderer.dart — complete tested v2 forms UI
+    (standalone; wiring is in flight, see below).
+- **UI overhaul** from three audits (docs/ui-feature-audit.md,
+  docs/ui-audit-lenses.md, docs/stack-gaps-and-desktop.md — all committed):
+  quick wins F1–F3/E1/E2; widget tap-through with profile guard; shell
+  polish (Mission Control card, global text-scale clamp, l10n groundwork
+  with More-hub pilot); composer trio (per-session drafts, image paste via
+  contentInsertionConfiguration, flush announcements); chat transcript pass
+  (streaming delta batching ~20 rebuilds/s, markdown memoization, copy
+  cluster C2+T1, expansion persistence, C4–C14); ergonomics pass (review
+  workspace overhaul, swipe-delete sessions, sheet keyboard behavior, tap
+  targets, ChipTheme); onboarding pass (O1–O9); error pipeline
+  (productErrorText + showProductError funnel, S1–S12). Clickable validated
+  file paths in chat (MarkdownFileLinks; negative-TTL revalidation).
+  Both formerly-broken tests are FIXED on tip (see "Test-history
+  corrections" above).
+- Repo is public-ready: README rewritten, MIT LICENSE, release audit clean
+  (docs/public-release-audit.md), screenshots force-added. Showcase videos
+  attached to release v1.0.27+28-preview.7.
+
+### IN FLIGHT at handoff — three worktree agents (branches may already
+have WIP commits; they were told to commit everything durable):
+
+1. ~~`port/v2-connect`~~ — DONE and MERGED (55ef83c). The app connects to
+   opencode2 end to end: probe flavor detection (401-with-empty-body on
+   /api/health is the v2 signal; missing vs rejected password
+   distinguished; every v1 verdict incl. DNS preserved), paste-first
+   password field with v2 verdict copy, ServerProfile.flavor +
+   serverVersion persisted, v2 gateway pair built through the same seams
+   v1 uses, re-probe only on protocol-shaped failures (401/404/405 — a
+   blanket re-probe hung unhealthy-server tests), and a mid-session 401
+   raising the banner's update-password action. Live-verified against
+   beta-18600: all three password verdicts, then 1150 sessions listed
+   with the event channel live. Follow-up landed in `0876745`:
+   `ConnectionController.serverFlavor` closed the transcript lane's
+   TODO seam. CAUTION for future tests: the flavor-correction path calls
+   `ProfileStore.upsert`, whose secure-storage channel hangs in unmocked
+   widget tests — use a recording store or mock the channel (see the
+   offline-queue harness fix).
+2. ~~`port/v2-interaction`~~ — DONE and MERGED (f2760db). Additive
+   FormGateway/InboxGateway on the domain (+ `forms`/`inbox`
+   capabilities, optional `PromptDelivery` on promptAsync, optional
+   reject `message` on permission replies — all inert on v1); forms
+   auto-present once per request in chat with an inline card as the
+   reopen path and counts on Requests/Mission Control/More; the
+   permission prompt is now `chat/permission_sheet.dart` (the old
+   permission_dialog.dart is deleted) with inline reject-with-reason,
+   and notification Reply maps to reject-with-message on v2 with the
+   requestID binding rules unchanged; one `_PendingSendsStrip` carries
+   offline drafts plus v2 inbox items with cancel and delivery flips;
+   Send stays live during a turn (tap steers, long-press queues).
+   Live-verified: form reply/invalid/already-settled/cancel and inbox
+   queue/cancel/steer/flip-conflict. Traps recorded by that lane: an
+   AnimatedSize around the strip inside a scroll view never settles, and
+   a Tooltip on the busy Send button swallows the long-press menu.
+   Merge fixups on top: `cfa195c` (the connect lane's fake gateway needed
+   `capabilities` once connect-time form polling landed).
+
+**THE V2 PORT IS COMPLETE AND SHIPPED.** All lanes merged, plus the
+capability gating sweep (ba7acec: v1-only surfaces hidden where they are
+navigation, disabled-with-explainer where they are settings; it also
+caught two live bugs where the v2 provider-runtime refresh failed an
+otherwise-good integration connect). Full suite green: 810 tests in six
+foreground chunks. Published as **v1.0.28+29-preview.8** (signer
+1de5bf08…d60c verified; key.properties deleted after the build).
+docs/opencode2-port-plan.md carries per-phase status and the known gaps.
+3. ~~`port/v2-transcript`~~ — DONE and MERGED (b29ec48): tagged part
+   types (`v2:switch`/`v2:notice`/`v2:compaction`), TranscriptMarker
+   pills, notices, compaction rows, shell status chips, interleaved tool
+   segments, ModelPickerApplyScope (session-scope label derives from
+   capabilities via a TODO(connect-flow) seam; "Use for new sessions"
+   call-site wiring belongs to the connect-flow lane). Live-event
+   synthesis of these rows mid-turn is NOT done — they appear on
+   hydration/refetch, per §6.
+
+Merge order for the remaining two: connect → interaction (or any,
+resolving conflicts in connection.dart / message_view.dart; every merge so
+far verified with analyze + affected suites before push).
+
+### Open follow-ups from the re-verification (docs/reverification-report.md)
+
+- FIXED already: the High-severity `_selectLocation` flavor bug (ceb3fe2 —
+  it rebuilt the v1 transport for v2 profiles, so choosing a directory, or
+  connecting a v2 profile that had a saved location, replaced the working
+  v2 pair with a v1 client whose health check can never succeed and reads
+  as a rotated password).
+- **NO TEST COVERS THAT FIX.** The regression test written for it was
+  removed in 41dcddb: it drives the full async rescope (health, catalog,
+  pending refreshes) against a bare fake gateway, so it failed in file
+  order and hung when run alone. To cover it properly, extend
+  `_FakeV2Gateway` in test/connection_v2_gateway_test.dart to answer the
+  post-rescope refresh chain (or add a seam asserting the chosen
+  transport), then assert `v1ApiBuilds == 0` after `selectLocation` on a
+  flavor=v2 profile. Verify the test genuinely fails with the fix reverted.
+- Still open from that report: two Medium v2 issues (every v2 send
+  re-issues switchModel/switchAgent — two extra round-trips and it
+  overrides another client's change; `session.diff` returns the
+  working-tree diff, so chat diff counts can over-report), the Lens-4
+  visual sweep (14 findings; start with the hardcoded green added in
+  review_workspace.dart), the fix-regression cluster (reasoning-toggle
+  overwrite, raw error.toString() snackbars bypassing the funnel in
+  worktrees/mcp/coding-settings, S11 voice notices, 28dp message-actions
+  affordance, drafts losing attachments), the drift/SQLite baseline, and
+  desktop Phase 1 (bridge MissingPluginException guard, gate the Termux
+  screen/route/entry, hide the desktop voice mic).
+
+### NOT started (queued, in order)
+
+4. **Gating sweep**: consume ServerCapabilities across the 26-row table in
+   design §7 (hide tiles/menu actions, disable-with-explainer settings
+   rows). Was deliberately held until error-pipeline merged (done now).
+5. **Lens-4 design-system sweep** (docs/ui-audit-lenses.md V1–V15 + C12):
+   status-color helper, hintColor→onSurfaceVariant, hairline/type/radius/
+   spacing normalization, icon aliases, mono helper. Run LAST — it sweeps
+   files every other lane touches.
+6. **Integrations & credentials screens** (design §8) — v2-native, phase 4.
+7. Full suite in 6 foreground chunks + emulator E2E against the live v2
+   server (headless Pixel_6 recipe in slice seven above; `opencode2 serve`
+   + adb reverse; app connects with the password step) + **preview 8 APK**
+   via the established channel (temp android/key.properties from
+   ~/.android/debug.keystore androiddebugkey/android, chmod 600, DELETE
+   after; signer sha256 must equal
+   1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c;
+   gh release create v{version}-preview.N on Eslamasabry/oc_app targeting
+   this branch; verify apksigner+aapt+sha256; post the link).
+8. Later lanes: drift/FTS5 local database (stack-gaps doc §1), voice loop +
+   tablet two-pane (wave 2b), Traycer-style agent cockpit (owner-gated),
+   message-list pagination seam, OAuth-attempt persistence friction.
+
+### Operational hazards (ALL verified this session)
+
+- Long BACKGROUND harness tasks get SIGKILLed on this machine. Everything
+  runs FOREGROUND in chunks under the 600s cap. Tests:
+  `ls test/*.dart | split -n l/6 - /tmp/chunk_` then
+  `flutter test --concurrency=1 $(cat /tmp/chunk_aa)` per chunk.
+- Pinned Flutter ONLY:
+  `~/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter`
+  (PATH flutter 3.38.5 cannot resolve the pubspec). Debug APK builds are
+  impossible (Shorebird mirror hosts release engine jars only) — compile
+  checks and releases use `--release`; a keystoreless release build fails
+  only at validateSigningRelease, which still proves Kotlin compiles.
+- Worktree agents spawn on stale bases — every brief must order
+  `git log --oneline -1` verification + reset to the named base.
+- flutter_animate is BANNED (pending-timer test failures).
+- Local opencode2 beta server for live verification:
+  `~/.bun/bin/opencode2 serve --port 4097 --hostname 127.0.0.1`
+  (v0.0.0-beta-18600; per-run password printed on the "server password"
+  line — NEVER commit/echo it; HTTP Basic user `opencode`). Bun blocks the
+  CLI postinstall — run `node ~/node_modules/@opencode-ai/cli/postinstall.mjs`
+  after upgrades. Beta quirk: the experimental session log endpoint replays
+  nothing on 18600 — transcripts reconcile via refetch.
+- Never echo provider API keys from /config/providers; notification copy
+  stays privacy-fixed; test-signed APKs only through the release channel.
+
+### Owner-side open items
+
+- GitHub Actions billing block (owner-only fix), PR #1 merge decision →
+  then Shorebird release from master + flip the Ubuntu-script raw URLs.
+- Decide repo-public flip timing (audit SHOULDs: merge/close PR #1, fix or
+  disable the red workflow, HANDOFF tone check, release-notes wording).
+- Waiting on Dax (OpenCode founder): app trial before public; v2 port
+  progress can be shared — one real beta bug to report upstream: the dead
+  durable session log (above).
+
+## Production Android hardening branch
+
+- Branch: `production/android-release-hardening`
+- Last pushed commit before the `1.0.20+21` candidate: `c17f4f63ae14e3ab676da440df44fc23e1116356`
+- Latest app-completeness implementation: `6c407fda3fbaba1c8ce34bb7e273c6d8c43d558f`
+- Compare/PR: <https://github.com/Eslamasabry/oc_app/pull/new/production/android-release-hardening>
+
+### Verified `1.0.20+21` candidate
+
+This branch now carries the first installable `1.0.20+21` candidate. It is not
+published and is not yet registered as a full Shorebird release. The final
+Flutter-built APK is package `ai.opencode.opencode_mobile`, version code `21`,
+version name `1.0.20`, `161366803` bytes, and SHA-256
+`701591bfece1a506ec7a97bf4279753fc7d6a6a8488524bea381db1199280387`.
+Its signer SHA-256 is
+`1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c`,
+exactly matching the public `1.0.19+20` GitHub APK. Installing it with
+`adb install -r` preserved the public app's first-install time and advanced the
+installed version from code 20/name 1.0.19 to code 21/name 1.0.20.
+
+The candidate finishes the Project health Git setup path. OpenCode's generated
+current-project contract determines whether the exact active location is a Git
+repository. A non-Git location shows a truthful empty state and an explicit
+confirmation before generated `project.initGit` is called; success must return
+a Git project, then health refreshes, while rejection stays inline and retryable.
+Mobile `/health` opens this same native surface. No model or provider inventory
+is hardcoded.
+
+The latest app-readiness slice repairs two phone transcript/review defects and
+revalidates persisted artifacts. Review now uses a phone-specific toolbar below
+560dp: file truth and counts remain visible, Unified/Split and hunk navigation
+fit without horizontal clipping, and the lower-frequency Ask about file and Copy
+patch actions share one accessible overflow menu. A release-mode Pixel 6 opened
+the live 114-file Branch response from OpenCode `1.18.23` and exercised both menu
+actions. Consecutive tool calls still share one growing Tools surface, while
+embedded failures are now flat inline results with a slim error accent instead
+of cards nested inside that group. The same release build rendered this shape in
+an existing real chat.
+
+Old-chat image compatibility was proven from server persistence rather than a
+widget fixture. A disposable OpenCode session stored an assistant shell result
+whose exact output was `{"filePath":"/home/eslam/Storage/Code/oc_app/incoming-photo.jpg"}`
+before the updated APK was installed. After reinstall, the chat rendered the
+JPEG inline; its full preview showed MIME type and byte count, Attach to prompt
+added the original file to the composer, and Save to device opened Android's
+document destination picker with the correct filename. The two disposable test
+sessions were verified by exact ID (one artifact session and one empty session)
+before deletion. No user session was removed. Final-tree Flutter analysis is
+clean and all 402 tests pass serially. The test-signed APK was used only on the
+emulator and was not published or distributed.
+
+Remote OpenCode updates are now a native, server-authoritative workflow rather
+than only copied shell commands. The app keeps its existing location-scoped
+`/event` stream for chat truth and owns a second lifecycle-matched
+`/global/event` stream solely for `installation.update-available` and
+`installation.updated`; other global events cannot mutate chat/session state or
+visible connection status. Settings offers generated `global.upgrade` only for
+the exact semantic version emitted by OpenCode, confirms the named server plus
+current/target versions and host-restart requirement, and sends that exact
+target. Failures remain inline and retryable. Success is labelled installed,
+not running, until later health or `server.connected` truth proves the restarted
+process is using it. Managed loopback Termux keeps its existing native updater;
+servers that emit no update continue to expose the external command fallback.
+
+The real OpenCode `1.18.23` server confirmed the `/global/event` wrapped payload
+wire shape. No upgrade request was sent to that server. A release-mode Pixel 6
+reinstall opened its existing workspace and Settings without a fatal exception,
+ANR, RenderFlex, overflow, or OOM; because that process emitted no available
+version, Settings truthfully retained the command fallback. The local emulator
+APK is `161399739` bytes with SHA-256
+`23be05c112acbae8f0e34c671cef495b0c38c288faad3c132515d085b6628458`.
+Final-tree Flutter analysis is clean and all 410 tests pass serially, including
+the real generated POST contract, dual-stream isolation/lifecycle, failure and
+retry, installed-versus-running state, and a 320dp/2x-text confirmation dialog.
+The temporary signing properties were removed; this APK was not published or
+distributed. The generated SDK audit now counts 88 directly used operations.
+
+Native Worktrees is now a complete phone workflow under Workspace. It uses the
+generated OpenCode `worktree.list`, `worktree.create`, `worktree.reset`, and
+`worktree.remove` operations, waits on the global `worktree.ready` /
+`worktree.failed` events, and can open an isolated location without duplicating
+the old horizontal worktree strip. Reset first inspects the exact target and
+warns that tracked, untracked, ignored, and submodule changes can be discarded.
+Remove first inspects the exact target, requires its name to be typed, explains
+that chats remain while the directory and branch are deleted, and switches back
+to the primary project before deleting the active worktree. The primary project
+cannot be reset or removed from this surface.
+
+OpenCode `1.18.23` was exercised end to end on a release-mode Pixel 6: create
+`proof-mobile`, receive ready, open it, make the active worktree dirty, and
+remove it after the typed confirmation. The final pass also exposed stale
+OpenCode project-directory metadata after Git had deleted the worktree. The app
+now treats `worktree.list` as existence truth and uses project metadata only to
+reconcile path aliases, so deleted worktrees cannot reappear as ghost rows.
+The corrected APK showed zero worktrees after deletion, and Android logged no
+fatal exception, ANR, RenderFlex overflow, or OOM. The disposable repository was
+moved to trash and the emulator was returned to `oc_app`.
+
+Final-tree evidence for this slice: Flutter analysis is clean and all 416 app
+tests pass; all four generated-SDK integrity verifiers pass for 188 operations;
+all 46 SDK tests and SDK analysis pass; the compiled SDK smoke binary runs; and
+Android `lintRelease` passes. The generated SDK audit now counts 92 directly
+used operations. The locally test-signed release APK is `161449043` bytes with
+SHA-256 `6d25e04152232f5872b81ca4268d4246d55fe6c9c14ad5f183d1addebb844ebe`.
+Temporary signing properties were removed, and this APK was not published or
+distributed.
+
+Native subagent-session navigation is now a complete phone workflow. Chat's
+Session views menu opens a flat Subagent sessions screen backed by generated
+`session.get` and `session.children` operations. It resolves the current child
+even when it is absent from the cached root list, shows its exact parent and
+chronologically ordered sibling sessions with live working state, and opens the
+selected session in its own transcript. Child chats carry a slim
+`Subagent · N of total` context strip with direct Parent and All subagents
+actions. The primary Agent picker now excludes `mode: subagent` definitions,
+matching upstream OpenCode rather than presenting agents that cannot be selected
+as the chat's primary agent.
+
+OpenCode `1.18.23` was exercised end to end on a release-mode Pixel 6 against a
+real root session with 63 children. The app opened the native 63-session list,
+opened the first child's exact persisted transcript, displayed
+`Subagent · 1 of 63`, and returned through Parent to the exact root chat. Android
+logged no fatal exception, ANR, RenderFlex overflow, or OOM. Final-tree Flutter
+analysis is clean and all 421 app tests pass; all four generated-SDK integrity
+verifiers pass for 188 operations; all 46 SDK tests and SDK analysis pass; the
+compiled SDK smoke binary runs; and Android `lintRelease` passes. The generated
+SDK audit now counts 93 directly used operations. The locally test-signed release
+APK is `161612943` bytes with SHA-256
+`4267befd8fc3ab16dce7252fee41ae446ac461fdb62cc011a1eecfbe056ddd97`.
+Temporary signing properties were removed, and this APK was not published or
+distributed.
+
+Native subagent invocation now completes the workflow from the composer. The
+lightning launcher is a flat two-tab Composer tools surface: Commands retains
+mobile and server slash actions, while Delegate lists only visible subagents
+returned by the connected OpenCode server. Selecting a row inserts its exact
+`@name` at the cursor; typing `@` provides the same runtime autocomplete. Send
+serializes a real generated async-prompt agent part with exact UTF-16 source
+offsets, so OpenCode creates the child through its native task path rather than
+through a mobile-only command or hardcoded agent list.
+
+Fresh and automatically selected models now follow the active project's
+generated `config.get` model and default agent instead of whichever connected
+provider happens to be first. Explicit user model choices remain pinned. This
+also repairs existing installs whose saved selection came from the old
+automatic provider-order fallback. A release-mode Pixel 6 clean install against
+OpenCode `1.18.23` proved the configured `openai/gpt-5.6-sol` default while the
+349-model catalog began with Google. It then invoked real `@explore`; the server
+persisted the agent part with source `{value: @explore, start: 0, end: 8}`, made
+the child session, completed it on `gpt-5.6-sol`, and returned
+`opencode_mobile` from `pubspec.yaml` to the parent transcript. The exact two
+disposable roots and child were verified before deletion, and no user session
+was removed.
+
+The same visual pass removed the remaining literal Markdown markers from short
+reasoning by routing reasoning through the shared Markdown renderer with its
+muted style. The composer tools fit a 320dp/2x-text fixture without overflow,
+and the release-mode emulator logged no app fatal exception, ANR, RenderFlex,
+overflow, or OOM. Final-tree Flutter analysis is clean and all 426 app tests
+pass serially; all four generated-SDK integrity verifiers pass for 188
+operations; all 46 SDK tests and SDK analysis pass; the compiled SDK smoke
+binary runs; and Android `lintRelease` passes. The generated SDK audit remains
+at 93 directly used operations because `configGet` was already in use. The
+locally test-signed release APK is `161629327` bytes with SHA-256
+`2dc0ef71b5daa2980cc2c5b082351d6e4fead1e6d666fa27ebaaf8e494116c67`.
+That exact final artifact clean-installed and launched on `emulator-5554`.
+Temporary signing properties were removed, and this APK was not published or
+distributed.
+
+Project and workspace continuity is now durable per saved server. Every
+successful location change stores the exact project directory plus optional
+remote workspace; the next cold connection validates that evidence through
+generated `project.current` and workspace-list truth before rebuilding the
+location-scoped API, event stream, provider/model catalog, sessions,
+permissions, and questions. A confirmed deleted project clears its stale
+selection and returns to the server workspace with a visible explanation. A
+removed remote workspace keeps the valid project and opens it locally. Each
+server retains an independent location, including non-POSIX paths, and no
+project/workspace value is hardcoded.
+
+Release-mode Pixel 6 proof selected the real `oc_app` project while the server's
+first project was `opencode-mobile-worktree-proof.zwFucJ`. After an Android
+force-stop and cold relaunch, `oc_app` returned selected and the unrelated first
+project remained unselected. A second clean-log repeat produced the same UI
+truth without an app fatal exception, ANR, RenderFlex overflow, or OOM. Final
+Flutter analysis is clean and all 433 app tests pass serially; all four
+generated-SDK integrity verifiers pass for 188 operations; all 46 SDK tests and
+SDK analysis pass; the compiled SDK smoke binary runs; and Android
+`lintRelease` passes. The generated SDK audit remains at 93 directly used
+operations because `projectCurrent` was already in use. The locally test-signed
+release APK is `161694863` bytes with SHA-256
+`764ad0807cec5e6ce5f069e94504ef1ae19d99109429a2418194b1e97d272617`.
+Temporary signing properties and the disposable keystore were removed; this APK
+was not published or distributed.
+
+Managed workspaces now have a complete native lifecycle instead of only a
+selector and `/warp` destination. The selected project's server-reported
+adapters and managed workspaces share one flat screen with connection status,
+refresh, adapter discovery/sync, create-and-open, direct open, and guarded
+removal. Creation sends only the exact adapter type and optional branch from the
+form; OpenCode remains responsible for adapter-specific configuration. Every
+management request is rooted explicitly to the selected local project with no
+active remote-workspace query leakage. Removing the active workspace first
+returns to Local, requires its exact server name, and warns that the adapter may
+permanently delete the environment while chat history remains.
+
+The real OpenCode `1.18.23` server reported one built-in `Worktree` adapter
+(`Create a git worktree`) and zero managed workspaces for `oc_app`. The final
+release-mode Pixel 6 rendered that exact adapter and truthful empty state,
+opened the server-derived create form, and closed it without creating or
+deleting anything. Android logged no app fatal exception, ANR, RenderFlex
+overflow, or OOM. Final Flutter analysis is clean and all 437 app tests pass
+serially; all four generated-SDK integrity verifiers pass for 188 operations;
+all 46 SDK tests and SDK analysis pass; the compiled SDK smoke binary runs; and
+Android `lintRelease` passes. The generated SDK audit now counts 97 directly
+used operations. The locally test-signed release APK is `161875359` bytes with
+SHA-256
+`2edf778dd4b756f7a70c65695d48e18745f0c12a5012dadcbc60ccd132a033c6`.
+Temporary signing properties and the disposable keystore were removed; this APK
+was not published or distributed.
+
+Project navigation now uses one compact current-project row on Workspace rather
+than a horizontally scrolling chip rail. It opens a flat searchable Projects
+screen populated only from generated `project.list` truth, shows the active
+project plus exact directory and worktree count, and switches every
+location-scoped surface through the existing durable controller. Project rename
+uses generated `project.update` rooted to the selected project's own directory
+without inheriting an active remote workspace. Clearing the name or entering the
+folder basename sends an empty name, matching upstream OpenCode's reset
+semantics. Mobile does not invent create, close, icon, or command actions.
+
+The real OpenCode `1.18.23` server returned nine projects. A release-mode Pixel
+6 opened the native list, searched `oc_app` down to `1 of 9`, opened the rename
+dialog with the exact `/home/eslam/Storage/Code/oc_app` path, cancelled without
+mutating server state, then selected that row and returned to Workspace with
+`oc_app` active. Android logged no app fatal exception, ANR, RenderFlex overflow,
+OOM, or Flutter error. Aggregate Android lint also exposed
+`flutter_secure_storage` 10.0.0 linting its optional biometric implementation
+even though this app uses the default non-biometric constructor and requests no
+biometric permission. The exception is now limited to that dependency and only
+the `MissingPermission` detector; a release-blocker test locks those assumptions
+so biometric adoption cannot silently inherit it.
+
+Final-tree Flutter analysis is clean and all 443 app tests pass serially. All
+four generated-SDK integrity verifiers pass for 188 operations; all 46 SDK tests
+and SDK analysis pass; the compiled SDK smoke binary runs; and aggregate Android
+`lintRelease` passes. The generated SDK audit now counts 98 directly used
+operations. The locally test-signed release APK is `161973663` bytes with
+SHA-256
+`27d2883334eba0f3f21bd007bbc77f7e143c74f641359971b7afbdf67db417dd`.
+Temporary signing properties and the disposable keystore were removed; this APK
+was not published or distributed.
+
+Native tool discovery now uses OpenCode's generated
+`experimental.capabilities.get`, `tool.ids`, and `tool.list` contracts. Library
+and mobile `/tools` open one flat searchable surface scoped to the active
+project, workspace, provider, and model. It distinguishes tools callable by the
+selected model from IDs that are registered on the project but absent from the
+model-specific response, so plugin and MCP inventory is not inferred or hidden.
+Every callable row opens the exact server description and pretty-printed JSON
+parameter schema. Long descriptions and schemas share one continuous scroll
+surface, while capability and registered-ID failures stay independent from a
+valid model-tool response.
+
+The real OpenCode `1.18.23` server reported 15 registered tool IDs, 12 callable
+by configured `openai/gpt-5.6-sol`, and `backgroundSubagents: false`. A
+release-mode Pixel 6 rendered those exact counts, exposed `edit`, `write`, and
+`websearch` as registered but not callable, found the still-server-registered
+`mgrep` tool through search, and scrolled the long `apply_patch` description
+into its real JSON schema. Android logged no app fatal exception, ANR,
+RenderFlex overflow, OOM, or Flutter error.
+
+Final-tree Flutter analysis is clean and all 449 app tests pass serially. All
+four generated-SDK integrity verifiers pass for 188 operations; all 46 SDK
+tests and SDK analysis pass; the compiled SDK smoke binary runs; and aggregate
+Android `lintRelease` passes. The generated SDK audit now counts 101 directly
+used operations. The locally test-signed release APK is `162006503` bytes with
+SHA-256
+`6333e4845c023d60f5cc91c111d48bb2608a35af78181f9403cd3e8d69fab6e6`.
+Temporary signing properties and the disposable keystore were removed; this APK
+was not published or distributed.
+
+Native session context is now available from Chat's Session views menu and the
+mobile `/context` command, with `/usage` as an alias. It derives exact usage from
+the latest token-bearing assistant message, including cache read/write, and
+matches that message's exact provider/model to the server catalog for the model
+name and context limit. Message counts and accumulated reported cost are kept
+separate from the current context window. The user, assistant, tool, and other
+input makeup is explicitly labelled estimated; exact token totals are never
+presented as inferred composition. OpenCode `1.18.23` returned an empty
+`v2.session.context` payload for populated legacy sessions, so the native screen
+follows upstream web and uses hydrated generated session-message truth instead.
+
+The retained screen refreshes after wake-time transport replacement, location
+changes, global data reconciliation, and busy-to-idle completion. A failed
+refresh preserves cached metrics with an inline retry instead of replacing them
+with an error screen. The visual treatment is flat and compact: divided metrics
+and one tonal gauge, no nested cards, with a side-by-side summary at Pixel width
+and a stacked layout under narrow or enlarged-text constraints.
+
+A release-mode Pixel 6 opened an existing 940-message session against OpenCode
+`1.18.23` and rendered `openai/gpt-5.6-sol-fast` as `GPT-5.6 Sol Fast` at
+`129625 / 400000` tokens (`32.4%`): input `19339`, output `236`, reasoning `482`,
+cache read `109568`, and cache write `0`. It reported 57 user plus 883 assistant
+messages and explicitly estimated the latest input makeup as 44 user, 1327
+assistant, 17967 tool, and 1 other token. Android logged no app fatal exception,
+ANR, RenderFlex overflow, OOM, or Flutter error.
+
+Final-tree Flutter analysis is clean and all 456 app tests pass serially. All
+four generated-SDK integrity verifiers pass for 188 operations; all 46 SDK
+tests and SDK analysis pass; the compiled SDK smoke binary runs; and aggregate
+Android `lintRelease` passes. The generated SDK audit remains at 101 directly
+used operations. The locally test-signed release APK is `162039375` bytes with
+SHA-256
+`a161dcb6d6ff052420b80dc2d99c10f3c655c2de850395e9c27757ee585819fa`
+and the public legacy certificate SHA-256
+`1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c`.
+Temporary signing properties were removed; this APK was not published or
+distributed.
+
+The unified model/mode/agent selector now opens on the exact active model and
+then the rest of its presented provider family before preserving the remaining
+server catalog order. Previously, the live OpenCode catalog began with Google,
+so a session visibly configured for `openai/gpt-5.6-sol` opened on unrelated
+Gemini rows and hid its current selection and thinking modes below hundreds of
+models. The correction changes presentation order only: all provider/model wire
+IDs, Z.AI regional aliases, search, provider filtering, Fast modes, Reasoning,
+Largest context, and explicit variant selection remain server-backed. Largest
+context still takes over ordering when the user selects that intent.
+
+A same-viewport release-mode Pixel 6 comparison against OpenCode `1.18.23`
+proved the change with the live 349-model catalog. Before the correction the
+first row was Google's `gemini-3.1-flash-tts-preview`; afterward the first row
+was the selected OpenAI `gpt-5.6-sol`, presented by the server as
+`GPT-5.6 Sol 1M (OAuth)` with 1,050,000 context, 128,000 output, reasoning,
+tools, attachments, fast-mode availability, and Default/none/low/medium/high/
+xhigh/max thinking choices immediately visible. The one audit-created session
+was verified by exact ID with zero messages before deletion; no user session
+was removed.
+
+The first post-install startup logged flutter_secure_storage's algorithm-change
+migration path, which found zero encrypted items and explicitly completed
+successfully. A clean-log close/reopen of the corrected picker then produced no
+app fatal exception, ANR, RenderFlex overflow, OOM, SIGSEGV, or Flutter error.
+Final-tree Flutter analysis is clean and all 458 app tests pass serially. All
+four generated-SDK integrity verifiers pass for 188 operations; all 46 SDK
+tests and SDK analysis pass; the compiled SDK smoke binary runs; and aggregate
+Android `lintRelease` passes. The generated SDK audit remains at 101 directly
+used operations. The locally test-signed `1.0.20+21` APK is `162039375` bytes
+with SHA-256
+`34322f2d85ef300e68b8f387df72cff7ca546ac7939102177b925474f11c72ef`
+and the public legacy certificate SHA-256
+`1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c`.
+It upgraded the emulator in place, temporary signing properties were removed,
+and the APK was not published or distributed.
+
+Mobile-created session lifecycle is now explicit instead of leaking empty
+server sessions when a user opens New session and immediately backs out. Only
+routes marked as newly created by mobile are eligible for cleanup. Back first
+reconciles the wake-safe transport, fetches the exact session's current server
+messages, and deletes it only when it is still empty and no local send, pending
+send, or busy state exists. Existing routes are never cleanup candidates, even
+when their sessions are empty. Verification or deletion failure fails closed:
+the session is preserved and mobile explains that it could not safely remove
+it. Mobile `/new` applies the same rule to the provisional session it replaces
+and cannot replace unsent text or attachments without the same confirmation.
+
+Unsent composer text or attachments are protected for every chat route. Back
+shows one compact `Discard unsent draft?` confirmation with Keep editing and
+Discard draft; Keep editing retains the exact draft and session. Widget coverage
+proves exact empty-session deletion, server-message preservation, verification-
+failure preservation, and the confirmation at 320dp with 2x text scaling.
+
+Release-mode Pixel 6 verification against OpenCode `1.18.23` exercised the
+server lifecycle by exact ID. Draft session
+`ses_fb784317fffeMCBJo6xD19O2yu` remained after Keep editing and disappeared
+only after Discard draft. Untouched session
+`ses_fb7828c78ffepvRbEfaZy321cz` was removed on back. Existing session
+`ses_fd13fc507ffeq9Vnk7GoQJwSo3` remained intact. Mobile `/new` removed its
+first provisional session `ses_fb781d43dffeKIdvxAV0CJKZym`, opened replacement
+`ses_fb781886dffe2sR7GjRGtndE73`, and back removed that untouched replacement.
+The final rebuilt binary additionally kept draft session
+`ses_fb779fc92ffeL3qFVahFE1Dd0t` and its exact composer text when `/new` was
+cancelled through Keep editing; no replacement session was created, and the
+audit session was removed only after the later explicit Discard draft action.
+Android logged no app fatal exception, ANR, RenderFlex overflow, OOM, SIGSEGV,
+or Flutter error.
+
+Final-tree Flutter analysis is clean and all 463 app tests pass serially. All
+four generated-SDK integrity verifiers pass for 188 operations; all 46 SDK
+tests and SDK analysis pass; the compiled SDK smoke binary runs; and aggregate
+Android `lintRelease` passes. The locally test-signed `1.0.20+21` APK is
+`162039375` bytes with SHA-256
+`133bb537935296a83672d7c9381f51381d40d30d5db0734815a895e390ef974d`
+and the public legacy certificate SHA-256
+`1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c`.
+It upgraded the emulator in place, temporary signing properties were removed,
+and the APK was not published or distributed.
+
+A live release-mode Pixel 6 check against OpenCode `1.18.23` also found and fixed
+a location-integrity defect: mounting Workspace could overwrite a directory
+selected from the global session finder with the server project root. Workspace
+now respects the controller's active session directory during refresh. The final
+live proof opened `/tmp/oc-git-proof2.iwAf13/project`, displayed `Git is not
+initialized`, confirmed the action, created the repository at that exact path,
+and refreshed to `master`, `Working tree is clean`, and `No uncommitted changes`.
+Android logged no app fatal exception, ANR, RenderFlex, overflow, or OOM.
+
+Final-tree evidence: Flutter analysis is clean; all 400 app tests pass serially;
+all four generated-SDK integrity verifiers pass for 188 operations; all 46 SDK
+tests and SDK analysis pass; the compiled SDK smoke binary runs; Android
+`lintRelease` passes; and the generated SDK audit counts 87 directly used
+operations. Traycer and the agent/task-tree lane remain explicitly deferred.
+
+Shorebird's direct non-publishing release dry run used Flutter `3.47.1`, APK
+artifact mode, build name `1.0.20`, and build number `21`. It resolved release
+version `1.0.20+21`, built the AAB and APK, and reported `No issues detected`.
+The Shorebird APK remained byte-for-byte identical to the candidate hash and
+retained the matching certificate above. Nothing was uploaded or published.
+
+The release helper now has a separate `sideload` mode for this verified legacy
+GitHub lineage. It does not weaken the production/store `release` mode: store
+builds still reject every debug certificate, while sideload builds require the
+exact public SHA-256 fingerprint above. Both modes require a private external
+keystore and ignored private properties. `sideload` uses Shorebird APK mode,
+then independently verifies one signer, package
+`ai.opencode.opencode_mobile`, version name, and version code after the dry run
+and again after an explicit `--publish`. It uploads nothing by default and does
+not create a GitHub release or tag.
+
+The complete helper was then exercised at commit
+`e7518d00882f6f14a44edbdd017aa11931d79284` from an isolated clean `master`
+tracking an isolated `origin/master`, using the real matching keystore and
+Android build tools. It passed analysis, all 400 tests, Shorebird's dry run,
+and every post-build identity gate. That dry-run APK was `161366803` bytes with
+SHA-256 `56e24f5bfaf542e58df81a4e989653ef2913ccf70ee7f0ff4dc4ec42dfcda200`.
+APK hashes are recorded per derivation rather than assumed reproducible;
+explicit publish mode deletes the dry-run output, rebuilds, and verifies the
+actual post-upload artifact again. Nothing was uploaded in this proof.
+
+This branch prepares the next native baseline without changing the patchable
+`1.0.19+20` release on `master`. It removes the debug signing fallback, adds a
+dedicated release signing configuration and ignored properties template, and
+upgrades to Gradle `9.5.0`, AGP `9.3.2`, built-in Kotlin with KGP `2.4.0`, and
+current AGP-9-compatible file/audio plugins. `flutter_secure_storage` advances
+from v9 to v10 deliberately so existing Android credentials pass through the
+required cipher migration; do not jump this release line directly to v11.
+
+Pinned Flutter `3.47.1` completed a release APK build in 139.5 seconds. The
+159.1 MB artifact used the known debug certificate only as an ignored local
+test key; that file was removed and the artifact must not be distributed.
+Flutter analysis was clean and all 237 tests passed. Shorebird's debug Maven
+repository lacked this fork's debug embedding, so release mode was the valid
+build gate. Pixel 6 install/launch verification was environment-blocked: the
+AVD never started Android's package service and then crashed with QEMU main-loop
+and CPU-thread watchdog errors even after its test data was reset.
+
+The GitHub sideload upgrade identity is now resolved: the available local key
+matches the public `1.0.19+20` APK exactly. Back it up before publishing another
+GitHub APK. Play/store production signing and any migration away from this legacy
+debug certificate remain separate owner decisions. These native and dependency
+changes cannot ship as a patch to `1.0.19+20`; they require a new full Shorebird
+release.
+
+The branch also has a bounded production-guardrail follow-up: a bundled,
+user-facing privacy policy; adaptive, round, and Android 13 themed launcher
+resources; a pinned GitHub Actions analysis/test/lint/release-compile gate; and
+pre-build verification that the release keystore is private, outside the
+repository, non-debug, and matches the expected certificate. Flutter analysis
+is clean, all 239 tests pass serially, the release-script safety harness passes,
+and Android release resources compile.
+
+The owner explicitly corrected the next priority: do not lead with Play/store
+work while core product journeys remain incomplete. The next lane is an
+authoritative comparison of every generated Dart OpenCode API against app call
+sites, followed by implementation of the highest-impact hidden or incomplete
+coding workflow. Signing and store publication remain deferred until that
+product-completeness audit is worked down.
+
+Long-idle and server-interruption recovery now preserves the product context
+instead of falling back to a fresh connection. Home and active Chat share one
+flat, accessible status banner; automatic SSE recovery keeps a force-retry
+action available, while repeated manual taps coalesce behind one health-check
+and transport rebuild. The rebuild retains the active profile, directory,
+workspace, sessions, and rendered transcript. A failed health check shows its
+error in place and no longer ejects Home or Chat to the server list; restarting
+OpenCode and retrying restores live events and reconciles server-owned data at
+the exact retained location. Explicit Disconnect remains the only flow that
+clears location data and returns to Servers.
+
+Release-mode Pixel 6 verification against isolated OpenCode `1.18.23` stopped
+the server from an active `oc_app` chat, observed automatic reconnect with an
+enabled Retry action, forced a failed health-check retry, and confirmed the
+same chat remained visible with the failure. After the server restarted, Retry
+removed the banner without navigation; returning to Workspace showed `oc_app`
+still selected and the same session still present. Android logged no fatal
+exception, ANR, RenderFlex overflow, or OOM. Final-tree Flutter analysis is
+clean, the generated SDK's four independent verifiers, 46 tests, and analyzer
+pass, Android `lintRelease` passes, and the test-signed release APK compiles at
+161,120,523 bytes. The locally signed APK and disposable server/signing state
+were removed and were not distributed. Traycer remains explicitly deferred.
+
+That API audit is now recorded in
+[`docs/opencode-sdk-coverage.md`](docs/opencode-sdk-coverage.md). The generated
+Dart SDK exposes 188 HTTP operations across 32 groups; the app directly used 30
+before this audit and also retained several handwritten compatibility routes.
+The first gap repaired is Review truth. The existing session diff remains the
+safe default, while adjacent Working tree and Branch scopes now use the generated
+`vcs.diff` API with the contract's exact `git` and `branch` modes. All scopes
+reuse the same flat file tabs, unified/split renderer, line selection, copy,
+question, and grounded-comment workflow.
+
+The generated VCS mapping has a real loopback HTTP contract test covering
+location, mode, context, patch, counts, and status. Live VCS evidence is now also
+complete against local OpenCode `1.18.23`: a reversible tracked README marker
+appeared in `/vcs/diff?mode=git` and the native Working tree scope with the exact
+path, `+2/-0` counts, and patch. Unified and split views, hunk navigation, Copy
+patch, and Ask about file remained usable. Branch scope loaded 67 files and
+`+11179/-760` lines without ANR, OOM, Flutter fatal, RenderFlex, or overflow.
+
+That live branch exposed two identical `ic_launcher.xml` phone tabs. Review now
+adds the shortest unique parent only when basenames collide, producing
+`ic_launcher.xml · mipmap-anydpi-v26` and
+`ic_launcher.xml · mipmap-anydpi-v33`, while accessibility announces each full
+path. The exact release-mode test build was installed on the Pixel 6 emulator and
+the corrected labels were verified from the live OpenCode response. The README
+probe was restored exactly, the temporary debug signing configuration was
+removed, and that locally test-signed APK must not be distributed. Flutter
+analysis is clean and all 310 tests pass serially.
+
+The next audited gap repaired is provider OAuth completion. Mobile now preserves
+OpenCode's OAuth attempt ID, `auto`/`code` mode, instructions, and expiry instead
+of discarding them after opening the browser. Provider connections show one flat,
+visible pending row with Check or Enter code plus cancellation. On app resume,
+automatic attempts query the generated status endpoint; code attempts accept the
+returned code and call the generated completion endpoint. Failed and expired
+states remain truthful, and provider/model inventories refresh only after the
+server reports completion. Cancelling the browser confirmation also releases the
+server attempt.
+
+The owner explicitly deferred Traycer and the agent/task-tree lane. Do not add it
+now. The next product-completeness lane should stay within core OpenCode mobile
+workflows, beginning with coding health surfaces such as VCS status/info, symbol
+search, LSP status, and formatter status. Flutter analysis is clean and all 244
+tests pass serially, including loopback HTTP coverage for OAuth start/status/
+complete/cancel and widget coverage for automatic, code, cancel, and model-refresh
+flows.
+
+Project coding health is also no longer hidden in the generated SDK. Workspace
+now exposes one native Project health destination for the selected location. It
+shows the current/default branch, changed files and line counts, active/erroring
+language servers, and enabled/disabled formatters using generated `vcs.get`,
+`vcs.status`, `lsp.status`, and `formatter.status` calls. The presentation is a
+flat sequence of sections and rows, not nested cards. Each API has an independent
+loading/error/empty state, so an older server missing one endpoint does not erase
+the other results.
+
+New coverage checks exact location-scoped HTTP paths and response mapping,
+partial endpoint failure, workspace discoverability, absence of nested cards,
+and 320dp rendering at 2x text scale. Live status is now proven against local
+OpenCode `1.18.23`: Project health rendered the exact
+`production/android-release-hardening` branch and `master` default, clean and
+changed working-tree states, one connected Dart language service, and the live
+5/27 formatter count. The release-mode Pixel 6 build logged no fatal exception,
+RenderFlex, overflow, OOM, or ANR.
+
+Workspace symbol navigation is now implemented without adding a separate nested
+surface. The Files screen has adjacent Files and Symbols tabs above one contextual
+search field. Symbols use the generated, location-scoped `/find/symbol` endpoint,
+show the LSP kind plus file/line/column, and open the existing smart file preview
+at the exact source line with line numbers and a highlighted target. Switching
+back to Files preserves ordinary browsing, and an older server missing symbol
+search shows a scoped error without breaking its file list.
+
+Contract coverage verifies file-URI normalization and zero-based LSP position
+conversion; widget coverage verifies exact-line opening, accessibility-scale
+layout at 320dp, and the old-server fallback. The generated SDK audit counts 39
+direct operations. Live OpenCode `1.18.23` activated its configured Dart service
+after a disposable read-only coding session, but `/find/symbol` still returned no
+workspace results even though OpenCode's document-symbol debugger returned the
+file's Dart symbols. Mobile symbol search now debounces typing automatically and
+shows a truthful zero-result explanation that some language services do not
+support workspace-wide search instead of leaving a blank surface. A positive
+live workspace-symbol result remains unverified; the disposable session and
+probe were removed. Final-tree Flutter analysis is clean and all 312 tests pass
+serially.
+
+The last plain skill-content surface now uses the shared smart file preview.
+Opening a skill renders its Markdown headings, tables, inline code, fenced code,
+lists, and links while retaining one explicit Raw mode for exact source inspection.
+The skill sheet remains a single flat content surface; it does not introduce a
+nested card or a second scrolling container. Focused widget coverage verifies the
+rendered/raw transition and a 320dp phone at 2x text scale. Final-tree Flutter
+analysis is clean and all 252 tests pass serially. Traycer remains explicitly
+deferred.
+
+Project references are no longer display-only. The mobile command launcher now
+exposes `/references` with `/reference` and `/refs` aliases. Selecting an item
+adds the visible `@name` mention and OpenCode's exact directory file part
+(`application/x-directory` plus a canonical `file://` URL) to the current
+composer. Pending and sent references render as references rather than broken
+downloadable attachments. The standalone Library screen copies the exact
+mention. This is grounded in the upstream TUI and web composer contract; no
+reference names or paths are hardcoded.
+
+Reference URL encoding also detects Windows drive and UNC paths returned by a
+remote server instead of applying the Android phone's path rules.
+
+Final-tree Flutter analysis is clean and all 256 tests pass serially. Coverage
+includes the exact serialized directory-part contract, standalone copy behavior,
+remote Windows path encoding, and the full command-launcher to composer to Send
+interaction.
+
+Long chats now have a mobile-native message timeline. The app bar groups Timeline,
+Changes, and Todos under one Session views control to preserve horizontal space;
+`/timeline` opens the same searchable flat list. Selecting any user or assistant
+message uses a stable indexed anchor and briefly highlights the destination, even
+when mixed-height Markdown, tool groups, diffs, and images make pixel-offset math
+unreliable. The sheet expands automatically for accessibility-scale text and is
+covered at 320dp with a 2x text scale.
+
+`/fork` now mirrors OpenCode's upstream UI rather than forking only the complete
+session. It lists canonical user prompts, sends the selected `messageID` through
+the generated fork API, then restores that prompt's text and file parts into the
+new session composer for editing or resending. The general timeline also exposes
+the same fork action beside eligible user prompts. The legacy whole-session fork
+remains available in the session overflow menu. Traycer remains explicitly
+deferred. Final-tree Flutter analysis is clean and all 261 tests pass serially;
+coverage includes indexed long-chat jumps, prompt/file restoration, the exact
+generated fork request, and the 320dp accessibility layout.
+
+Transcript display parity is now native rather than slash-only. Session views
+groups checked Expand reasoning and Show timestamps actions with Timeline,
+Changes, and Todos; `/thinking`, `/toggle-thinking`, `/timestamps`, and
+`/toggle-timestamps` call the same handlers. Both preferences persist app-wide
+through `ProfileStore` and update retained chats through `ConnectionController`.
+No chat migration is involved: timestamps come from stored OpenCode message
+creation times, while the existing reasoning parts expand or collapse in place.
+Reasoning shorter than two rendered lines remains visible regardless of the
+global long-reasoning setting, and individual long blocks remain tappable.
+
+Final-tree Flutter analysis is clean and all 263 tests pass serially. Coverage
+includes preference restoration, old-chat live updates through both the command
+launcher and native Session views, timestamp metadata, and global reasoning
+collapse. Traycer remains deferred.
+
+`/editor` now matches the upstream prompt-editing intent instead of opening the
+project file browser. It opens a focused full-screen multiline editor initialized
+with the exact composer `TextEditingValue`, so both the draft and cursor/range
+selection survive the round trip. Existing attachments remain visible and
+previewable; they can be removed or extended through the same bounded file picker
+and aggregate-size rules as the compact composer. Done returns changes without
+sending, while back/close protects dirty text or attachments with an explicit
+discard choice. The composer also exposes a direct expand action.
+
+Project browsing is now the distinct `/files` action with `/open` as the web-client
+alias. Command-search coverage ensures `/open` cannot drift back to the prompt
+editor. Final-tree Flutter analysis is clean and all 265 tests pass serially,
+including selection and attachment round trips, cancel/discard behavior,
+no-auto-send behavior, and a 320dp/2x-text keyboard-inset layout. Traycer remains
+deferred.
+
+The remaining location and organization commands now use their actual generated
+OpenCode contracts. `/move` lists known directories for the session project and
+can transfer current working changes. `/warp` distinguishes connected
+experimental workspaces from the Local project and can copy changes during the
+warp. `/org`, `/orgs`, and `/switch-org` show organizations grouped by Console
+account, switch the selected account/org pair, dispose the old instance, and
+rebuild the location-scoped transport so provider and model catalogs reload.
+Each operation has its own loading, empty, error, current, and unavailable
+states; the surfaces are flat lists rather than nested cards.
+
+The app sends OpenCode's synthetic no-reply working-directory reminder after a
+successful move or warp, then rehydrates the existing chat on the replacement
+transport. Workspace listing remains compatible with servers that predate the
+status endpoint. Contract tests cover exact paths, queries, payloads, instance
+disposal, and reminder serialization; widget tests cover launcher mapping,
+change-transfer choices, transport replacement, and 320dp rendering at 2x text.
+Final-tree Flutter analysis is clean and all 272 tests pass serially. The
+generated SDK audit now counts 46 directly used operations. Traycer remains
+explicitly deferred.
+
+The ordinary chat send path now uses the generated `session.prompt_async`
+transport rather than duplicating that endpoint through handwritten Dio. The
+wire contract remains unchanged: selected provider/model, agent, thinking
+variant, text, uploaded files, OpenCode directory references, directory, and
+workspace are all preserved. Declared generated errors are translated back to
+the app's product-facing `ApiException` without losing HTTP status, error tag,
+request ID, or server detail; undeclared transport failures retain the existing
+Dio fallback. Exact loopback coverage guards both the full request and error
+mapping. Final-tree Flutter analysis is clean and all 274 tests pass serially.
+The generated SDK audit now counts 47 directly used operations. Traycer remains
+explicitly deferred.
+
+Server-provided slash commands now use generated `session.command`, preserving
+their exact arguments, `provider/model` route, selected thinking variant,
+directory, and workspace. Declared server failures retain product-facing HTTP
+and OpenCode error details. Shell execution deliberately remains on its bounded
+compatibility request because the generated `SessionShellRequest` omits
+`variant`; replacing it would silently discard High, Max, Fast, or any other
+server-provided thinking mode. A loopback transport regression proves both the
+generated command payload and the retained shell variant. Redundant handwritten
+prompt and command body builders were removed after their stronger end-to-end
+wire tests replaced them. Final-tree Flutter analysis is clean and all 274 tests
+pass serially. The generated SDK audit now counts 48 directly used operations.
+Traycer remains explicitly deferred.
+
+Stopping a generation is now a production-safe lifecycle action. It waits for
+the same wake-time transport reconciliation as sending, calls generated
+`session.abort` with the selected directory/workspace, ignores repeated taps
+while the first stop is pending, and shows a product-facing failure instead of
+silently swallowing it. Exact transport tests cover success and declared server
+errors; widget tests prove a stale retained API is not used after wake and a
+failed stop remains visible. The unused handwritten `initProject` wrapper was
+removed; the visible `/init` workflow continues through OpenCode's authoritative
+server-command catalog. Final-tree Flutter analysis is clean and all 278 tests
+pass serially. The generated SDK audit now counts 49 directly used operations.
+Traycer remains explicitly deferred.
+
+Session creation, rename, and deletion now use one wake-safe mutation path
+instead of capturing whichever API object a retained screen happened to hold.
+The underlying calls use generated `session.create`, `session.update`, and
+`session.delete`, with directory/workspace scoping and product-facing declared
+errors. Successful but looser session responses from older OpenCode servers are
+still accepted, avoiding a false failure after a mutation already committed.
+The Chats list now confirms permanent deletion just like Workspace; cancellation
+does not call the server, and failed mutations leave the session visible.
+Transport tests cover exact methods, paths, queries, bodies, loose success
+responses, and declared failures. A controller regression proves create, rename,
+and delete all wait for the post-wake replacement API. Final-tree Flutter
+analysis is clean and all 281 tests pass serially. The generated SDK audit now
+counts 51 directly used operations. Traycer remains explicitly deferred.
+
+The session read side now uses generated `session.list`, `session.get`,
+`session.status`, and `session.messages`. Loose metadata returned by older
+OpenCode servers still falls back to the app's tolerant parser. Message info and
+parts pass through the SDK's lossless raw-union wrappers, so custom tools,
+plugins, structured input/output, metadata, and future part fields are not
+flattened or discarded before the existing renderer sees them. Exact loopback
+coverage proves location queries, loose metadata, busy/retry statuses, declared
+errors, and nested plugin-specific tool data. Final-tree Flutter analysis is
+clean and all 283 tests pass serially. The generated SDK audit now counts 55
+directly used operations. Traycer remains explicitly deferred.
+
+Session Todos and Diff now use generated `session.todo` and `session.diff` with
+the selected directory/workspace instead of duplicate handwritten requests.
+Typed todo priority and diff patch/count/status data are preserved in the app;
+unknown future diff statuses do not leak the SDK's internal fallback enum label.
+If an older server returns a successful but looser todo or diff payload, the app
+falls back only for that deserialization failure and retains missing-priority
+todos plus legacy before/after diff content. Todo rows now show non-pending state
+and server priority without adding a nested card. Exact loopback coverage proves
+paths, location queries, strict mapping, loose successful responses, and declared
+OpenCode errors. Final-tree Flutter analysis is clean and all 287 tests pass
+serially. The generated SDK audit now counts 57 directly used operations. Traycer
+remains explicitly deferred.
+
+Pending permission and question flows now use generated legacy and V2 transports
+for both hydration and replies. This covers `permission.list`,
+`permission.reply`, the bounded deprecated `permission.respond` fallback,
+`v2.permission.request.list`, `v2.session.permission.reply`,
+`v2.question.request.list`, `v2.session.question.reply`, and
+`v2.session.question.reject`. Strict V2 location envelopes are verified before
+publishing requests; successful looser payloads from older servers retain their
+existing tolerant path. Declared request IDs and error tags still resolve
+permission/question reply races idempotently instead of leaving stale dialogs.
+
+Permission and question replies now wait for the lifecycle action transport, so
+a retained Requests or Chat surface cannot answer through the API/repository
+being replaced during Android wake reconciliation. Exact loopback tests cover
+strict and loose envelopes, location queries, bodies, unavailable-endpoint
+fallback, and generated OpenCode errors; controller coverage proves permission,
+answer, and rejection actions all use the replacement wake transport. The
+final tree has clean Flutter analysis and all 291 tests pass serially. The
+generated SDK audit now counts 65 directly used operations. Traycer remains
+explicitly deferred.
+
+The active Files surface now uses generated `file.list`, `file.read`,
+`find.files`, and `find.text` contracts with the selected directory/workspace.
+Binary type, base64 encoding, and MIME metadata survive the mapping so image and
+file previews remain viewable, downloadable, and attachable. Successful legacy
+responses still accept nodes without newly required fields, raw text bodies,
+line-array content, and loose search matches. File browsing, filename search,
+symbol search, direct file viewing, and chat tool-output previews all wait for
+the post-wake transport before reading, preventing a retained screen from using
+the API being replaced after Android idle. Exact loopback tests prove methods,
+paths, queries, strict and loose mappings, binary bytes, and generated error
+identity; a widget regression proves a tool image loads only through the
+replacement wake transport. Final-tree Flutter analysis is clean and all 295
+tests pass serially. The generated SDK audit now counts 69 directly used
+operations. Traycer remains explicitly deferred.
+
+Project files are now first-class artifacts from both entry points. The main
+Files tab always exposes Android's system document destination, while `/files`
+opened from a chat additionally exposes Attach to prompt and returns the full
+original bytes to that chat's bounded attachment list for a follow-up comment.
+Large text may stay bounded in the viewer without truncating its saved or
+attached payload. The `/files` command route now owns a proper Scaffold/AppBar;
+the prior bare widget route could assert for missing Material and provided no
+reliable back affordance.
+
+Release-mode Pixel 6 verification used live OpenCode `1.18.23`. A repository PNG
+rendered with zoom, saved through Android DocumentsUI, and matched the source
+SHA-256 exactly. `HANDOFF.md` rendered as Markdown with Rendered/Raw, Save, and
+chat-only Attach actions; the returned attachment plus a typed follow-up comment
+survived Android Home/background/resume with Send enabled. The downloaded probe,
+local server, reverse route, disposable signing key, and test APK were removed.
+Final-tree Flutter analysis is clean and all 315 tests pass serially. Traycer
+remains explicitly deferred.
+
+Wake safety now covers the full retained foreground action surface, not only
+chat send/stop and file reads. `ConnectionController` resolves the product
+repository paired with the post-wake API, and chat share/unshare, fork,
+compact, revert/restore, retry, shell, Review, and Todos use it. Library MCP,
+provider OAuth/key actions, commands, Skills, and References; workspace session
+actions and destination discovery; project/Settings health; and terminal
+list/create/rename/remove also wait for reconciliation. Existing transcript
+data can render immediately during wake, while new requests cannot escape
+through the repository being retired. Terminal dialogs additionally retain
+their location revision so an actual workspace switch still fails closed.
+Replacement-repository widget regressions cover a session fork, an MCP connect,
+and all three project-health requests. Final-tree Flutter analysis is clean and
+all 298 tests pass serially. The generated SDK audit remains at 69 directly used
+operations. Traycer remains explicitly deferred.
+
+The interactive terminal is now verified end to end against OpenCode `1.18.23`.
+The release-mode Pixel 6 build created a real `/bin/bash` PTY, obtained the
+guarded single-use WebSocket ticket, rendered its prompt, sent commands, received
+output, and reconnected after Android background/wake. That run exposed a real
+resume defect: each fresh socket replayed OpenCode's complete PTY screen and the
+accessible transcript appended it again, duplicating every prior command and
+result after each wake. The client now consumes OpenCode's NUL-prefixed cursor
+metadata, retains the authoritative stream position, and supplies `cursor` on
+replacement WebSocket connections just like the upstream web terminal. Manual
+reconnect and background/wake both delivered only missed output, with each proof
+command/output pair retaining its original count instead of multiplying. The
+disposable PTY, local server, reverse route, and test signing configuration were
+removed. Device logs contained no fatal exception, RenderFlex, overflow, OOM, or
+ANR. Final-tree Flutter analysis is clean and all 313 tests pass serially.
+
+Library now includes a native persistent MCP setup flow for remote URLs and
+server-local commands. Users explicitly choose the current project or all
+projects; the form validates transport fields and writes through generated
+`configGet`/`configUpdate` or `globalConfigGet`/`globalConfigUpdate` contracts.
+Duplicate names fail before a patch, and a successful patch rebuilds the
+location transport because OpenCode invalidates the configured instance. If
+that reconnect fails, the UI truthfully reports that configuration was saved,
+disables editing, and offers Close instead of risking a duplicate submission.
+Focused coverage includes exact loopback methods, paths, queries, payloads,
+unsafe input, duplicate prevention, Library entry, compact 320dp/2x-text layout,
+and post-save reconnect failure. Final-tree Flutter analysis is clean and all
+307 tests pass serially. The generated SDK audit now counts 73 directly used
+operations. Traycer remains explicitly deferred.
+
+The next native baseline now has one authoritative Shorebird update owner.
+`shorebird.yaml` disables the engine's automatic launch updater while the
+existing app-level notice continues to check and download on startup/resume.
+This removes a real race where `ShorebirdUpdater.update()` returned the benign
+`UPDATE_IN_PROGRESS` result from the parallel engine thread and the UI announced
+`restart to apply` before the patch was staged. A failed update now removes the
+progress snackbar and never shows the ready notice; a release contract prevents
+the second updater from being re-enabled.
+
+This was reproduced and verified on the running Pixel 6 emulator with an exact
+branch release-mode build signed by the known Android debug certificate for
+simulation only. Before the fix, Shorebird rejected the deliberately mismatched
+`1.0.19+20` test binary by hash while the UI still claimed ready. After the fix,
+the engine logged `auto_update disabled`, the app-owned updater surfaced the
+hash rejection internally, and the visible UI contained neither Receiving nor
+restart-ready text. The same build connected through `adb reverse` to local
+OpenCode `1.18.23`, opened Workspace -> More -> MCP and integrations -> Add MCP
+server, rendered the project-scoped native form, and rejected an `ftp://` URL
+inline without persisting it. Device logs contained no fatal exception,
+RenderFlex, or overflow. The temporary server and reverse mapping were stopped,
+the ignored signing file was removed, and this APK must not be distributed.
+Flutter analysis is clean and all 309 tests pass serially.
+
+Live background/wake reconciliation is now proven against OpenCode `1.18.23`
+without spending provider tokens. With the app on Workspace, Android forced
+deep idle and killed the process; a disposable session created and renamed
+while idle appeared immediately after wake without manual refresh. In a second
+run, the app stayed on that session's chat screen with PID `8628`, retained the
+same PID while backgrounded, missed a server-side model-free shell event, then
+showed its completed tool call and `wake-shell-proof` output immediately after
+resume. Both paths had no fatal exception, RenderFlex, overflow, connection
+refusal, or endpoint-unavailable log. The probe session was deleted afterward.
+
+Background live mode now surfaces the events that otherwise remained invisible
+while the phone was away. OpenCode permission and question requests share one
+deduplicated per-session alert; a root session's busy-to-idle transition posts
+one completion alert; and a session error replaces completion so a later idle
+event cannot report false success. Known child sessions stay quiet. Returning to
+the app, resolving the last pending request, starting a new run, deleting a
+session, changing location, disconnecting, or disabling live mode dismisses the
+corresponding alert.
+
+Android owns fixed privacy-safe copy on separate high-importance request/error
+and default-importance completion channels. Notifications are `PRIVATE` and do
+not receive prompt text, tool input, filenames, session titles, or provider error
+details. They are posted only while `Keep coding session live` is enabled, Android
+notification access is granted, and the Activity is backgrounded. A request that
+was already visible before Home is still alerted after backgrounding.
+
+A locally signed release build was installed on the Pixel 6 emulator and connected
+through `adb reverse` to OpenCode `1.18.23`. With the app on Android Home, a real
+model-free shell session emitted busy-to-idle and produced `OpenCode finished` on
+`opencode_coding_status` with `vis=PRIVATE`; the high-importance request channel
+was also registered. Bringing the app forward removed the completion notification.
+No fatal exception, ANR, OOM, RenderFlex, or overflow was logged. The disposable
+session, server, reverse, Android install, signing key, and test APK were removed.
+This is a native baseline change and cannot be delivered to an older APK by a
+Shorebird Dart patch. Native release Kotlin compilation succeeded, final-tree
+Flutter analysis is clean, and all 323 tests pass serially. Traycer remains
+explicitly deferred.
+
+Session discovery is now global without introducing Traycer or an agent/task
+tree. Workspace and `/sessions` open one flat native finder backed by generated
+`experimental.session.list`. Server-side title search spans every OpenCode
+project, `roots=true` keeps child sessions out, archived sessions are an explicit
+filter, and older results load through the server cursor. Opening a result first
+switches to its exact directory/workspace, then hydrates the existing chat. The
+finder also re-queries through the replacement post-wake repository while
+preserving its search and archived-filter state.
+
+Live OpenCode `1.18.23` verification used two temporary projects and proved root
+filtering, server-side search, archived exclusion/inclusion, cross-project
+navigation, and wake reconciliation. A root session created externally while the
+release-mode Pixel 6 app was backgrounded appeared immediately after resume next
+to the archived search result. Both rows exposed real semantic tap actions, and
+opening the result caused OpenCode to load the exact other project directory.
+Device logs contained no fatal exception, ANR, OOM, RenderFlex, or overflow.
+Exact HTTP coverage also proves that no active directory/workspace leaks into the
+global query. Pagination, compact 320dp/2x-text layout, error/empty states, and
+replacement-repository behavior have widget regressions. The locally test-signed
+161,120,523-byte APK is verification-only and was not published. Final-tree
+Flutter analysis is clean, all 375 app tests and 46 generated-SDK tests pass, all
+four independent SDK verifiers pass, Android release lint succeeds, and the
+generated SDK audit now counts 85 directly used operations. Traycer remains
+explicitly deferred.
+
+The first-run server connection path is no longer a cramped modal. A fresh
+release-mode Pixel 6 audit found overlapping field labels/helper text, actions
+competing with the Android keyboard, and an app-bar overflow at 320dp with 2x
+text. Add, edit, and password-reentry now share one flat full-screen profile
+editor. The required URL receives initial focus; display name and authentication
+are explicitly optional; fields scroll above the keyboard; Save remains in the
+app bar; password visibility is user-controlled; URL errors retain their full
+instruction; and closing a changed profile requires discard confirmation.
+
+The same locally test-signed release build was rechecked at normal and 2x Android
+font scales. The server list, URL-first editor, keyboard state, and incomplete-URL
+recovery rendered without a fatal exception, ANR, OOM, RenderFlex, or overflow.
+The 161,120,523-byte APK is verification-only and was not published. Final-tree
+Flutter analysis is clean, all 379 app tests and 46 generated-SDK tests pass, all
+four independent SDK verifiers pass, and Android release lint succeeds. Traycer
+remains explicitly deferred.
+
+`tool/smoke_test.dart` now makes this server evidence stronger and safer. It
+accepts explicit directory/workspace scope, verifies health, session lifecycle,
+provider/agent catalogs, a model-free shell plus hydrated output, files/search,
+and SSE, and deletes its disposable session from `finally` even when a check
+throws. The hardened tool passed every check against the same OpenCode `1.18.23`
+instance and analyzed cleanly.
 
 ## Shorebird chat-timeline, updater, command-launcher, and review patches for `1.0.19+20`
 
@@ -436,6 +1742,273 @@ same process and foreground service survived, the setting survived the upgrade f
 version code 18 to 19, and no fatal exception was logged. Android 15+ limits
 `dataSync` foreground-service use to six background hours per rolling 24-hour period;
 the battery exemption does not bypass that platform limit.
+
+Background coding alerts now retain OpenCode's exact event kind and session ID in
+their Android content intent. Tapping a completion or error opens that chat; tapping
+a permission opens the chat and its queued permission dialog; tapping a question
+opens Pending requests and the exact answer sheet. The destination is consumed once
+across both warm `onNewIntent` delivery and cold Activity launch. If one session's
+permission resolves while a question remains, Android updates the existing input
+notification in place instead of leaving stale permission copy or creating a second
+card. Permission names use the same readable mobile copy in chat and Pending requests.
+
+This was proven on the Pixel 6 against local OpenCode `1.18.23`. With the app on the
+Home screen and its foreground service active, a disposable `sleep 2` session posted
+the private `OpenCode finished` notification. Tapping it opened the uniquely titled
+`Background alert tap proof` chat and its completed shell card. A separate cold
+Activity launch with the same notification extras also opened that exact session.
+The run logged no fatal exception, ANR, overflow, or crash. The disposable session,
+emulator app, reverse port, test key, and locally signed APK were removed afterward;
+that APK must not be distributed. Final-tree Flutter analysis is clean, all 326 tests
+pass serially, and `:app:compileReleaseKotlin` succeeds. This requires the next full
+native APK and cannot be added to an older baseline through Shorebird. Traycer remains
+explicitly deferred.
+
+Settings now closes the safety loop created by `Always allow`. The new flat
+Access control destination resolves OpenCode's exact current project, lists only
+that project's durable grants, and revokes one server-issued permission ID after
+showing the readable action, exact resource pattern, and an explicit consequence.
+Cancellation performs no mutation; a failed delete keeps the grant visible and
+retryable. Both list and revoke wait for the wake-reconciled repository, while an
+older server without the saved-permission endpoint shows a scoped error without
+breaking Settings.
+
+Live OpenCode `1.18.23` verification created a disposable external-directory
+permission request without running a model, replied `always`, and confirmed the
+saved grant through `/api/permission/saved` for this project's ID. The release-mode
+Pixel 6 build rendered `1 grant`, the readable action and exact resource, showed the
+confirmation sheet, revoked it through the mobile UI, and then rendered the empty
+state while the server returned `{\"data\":[]}`. No fatal exception, ANR, RenderFlex,
+overflow, or OOM was logged. The grant, session, emulator install, reverse route,
+test key, and locally signed APK were removed afterward; that APK must not be
+distributed. The generated SDK audit now counts 76 directly used operations.
+Final-tree Flutter analysis is clean, all 334 tests pass serially, and
+`:app:compileReleaseKotlin` succeeds. Traycer remains explicitly deferred.
+
+Provider connections now close their own credential lifecycle too. A stored
+connection shows OpenCode's returned label and an explicit Disconnect action;
+environment-backed connections remain visibly server-managed because mobile
+cannot remove the server process environment. Confirmation explains that new
+prompts stop using the credential after the runtime refresh and that an active
+response is not interrupted. The implementation deletes the exact integration
+ID from OpenCode's legacy auth store before deleting each exact server-issued
+credential ID from the v2 store, then disposes both provider-runtime instances.
+No Z.AI/Zhipu or other provider aliases are inferred or hardcoded.
+
+The ordering deliberately preserves a visible retry path. If legacy auth
+removal fails, no v2 credential is touched. If a v2 deletion fails after the
+legacy copy is removed, the remaining v2 connection stays in the row and the
+runtime is still refreshed. Environment-only connections cannot invoke the
+destructive action. Repository and widget coverage verifies exact encoded
+paths, dual-store ordering, partial failures, confirmation cancellation,
+retry visibility, credential/environment presentation, and an adaptive flat
+row plus scrollable confirmation at 320dp with 2x text.
+
+Live OpenCode `1.18.23` verification used isolated config, data, and cache homes
+plus a disposable fake 302.AI key, so no personal provider credential was read
+or changed. The release-mode Pixel 6 build rendered the server-issued `default`
+credential row and confirmation, disconnected it through the mobile UI, and
+returned the row to Connect. The server then reported an empty v2 connection
+list and an empty legacy auth-ID list. Android logged no fatal exception, ANR,
+RenderFlex, overflow, or OOM; the only update notice was the expected Shorebird
+binary-mismatch warning for a local rebuild of an existing version. The test
+profile, app, reverse port, isolated OpenCode state, disposable signing key, and
+locally signed APK were removed afterward; that APK must not be distributed.
+The generated SDK audit now counts 78 directly used operations. Final-tree
+Flutter analysis is clean, all 342 tests pass serially, and the Android release
+APK compiled successfully. Traycer remains explicitly deferred.
+
+Files now exposes authoritative working-tree truth where users browse code.
+Existing files show OpenCode's added, modified, or deleted status plus non-zero
+line counts, while each folder shows the number of changed descendants. The
+presentation stays in the existing flat list rather than adding a nested card,
+and remains usable at 320dp with 2x text. Status and directory loading fail
+independently: an unavailable status request leaves valid files visible with a
+small retryable notice, and a failed refresh retains the last known indicators.
+Wake reconciliation refreshes the selected directory and its status together.
+
+The generated `/file/status` contract was not used blindly. Live OpenCode
+`1.18.23` returned `[]` despite a dirty Git tree, and current upstream source
+shows that route's handler is an explicit empty stub. Files therefore reuses
+the already-generated, authoritative `/vcs/status` endpoint also used by
+Project health; no status, count, or provider identity is inferred locally.
+Loopback contract coverage proves the exact location query and typed mapping.
+
+Pixel 6 release-mode verification used an isolated temporary Git repository and
+isolated OpenCode config, data, and cache homes. The root Files screen rendered
+`README.md` as `Modified · +1 −1` and `lib` as `1 changed file`; inside `lib`,
+`new_feature.dart` rendered as `Added · +1`. After the app was backgrounded, a
+tracked Dart file was changed and the wake-reconciled screen rendered it as
+`Modified · +1 −1` without a manual reconnect. A tracked deletion then appeared
+as a disabled `legacy.txt` row with `Deleted · −1`, and its accessibility label
+contained the status only once. Android logged no fatal exception, ANR,
+RenderFlex overflow, or OOM. Flutter analysis is clean, all 344
+tests pass serially, and the release APK compiled successfully. The simulator
+app, reverse port, isolated server/state/worktree, disposable signing key, and
+local APK were removed after the proof; that APK was not distributed.
+Traycer remains explicitly deferred by owner request.
+
+Changed files now lead directly from Files into the authoritative Working tree
+Review. The new trailing review action opens the exact selected file without a
+fake session or a redundant scope picker; ordinary file-row taps still open the
+preview, and deleted files remain reviewable even though they cannot be opened.
+Review comments return to the active chat composer when Files was opened from a
+chat command. From the top-level Files tab, the same comment is copied to the
+system clipboard with an explicit confirmation instead of being discarded.
+
+Widget coverage proves exact initial-file selection when the requested file is
+not the first diff, single-scope presentation, narrow 320dp/2x-text behavior,
+deleted-file review access, active-chat callback delivery, and top-level Files
+fallback behavior. Pixel 6 release-mode verification against OpenCode `1.18.23`
+used an isolated dirty Git repository with two modified files: Files showed the
+README status and review action, Review opened `README.md` rather than the first
+`lib/main.dart` diff, and rendered the expected selected README patch. Android
+logged no fatal exception, ANR, RenderFlex overflow, or OOM. The proof used no
+Traycer integration. Final-tree Flutter analysis is clean, all 347 tests pass
+serially, and the Android release APK compiled successfully.
+
+The Android quality workflow now runs on pushes to the active
+`production/android-release-hardening` branch as well as `master`, closing the
+gap where the repository had a workflow file but no recorded GitHub Actions
+run. Before Flutter analysis and tests, CI also verifies the canonical OpenCode
+contract, generated Dart SDK, committed contract matrices, and independent
+artifact inventory, then runs the generated SDK's own tests and analysis.
+Android release lint and the isolated test-signed APK compile remain required;
+the CI signing identity is created per job and never distributed.
+
+The first live workflow run was created successfully at
+<https://github.com/Eslamasabry/oc_app/actions/runs/33137323986>, but GitHub
+rejected the job before allocating a runner because the account has a failed
+payment or exhausted spending limit. No repository step failed and no remote
+gate is claimed green. The complete equivalent passed locally: all canonical
+SDK verifiers, 46 generated-SDK tests, both analyzers, all 347 Flutter tests,
+Android `lintRelease`, and a 160,775,755-byte release APK compile. Billing must
+be repaired and that workflow rerun before remote CI can serve as release
+evidence.
+
+Appearance is now a native mobile capability rather than a mechanical copy of
+terminal color schemes. Settings and `/themes` (with `/theme`) offer Follow
+Android, Light, and Dark; selection applies immediately and persists app-wide.
+The established dark design remains the migration-safe default, while the new
+light theme has its own high-contrast surfaces, system-bar treatment, controls,
+and diff addition colors. Pixel 6 release-mode verification against an isolated
+OpenCode `1.18.23` server proved the native `/themes` command path, immediate
+Dark-to-Light switching, persistence after a forced process restart, and a
+readable light-mode Working tree Review with distinct metadata, hunk, removal,
+and addition treatments. Android logged no fatal exception, ANR, RenderFlex
+overflow, or OOM. Final-tree Flutter analysis is clean, all 354 tests pass
+serially, Android `lintRelease` passes, and the release APK compiled at
+160,792,591 bytes. This capability includes no Traycer integration.
+
+Remote MCP OAuth now completes on Android instead of ending after the browser
+opens. Mobile preserves OpenCode's server-issued `oauthState`, accepts only an
+explicit HTTP loopback callback embedded in the already validated HTTPS
+authorization URL, listens on that phone-local address for up to ten minutes,
+rejects mismatched state, and sends the authorization code through generated
+`mcp.auth.callback`. A flat pending row provides manual callback-URL/code entry
+when automatic capture is unavailable and cancels through generated
+`mcp.auth.remove`; leaving the screen also clears the listener and pending
+server transport. The same work repaired the MCP server row and authorization
+dialog at 320dp with 2x text scaling, without nested cards.
+
+Pixel 6 release-mode proof used isolated OpenCode `1.18.23` behind a controlled
+MCP OAuth fixture. The app rendered `needs_auth`, opened the validated browser
+host, showed its secure pending row, received a real Android Chrome redirect at
+`127.0.0.1:19876`, posted the exact callback through the selected workspace,
+and refreshed to `connected`. The proxy recorded the generated start, callback,
+and status requests, while Android logged no fatal exception, ANR, RenderFlex
+overflow, or OOM. The generated SDK audit now counts 80 directly used
+operations. Final-tree Flutter analysis is clean, all 361 tests pass serially,
+Android `lintRelease` passes, and the isolated release APK compiled at
+161,022,083 bytes. The exact final APK was reinstalled on `emulator-5554` and
+repeated the browser-to-phone-loopback success path before cleanup. This
+locally signed APK must not be distributed. Traycer remains explicitly
+deferred.
+
+Settings -> Defaults now exposes OpenCode's actual default shell rather than a
+hardcoded mobile list. The picker loads generated `pty.shells`, keeps full paths
+when names collide, labels shells that OpenCode considers terminal-only, and
+offers Automatic to remove the override. Selection updates the global shell
+configuration through generated `global.config.update`, then reads it back
+through `global.config.get` before showing success. The action resolves the
+wake-reconciled repository at mutation time; load and write failures stay scoped
+to the shell row and never replace the last server-reported choice.
+
+Live OpenCode `1.18.23` testing found and prevented a false implementation: its
+scoped `config.update` writes a project `config.json`, but its current loader
+does not read that legacy filename. Upstream web uses the global config route for
+this setting, so mobile now does the same. On the exact release-mode Pixel 6
+build, the picker rendered the isolated server's real shell inventory, including
+duplicate Bash paths and terminal-only Fish. Selecting Fish changed the app row
+and global config to `fish`; a new mobile terminal then reported
+`command: /usr/bin/fish`. Resetting Automatic removed the global override, and
+the next new terminal reported `command: /bin/bash`. Android logged no fatal
+exception, ANR, RenderFlex overflow, or OOM. The generated SDK audit now counts
+81 directly used operations. Final-tree Flutter analysis is clean, all 367 tests
+pass serially, Android `lintRelease` passes, and the isolated release APK compiled
+at 161,022,083 bytes. The emulator app, reverse port, isolated server/config/project,
+disposable signing key, and local APK were removed afterward; that APK was not
+distributed. Traycer remains explicitly deferred.
+
+The detailed model/provider/agent catalog now uses the generated
+`v2.provider.list`, `v2.model.list`, and `v2.agent.list` operations instead of
+three handwritten `/api/*` parsers. This required repairing a real generator
+collision: OpenAPI Generator named the inline legacy `Model.capabilities` object
+`ModelCapabilities`, overwriting the canonical v2 component of the same name.
+Normalization now gives the canonical shape the stable `ModelV2Capabilities`
+name, records the ninth component/ref rewrite in the manifest, and pins the new
+generated-model tree hash. The regenerated package retained all 188 operations,
+passed its 46 tests, independent parity verifier, analysis, and compiled smoke
+test before the atomic package swap.
+
+The app keeps connected-provider truth authoritative: v2 details enrich matching
+rows but cannot hide a provider missing from the location-scoped v2 response.
+The merge also cannot erase richer reasoning, attachment, tool, or variant
+metadata returned with the connected provider, preserving the Z.AI-versus-Zen
+fix and the thinking/fast-mode picker filters. Exact loopback coverage proves
+all three generated paths, bracketed directory/workspace queries, strict response
+envelopes, provider integration identity, model capabilities/limits/variants,
+and agent descriptions. On the release-mode Pixel 6 against isolated OpenCode
+`1.18.23`, the picker showed the six connected Zen models, all six under
+Reasoning, two under Fast modes, exact context/output limits, and the visible
+build/plan/general/explore agents with their server modes. Android logged no
+fatal exception, ANR, RenderFlex overflow, or OOM. The generated SDK audit now
+counts 84 directly used operations. Final-tree Flutter analysis is clean, all
+367 tests pass serially, Android `lintRelease` passes, and the isolated release
+APK compiled at 161,022,083 bytes. The emulator app/profile, reverse port,
+isolated server/state/project, disposable signing key, and local APK were
+removed afterward; that APK was not distributed. Traycer remains explicitly
+deferred.
+
+The next production-readiness slice contains failures without adding Traycer.
+App startup now renders immediately and exposes a retryable failure state if
+preferences or secure storage cannot bootstrap, preventing a blank Android
+window. Flutter framework errors, uncaught platform-dispatcher errors, failed
+widget builds, and bootstrap failures enter one bounded 20-entry in-memory ring;
+burst duplicates coalesce and every entry is truncated and scrubbed for
+authorization headers, credential-like fields, URL credentials/query data, and
+long token-like values. Chat text and file contents are not collected, the ring
+is not persisted, and no report is sent automatically.
+
+Settings -> App diagnostics and the separate `/debug` mobile action show the
+same flat report with expandable selectable details plus Copy, Clear, and an
+explicit Send action. Send resolves the wake-reconciled repository at tap time
+and uses generated `app.log` with the exact selected directory/workspace. The
+server must return `true` before mobile claims success. `/status` remains the
+server-health destination. Contract and widget tests cover redaction, bounds,
+deduplication, generic error rendering, bootstrap retry, exact `/log` payload,
+server rejection, Settings/command discoverability, explicit sending, and a
+320dp phone at 2x density. The generated SDK audit now counts 86 directly used
+operations. Final-tree Flutter analysis is clean and all 394 app tests pass
+serially; all four generated-SDK verifiers, its 46 tests/analyzer, and Android
+`lintRelease` pass. A locally test-signed release APK compiled at 161,366,751
+bytes and was installed on `emulator-5554`. Against isolated OpenCode `1.18.23`,
+the Pixel 6 reached Workspace, exposed Settings -> App diagnostics, and rendered
+the empty process-local state with disabled Send/Copy/Clear actions plus the
+exact no-auto-send explanation. Android logged no app fatal exception, ANR,
+RenderFlex overflow, or OOM. The emulator app/profile, reverse port, isolated
+server/state, disposable signing key, and local APK were removed afterward;
+that APK was not distributed. Traycer remains explicitly deferred.
 
 ## Shorebird wake patch for `1.0.17+18`
 

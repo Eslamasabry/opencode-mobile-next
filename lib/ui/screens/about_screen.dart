@@ -2,52 +2,90 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../widgets/markdown.dart';
+import '../widgets/product_states.dart';
 
 class AboutScreen extends StatelessWidget {
-  const AboutScreen({super.key});
+  const AboutScreen({super.key, this.initialTab = 0});
 
-  Future<String> _loadNotices() =>
-      rootBundle.loadString('THIRD_PARTY_NOTICES.md');
+  /// 0 opens Privacy, 1 opens Open source.
+  final int initialTab;
+
+  Future<List<String>> _loadDocuments() => Future.wait([
+    rootBundle.loadString('PRIVACY.md'),
+    rootBundle.loadString('THIRD_PARTY_NOTICES.md'),
+  ]);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('About and open source notices')),
-      body: FutureBuilder<String>(
-        future: _loadNotices(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  'Open source notices could not be loaded: ${snapshot.error}',
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            );
-          }
-          return SelectionArea(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-              children: [
-                const ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(Icons.terminal_rounded, size: 34),
-                  title: Text('OpenCode for Android'),
-                  subtitle: Text(
-                    'A mobile client for an OpenCode server. Voice recognition runs locally after optional model downloads.',
+    return DefaultTabController(
+      length: 2,
+      initialIndex: initialTab.clamp(0, 1),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('About and open source notices'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(icon: Icon(Icons.privacy_tip_outlined), text: 'Privacy'),
+              Tab(icon: Icon(Icons.code_rounded), text: 'Open source'),
+            ],
+          ),
+        ),
+        body: FutureBuilder<List<String>>(
+          future: _loadDocuments(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const LoadingList(rows: 6);
+            }
+            if (snapshot.hasError) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(
+                    'App information could not be loaded: ${snapshot.error}',
+                    textAlign: TextAlign.center,
                   ),
                 ),
-                const Divider(height: 28),
-                MarkdownText(snapshot.data!),
+              );
+            }
+            final documents = snapshot.data!;
+            return TabBarView(
+              children: [
+                _DocumentView(data: documents[0]),
+                _DocumentView(data: documents[1], showAppSummary: true),
               ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _DocumentView extends StatelessWidget {
+  const _DocumentView({required this.data, this.showAppSummary = false});
+
+  final String data;
+  final bool showAppSummary;
+
+  @override
+  Widget build(BuildContext context) {
+    return SelectionArea(
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+        children: [
+          if (showAppSummary) ...[
+            const ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.terminal_rounded, size: 34),
+              title: Text('OpenCode for Android'),
+              subtitle: Text(
+                'A mobile client for an OpenCode server. Voice recognition runs locally after optional model downloads.',
+              ),
             ),
-          );
-        },
+            const Divider(height: 28),
+          ],
+          MarkdownText(data),
+        ],
       ),
     );
   }

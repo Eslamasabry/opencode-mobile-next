@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../api/server_probe.dart' show ServerFlavor;
+
 /// One opencode server the user can connect to.
 class ServerProfile {
   final String id;
@@ -13,6 +15,15 @@ class ServerProfile {
   /// Runtime-only signal that the saved password could not be decrypted.
   bool requiresPasswordReentry;
 
+  /// Protocol generation detected at Test/connect time. Additive: profiles
+  /// saved before flavor detection default to [ServerFlavor.v1]. Cached so a
+  /// reconnect skips re-detection; a failed connect re-probes and corrects it.
+  ServerFlavor flavor;
+
+  /// Server version reported by the last successful probe/connect, cached
+  /// alongside [flavor] for the servers list.
+  String? serverVersion;
+
   ServerProfile({
     required this.id,
     required this.name,
@@ -20,6 +31,8 @@ class ServerProfile {
     this.username = '',
     this.password = '',
     this.requiresPasswordReentry = false,
+    this.flavor = ServerFlavor.v1,
+    this.serverVersion,
   });
 
   Map<String, dynamic> toJson() => {
@@ -27,6 +40,8 @@ class ServerProfile {
     'name': name,
     'baseUrl': baseUrl,
     'username': username,
+    'flavor': flavor.name,
+    if (serverVersion != null) 'serverVersion': serverVersion,
   };
 
   static ServerProfile fromJson(Map<String, dynamic> j) => ServerProfile(
@@ -34,11 +49,33 @@ class ServerProfile {
     name: (j['name'] ?? '').toString(),
     baseUrl: (j['baseUrl'] ?? '').toString(),
     username: (j['username'] ?? '').toString(),
+    flavor: j['flavor'] == ServerFlavor.v2.name
+        ? ServerFlavor.v2
+        : ServerFlavor.v1,
+    serverVersion: j['serverVersion']?.toString(),
   );
 }
 
 /// Validates the transport boundary used by both profile editing and connect.
 /// Android only permits cleartext traffic to the two Termux loopback names.
+/// Expands a pasted bare address into a full server URL so setup does not
+/// require knowing URL syntax. `host[:port]` and bare IPs gain a scheme:
+/// loopback becomes `http://` (the only place HTTP is allowed) and everything
+/// else becomes `https://`. Values that already carry a scheme, and values
+/// that are not a plausible single address, come back unchanged for the
+/// validator to explain.
+String normalizeServerProfileUrl(String value) {
+  final raw = value.trim();
+  if (raw.isEmpty || raw.contains('://')) return raw;
+  final bare = RegExp(
+    r'^\[?[A-Za-z0-9._\-:]+\]?(:\d{1,5})?$',
+  );
+  if (!bare.hasMatch(raw)) return raw;
+  final host = raw.split(':').first.toLowerCase();
+  final loopback = host == 'localhost' || host == '127.0.0.1';
+  return '${loopback ? 'http' : 'https'}://$raw';
+}
+
 String? validateServerProfileUrl(
   String value, {
   String username = '',
@@ -78,6 +115,18 @@ String? validateServerProfileUrl(
   return null;
 }
 
+enum AppAppearance { system, light, dark }
+
+/// Selectable color identity; palettes live in lib/ui/theme_packs.dart.
+enum ThemePackId { opencode, catppuccin, gruvbox, solarized, dynamic }
+
+class ProfileLocation {
+  final String? directory;
+  final String? workspace;
+
+  const ProfileLocation({this.directory, this.workspace});
+}
+
 /// Persists server profiles. Metadata in SharedPreferences, secrets in the
 /// Android Keystore via flutter_secure_storage.
 class ProfileStore {
@@ -87,6 +136,11 @@ class ProfileStore {
   static const _modelExplicitKey = 'oc.modelExplicit.'; // + profileId
   static const _agentKey = 'oc.agent.'; // + profileId
   static const _variantKey = 'oc.variant.'; // + profileId
+  static const _locationKey = 'oc.location.'; // + profileId -> JSON
+  static const _transcriptReasoningKey = 'oc.transcript.reasoningExpanded';
+  static const _transcriptTimestampsKey = 'oc.transcript.timestampsVisible';
+  static const _appearanceKey = 'oc.appearance';
+  static const _themePackKey = 'oc.themePack';
   static const _providerRuntimeRefreshVersion = 'v1';
 
   final SharedPreferences prefs;
@@ -211,6 +265,59 @@ class ProfileStore {
     return null;
   }
 
+  ProfileLocation? locationFor(String profileId) {
+    final raw = prefs.getString('$_locationKey$profileId');
+    if (raw == null) return null;
+    try {
+      final value = jsonDecode(raw);
+      if (value is! Map) return null;
+      final directoryValue = value['directory'];
+      final workspaceValue = value['workspace'];
+      final directory = directoryValue is String && directoryValue.isNotEmpty
+          ? directoryValue
+          : null;
+      final workspace = workspaceValue is String && workspaceValue.isNotEmpty
+          ? workspaceValue
+          : null;
+      if (directory == null && workspace == null) return null;
+      return ProfileLocation(directory: directory, workspace: workspace);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> setLocation(
+    String profileId, {
+    String? directory,
+    String? workspace,
+  }) async {
+    final normalizedDirectory = directory?.isNotEmpty == true
+        ? directory
+        : null;
+    final normalizedWorkspace = workspace?.isNotEmpty == true
+        ? workspace
+        : null;
+    if (normalizedDirectory == null && normalizedWorkspace == null) {
+      await clearLocation(profileId);
+      return;
+    }
+    if (!await prefs.setString(
+      '$_locationKey$profileId',
+      jsonEncode({
+        'directory': normalizedDirectory,
+        'workspace': normalizedWorkspace,
+      }),
+    )) {
+      throw StateError('Could not save the selected server location');
+    }
+  }
+
+  Future<void> clearLocation(String profileId) async {
+    if (!await prefs.remove('$_locationKey$profileId')) {
+      throw StateError('Could not clear the selected server location');
+    }
+  }
+
   String _providerRuntimeRefreshKey(
     String profileId, {
     String? directory,
@@ -297,4 +404,50 @@ class ProfileStore {
 
   Future<void> setAgent(String profileId, String agent) =>
       prefs.setString('$_agentKey$profileId', agent);
+
+  // ----- app-wide transcript display -----
+
+  bool get transcriptReasoningExpanded =>
+      prefs.getBool(_transcriptReasoningKey) ?? false;
+
+  bool get transcriptTimestampsVisible =>
+      prefs.getBool(_transcriptTimestampsKey) ?? false;
+
+  Future<void> setTranscriptReasoningExpanded(bool expanded) async {
+    if (!await prefs.setBool(_transcriptReasoningKey, expanded)) {
+      throw StateError('Could not save the reasoning display preference');
+    }
+  }
+
+  Future<void> setTranscriptTimestampsVisible(bool visible) async {
+    if (!await prefs.setBool(_transcriptTimestampsKey, visible)) {
+      throw StateError('Could not save the timestamp display preference');
+    }
+  }
+
+  AppAppearance get appearance => switch (prefs.getString(_appearanceKey)) {
+    'system' => AppAppearance.system,
+    'light' => AppAppearance.light,
+    _ => AppAppearance.dark,
+  };
+
+  ThemePackId get themePack {
+    final raw = prefs.getString(_themePackKey);
+    for (final pack in ThemePackId.values) {
+      if (pack.name == raw) return pack;
+    }
+    return ThemePackId.opencode;
+  }
+
+  Future<void> setThemePack(ThemePackId pack) async {
+    if (!await prefs.setString(_themePackKey, pack.name)) {
+      throw StateError('Could not save the theme preference');
+    }
+  }
+
+  Future<void> setAppearance(AppAppearance appearance) async {
+    if (!await prefs.setString(_appearanceKey, appearance.name)) {
+      throw StateError('Could not save the appearance preference');
+    }
+  }
 }

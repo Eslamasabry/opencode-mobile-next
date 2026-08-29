@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../app_theme.dart';
+import '../widgets/confirm_sheet.dart';
 import 'package:flutter/services.dart';
 import 'package:xterm/xterm.dart' as xterm;
 
@@ -20,13 +22,13 @@ class _TerminalScreenState extends State<TerminalScreen> {
   List<TerminalProcess>? _processes;
   String? _error;
   bool _creating = false;
-  ProductRepository? _activeRepository;
+  ServerOperationsGateway? _activeRepository;
   int _locationRevision = -1;
   int _dataRefreshRevision = -1;
   int _ptyRevision = -1;
   int _loadGeneration = 0;
 
-  ProductRepository? get _repository => widget.controller.repository;
+  ServerOperationsGateway? get _repository => widget.controller.repository;
 
   @override
   void initState() {
@@ -81,21 +83,22 @@ class _TerminalScreenState extends State<TerminalScreen> {
     _load();
   }
 
-  int _revisionOf(ProductRepository? repository) => Object.hash(
+  int _revisionOf(ServerOperationsGateway? repository) => Object.hash(
     widget.controller.locationRevision,
     repository is LocationAwareProductRepository
         ? (repository as LocationAwareProductRepository).locationRevision
         : 0,
   );
 
-  bool _isCurrentLocation(ProductRepository repository, int revision) =>
+  bool _isCurrentLocation(ServerOperationsGateway repository, int revision) =>
       mounted &&
       identical(repository, _repository) &&
       revision == _revisionOf(repository);
 
   Future<void> _load() async {
     final generation = ++_loadGeneration;
-    final repository = _repository;
+    final repository = await widget.controller.prepareActionRepository();
+    if (!mounted || generation != _loadGeneration) return;
     if (repository == null) {
       setState(() => _error = 'The server is not connected.');
       return;
@@ -108,16 +111,21 @@ class _TerminalScreenState extends State<TerminalScreen> {
       }
     } catch (error) {
       if (mounted && generation == _loadGeneration) {
-        setState(() => _error = error.toString());
+        setState(() => _error = productErrorText(error));
       }
     }
   }
 
   Future<void> _create() async {
-    final repository = _repository;
-    if (repository == null || _creating) return;
-    final revision = _revisionOf(repository);
+    if (_creating) return;
     setState(() => _creating = true);
+    final repository = await widget.controller.prepareActionRepository();
+    if (!mounted) return;
+    if (repository == null) {
+      setState(() => _creating = false);
+      return;
+    }
+    final revision = _revisionOf(repository);
     try {
       final process = await repository.createTerminal(
         title: 'Terminal ${(_processes?.length ?? 0) + 1}',
@@ -139,7 +147,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
 
   Future<void> _open(
     TerminalProcess process, [
-    ProductRepository? repository,
+    ServerOperationsGateway? repository,
   ]) async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -158,9 +166,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
   }
 
   Future<void> _rename(TerminalProcess process) async {
-    final repository = _repository;
-    if (repository == null) return;
-    final revision = _revisionOf(repository);
+    final locationRevision = widget.controller.locationRevision;
     var editedTitle = process.title;
     final title = await showDialog<String>(
       context: context,
@@ -185,9 +191,16 @@ class _TerminalScreenState extends State<TerminalScreen> {
       ),
     );
     if (title?.isNotEmpty != true ||
-        !_isCurrentLocation(repository, revision)) {
+        locationRevision != widget.controller.locationRevision) {
       return;
     }
+    final repository = await widget.controller.prepareActionRepository();
+    if (!mounted ||
+        repository == null ||
+        locationRevision != widget.controller.locationRevision) {
+      return;
+    }
+    final revision = _revisionOf(repository);
     try {
       await repository.renameTerminal(process.id, title!);
       if (!_isCurrentLocation(repository, revision)) return;
@@ -200,34 +213,30 @@ class _TerminalScreenState extends State<TerminalScreen> {
   }
 
   Future<void> _remove(TerminalProcess process) async {
-    final repository = _repository;
-    if (repository == null) return;
-    final revision = _revisionOf(repository);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(process.running ? 'Stop terminal?' : 'Remove terminal?'),
-        content: Text(
-          process.running
-              ? 'The running process and its child processes will be terminated.'
-              : 'This terminal record will be removed.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(process.running ? 'Stop' : 'Remove'),
-          ),
-        ],
-      ),
+    final locationRevision = widget.controller.locationRevision;
+    final confirmed = await showConfirmSheet(
+      context,
+      icon: process.running
+          ? Icons.stop_circle_outlined
+          : Icons.delete_outline_rounded,
+      title: process.running ? 'Stop terminal?' : 'Remove terminal?',
+      message: process.running
+          ? 'The running process and its child processes will be terminated.'
+          : 'This terminal record will be removed.',
+      confirmLabel: process.running ? 'Stop' : 'Remove',
+      destructive: true,
     );
-    if (confirmed != true || !_isCurrentLocation(repository, revision)) return;
+    if (!confirmed ||
+        locationRevision != widget.controller.locationRevision) {
+      return;
+    }
+    final repository = await widget.controller.prepareActionRepository();
+    if (!mounted ||
+        repository == null ||
+        locationRevision != widget.controller.locationRevision) {
+      return;
+    }
+    final revision = _revisionOf(repository);
     try {
       await repository.removeTerminal(process.id);
       if (!_isCurrentLocation(repository, revision)) return;
@@ -271,7 +280,19 @@ class _TerminalScreenState extends State<TerminalScreen> {
                 return ListTile(
                   minTileHeight: 68,
                   leading: _ProcessIndicator(running: process.running),
-                  title: Text(process.title),
+                  title: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          process.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      _ProcessStatusChip(running: process.running),
+                    ],
+                  ),
                   subtitle: Text(
                     process.running
                         ? '${process.command} - PID ${process.pid}'
@@ -279,7 +300,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontFamily: 'monospace',
+                      fontFamily: 'AppMono',
                       fontSize: 12,
                     ),
                   ),
@@ -347,15 +368,17 @@ class _ProcessIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final color = running
-        ? Theme.of(context).colorScheme.primary
-        : Theme.of(context).hintColor;
+        ? AppTheme.success(theme.colorScheme)
+        : theme.hintColor;
     return Semantics(
       label: running ? 'Running' : 'Exited',
       child: Container(
         width: 38,
         height: 38,
         decoration: BoxDecoration(
+          color: color.withValues(alpha: .12),
           border: Border.all(color: color.withValues(alpha: .55)),
           borderRadius: BorderRadius.circular(9),
         ),
@@ -365,9 +388,35 @@ class _ProcessIndicator extends StatelessWidget {
   }
 }
 
+/// A compact live/ended chip on terminal rows, mirroring the status-chip
+/// treatment in docs/design-inspiration.md's terminal section.
+class _ProcessStatusChip extends StatelessWidget {
+  final bool running;
+  const _ProcessStatusChip({required this.running});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = running
+        ? AppTheme.success(theme.colorScheme)
+        : theme.hintColor;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .14),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        running ? 'Running' : 'Exited',
+        style: theme.textTheme.labelSmall?.copyWith(color: color),
+      ),
+    );
+  }
+}
+
 class TerminalSurface extends StatefulWidget {
-  final ProductRepository repository;
-  final ProductRepository? Function()? repositoryResolver;
+  final ServerOperationsGateway repository;
+  final ServerOperationsGateway? Function()? repositoryResolver;
   final int Function()? dataRefreshRevisionResolver;
   final bool Function()? keepLiveInBackgroundResolver;
   final Listenable? repositoryChanges;
@@ -405,10 +454,11 @@ class _TerminalSurfaceState extends State<TerminalSurface>
   bool _lifecycleSuspended = false;
   String _transcript = '';
   final _transcriptSanitizer = _TerminalTranscriptSanitizer();
-  ProductRepository? _activeRepository;
+  int? _terminalCursor;
+  ServerOperationsGateway? _activeRepository;
   int _activeDataRefreshRevision = -1;
 
-  ProductRepository? get _repository => widget.repositoryResolver == null
+  ServerOperationsGateway? get _repository => widget.repositoryResolver == null
       ? widget.repository
       : widget.repositoryResolver!();
 
@@ -471,6 +521,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
       _resizeTimer = null;
       final subscription = _subscription;
       final channel = _channel;
+      _rememberCursor(channel);
       _subscription = null;
       _channel = null;
       if (mounted && !_lifecycleSuspended) {
@@ -496,6 +547,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
     });
     final previousSubscription = _subscription;
     final previousChannel = _channel;
+    _rememberCursor(previousChannel);
     _subscription = null;
     _channel = null;
     try {
@@ -506,11 +558,14 @@ class _TerminalSurfaceState extends State<TerminalSurface>
         return;
       }
       if (repository == null) {
-        throw StateError('The server transport is reconnecting.');
+        throw const ProductException('The server transport is reconnecting.');
       }
       _activeRepository = repository;
       _transcriptSanitizer.reset();
-      final channel = await repository.connectTerminal(widget.process.id);
+      final channel = await repository.connectTerminal(
+        widget.process.id,
+        cursor: _terminalCursor,
+      );
       if (!mounted ||
           _lifecycleSuspended ||
           generation != _connectionGeneration) {
@@ -523,12 +578,13 @@ class _TerminalSurfaceState extends State<TerminalSurface>
           if (generation == _connectionGeneration) {
             _terminal.write(chunk);
             _appendTranscript(chunk);
+            _rememberCursor(channel);
           }
         },
         onError: (Object error) {
           if (mounted && generation == _connectionGeneration) {
             setState(() {
-              _error = error.toString();
+              _error = productErrorText(error);
               _closed = true;
             });
           }
@@ -549,7 +605,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
         setState(() {
           _connecting = false;
           _closed = true;
-          _error = error.toString();
+          _error = productErrorText(error);
         });
       }
     }
@@ -578,6 +634,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
     _resizeTimer = null;
     final subscription = _subscription;
     final channel = _channel;
+    _rememberCursor(channel);
     _subscription = null;
     _channel = null;
     if (mounted) {
@@ -627,6 +684,11 @@ class _TerminalSurfaceState extends State<TerminalSurface>
   void _write(String value) {
     if (!_canWrite) return;
     _channel!.write(value);
+  }
+
+  void _rememberCursor(TerminalChannel? channel) {
+    final cursor = channel?.cursor;
+    if (cursor != null && cursor >= 0) _terminalCursor = cursor;
   }
 
   void _sendControl(String value) {
@@ -739,7 +801,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
             MaterialBanner(
               content: Text(_error!),
               actions: [
-                TextButton(onPressed: _connect, child: const Text('Retry')),
+                TextButton(onPressed: _connect, child: const Text('Try again')),
               ],
             ),
           Expanded(
@@ -770,7 +832,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
                           readOnly: !canWrite,
                           padding: const EdgeInsets.all(10),
                           textStyle: const xterm.TerminalStyle(
-                            fontFamily: 'monospace',
+                            fontFamily: 'AppMono',
                             fontSize: 12.5,
                           ),
                         ),
@@ -921,7 +983,7 @@ class _AccessibleTerminal extends StatelessWidget {
                   reverse: true,
                   child: SelectableText(
                     transcript.isEmpty ? 'No terminal output yet.' : transcript,
-                    style: const TextStyle(fontFamily: 'monospace'),
+                    style: const TextStyle(fontFamily: 'AppMono'),
                   ),
                 ),
               ),
@@ -985,9 +1047,8 @@ class _TerminalTranscriptSanitizer {
   }
 
   String add(String chunk) {
-    // OpenCode prefixes binary WebSocket metadata frames with NUL. The
-    // repository decodes binary frames to strings, so keep them out of the
-    // human-readable transcript regardless of their JSON payload shape.
+    // Keep a defensive guard for older/custom transports that expose OpenCode's
+    // NUL-prefixed metadata as text instead of consuming it at the channel.
     if (chunk.isEmpty || (_state == _normal && chunk.startsWith('\x00'))) {
       return '';
     }

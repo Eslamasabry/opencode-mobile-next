@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'markdown.dart';
+import 'product_states.dart';
 
 /// Normalized file content that can be rendered by [FilePreviewBody].
 class FilePreviewData {
@@ -162,9 +163,7 @@ class _FilePreviewSheetState extends State<_FilePreviewSheet> {
       if (mounted) Navigator.of(context).pop();
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not attach file: $error')));
+      showProductError(context, error);
       setState(() => _attaching = false);
     }
   }
@@ -191,11 +190,7 @@ class _FilePreviewSheetState extends State<_FilePreviewSheet> {
         }
       }
     } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Could not save file: $error')));
-      }
+      if (mounted) showProductError(context, error);
     } finally {
       if (mounted) setState(() => _downloading = false);
     }
@@ -303,9 +298,10 @@ class _FilePreviewSheetState extends State<_FilePreviewSheet> {
 
 /// Renders supported file content without sending it to another application.
 class FilePreviewBody extends StatelessWidget {
-  const FilePreviewBody({super.key, required this.data});
+  const FilePreviewBody({super.key, required this.data, this.initialLine});
 
   final FilePreviewData data;
+  final int? initialLine;
 
   @override
   Widget build(BuildContext context) {
@@ -361,6 +357,12 @@ class FilePreviewBody extends StatelessWidget {
       );
     }
     if (data.text != null) {
+      if (initialLine != null) {
+        return _FocusedSourcePreview(
+          text: data.text!,
+          initialLine: initialLine!,
+        );
+      }
       return SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: SmartTextPreview(
@@ -378,6 +380,109 @@ class FilePreviewBody extends StatelessWidget {
         'This format cannot be rendered in the app yet.',
       ].join('\n'),
     );
+  }
+}
+
+class _FocusedSourcePreview extends StatefulWidget {
+  final String text;
+  final int initialLine;
+
+  const _FocusedSourcePreview({required this.text, required this.initialLine});
+
+  @override
+  State<_FocusedSourcePreview> createState() => _FocusedSourcePreviewState();
+}
+
+class _FocusedSourcePreviewState extends State<_FocusedSourcePreview> {
+  static const _lineHeight = 24.0;
+  late final List<String> _lines = widget.text.split('\n');
+  late final int _targetLine = widget.initialLine.clamp(1, _lines.length);
+  late final ScrollController _vertical = ScrollController(
+    initialScrollOffset: ((_targetLine - 1) * _lineHeight - _lineHeight * 2)
+        .clamp(0, (_lines.length - 1) * _lineHeight),
+  );
+  final ScrollController _horizontal = ScrollController();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final longestLine = _lines.fold<int>(
+      0,
+      (length, line) => line.length > length ? line.length : length,
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final textScale = MediaQuery.textScalerOf(context).scale(1);
+        final widthScale = textScale < 2 ? 2.0 : textScale;
+        final contentWidth = (longestLine * 7.8 * widthScale + 72).clamp(
+          constraints.maxWidth,
+          4000.0,
+        );
+        return Scrollbar(
+          controller: _horizontal,
+          child: SingleChildScrollView(
+            controller: _horizontal,
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: contentWidth,
+              height: constraints.maxHeight,
+              child: ListView.builder(
+                key: const Key('file-preview-focused-source'),
+                controller: _vertical,
+                itemExtent: _lineHeight,
+                itemCount: _lines.length,
+                itemBuilder: (context, index) {
+                  final selected = index + 1 == _targetLine;
+                  return ColoredBox(
+                    key: selected
+                        ? const Key('file-preview-target-line')
+                        : null,
+                    color: selected
+                        ? theme.colorScheme.primaryContainer.withValues(
+                            alpha: .45,
+                          )
+                        : Colors.transparent,
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 54,
+                          child: Text(
+                            '${index + 1}',
+                            textAlign: TextAlign.right,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              fontFamily: 'AppMono',
+                              color: selected
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        SelectableText(
+                          _lines[index].isEmpty ? ' ' : _lines[index],
+                          maxLines: 1,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontFamily: 'AppMono',
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _vertical.dispose();
+    _horizontal.dispose();
+    super.dispose();
   }
 }
 

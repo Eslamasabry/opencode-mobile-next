@@ -1,14 +1,22 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
+import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/ui/app_theme.dart';
+import 'package:opencode_mobile/ui/screens/app_diagnostics_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
+import 'package:opencode_mobile/ui/screens/global_sessions_screen.dart';
+import 'package:opencode_mobile/ui/screens/project_health_screen.dart';
+import 'package:opencode_mobile/ui/screens/session_context_screen.dart';
+import 'package:opencode_mobile/ui/widgets/product_states.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeOpenCodeApi extends OpenCodeApi {
@@ -23,6 +31,7 @@ class _FakeOpenCodeApi extends OpenCodeApi {
       ModelRef? model,
       String? variant,
       List<PromptAttachment> attachments,
+      List<PromptAgentMention> agentMentions,
     })
   >
   prompts = [];
@@ -30,12 +39,25 @@ class _FakeOpenCodeApi extends OpenCodeApi {
   String? slashArguments;
   ModelRef? slashModel;
   String? slashVariant;
+  int abortCalls = 0;
+  Object? abortError;
   bool failRename = false;
   bool failDelete = false;
+  int createCalls = 0;
+  final List<({String id, String title})> renameCalls = [];
+  final List<String> deleteCalls = [];
   List<FileDiff> diffs = const [];
   List<Todo> todoItems = const [];
+  Object? todosError;
   final Map<String, FileContent> fileContents = {};
   final List<String> fileContentRequests = [];
+  List<FileNode> projectFiles = const [];
+
+  @override
+  Future<List<Session>> sessions() async => const [];
+
+  @override
+  Future<Map<String, String>> sessionStatuses() async => const {};
 
   @override
   Future<List<MessageWithParts>> messages(String id) =>
@@ -45,10 +67,24 @@ class _FakeOpenCodeApi extends OpenCodeApi {
   Future<Session> session(String id) async => Session(id: id);
 
   @override
+  Future<Session> createSession() async {
+    createCalls += 1;
+    return Session(id: 'session-created');
+  }
+
+  @override
   Future<List<FileDiff>> diff(String id) async => diffs;
 
   @override
-  Future<List<Todo>> todos(String id) async => todoItems;
+  Future<List<Todo>> todos(String id) async {
+    final error = todosError;
+    if (error != null) throw error;
+    return todoItems;
+  }
+
+  @override
+  Future<List<FileNode>> listFiles([String path = '']) async =>
+      path.isEmpty ? projectFiles : const [];
 
   @override
   Future<FileContent> fileContent(String path) async {
@@ -66,6 +102,8 @@ class _FakeOpenCodeApi extends OpenCodeApi {
     String? agent,
     String? variant,
     List<PromptAttachment> attachments = const [],
+    List<PromptAgentMention> agentMentions = const [],
+    PromptDelivery? delivery,
   }) {
     promptCalls += 1;
     prompts.add((
@@ -73,6 +111,7 @@ class _FakeOpenCodeApi extends OpenCodeApi {
       model: model,
       variant: variant,
       attachments: attachments,
+      agentMentions: agentMentions,
     ));
     return promptCompleter?.future ?? Future.value();
   }
@@ -92,32 +131,231 @@ class _FakeOpenCodeApi extends OpenCodeApi {
   }
 
   @override
+  Future<void> abort(String sessionID) async {
+    abortCalls += 1;
+    final error = abortError;
+    if (error != null) throw error;
+  }
+
+  @override
   Future<void> renameSession(String id, String title) async {
+    renameCalls.add((id: id, title: title));
     if (failRename) throw StateError('rename failed');
   }
 
   @override
   Future<void> deleteSession(String id) async {
+    deleteCalls.add(id);
     if (failDelete) throw StateError('delete failed');
   }
 }
 
 class _FakeProductRepository implements ProductRepository {
-  _FakeProductRepository(this.commands);
+  _FakeProductRepository(this.commands, {this.references = const []});
 
   final List<CommandInfo> commands;
+  final List<ReferenceInfo> references;
+  String? forkMessageID;
+  int forkCalls = 0;
 
   @override
   Future<List<CommandInfo>> listCommands() async => commands;
 
   @override
+  Future<List<ReferenceInfo>> listReferences() async => references;
+
+  @override
+  Future<String> forkSession(String id, {String? messageID}) async {
+    forkCalls += 1;
+    forkMessageID = messageID;
+    return 'forked-session';
+  }
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _DestinationRepository extends _FakeProductRepository {
+  _DestinationRepository({this.healthError = false}) : super(const []);
+
+  final bool healthError;
+
+  String? movedDirectory;
+  bool? movedChanges;
+  String? warpedWorkspaceID;
+  bool? copiedChanges;
+  ConsoleOrganization? switchedOrganization;
+  String? reminderDirectory;
+
+  @override
+  Future<List<WorkspaceProject>> listProjects() async => const [
+    WorkspaceProject(
+      id: 'project-1',
+      name: 'Acme',
+      directory: '/work/acme',
+      worktrees: ['/work/acme-copy'],
+      updatedAt: 1,
+    ),
+  ];
+
+  @override
+  Future<List<ProjectDirectoryInfo>> listProjectDirectories(
+    String projectID,
+  ) async => const [
+    ProjectDirectoryInfo(directory: '/work/acme'),
+    ProjectDirectoryInfo(
+      directory: '/work/acme-copy',
+      strategy: 'git_worktree',
+    ),
+  ];
+
+  @override
+  Future<List<WorkspaceInfo>> listWorkspaces() async => const [
+    WorkspaceInfo(
+      id: 'workspace-1',
+      projectID: 'project-1',
+      name: 'Current cloud',
+      type: 'cloud',
+      directory: '/remote/current',
+      status: 'connected',
+    ),
+    WorkspaceInfo(
+      id: 'workspace-2',
+      projectID: 'project-1',
+      name: 'Review cloud',
+      type: 'cloud',
+      directory: '/remote/review',
+      status: 'connected',
+    ),
+    WorkspaceInfo(
+      id: 'workspace-offline',
+      projectID: 'project-1',
+      name: 'Offline cloud',
+      type: 'cloud',
+      status: 'disconnected',
+    ),
+  ];
+
+  @override
+  Future<VersionControlHealth> loadVersionControlHealth() async {
+    if (healthError) throw StateError('VCS status unavailable');
+    return const VersionControlHealth(
+      branch: 'feature/mobile',
+      changes: [
+        VersionControlFile(
+          path: 'lib/main.dart',
+          status: 'modified',
+          additions: 1,
+          deletions: 1,
+        ),
+      ],
+    );
+  }
+
+  @override
+  Future<List<LanguageServiceHealth>> listLanguageServices() async => const [];
+
+  @override
+  Future<List<FormatterHealth>> listFormatters() async => const [];
+
+  @override
+  Future<void> moveSession(
+    String sessionID, {
+    required String directory,
+    required bool moveChanges,
+  }) async {
+    movedDirectory = directory;
+    movedChanges = moveChanges;
+  }
+
+  @override
+  Future<void> warpSession(
+    String sessionID, {
+    required String? workspaceID,
+    required bool copyChanges,
+  }) async {
+    warpedWorkspaceID = workspaceID;
+    copiedChanges = copyChanges;
+  }
+
+  @override
+  Future<List<ConsoleOrganization>> listConsoleOrganizations() async => const [
+    ConsoleOrganization(
+      accountID: 'account-1',
+      accountEmail: 'dev@example.com',
+      accountUrl: 'https://console.example.com',
+      orgID: 'org-current',
+      orgName: 'Current org',
+      active: true,
+    ),
+    ConsoleOrganization(
+      accountID: 'account-1',
+      accountEmail: 'dev@example.com',
+      accountUrl: 'https://console.example.com',
+      orgID: 'org-next',
+      orgName: 'Next org',
+      active: false,
+    ),
+  ];
+
+  @override
+  Future<void> switchConsoleOrganization(
+    ConsoleOrganization organization,
+  ) async {
+    switchedOrganization = organization;
+  }
+
+  @override
+  Future<void> addSessionLocationReminder(
+    String sessionID,
+    String directory,
+  ) async {
+    reminderDirectory = directory;
+  }
+
+  @override
+  Future<CatalogSnapshot> loadCatalog() async =>
+      const CatalogSnapshot(providers: [], models: [], agents: []);
+}
+
+class _MessageDeleteRepository extends _FakeProductRepository {
+  _MessageDeleteRepository(this.serverMessages) : super(const []);
+
+  final List<MessageWithParts> serverMessages;
+  final List<(String, String)> deleted = [];
+  Object? failure;
+
+  @override
+  Future<void> deleteMessage({
+    required String sessionID,
+    required String messageID,
+  }) async {
+    if (failure case final error?) throw error;
+    deleted.add((sessionID, messageID));
+    serverMessages.removeWhere((message) => message.info.id == messageID);
+  }
+}
+
+class _RelationsProductRepository extends _FakeProductRepository {
+  _RelationsProductRepository(this.parent, this.children) : super(const []);
+
+  final Session parent;
+  final List<Session> children;
+
+  @override
+  Future<Session> getSessionDetails(String id) async =>
+      id == parent.id ? parent : children.singleWhere((item) => item.id == id);
+
+  @override
+  Future<List<Session>> listSessionChildren(String id) async => children;
 }
 
 Future<ConnectionController> _controller(_FakeOpenCodeApi api) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
-  return ConnectionController(ProfileStore(prefs: prefs))..api = api;
+  return ConnectionController(ProfileStore(prefs: prefs))
+    ..api = api
+    ..status = StreamStatus.connected;
 }
 
 class _DelayedActionController extends ConnectionController {
@@ -127,6 +365,23 @@ class _DelayedActionController extends ConnectionController {
 
   @override
   Future<OpenCodeApi?> prepareActionTransport() => readyApi.future;
+}
+
+class _DelayedRepositoryController extends ConnectionController {
+  _DelayedRepositoryController(super.store, this.readyRepository);
+
+  final Completer<ProductRepository?> readyRepository;
+
+  @override
+  Future<ProductRepository?> prepareActionRepository() =>
+      readyRepository.future;
+}
+
+class _StaticCatalogController extends ConnectionController {
+  _StaticCatalogController(super.store);
+
+  @override
+  Future<void> refreshCatalog() async {}
 }
 
 MessageWithParts _message(
@@ -178,16 +433,64 @@ Future<ConnectionController> _pumpChat(
   WidgetTester tester,
   _FakeOpenCodeApi api, {
   ProductRepository? repository,
+  ConnectionController? controller,
+}) async {
+  final activeController = controller ?? await _controller(api);
+  activeController.repository = repository;
+  addTearDown(activeController.dispose);
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [connProvider.overrideWithValue(activeController)],
+      child: const MaterialApp(home: ChatScreen(sessionID: 'session-1')),
+    ),
+  );
+  await tester.pump();
+  await tester.pump();
+  return activeController;
+}
+
+Future<ConnectionController> _pumpProvisionalChat(
+  WidgetTester tester,
+  _FakeOpenCodeApi api, {
+  double textScale = 1,
+  List<PromptAttachment> attachments = const [],
 }) async {
   final controller = await _controller(api);
-  controller.repository = repository;
   addTearDown(controller.dispose);
   await tester.pumpWidget(
     ProviderScope(
       overrides: [connProvider.overrideWithValue(controller)],
-      child: const MaterialApp(home: ChatScreen(sessionID: 'session-1')),
+      child: MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
+        home: Builder(
+          builder: (context) => Scaffold(
+            key: const ValueKey('provisional-chat-host'),
+            body: Center(
+              child: FilledButton(
+                key: const ValueKey('open-provisional-chat'),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => ChatScreen(
+                      sessionID: 'session-1',
+                      discardIfUntouched: true,
+                      initialAttachments: attachments,
+                    ),
+                  ),
+                ),
+                child: const Text('Open provisional chat'),
+              ),
+            ),
+          ),
+        ),
+      ),
     ),
   );
+  await tester.tap(find.byKey(const ValueKey('open-provisional-chat')));
   await tester.pump();
   await tester.pump();
   return controller;
@@ -215,6 +518,264 @@ void main() {
     expect(info.errorText, 'The selected model is unavailable');
   });
 
+  testWidgets('back discards only the exact verified empty mobile session', (
+    tester,
+  ) async {
+    final requested = <String>[];
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (id) async {
+        requested.add(id);
+        return [];
+      };
+    await _pumpProvisionalChat(tester, api);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(requested, everyElement('session-1'));
+    expect(requested.length, greaterThanOrEqualTo(2));
+    expect(api.deleteCalls, ['session-1']);
+    expect(find.byKey(const ValueKey('provisional-chat-host')), findsOneWidget);
+  });
+
+  testWidgets('back preserves a newly created session after server messages', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('user-committed', 'user', [
+          Part(type: 'text', text: 'Keep this session'),
+        ]),
+      ];
+    await _pumpProvisionalChat(tester, api);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(api.deleteCalls, isEmpty);
+    expect(find.byKey(const ValueKey('provisional-chat-host')), findsOneWidget);
+  });
+
+  testWidgets('failed empty-session verification keeps server state', (
+    tester,
+  ) async {
+    var calls = 0;
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async {
+        calls += 1;
+        if (calls > 1) throw StateError('transport moved');
+        return [];
+      };
+    await _pumpProvisionalChat(tester, api);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(api.deleteCalls, isEmpty);
+    expect(
+      find.text(
+        'Empty session was kept because OpenCode could not verify or remove it.',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('leaving with a typed draft keeps it silently', (tester) async {
+    tester.view.physicalSize = const Size(640, 1280);
+    tester.view.devicePixelRatio = 2;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final api = _FakeOpenCodeApi()..messagesHandler = (_) async => [];
+    final controller = await _pumpProvisionalChat(tester, api, textScale: 2);
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      'Keep this draft',
+    );
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    // No confirmation: the text persists as a per-session draft, and the
+    // provisional session survives so the draft has a home to return to.
+    expect(
+      find.byKey(const ValueKey('discard-chat-draft-dialog')),
+      findsNothing,
+    );
+    expect(find.byKey(const ValueKey('provisional-chat-host')), findsOneWidget);
+    expect(api.deleteCalls, isEmpty);
+    expect(controller.sessionDraft('session-1'), 'Keep this draft');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('mobile new command cannot silently drop unsent attachments', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()..messagesHandler = (_) async => [];
+    await _pumpProvisionalChat(
+      tester,
+      api,
+      attachments: const [
+        PromptAttachment(
+          mime: 'text/plain',
+          filename: 'notes.txt',
+          url: 'data:text/plain;base64,bm90ZXM=',
+        ),
+      ],
+    );
+
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('command-mobile-new')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('discard-chat-draft-dialog')),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Keep editing'));
+    await tester.pumpAndSettle();
+
+    expect(api.createCalls, 0);
+    expect(api.deleteCalls, isEmpty);
+    expect(find.textContaining('notes.txt'), findsWidgets);
+  });
+
+  testWidgets('child chat exposes parent and sibling navigation', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(320, 640));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final api = _FakeOpenCodeApi();
+    final parent = Session(
+      id: 'parent',
+      title: 'Parent work',
+      directory: '/work/acme',
+      time: SessionTime(created: 1),
+    );
+    final child = Session(
+      id: 'session-1',
+      title: 'Explore mobile flow',
+      parentID: parent.id,
+      directory: '/work/acme',
+      time: SessionTime(created: 2),
+    );
+    final sibling = Session(
+      id: 'session-2',
+      title: 'Review mobile flow',
+      parentID: parent.id,
+      directory: '/work/acme',
+      time: SessionTime(created: 3),
+    );
+    final controller = await _controller(api)
+      ..directory = '/work/acme'
+      ..repository = _RelationsProductRepository(parent, [child, sibling])
+      ..sessionsById = {
+        parent.id: parent,
+        child.id: child,
+        sibling.id: sibling,
+      };
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: const MaterialApp(home: ChatScreen(sessionID: 'session-1')),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Subagent · 1 of 2'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('subagent-parent-session')),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const ValueKey('subagent-session-list')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Subagent sessions'), findsOneWidget);
+    expect(find.text('Review mobile flow'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('offline chat keeps its transcript and shows recovery actions', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('assistant-1', 'assistant', [
+          Part(
+            id: 'part-1',
+            type: 'text',
+            text: 'Retained response',
+            messageID: 'assistant-1',
+          ),
+        ]),
+      ];
+    final controller = await _pumpChat(tester, api);
+    expect(find.text('Retained response'), findsOneWidget);
+
+    controller
+      ..status = StreamStatus.disconnected
+      ..lastError = 'Endpoint is unavailable'
+      ..signalDataRefreshForTesting();
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Retained response'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('connection-status-banner')),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Endpoint is unavailable'), findsOneWidget);
+    expect(find.text('Try again'), findsOneWidget);
+    expect(find.text('Change server'), findsOneWidget);
+  });
+
+  testWidgets('rehydrate never flashes a skeleton over existing messages', (
+    tester,
+  ) async {
+    var loads = 0;
+    Completer<List<MessageWithParts>>? pending;
+    List<MessageWithParts> transcript() => [
+      _message('assistant-1', 'assistant', [
+        Part(
+          id: 'part-1',
+          type: 'text',
+          text: 'Retained response',
+          messageID: 'assistant-1',
+        ),
+      ]),
+    ];
+    final api = _FakeOpenCodeApi();
+    api.messagesHandler = (_) {
+      loads += 1;
+      if (loads == 1) return Future.value(transcript());
+      pending = Completer<List<MessageWithParts>>();
+      return pending!.future;
+    };
+
+    final controller = await _pumpChat(tester, api);
+    expect(find.text('Retained response'), findsOneWidget);
+    expect(find.byType(LoadingList), findsNothing);
+
+    controller.signalDataRefreshForTesting();
+    await tester.pump();
+    await tester.pump();
+
+    // The reload is still in flight: the transcript stays rendered with no
+    // skeleton and no full-screen error.
+    expect(loads, 2);
+    expect(find.text('Retained response'), findsOneWidget);
+    expect(find.byType(LoadingList), findsNothing);
+    expect(find.byType(ProductErrorState), findsNothing);
+
+    // Even a failed refresh keeps the transcript instead of a dead end.
+    pending!.completeError(StateError('stream reset during rehydrate'));
+    await tester.pumpAndSettle();
+    expect(find.text('Retained response'), findsOneWidget);
+    expect(find.byType(LoadingList), findsNothing);
+    expect(find.byType(ProductErrorState), findsNothing);
+  });
+
   testWidgets('renders current OpenCode unified patches and server counts', (
     tester,
   ) async {
@@ -230,7 +791,9 @@ void main() {
       ];
     await _pumpChat(tester, api);
 
-    await tester.tap(find.byTooltip('Changes'));
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Changes'));
     await tester.pumpAndSettle();
     expect(find.text('+1'), findsOneWidget);
     expect(find.text('-1'), findsOneWidget);
@@ -257,7 +820,9 @@ void main() {
       ];
     await _pumpChat(tester, api);
 
-    await tester.tap(find.byTooltip('Changes'));
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Changes'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('review-line-2')));
     await tester.pump();
@@ -346,10 +911,13 @@ void main() {
     final retainedApi = _FakeOpenCodeApi();
     final replacementApi = _FakeOpenCodeApi();
     final readyApi = Completer<OpenCodeApi?>();
-    final controller = _DelayedActionController(
-      ProfileStore(prefs: prefs),
-      readyApi,
-    )..api = retainedApi;
+    final controller =
+        _DelayedActionController(ProfileStore(prefs: prefs), readyApi)
+          ..api = retainedApi
+          // Connected: offline sends queue instead of hitting the transport, and
+          // this test covers the wake path where the stream is already live but
+          // the action transport is still being replaced.
+          ..status = StreamStatus.connected;
     addTearDown(controller.dispose);
 
     await tester.pumpWidget(
@@ -385,6 +953,94 @@ void main() {
     expect(replacementApi.promptCalls, 1);
     expect(replacementApi.prompts.single.text, 'send after wake');
   });
+
+  testWidgets('stop waits for the wake-time replacement transport', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final retainedApi = _FakeOpenCodeApi();
+    final replacementApi = _FakeOpenCodeApi();
+    final readyApi = Completer<OpenCodeApi?>();
+    final controller = _DelayedActionController(
+      ProfileStore(prefs: prefs),
+      readyApi,
+    )..api = retainedApi;
+    controller.busySessions.add('session-1');
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: const MaterialApp(home: ChatScreen(sessionID: 'session-1')),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    await tester.tap(find.byKey(const Key('chat-send-button')));
+    await tester.pump();
+
+    expect(retainedApi.abortCalls, 0);
+    expect(replacementApi.abortCalls, 0);
+
+    readyApi.complete(replacementApi);
+    await tester.pumpAndSettle();
+
+    expect(retainedApi.abortCalls, 0);
+    expect(replacementApi.abortCalls, 1);
+  });
+
+  testWidgets('stop failure remains visible instead of being swallowed', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..abortError = ApiException('server refused to stop');
+    final controller = await _pumpChat(tester, api);
+    controller.busySessions.add('session-1');
+    controller.notifyListeners();
+    await tester.pump();
+
+    await tester.tap(find.byKey(const Key('chat-send-button')));
+    await tester.pumpAndSettle();
+
+    expect(api.abortCalls, 1);
+    expect(find.text('server refused to stop'), findsOneWidget);
+  });
+
+  test(
+    'session mutations wait for the wake-time replacement transport',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final retainedApi = _FakeOpenCodeApi();
+      final replacementApi = _FakeOpenCodeApi();
+      final readyApi = Completer<OpenCodeApi?>();
+      final controller = _DelayedActionController(
+        ProfileStore(prefs: prefs),
+        readyApi,
+      )..api = retainedApi;
+      addTearDown(controller.dispose);
+
+      final create = controller.createSession();
+      final rename = controller.renameSession('session-1', 'Renamed');
+      final delete = controller.deleteSession('session-2');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(retainedApi.createCalls, 0);
+      expect(retainedApi.renameCalls, isEmpty);
+      expect(retainedApi.deleteCalls, isEmpty);
+
+      readyApi.complete(replacementApi);
+      final created = await create;
+      await Future.wait([rename, delete]);
+
+      expect(created.id, 'session-created');
+      expect(replacementApi.createCalls, 1);
+      expect(replacementApi.renameCalls, [(id: 'session-1', title: 'Renamed')]);
+      expect(replacementApi.deleteCalls, ['session-2']);
+    },
+  );
 
   testWidgets('renders a generated image from a tool output filePath', (
     tester,
@@ -455,6 +1111,55 @@ void main() {
       api.prompts.single.attachments.single.url,
       startsWith('data:image/png;base64,'),
     );
+  });
+
+  testWidgets('tool output previews wait for the wake-time transport', (
+    tester,
+  ) async {
+    const path = '/tmp/opencode/shots/after-wake.png';
+    final retainedApi = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('assistant-after-wake', 'assistant', [
+          Part(
+            id: 'tool-after-wake',
+            messageID: 'assistant-after-wake',
+            type: 'tool',
+            toolName: 'browser screenshot',
+            toolState: ToolState.fromJson({
+              'status': 'completed',
+              'title': 'Capture after wake',
+              'input': const <String, dynamic>{},
+              'output': {'filePath': path},
+            }),
+          ),
+        ]),
+      ];
+    final replacementApi = _FakeOpenCodeApi()
+      ..fileContents[path] = const FileContent(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2ZKgAAAAASUVORK5CYII=',
+        type: 'binary',
+        encoding: 'base64',
+        mimeType: 'image/png',
+      );
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final readyApi = Completer<OpenCodeApi?>();
+    final controller = _DelayedActionController(
+      ProfileStore(prefs: prefs),
+      readyApi,
+    )..api = retainedApi;
+
+    await _pumpChat(tester, retainedApi, controller: controller);
+
+    expect(retainedApi.fileContentRequests, isEmpty);
+    expect(replacementApi.fileContentRequests, isEmpty);
+
+    readyApi.complete(replacementApi);
+    await tester.pumpAndSettle();
+
+    expect(retainedApi.fileContentRequests, isEmpty);
+    expect(replacementApi.fileContentRequests, [path]);
+    expect(find.byKey(const Key('tool-output-image')), findsOneWidget);
   });
 
   testWidgets('opens non-image tool files in the shared preview', (
@@ -609,6 +1314,62 @@ void main() {
         isNull,
         reason: 'Grouped tool rows must not render nested cards.',
       );
+    }
+  });
+
+  testWidgets('renders grouped tool failures as flat inline results', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('assistant-errors', 'assistant', [
+          Part(
+            id: 'failed-edit',
+            messageID: 'assistant-errors',
+            type: 'tool',
+            toolName: 'edit',
+            toolState: ToolState.fromJson(const {
+              'status': 'error',
+              'input': {'filePath': '/workspace/lib/main.dart'},
+              'error': 'Tool execution aborted',
+            }, toolName: 'edit'),
+          ),
+          Part(
+            id: 'failed-shell',
+            messageID: 'assistant-errors',
+            type: 'tool',
+            toolName: 'bash',
+            toolState: ToolState.fromJson(const {
+              'status': 'error',
+              'input': {'command': 'flutter test'},
+              'error': 'Process exited before completion',
+            }, toolName: 'bash'),
+          ),
+        ]),
+      ];
+
+    await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('tool-call-group')), findsOneWidget);
+    expect(
+      find.byKey(const Key('embedded-tool-error-output')),
+      findsNWidgets(2),
+    );
+    expect(find.text('Tool execution aborted'), findsOneWidget);
+    expect(find.text('Process exited before completion'), findsOneWidget);
+    expect(find.byKey(const Key('standalone-tool-error-output')), findsNothing);
+
+    for (final result in tester.widgetList<Container>(
+      find.byKey(const Key('embedded-tool-error-output')),
+    )) {
+      final decoration = result.decoration! as BoxDecoration;
+      expect(decoration.color, isNull);
+      expect(decoration.borderRadius, isNull);
+      expect((decoration.border! as Border).top.style, BorderStyle.none);
+      expect((decoration.border! as Border).right.style, BorderStyle.none);
+      expect((decoration.border! as Border).bottom.style, BorderStyle.none);
+      expect((decoration.border! as Border).left.width, 2);
     }
   });
 
@@ -769,8 +1530,8 @@ void main() {
 
     delta('text-1', 'text', 'Hel');
     delta('text-1', 'text', 'lo');
-    delta('reasoning-1', 'text', 'why ');
-    delta('reasoning-1', 'text', 'this works');
+    delta('reasoning-1', 'text', '**why ');
+    delta('reasoning-1', 'text', 'this works**');
     delta('tool-1', 'input', '{"query":');
     delta('tool-1', 'input', '"chat"}');
     await _pumpEvent(tester);
@@ -779,6 +1540,7 @@ void main() {
     expect(find.byKey(const Key('reasoning-inline')), findsOneWidget);
     expect(find.byKey(const Key('reasoning-toggle')), findsNothing);
     expect(find.text('why this works'), findsOneWidget);
+    expect(find.text('**why this works**'), findsNothing);
     await tester.tap(find.text('search'));
     await _pumpEvent(tester);
     expect(find.textContaining('"query": "chat"'), findsOneWidget);
@@ -828,6 +1590,78 @@ void main() {
     expect(find.text('Second answer paragraph.'), findsOneWidget);
   });
 
+  testWidgets('transcript controls update old messages and persist state', (
+    tester,
+  ) async {
+    const reasoning =
+        'This is a deliberately long reasoning explanation that spans several lines on a phone and starts collapsed.';
+    final created = DateTime.now().millisecondsSinceEpoch;
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('user-display', 'user', [
+          Part(
+            id: 'user-display-text',
+            messageID: 'user-display',
+            type: 'text',
+            text: 'Explain the implementation',
+          ),
+        ], created: created),
+        _message('assistant-display', 'assistant', [
+          Part(
+            id: 'assistant-display-reasoning',
+            messageID: 'assistant-display',
+            type: 'reasoning',
+            text: reasoning,
+          ),
+          Part(
+            id: 'assistant-display-text',
+            messageID: 'assistant-display',
+            type: 'text',
+            text: 'Here is the implementation.',
+          ),
+        ], created: created + 1),
+      ];
+
+    final controller = await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+    expect(find.text(reasoning), findsNothing);
+    expect(find.byKey(const Key('message-meta-user-display')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'thinking',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('command-mobile-thinking')));
+    await tester.pumpAndSettle();
+
+    expect(controller.transcriptReasoningExpanded, isTrue);
+    expect(find.text(reasoning), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    expect(find.text('Collapse reasoning'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('session-view-timestamps')));
+    await tester.pumpAndSettle();
+
+    expect(controller.transcriptTimestampsVisible, isTrue);
+    expect(find.byKey(const Key('message-meta-user-display')), findsOneWidget);
+    expect(
+      find.byKey(const Key('message-meta-assistant-display')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('session-view-thinking')));
+    await tester.pumpAndSettle();
+
+    expect(controller.transcriptReasoningExpanded, isFalse);
+    expect(find.text(reasoning), findsNothing);
+  });
+
   testWidgets('command launcher maps diff to the native session viewer', (
     tester,
   ) async {
@@ -855,6 +1689,179 @@ void main() {
     expect(find.text('chat.dart'), findsOneWidget);
     expect(find.text('+7'), findsOneWidget);
     expect(find.text('-2'), findsOneWidget);
+  });
+
+  testWidgets('command launcher maps context to the native usage surface', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('user-context', 'user', [
+          Part(type: 'text', text: 'Inspect context'),
+        ], created: 1),
+        _message(
+          'assistant-context',
+          'assistant',
+          [Part(type: 'text', text: 'Context ready')],
+          created: 2,
+          providerID: 'openai',
+          modelID: 'gpt-context',
+          tokens: Tokens(input: 700, output: 40, cacheRead: 260),
+          cost: .031,
+        ),
+      ];
+
+    await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'context',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('command-mobile-context')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SessionContextScreen), findsOneWidget);
+    expect(find.text('1,000 tokens · limit unavailable'), findsOneWidget);
+  });
+
+  testWidgets('debug command opens native app diagnostics', (tester) async {
+    await _pumpChat(tester, _FakeOpenCodeApi());
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'debug',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('command-mobile-debug')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AppDiagnosticsScreen), findsOneWidget);
+    expect(find.text('Private until you send it'), findsOneWidget);
+  });
+
+  testWidgets('health command opens native project health', (tester) async {
+    final repository = _DestinationRepository();
+    await _pumpChat(tester, _FakeOpenCodeApi(), repository: repository);
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'health',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('command-mobile-health')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ProjectHealthScreen), findsOneWidget);
+    expect(find.text('feature/mobile'), findsOneWidget);
+  });
+
+  testWidgets('sessions command opens the all-project native finder', (
+    tester,
+  ) async {
+    await _pumpChat(tester, _FakeOpenCodeApi());
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'sessions',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('command-mobile-sessions')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(GlobalSessionsScreen), findsOneWidget);
+    expect(find.text('All sessions'), findsOneWidget);
+  });
+
+  testWidgets('themes command opens the native appearance picker', (
+    tester,
+  ) async {
+    final controller = await _pumpChat(tester, _FakeOpenCodeApi());
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'themes',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('command-mobile-themes')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('appearance-picker')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('appearance-light')));
+    await tester.pumpAndSettle();
+
+    expect(controller.appearance.value, AppAppearance.light);
+    expect(find.text('Appearance set to Light'), findsOneWidget);
+  });
+
+  testWidgets('session todo view shows server status and priority', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..todoItems = [
+        Todo(
+          content: 'Verify production release',
+          status: 'in_progress',
+          priority: 'high',
+        ),
+      ];
+
+    await _pumpChat(tester, api);
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Todos'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Verify production release'), findsOneWidget);
+    expect(find.text('in progress · high priority'), findsOneWidget);
+  });
+
+  testWidgets('todos sheet failure offers retry instead of raw exception', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..todosError = ApiException(
+        'Load todos failed (HTTP 500): session store unavailable',
+      );
+
+    await _pumpChat(tester, api);
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Todos'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Load todos failed (HTTP 500): session store unavailable'),
+      findsOneWidget,
+    );
+    expect(find.text('Try again'), findsOneWidget);
+
+    api
+      ..todosError = null
+      ..todoItems = [Todo(content: 'Recovered todo', status: 'pending')];
+    await tester.tap(find.text('Try again'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Recovered todo'), findsOneWidget);
+    expect(find.text('Try again'), findsNothing);
+  });
+
+  testWidgets('todos sheet explains an empty todo list', (tester) async {
+    final api = _FakeOpenCodeApi();
+
+    await _pumpChat(tester, api);
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Todos'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No todos in this session'), findsOneWidget);
   });
 
   testWidgets('launcher combines mobile actions with server commands', (
@@ -886,6 +1893,13 @@ void main() {
     expect(find.text('/models'), findsOneWidget);
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
+      'open',
+    );
+    await tester.pump();
+    expect(find.text('/files'), findsOneWidget);
+    expect(find.text('/editor'), findsNothing);
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
       'review',
     );
     await tester.pump();
@@ -897,6 +1911,570 @@ void main() {
     );
     expect(composer.controller?.text, '/review ');
   });
+
+  testWidgets('/files attaches a project artifact back to the chat', (
+    tester,
+  ) async {
+    const path = 'docs/review.md';
+    final api = _FakeOpenCodeApi()
+      ..projectFiles = [FileNode(name: 'review.md', path: path, isDir: false)]
+      ..fileContents[path] = const FileContent(
+        '# Review\n\nPlease check this file.',
+        mimeType: 'text/markdown',
+      );
+
+    await _pumpChat(tester, api);
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'open',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('command-mobile-files')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('review.md'), findsOneWidget);
+    await tester.tap(find.text('review.md'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('project-file-attach')), findsOneWidget);
+    expect(find.byKey(const Key('project-file-download')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('project-file-attach')));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('review.md attached. Return to the chat to add your comment.'),
+      findsOneWidget,
+    );
+
+    Navigator.of(
+      tester.element(find.byKey(const Key('project-file-attach'))),
+    ).pop();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
+    expect(
+      find.bySemanticsLabel('Remove attachment review.md'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('move, warp, and org commands preserve their server semantics', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi();
+    final repository = _DestinationRepository();
+    final controller = await _controller(api);
+    controller
+      ..repository = repository
+      ..directory = '/work/acme'
+      ..workspace = 'workspace-1'
+      ..sessionsById['session-1'] = Session(
+        id: 'session-1',
+        title: 'Mobile work',
+        projectID: 'project-1',
+        workspaceID: 'workspace-1',
+        directory: '/work/acme',
+      );
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: const MaterialApp(home: ChatScreen(sessionID: 'session-1')),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    Future<void> openCommand(String command) async {
+      await tester.tap(find.byKey(const Key('command-launcher-button')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('command-launcher-search')),
+        command,
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(Key('command-mobile-$command')));
+      await tester.pumpAndSettle();
+    }
+
+    await openCommand('move');
+    expect(find.byKey(const Key('move-session-sheet')), findsOneWidget);
+    expect(find.text('Current'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('move-destination-/work/acme-copy')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('1 changed file is present.'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('session-destination-confirm')));
+    await tester.pumpAndSettle();
+    expect(repository.movedDirectory, '/work/acme-copy');
+    expect(repository.movedChanges, isTrue);
+    expect(repository.reminderDirectory, '/work/acme-copy');
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+
+    await openCommand('warp');
+    expect(find.byKey(const Key('warp-session-sheet')), findsOneWidget);
+    expect(find.text('Offline cloud'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('warp-destination-workspace-2')));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const Key('session-destination-without-changes')),
+    );
+    await tester.pumpAndSettle();
+    expect(repository.warpedWorkspaceID, 'workspace-2');
+    expect(repository.copiedChanges, isFalse);
+    expect(repository.reminderDirectory, '/remote/review');
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+
+    await openCommand('org');
+    expect(find.byKey(const Key('console-organization-sheet')), findsOneWidget);
+    expect(find.text('Current org'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('console-org-account-1-org-next')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('console-org-confirm')));
+    await tester.pumpAndSettle();
+    expect(repository.switchedOrganization?.orgID, 'org-next');
+  });
+
+  testWidgets('move fails closed when working changes cannot be inspected', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi();
+    final repository = _DestinationRepository(healthError: true);
+    final controller = await _controller(api);
+    controller
+      ..repository = repository
+      ..directory = '/work/acme'
+      ..sessionsById['session-1'] = Session(
+        id: 'session-1',
+        projectID: 'project-1',
+        directory: '/work/acme',
+      );
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: const MaterialApp(home: ChatScreen(sessionID: 'session-1')),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'move',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('command-mobile-move')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('move-destination-/work/acme-copy')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('could not inspect working changes'),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('session-destination-without-changes')),
+      findsNothing,
+    );
+    await tester.tap(find.byKey(const Key('session-destination-confirm')));
+    await tester.pumpAndSettle();
+    expect(repository.movedChanges, isFalse);
+  });
+
+  testWidgets('prompt editor preserves selection, attachments, and cancel', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi();
+    final controller = await _controller(api);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: const MaterialApp(
+          home: ChatScreen(
+            sessionID: 'session-1',
+            initialAttachments: [
+              PromptAttachment(
+                mime: 'text/plain',
+                filename: 'notes.txt',
+                url: 'data:text/plain;base64,bm90ZXM=',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final composerFinder = find.byKey(const Key('chat-composer-field'));
+    final composer = tester.widget<TextField>(composerFinder).controller!;
+    composer.value = const TextEditingValue(
+      text: 'Original prompt draft',
+      selection: TextSelection(baseOffset: 2, extentOffset: 10),
+    );
+    await tester.pump();
+
+    expect(find.byKey(const Key('prompt-editor-button')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'editor',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('command-mobile-editor')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('prompt-editor-screen')), findsOneWidget);
+    final editor = tester
+        .widget<TextField>(find.byKey(const Key('prompt-editor-field')))
+        .controller!;
+    expect(editor.text, 'Original prompt draft');
+    expect(
+      editor.selection,
+      const TextSelection(baseOffset: 2, extentOffset: 10),
+    );
+    editor.selection = const TextSelection.collapsed(offset: 4);
+    await tester.tap(find.byTooltip('Close prompt editor'));
+    await tester.pumpAndSettle();
+    expect(find.text('Discard prompt changes?'), findsNothing);
+    expect(
+      composer.selection,
+      const TextSelection(baseOffset: 2, extentOffset: 10),
+    );
+
+    await tester.tap(find.byKey(const Key('prompt-editor-button')));
+    await tester.pumpAndSettle();
+    final discardEditor = tester
+        .widget<TextField>(find.byKey(const Key('prompt-editor-field')))
+        .controller!;
+    discardEditor.value = const TextEditingValue(
+      text: 'Discarded edit',
+      selection: TextSelection.collapsed(offset: 5),
+    );
+    await tester.tap(find.byTooltip('Remove attachment notes.txt'));
+    await tester.pump();
+    await tester.tap(find.byTooltip('Close prompt editor'));
+    await tester.pumpAndSettle();
+    expect(find.text('Discard prompt changes?'), findsOneWidget);
+    await tester.tap(find.text('Keep editing'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('prompt-editor-screen')), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Close prompt editor'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Discard'));
+    await tester.pumpAndSettle();
+    expect(composer.text, 'Original prompt draft');
+    expect(find.byTooltip('Remove attachment notes.txt'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('prompt-editor-button')));
+    await tester.pumpAndSettle();
+    final savedEditor = tester
+        .widget<TextField>(find.byKey(const Key('prompt-editor-field')))
+        .controller!;
+    savedEditor.value = const TextEditingValue(
+      text: 'Final edited prompt',
+      selection: TextSelection.collapsed(offset: 7),
+    );
+    await tester.tap(find.byTooltip('Remove attachment notes.txt'));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('prompt-editor-done')));
+    await tester.pumpAndSettle();
+
+    expect(composer.text, 'Final edited prompt');
+    expect(composer.selection, const TextSelection.collapsed(offset: 7));
+    expect(find.byTooltip('Remove attachment notes.txt'), findsNothing);
+    expect(api.promptCalls, 0);
+  });
+
+  testWidgets('timeline searches old messages and jumps to a stable anchor', (
+    tester,
+  ) async {
+    final messages = <MessageWithParts>[];
+    for (var index = 0; index < 30; index += 1) {
+      messages.add(
+        _message('user-$index', 'user', [
+          Part(
+            id: 'part-$index',
+            messageID: 'user-$index',
+            type: 'text',
+            text: index == 0 ? 'oldest anchor prompt' : 'prompt $index',
+          ),
+        ], created: index + 1),
+      );
+    }
+    final api = _FakeOpenCodeApi()..messagesHandler = (_) async => messages;
+
+    await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Timeline'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('timeline-search')),
+      'oldest anchor',
+    );
+    await tester.pump();
+    expect(find.byKey(const Key('timeline-row-user-0')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('timeline-row-user-0')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('oldest anchor prompt'), findsOneWidget);
+    // The key stays stable while highlighted (no remount), and the highlight
+    // itself is expressed through the animated decoration.
+    final highlightFinder = find.byKey(const Key('message-highlight-user-0'));
+    expect(highlightFinder, findsOneWidget);
+    final highlighted = tester.widget<AnimatedContainer>(highlightFinder);
+    expect(
+      (highlighted.decoration as BoxDecoration?)?.color,
+      isNot(Colors.transparent),
+    );
+  });
+
+  testWidgets('fork from prompt restores text and file in the new composer', (
+    tester,
+  ) async {
+    final prompt = _message('user-restore', 'user', [
+      Part(
+        id: 'text-restore',
+        messageID: 'user-restore',
+        type: 'text',
+        text: 'Review this design',
+      ),
+      Part(
+        id: 'file-restore',
+        messageID: 'user-restore',
+        type: 'file',
+        filename: 'design.png',
+        mime: 'image/png',
+        url: 'data:image/png;base64,iVBORw0KGgo=',
+      ),
+    ]);
+    final api = _FakeOpenCodeApi()..messagesHandler = (_) async => [prompt];
+    final repository = _FakeProductRepository(const []);
+
+    await _pumpChat(tester, api, repository: repository);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Timeline'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('timeline-fork-user-restore')));
+    await tester.pumpAndSettle();
+
+    expect(repository.forkCalls, 1);
+    expect(repository.forkMessageID, 'user-restore');
+    final composer = tester.widget<TextField>(
+      find.byKey(const Key('chat-composer-field')),
+    );
+    expect(composer.controller?.text, 'Review this design');
+    expect(find.byTooltip('Remove attachment design.png'), findsOneWidget);
+  });
+
+  testWidgets('session repository actions wait for the wake-time replacement', (
+    tester,
+  ) async {
+    final prompt = _message('user-after-wake', 'user', [
+      Part(
+        id: 'text-after-wake',
+        messageID: 'user-after-wake',
+        type: 'text',
+        text: 'Fork after wake',
+      ),
+    ]);
+    final api = _FakeOpenCodeApi()..messagesHandler = (_) async => [prompt];
+    final retainedRepository = _FakeProductRepository(const []);
+    final replacementRepository = _FakeProductRepository(const []);
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final readyRepository = Completer<ProductRepository?>();
+    final controller = _DelayedRepositoryController(
+      ProfileStore(prefs: prefs),
+      readyRepository,
+    )..api = api;
+
+    await _pumpChat(
+      tester,
+      api,
+      repository: retainedRepository,
+      controller: controller,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Timeline'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('timeline-fork-user-after-wake')));
+    await tester.pump();
+
+    expect(retainedRepository.forkCalls, 0);
+    expect(replacementRepository.forkCalls, 0);
+
+    readyRepository.complete(replacementRepository);
+    await tester.pumpAndSettle();
+
+    expect(retainedRepository.forkCalls, 0);
+    expect(replacementRepository.forkCalls, 1);
+    expect(replacementRepository.forkMessageID, 'user-after-wake');
+  });
+
+  testWidgets('/fork lists prompts and forks the selected message point', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('user-fork-command', 'user', [
+          Part(
+            id: 'fork-command-text',
+            messageID: 'user-fork-command',
+            type: 'text',
+            text: 'Try another implementation',
+          ),
+        ]),
+        _message('assistant-fork-command', 'assistant', [
+          Part(
+            id: 'assistant-command-text',
+            messageID: 'assistant-fork-command',
+            type: 'text',
+            text: 'Current implementation',
+          ),
+        ]),
+      ];
+    final repository = _FakeProductRepository(const []);
+
+    await _pumpChat(tester, api, repository: repository);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'fork',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('command-mobile-fork')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Fork from prompt'), findsOneWidget);
+    expect(
+      find.byKey(const Key('timeline-row-assistant-fork-command')),
+      findsNothing,
+    );
+    await tester.tap(find.byKey(const Key('timeline-row-user-fork-command')));
+    await tester.pumpAndSettle();
+
+    expect(repository.forkMessageID, 'user-fork-command');
+    final composer = tester.widget<TextField>(
+      find.byKey(const Key('chat-composer-field')),
+    );
+    expect(composer.controller?.text, 'Try another implementation');
+  });
+
+  testWidgets('timeline remains usable at 320dp with 2x text', (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('user-narrow', 'user', [
+          Part(
+            id: 'part-narrow',
+            messageID: 'user-narrow',
+            type: 'text',
+            text: 'A long prompt that must remain reachable on a narrow phone',
+          ),
+        ]),
+      ];
+    final controller = await _controller(api);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: MediaQuery(
+          data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+          child: const MaterialApp(home: ChatScreen(sessionID: 'session-1')),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    final timestamps = find.byKey(const Key('session-view-timestamps'));
+    await tester.ensureVisible(timestamps);
+    await tester.pumpAndSettle();
+    await tester.tap(timestamps);
+    await tester.pumpAndSettle();
+    expect(controller.transcriptTimestampsVisible, isTrue);
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Timeline'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('timeline-search')), findsOneWidget);
+    expect(find.byKey(const Key('timeline-row-user-narrow')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'project reference screen adds an upstream directory prompt part',
+    (tester) async {
+      final api = _FakeOpenCodeApi();
+      final repository = _FakeProductRepository(
+        const [],
+        references: const [
+          ReferenceInfo(
+            name: 'docs',
+            path: '/workspace/../shared-docs',
+            description: 'Shared engineering documentation',
+          ),
+        ],
+      );
+
+      await _pumpChat(tester, api, repository: repository);
+      await tester.tap(find.byKey(const Key('command-launcher-button')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('command-launcher-search')),
+        'references',
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('command-mobile-references')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('Shared engineering documentation'),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const Key('reference-docs')));
+      await tester.pumpAndSettle();
+
+      final composer = tester.widget<TextField>(
+        find.byKey(const Key('chat-composer-field')),
+      );
+      expect(composer.controller?.text, '@docs');
+      expect(find.bySemanticsLabel('Reference @docs'), findsOneWidget);
+      expect(find.byTooltip('Remove reference @docs'), findsOneWidget);
+      expect(find.bySemanticsLabel('Preview attachment docs'), findsNothing);
+
+      await tester.tap(find.byTooltip('Send'));
+      await tester.pumpAndSettle();
+
+      expect(api.prompts.single.text, '@docs');
+      expect(api.prompts.single.attachments.single.toJson(), {
+        'type': 'file',
+        'mime': 'application/x-directory',
+        'filename': 'docs',
+        'url': 'file:///shared-docs',
+      });
+    },
+  );
 
   testWidgets('typing slash opens filtered inline command suggestions', (
     tester,
@@ -921,6 +2499,270 @@ void main() {
     expect(find.byKey(const Key('inline-command-suggestions')), findsOneWidget);
     expect(find.byKey(const Key('inline-command-review')), findsOneWidget);
     expect(find.text('/models'), findsNothing);
+
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      '/too',
+    );
+    await tester.pump();
+    expect(find.byKey(const Key('inline-command-tools')), findsOneWidget);
+  });
+
+  testWidgets('inline command suggestion rows meet 44dp targets', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi();
+    final repository = _FakeProductRepository(const [
+      CommandInfo(
+        name: 'review',
+        description: 'Review current changes',
+        subtask: false,
+      ),
+    ]);
+
+    await _pumpChat(tester, api, repository: repository);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('chat-composer-field')), '/rev');
+    await tester.pump();
+
+    final row = find.byKey(const Key('inline-command-review'));
+    expect(row, findsOneWidget);
+    expect(tester.getSize(row).height, greaterThanOrEqualTo(44));
+  });
+
+  testWidgets('floating transcript pills meet tap-target minimums', (
+    tester,
+  ) async {
+    final messages = <MessageWithParts>[
+      for (var index = 0; index < 35; index += 1)
+        _message('user-$index', 'user', [
+          Part(
+            id: 'part-$index',
+            messageID: 'user-$index',
+            type: 'text',
+            text: 'prompt $index',
+          ),
+        ], created: index + 1),
+    ];
+    final api = _FakeOpenCodeApi()..messagesHandler = (_) async => messages;
+    await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+
+    // Both pills gate on being scrolled away from the latest message.
+    await tester.drag(
+      find.text('prompt 34'),
+      const Offset(0, 600),
+      warnIfMissed: false,
+    );
+    await tester.pumpAndSettle();
+
+    final earlier = find.byKey(const ValueKey('earlier-messages-pill'));
+    expect(earlier, findsOneWidget);
+    expect(tester.getSize(earlier).height, greaterThanOrEqualTo(44));
+
+    final jump = find.byKey(const ValueKey('jump-to-latest'));
+    expect(jump, findsOneWidget);
+    final jumpSize = tester.getSize(jump);
+    expect(jumpSize.width, greaterThanOrEqualTo(48));
+    expect(jumpSize.height, greaterThanOrEqualTo(48));
+  });
+
+  testWidgets(
+    'searchable sheets keep drag handles and dismiss the keyboard on drag',
+    (tester) async {
+      final messages = <MessageWithParts>[
+        for (var index = 0; index < 8; index += 1)
+          _message('user-$index', 'user', [
+            Part(
+              id: 'part-$index',
+              messageID: 'user-$index',
+              type: 'text',
+              text: 'prompt $index',
+            ),
+          ], created: index + 1),
+      ];
+      final api = _FakeOpenCodeApi()..messagesHandler = (_) async => messages;
+      // The product theme supplies the default drag handle under test.
+      final controller = await _controller(api);
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [connProvider.overrideWithValue(controller)],
+          child: MaterialApp(
+            theme: AppTheme.dark(),
+            home: const ChatScreen(sessionID: 'session-1'),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Session views'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Timeline'));
+      await tester.pumpAndSettle();
+
+      // The sheet no longer opts out of the theme drag handle.
+      expect(
+        tester.widget<BottomSheet>(find.byType(BottomSheet)).showDragHandle,
+        isNot(false),
+      );
+      final timelineList = tester.widget<ListView>(
+        find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.byType(ListView),
+        ),
+      );
+      expect(
+        timelineList.keyboardDismissBehavior,
+        ScrollViewKeyboardDismissBehavior.onDrag,
+      );
+
+      // Focus the search, then drag the results: the keyboard focus releases.
+      await tester.tap(find.byKey(const Key('timeline-search')));
+      await tester.pump();
+      final editable = tester.widget<EditableText>(
+        find.descendant(
+          of: find.byKey(const Key('timeline-search')),
+          matching: find.byType(EditableText),
+        ),
+      );
+      expect(editable.focusNode.hasFocus, isTrue);
+      // First drag expands the draggable sheet to its max; the second one
+      // scrolls the result list itself, which releases the keyboard focus.
+      await tester.drag(
+        find.byKey(const ValueKey('timeline-row-user-7')),
+        const Offset(0, -300),
+        warnIfMissed: false,
+      );
+      await tester.pumpAndSettle();
+      await tester.drag(
+        find.byKey(const ValueKey('timeline-row-user-7')),
+        const Offset(0, -120),
+        warnIfMissed: false,
+      );
+      await tester.pumpAndSettle();
+      expect(editable.focusNode.hasFocus, isFalse);
+
+      await tester.tap(find.byTooltip('Close timeline'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('command-launcher-button')));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<BottomSheet>(find.byType(BottomSheet)).showDragHandle,
+        isNot(false),
+      );
+      final launcherList = tester.widget<ListView>(
+        find.byKey(const Key('command-launcher-list')),
+      );
+      expect(
+        launcherList.keyboardDismissBehavior,
+        ScrollViewKeyboardDismissBehavior.onDrag,
+      );
+    },
+  );
+
+  testWidgets('composer tools delegates only to visible server subagents', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(320, 640));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final controller = _StaticCatalogController(ProfileStore(prefs: prefs))
+      ..api = _FakeOpenCodeApi()
+      ..status = StreamStatus.connected
+      ..catalog = const CatalogSnapshot(
+        providers: [],
+        models: [],
+        agents: [
+          CatalogAgent(id: 'build', mode: 'primary', hidden: false),
+          CatalogAgent(
+            id: 'explore',
+            mode: 'subagent',
+            hidden: false,
+            description: 'Find code and explain how it works',
+          ),
+          CatalogAgent(id: 'internal', mode: 'subagent', hidden: true),
+        ],
+      );
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: const MediaQuery(
+          data: MediaQueryData(textScaler: TextScaler.linear(2)),
+          child: MaterialApp(home: ChatScreen(sessionID: 'session-1')),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await tester.pumpAndSettle();
+    expect(find.text('Composer tools'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.byKey(const Key('composer-tools-agents-tab')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('@explore'), findsOneWidget);
+    expect(find.text('@build'), findsNothing);
+    expect(find.text('@internal'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.byKey(const Key('composer-agent-explore')));
+    await tester.pumpAndSettle();
+
+    final composer = tester.widget<TextField>(
+      find.byKey(const Key('chat-composer-field')),
+    );
+    expect(composer.controller?.text, '@explore ');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('typed agent autocomplete sends exact OpenCode agent parts', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi();
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final controller = _StaticCatalogController(ProfileStore(prefs: prefs))
+      ..api = api
+      ..status = StreamStatus.connected
+      ..catalog = const CatalogSnapshot(
+        providers: [],
+        models: [],
+        agents: [
+          CatalogAgent(id: 'build', mode: 'primary', hidden: false),
+          CatalogAgent(id: 'general', mode: 'subagent', hidden: false),
+        ],
+      );
+    await _pumpChat(tester, api, controller: controller);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      'Please ask @gen',
+    );
+    await tester.pump();
+    expect(find.byKey(const Key('inline-agent-general')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('inline-agent-general')));
+    await tester.pump();
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      'Please ask @general to inspect this.',
+    );
+    await tester.tap(find.byTooltip('Send'));
+    await tester.pumpAndSettle();
+
+    expect(api.prompts.single.text, 'Please ask @general to inspect this.');
+    expect(api.prompts.single.agentMentions, hasLength(1));
+    final mention = api.prompts.single.agentMentions.single;
+    expect(mention.name, 'general');
+    expect(mention.value, '@general');
+    expect(mention.start, 11);
+    expect(mention.end, 19);
   });
 
   testWidgets('removes individual parts and complete messages', (tester) async {
@@ -1137,7 +2979,10 @@ void main() {
         tester.widget<TextField>(find.byType(TextField)).controller?.text,
         'try once',
       );
-      expect(find.textContaining('Send failed:'), findsOneWidget);
+      expect(
+        find.text('OpenCode is unreachable. Try again.'),
+        findsOneWidget,
+      );
     },
   );
 
@@ -1159,7 +3004,7 @@ void main() {
       }),
     );
     await _pumpEvent(tester);
-    expect(find.text('thinking…'), findsOneWidget);
+    expect(find.byKey(const ValueKey('typing-indicator')), findsOneWidget);
 
     controller.handleEventForTesting(
       _event('session.error', {
@@ -1172,7 +3017,7 @@ void main() {
     );
     await _pumpEvent(tester);
 
-    expect(find.text('thinking…'), findsNothing);
+    expect(find.byKey(const ValueKey('typing-indicator')), findsNothing);
     expect(find.byKey(const ValueKey('prompt-error-banner')), findsOneWidget);
     expect(
       find.text('Sign in to the selected model provider.'),
@@ -1253,7 +3098,7 @@ void main() {
     final controller = await _pumpChat(tester, api);
     controller.selectedVariant = 'fast';
 
-    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.tap(find.byTooltip('Session actions'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Retry last prompt'));
     await tester.pumpAndSettle();
@@ -1274,7 +3119,7 @@ void main() {
       }),
     );
     await _pumpEvent(tester);
-    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.tap(find.byTooltip('Session actions'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Retry last prompt'));
     await tester.pumpAndSettle();
@@ -1347,7 +3192,11 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Delete'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Could not delete chat:'), findsOneWidget);
+    expect(find.text('Delete chat?'), findsOneWidget);
+    expect(controller.sessionsById, contains('session-1'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.pumpAndSettle();
+    expect(find.text('OpenCode is unreachable. Try again.'), findsOneWidget);
     expect(controller.sessionsById, contains('session-1'));
     expect(find.text('Original title'), findsOneWidget);
     await tester.pump(const Duration(seconds: 5));
@@ -1360,9 +3209,51 @@ void main() {
     await tester.enterText(find.byType(TextField), 'Changed title');
     await tester.tap(find.widgetWithText(FilledButton, 'Save'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Could not rename chat:'), findsOneWidget);
+    expect(find.text('OpenCode is unreachable. Try again.'), findsOneWidget);
     expect(controller.sessionsById['session-1']?.title, 'Original title');
     expect(find.text('Original title'), findsOneWidget);
+  });
+
+  testWidgets('session row end-swipe runs the existing delete confirm flow', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi();
+    final controller = await _controller(api);
+    addTearDown(controller.dispose);
+    controller.sessionsById = {
+      'session-1': Session(
+        id: 'session-1',
+        title: 'Swipe me away',
+        time: SessionTime(created: 1, updated: 1),
+      ),
+    };
+    await tester.pumpWidget(
+      MaterialApp(home: Scaffold(body: SessionsTab(controller: controller))),
+    );
+
+    final row = find.byKey(const ValueKey('session-dismiss-session-1'));
+    expect(row, findsOneWidget);
+    // The trailing popup menu remains alongside the swipe affordance.
+    expect(find.byType(PopupMenuButton<String>), findsOneWidget);
+
+    // Cancelling the confirm sheet keeps the session.
+    await tester.drag(row, const Offset(-400, 0));
+    await tester.pumpAndSettle();
+    expect(find.text('Delete chat?'), findsOneWidget);
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await tester.pumpAndSettle();
+    expect(api.deleteCalls, isEmpty);
+    expect(find.text('Swipe me away'), findsOneWidget);
+
+    // Confirming deletes through the same flow as the popup menu.
+    await tester.drag(row, const Offset(-400, 0));
+    await tester.pumpAndSettle();
+    expect(find.text('Delete chat?'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.pumpAndSettle();
+
+    expect(api.deleteCalls, ['session-1']);
+    expect(find.text('Swipe me away'), findsNothing);
   });
 
   testWidgets('attachment count limit is enforced before opening the picker', (
@@ -1454,5 +3345,277 @@ void main() {
     await tester.pumpAndSettle();
     expect(remove, findsNothing);
     semantics.dispose();
+  });
+
+  testWidgets('empty transcript suggestions fill the composer', (tester) async {
+    final api = _FakeOpenCodeApi();
+    // No directory is selected, so the project- and git-dependent chips give
+    // way to one that works in the server's default directory.
+    await _pumpChat(tester, api);
+
+    expect(find.text('Start coding'), findsOneWidget);
+    expect(find.byKey(const ValueKey('empty-transcript-tip')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('empty-suggestion-What changed recently?')),
+      findsNothing,
+    );
+
+    await tester.tap(
+      find.byKey(
+        const ValueKey("empty-suggestion-List what's in this directory"),
+      ),
+    );
+    await tester.pump();
+
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller?.text,
+      "List what's in this directory",
+    );
+    expect(api.promptCalls, 0);
+  });
+
+  testWidgets('empty transcript chips are seeded from the active project', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi();
+    final controller = await _controller(api);
+    controller.directory = '/work/oc_app';
+    await _pumpChat(tester, api, controller: controller);
+
+    expect(
+      find.byKey(
+        const ValueKey('empty-suggestion-Explain the oc_app project'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('empty-suggestion-What changed recently?')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('long-pressing a user message offers copy and fork actions', (
+    tester,
+  ) async {
+    String? copiedText;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copiedText = (call.arguments as Map)['text'] as String?;
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('user-1', 'user', [
+          Part(type: 'text', text: 'Fix the login bug'),
+        ]),
+      ];
+    await _pumpChat(tester, api);
+
+    await tester.longPress(find.text('Fix the login bug'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('message-action-copy')), findsOneWidget);
+    expect(find.byKey(const ValueKey('message-action-fork')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('message-action-copy')));
+    await tester.pumpAndSettle();
+    expect(copiedText, 'Fix the login bug');
+    expect(find.text('Message text copied'), findsOneWidget);
+  });
+
+  testWidgets('deleting a message confirms, calls the server, and prunes it', (
+    tester,
+  ) async {
+    final serverMessages = <MessageWithParts>[
+      _message('user-1', 'user', [Part(type: 'text', text: 'first prompt')]),
+      _message('user-2', 'user', [
+        Part(type: 'text', text: 'second prompt'),
+      ], created: 2),
+    ];
+    final repository = _MessageDeleteRepository(serverMessages);
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => List.of(serverMessages);
+    await _pumpChat(tester, api, repository: repository);
+
+    await tester.longPress(find.text('first prompt'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('message-action-delete')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Delete this message?'), findsOneWidget);
+    expect(find.textContaining('File changes it made'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete message'));
+    await tester.pumpAndSettle();
+
+    expect(repository.deleted, [('session-1', 'user-1')]);
+    expect(find.text('first prompt'), findsNothing);
+    expect(find.text('second prompt'), findsOneWidget);
+  });
+
+  testWidgets('a failed message delete keeps the transcript intact', (
+    tester,
+  ) async {
+    final serverMessages = <MessageWithParts>[
+      _message('user-1', 'user', [Part(type: 'text', text: 'only prompt')]),
+    ];
+    final repository = _MessageDeleteRepository(serverMessages)
+      ..failure = const ProductException('Message deletion is unavailable');
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => List.of(serverMessages);
+    await _pumpChat(tester, api, repository: repository);
+
+    await tester.longPress(find.text('only prompt'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('message-action-delete')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete message'));
+    await tester.pumpAndSettle();
+
+    expect(repository.deleted, isEmpty);
+    expect(find.text('only prompt'), findsOneWidget);
+    expect(
+      find.textContaining('Message deletion is unavailable'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('composer divider doubles as the context window meter', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message(
+          'assistant-1',
+          'assistant',
+          [Part(type: 'text', text: 'done')],
+          providerID: 'p',
+          modelID: 'm',
+          tokens: Tokens(input: 45000, output: 5000),
+        ),
+      ];
+    final controller = await _controller(api);
+    controller.catalog = const CatalogSnapshot(
+      providers: [CatalogProvider(id: 'p', name: 'Provider', enabled: true)],
+      models: [
+        CatalogModel(
+          id: 'm',
+          providerID: 'p',
+          name: 'Model',
+          enabled: true,
+          status: 'active',
+          contextLimit: 100000,
+          outputLimit: 8192,
+          reasoning: false,
+          attachments: false,
+          tools: false,
+          variants: [],
+        ),
+      ],
+      agents: [],
+    );
+    await _pumpChat(tester, api, controller: controller);
+
+    final semantics = tester.ensureSemantics();
+    expect(
+      find.byKey(const ValueKey('composer-context-meter')),
+      findsOneWidget,
+    );
+    expect(
+      find.bySemanticsLabel('Context window 50 percent used'),
+      findsOneWidget,
+    );
+
+    // The fill must actually paint: half the track's width at full height.
+    await tester.pumpAndSettle();
+    final fillSize = tester.getSize(
+      find.byKey(const ValueKey('composer-context-meter-fill')),
+    );
+    final trackSize = tester.getSize(
+      find.byKey(const ValueKey('composer-context-meter')),
+    );
+    expect(fillSize.height, trackSize.height);
+    expect(
+      fillSize.width / trackSize.width,
+      moreOrLessEquals(.5, epsilon: .01),
+    );
+    semantics.dispose();
+  });
+
+  testWidgets('composer meter stays a plain divider without a known limit', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi();
+    await _pumpChat(tester, api);
+
+    expect(find.byKey(const ValueKey('composer-context-meter')), findsNothing);
+  });
+
+  testWidgets('Ctrl+Enter sends the drafted prompt', (tester) async {
+    final api = _FakeOpenCodeApi();
+    await _pumpChat(tester, api);
+
+    await tester.enterText(find.byKey(const Key('chat-composer-field')), 'go');
+    await tester.pump();
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await _pumpEvent(tester);
+
+    expect(api.promptCalls, 1);
+    expect(api.prompts.single.text, 'go');
+  });
+
+  testWidgets('session sheets fit a 320dp phone at 2x text', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(320, 640));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final api = _FakeOpenCodeApi();
+    final controller = await _controller(api);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(2)),
+            child: child!,
+          ),
+          home: const ChatScreen(sessionID: 'session-1'),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    expect(find.text('Timeline'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('session-view-timestamps')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Session actions'));
+    await tester.pumpAndSettle();
+    expect(find.text('Retry last prompt'), findsOneWidget);
+    await tester.drag(find.text('Retry last prompt'), const Offset(0, -400));
+    await tester.pumpAndSettle();
+    expect(find.text('Reload messages'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }

@@ -1,87 +1,159 @@
-// Integration smoke test against a real opencode server.
-// Usage: dart run tool/smoke_test.dart <baseUrl>
+// Integration smoke test against a real OpenCode server.
+// Usage: dart run tool/smoke_test.dart <baseUrl> [directory] [workspace]
 import 'dart:async';
 import 'dart:io';
 
-
+import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/sse.dart';
 
 Future<void> main(List<String> args) async {
   final baseUrl = args.isNotEmpty ? args[0] : 'http://127.0.0.1:4123';
   final api = OpenCodeApi(baseUrl: baseUrl);
+  final directory = args.length > 1 && args[1].trim().isNotEmpty
+      ? args[1].trim()
+      : null;
+  final workspace = args.length > 2 && args[2].trim().isNotEmpty
+      ? args[2].trim()
+      : null;
+  api.setLocation(directory: directory, workspace: workspace);
 
   var failures = 0;
+  Session? smokeSession;
+  EventStream? stream;
+
   void check(String name, bool ok, [String extra = '']) {
-    stdout.writeln('${ok ? 'PASS' : 'FAIL'}  $name ${extra.isEmpty ? '' : '- $extra'}');
+    stdout.writeln(
+      '${ok ? 'PASS' : 'FAIL'}  $name ${extra.isEmpty ? '' : '- $extra'}',
+    );
     if (!ok) failures++;
   }
 
-  // 1. Health
-  final h = await api.health();
-  check('health', h.healthy == true, 'version=${h.version}');
-
-  // 2. Sessions list + create + rename + delete
-  await api.sessions();
-  check('list sessions', true);
-  final s = await api.createSession();
-  check('create session', s.id.isNotEmpty);
-  await api.renameSession(s.id, 'smoke-test-session');
-  final renamed = await api.session(s.id);
-  check('rename session', renamed.title == 'smoke-test-session', 'title=${renamed.title}');
-  final msgs = await api.messages(s.id);
-  check('messages empty', msgs.isEmpty, '${msgs.length} messages');
-
-  // 3. Providers / agents catalogs
   try {
-    final p = await api.providers();
-    check('providers catalog', true, '${p.providers.length} providers');
-  } catch (e) {
-    check('providers catalog', false, '$e');
-  }
-  final agents = await api.agents();
-  check('agents catalog', agents.isNotEmpty, agents.map((a) => a.name).take(5).join(','));
+    final health = await api.health();
+    check('health', health.healthy, 'version=${health.version}');
+    if (directory != null) {
+      check(
+        'location scope',
+        api.directory == directory && api.workspace == workspace,
+        [directory, ?workspace].join(' · '),
+      );
+    }
 
-  // 4. Files
-  final rootFiles = await api.listFiles('');
-  check('file listing', rootFiles.isNotEmpty, '${rootFiles.length} entries at project root');
+    final gotConnectedEvent = Completer<bool>();
+    stream = EventStream(
+      api: api,
+      onStatus: (_) {},
+      onEvent: (event) {
+        if (event.type == 'server.connected' &&
+            !gotConnectedEvent.isCompleted) {
+          gotConnectedEvent.complete(true);
+        }
+      },
+      onError: (_) {
+        if (!gotConnectedEvent.isCompleted) {
+          gotConnectedEvent.complete(false);
+        }
+      },
+    )..start();
 
-  // 5. File search
-  try {
-    final found = await api.findFile('pubspec');
-    check('file search', found.isNotEmpty, found.take(2).join(', '));
-  } catch (_) {
-    check('file search', false, 'find/file unavailable');
-  }
+    await api.sessions();
+    check('list sessions', true);
+    final session = await api.createSession();
+    smokeSession = session;
+    check('create session', session.id.isNotEmpty);
 
-  // 6. SSE event stream: expect server.connected within 15s
-  final gotConnectedEvent = Completer<bool>();
-  final stream = EventStream(
-    api: api,
-    onStatus: (_) {},
-    onEvent: (env) {
-      if (env.type == 'server.connected' && !gotConnectedEvent.isCompleted) {
-        gotConnectedEvent.complete(true);
+    await api.renameSession(session.id, 'opencode-mobile-smoke');
+    final renamed = await api.session(session.id);
+    check(
+      'rename session',
+      renamed.title == 'opencode-mobile-smoke',
+      'title=${renamed.title}',
+    );
+
+    var messages = await api.messages(session.id);
+    check('messages empty', messages.isEmpty, '${messages.length} messages');
+
+    final providers = await api.providers();
+    check(
+      'providers catalog',
+      providers.providers.isNotEmpty,
+      '${providers.providers.length} providers',
+    );
+    final agents = await api.agents();
+    check(
+      'agents catalog',
+      agents.isNotEmpty,
+      agents.map((agent) => agent.name).take(5).join(','),
+    );
+
+    String? agent;
+    for (final candidate in agents) {
+      if (candidate.name == 'build') {
+        agent = candidate.name;
+        break;
       }
-      // 7. Session lifecycle events while we touch the session
-      if (env.type.contains('session') && !gotConnectedEvent.isCompleted) {
-        // any session traffic also proves the bus is alive
-      }
-    },
-    onError: (e) {
-      if (!gotConnectedEvent.isCompleted) gotConnectedEvent.complete(false);
-    },
-  )..start();
+    }
+    if (agent == null) {
+      check('model-free shell', false, 'build agent unavailable');
+    } else {
+      const expectedOutput = 'opencode-mobile-smoke-output';
+      await api.shell(
+        session.id,
+        command: 'printf $expectedOutput',
+        agent: agent,
+      );
+      messages = await api.messages(session.id);
+      final outputs = messages
+          .expand((message) => message.parts)
+          .where((part) => part.type == 'tool')
+          .map((part) => part.toolState.output?.trim())
+          .whereType<String>();
+      check(
+        'model-free shell and hydration',
+        outputs.contains(expectedOutput),
+        outputs.isEmpty ? 'no completed tool output' : outputs.join(' | '),
+      );
+    }
 
-  final ok = await gotConnectedEvent.future.timeout(
-    const Duration(seconds: 20),
-    onTimeout: () => false,
+    final rootFiles = await api.listFiles('');
+    check(
+      'file listing',
+      rootFiles.isNotEmpty,
+      '${rootFiles.length} entries at project root',
+    );
+
+    try {
+      final found = await api.findFile('pubspec');
+      check('file search', found.isNotEmpty, found.take(2).join(', '));
+    } catch (error) {
+      check('file search', false, '$error');
+    }
+
+    final streamConnected = await gotConnectedEvent.future.timeout(
+      const Duration(seconds: 20),
+      onTimeout: () => false,
+    );
+    check('SSE event stream', streamConnected);
+  } catch (error, stackTrace) {
+    check('unexpected smoke failure', false, '$error');
+    stderr.writeln(stackTrace);
+  } finally {
+    await stream?.dispose();
+    final session = smokeSession;
+    if (session != null) {
+      try {
+        await api.deleteSession(session.id);
+        check('cleanup session', true);
+      } catch (error) {
+        check('cleanup session', false, '$error');
+      }
+    }
+    api.close();
+  }
+
+  stdout.writeln(
+    failures == 0 ? '\nALL CHECKS PASSED' : '\n$failures CHECK(S) FAILED',
   );
-  check('SSE event stream', ok);
-
-  await stream.dispose();
-  await api.deleteSession(s.id).catchError((_) => false as dynamic);
-
-  stdout.writeln(failures == 0 ? '\nALL CHECKS PASSED' : '\n$failures CHECK(S) FAILED');
   exit(failures == 0 ? 0 : 1);
 }

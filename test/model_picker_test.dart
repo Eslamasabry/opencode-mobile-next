@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
+import 'package:opencode_mobile/api/provider_presentation.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
@@ -147,6 +148,7 @@ Future<_RefreshCountingController> _controller() async {
       agents: [
         CatalogAgent(id: 'build', mode: 'primary', hidden: false),
         CatalogAgent(id: 'plan', mode: 'primary', hidden: false),
+        CatalogAgent(id: 'explore', mode: 'subagent', hidden: false),
       ],
     )
     ..selectedAgent = 'build'
@@ -184,6 +186,75 @@ Widget _app(ConnectionController controller, {double textScale = 1}) {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  test('model presentation leads with current model and provider family', () {
+    const models = [
+      CatalogModel(
+        id: 'gemini-wire-first',
+        providerID: 'google',
+        name: 'Gemini wire first',
+        enabled: true,
+        status: 'active',
+        contextLimit: 1000000,
+        outputLimit: 64000,
+        reasoning: true,
+        attachments: true,
+        tools: true,
+        variants: [],
+      ),
+      CatalogModel(
+        id: 'gpt-current',
+        providerID: 'openai',
+        name: 'GPT current',
+        enabled: true,
+        status: 'active',
+        contextLimit: 400000,
+        outputLimit: 128000,
+        reasoning: true,
+        attachments: true,
+        tools: true,
+        variants: [],
+      ),
+      CatalogModel(
+        id: 'gpt-sibling',
+        providerID: 'openai',
+        name: 'GPT sibling',
+        enabled: true,
+        status: 'active',
+        contextLimit: 400000,
+        outputLimit: 128000,
+        reasoning: true,
+        attachments: true,
+        tools: true,
+        variants: [],
+      ),
+      CatalogModel(
+        id: 'local-last',
+        providerID: 'local',
+        name: 'Local last',
+        enabled: true,
+        status: 'active',
+        contextLimit: 32000,
+        outputLimit: 4000,
+        reasoning: false,
+        attachments: false,
+        tools: false,
+        variants: [],
+      ),
+    ];
+
+    final ordered = presentModels(
+      models,
+      selected: ModelRef(providerID: 'openai', modelID: 'gpt-current'),
+    );
+
+    expect(ordered.map((model) => '${model.providerID}/${model.id}').toList(), [
+      'openai/gpt-current',
+      'openai/gpt-sibling',
+      'google/gemini-wire-first',
+      'local/local-last',
+    ]);
+  });
 
   testWidgets('model selector searches and persists a new selection', (
     tester,
@@ -224,6 +295,51 @@ void main() {
     expect(find.text('Model, mode & agent'), findsNothing);
   });
 
+  testWidgets('current model and provider family lead the unfiltered catalog', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(411, 891));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    final existing = controller.catalog!;
+    controller.catalog = CatalogSnapshot(
+      providers: const [
+        CatalogProvider(id: 'google', name: 'Google', enabled: true),
+        CatalogProvider(id: 'opencode', name: 'OpenCode Zen', enabled: true),
+        CatalogProvider(id: 'local', name: 'Local models', enabled: true),
+      ],
+      models: [
+        const CatalogModel(
+          id: 'gemini-first-on-wire',
+          providerID: 'google',
+          name: 'Gemini first on wire',
+          enabled: true,
+          status: 'active',
+          contextLimit: 1000000,
+          outputLimit: 64000,
+          reasoning: true,
+          attachments: true,
+          tools: true,
+          variants: [],
+        ),
+        ...existing.models,
+      ],
+      agents: existing.agents,
+    );
+    await tester.pumpWidget(_app(controller));
+
+    await tester.tap(find.text('Choose model'));
+    await tester.pumpAndSettle();
+
+    final current = find.byKey(
+      const Key('model-option-opencode-nemotron-3.5-lightning-free'),
+    );
+    expect(current, findsOneWidget);
+    expect(tester.getTopLeft(current).dy, lessThan(891));
+    expect(find.text('Use model and mode'), findsOneWidget);
+  });
+
   testWidgets('explicit fast thinking mode is selected and persisted', (
     tester,
   ) async {
@@ -237,10 +353,17 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Fast modes'));
     await tester.pumpAndSettle();
-    expect(find.text('Nemotron Lightning'), findsOneWidget);
+    // The pinned apply bar also names the drafted (current) model, so the
+    // name can appear twice while its row stays unique.
+    expect(
+      find.byKey(const Key('model-option-opencode-nemotron-3.5-lightning-free')),
+      findsOneWidget,
+    );
     expect(find.text('Nemotron Ultra'), findsNothing);
 
-    await tester.tap(find.text('Nemotron Lightning'));
+    await tester.tap(
+      find.byKey(const Key('model-option-opencode-nemotron-3.5-lightning-free')),
+    );
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('fast · low effort'));
     await tester.pumpAndSettle();
@@ -251,6 +374,23 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(controller.selectedVariant, 'fast');
+  });
+
+  testWidgets('primary agent picker excludes subagents', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(411, 891));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(controller));
+
+    await tester.tap(find.text('Choose model'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('model-picker-agent')));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('build · primary'), findsWidgets);
+    expect(find.textContaining('plan · primary'), findsOneWidget);
+    expect(find.textContaining('explore'), findsNothing);
   });
 
   testWidgets('Z.AI aliases share a filter but retain exact backend routes', (
@@ -314,5 +454,33 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('model-picker-provider')), findsWidgets);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('apply bar stays pinned while browsing models', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(411, 891));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(controller));
+
+    await tester.tap(find.text('Choose model'));
+    await tester.pumpAndSettle();
+
+    // The current model is drafted on open, so its apply action is already
+    // visible without scrolling.
+    expect(find.byKey(const Key('model-picker-apply-bar')), findsOneWidget);
+    expect(
+      find.byKey(const Key('use-model-opencode-nemotron-3.5-lightning-free')),
+      findsOneWidget,
+    );
+
+    // Tapping another row re-targets the same pinned bar immediately.
+    await tester.tap(find.text('Nemotron Ultra'));
+    await tester.pump();
+    expect(
+      find.byKey(const Key('use-model-opencode-nemotron-3-ultra-free')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('model-picker-apply-bar')), findsOneWidget);
   });
 }

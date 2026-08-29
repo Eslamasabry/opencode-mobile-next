@@ -1,0 +1,132 @@
+# OWNER ACTION REQUIRED before this gate can run at all:
+# Every recorded run of this workflow (35/35 as of 2026-08-28) failed in ~5s
+# with zero steps and runner_id 0. The check-run annotation on each says:
+#   "The job was not started because recent account payments have failed or
+#    your spending limit needs to be increased. Please check the
+#    'Billing & plans' section in your settings"
+# This is a GitHub account-level block, not a workflow defect. Fix it at
+# https://github.com/settings/billing (resolve the failed payment or raise
+# the Actions spending limit), then re-run any run or push to verify.
+# Nothing inside this file can lift that block.
+
+name: Android quality gate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - production/android-release-hardening
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Java 17
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up pinned Flutter
+        uses: subosito/flutter-action@fd55f4c5af5b953cc57a2be44cb082c8f6635e8e # v2.21.0
+        with:
+          flutter-version: 3.47.1
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Resolve generated SDK dependencies
+        run: dart pub get --directory packages/opencode_sdk --enforce-lockfile
+
+      - name: Verify generated OpenCode SDK integrity
+        run: |
+          dart run tool/sdk/verify_contract.dart \
+            contracts/opencode-openapi-03bba464.json \
+            contracts/opencode-sdk-manifest.json before
+          dart run tool/sdk/verify_generated.dart \
+            packages/opencode_sdk \
+            contracts/opencode-sdk-manifest.json
+          dart run tool/sdk/verify_contract_matrix.dart \
+            contracts/opencode-openapi-03bba464.json \
+            contracts/opencode-sdk-manifest.json \
+            packages/opencode_sdk \
+            contracts/opencode-sdk-matrix.json \
+            contracts/opencode-sdk-matrix.md
+          dart run tool/sdk/verify_artifacts_independent.dart \
+            contracts/opencode-openapi-03bba464.json \
+            contracts/opencode-sdk-manifest.json \
+            packages/opencode_sdk \
+            contracts/opencode-sdk-matrix.json \
+            contracts/opencode-sdk-matrix.md
+
+      - name: Test generated OpenCode SDK
+        working-directory: packages/opencode_sdk
+        run: dart test
+
+      - name: Analyze generated OpenCode SDK
+        working-directory: packages/opencode_sdk
+        run: dart analyze
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        # Chunked into thirds so one hung invocation cannot consume the whole
+        # job timeout; each chunk keeps the repo's serial --concurrency=1.
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(ls test/*_test.dart | sort)
+          total=${#files[@]}
+          test "$total" -gt 0
+          third=$(( (total + 2) / 3 ))
+          for start in 0 "$third" $((third * 2)); do
+            chunk=("${files[@]:start:third}")
+            [ ${#chunk[@]} -eq 0 ] && continue
+            flutter test --concurrency=1 "${chunk[@]}"
+          done
+
+      - name: Create isolated CI signing identity
+        env:
+          CI_KEYSTORE: ${{ runner.temp }}/opencode-ci-release.jks
+        run: |
+          keytool -genkeypair -noprompt \
+            -keystore "$CI_KEYSTORE" \
+            -storepass ci-not-for-distribution \
+            -keypass ci-not-for-distribution \
+            -alias ci-release \
+            -keyalg RSA \
+            -keysize 3072 \
+            -validity 1 \
+            -dname "CN=CI Build, O=OpenCode Mobile"
+          chmod 600 "$CI_KEYSTORE"
+          printf '%s\n' \
+            "storeFile=$CI_KEYSTORE" \
+            'storePassword=ci-not-for-distribution' \
+            'keyAlias=ci-release' \
+            'keyPassword=ci-not-for-distribution' \
+            > android/key.properties
+          chmod 600 android/key.properties
+
+      - name: Run Android release lint
+        run: ./android/gradlew -p android :app:lintRelease --no-daemon
+
+      - name: Compile test-signed release APK
+        run: flutter build apk --release
+
+      - name: Verify release artifact exists
+        run: test -s build/app/outputs/flutter-apk/app-release.apk

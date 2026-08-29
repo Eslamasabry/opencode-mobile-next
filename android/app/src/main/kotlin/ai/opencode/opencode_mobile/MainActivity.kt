@@ -26,9 +26,11 @@ class MainActivity : FlutterActivity() {
     private var permissionResult: MethodChannel.Result? = null
     private var microphonePermissionResult: MethodChannel.Result? = null
     private var backgroundPermissionResult: MethodChannel.Result? = null
+    private var pendingCodingAlertOpen: Map<String, String>? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        captureCodingAlertOpen(intent)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL_NAME)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
@@ -65,7 +67,14 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, BACKGROUND_CHANNEL_NAME)
+        val background = MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            BACKGROUND_CHANNEL_NAME
+        )
+        // Notification-action broadcasts reach Dart through this channel even
+        // while the Activity is backgrounded; see CodingActionReceiver.
+        backgroundChannel = background
+        background
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "getStatus" -> result.success(backgroundStatus())
@@ -78,9 +87,84 @@ class MainActivity : FlutterActivity() {
                         requestBatteryOptimizationExemption()
                         result.success(backgroundStatus())
                     }
+                    "showCodingAlert" -> {
+                        val kind = call.argument<String>("kind").orEmpty()
+                        val sessionID = call.argument<String>("sessionID").orEmpty()
+                        val key = call.argument<String>("key").orEmpty()
+                        val quickReply = call.argument<Boolean>("quickReply") ?: false
+                        val requestID = call.argument<String>("requestID").orEmpty()
+                        result.success(
+                            mapOf(
+                                "shown" to BackgroundConnectionService.showCodingAlert(
+                                    this,
+                                    kind = kind,
+                                    sessionID = sessionID,
+                                    key = key,
+                                    quickReply = quickReply,
+                                    requestID = requestID
+                                )
+                            )
+                        )
+                    }
+                    "dismissCodingAlert" -> {
+                        val key = call.argument<String>("key").orEmpty()
+                        result.success(
+                            mapOf(
+                                "dismissed" to BackgroundConnectionService.dismissCodingAlert(
+                                    this,
+                                    key
+                                )
+                            )
+                        )
+                    }
+                    "consumeCodingAlertOpen" -> {
+                        val pending = pendingCodingAlertOpen
+                        pendingCodingAlertOpen = null
+                        result.success(pending ?: emptyMap<String, String>())
+                    }
+                    "refreshHomeWidget" -> {
+                        SessionsWidgetProvider.refreshAll(this)
+                        result.success(mapOf("refreshed" to true))
+                    }
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        if (backgroundChannel != null) backgroundChannel = null
+        super.cleanUpFlutterEngine(flutterEngine)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        captureCodingAlertOpen(intent)
+    }
+
+    private fun captureCodingAlertOpen(intent: Intent?) {
+        if (intent == null) return
+        val kind = intent.getStringExtra(
+            BackgroundConnectionService.EXTRA_CODING_ALERT_KIND
+        ).orEmpty()
+        val sessionID = intent.getStringExtra(
+            BackgroundConnectionService.EXTRA_CODING_ALERT_SESSION_ID
+        ).orEmpty()
+        val profileID = intent.getStringExtra(
+            BackgroundConnectionService.EXTRA_CODING_ALERT_PROFILE_ID
+        ).orEmpty()
+        if (kind.isNotBlank() && sessionID.isNotBlank()) {
+            pendingCodingAlertOpen = mapOf(
+                "kind" to kind,
+                "sessionID" to sessionID,
+                // Set by widget-row taps only; Dart drops the destination
+                // when it names a profile other than the active one.
+                "profileID" to profileID
+            )
+        }
+        intent.removeExtra(BackgroundConnectionService.EXTRA_CODING_ALERT_KIND)
+        intent.removeExtra(BackgroundConnectionService.EXTRA_CODING_ALERT_SESSION_ID)
+        intent.removeExtra(BackgroundConnectionService.EXTRA_CODING_ALERT_PROFILE_ID)
     }
 
     override fun onRequestPermissionsResult(
@@ -373,6 +457,11 @@ class MainActivity : FlutterActivity() {
     }
 
     companion object {
+        // The live background channel, readable by CodingActionReceiver while
+        // the engine survives in the backgrounded process.
+        @Volatile
+        var backgroundChannel: MethodChannel? = null
+
         private const val CHANNEL_NAME = "oc/termux"
         private const val VOICE_CHANNEL_NAME = "oc/voice"
         private const val BACKGROUND_CHANNEL_NAME = "oc/background"

@@ -24749,11 +24749,11 @@
       "name": "ModelCapabilities",
       "canonicalSchemaHash": "59d2aa7d3a79b74ec0a3fe3d5140a29c1ba5d849aa1b0f86d80de143432307e1",
       "generated": {
-        "normalizedName": "ModelCapabilities",
-        "file": "lib/src/model/model_capabilities.dart",
-        "declaration": "ModelCapabilities",
+        "normalizedName": "ModelV2Capabilities",
+        "file": "lib/src/model/model_v2_capabilities.dart",
+        "declaration": "ModelV2Capabilities",
         "kind": "model",
-        "codecFile": "lib/src/model/model_capabilities.g.dart",
+        "codecFile": "lib/src/model/model_v2_capabilities.g.dart",
         "codec": "json_serializable fromJson/toJson"
       }
     },

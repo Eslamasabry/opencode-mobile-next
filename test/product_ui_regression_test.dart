@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
@@ -15,6 +16,7 @@ import 'package:opencode_mobile/ui/screens/library_screen.dart';
 import 'package:opencode_mobile/ui/screens/requests_screen.dart';
 import 'package:opencode_mobile/ui/screens/servers_screen.dart';
 import 'package:opencode_mobile/ui/screens/terminal_screen.dart';
+import 'package:opencode_mobile/ui/widgets/file_preview.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xterm/xterm.dart';
 
@@ -78,7 +80,44 @@ class _LocationRepository
   Future<CatalogSnapshot> loadCatalog() async => catalog;
 
   @override
+  Future<List<VersionControlFile>> listFileStatuses() async => const [];
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FileStatusRepository extends _LocationRepository {
+  List<VersionControlFile> statuses = const [];
+  List<FileDiff> diffs = const [];
+  Object? statusError;
+  int statusLoads = 0;
+  int diffLoads = 0;
+
+  @override
+  Future<List<VersionControlFile>> listFileStatuses() async {
+    statusLoads++;
+    if (statusError case final error?) throw error;
+    return statuses;
+  }
+
+  @override
+  Future<List<FileDiff>> listVcsDiffs(VcsDiffMode mode) async {
+    diffLoads++;
+    return diffs;
+  }
+}
+
+class _SymbolRepository extends _LocationRepository {
+  final queries = <String>[];
+  List<WorkspaceSymbol> symbols = const [];
+  Object? symbolError;
+
+  @override
+  Future<List<WorkspaceSymbol>> findWorkspaceSymbols(String query) async {
+    queries.add(query);
+    if (symbolError case final error?) throw error;
+    return symbols;
+  }
 }
 
 class _MemoryChannel implements TerminalChannel {
@@ -88,6 +127,9 @@ class _MemoryChannel implements TerminalChannel {
 
   @override
   Stream<String> get output => controller.stream;
+
+  @override
+  int? get cursor => null;
 
   @override
   void write(String value) => writes.add(value);
@@ -115,7 +157,7 @@ class _TerminalRepository extends _LocationRepository {
   int resizeCalls = 0;
 
   @override
-  Future<TerminalChannel> connectTerminal(String id) async {
+  Future<TerminalChannel> connectTerminal(String id, {int? cursor}) async {
     final channel = _MemoryChannel();
     channels.add(channel);
     return channel;
@@ -173,7 +215,10 @@ class _ReconnectController extends ConnectionController {
   final Completer<void> ready;
 
   @override
-  Future<void> connect(ServerProfile profile) async {
+  Future<void> connect(
+    ServerProfile profile, {
+    bool redetectOnFailure = true,
+  }) async {
     status = StreamStatus.connecting;
     notifyListeners();
     await ready.future;
@@ -189,7 +234,10 @@ class _ImmediateController extends ConnectionController {
   _ImmediateController(super.store);
 
   @override
-  Future<void> connect(ServerProfile profile) async {
+  Future<void> connect(
+    ServerProfile profile, {
+    bool redetectOnFailure = true,
+  }) async {
     await store.setActiveId(profile.id);
     api = _TestApi();
     repository = _LocationRepository();
@@ -388,6 +436,319 @@ void main() {
     expect(requestedPaths.last, 'lib');
   });
 
+  testWidgets(
+    'files show exact changes and aggregate nested changes without crowding',
+    (tester) async {
+      final api = _TestApi(
+        files: (path) async => switch (path) {
+          '' => [
+            FileNode(name: 'lib', path: 'lib', isDir: true),
+            FileNode(name: 'README.md', path: 'README.md', isDir: false),
+          ],
+          'lib' => [
+            FileNode(name: 'main.dart', path: 'lib/main.dart', isDir: false),
+          ],
+          _ => const <FileNode>[],
+        },
+      );
+      final repository = _FileStatusRepository()
+        ..statuses = const [
+          VersionControlFile(
+            path: '/README.md',
+            status: 'modified',
+            additions: 8,
+            deletions: 2,
+          ),
+          VersionControlFile(
+            path: 'lib/main.dart',
+            status: 'added',
+            additions: 34,
+            deletions: 0,
+          ),
+          VersionControlFile(
+            path: 'gone.txt',
+            status: 'deleted',
+            additions: 0,
+            deletions: 12,
+          ),
+        ]
+        ..diffs = [
+          FileDiff(
+            file: 'lib/main.dart',
+            patch: '@@ -0,0 +1 @@\n+library change',
+            additions: 1,
+            deletions: 0,
+          ),
+          FileDiff(
+            file: 'README.md',
+            patch: '@@ -1 +1 @@\n-old readme\n+new readme',
+            additions: 1,
+            deletions: 1,
+          ),
+          FileDiff(
+            file: 'gone.txt',
+            patch: '@@ -1 +0,0 @@\n-deleted text',
+            additions: 0,
+            deletions: 1,
+            status: 'deleted',
+          ),
+        ];
+      final controller = await _controller(api: api, repository: repository);
+      addTearDown(controller.dispose);
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: const TextScaler.linear(2)),
+              child: Scaffold(body: FilesScreen(controller: controller)),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('folder-change-count')), findsOneWidget);
+      expect(find.text('1 changed file'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('review-file-change-README.md')),
+        findsOneWidget,
+      );
+      expect(find.text('Modified · +8 −2'), findsOneWidget);
+      expect(find.text('gone.txt'), findsOneWidget);
+      expect(find.text('Deleted · −12'), findsOneWidget);
+      expect(
+        tester
+            .widget<ListTile>(
+              find.byKey(const ValueKey('project-file-gone.txt')),
+            )
+            .onTap,
+        isNull,
+      );
+      expect(
+        find.byKey(const ValueKey('review-file-change-gone.txt')),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+
+      await tester.tap(
+        find.byKey(const ValueKey('review-file-change-README.md')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('review-workspace')), findsOneWidget);
+      expect(find.byKey(const Key('review-scope-picker')), findsNothing);
+      expect(find.text('+new readme'), findsOneWidget);
+      expect(find.text('+library change'), findsNothing);
+      expect(repository.diffLoads, 1);
+      expect(tester.takeException(), isNull);
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('lib'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('review-file-change-lib/main.dart')),
+        findsOneWidget,
+      );
+      expect(find.text('Added · +34'), findsOneWidget);
+      expect(repository.statusLoads, greaterThanOrEqualTo(2));
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('file review comments return to the active chat callback', (
+    tester,
+  ) async {
+    final api = _TestApi(
+      files: (_) async => [
+        FileNode(name: 'README.md', path: 'README.md', isDir: false),
+      ],
+    );
+    final repository = _FileStatusRepository()
+      ..statuses = const [
+        VersionControlFile(
+          path: 'README.md',
+          status: 'modified',
+          additions: 1,
+          deletions: 1,
+        ),
+      ]
+      ..diffs = [
+        FileDiff(
+          file: 'README.md',
+          patch: '@@ -1 +1 @@\n-old copy\n+new copy',
+          additions: 1,
+          deletions: 1,
+        ),
+      ];
+    final controller = await _controller(api: api, repository: repository);
+    addTearDown(controller.dispose);
+    String? reviewPrompt;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: FilesScreen(
+            controller: controller,
+            onReviewPrompt: (value) => reviewPrompt = value,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byKey(const ValueKey('review-file-change-README.md')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ask about file'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('review-comment-field')),
+      'Keep this wording precise.',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('review-add-to-prompt')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('review-workspace')), findsNothing);
+    expect(reviewPrompt, contains('Review `README.md`'));
+    expect(reviewPrompt, contains('Keep this wording precise.'));
+    expect(
+      find.text('Review comment added. Return to the chat to continue.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('top-level file review copies its comment for another chat', (
+    tester,
+  ) async {
+    String? copiedText;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copiedText = (call.arguments as Map)['text'] as String?;
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    final api = _TestApi(
+      files: (_) async => [
+        FileNode(name: 'README.md', path: 'README.md', isDir: false),
+      ],
+    );
+    final repository = _FileStatusRepository()
+      ..statuses = const [
+        VersionControlFile(
+          path: 'README.md',
+          status: 'modified',
+          additions: 1,
+          deletions: 1,
+        ),
+      ]
+      ..diffs = [
+        FileDiff(
+          file: 'README.md',
+          patch: '@@ -1 +1 @@\n-old copy\n+new copy',
+          additions: 1,
+          deletions: 1,
+        ),
+      ];
+    final controller = await _controller(api: api, repository: repository);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: FilesScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('review-file-change-README.md')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ask about file'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('review-comment-field')),
+      'Use the approved wording.',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('review-add-to-prompt')));
+    await tester.pumpAndSettle();
+
+    expect(copiedText, contains('Review `README.md`'));
+    expect(copiedText, contains('Use the approved wording.'));
+    expect(
+      find.text('Review comment copied. Paste it into a chat.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('file status failure stays scoped and retries independently', (
+    tester,
+  ) async {
+    final api = _TestApi(
+      files: (_) async => [
+        FileNode(name: 'README.md', path: 'README.md', isDir: false),
+      ],
+    );
+    final repository = _FileStatusRepository()
+      ..statusError = const ProductException('Old server');
+    final controller = await _controller(api: api, repository: repository);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: FilesScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('README.md'), findsOneWidget);
+    expect(find.byKey(const ValueKey('file-status-notice')), findsOneWidget);
+    expect(
+      find.text('File change indicators are unavailable on this server.'),
+      findsOneWidget,
+    );
+
+    repository
+      ..statusError = null
+      ..statuses = const [
+        VersionControlFile(
+          path: 'README.md',
+          status: 'modified',
+          additions: 1,
+          deletions: 0,
+        ),
+      ];
+    await tester.tap(find.text('Try again'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('file-status-notice')), findsNothing);
+    expect(
+      find.byKey(const ValueKey('review-file-change-README.md')),
+      findsOneWidget,
+    );
+    expect(repository.statusLoads, 2);
+  });
+
   testWidgets('foreground refresh reloads the current file directory', (
     tester,
   ) async {
@@ -561,6 +922,206 @@ void main() {
     expect(find.byKey(const Key('file-preview-image')), findsOneWidget);
     expect(find.text('Pinch to zoom'), findsOneWidget);
     expect(find.byType(InteractiveViewer), findsOneWidget);
+    expect(find.byKey(const Key('project-file-download')), findsOneWidget);
+    expect(find.byKey(const Key('project-file-attach')), findsNothing);
+  });
+
+  testWidgets('chat file viewer can attach the original project file', (
+    tester,
+  ) async {
+    const path = 'docs/review.md';
+    const body = '# Review\n\nAdd a focused follow-up comment.';
+    final api = _TestApi(
+      files: (_) async => [
+        FileNode(name: 'review.md', path: path, isDir: false),
+      ],
+      contents: const {path: FileContent(body, mimeType: 'text/markdown')},
+    );
+    final controller = await _controller(
+      api: api,
+      repository: _LocationRepository(),
+    );
+    addTearDown(controller.dispose);
+    String? attachedPath;
+    FilePreviewData? attachedData;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: FilesScreen(
+            controller: controller,
+            onAttachFile: (path, data) async {
+              attachedPath = path;
+              attachedData = data;
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('review.md'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('project-file-download')), findsOneWidget);
+    expect(find.byKey(const Key('project-file-attach')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('project-file-attach')));
+    await tester.pumpAndSettle();
+
+    expect(attachedPath, path);
+    expect(attachedData?.name, 'review.md');
+    expect(attachedData?.mimeType, 'text/markdown');
+    expect(attachedData?.text, body);
+    expect(
+      find.text('review.md attached. Return to the chat to add your comment.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('symbol search opens the exact source line in file preview', (
+    tester,
+  ) async {
+    final source = List.generate(
+      70,
+      (index) => index == 41
+          ? 'class ProjectHealthScreen extends StatefulWidget {'
+          : '// line ${index + 1}',
+    ).join('\n');
+    final api = _TestApi(
+      files: (_) async => const [],
+      contents: {
+        'lib/ui/project_health_screen.dart': FileContent(
+          source,
+          type: 'text',
+          mimeType: 'text/plain',
+        ),
+      },
+    );
+    final repository = _SymbolRepository()
+      ..symbols = const [
+        WorkspaceSymbol(
+          name: 'ProjectHealthScreen',
+          kind: 5,
+          path: 'lib/ui/project_health_screen.dart',
+          line: 42,
+          column: 7,
+        ),
+      ];
+    final controller = await _controller(api: api, repository: repository);
+    addTearDown(controller.dispose);
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(2)),
+            child: Scaffold(body: FilesScreen(controller: controller)),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Symbols'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'ProjectHealth');
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pumpAndSettle();
+
+    expect(repository.queries, ['ProjectHealth']);
+    expect(find.text('ProjectHealthScreen'), findsOneWidget);
+    expect(
+      find.textContaining('lib/ui/project_health_screen.dart:42:7'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('ProjectHealthScreen'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Line 42'), findsOneWidget);
+    expect(
+      find.byKey(const Key('file-preview-focused-source')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('file-preview-target-line')), findsOneWidget);
+    expect(
+      find.text('class ProjectHealthScreen extends StatefulWidget {'),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('symbol search debounces typing and explains empty results', (
+    tester,
+  ) async {
+    final api = _TestApi(files: (_) async => const []);
+    final repository = _SymbolRepository();
+    final controller = await _controller(api: api, repository: repository);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: FilesScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Symbols'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'MissingSymbol');
+    await tester.pump(const Duration(milliseconds: 349));
+    expect(repository.queries, isEmpty);
+    await tester.pump(const Duration(milliseconds: 1));
+    await tester.pumpAndSettle();
+
+    expect(repository.queries, ['MissingSymbol']);
+    expect(find.text('No symbols found'), findsOneWidget);
+    expect(
+      find.textContaining('do not support workspace-wide symbol search'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('unavailable symbol search leaves file browsing intact', (
+    tester,
+  ) async {
+    final api = _TestApi(
+      files: (_) async => [
+        FileNode(name: 'README.md', path: 'README.md', isDir: false),
+      ],
+    );
+    final repository = _SymbolRepository()
+      ..symbolError = const ProductException(
+        'Symbol search is unavailable on this server',
+      );
+    final controller = await _controller(api: api, repository: repository);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: FilesScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('README.md'), findsOneWidget);
+
+    await tester.tap(find.text('Symbols'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Missing');
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Symbol search is unavailable on this server'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Files'));
+    await tester.pumpAndSettle();
+    expect(find.text('README.md'), findsOneWidget);
   });
 
   testWidgets(
@@ -749,9 +1310,12 @@ void main() {
     await tester.tap(find.text('Run a shell command'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Reject'), findsOneWidget);
-    expect(find.text('Always'), findsOneWidget);
-    expect(find.text('Allow once'), findsOneWidget);
+    // The tile now opens the shared permission sheet; its triad is stacked
+    // full-width, so a 280dp screen must still render all three actions.
+    expect(find.byKey(const Key('permission-sheet')), findsOneWidget);
+    expect(find.byKey(const Key('permission-allow-once')), findsOneWidget);
+    expect(find.byKey(const Key('permission-allow-always')), findsOneWidget);
+    expect(find.byKey(const Key('permission-reject')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -862,10 +1426,12 @@ void main() {
         child: const MaterialApp(home: ServersScreen()),
       ),
     );
-    await tester.tap(find.text('Remote machine (LAN)'));
+    await tester.tap(find.byKey(const ValueKey('welcome-connect-card')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Add server'), findsNWidgets(2));
+    expect(find.text('Add server'), findsOneWidget);
+    expect(find.byKey(const ValueKey('server-profile-editor')), findsOneWidget);
+    expect(find.byType(AlertDialog), findsNothing);
     expect(find.text('Server URL'), findsOneWidget);
     expect(store.profiles, isEmpty);
     expect(find.text('Start the server'), findsNothing);

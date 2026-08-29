@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/api/mcp_oauth.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/library_screen.dart';
+import 'package:opencode_mobile/ui/screens/mcp_setup_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _IntegrationsRepository implements ProductRepository {
@@ -14,13 +18,36 @@ class _IntegrationsRepository implements ProductRepository {
   Object? serverError;
   Object? resourceError;
   Object? integrationError;
-  String mcpAuthorizationUrl = 'https://mcp-auth.example.com/authorize';
+  Object? providerDisconnectError;
+  McpAuthLaunch mcpAuthLaunch = McpAuthLaunch(
+    authorizationUrl: Uri.parse(
+      'https://mcp-auth.example.com/authorize?redirect_uri='
+      'http%3A%2F%2F127.0.0.1%3A19876%2Fmcp%2Foauth%2Fcallback',
+    ),
+    oauthState: 'mcp-state-1',
+  );
   IntegrationAuthLaunch oauthLaunch = const IntegrationAuthLaunch(
+    attemptID: 'attempt-1',
     url: 'https://provider-auth.example.com/authorize',
     instructions: '',
+    mode: IntegrationAuthMode.auto,
+  );
+  IntegrationAuthStatus oauthStatus = const IntegrationAuthStatus(
+    state: IntegrationAuthState.pending,
   );
   Map<String, String>? oauthInputs;
   int oauthCalls = 0;
+  int oauthStatusCalls = 0;
+  int oauthCompleteCalls = 0;
+  int oauthCancelCalls = 0;
+  int providerRefreshCalls = 0;
+  int providerDisconnectCalls = 0;
+  int mcpConnectCalls = 0;
+  int mcpCompleteCalls = 0;
+  int mcpCancelCalls = 0;
+  String? mcpCompletionCode;
+  IntegrationInfo? disconnectedIntegration;
+  String? oauthCompletionCode;
 
   @override
   void setLocation({String? directory, String? workspace}) {}
@@ -44,8 +71,29 @@ class _IntegrationsRepository implements ProductRepository {
   }
 
   @override
-  Future<String> startMcpAuthentication(String name) async =>
-      mcpAuthorizationUrl;
+  Future<McpAuthLaunch> startMcpAuthentication(String name) async =>
+      mcpAuthLaunch;
+
+  @override
+  Future<McpServerInfo> completeMcpAuthentication(
+    String name,
+    String code,
+  ) async {
+    mcpCompleteCalls += 1;
+    mcpCompletionCode = code;
+    servers = [McpServerInfo(name: name, status: 'connected')];
+    return servers.single;
+  }
+
+  @override
+  Future<void> cancelMcpAuthentication(String name) async {
+    mcpCancelCalls += 1;
+  }
+
+  @override
+  Future<void> connectMcp(String name) async {
+    mcpConnectCalls += 1;
+  }
 
   @override
   Future<IntegrationAuthLaunch> startIntegrationOAuth(
@@ -60,7 +108,75 @@ class _IntegrationsRepository implements ProductRepository {
   }
 
   @override
+  Future<IntegrationAuthStatus> integrationOAuthStatus(String attemptID) async {
+    oauthStatusCalls++;
+    return oauthStatus;
+  }
+
+  @override
+  Future<void> completeIntegrationOAuth(
+    String attemptID, {
+    String? code,
+  }) async {
+    oauthCompleteCalls++;
+    oauthCompletionCode = code;
+  }
+
+  @override
+  Future<void> cancelIntegrationOAuth(String attemptID) async {
+    oauthCancelCalls++;
+  }
+
+  @override
+  Future<void> refreshProviderRuntime() async {
+    providerRefreshCalls++;
+  }
+
+  @override
+  Future<void> disconnectIntegration(IntegrationInfo integration) async {
+    providerDisconnectCalls++;
+    disconnectedIntegration = integration;
+    if (providerDisconnectError case final error?) throw error;
+    integrations = [
+      for (final current in integrations)
+        if (current.id != integration.id)
+          current
+        else
+          IntegrationInfo(
+            id: current.id,
+            name: current.name,
+            methods: current.methods,
+            connections: current.connections
+                .where((connection) => connection.type != 'credential')
+                .toList(),
+            connectionCount: current.connections
+                .where((connection) => connection.type != 'credential')
+                .length,
+          ),
+    ];
+  }
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _SwitchingRepositoryController extends ConnectionController {
+  _SwitchingRepositoryController(
+    super.store,
+    this.initialRepository,
+    this.readyRepository,
+  );
+
+  final ProductRepository initialRepository;
+  final Completer<ProductRepository?> readyRepository;
+  int actionRepositoryCalls = 0;
+
+  @override
+  Future<ProductRepository?> prepareActionRepository() {
+    actionRepositoryCalls += 1;
+    if (actionRepositoryCalls == 1) return Future.value(initialRepository);
+    return readyRepository.future;
+  }
 }
 
 Future<ConnectionController> _controller(ProductRepository repository) async {
@@ -71,8 +187,23 @@ Future<ConnectionController> _controller(ProductRepository repository) async {
     ..status = StreamStatus.connected;
 }
 
-Widget _app(ConnectionController controller) =>
-    MaterialApp(home: IntegrationsScreen(controller: controller));
+Widget _app(
+  ConnectionController controller, {
+  Future<bool> Function(Uri destination)? authorizationLauncher,
+  double textScale = 1,
+}) => MaterialApp(
+  home: Builder(
+    builder: (context) => MediaQuery(
+      data: MediaQuery.of(
+        context,
+      ).copyWith(textScaler: TextScaler.linear(textScale)),
+      child: IntegrationsScreen(
+        controller: controller,
+        authorizationLauncher: authorizationLauncher,
+      ),
+    ),
+  ),
+);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -128,6 +259,22 @@ void main() {
     },
   );
 
+  testWidgets('empty MCP state opens persistent native setup', (tester) async {
+    final controller = await _controller(_IntegrationsRepository());
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No MCP servers configured'), findsOneWidget);
+    expect(find.byKey(const ValueKey('add-mcp-server')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('add-mcp-server')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(McpSetupScreen), findsOneWidget);
+    expect(find.text('Persisted configuration'), findsOneWidget);
+  });
+
   testWidgets('provider aliases retain separate regional connection states', (
     tester,
   ) async {
@@ -159,6 +306,185 @@ void main() {
     expect(find.text('Connect'), findsOneWidget);
   });
 
+  testWidgets(
+    'stored provider credential requires confirmation before disconnect',
+    (tester) async {
+      final repository = _IntegrationsRepository()
+        ..integrations = const [
+          IntegrationInfo(
+            id: 'cloud',
+            name: 'Cloud Provider',
+            methods: [IntegrationMethodInfo(type: 'key', label: 'API key')],
+            connections: [
+              IntegrationConnectionInfo(
+                type: 'credential',
+                id: 'credential-1',
+                label: 'Personal key',
+              ),
+            ],
+            connectionCount: 1,
+          ),
+        ];
+      final controller = await _controller(repository);
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(_app(controller));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Stored credential: Personal key'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('disconnect-provider-cloud')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Disconnect Cloud Provider?'), findsOneWidget);
+      expect(
+        find.textContaining('An active response is not stopped'),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(repository.providerDisconnectCalls, 0);
+
+      await tester.tap(find.byKey(const ValueKey('disconnect-provider-cloud')));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('confirm-provider-disconnect')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(repository.providerDisconnectCalls, 1);
+      expect(repository.disconnectedIntegration?.id, 'cloud');
+      expect(repository.disconnectedIntegration?.credentialIDs, [
+        'credential-1',
+      ]);
+      expect(find.text('Cloud Provider disconnected'), findsOneWidget);
+      expect(find.text('Connect'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'environment provider explains that mobile cannot disconnect it',
+    (tester) async {
+      final repository = _IntegrationsRepository()
+        ..integrations = const [
+          IntegrationInfo(
+            id: 'environment-provider',
+            name: 'Environment Provider',
+            methods: [
+              IntegrationMethodInfo(
+                type: 'env',
+                label: 'Server environment',
+                environmentNames: ['PROVIDER_TOKEN'],
+              ),
+            ],
+            connections: [
+              IntegrationConnectionInfo(type: 'env', label: 'PROVIDER_TOKEN'),
+            ],
+            connectionCount: 1,
+          ),
+        ];
+      final controller = await _controller(repository);
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(_app(controller));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Server environment: PROVIDER_TOKEN'), findsOneWidget);
+      expect(find.text('Server\nenvironment'), findsOneWidget);
+      expect(find.text('Disconnect'), findsNothing);
+      expect(repository.providerDisconnectCalls, 0);
+    },
+  );
+
+  testWidgets('failed provider disconnect keeps its action visible for retry', (
+    tester,
+  ) async {
+    final repository = _IntegrationsRepository()
+      ..providerDisconnectError = const ProductException(
+        'The connection remains visible so you can retry.',
+      )
+      ..integrations = const [
+        IntegrationInfo(
+          id: 'cloud',
+          name: 'Cloud Provider',
+          methods: [IntegrationMethodInfo(type: 'key', label: 'API key')],
+          connections: [
+            IntegrationConnectionInfo(
+              type: 'credential',
+              id: 'credential-1',
+              label: 'Personal key',
+            ),
+          ],
+          connectionCount: 1,
+        ),
+      ];
+    final controller = await _controller(repository);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('disconnect-provider-cloud')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('confirm-provider-disconnect')));
+    await tester.pumpAndSettle();
+
+    expect(repository.providerDisconnectCalls, 1);
+    expect(
+      find.text('The connection remains visible so you can retry.'),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('disconnect-provider-cloud')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'provider disconnect confirmation fits a compact large-text phone',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 480);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final repository = _IntegrationsRepository()
+        ..integrations = const [
+          IntegrationInfo(
+            id: 'cloud',
+            name: 'Cloud Provider',
+            methods: [IntegrationMethodInfo(type: 'key', label: 'API key')],
+            connections: [
+              IntegrationConnectionInfo(
+                type: 'credential',
+                id: 'credential-1',
+                label: 'Personal key',
+              ),
+            ],
+            connectionCount: 1,
+          ),
+        ];
+      final controller = await _controller(repository);
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(_app(controller, textScale: 2));
+      await tester.pumpAndSettle();
+      final disconnect = find.byKey(
+        const ValueKey('disconnect-provider-cloud'),
+      );
+      await tester.scrollUntilVisible(disconnect, 160);
+      await Scrollable.ensureVisible(
+        tester.element(disconnect),
+        alignment: 0.5,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(disconnect);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Disconnect Cloud Provider?'), findsOneWidget);
+      expect(find.text('Cancel'), findsOneWidget);
+      expect(find.text('Disconnect provider'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('MCP resources remain available when integrations fail', (
     tester,
   ) async {
@@ -187,8 +513,12 @@ void main() {
       ..servers = const [
         McpServerInfo(name: 'remote-tools', status: 'needs_auth'),
       ]
-      ..mcpAuthorizationUrl =
-          'https://mcp-auth.example.com:8443/authorize?state=secret';
+      ..mcpAuthLaunch = McpAuthLaunch(
+        authorizationUrl: Uri.parse(
+          'https://mcp-auth.example.com:8443/authorize?state=secret',
+        ),
+        oauthState: 'mcp-state-1',
+      );
 
     await tester.pumpWidget(_app(await _controller(repository)));
     await tester.pumpAndSettle();
@@ -212,7 +542,10 @@ void main() {
       ..servers = const [
         McpServerInfo(name: 'remote-tools', status: 'needs_auth'),
       ]
-      ..mcpAuthorizationUrl = 'opencode://authorize';
+      ..mcpAuthLaunch = McpAuthLaunch(
+        authorizationUrl: Uri.parse('opencode://authorize'),
+        oauthState: 'mcp-state-1',
+      );
 
     await tester.pumpWidget(_app(await _controller(repository)));
     await tester.pumpAndSettle();
@@ -221,6 +554,193 @@ void main() {
 
     expect(find.text('Open authorization page?'), findsNothing);
     expect(find.textContaining('unsafe authorization link'), findsOneWidget);
+  });
+
+  testWidgets('MCP authorization completes from a state-validated callback URL', (
+    tester,
+  ) async {
+    Uri? opened;
+    final repository = _IntegrationsRepository()
+      ..servers = const [
+        McpServerInfo(name: 'remote-tools', status: 'needs_auth'),
+      ]
+      ..mcpAuthLaunch = McpAuthLaunch(
+        authorizationUrl: Uri.parse(
+          'https://mcp-auth.example.com/authorize?client_id=mobile',
+        ),
+        oauthState: 'mcp-state-1',
+      );
+
+    await tester.pumpWidget(
+      _app(
+        await _controller(repository),
+        authorizationLauncher: (destination) async {
+          opened = destination;
+          return true;
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Authenticate'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('Open browser'));
+    await tester.pumpAndSettle();
+
+    expect(opened?.host, 'mcp-auth.example.com');
+    expect(find.byKey(const ValueKey('pending-mcp-oauth')), findsOneWidget);
+    expect(
+      find.textContaining('Automatic callback capture is unavailable'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('enter-mcp-oauth-code')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('mcp-oauth-code-input')),
+      'http://127.0.0.1:19876/mcp/oauth/callback?code=code-1&state=mcp-state-1',
+    );
+    await tester.tap(find.byKey(const ValueKey('complete-mcp-oauth')));
+    await tester.pumpAndSettle();
+
+    expect(repository.mcpCompleteCalls, 1);
+    expect(repository.mcpCompletionCode, 'code-1');
+    expect(find.byKey(const ValueKey('pending-mcp-oauth')), findsNothing);
+    expect(find.text('Connected and tools are available'), findsOneWidget);
+    expect(find.text('remote-tools authenticated'), findsOneWidget);
+  });
+
+  testWidgets(
+    'MCP authorization rejects mismatched state and can be cancelled',
+    (tester) async {
+      final repository = _IntegrationsRepository()
+        ..servers = const [
+          McpServerInfo(name: 'remote-tools', status: 'needs_auth'),
+        ]
+        ..mcpAuthLaunch = McpAuthLaunch(
+          authorizationUrl: Uri.parse(
+            'https://mcp-auth.example.com/authorize?client_id=mobile',
+          ),
+          oauthState: 'mcp-state-1',
+        );
+
+      await tester.pumpWidget(
+        _app(
+          await _controller(repository),
+          authorizationLauncher: (_) async => true,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Authenticate'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.tap(find.text('Open browser'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('enter-mcp-oauth-code')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('mcp-oauth-code-input')),
+        'http://127.0.0.1:19876/mcp/oauth/callback?code=code-1&state=wrong',
+      );
+      await tester.tap(find.byKey(const ValueKey('complete-mcp-oauth')));
+      await tester.pump();
+
+      expect(find.textContaining('state does not match'), findsOneWidget);
+      expect(repository.mcpCompleteCalls, 0);
+      await tester.tap(find.text('Back'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('cancel-mcp-oauth')));
+      await tester.pumpAndSettle();
+
+      expect(repository.mcpCancelCalls, 1);
+      expect(find.byKey(const ValueKey('pending-mcp-oauth')), findsNothing);
+    },
+  );
+
+  testWidgets('pending MCP authorization fits compact large-text phones', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 480);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final repository = _IntegrationsRepository()
+      ..servers = const [
+        McpServerInfo(name: 'remote-tools', status: 'needs_auth'),
+      ]
+      ..mcpAuthLaunch = McpAuthLaunch(
+        authorizationUrl: Uri.parse(
+          'https://mcp-auth.example.com/authorize?client_id=mobile',
+        ),
+        oauthState: 'mcp-state-1',
+      );
+
+    await tester.pumpWidget(
+      _app(
+        await _controller(repository),
+        authorizationLauncher: (_) async => true,
+        textScale: 2,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Authenticate'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(tester.takeException(), isNull);
+    await tester.ensureVisible(find.text('Open browser'));
+    await tester.tap(find.text('Open browser'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('enter-mcp-oauth-code')),
+      160,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    expect(find.byKey(const ValueKey('enter-mcp-oauth-code')), findsOneWidget);
+    expect(find.byKey(const ValueKey('cancel-mcp-oauth')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('MCP actions wait for the wake-time replacement repository', (
+    tester,
+  ) async {
+    final retainedRepository = _IntegrationsRepository()
+      ..servers = const [
+        McpServerInfo(name: 'remote-tools', status: 'disabled'),
+      ];
+    final replacementRepository = _IntegrationsRepository()
+      ..servers = const [
+        McpServerInfo(name: 'remote-tools', status: 'connected'),
+      ];
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+    final readyRepository = Completer<ProductRepository?>();
+    final controller =
+        _SwitchingRepositoryController(
+            ProfileStore(prefs: preferences),
+            retainedRepository,
+            readyRepository,
+          )
+          ..repository = retainedRepository
+          ..status = StreamStatus.connected;
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Connect').first);
+    await tester.pump();
+
+    expect(retainedRepository.mcpConnectCalls, 0);
+    expect(replacementRepository.mcpConnectCalls, 0);
+
+    readyRepository.complete(replacementRepository);
+    await tester.pumpAndSettle();
+
+    expect(retainedRepository.mcpConnectCalls, 0);
+    expect(replacementRepository.mcpConnectCalls, 1);
+    expect(find.text('Connected and tools are available'), findsOneWidget);
   });
 
   testWidgets(
@@ -280,6 +800,11 @@ void main() {
 
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
+      expect(repository.oauthCancelCalls, 1);
+      expect(
+        find.byKey(const ValueKey('pending-provider-oauth')),
+        findsNothing,
+      );
     },
   );
 
@@ -387,6 +912,110 @@ void main() {
 
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
+      expect(repository.oauthCancelCalls, 1);
     },
   );
+
+  testWidgets(
+    'automatic OAuth stays visible and checks server attempt status',
+    (tester) async {
+      final repository = _IntegrationsRepository()
+        ..integrations = const [
+          IntegrationInfo(
+            id: 'cloud',
+            name: 'Cloud Provider',
+            methods: [
+              IntegrationMethodInfo(
+                type: 'oauth',
+                id: 'oauth-1',
+                label: 'Cloud OAuth',
+              ),
+            ],
+            connectionCount: 0,
+          ),
+        ];
+
+      await tester.pumpWidget(
+        _app(
+          await _controller(repository),
+          authorizationLauncher: (_) async => true,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Connect'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Open browser'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('pending-provider-oauth')),
+        findsOneWidget,
+      );
+      expect(find.text('Connecting Cloud Provider'), findsOneWidget);
+      await tester.tap(find.text('Check'));
+      await tester.pumpAndSettle();
+
+      expect(repository.oauthStatusCalls, 1);
+      expect(
+        find.byKey(const ValueKey('pending-provider-oauth')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('code OAuth completes, refreshes models, and clears its state', (
+    tester,
+  ) async {
+    final repository = _IntegrationsRepository()
+      ..integrations = const [
+        IntegrationInfo(
+          id: 'cloud',
+          name: 'Cloud Provider',
+          methods: [
+            IntegrationMethodInfo(
+              type: 'oauth',
+              id: 'oauth-1',
+              label: 'Cloud OAuth',
+            ),
+          ],
+          connectionCount: 0,
+        ),
+      ]
+      ..oauthLaunch = const IntegrationAuthLaunch(
+        attemptID: 'attempt-code',
+        url: 'https://provider-auth.example.com/authorize',
+        instructions: 'Paste the browser code',
+        mode: IntegrationAuthMode.code,
+      )
+      ..oauthStatus = const IntegrationAuthStatus(
+        state: IntegrationAuthState.complete,
+      );
+
+    await tester.pumpWidget(
+      _app(
+        await _controller(repository),
+        authorizationLauncher: (_) async => true,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Connect'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Open browser'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Enter code'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('oauth-completion-code')),
+      'returned-code',
+    );
+    await tester.tap(find.text('Complete'));
+    await tester.pumpAndSettle();
+
+    expect(repository.oauthCompleteCalls, 1);
+    expect(repository.oauthCompletionCode, 'returned-code');
+    expect(repository.oauthStatusCalls, 1);
+    expect(repository.providerRefreshCalls, 1);
+    expect(find.byKey(const ValueKey('pending-provider-oauth')), findsNothing);
+    expect(find.text('Cloud Provider is connected'), findsOneWidget);
+  });
 }

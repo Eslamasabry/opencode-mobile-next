@@ -109,6 +109,7 @@ Future<void> main(List<String> arguments) async {
   }
 
   final expectedCollisionModels = {
+    'model_v2_capabilities.dart': 'ModelV2Capabilities',
     'event_tui_command_execute_schema2.dart': 'EventTuiCommandExecuteSchema2',
     'event_tui_prompt_append_schema2.dart': 'EventTuiPromptAppendSchema2',
     'event_tui_session_select_schema2.dart': 'EventTuiSessionSelectSchema2',

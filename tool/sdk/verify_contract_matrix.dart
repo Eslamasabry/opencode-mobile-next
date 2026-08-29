@@ -546,6 +546,16 @@ Map<String, String> _componentRenames(Map<String, dynamic> document) {
   }
 
   final result = <String, String>{};
+  const overrides = <String, String>{
+    'ModelCapabilities': 'ModelV2Capabilities',
+  };
+  for (final entry in overrides.entries) {
+    if (!schemas.containsKey(entry.key)) continue;
+    if (!occupied.add(entry.value)) {
+      throw StateError('Component rename target exists: ${entry.value}.');
+    }
+    result[entry.key] = entry.value;
+  }
   final groupEntries = groups.entries.toList()
     ..sort((left, right) => left.key.compareTo(right.key));
   for (final group in groupEntries) {

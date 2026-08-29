@@ -3,12 +3,14 @@ set -euo pipefail
 
 readonly REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 readonly SOURCE_SCRIPT="$REPO_ROOT/scripts/release.sh"
+readonly LEGACY_SIDELOAD_FINGERPRINT="1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C"
 TEST_ROOT="$(mktemp -d)"
 readonly TEST_ROOT
 trap 'rm -rf "$TEST_ROOT"' EXIT
 
 TEST_NUMBER=0
 FIXTURE=""
+KEYSTORE_PATH=""
 OUTPUT=""
 STATUS=0
 
@@ -24,7 +26,8 @@ fail_test() {
 new_fixture() {
   TEST_NUMBER=$((TEST_NUMBER + 1))
   FIXTURE="$TEST_ROOT/case-$TEST_NUMBER"
-  mkdir -p "$FIXTURE/scripts" "$FIXTURE/android/app" "$FIXTURE/mock-bin" "$FIXTURE/home"
+  KEYSTORE_PATH="$TEST_ROOT/keystores/case-$TEST_NUMBER/release.jks"
+  mkdir -p "$FIXTURE/scripts" "$FIXTURE/android/app" "$FIXTURE/mock-bin" "$FIXTURE/home" "$(dirname "$KEYSTORE_PATH")"
   cp "$SOURCE_SCRIPT" "$FIXTURE/scripts/release.sh"
   chmod +x "$FIXTURE/scripts/release.sh"
   : >"$FIXTURE/commands.log"
@@ -48,12 +51,15 @@ android {
 }
 EOF
 
-  cat >"$FIXTURE/android/key.properties" <<'EOF'
-storeFile=/secure/release.jks
+  : >"$KEYSTORE_PATH"
+  chmod 600 "$KEYSTORE_PATH"
+  cat >"$FIXTURE/android/key.properties" <<EOF
+storeFile=$KEYSTORE_PATH
 storePassword=fixture-store-password
 keyAlias=release
 keyPassword=fixture-key-password
 EOF
+  chmod 600 "$FIXTURE/android/key.properties"
 
   cat >"$FIXTURE/mock-bin/git" <<'EOF'
 #!/usr/bin/env bash
@@ -131,9 +137,13 @@ EOF
 set -euo pipefail
 printf 'shorebird %s\n' "$*" >>"$MOCK_COMMAND_LOG"
 [[ "${MOCK_SHOREBIRD_FAIL:-false}" != true ]] || exit 1
-if [[ "${1:-}" == release && "$*" == *'--dry-run'* ]]; then
+if [[ "${1:-}" == release && "$*" == *'--artifact aab'* ]]; then
   mkdir -p build/app/outputs/bundle/release
   : >build/app/outputs/bundle/release/app-release.aab
+fi
+if [[ "${1:-}" == release && "$*" == *'--artifact apk'* ]]; then
+  mkdir -p build/app/outputs/flutter-apk
+  : >build/app/outputs/flutter-apk/app-release.apk
 fi
 EOF
 
@@ -141,11 +151,36 @@ EOF
 #!/usr/bin/env bash
 set -euo pipefail
 printf 'keytool %s\n' "$*" >>"$MOCK_COMMAND_LOG"
+if [[ "$*" == *'-list -v'* ]]; then
+  printf 'Owner: %s\n' "${MOCK_KEYSTORE_OWNER:-CN=OpenCode Release}"
+  fingerprint="${MOCK_KEYSTORE_FINGERPRINT:-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA}"
+else
+  fingerprint="${MOCK_AAB_FINGERPRINT:-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA}"
+fi
 printf 'Certificate fingerprints:\n'
-printf '         SHA256: AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA\n'
+printf '         SHA256: %s\n' "$fingerprint"
+EOF
+
+  mkdir -p "$FIXTURE/home/Android/Sdk/build-tools/99.0.0"
+  cat >"$FIXTURE/home/Android/Sdk/build-tools/99.0.0/apksigner" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'apksigner %s\n' "$*" >>"$MOCK_COMMAND_LOG"
+printf 'Signer #1 certificate SHA-256 digest: %s\n' "${MOCK_APK_FINGERPRINT:-1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C}"
+EOF
+
+  cat >"$FIXTURE/home/Android/Sdk/build-tools/99.0.0/aapt" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'aapt %s\n' "$*" >>"$MOCK_COMMAND_LOG"
+printf "package: name='%s' versionCode='%s' versionName='%s'\n" \
+  "${MOCK_APK_PACKAGE:-ai.opencode.opencode_mobile}" \
+  "${MOCK_APK_VERSION_CODE:-13}" \
+  "${MOCK_APK_VERSION_NAME:-1.0.12}"
 EOF
 
   chmod +x "$FIXTURE/mock-bin/git" "$FIXTURE/mock-bin/flutter" "$FIXTURE/mock-bin/shorebird" "$FIXTURE/mock-bin/keytool"
+  chmod +x "$FIXTURE/home/Android/Sdk/build-tools/99.0.0/apksigner" "$FIXTURE/home/Android/Sdk/build-tools/99.0.0/aapt"
 }
 
 run_release() {
@@ -154,6 +189,8 @@ run_release() {
     env \
       HOME="$FIXTURE/home" \
       PATH="$FIXTURE/mock-bin:/usr/bin:/bin" \
+      ANDROID_HOME= \
+      ANDROID_SDK_ROOT= \
       MOCK_COMMAND_LOG="$FIXTURE/commands.log" \
       MOCK_GIT_STATUS="${MOCK_GIT_STATUS:-}" \
       MOCK_BRANCH="${MOCK_BRANCH:-master}" \
@@ -171,6 +208,13 @@ run_release() {
       MOCK_FLUTTER_VERSION="${MOCK_FLUTTER_VERSION:-3.47.1}" \
       MOCK_FLUTTER_FAIL="${MOCK_FLUTTER_FAIL:-}" \
       MOCK_SHOREBIRD_FAIL="${MOCK_SHOREBIRD_FAIL:-false}" \
+      MOCK_KEYSTORE_OWNER="${MOCK_KEYSTORE_OWNER:-CN=OpenCode Release}" \
+      MOCK_KEYSTORE_FINGERPRINT="${MOCK_KEYSTORE_FINGERPRINT:-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA}" \
+      MOCK_AAB_FINGERPRINT="${MOCK_AAB_FINGERPRINT:-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA}" \
+      MOCK_APK_FINGERPRINT="${MOCK_APK_FINGERPRINT:-$LEGACY_SIDELOAD_FINGERPRINT}" \
+      MOCK_APK_PACKAGE="${MOCK_APK_PACKAGE:-ai.opencode.opencode_mobile}" \
+      MOCK_APK_VERSION_CODE="${MOCK_APK_VERSION_CODE:-13}" \
+      MOCK_APK_VERSION_NAME="${MOCK_APK_VERSION_NAME:-1.0.12}" \
       RELEASE_CERT_SHA256="${RELEASE_CERT_SHA256:-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA}" \
       "$FIXTURE/scripts/release.sh" "$@"
   } 2>&1)"
@@ -211,7 +255,7 @@ test_strict_arguments() {
   new_fixture
   run_release
   assert_status 64
-  assert_output_contains 'Usage: ./scripts/release.sh <release|patch> [--publish]'
+  assert_output_contains 'Usage: ./scripts/release.sh <release|sideload|patch> [--publish]'
   assert_log_line_count 0 'shorebird '
 
   run_release ship
@@ -295,11 +339,34 @@ EOF
 
   new_fixture
   : >"$FIXTURE/android/key.properties"
+  chmod 600 "$FIXTURE/android/key.properties"
   run_release release
   assert_status 1
   assert_output_contains 'no non-empty storeFile'
   assert_log_not_contains 'flutter analyze'
   assert_log_not_contains 'shorebird '
+
+  new_fixture
+  sed -i "s#storeFile=.*#storeFile=$FIXTURE/release.jks#" "$FIXTURE/android/key.properties"
+  : >"$FIXTURE/release.jks"
+  chmod 600 "$FIXTURE/release.jks"
+  run_release release
+  assert_status 1
+  assert_output_contains 'keystore must live outside the repository'
+  assert_log_not_contains 'flutter analyze'
+
+  new_fixture
+  chmod 644 "$FIXTURE/android/key.properties"
+  run_release release
+  assert_status 1
+  assert_output_contains 'must not be readable or writable by group or other users'
+  assert_log_not_contains 'keytool '
+
+  new_fixture
+  MOCK_KEYSTORE_OWNER='CN=Android Debug,O=Android,C=US' run_release release
+  assert_status 1
+  assert_output_contains 'contains an Android debug certificate'
+  assert_log_not_contains 'flutter analyze'
 }
 
 test_release_is_dry_run_by_default_and_builds_aab() {
@@ -308,7 +375,7 @@ test_release_is_dry_run_by_default_and_builds_aab() {
   assert_status 0
   assert_output_contains 'nothing was uploaded'
   assert_log_contains 'flutter analyze'
-  assert_log_contains 'flutter test'
+  assert_log_contains 'flutter test --concurrency=1'
   assert_log_contains 'shorebird release android --build-name 1.0.12 --build-number 13 --flutter-version 3.47.1 --artifact aab --dry-run'
   assert_log_line_count 1 'shorebird '
   assert_log_not_contains '--artifact apk'
@@ -321,9 +388,70 @@ test_release_is_dry_run_by_default_and_builds_aab() {
   assert_log_line_count 2 'shorebird '
 
   new_fixture
-  RELEASE_CERT_SHA256='BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB' run_release release --publish
+  MOCK_AAB_FINGERPRINT='BB:BB:BB:BB:BB:BB:BB:BB:BB:BB:BB:BB:BB:BB:BB:BB:BB:BB:BB:BB:BB:BB:BB:BB:BB:BB:BB:BB:BB:BB:BB:BB' run_release release --publish
   assert_status 1
   assert_output_contains 'AAB signing certificate does not match'
+  assert_log_line_count 1 'shorebird '
+}
+
+test_sideload_requires_public_lineage_and_verifies_apk() {
+  new_fixture
+  MOCK_KEYSTORE_OWNER='CN=Android Debug,O=Android,C=US' \
+    MOCK_KEYSTORE_FINGERPRINT="$LEGACY_SIDELOAD_FINGERPRINT" \
+    run_release sideload
+  assert_status 0
+  assert_output_contains 'nothing was uploaded'
+  assert_output_contains 'Publish explicitly with: ./scripts/release.sh sideload --publish'
+  assert_log_contains 'flutter analyze'
+  assert_log_contains 'flutter test --concurrency=1'
+  assert_log_contains 'shorebird release android --build-name 1.0.12 --build-number 13 --flutter-version 3.47.1 --artifact apk --dry-run'
+  assert_log_contains 'apksigner verify --print-certs build/app/outputs/flutter-apk/app-release.apk'
+  assert_log_contains 'aapt dump badging build/app/outputs/flutter-apk/app-release.apk'
+  assert_log_not_contains '--artifact aab'
+  assert_log_line_count 1 'shorebird '
+  assert_log_line_count 1 'apksigner '
+  assert_log_line_count 1 'aapt '
+
+  new_fixture
+  MOCK_KEYSTORE_OWNER='CN=Android Debug,O=Android,C=US' \
+    MOCK_KEYSTORE_FINGERPRINT="$LEGACY_SIDELOAD_FINGERPRINT" \
+    run_release sideload --publish
+  assert_status 0
+  assert_output_contains 'APK: ./build/app/outputs/flutter-apk/app-release.apk'
+  assert_output_contains 'GitHub release v1.0.12+13'
+  assert_log_line_count 2 'shorebird '
+  assert_log_line_count 2 'apksigner '
+  assert_log_line_count 2 'aapt '
+
+  new_fixture
+  run_release sideload --publish
+  assert_status 1
+  assert_output_contains 'does not match the public APK upgrade lineage'
+  assert_log_not_contains 'flutter analyze'
+  assert_log_not_contains 'shorebird '
+
+  new_fixture
+  MOCK_KEYSTORE_FINGERPRINT="$LEGACY_SIDELOAD_FINGERPRINT" \
+    MOCK_APK_FINGERPRINT='BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB' \
+    run_release sideload --publish
+  assert_status 1
+  assert_output_contains 'APK certificate does not match the public upgrade lineage'
+  assert_log_line_count 1 'shorebird '
+
+  new_fixture
+  MOCK_KEYSTORE_FINGERPRINT="$LEGACY_SIDELOAD_FINGERPRINT" \
+    MOCK_APK_PACKAGE='example.wrong.application' \
+    run_release sideload --publish
+  assert_status 1
+  assert_output_contains 'APK package is example.wrong.application'
+  assert_log_line_count 1 'shorebird '
+
+  new_fixture
+  MOCK_KEYSTORE_FINGERPRINT="$LEGACY_SIDELOAD_FINGERPRINT" \
+    MOCK_APK_VERSION_CODE='12' \
+    run_release sideload --publish
+  assert_status 1
+  assert_output_contains 'APK version is 1.0.12+12, expected 1.0.12+13'
   assert_log_line_count 1 'shorebird '
 }
 
@@ -414,6 +542,7 @@ test_git_gates
 test_flutter_toolchain_gate
 test_release_signing_blocker
 test_release_is_dry_run_by_default_and_builds_aab
+test_sideload_requires_public_lineage_and_verifies_apk
 test_quality_gate_failure_prevents_shorebird
 test_patch_targets_exact_version_and_requires_baseline
 test_patch_rejects_native_and_asset_inputs

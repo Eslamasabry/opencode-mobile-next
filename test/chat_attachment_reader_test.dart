@@ -1,16 +1,67 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:cross_file/cross_file.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 
+base class _TestPlatformFile extends PlatformFile {
+  _TestPlatformFile({
+    required this.name,
+    required this.size,
+    this.path,
+    Uint8List? bytes,
+    Stream<List<int>>? stream,
+  }) : _bytes = bytes,
+       _stream = stream;
+
+  @override
+  final String name;
+  final int size;
+  @override
+  final String? path;
+  final Uint8List? _bytes;
+  final Stream<List<int>>? _stream;
+
+  @override
+  Uri get uri =>
+      path == null ? Uri.dataFromBytes(_bytes ?? []) : Uri.file(path!);
+
+  @override
+  XFile get xFile => path == null
+      ? XFile.fromData(_bytes ?? Uint8List(0), name: name, length: size)
+      : XFile(path!, name: name, length: size);
+
+  @override
+  Future<int> length() async => size;
+
+  @override
+  Future<Uint8List> readAsBytes() async {
+    if (_bytes != null) return _bytes;
+    if (path != null) return File(path!).readAsBytes();
+    final builder = BytesBuilder();
+    await for (final chunk in _stream ?? const Stream.empty()) {
+      builder.add(chunk);
+    }
+    return builder.takeBytes();
+  }
+
+  @override
+  Stream<Uint8List> readAsByteStream() {
+    if (_stream != null) return _stream.map(Uint8List.fromList);
+    if (_bytes != null) return Stream.value(_bytes);
+    if (path != null) return File(path!).openRead().map(Uint8List.fromList);
+    return const Stream.empty();
+  }
+}
+
 void main() {
   test('reads a streamed attachment at the exact byte limit', () async {
-    final file = PlatformFile(
+    final file = _TestPlatformFile(
       name: 'exact.txt',
       size: 5,
-      readStream: Stream<List<int>>.fromIterable(const [
+      stream: Stream<List<int>>.fromIterable(const [
         [1, 2],
         [3, 4, 5],
       ]),
@@ -31,10 +82,10 @@ void main() {
       yield List<int>.filled(1024 * 1024, 7);
     }
 
-    final file = PlatformFile(
+    final file = _TestPlatformFile(
       name: 'growing.txt',
       size: 3,
-      readStream: growingStream(),
+      stream: growingStream(),
     );
 
     final bytes = await readAttachmentBytesWithinLimit(file, maxBytes: 5);
@@ -50,7 +101,7 @@ void main() {
     addTearDown(() => directory.delete(recursive: true));
     final path = '${directory.path}/changed.txt';
     await File(path).writeAsBytes([1, 2, 3, 4, 5, 6]);
-    final file = PlatformFile(name: 'changed.txt', path: path, size: 3);
+    final file = _TestPlatformFile(name: 'changed.txt', path: path, size: 3);
 
     final bytes = await readAttachmentBytesWithinLimit(file, maxBytes: 5);
 
@@ -58,7 +109,7 @@ void main() {
   });
 
   test('rejects oversized in-memory picker data without copying it', () async {
-    final file = PlatformFile(
+    final file = _TestPlatformFile(
       name: 'memory.txt',
       size: 2,
       bytes: Uint8List.fromList([1, 2, 3]),

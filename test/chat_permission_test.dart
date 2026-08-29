@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
+import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
@@ -25,6 +26,7 @@ class _FakeOpenCodeApi extends OpenCodeApi {
     String reply, {
     String? legacySessionID,
     String? legacyPermissionID,
+    String? message,
   }) async {
     replies.add((requestID: requestID, reply: reply));
     if (permissionNotFound) {
@@ -51,7 +53,9 @@ class _FakeOpenCodeApi extends OpenCodeApi {
 Future<ConnectionController> _controller(_FakeOpenCodeApi api) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
-  return ConnectionController(ProfileStore(prefs: prefs))..api = api;
+  return ConnectionController(ProfileStore(prefs: prefs))
+    ..api = api
+    ..status = StreamStatus.connected;
 }
 
 EventEnvelope _permission(
@@ -95,15 +99,15 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('bash'), findsOneWidget);
+    expect(find.text('Run a shell command'), findsOneWidget);
     expect(find.text('git status'), findsOneWidget);
-    expect(find.text('edit'), findsNothing);
+    expect(find.text('Edit a file'), findsNothing);
 
     await tester.tap(find.text('Allow once'));
     await tester.pumpAndSettle();
 
     expect(api.replies, [(requestID: 'request-1', reply: 'once')]);
-    expect(find.text('edit'), findsOneWidget);
+    expect(find.text('Edit a file'), findsOneWidget);
     expect(find.text('lib/main.dart'), findsOneWidget);
   });
 
@@ -124,7 +128,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Requested for this action'), findsOneWidget);
+    expect(find.byKey(const Key('permission-sheet')), findsOneWidget);
+    expect(find.byKey(const Key('permission-resources')), findsOneWidget);
     expect(find.text('git status'), findsOneWidget);
     expect(find.text('Always allow would also cover'), findsOneWidget);
     expect(find.text('git *\ngh *'), findsOneWidget);
@@ -183,7 +188,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('bash'), findsOneWidget);
+      expect(find.text('Run a shell command'), findsOneWidget);
 
       controller.handleEventForTesting(
         EventEnvelope(
@@ -193,8 +198,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('bash'), findsNothing);
-      expect(find.text('edit'), findsOneWidget);
+      expect(find.text('Run a shell command'), findsNothing);
+      expect(find.text('Edit a file'), findsOneWidget);
       expect(find.text('lib/main.dart'), findsOneWidget);
       expect(find.textContaining('no longer pending'), findsNothing);
     },
@@ -223,8 +228,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(controller.permissions.keys, ['request-2']);
-      expect(find.text('bash'), findsNothing);
-      expect(find.text('edit'), findsOneWidget);
+      expect(find.text('Run a shell command'), findsNothing);
+      expect(find.text('Edit a file'), findsOneWidget);
       expect(find.textContaining('Reply failed:'), findsNothing);
 
       controller.handleEventForTesting(
@@ -296,13 +301,13 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('bash'), findsOneWidget);
+    expect(find.text('Run a shell command'), findsOneWidget);
 
     await controller.refreshPendingPermissions();
     await tester.pumpAndSettle();
 
     expect(controller.permissions, isEmpty);
-    expect(find.text('bash'), findsNothing);
+    expect(find.text('Run a shell command'), findsNothing);
     expect(find.byType(AlertDialog), findsNothing);
   });
 }

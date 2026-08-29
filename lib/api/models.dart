@@ -38,16 +38,22 @@ class SessionTime {
 class Session {
   final String id;
   final String? title;
+  final String? projectID;
+  final String? workspaceID;
   final String? parentID;
   final String? directory;
+  final String? path;
   final bool reverted;
   final String? shareUrl;
   final SessionTime? time;
   Session({
     required this.id,
     this.title,
+    this.projectID,
+    this.workspaceID,
     this.parentID,
     this.directory,
+    this.path,
     this.reverted = false,
     this.shareUrl,
     this.time,
@@ -56,8 +62,11 @@ class Session {
   factory Session.fromJson(Map<String, dynamic> j) => Session(
     id: j['id'] as String,
     title: j['title'] as String?,
+    projectID: j['projectID'] as String?,
+    workspaceID: j['workspaceID'] as String?,
     parentID: j['parentID'] as String?,
     directory: j['directory'] as String?,
+    path: j['path'] as String?,
     reverted: j['revert'] != null,
     shareUrl: j['share'] is Map ? (j['share'] as Map)['url']?.toString() : null,
     time: SessionTime.fromJson(j['time']),
@@ -90,18 +99,32 @@ class Tokens {
   final int input;
   final int output;
   final int reasoning;
-  Tokens({this.input = 0, this.output = 0, this.reasoning = 0});
+  final int cacheRead;
+  final int cacheWrite;
+  Tokens({
+    this.input = 0,
+    this.output = 0,
+    this.reasoning = 0,
+    this.cacheRead = 0,
+    this.cacheWrite = 0,
+  });
 
   factory Tokens.fromJson(dynamic v) {
     if (v is! Map<String, dynamic>) return Tokens();
+    final cache = v['cache'];
     return Tokens(
       input: _asInt(v['input']) ?? 0,
       output: _asInt(v['output']) ?? 0,
       reasoning: _asInt(v['reasoning']) ?? 0,
+      cacheRead: cache is Map ? _asInt(cache['read']) ?? 0 : 0,
+      cacheWrite: cache is Map ? _asInt(cache['write']) ?? 0 : 0,
     );
   }
 
-  int get total => input + output + reasoning;
+  int get cache => cacheRead + cacheWrite;
+
+  /// The same context-total definition used by the upstream OpenCode client.
+  int get total => input + output + reasoning + cache;
 }
 
 class MessageInfo {
@@ -311,6 +334,19 @@ List<ToolOutputFile> _toolOutputFiles({
   return List.unmodifiable(files);
 }
 
+/// One ordered item of a v2 tool result's `content` array: either a text run
+/// or a file attachment. v1 payloads carry a single output string and never
+/// populate these, so [ToolState.segments] stays empty on v1 servers.
+class ToolResultSegment {
+  final String? text;
+  final ToolOutputFile? file;
+
+  const ToolResultSegment.text(String this.text) : file = null;
+  const ToolResultSegment.file(ToolOutputFile this.file) : text = null;
+
+  bool get isFile => file != null;
+}
+
 /// Tool state extracted from a tool part's `state` object.
 class ToolState {
   final String status; // pending | running | completed | error
@@ -322,6 +358,10 @@ class ToolState {
   final Map<String, dynamic>? metadata;
   final List<ToolOutputFile> outputFiles;
 
+  /// Ordered text/file interleaving of the tool result (v2 `content` arrays).
+  /// Empty when the server gave a single output string (all v1 payloads).
+  final List<ToolResultSegment> segments;
+
   ToolState({
     required this.status,
     this.title,
@@ -331,6 +371,7 @@ class ToolState {
     this.outputValue,
     this.metadata,
     this.outputFiles = const [],
+    this.segments = const [],
   });
 
   static String _pretty(dynamic v) {
@@ -389,7 +430,36 @@ class ToolState {
         metadata: meta,
         toolName: toolName,
       ),
+      segments: _segmentsFromJson(v['contentSegments']),
     );
+  }
+
+  /// Parses the ordered `contentSegments` list the v2 mapper attaches; v1
+  /// payloads never carry the key.
+  static List<ToolResultSegment> _segmentsFromJson(dynamic raw) {
+    if (raw is! List) return const [];
+    final segments = <ToolResultSegment>[];
+    for (final item in raw) {
+      if (item is! Map) continue;
+      final type = item['type']?.toString();
+      if (type == 'text') {
+        final text = item['text']?.toString() ?? '';
+        if (text.isNotEmpty) segments.add(ToolResultSegment.text(text));
+      } else if (type == 'file') {
+        final url = item['url']?.toString();
+        if (url == null || url.isEmpty) continue;
+        segments.add(
+          ToolResultSegment.file(
+            ToolOutputFile(
+              url: url,
+              mimeType: item['mime']?.toString(),
+              filename: item['name']?.toString(),
+            ),
+          ),
+        );
+      }
+    }
+    return List.unmodifiable(segments);
   }
 }
 
@@ -472,6 +542,8 @@ class ModelRef {
 }
 
 class PromptAttachment {
+  static const directoryReferenceMime = 'application/x-directory';
+
   final String mime;
   final String filename;
   final String url;
@@ -482,6 +554,24 @@ class PromptAttachment {
     required this.url,
   });
 
+  factory PromptAttachment.reference({
+    required String name,
+    required String path,
+  }) => PromptAttachment(
+    mime: directoryReferenceMime,
+    filename: name,
+    url: _referenceUrl(path),
+  );
+
+  bool get isDirectoryReference =>
+      mime == directoryReferenceMime && Uri.tryParse(url)?.scheme == 'file';
+
+  static String _referenceUrl(String path) {
+    final windows =
+        RegExp(r'^[A-Za-z]:[\\/]').hasMatch(path) || path.startsWith(r'\\');
+    return Uri.file(path, windows: windows).toString();
+  }
+
   Map<String, dynamic> toJson() => {
     'type': 'file',
     'mime': mime,
@@ -490,23 +580,23 @@ class PromptAttachment {
   };
 }
 
-Map<String, dynamic> promptRequestBody({
-  required String text,
-  ModelRef? model,
-  String? agent,
-  String? variant,
-  String? messageID,
-  List<PromptAttachment> attachments = const [],
-}) => {
-  'messageID': ?messageID,
-  'model': ?model?.toJson(),
-  'agent': ?agent,
-  'variant': ?variant,
-  'parts': [
-    {'type': 'text', 'text': text},
-    ...attachments.map((attachment) => attachment.toJson()),
-  ],
-};
+/// A server-authored subagent mention embedded in the prompt text.
+///
+/// [start] and [end] are UTF-16 code-unit offsets, matching both Dart strings
+/// and OpenCode's JavaScript wire contract.
+class PromptAgentMention {
+  final String name;
+  final String value;
+  final int start;
+  final int end;
+
+  const PromptAgentMention({
+    required this.name,
+    required this.value,
+    required this.start,
+    required this.end,
+  });
+}
 
 Map<String, dynamic> shellRequestBody(
   String command, {
@@ -518,18 +608,6 @@ Map<String, dynamic> shellRequestBody(
   'model': ?model?.toJson(),
   'variant': ?variant,
   'command': command,
-};
-
-Map<String, dynamic> commandRequestBody(
-  String command,
-  String args, {
-  ModelRef? model,
-  String? variant,
-}) => {
-  'command': command,
-  'arguments': args,
-  'model': ?model?.wireName,
-  'variant': ?variant,
 };
 
 // ---------------- Providers / agents ----------------
@@ -743,11 +821,14 @@ class FindMatch {
 class Todo {
   final String content;
   final String status;
-  Todo({required this.content, required this.status});
+  final String? priority;
+
+  Todo({required this.content, required this.status, this.priority});
 
   factory Todo.fromJson(Map<String, dynamic> j) => Todo(
     content: (j['content'] ?? '').toString(),
     status: (j['status'] ?? 'pending').toString(),
+    priority: j['priority']?.toString(),
   );
 
   bool get done => status == 'completed';
@@ -793,7 +874,17 @@ class FileDiff {
 class EventEnvelope {
   final String type;
   final Map<String, dynamic> properties;
-  EventEnvelope({required this.type, this.properties = const {}});
+  final String? directory;
+  final String? project;
+  final String? workspace;
+
+  EventEnvelope({
+    required this.type,
+    this.properties = const {},
+    this.directory,
+    this.project,
+    this.workspace,
+  });
 
   factory EventEnvelope.fromJson(Map<String, dynamic> j) => EventEnvelope(
     type: (j['type'] ?? '').toString(),
@@ -801,6 +892,20 @@ class EventEnvelope {
         ? j['properties'] as Map<String, dynamic>
         : const {},
   );
+
+  factory EventEnvelope.fromGlobalJson(Map<String, dynamic> j) {
+    final payload = j['payload'];
+    final event = payload is Map
+        ? EventEnvelope.fromJson(Map<String, dynamic>.from(payload))
+        : EventEnvelope(type: '');
+    return EventEnvelope(
+      type: event.type,
+      properties: event.properties,
+      directory: j['directory']?.toString(),
+      project: j['project']?.toString(),
+      workspace: j['workspace']?.toString(),
+    );
+  }
 }
 
 class PermissionTool {
@@ -824,6 +929,10 @@ class PermissionRequest {
   final List<String> always;
   final PermissionTool? tool;
 
+  /// Optional human context supplied with an OpenCode 2 request; v1
+  /// requests never carry one.
+  final String? message;
+
   PermissionRequest({
     required this.id,
     required this.sessionID,
@@ -832,6 +941,7 @@ class PermissionRequest {
     this.metadata = const {},
     this.always = const [],
     this.tool,
+    this.message,
   });
 
   factory PermissionRequest.fromJson(Map<String, dynamic> json) =>
@@ -853,6 +963,7 @@ class PermissionRequest {
                 Map<String, dynamic>.from(json['tool'] as Map),
               )
             : null,
+        message: json['message']?.toString(),
       );
 }
 
@@ -894,4 +1005,28 @@ double _asDouble(dynamic v) {
   final removed = bLines.length - p - s;
   final added = aLines.length - p - s;
   return (added: added, removed: removed);
+}
+
+class ApiException implements Exception {
+  final String message;
+  final int? statusCode;
+  final String? errorTag;
+  final String? requestID;
+
+  ApiException(this.message, {this.statusCode, this.errorTag, this.requestID});
+
+  bool get unauthorized => statusCode == 401 || statusCode == 403;
+
+  bool isPermissionNotFound(String id) =>
+      statusCode == 404 &&
+      errorTag == 'PermissionNotFoundError' &&
+      requestID == id;
+
+  bool isQuestionNotFound(String id) =>
+      statusCode == 404 &&
+      errorTag == 'QuestionNotFoundError' &&
+      requestID == id;
+
+  @override
+  String toString() => message;
 }

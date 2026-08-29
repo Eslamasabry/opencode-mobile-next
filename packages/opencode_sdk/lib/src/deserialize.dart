@@ -266,6 +266,7 @@ import 'package:opencode_sdk/src/model/model_cost_tiers_inner.dart';
 import 'package:opencode_sdk/src/model/model_cost_tiers_inner_tier.dart';
 import 'package:opencode_sdk/src/model/model_part.dart';
 import 'package:opencode_sdk/src/model/model_ref.dart';
+import 'package:opencode_sdk/src/model/model_v2_capabilities.dart';
 import 'package:opencode_sdk/src/model/model_v2_info.dart';
 import 'package:opencode_sdk/src/model/model_v2_info_limit.dart';
 import 'package:opencode_sdk/src/model/model_v2_info_request.dart';
@@ -1861,6 +1862,9 @@ ReturnType deserialize<ReturnType, BaseType>(
       return ModelPart.fromJson(value) as ReturnType;
     case 'ModelRef':
       return ModelRef.fromJson(value as Map<String, dynamic>) as ReturnType;
+    case 'ModelV2Capabilities':
+      return ModelV2Capabilities.fromJson(value as Map<String, dynamic>)
+          as ReturnType;
     case 'ModelV2Info':
       return ModelV2Info.fromJson(value as Map<String, dynamic>) as ReturnType;
     case 'ModelV2InfoLimit':

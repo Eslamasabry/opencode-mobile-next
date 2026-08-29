@@ -24,4 +24,30 @@ void main() {
     expect(minimumButtonSize?.width, greaterThanOrEqualTo(48));
     expect(minimumButtonSize?.height, greaterThanOrEqualTo(48));
   });
+
+  test('light theme keeps the same deliberate contrast and touch targets', () {
+    final theme = AppTheme.light();
+    final scheme = theme.colorScheme;
+
+    expect(theme.brightness, Brightness.light);
+    expect(theme.scaffoldBackgroundColor, AppTheme.lightBackground);
+    expect(theme.appBarTheme.surfaceTintColor, Colors.transparent);
+    expect(
+      theme.appBarTheme.systemOverlayStyle?.statusBarIconBrightness,
+      Brightness.dark,
+    );
+    expect(theme.navigationBarTheme.backgroundColor, isNotNull);
+    expect(theme.inputDecorationTheme.filled, isTrue);
+
+    final foreground = scheme.onSurface.computeLuminance();
+    final background = scheme.surface.computeLuminance();
+    final lighter = foreground > background ? foreground : background;
+    final darker = foreground > background ? background : foreground;
+    expect((lighter + .05) / (darker + .05), greaterThanOrEqualTo(7));
+
+    final minimumButtonSize = theme.filledButtonTheme.style?.minimumSize
+        ?.resolve(const <WidgetState>{});
+    expect(minimumButtonSize?.width, greaterThanOrEqualTo(48));
+    expect(minimumButtonSize?.height, greaterThanOrEqualTo(48));
+  });
 }

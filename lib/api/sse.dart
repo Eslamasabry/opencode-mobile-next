@@ -2,20 +2,28 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dio/dio.dart' show CancelToken;
+import 'package:dio/dio.dart' show CancelToken, Response, ResponseBody;
 
+import '../domain/server_gateway.dart';
 import 'models.dart';
-import 'opencode_api.dart';
 
-/// Connection lifecycle surfaced to the UI.
-enum StreamStatus { connecting, connected, reconnecting, disconnected }
+export '../domain/server_gateway.dart' show LiveEventChannel, StreamStatus;
 
-/// Server-sent events from `/event` with automatic reconnect + exponential backoff.
-class EventStream {
-  final OpenCodeApi api;
+/// The raw v1 SSE endpoints [EventStream] consumes.
+abstract class EventStreamTransport {
+  Future<Response<ResponseBody>> openEventStream({CancelToken? cancelToken});
+  Future<Response<ResponseBody>> openGlobalEventStream({
+    CancelToken? cancelToken,
+  });
+}
+
+/// Server-sent events with automatic reconnect + exponential backoff.
+class EventStream implements LiveEventChannel {
+  final EventStreamTransport api;
   final void Function(EventEnvelope event) onEvent;
   final void Function(StreamStatus status) onStatus;
   final void Function(Object error)? onError;
+  final bool global;
 
   CancelToken? _cancelToken;
   StreamSubscription<Uint8List>? _subscription;
@@ -31,6 +39,7 @@ class EventStream {
     required this.onEvent,
     required this.onStatus,
     this.onError,
+    this.global = false,
   });
 
   /// After this many failed attempts we stop showing "reconnecting".
@@ -42,12 +51,14 @@ class EventStream {
   // a broken or hostile server to grow the receive buffer without bound.
   static const _maxLineBytes = 8 * 1024 * 1024;
 
+  @override
   void start() {
     assert(!_disposed);
     if (_disposed) return;
     _connect();
   }
 
+  @override
   Future<void> dispose() async {
     if (_disposed) return;
     _disposed = true;
@@ -101,7 +112,9 @@ class EventStream {
       final cancelToken = CancelToken();
       requestCancelToken = cancelToken;
       _cancelToken = cancelToken;
-      final response = await api.openEventStream(cancelToken: cancelToken);
+      final response = global
+          ? await api.openGlobalEventStream(cancelToken: cancelToken)
+          : await api.openEventStream(cancelToken: cancelToken);
       if (!_isCurrent(generation)) return;
       onStatus(StreamStatus.connected);
       backoffResetTimer = Timer(_backoffResetAfter, () {
@@ -132,7 +145,10 @@ class EventStream {
         try {
           final json = jsonDecode(payload);
           if (_isCurrent(generation) && json is Map<String, dynamic>) {
-            onEvent(EventEnvelope.fromJson(json));
+            final event = global
+                ? EventEnvelope.fromGlobalJson(json)
+                : EventEnvelope.fromJson(json);
+            if (event.type.isNotEmpty) onEvent(event);
           }
         } catch (_) {
           // Malformed frame - skip it rather than killing the stream.

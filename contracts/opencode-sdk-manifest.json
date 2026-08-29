@@ -48,7 +48,7 @@
       }
     },
     "after": {
-      "sha256": "bd92134aca6c98709d5da0475cb93e7ba6ea80d1f0ae6703fc124514d198a9f4",
+      "sha256": "5aae57b2b7284803605c73c24dbd1f7a155076807947e8b955047b1782b23149",
       "counts": {
         "paths": 162,
         "operations": 188,
@@ -142,14 +142,15 @@
       },
       {
         "kind": "renameDartSanitizedComponentCollisions",
-        "strategy": "retainExactDartNameThenStableSchemaOrdinalAndApiModelSuffix",
+        "strategy": "retainExactDartNameThenStableSchemaOrdinalApiModelSuffixAndKnownInlineCollisionRename",
         "componentCollisionGroupsBefore": 7,
         "componentCollisionGroupsAfter": 0,
         "apiTypeCollisionsBefore": 1,
         "apiTypeCollisionsAfter": 0,
-        "renamedSchemas": 8,
-        "rewrittenRefs": 8,
+        "renamedSchemas": 9,
+        "rewrittenRefs": 9,
         "mappings": {
+          "ModelCapabilities": "ModelV2Capabilities",
           "Event.tui.command.execute": "EventTuiCommandExecuteSchema2",
           "Event.tui.prompt.append": "EventTuiPromptAppendSchema2",
           "Event.tui.session.select": "EventTuiSessionSelectSchema2",
@@ -204,8 +205,8 @@
     "operations": 188,
     "schemas": 472,
     "generatedApiFiles": 32,
-    "generatedModelSourceFiles": 982,
-    "generatedSerializerFiles": 834
+    "generatedModelSourceFiles": 983,
+    "generatedSerializerFiles": 835
   },
   "deterministicSourceHashes": {
     "algorithmScope": "UTF-8 relative path, NUL, byte length, NUL, file SHA-256 records sorted lexicographically; no absolute paths, mtimes, permissions, or host separators",
@@ -217,7 +218,7 @@
     "generatedModels": {
       "path": "../packages/opencode_sdk/lib/src/model",
       "algorithm": "sha256(relative-path-nul-bytes-v1)",
-      "sha256": "337568251140a2a65497342dda1ce27bcfc640aed9e5525a77bfc9c81c268294"
+      "sha256": "80715f2ddc3409e14821a336e70e86535be1fc3279081fb2b9c4ef83c9cd2560"
     },
     "generatedRuntime": {
       "paths": [

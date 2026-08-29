@@ -1,58 +1,112 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'theme_packs.dart';
+
+/// Pack-provided colors that live outside Material's scheme, carried on the
+/// ThemeData so widgets resolve them from context.
+class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
+  final Color success;
+
+  const AppSemanticColors({required this.success});
+
+  @override
+  AppSemanticColors copyWith({Color? success}) =>
+      AppSemanticColors(success: success ?? this.success);
+
+  @override
+  AppSemanticColors lerp(AppSemanticColors? other, double t) => other == null
+      ? this
+      : AppSemanticColors(
+          success: Color.lerp(success, other.success, t) ?? success,
+        );
+}
+
 /// The shared visual system for the mobile client.
 ///
 /// Keeping component defaults here prevents individual screens from drifting
-/// back to stock Material styling as the product grows.
+/// back to stock Material styling as the product grows. Color comes from a
+/// [ThemePack]; structure never changes between packs.
 abstract final class AppTheme {
+  /// Bundled JetBrains Mono; code is this product's primary material.
+  static const monoFamily = 'AppMono';
+
+  /// Pack-aware success green for status dots, done states, and diff
+  /// additions. Prefer this over [success] wherever a ThemeData is in reach.
+  static Color successOf(ThemeData theme) =>
+      theme.extension<AppSemanticColors>()?.success ??
+      success(theme.colorScheme);
+
+  /// Brightness-based fallback with the OpenCode pack's values, for the rare
+  /// place that has only a scheme.
+  static Color success(ColorScheme scheme) =>
+      scheme.brightness == Brightness.dark
+      ? const Color(0xFF86D8A5)
+      : const Color(0xFF1E7A44);
+
   static const background = Color(0xFF101310);
   static const surface = Color(0xFF151A17);
   static const accent = Color(0xFF83CDAA);
+  static const lightBackground = Color(0xFFF6F9F6);
+  static const lightSurface = Color(0xFFFFFFFF);
+  static const lightAccent = Color(0xFF176B4B);
 
-  static ThemeData dark() {
-    final scheme =
-        ColorScheme.fromSeed(
-          seedColor: accent,
-          brightness: Brightness.dark,
-        ).copyWith(
-          primary: accent,
-          onPrimary: const Color(0xFF052117),
-          primaryContainer: const Color(0xFF183B2D),
-          onPrimaryContainer: const Color(0xFFB6EBD2),
-          secondary: const Color(0xFFA8CBB9),
-          onSecondary: const Color(0xFF10231A),
-          secondaryContainer: const Color(0xFF253A30),
-          onSecondaryContainer: const Color(0xFFD7E9DE),
-          surface: surface,
-          onSurface: const Color(0xFFE3E8E4),
-          onSurfaceVariant: const Color(0xFFBCC5BF),
-          outline: const Color(0xFF7F8A83),
-          outlineVariant: const Color(0xFF3B443F),
-          error: const Color(0xFFFFB4AB),
-          onError: const Color(0xFF690005),
-          errorContainer: const Color(0xFF4B1518),
-          onErrorContainer: const Color(0xFFFFDAD6),
-          surfaceContainerLowest: const Color(0xFF0C0F0D),
-          surfaceContainerLow: const Color(0xFF171C19),
-          surfaceContainer: const Color(0xFF1B211D),
-          surfaceContainerHigh: const Color(0xFF222824),
-          surfaceContainerHighest: const Color(0xFF29302B),
-        );
+  static ThemeData dark([ThemePack? pack]) =>
+      fromPalette((pack ?? themePack(ThemePackId.opencode)).dark);
+
+  static ThemeData light([ThemePack? pack]) =>
+      fromPalette((pack ?? themePack(ThemePackId.opencode)).light);
+
+  static ThemeData fromPalette(ThemePalette palette) {
+    final dark = palette.scheme.brightness == Brightness.dark;
+    return _build(
+      scheme: palette.scheme,
+      backgroundColor: palette.background,
+      navigationColor: palette.navigation,
+      successColor: palette.success,
+      overlayStyle: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: dark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: dark ? Brightness.dark : Brightness.light,
+        systemNavigationBarColor: palette.background,
+        systemNavigationBarIconBrightness: dark
+            ? Brightness.light
+            : Brightness.dark,
+      ),
+    );
+  }
+
+  static ThemeData _build({
+    required ColorScheme scheme,
+    required Color backgroundColor,
+    required Color navigationColor,
+    required Color successColor,
+    required SystemUiOverlayStyle overlayStyle,
+  }) {
     const roundedRectangle = RoundedRectangleBorder(
       borderRadius: BorderRadius.all(Radius.circular(14)),
     );
     final base = ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
+      brightness: scheme.brightness,
       colorScheme: scheme,
-      scaffoldBackgroundColor: background,
-      canvasColor: background,
+      scaffoldBackgroundColor: backgroundColor,
+      canvasColor: backgroundColor,
       materialTapTargetSize: MaterialTapTargetSize.padded,
       visualDensity: VisualDensity.standard,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          // The M3 horizontal fade-through keeps pushes light and fast and
+          // respects predictive back on current Android.
+          TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.fuchsia: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.linux: FadeForwardsPageTransitionsBuilder(),
+        },
+      ),
     );
 
     return base.copyWith(
+      extensions: [AppSemanticColors(success: successColor)],
       textTheme: base.textTheme.copyWith(
         headlineSmall: base.textTheme.headlineSmall?.copyWith(
           fontWeight: FontWeight.w700,
@@ -70,21 +124,15 @@ abstract final class AppTheme {
           letterSpacing: 0.1,
         ),
       ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: background,
-        foregroundColor: Color(0xFFE3E8E4),
+      appBarTheme: AppBarTheme(
+        backgroundColor: backgroundColor,
+        foregroundColor: scheme.onSurface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
         toolbarHeight: 64,
-        systemOverlayStyle: SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.light,
-          statusBarBrightness: Brightness.dark,
-          systemNavigationBarColor: background,
-          systemNavigationBarIconBrightness: Brightness.light,
-        ),
+        systemOverlayStyle: overlayStyle,
       ),
       cardTheme: CardThemeData(
         color: scheme.surfaceContainerLow,
@@ -114,7 +162,7 @@ abstract final class AppTheme {
       navigationBarTheme: NavigationBarThemeData(
         height: 68,
         elevation: 0,
-        backgroundColor: const Color(0xFF131714),
+        backgroundColor: navigationColor,
         surfaceTintColor: Colors.transparent,
         indicatorColor: scheme.primary.withValues(alpha: .17),
         indicatorShape: const RoundedRectangleBorder(
@@ -139,7 +187,7 @@ abstract final class AppTheme {
         }),
       ),
       navigationRailTheme: NavigationRailThemeData(
-        backgroundColor: const Color(0xFF131714),
+        backgroundColor: navigationColor,
         indicatorColor: scheme.primary.withValues(alpha: .17),
         selectedIconTheme: IconThemeData(color: scheme.primary),
         unselectedIconTheme: IconThemeData(color: scheme.onSurfaceVariant),
@@ -231,6 +279,12 @@ abstract final class AppTheme {
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(14)),
         ),
+      ),
+      chipTheme: const ChipThemeData(
+        // Comfortable density: chips act as primary filters in this product
+        // (model intents, variants, file breadcrumbs), so raise them from
+        // M3's 32dp toward a >=40dp visual target.
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       ),
       dividerTheme: DividerThemeData(
         color: scheme.outlineVariant.withValues(alpha: .7),

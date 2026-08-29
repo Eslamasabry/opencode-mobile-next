@@ -7,12 +7,14 @@ import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
+import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/about_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
 import 'package:opencode_mobile/ui/screens/requests_screen.dart';
+import 'package:opencode_mobile/ui/screens/session_destination_sheet.dart';
 import 'package:opencode_mobile/ui/widgets/markdown.dart';
 import 'package:opencode_mobile/ui/widgets/tool_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -78,6 +80,43 @@ class _ReleaseRepository implements ProductRepository {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _DestinationReleaseRepository extends _ReleaseRepository {
+  @override
+  Future<List<WorkspaceProject>> listProjects() async => const [
+    WorkspaceProject(
+      id: 'project-1',
+      name: 'Acme',
+      directory: '/work/acme',
+      worktrees: ['/work/acme-copy'],
+      updatedAt: 1,
+    ),
+  ];
+
+  @override
+  Future<List<ProjectDirectoryInfo>> listProjectDirectories(
+    String projectID,
+  ) async => const [
+    ProjectDirectoryInfo(directory: '/work/acme'),
+    ProjectDirectoryInfo(directory: '/work/acme-copy'),
+  ];
+
+  @override
+  Future<VersionControlHealth> loadVersionControlHealth() async =>
+      const VersionControlHealth(changes: []);
+
+  @override
+  Future<List<ConsoleOrganization>> listConsoleOrganizations() async => const [
+    ConsoleOrganization(
+      accountID: 'account-1',
+      accountEmail: 'dev@example.com',
+      accountUrl: 'https://console.example.com',
+      orgID: 'org-1',
+      orgName: 'Acme engineering',
+      active: true,
+    ),
+  ];
 }
 
 Future<ConnectionController> _controller({
@@ -155,6 +194,135 @@ void main() {
     expect(launch, isNot(contains('@android:color/white')));
   });
 
+  test('secure storage biometric lint exception stays narrow and truthful', () {
+    final manifest = File(
+      'android/app/src/main/AndroidManifest.xml',
+    ).readAsStringSync();
+    final profiles = File('lib/state/profiles.dart').readAsStringSync();
+    final rootGradle = File('android/build.gradle.kts').readAsStringSync();
+
+    expect(profiles, contains('const FlutterSecureStorage()'));
+    expect(profiles, isNot(contains('AndroidOptions.biometric')));
+    expect(manifest, isNot(contains('android.permission.USE_BIOMETRIC')));
+    expect(rootGradle, contains('project.name == "flutter_secure_storage"'));
+    expect(rootGradle, contains('disable += "MissingPermission"'));
+    expect(
+      'disable += "MissingPermission"'.allMatches(rootGradle),
+      hasLength(1),
+    );
+  });
+
+  test('Android launcher supports adaptive, round, and themed icons', () {
+    final manifest = File(
+      'android/app/src/main/AndroidManifest.xml',
+    ).readAsStringSync();
+    final adaptive = File(
+      'android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml',
+    ).readAsStringSync();
+    final themed = File(
+      'android/app/src/main/res/mipmap-anydpi-v33/ic_launcher.xml',
+    ).readAsStringSync();
+
+    expect(manifest, contains('android:roundIcon="@mipmap/ic_launcher"'));
+    expect(adaptive, contains('<adaptive-icon'));
+    expect(adaptive, contains('@drawable/ic_launcher_foreground'));
+    expect(themed, contains('@drawable/ic_launcher_monochrome'));
+  });
+
+  test('Android background coding alerts are private and actionable', () {
+    final activity = File(
+      'android/app/src/main/kotlin/ai/opencode/opencode_mobile/MainActivity.kt',
+    ).readAsStringSync();
+    final service = File(
+      'android/app/src/main/kotlin/ai/opencode/opencode_mobile/'
+      'BackgroundConnectionService.kt',
+    ).readAsStringSync();
+
+    expect(activity, contains('"showCodingAlert"'));
+    expect(activity, contains('"dismissCodingAlert"'));
+    expect(activity, contains('"consumeCodingAlertOpen"'));
+    expect(activity, contains('override fun onNewIntent(intent: Intent)'));
+    expect(activity, contains('captureCodingAlertOpen(intent)'));
+    expect(service, contains('NotificationManager.IMPORTANCE_HIGH'));
+    expect(service, contains('NotificationManager.IMPORTANCE_DEFAULT'));
+    expect(service, contains('setVisibility(Notification.VISIBILITY_PRIVATE)'));
+    expect(
+      service,
+      contains('lockscreenVisibility = Notification.VISIBILITY_PRIVATE'),
+    );
+    expect(service, contains('OpenCode needs permission'));
+    expect(service, contains('OpenCode needs your input'));
+    expect(service, contains('OpenCode finished'));
+    expect(service, contains('OpenCode session needs attention'));
+    expect(service, contains('putExtra(EXTRA_CODING_ALERT_KIND, kind)'));
+    expect(
+      service,
+      contains('putExtra(EXTRA_CODING_ALERT_SESSION_ID, sessionID)'),
+    );
+    expect(service, isNot(contains('sessionTitle')));
+    expect(service, isNot(contains('errorMessage')));
+  });
+
+  test('Shorebird updates have one app-controlled owner', () {
+    final shorebird = File('shorebird.yaml').readAsStringSync();
+    final main = File('lib/main.dart').readAsStringSync();
+
+    expect(
+      shorebird,
+      contains(RegExp(r'^auto_update: false$', multiLine: true)),
+    );
+    expect(main, contains('ShorebirdUpdateNotice('));
+    expect(main, contains('ShorebirdAppUpdateService()'));
+  });
+
+  test('privacy policy is bundled and names sensitive product surfaces', () {
+    final pubspec = File('pubspec.yaml').readAsStringSync();
+    final policy = File('PRIVACY.md').readAsStringSync();
+
+    expect(pubspec, contains('    - PRIVACY.md'));
+    expect(policy, contains('## Microphone and local voice input'));
+    expect(policy, contains('## Files, terminal access, and Termux'));
+    expect(policy, contains('## Background mode and updates'));
+    expect(policy, contains('AI provider'));
+    expect(policy, contains('Shorebird'));
+  });
+
+  test('Android release builds require the production signing lineage', () {
+    final appGradle = File('android/app/build.gradle.kts').readAsStringSync();
+    final gradleProperties = File(
+      'android/gradle.properties',
+    ).readAsStringSync();
+    final settings = File('android/settings.gradle.kts').readAsStringSync();
+    final wrapper = File(
+      'android/gradle/wrapper/gradle-wrapper.properties',
+    ).readAsStringSync();
+    final example = File('android/key.properties.example').readAsStringSync();
+
+    expect(appGradle, contains('create("release")'));
+    expect(
+      appGradle,
+      contains('signingConfig = signingConfigs.getByName("release")'),
+    );
+    expect(
+      appGradle,
+      isNot(contains('signingConfig = signingConfigs.getByName("debug")')),
+    );
+    expect(settings, contains('version "9.3.2"'));
+    expect(
+      settings,
+      contains(
+        'id("org.jetbrains.kotlin.android") version "2.4.0" apply false',
+      ),
+    );
+    expect(appGradle, isNot(contains('id("kotlin-android")')));
+    expect(appGradle, contains('compilerOptions'));
+    expect(gradleProperties, contains('android.builtInKotlin=true'));
+    expect(gradleProperties, contains('android.newDsl=false'));
+    expect(wrapper, contains('gradle-9.5.0-all.zip'));
+    expect(example, contains('storeFile=/absolute/path/'));
+    expect(example, contains('keyAlias=upload'));
+  });
+
   testWidgets('markdown blocks custom schemes and confirms HTTP with host', (
     tester,
   ) async {
@@ -215,7 +383,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(PopupMenuButton<String>));
+    await tester.tap(find.byTooltip('Session actions'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Share session'));
     await tester.pumpAndSettle();
@@ -332,6 +500,113 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('full-screen prompt editor fits a 320dp phone at 2x text', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(320, 640));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: _scaledApp(const ChatScreen(sessionID: 's1'), bottomInset: 180),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('prompt-editor-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('prompt-editor-screen')), findsOneWidget);
+    expect(find.byKey(const Key('prompt-editor-field')), findsOneWidget);
+    expect(find.byKey(const Key('prompt-editor-attach')), findsOneWidget);
+    final done = find.byKey(const Key('prompt-editor-done'));
+    expect(done, findsOneWidget);
+    expect(tester.getSize(done).height, greaterThanOrEqualTo(48));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('session destination controls fit a 320dp phone at 2x text', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final controller = await _controller(
+      repository: _DestinationReleaseRepository(),
+    );
+    controller
+      ..directory = '/work/acme'
+      ..sessionsById['session-1'] = Session(
+        id: 'session-1',
+        projectID: 'project-1',
+        directory: '/work/acme',
+      );
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      _scaledApp(
+        Builder(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FilledButton(
+                    key: const Key('open-session-destinations'),
+                    onPressed: () => showSessionDestinationSheet(
+                      context,
+                      controller: controller,
+                      sessionID: 'session-1',
+                      mode: SessionDestinationMode.move,
+                    ),
+                    child: const Text('Move'),
+                  ),
+                  FilledButton(
+                    key: const Key('open-console-organizations'),
+                    onPressed: () => showConsoleOrganizationSheet(
+                      context,
+                      controller: controller,
+                    ),
+                    child: const Text('Org'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('open-session-destinations')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('move-session-sheet')), findsOneWidget);
+    expect(find.text('Move session'), findsOneWidget);
+    expect(
+      find.byKey(const Key('move-destination-/work/acme-copy')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+    expect(
+      tester.getSize(find.byTooltip('Close')).height,
+      greaterThanOrEqualTo(48),
+    );
+
+    await tester.tap(find.byTooltip('Close'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('open-console-organizations')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('console-organization-sheet')), findsOneWidget);
+    expect(find.text('Acme engineering'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    expect(
+      tester.getSize(find.byTooltip('Close')).height,
+      greaterThanOrEqualTo(48),
+    );
+  });
+
   testWidgets('tool expansion has 48dp target and reduced-motion semantics', (
     tester,
   ) async {
@@ -364,10 +639,16 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('bundled open source notices render in app', (tester) async {
+  testWidgets('bundled privacy policy and open source notices render in app', (
+    tester,
+  ) async {
     await tester.pumpWidget(const MaterialApp(home: AboutScreen()));
     await tester.pumpAndSettle();
     expect(find.text('About and open source notices'), findsOneWidget);
+    expect(find.text('Privacy Policy'), findsOneWidget);
+    expect(find.text('Where your data goes'), findsOneWidget);
+    await tester.tap(find.text('Open source'));
+    await tester.pumpAndSettle();
     expect(find.text('Third-Party Notices'), findsOneWidget);
     expect(find.text('sherpa-onnx'), findsWidgets);
   });
@@ -381,7 +662,11 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [connProvider.overrideWithValue(controller)],
-        child: const MaterialApp(home: HomeScreen()),
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: HomeScreen(),
+        ),
       ),
     );
     await tester.pumpAndSettle();

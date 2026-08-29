@@ -1,0 +1,138 @@
+{
+  "location": {
+    "directory": "/home/eslam/Storage/Code/oc_app",
+    "project": {
+      "id": "5e625357c202857bf3cd6f591d76b2bec8b5093d",
+      "directory": "/home/eslam/Storage/Code/oc_app",
+      "canonical": "/home/eslam/Storage/Code/oc_app"
+    }
+  },
+  "data": [
+    {
+      "id": "google",
+      "integrationID": "google",
+      "name": "Google",
+      "activation": "auto",
+      "package": "aisdk:@ai-sdk/google"
+    },
+    {
+      "id": "anthropic",
+      "integrationID": "anthropic",
+      "name": "Anthropic",
+      "activation": "auto",
+      "package": "aisdk:@ai-sdk/anthropic",
+      "headers": {
+        "anthropic-beta": "interleaved-thinking-2025-05-14,fine-grained-tool-streaming-2025-05-14"
+      }
+    },
+    {
+      "id": "zai",
+      "integrationID": "zai",
+      "name": "Z.ai (GLM)",
+      "activation": "enabled",
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "settings": {
+        "baseURL": "https://api.z.ai/api/coding/paas/v4",
+        "apiKey": ""
+      }
+    },
+    {
+      "id": "openai",
+      "integrationID": "openai",
+      "name": "OpenAI",
+      "activation": "enabled",
+      "package": "aisdk:@ai-sdk/openai",
+      "settings": {
+        "baseURL": "https://chatgpt.com/backend-api/codex",
+        "reasoningEffort": "medium",
+        "reasoningSummary": "auto",
+        "textVerbosity": "medium",
+        "include": [
+          "reasoning.encrypted_content"
+        ],
+        "store": false
+      },
+      "headers": {
+        "originator": "opencode",
+        "chatgpt-account-id": "00000000-0000-0000-0000-000000000000"
+      }
+    },
+    {
+      "id": "opencode-go",
+      "integrationID": "opencode-go",
+      "name": "OpenCode Go",
+      "activation": "auto",
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "settings": {
+        "baseURL": "https://opencode.ai/zen/go/v1"
+      }
+    },
+    {
+      "id": "zai-coding-plan",
+      "integrationID": "zai-coding-plan",
+      "name": "Z.AI Coding Plan",
+      "activation": "auto",
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "settings": {
+        "baseURL": "https://api.z.ai/api/coding/paas/v4"
+      }
+    },
+    {
+      "id": "zenmux",
+      "integrationID": "zenmux",
+      "name": "ZenMux",
+      "activation": "auto",
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "settings": {
+        "baseURL": "https://zenmux.ai/api/v1"
+      },
+      "headers": {
+        "HTTP-Referer": "https://opencode.ai/",
+        "X-Title": "opencode"
+      }
+    },
+    {
+      "id": "opencode",
+      "integrationID": "opencode",
+      "name": "OpenCode Zen",
+      "activation": "auto",
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "settings": {
+        "baseURL": "https://opencode.ai/zen/v1"
+      }
+    },
+    {
+      "id": "github-copilot",
+      "integrationID": "github-copilot",
+      "name": "GitHub Copilot",
+      "activation": "auto",
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "settings": {
+        "baseURL": "https://api.githubcopilot.com"
+      }
+    },
+    {
+      "id": "fireworks-ai",
+      "integrationID": "fireworks-ai",
+      "name": "Fireworks AI",
+      "activation": "auto",
+      "package": "aisdk:@ai-sdk/openai-compatible",
+      "settings": {
+        "baseURL": "https://api.fireworks.ai/inference/v1/"
+      }
+    },
+    {
+      "id": "minimax",
+      "integrationID": "minimax",
+      "name": "MiniMax (minimax.io)",
+      "activation": "auto",
+      "package": "aisdk:@ai-sdk/anthropic",
+      "settings": {
+        "baseURL": "https://api.minimax.io/anthropic/v1"
+      },
+      "headers": {
+        "anthropic-beta": "interleaved-thinking-2025-05-14,fine-grained-tool-streaming-2025-05-14"
+      }
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+data: {"id":"evt_04acb4575001Asi0ADJYVxL8wV","type":"server.connected","data":{}}
+
+: heartbeat
+
+data: {"id":"evt_04acb4968001OprCAefWhP9kgG","created":1787961231720,"type":"session.created","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","slug":"glowing-garden","version":"0.0.0-beta-18600","projectID":"5e625357c202857bf3cd6f591d76b2bec8b5093d","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"subpath":"","title":"api2 fixture probe"},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":0,"version":1}}
+
+data: {"id":"evt_04acb4989001vfE23K8ZhCehtl","created":1787961231753,"type":"session.inbox.enqueued","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"inboxID":"msg_04acb4987001Ei5pD9H8pLWeKb","sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","item":{"type":"user","payload":{"text":"Reply with exactly the word: pong. Then use the read tool to read the file README.md (just the first 5 lines).","files":[{"data":"dGlueSBhdHRhY2htZW50","mime":"text/plain","source":{"type":"inline"},"name":"att.txt"}]},"delivery":"steer"}},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":1,"version":1}}
+
+data: {"id":"evt_04acb498c0014ckK5TEh8OaP7Y","created":1787961231756,"type":"session.execution.started","data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2"},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":2,"version":1}}
+
+data: {"id":"evt_04acb4994001NigwglesAbmvXG","created":1787961231764,"metadata":{"instructions":{"initial":true}},"type":"session.instructions.updated","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","delta":{"core/environment":"1c3c141109fdace7c3c226a44af61c980b03dd29cee68f57674d5909f96a16e1","core/date":"6c8d2d3c2bccea20b61c77ecfb8cd07045d2ec5c99a03b6f797d7e08ece08134","core/codemode":"19adcab9b2f5b0e7e23aaff1bf8c147de8d0e552b38f2cc5c4450c63cb426dde","core/skill-guidance":"07796df8f9cffe158f8c00c2a5108bd95600a257a4c8df6ea1c15461df7524fe","core/mcp-guidance":"ebfb2cdb7f306bc024f59985a6d693126c41c28f4ddadb5905c67683b520c1f7"}},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":3,"version":2}}
+
+data: {"id":"evt_04acb499600175nRk2niCmounW","created":1787961231766,"type":"session.inbox.delivered","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","inboxID":"msg_04acb4987001Ei5pD9H8pLWeKb"},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":4,"version":1}}
+
+data: {"id":"evt_04acb50bc001K8rthbZFsACbCK","created":1787961233596,"type":"session.step.started","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","agent":"build","model":{"id":"gpt-5.6-sol","providerID":"openai"},"assistantMessageID":"msg_04acb499d0018dZywDIvO4DCTc","snapshot":"59785f455ee0e35afacfc27ec31ae20efab265a6"},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":5,"version":1}}
+
+data: {"id":"evt_04acb50c3001VatxCGnwEhDpVU","created":1787961233603,"type":"session.reasoning.started","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","assistantMessageID":"msg_04acb499d0018dZywDIvO4DCTc","ordinal":0,"state":{"itemId":"rs_0122e05649ee457d016a921f91839487d2b71b850ce16de292","reasoningEncryptedContent":"redacted"}},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":6,"version":1}}
+
+data: {"id":"evt_04acb5405001vi9hQxLTc5OFR5","created":1787961234437,"type":"session.reasoning.ended","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","assistantMessageID":"msg_04acb499d0018dZywDIvO4DCTc","ordinal":0,"text":"","state":{"itemId":"rs_0122e05649ee457d016a921f91839487d2b71b850ce16de292","reasoningEncryptedContent":"redacted"}},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":7,"version":1}}
+
+data: {"id":"evt_04acb540a00177I3K2bZkbp3uU","created":1787961234442,"type":"session.text.started","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","assistantMessageID":"msg_04acb499d0018dZywDIvO4DCTc","ordinal":0},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":8,"version":1}}
+
+data: {"id":"evt_04acb54bc001sprst9G0UxsGaB","created":1787961234620,"type":"session.text.delta","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","assistantMessageID":"msg_04acb499d0018dZywDIvO4DCTc","ordinal":0,"delta":"pong."}}
+
+data: {"id":"evt_04acb54bd001hR7CkMcuK47tve","created":1787961234621,"type":"session.text.ended","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","assistantMessageID":"msg_04acb499d0018dZywDIvO4DCTc","ordinal":0,"text":"pong.","state":{"itemId":"msg_0122e05649ee457d016a921f925c0c87d2a03f1e545c8c178d","phase":"commentary"}},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":9,"version":1}}
+
+data: {"id":"evt_04acb54c4001iiboBvdYYEsj5r","created":1787961234628,"type":"session.tool.input.started","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","assistantMessageID":"msg_04acb499d0018dZywDIvO4DCTc","id":"call_qdg2bCIuJ1zMqEwatSi1wXOz","name":"read"},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":10,"version":1}}
+
+data: {"id":"evt_04acb5600001GxTC6osEfSWs8s","created":1787961234944,"type":"session.tool.input.ended","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","assistantMessageID":"msg_04acb499d0018dZywDIvO4DCTc","id":"call_qdg2bCIuJ1zMqEwatSi1wXOz","text":"{\"path\":\"README.md\",\"offset\":1,\"limit\":5}"},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":11,"version":1}}
+
+data: {"id":"evt_04acb5607001ofkiXu8Wtz96EB","created":1787961234951,"type":"session.tool.called","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","assistantMessageID":"msg_04acb499d0018dZywDIvO4DCTc","id":"call_qdg2bCIuJ1zMqEwatSi1wXOz","input":{"path":"README.md","offset":1,"limit":5},"executed":false,"state":{"itemId":"fc_0122e05649ee457d016a921f927ccc87d2933eeaea9b73f4f8"}},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":12,"version":1}}
+
+data: {"id":"evt_04acb560c0013WSzTWj2XQWXBu","created":1787961234956,"type":"session.step.streamed","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","assistantMessageID":"msg_04acb499d0018dZywDIvO4DCTc"},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":13,"version":1}}
+
+data: {"id":"evt_04acb5615001kvk7sSK4xvSS4I","created":1787961234965,"type":"session.tool.success","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","assistantMessageID":"msg_04acb499d0018dZywDIvO4DCTc","id":"call_qdg2bCIuJ1zMqEwatSi1wXOz","content":[{"type":"text","text":"Read file README.md, lines 1-5\n1: # OpenCode for Android\n2: \n3: A native Flutter client for [opencode](https://opencode.ai) that connects to an\n4: opencode server either **remotely** (your dev box / VPS) or **on-device** — the\n5: app drives Termux itself, so you never manage a terminal by hand. Ships with\n[Output truncated. Continue reading with offset: 6]"}],"metadata":{"truncated":true},"executed":false},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":14,"version":2}}
+
+data: {"id":"evt_04acb561f001Yn11tLK7v8CTW6","created":1787961234975,"type":"session.step.ended","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","assistantMessageID":"msg_04acb499d0018dZywDIvO4DCTc","finish":"tool-calls","providerState":{"responseId":"resp_0122e05649ee457d016a921f90407c87d2a920591de15c49a6","serviceTier":"default"},"cost":0,"tokens":{"input":11185,"output":37,"reasoning":35,"cache":{"read":0,"write":0}},"snapshot":"59785f455ee0e35afacfc27ec31ae20efab265a6","files":[]},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":15,"version":1}}
+
+data: {"id":"evt_04acb56220015twiyw1DoHax8F","created":1787961234978,"type":"session.usage.updated","data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","cost":0,"tokens":{"input":11185,"output":37,"reasoning":35,"cache":{"read":0,"write":0}}}}
+
+data: {"id":"evt_04acb5e4d001cIhGCsSKBU741l","created":1787961237069,"type":"session.step.started","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","agent":"build","model":{"id":"gpt-5.6-sol","providerID":"openai"},"assistantMessageID":"msg_04acb562a001AVrRyQ0SN5T20D","snapshot":"59785f455ee0e35afacfc27ec31ae20efab265a6"},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":16,"version":1}}
+
+data: {"id":"evt_04acb5e55001uFXODb0f4brbUf","created":1787961237077,"type":"session.reasoning.started","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","assistantMessageID":"msg_04acb562a001AVrRyQ0SN5T20D","ordinal":0,"state":{"itemId":"rs_0122e05649ee457d016a921f94f33087d2bb9de980b473cd52","reasoningEncryptedContent":"redacted"}},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":17,"version":1}}
+
+data: {"id":"evt_04acb60a8001igMxgqA7PnLwO5","created":1787961237672,"type":"session.reasoning.ended","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","assistantMessageID":"msg_04acb562a001AVrRyQ0SN5T20D","ordinal":0,"text":"","state":{"itemId":"rs_0122e05649ee457d016a921f94f33087d2bb9de980b473cd52","reasoningEncryptedContent":"redacted"}},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":18,"version":1}}
+
+data: {"id":"evt_04acb60bd001HvgoUDdlh1hB9K","created":1787961237693,"type":"session.text.started","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","assistantMessageID":"msg_04acb562a001AVrRyQ0SN5T20D","ordinal":0},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":19,"version":1}}
+
+data: {"id":"evt_04acb60c0001eG6QA06gU6Rbsu","created":1787961237696,"type":"session.text.delta","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","assistantMessageID":"msg_04acb562a001AVrRyQ0SN5T20D","ordinal":0,"delta":"pong."}}
+
+data: {"id":"evt_04acb60c00025MUuFDNZVQEG79","created":1787961237696,"type":"session.text.ended","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","assistantMessageID":"msg_04acb562a001AVrRyQ0SN5T20D","ordinal":0,"text":"pong.","state":{"itemId":"msg_0122e05649ee457d016a921f957e5087d2936c77d3ad05913e","phase":"final_answer"}},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":20,"version":1}}
+
+data: {"id":"evt_04acb60cb001E3NNXU1YPawEKy","created":1787961237707,"type":"session.step.streamed","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","assistantMessageID":"msg_04acb562a001AVrRyQ0SN5T20D"},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":21,"version":1}}
+
+data: {"id":"evt_04acb60d4001M1u4yiJB2eN0Pz","created":1787961237716,"type":"session.step.ended","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","assistantMessageID":"msg_04acb562a001AVrRyQ0SN5T20D","finish":"stop","providerState":{"responseId":"resp_0122e05649ee457d016a921f9357d087d2a7e679c6a877fe22","serviceTier":"default"},"cost":0,"tokens":{"input":617,"output":8,"reasoning":23,"cache":{"read":10752,"write":0}},"snapshot":"59785f455ee0e35afacfc27ec31ae20efab265a6","files":[]},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":22,"version":1}}
+
+data: {"id":"evt_04acb60d6001uYfgQfuC4DLCK1","created":1787961237718,"type":"session.usage.updated","data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","cost":0,"tokens":{"input":11802,"output":45,"reasoning":58,"cache":{"read":10752,"write":0}}}}
+
+data: {"id":"evt_04acb60d70019aOq7P701idn3f","created":1787961237719,"type":"session.execution.succeeded","data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2"},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":23,"version":1}}
+
+data: {"id":"evt_04acb613b001UOH3UJeMhhCYSx","created":1787961237819,"type":"session.deleted","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"data":{"sessionID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2"},"durable":{"aggregateID":"ses_fb534b6a0ffeJ5pNlwiesRdWV2","seq":24,"version":2}}
+
+: heartbeat
+
+: heartbeat
+
+: heartbeat
+

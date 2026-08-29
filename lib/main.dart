@@ -1,32 +1,195 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
+import 'package:dynamic_color/dynamic_color.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:window_manager/window_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'background/live_background.dart';
+import 'diagnostics/app_diagnostics.dart';
+import 'l10n/app_localizations.dart';
 import 'state/connection.dart';
+import 'state/profiles.dart';
+import 'update/desktop_release_check.dart';
 import 'update/shorebird_update_notice.dart';
 import 'ui/app_theme.dart';
+import 'ui/theme_packs.dart';
+import 'ui/navigation/chat_route.dart';
 import 'ui/screens/guide_screen.dart';
 import 'ui/screens/about_screen.dart';
 import 'ui/screens/home_screen.dart';
 import 'ui/screens/servers_screen.dart';
 import 'ui/screens/chat_screen.dart';
+import 'ui/screens/requests_screen.dart';
 import 'ui/screens/termux_setup_screen.dart';
+import 'ui/screens/app_diagnostics_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final bootstrap = await AppBootstrap.create();
-  final conn = ConnectionController(bootstrap.store);
+  if (!kIsWeb && (Platform.isLinux || Platform.isWindows || Platform.isMacOS)) {
+    // Desktop windows get a sane default and floor; Android never reaches
+    // these calls.
+    await windowManager.ensureInitialized();
+    const options = WindowOptions(
+      size: Size(900, 700),
+      minimumSize: Size(480, 600),
+      title: 'OpenCode',
+    );
+    unawaited(
+      windowManager.waitUntilReadyToShow(options, () async {
+        await windowManager.show();
+        await windowManager.focus();
+      }),
+    );
+  }
+  final diagnostics = AppDiagnosticsController();
+  installAppErrorCapture(diagnostics);
+  runApp(AppBootstrapGate(diagnostics: diagnostics));
+}
 
-  runApp(
-    ProviderScope(
-      overrides: [
-        bootstrapProvider.overrideWithValue(bootstrap),
-        connProvider.overrideWithValue(conn),
-      ],
-      child: const OcApp(),
-    ),
-  );
+typedef AppBootstrapLoader = Future<AppBootstrap> Function();
+
+/// Renders immediately so a preferences or secure-storage failure can never
+/// leave Android showing a blank native window.
+class AppBootstrapGate extends StatefulWidget {
+  const AppBootstrapGate({super.key, required this.diagnostics, this.loader});
+
+  final AppDiagnosticsController diagnostics;
+  final AppBootstrapLoader? loader;
+
+  @override
+  State<AppBootstrapGate> createState() => _AppBootstrapGateState();
+}
+
+class _AppBootstrapGateState extends State<AppBootstrapGate> {
+  AppBootstrap? _bootstrap;
+  ConnectionController? _controller;
+  Object? _error;
+  bool _loading = true;
+  int _generation = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_load());
+  }
+
+  Future<void> _load() async {
+    final generation = ++_generation;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final bootstrap = await (widget.loader ?? AppBootstrap.create)();
+      if (!mounted || generation != _generation) return;
+      final controller = ConnectionController(
+        bootstrap.store,
+        diagnostics: widget.diagnostics,
+      );
+      _controller?.dispose();
+      setState(() {
+        _bootstrap = bootstrap;
+        _controller = controller;
+        _loading = false;
+      });
+    } catch (error, stack) {
+      widget.diagnostics.record(error, stack, source: 'bootstrap');
+      if (!mounted || generation != _generation) return;
+      setState(() {
+        _error = error;
+        _loading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bootstrap = _bootstrap;
+    final controller = _controller;
+    if (bootstrap != null && controller != null) {
+      return ProviderScope(
+        overrides: [
+          bootstrapProvider.overrideWithValue(bootstrap),
+          connProvider.overrideWithValue(controller),
+        ],
+        child: const OcApp(),
+      );
+    }
+    return MaterialApp(
+      title: 'OpenCode',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      home: Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(28),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: _loading
+                    ? const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 18),
+                          Text('Starting OpenCode…'),
+                        ],
+                      )
+                    : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.error_outline_rounded,
+                            size: 40,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                          const SizedBox(height: 14),
+                          Text(
+                            'OpenCode could not start',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            widget.diagnostics.sanitize(
+                              _error?.toString() ?? 'Unknown startup error',
+                              limit: 300,
+                            ),
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                          ),
+                          const SizedBox(height: 20),
+                          FilledButton.icon(
+                            key: const ValueKey('retry-app-bootstrap'),
+                            onPressed: _load,
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: const Text('Try again'),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _generation++;
+    _controller?.dispose();
+    super.dispose();
+  }
 }
 
 class OcApp extends ConsumerStatefulWidget {
@@ -41,12 +204,16 @@ class OcApp extends ConsumerStatefulWidget {
 class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
   late final ConnectionController _controller;
   late final AppUpdateService _updateService;
+  final _navigatorKey = GlobalKey<NavigatorState>();
   final _messengerKey = GlobalKey<ScaffoldMessengerState>();
+  bool _codingAlertRouteScheduled = false;
 
   @override
   void initState() {
     super.initState();
+    unawaited(_harvestDynamicColors());
     _controller = ref.read(connProvider);
+    _controller.addListener(_controllerChanged);
     _updateService = widget.updateService ?? ShorebirdAppUpdateService();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -58,7 +225,7 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
       case AppLifecycleState.resumed:
-        _controller.resumeFromLifecycle();
+        unawaited(_resumeAndConsumeCodingAlert());
       case AppLifecycleState.hidden:
       case AppLifecycleState.paused:
       case AppLifecycleState.detached:
@@ -68,41 +235,151 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _resumeAndConsumeCodingAlert() async {
+    // Start destination capture before wake reconciliation performs any
+    // potentially slow health or catalog requests, while allowing transport
+    // recovery to proceed in parallel. Routing still waits for a usable
+    // transport when the background connection had been suspended.
+    await Future.wait<void>([
+      _controller.consumeCodingAlertOpen(),
+      _controller.resumeFromLifecycle(),
+    ]);
+  }
+
+  void _controllerChanged() => _scheduleCodingAlertRoute();
+
+  void _scheduleCodingAlertRoute() {
+    if (_codingAlertRouteScheduled ||
+        _controller.pendingCodingAlertOpen == null ||
+        _controller.api == null ||
+        _controller.repository == null ||
+        _controller.version == null) {
+      return;
+    }
+    _codingAlertRouteScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _codingAlertRouteScheduled = false;
+      if (!mounted) return;
+      final navigator = _navigatorKey.currentState;
+      if (navigator == null) {
+        _scheduleCodingAlertRoute();
+        return;
+      }
+      final target = _controller.takePendingCodingAlertOpen();
+      if (target == null) return;
+      if (target.kind == CodingAlertKind.question) {
+        navigator.push(
+          MaterialPageRoute<void>(
+            builder: (_) => RequestsScreen(
+              controller: _controller,
+              initialQuestionSessionID: target.sessionID,
+            ),
+          ),
+        );
+        return;
+      }
+      navigator.push(
+        MaterialPageRoute<void>(
+          builder: (_) => ChatScreen(sessionID: target.sessionID),
+        ),
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      scaffoldMessengerKey: _messengerKey,
-      builder: (context, child) => ShorebirdUpdateNotice(
-        service: _updateService,
-        messengerKey: _messengerKey,
-        child: child ?? const SizedBox.shrink(),
+    return ValueListenableBuilder<AppAppearance>(
+      valueListenable: _controller.appearance,
+      builder: (context, appearance, _) => ListenableBuilder(
+        listenable: Listenable.merge([
+          _controller.themePack,
+          harvestedDynamicPack,
+        ]),
+        builder: (context, _) {
+          final pack = effectiveThemePack(_controller.themePack.value);
+          return MaterialApp(
+            navigatorKey: _navigatorKey,
+            scaffoldMessengerKey: _messengerKey,
+            builder: (context, child) {
+              // Global text-scale safety net: honor the system setting up to
+              // 2.0x so unguarded screens cannot overflow at extreme scales.
+              // Screens with their own tighter clamps still apply them on top.
+              final scale = MediaQuery.textScalerOf(context).scale(1);
+              return MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  textScaler: TextScaler.linear(scale.clamp(1.0, 2.0)),
+                ),
+                child: ShorebirdUpdateNotice(
+                  service: _updateService,
+                  messengerKey: _messengerKey,
+                  child: DesktopReleaseNotice(
+                    messengerKey: _messengerKey,
+                    child: child ?? const SizedBox.shrink(),
+                  ),
+                ),
+              );
+            },
+            title: 'OpenCode',
+            onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            debugShowCheckedModeBanner: false,
+            themeMode: switch (appearance) {
+              AppAppearance.system => ThemeMode.system,
+              AppAppearance.light => ThemeMode.light,
+              AppAppearance.dark => ThemeMode.dark,
+            },
+            theme: AppTheme.light(pack),
+            darkTheme: AppTheme.dark(pack),
+            initialRoute: '/',
+            routes: {
+              '/': (_) => _Root(),
+              '/servers': (_) => const ServersScreen(),
+              '/home': (_) => const HomeScreen(),
+              '/guide': (_) => GuideScreen(embedded: false),
+              '/about': (_) => const AboutScreen(),
+              '/termux-setup': (_) => const TermuxSetupScreen(),
+              '/debug': (_) => AppDiagnosticsScreen(controller: _controller),
+            },
+            onGenerateRoute: (settings) {
+              if (settings.name?.startsWith('/chat/') == true) {
+                final id = settings.name!.substring('/chat/'.length);
+                final arguments = settings.arguments;
+                return MaterialPageRoute(
+                  builder: (_) => ChatScreen(
+                    sessionID: id,
+                    discardIfUntouched:
+                        arguments is ChatRouteArguments &&
+                        arguments.discardIfUntouched,
+                  ),
+                );
+              }
+              return null;
+            },
+          );
+        },
       ),
-      title: 'OpenCode',
-      debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.dark,
-      darkTheme: AppTheme.dark(),
-      initialRoute: '/',
-      routes: {
-        '/': (_) => _Root(),
-        '/servers': (_) => const ServersScreen(),
-        '/home': (_) => const HomeScreen(),
-        '/guide': (_) => GuideScreen(embedded: false),
-        '/about': (_) => const AboutScreen(),
-        '/termux-setup': (_) => const TermuxSetupScreen(),
-      },
-      onGenerateRoute: (settings) {
-        if (settings.name?.startsWith('/chat/') == true) {
-          final id = settings.name!.substring('/chat/'.length);
-          return MaterialPageRoute(builder: (_) => ChatScreen(sessionID: id));
-        }
-        return null;
-      },
     );
+  }
+
+  Future<void> _harvestDynamicColors() async {
+    try {
+      final palette = await DynamicColorPlugin.getCorePalette();
+      if (palette == null) return;
+      harvestedDynamicPack.value = dynamicThemePack(
+        lightScheme: palette.toColorScheme(brightness: Brightness.light),
+        darkScheme: palette.toColorScheme(brightness: Brightness.dark),
+      );
+    } catch (_) {
+      // Below Android 12, on desktop, or in tests: Material You stays
+      // unavailable and the OpenCode pack remains the fallback.
+    }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _controller.removeListener(_controllerChanged);
     super.dispose();
   }
 }
@@ -286,7 +563,7 @@ class _SavedServerConnectionView extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: scheme.onSurfaceVariant,
-                                fontFamily: 'monospace',
+                                fontFamily: 'AppMono',
                               ),
                             ),
                           ),

@@ -361,7 +361,7 @@ void _verifyNormalizationLedger(
   _expect(actual.unconstrainedUnionsCollapsed, 2, 'unconstrained unions');
   _expect(actual.effectExtensionsRemoved, 1, 'effect-stream removals');
   _expect(actual.inlineUnionsHoisted, 115, 'hoisted inline unions');
-  _expect(actual.renames.length, 8, 'component renames');
+  _expect(actual.renames.length, 9, 'component renames');
   _expect(
     ((normalized['components'] as Map)['schemas'] as Map).length,
     587,
@@ -1568,6 +1568,16 @@ Map<String, String> _componentRenames(Map<String, dynamic> document) {
   }
 
   final result = <String, String>{};
+  const overrides = <String, String>{
+    'ModelCapabilities': 'ModelV2Capabilities',
+  };
+  for (final entry in overrides.entries) {
+    if (!schemas.containsKey(entry.key)) continue;
+    if (!occupied.add(entry.value)) {
+      throw StateError('Component rename target exists: ${entry.value}.');
+    }
+    result[entry.key] = entry.value;
+  }
   final entries = groups.entries.toList()
     ..sort((left, right) => left.key.compareTo(right.key));
   for (final entry in entries) {

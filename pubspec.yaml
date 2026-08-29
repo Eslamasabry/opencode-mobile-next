@@ -1,7 +1,7 @@
 name: opencode_mobile
 description: "OpenCode client for Android - connect to a remote opencode server or one running on-device via Termux."
 publish_to: "none"
-version: 1.0.19+20
+version: 1.0.28+29
 
 environment:
   sdk: ^3.10.0
@@ -9,31 +9,56 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
   cupertino_icons: ^1.0.8
   dio: ^5.7.0
-  file_picker: ^11.0.3
+  file_picker: 12.1.1
   flutter_riverpod: ^2.6.1
-  flutter_secure_storage: ^9.2.2
+  highlight: ^0.7.0
+  # v10 migrates legacy Android ciphers. Do not jump from v9 directly to v11:
+  # existing profile credentials must pass through this migration release.
+  flutter_secure_storage: 10.0.0
   crypto: 3.0.7
   opencode_sdk:
     path: packages/opencode_sdk
   path_provider: 2.1.6
-  record: 6.2.1
+  record: 7.1.1
+  scrollable_positioned_list: 0.3.8
   sherpa_onnx: 1.13.6
   shared_preferences: ^2.3.3
   shorebird_code_push: 2.0.7
   url_launcher: ^6.3.1
   uuid: ^4.5.1
   xterm: ^4.0.0
+  dynamic_color: ^1.7.0
+  package_info_plus: ^10.2.1
+  window_manager: ^0.5.2
 
 dev_dependencies:
+  cross_file: 0.3.5+5
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
 
 flutter:
+  generate: true
   assets:
     - shorebird.yaml
+    - PRIVACY.md
     - THIRD_PARTY_NOTICES.md
     - LICENSES/
+  fonts:
+    - family: AppMono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono-Regular.ttf
+        - asset: assets/fonts/JetBrainsMono-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/JetBrainsMono-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/JetBrainsMono-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/JetBrainsMono-Italic.ttf
+          style: italic
   uses-material-design: true
