@@ -81,7 +81,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     ]);
   }
 
-  Future<void> _loadServers(ProductRepository repository) async {
+  Future<void> _loadServers(ServerOperationsGateway repository) async {
     final generation = ++_serverLoadGeneration;
     setState(() => _serverError = null);
     try {
@@ -96,7 +96,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     }
   }
 
-  Future<void> _loadResources(ProductRepository repository) async {
+  Future<void> _loadResources(ServerOperationsGateway repository) async {
     final generation = ++_resourceLoadGeneration;
     setState(() => _resourceError = null);
     try {
@@ -111,7 +111,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     }
   }
 
-  Future<void> _loadIntegrations(ProductRepository repository) async {
+  Future<void> _loadIntegrations(ServerOperationsGateway repository) async {
     final generation = ++_integrationLoadGeneration;
     setState(() => _integrationError = null);
     try {
@@ -156,7 +156,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
 
   Future<void> _startMcpAuthentication(
     McpServerInfo server,
-    ProductRepository repository,
+    ServerOperationsGateway repository,
   ) async {
     if (_pendingMcpOAuth != null) {
       throw const ProductException(
@@ -314,7 +314,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     );
   }
 
-  Future<ProductRepository> _requireActionRepository() async {
+  Future<ServerOperationsGateway> _requireActionRepository() async {
     final repository = await widget.controller.prepareActionRepository();
     if (repository != null) return repository;
     throw const ProductException(

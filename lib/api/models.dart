@@ -953,3 +953,27 @@ double _asDouble(dynamic v) {
   final added = aLines.length - p - s;
   return (added: added, removed: removed);
 }
+
+class ApiException implements Exception {
+  final String message;
+  final int? statusCode;
+  final String? errorTag;
+  final String? requestID;
+
+  ApiException(this.message, {this.statusCode, this.errorTag, this.requestID});
+
+  bool get unauthorized => statusCode == 401 || statusCode == 403;
+
+  bool isPermissionNotFound(String id) =>
+      statusCode == 404 &&
+      errorTag == 'PermissionNotFoundError' &&
+      requestID == id;
+
+  bool isQuestionNotFound(String id) =>
+      statusCode == 404 &&
+      errorTag == 'QuestionNotFoundError' &&
+      requestID == id;
+
+  @override
+  String toString() => message;
+}

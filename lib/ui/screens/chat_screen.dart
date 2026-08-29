@@ -9,7 +9,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import '../../api/models.dart';
-import '../../api/opencode_api.dart' show ApiException;
 import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../api/sse.dart';
@@ -1332,7 +1331,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
-  Future<ProductRepository> _requireActionRepository() async {
+  Future<ServerOperationsGateway> _requireActionRepository() async {
     final repository = await _conn.prepareActionRepository();
     if (repository != null) return repository;
     throw StateError(

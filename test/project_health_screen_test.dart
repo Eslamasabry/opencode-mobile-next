@@ -104,7 +104,7 @@ class _WorkspaceLocationController extends ConnectionController {
   final locations = <({String? directory, String? workspace})>[];
 
   @override
-  Future<ProductRepository?> prepareActionRepository() async => repository;
+  Future<ServerOperationsGateway?> prepareActionRepository() async => repository;
 
   @override
   Future<void> selectLocation({String? directory, String? workspace}) async {

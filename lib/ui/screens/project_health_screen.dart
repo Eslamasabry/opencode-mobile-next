@@ -6,8 +6,8 @@ import '../../api/product_repository.dart';
 import '../widgets/product_states.dart';
 
 class ProjectHealthScreen extends StatefulWidget {
-  final ProductRepository repository;
-  final Future<ProductRepository?> Function()? repositoryResolver;
+  final ServerOperationsGateway repository;
+  final Future<ServerOperationsGateway?> Function()? repositoryResolver;
 
   const ProjectHealthScreen({
     super.key,
@@ -68,7 +68,7 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
     }
   }
 
-  Future<ProductRepository?> _resolveRepository() async =>
+  Future<ServerOperationsGateway?> _resolveRepository() async =>
       widget.repositoryResolver?.call() ?? widget.repository;
 
   Future<void> _initializeGit() async {
@@ -121,7 +121,7 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
   }
 
   Future<void> _loadVersionControl(
-    ProductRepository repository,
+    ServerOperationsGateway repository,
     int generation,
   ) async {
     try {
@@ -137,7 +137,7 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
   }
 
   Future<void> _loadLanguageServices(
-    ProductRepository repository,
+    ServerOperationsGateway repository,
     int generation,
   ) async {
     try {
@@ -153,7 +153,7 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
   }
 
   Future<void> _loadFormatters(
-    ProductRepository repository,
+    ServerOperationsGateway repository,
     int generation,
   ) async {
     try {

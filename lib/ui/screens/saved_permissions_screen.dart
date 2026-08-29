@@ -8,7 +8,7 @@ import '../permission_presentation.dart';
 import '../widgets/product_states.dart';
 
 typedef SavedPermissionRepositoryResolver =
-    Future<ProductRepository?> Function();
+    Future<ServerOperationsGateway?> Function();
 
 class SavedPermissionsScreen extends StatefulWidget {
   const SavedPermissionsScreen({
@@ -37,7 +37,7 @@ class _SavedPermissionsScreenState extends State<SavedPermissionsScreen> {
     unawaited(_load());
   }
 
-  Future<ProductRepository?> _resolveRepository() =>
+  Future<ServerOperationsGateway?> _resolveRepository() =>
       widget.repositoryResolver?.call() ??
       widget.controller.prepareActionRepository();
 

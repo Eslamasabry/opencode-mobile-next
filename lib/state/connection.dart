@@ -129,8 +129,8 @@ class ConnectionController extends ChangeNotifier {
   final EventStreamFactory? _globalEventStreamFactory;
   final LocalWakeLockEnsurer _localWakeLockEnsurer;
 
-  OpenCodeApi? api;
-  ProductRepository? repository;
+  ServerGateway? api;
+  ServerOperationsGateway? repository;
   EventStream? _events;
   EventStream? _globalEvents;
   Timer? _poll;
@@ -607,9 +607,9 @@ class ConnectionController extends ChangeNotifier {
 
   Future<ProfileLocation?> _validatedSavedLocation(
     ServerProfile profile,
-    ProductRepository currentRepository,
+    ServerOperationsGateway currentRepository,
     int generation,
-    OpenCodeApi currentApi,
+    ServerGateway currentApi,
   ) async {
     final saved = store.locationFor(profile.id);
     if (saved == null) return null;
@@ -1500,7 +1500,7 @@ class ConnectionController extends ChangeNotifier {
   }
 
   Future<void> _hydratePendingPermissions(
-    OpenCodeApi currentApi,
+    ServerGateway currentApi,
     int connectionGeneration,
     int generation,
     int attempt,
@@ -1601,7 +1601,7 @@ class ConnectionController extends ChangeNotifier {
   Future<
     ({List<PermissionRequest> pending, Set<String> v2IDs, bool v2Succeeded})
   >
-  _loadPendingPermissions(OpenCodeApi currentApi) async {
+  _loadPendingPermissions(ServerGateway currentApi) async {
     List<PermissionRequest>? legacy;
     List<PermissionRequest>? v2;
     Object? legacyError;
@@ -1647,7 +1647,7 @@ class ConnectionController extends ChangeNotifier {
   }
 
   bool _isCurrentPermissionHydration(
-    OpenCodeApi currentApi,
+    ServerGateway currentApi,
     int connectionGeneration,
     int generation,
   ) =>
@@ -1676,7 +1676,7 @@ class ConnectionController extends ChangeNotifier {
   /// foreground path's wake reconciliation doubles as an app resume, which
   /// would clear every posted alert.
   Future<void> _sendPermissionReply(
-    OpenCodeApi currentApi,
+    ServerGateway currentApi,
     String requestID,
     String response,
   ) async {
@@ -1790,8 +1790,8 @@ class ConnectionController extends ChangeNotifier {
 
   Future<({List<PendingQuestion> pending, Set<String> v2IDs, bool v2Succeeded})>
   _loadPendingQuestions(
-    OpenCodeApi? currentApi,
-    ProductRepository currentRepository,
+    ServerGateway? currentApi,
+    ServerOperationsGateway currentRepository,
   ) async {
     List<PendingQuestion>? legacy;
     List<PendingQuestion>? v2;
@@ -1854,8 +1854,8 @@ class ConnectionController extends ChangeNotifier {
   /// notification-action path passes the live background transport directly
   /// to avoid resume semantics (see [_sendPermissionReply]).
   Future<void> _sendQuestionAnswer(
-    OpenCodeApi? currentApi,
-    ProductRepository? current,
+    ServerGateway? currentApi,
+    ServerOperationsGateway? current,
     String requestID,
     List<List<String>> answers,
   ) async {
@@ -2296,7 +2296,7 @@ class ConnectionController extends ChangeNotifier {
     }
   }
 
-  Future<OpenCodeApi?> prepareActionTransport() async {
+  Future<ServerGateway?> prepareActionTransport() async {
     await resumeFromLifecycle();
     if (_disposed || _lifecycleSuspended) return null;
     return api;
@@ -2306,7 +2306,7 @@ class ConnectionController extends ChangeNotifier {
   ///
   /// Retained screens must resolve this after [prepareActionTransport]
   /// completes because lifecycle recovery can replace both objects together.
-  Future<ProductRepository?> prepareActionRepository() async {
+  Future<ServerOperationsGateway?> prepareActionRepository() async {
     await prepareActionTransport();
     if (_disposed || _lifecycleSuspended) return null;
     return repository;
@@ -2326,7 +2326,7 @@ class ConnectionController extends ChangeNotifier {
     );
   }
 
-  Future<OpenCodeApi> _requireActionTransport() async {
+  Future<ServerGateway> _requireActionTransport() async {
     final actionApi = await prepareActionTransport();
     if (actionApi != null) return actionApi;
     throw ApiException(
@@ -2667,8 +2667,8 @@ class ConnectionController extends ChangeNotifier {
 
   Future<void> _refreshPreexistingProviderRuntime({
     required int generation,
-    required OpenCodeApi currentApi,
-    required ProductRepository currentRepository,
+    required ServerGateway currentApi,
+    required ServerOperationsGateway currentRepository,
     required ServerProfile profile,
   }) async {
     if (store.providerRuntimeWasRefreshed(
@@ -2703,7 +2703,7 @@ class ConnectionController extends ChangeNotifier {
     return _generation;
   }
 
-  void _markDataRefreshReady(int generation, OpenCodeApi currentApi) {
+  void _markDataRefreshReady(int generation, ServerGateway currentApi) {
     if (_isCurrent(generation, currentApi)) dataRefreshRevision += 1;
   }
 
@@ -2713,24 +2713,24 @@ class ConnectionController extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool _isCurrent(int generation, OpenCodeApi? currentApi) =>
+  bool _isCurrent(int generation, ServerGateway? currentApi) =>
       !_disposed && generation == _generation && identical(api, currentApi);
 
   bool _isCurrentStream(
     int generation,
-    OpenCodeApi currentApi,
+    ServerGateway currentApi,
     EventStream stream,
   ) => _isCurrent(generation, currentApi) && identical(_events, stream);
 
   bool _isCurrentGlobalStream(
     int generation,
-    OpenCodeApi currentApi,
+    ServerGateway currentApi,
     EventStream stream,
   ) => _isCurrent(generation, currentApi) && identical(_globalEvents, stream);
 
   bool _isCurrentSessionsRefresh(
     int generation,
-    OpenCodeApi currentApi,
+    ServerGateway currentApi,
     int refreshGeneration,
   ) =>
       _isCurrent(generation, currentApi) &&
@@ -2738,7 +2738,7 @@ class ConnectionController extends ChangeNotifier {
 
   bool _isCurrentCatalogRefresh(
     int generation,
-    OpenCodeApi currentApi,
+    ServerGateway currentApi,
     int refreshGeneration,
   ) =>
       _isCurrent(generation, currentApi) &&
@@ -2746,8 +2746,8 @@ class ConnectionController extends ChangeNotifier {
 
   bool _isCurrentQuestionsRefresh(
     int generation,
-    OpenCodeApi? currentApi,
-    ProductRepository currentRepository,
+    ServerGateway? currentApi,
+    ServerOperationsGateway currentRepository,
     int refreshGeneration,
   ) =>
       _isCurrent(generation, currentApi) &&

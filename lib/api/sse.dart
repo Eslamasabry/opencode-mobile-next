@@ -2,17 +2,24 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dio/dio.dart' show CancelToken;
+import 'package:dio/dio.dart' show CancelToken, Response, ResponseBody;
 
+import '../domain/server_gateway.dart';
 import 'models.dart';
-import 'opencode_api.dart';
 
-/// Connection lifecycle surfaced to the UI.
-enum StreamStatus { connecting, connected, reconnecting, disconnected }
+export '../domain/server_gateway.dart' show LiveEventChannel, StreamStatus;
+
+/// The raw v1 SSE endpoints [EventStream] consumes.
+abstract class EventStreamTransport {
+  Future<Response<ResponseBody>> openEventStream({CancelToken? cancelToken});
+  Future<Response<ResponseBody>> openGlobalEventStream({
+    CancelToken? cancelToken,
+  });
+}
 
 /// Server-sent events with automatic reconnect + exponential backoff.
-class EventStream {
-  final OpenCodeApi api;
+class EventStream implements LiveEventChannel {
+  final EventStreamTransport api;
   final void Function(EventEnvelope event) onEvent;
   final void Function(StreamStatus status) onStatus;
   final void Function(Object error)? onError;
@@ -44,12 +51,14 @@ class EventStream {
   // a broken or hostile server to grow the receive buffer without bound.
   static const _maxLineBytes = 8 * 1024 * 1024;
 
+  @override
   void start() {
     assert(!_disposed);
     if (_disposed) return;
     _connect();
   }
 
+  @override
   Future<void> dispose() async {
     if (_disposed) return;
     _disposed = true;

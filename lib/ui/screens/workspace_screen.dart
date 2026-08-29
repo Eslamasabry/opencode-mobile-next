@@ -539,7 +539,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     }
   }
 
-  Future<ProductRepository> _requireActionRepository() async {
+  Future<ServerOperationsGateway> _requireActionRepository() async {
     final repository = await widget.controller.prepareActionRepository();
     if (repository != null) return repository;
     throw StateError('OpenCode is reconnecting. Try again shortly.');

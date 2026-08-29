@@ -4,10 +4,11 @@ import 'dart:io';
 
 import 'package:opencode_sdk/opencode_sdk.dart' as sdk;
 
+import '../domain/server_gateway.dart';
 import 'mcp_oauth.dart';
 import 'models.dart';
 
-enum VcsDiffMode { workingTree, branch }
+export '../domain/server_gateway.dart' hide LiveEventChannel, StreamStatus;
 
 final RegExp _exactSemanticVersion = RegExp(
   r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)'
@@ -25,679 +26,16 @@ extension on VcsDiffMode {
   };
 }
 
-class WorkspaceProject {
-  final String id;
-  final String name;
-  final String directory;
-  final List<String> worktrees;
-  final int updatedAt;
-
-  const WorkspaceProject({
-    required this.id,
-    required this.name,
-    required this.directory,
-    required this.worktrees,
-    required this.updatedAt,
-  });
-}
-
-class WorkspaceInfo {
-  final String id;
-  final String projectID;
-  final String name;
-  final String type;
-  final String? branch;
-  final String? directory;
-  final String? status;
-
-  const WorkspaceInfo({
-    required this.id,
-    required this.projectID,
-    required this.name,
-    required this.type,
-    this.branch,
-    this.directory,
-    this.status,
-  });
-}
-
-class WorkspaceAdapterInfo {
-  final String type;
-  final String name;
-  final String description;
-
-  const WorkspaceAdapterInfo({
-    required this.type,
-    required this.name,
-    required this.description,
-  });
-}
-
-class WorktreeInfo {
-  final String name;
-  final String directory;
-  final String? branch;
-
-  const WorktreeInfo({
-    required this.name,
-    required this.directory,
-    this.branch,
-  });
-}
-
-class ProjectDirectoryInfo {
-  final String directory;
-  final String? strategy;
-
-  const ProjectDirectoryInfo({required this.directory, this.strategy});
-}
-
-class GlobalSessionResult {
-  final Session session;
-  final String? projectName;
-  final String? projectDirectory;
-
-  const GlobalSessionResult({
-    required this.session,
-    this.projectName,
-    this.projectDirectory,
-  });
-}
-
-class ConsoleOrganization {
-  final String accountID;
-  final String accountEmail;
-  final String accountUrl;
-  final String orgID;
-  final String orgName;
-  final bool active;
-
-  const ConsoleOrganization({
-    required this.accountID,
-    required this.accountEmail,
-    required this.accountUrl,
-    required this.orgID,
-    required this.orgName,
-    required this.active,
-  });
-}
-
-enum VersionControlSetupState { git, absent, unknown }
-
-class VersionControlHealth {
-  final String? branch;
-  final String? defaultBranch;
-  final List<VersionControlFile> changes;
-  final VersionControlSetupState setupState;
-
-  const VersionControlHealth({
-    this.branch,
-    this.defaultBranch,
-    required this.changes,
-    this.setupState = VersionControlSetupState.unknown,
-  });
-
-  int get additions => changes.fold(0, (total, file) => total + file.additions);
-  int get deletions => changes.fold(0, (total, file) => total + file.deletions);
-}
-
-class VersionControlFile {
-  final String path;
-  final String status;
-  final int additions;
-  final int deletions;
-
-  const VersionControlFile({
-    required this.path,
-    required this.status,
-    required this.additions,
-    required this.deletions,
-  });
-}
-
-class LanguageServiceHealth {
-  final String id;
-  final String name;
-  final String root;
-  final String status;
-
-  const LanguageServiceHealth({
-    required this.id,
-    required this.name,
-    required this.root,
-    required this.status,
-  });
-
-  bool get connected => status == 'connected';
-}
-
-class FormatterHealth {
-  final String name;
-  final List<String> extensions;
-  final bool enabled;
-
-  const FormatterHealth({
-    required this.name,
-    required this.extensions,
-    required this.enabled,
-  });
-}
-
-class SavedPermission {
-  final String id;
-  final String projectID;
-  final String action;
-  final String resource;
-
-  const SavedPermission({
-    required this.id,
-    required this.projectID,
-    required this.action,
-    required this.resource,
-  });
-}
-
-class WorkspaceSymbol {
-  final String name;
-  final int kind;
-  final String path;
-  final int line;
-  final int column;
-
-  const WorkspaceSymbol({
-    required this.name,
-    required this.kind,
-    required this.path,
-    required this.line,
-    required this.column,
-  });
-}
-
-class TerminalProcess {
-  final String id;
-  final String title;
-  final String command;
-  final List<String> arguments;
-  final String directory;
-  final bool running;
-  final int pid;
-  final int? exitCode;
-
-  const TerminalProcess({
-    required this.id,
-    required this.title,
-    required this.command,
-    required this.arguments,
-    required this.directory,
-    required this.running,
-    required this.pid,
-    this.exitCode,
-  });
-}
-
-class TerminalShellOption {
-  final String path;
-  final String name;
-  final bool acceptable;
-
-  const TerminalShellOption({
-    required this.path,
-    required this.name,
-    required this.acceptable,
-  });
-}
-
-class TerminalShellSettings {
-  final String selected;
-  final List<TerminalShellOption> options;
-
-  const TerminalShellSettings({required this.selected, required this.options});
-}
-
-class CatalogVariant {
-  final String id;
-  final bool disabled;
-  final Map<String, dynamic> options;
-
-  const CatalogVariant({
-    required this.id,
-    this.disabled = false,
-    this.options = const {},
-  });
-
-  String? get reasoningEffort {
-    final value = options['reasoningEffort'] ?? options['reasoning_effort'];
-    return value?.toString();
-  }
-
-  bool get isFast {
-    final normalizedID = id.toLowerCase();
-    final effort = reasoningEffort?.toLowerCase();
-    return effort == 'low' ||
-        normalizedID == 'fast' ||
-        normalizedID.contains('turbo');
-  }
-}
-
-class CatalogModel {
-  final String id;
-  final String providerID;
-  final String name;
-  final String? family;
-  final bool enabled;
-  final String status;
-  final int contextLimit;
-  final int outputLimit;
-  final bool reasoning;
-  final bool attachments;
-  final bool tools;
-  final List<CatalogVariant> variants;
-
-  const CatalogModel({
-    required this.id,
-    required this.providerID,
-    required this.name,
-    this.family,
-    required this.enabled,
-    required this.status,
-    required this.contextLimit,
-    required this.outputLimit,
-    required this.reasoning,
-    required this.attachments,
-    required this.tools,
-    required this.variants,
-  });
-}
-
-class CatalogProvider {
-  final String id;
-  final String name;
-  final bool enabled;
-  final String? integrationID;
-
-  const CatalogProvider({
-    required this.id,
-    required this.name,
-    required this.enabled,
-    this.integrationID,
-  });
-}
-
-class CatalogAgent {
-  final String id;
-  final String mode;
-  final String? description;
-  final bool hidden;
-  final int? maxSteps;
-
-  const CatalogAgent({
-    required this.id,
-    required this.mode,
-    this.description,
-    required this.hidden,
-    this.maxSteps,
-  });
-}
-
-class CatalogSnapshot {
-  final List<CatalogProvider> providers;
-  final List<CatalogModel> models;
-  final List<CatalogAgent> agents;
-
-  const CatalogSnapshot({
-    required this.providers,
-    required this.models,
-    required this.agents,
-  });
-}
-
-class ExperimentalServerCapabilities {
-  final bool backgroundSubagents;
-
-  const ExperimentalServerCapabilities({required this.backgroundSubagents});
-}
-
-class CodingToolInfo {
-  final String id;
-  final String description;
-  final Object? parameters;
-
-  const CodingToolInfo({
-    required this.id,
-    required this.description,
-    required this.parameters,
-  });
-}
-
-class ChatDefaults {
-  final ModelRef? model;
-  final String? agent;
-
-  const ChatDefaults({this.model, this.agent});
-}
-
-class McpServerInfo {
-  final String name;
-  final String status;
-  final String? error;
-
-  const McpServerInfo({required this.name, required this.status, this.error});
-}
-
-enum McpServerKind { remote, local }
-
-enum McpConfigScope { project, global }
-
-class McpServerDraft {
-  final String name;
-  final McpServerKind kind;
-  final String? url;
-  final List<String> command;
-  final String? cwd;
-  final Map<String, String> headers;
-  final Map<String, String> environment;
-  final bool detectOAuth;
-  final int? timeoutMs;
-
-  const McpServerDraft({
-    required this.name,
-    required this.kind,
-    this.url,
-    this.command = const [],
-    this.cwd,
-    this.headers = const {},
-    this.environment = const {},
-    this.detectOAuth = true,
-    this.timeoutMs,
-  });
-
-  String get normalizedName => name.trim();
-
-  Map<String, Object?> toConfigJson() {
-    final serverName = normalizedName;
-    if (serverName.isEmpty || serverName.contains(RegExp(r'[\r\n]'))) {
-      throw const ProductException('Enter a valid MCP server name');
-    }
-    final timeout = timeoutMs;
-    if (timeout != null && timeout <= 0) {
-      throw const ProductException('MCP timeout must be greater than zero');
-    }
-    switch (kind) {
-      case McpServerKind.remote:
-        final value = url?.trim() ?? '';
-        final uri = Uri.tryParse(value);
-        if (uri == null ||
-            !uri.hasScheme ||
-            !uri.hasAuthority ||
-            (uri.scheme != 'https' && uri.scheme != 'http') ||
-            uri.userInfo.isNotEmpty) {
-          throw const ProductException(
-            'Enter an HTTP or HTTPS MCP server URL without credentials',
-          );
-        }
-        _validatePairs(headers, 'HTTP header');
-        return {
-          'type': 'remote',
-          'url': uri.toString(),
-          if (headers.isNotEmpty) 'headers': Map.of(headers),
-          if (!detectOAuth) 'oauth': false,
-          'timeout': ?timeout,
-        };
-      case McpServerKind.local:
-        final parts = command.map((part) => part.trim()).toList();
-        if (parts.isEmpty || parts.any((part) => part.isEmpty)) {
-          throw const ProductException(
-            'Enter the local command and each argument on its own line',
-          );
-        }
-        _validatePairs(environment, 'environment variable');
-        return {
-          'type': 'local',
-          'command': parts,
-          if (cwd?.trim().isNotEmpty == true) 'cwd': cwd!.trim(),
-          if (environment.isNotEmpty) 'environment': Map.of(environment),
-          'timeout': ?timeout,
-        };
-    }
-  }
-
-  static void _validatePairs(Map<String, String> values, String label) {
-    for (final entry in values.entries) {
-      if (entry.key.trim().isEmpty ||
-          entry.key.contains(RegExp(r'[\r\n=]')) ||
-          entry.value.contains(RegExp(r'[\r\n]'))) {
-        throw ProductException('Enter a valid $label name and value');
-      }
-    }
-  }
-}
-
-class McpResourceInfo {
-  final String name;
-  final String server;
-  final String uri;
-  final String? description;
-  final String? mimeType;
-
-  const McpResourceInfo({
-    required this.name,
-    required this.server,
-    required this.uri,
-    this.description,
-    this.mimeType,
-  });
-}
-
-class IntegrationInfo {
-  final String id;
-  final String name;
-  final List<IntegrationMethodInfo> methods;
-  final List<IntegrationConnectionInfo> connections;
-  final int connectionCount;
-
-  const IntegrationInfo({
-    required this.id,
-    required this.name,
-    required this.methods,
-    this.connections = const [],
-    required this.connectionCount,
-  });
-
-  List<String> get credentialIDs => connections
-      .where((connection) => connection.type == 'credential')
-      .map((connection) => connection.id)
-      .whereType<String>()
-      .where((id) => id.isNotEmpty)
-      .toList(growable: false);
-
-  bool get hasEnvironmentConnection =>
-      connections.any((connection) => connection.type == 'env');
-}
-
-class IntegrationConnectionInfo {
-  final String type;
-  final String? id;
-  final String label;
-
-  const IntegrationConnectionInfo({
-    required this.type,
-    this.id,
-    required this.label,
-  });
-}
-
-class IntegrationMethodInfo {
-  final String type;
-  final String? id;
-  final String label;
-  final List<Map<String, dynamic>> prompts;
-  final List<String> environmentNames;
-
-  const IntegrationMethodInfo({
-    required this.type,
-    this.id,
-    required this.label,
-    this.prompts = const [],
-    this.environmentNames = const [],
-  });
-}
-
-class IntegrationAuthLaunch {
-  final String attemptID;
-  final String url;
-  final String instructions;
-  final IntegrationAuthMode mode;
-  final int? expiresAt;
-
-  const IntegrationAuthLaunch({
-    required this.attemptID,
-    required this.url,
-    required this.instructions,
-    required this.mode,
-    this.expiresAt,
-  });
-}
-
-enum IntegrationAuthMode { auto, code }
-
-enum IntegrationAuthState { pending, complete, failed, expired }
-
-class IntegrationAuthStatus {
-  final IntegrationAuthState state;
-  final String? message;
-  final int? expiresAt;
-
-  const IntegrationAuthStatus({
-    required this.state,
-    this.message,
-    this.expiresAt,
-  });
-}
-
-class CommandInfo {
-  final String name;
-  final String? description;
-  final String? agent;
-  final bool subtask;
-
-  const CommandInfo({
-    required this.name,
-    this.description,
-    this.agent,
-    required this.subtask,
-  });
-}
-
-class SkillInfo {
-  final String name;
-  final String? description;
-  final String location;
-  final String content;
-  final bool slashCommand;
-
-  const SkillInfo({
-    required this.name,
-    this.description,
-    required this.location,
-    required this.content,
-    required this.slashCommand,
-  });
-}
-
-class ReferenceInfo {
-  final String name;
-  final String path;
-  final String? description;
-
-  const ReferenceInfo({
-    required this.name,
-    required this.path,
-    this.description,
-  });
-}
-
-class QuestionChoice {
-  final String label;
-  final String description;
-
-  const QuestionChoice({required this.label, required this.description});
-}
-
-class QuestionPrompt {
-  final String title;
-  final String question;
-  final bool multiple;
-  final bool custom;
-  final List<QuestionChoice> choices;
-
-  const QuestionPrompt({
-    required this.title,
-    required this.question,
-    required this.multiple,
-    required this.custom,
-    required this.choices,
-  });
-}
-
-class PendingQuestion {
-  final String id;
-  final String sessionID;
-  final List<QuestionPrompt> prompts;
-
-  const PendingQuestion({
-    required this.id,
-    required this.sessionID,
-    required this.prompts,
-  });
-
-  factory PendingQuestion.fromJson(Map<String, dynamic> json) {
-    final raw = json['questions'];
-    return PendingQuestion(
-      id: (json['id'] ?? json['requestID'] ?? '').toString(),
-      sessionID: (json['sessionID'] ?? '').toString(),
-      prompts: raw is List
-          ? raw.whereType<Map>().map((item) {
-              final value = Map<String, dynamic>.from(item);
-              final options = value['options'];
-              return QuestionPrompt(
-                title: (value['header'] ?? 'Question').toString(),
-                question: (value['question'] ?? '').toString(),
-                multiple: value['multiple'] == true,
-                custom: value['custom'] != false,
-                choices: options is List
-                    ? options.whereType<Map>().map((option) {
-                        final choice = Map<String, dynamic>.from(option);
-                        return QuestionChoice(
-                          label: (choice['label'] ?? '').toString(),
-                          description: (choice['description'] ?? '').toString(),
-                        );
-                      }).toList()
-                    : const [],
-              );
-            }).toList()
-          : const [],
-    );
-  }
-}
-
-abstract class TerminalChannel {
-  Stream<String> get output;
-  int? get cursor => null;
-  void write(String value);
-  Future<void> close();
-}
-
-abstract interface class LocationAwareProductRepository {
-  int get locationRevision;
-}
-
-abstract class ProductRepository {
+abstract class ProductRepository implements ServerOperationsGateway {
+  @override
   void setLocation({String? directory, String? workspace});
+  @override
   Future<String> upgradeServer(String target) => Future.error(
     const ProductException(
       'Remote OpenCode upgrade is unavailable on this server',
     ),
   );
+  @override
   Future<void> writeClientLog({
     required String message,
     Map<String, Object?> extra = const {},
@@ -706,7 +44,9 @@ abstract class ProductRepository {
       'Sending app diagnostics is unavailable on this server',
     ),
   );
+  @override
   Future<List<WorkspaceProject>> listProjects();
+  @override
   Future<WorkspaceProject> renameProject({
     required String projectID,
     required String projectDirectory,
@@ -714,39 +54,48 @@ abstract class ProductRepository {
   }) => Future.error(
     const ProductException('Project renaming is unavailable on this server'),
   );
+  @override
   Future<WorkspaceProject?> loadCurrentProject() async => null;
+  @override
   Future<List<WorktreeInfo>> listWorktrees({
     required String projectDirectory,
     String? projectID,
   }) => Future.error(
     const ProductException('Worktree management is unavailable on this server'),
   );
+  @override
   Future<WorktreeInfo> createWorktree({
     required String projectDirectory,
     String? name,
   }) => Future.error(
     const ProductException('Worktree management is unavailable on this server'),
   );
+  @override
   Future<List<VersionControlFile>> listWorktreeFileStatuses(String directory) =>
       Future.error(
         const ProductException('Worktree status is unavailable on this server'),
       );
+  @override
   Future<void> resetWorktree({
     required String projectDirectory,
     required String directory,
   }) => Future.error(
     const ProductException('Worktree management is unavailable on this server'),
   );
+  @override
   Future<void> removeWorktree({
     required String projectDirectory,
     required String directory,
   }) => Future.error(
     const ProductException('Worktree management is unavailable on this server'),
   );
+  @override
   Future<List<WorkspaceInfo>> listWorkspaces();
+  @override
   Future<List<WorkspaceInfo>> listManagedWorkspaces({
     required String projectDirectory,
   }) => listWorkspaces();
+  @override
   Future<List<WorkspaceAdapterInfo>> listWorkspaceAdapters({
     required String projectDirectory,
   }) => Future.error(
@@ -754,12 +103,14 @@ abstract class ProductRepository {
       'Workspace management is unavailable on this server',
     ),
   );
+  @override
   Future<void> syncWorkspaceList({required String projectDirectory}) =>
       Future.error(
         const ProductException(
           'Workspace discovery is unavailable on this server',
         ),
       );
+  @override
   Future<WorkspaceInfo> createManagedWorkspace({
     required String projectDirectory,
     required String type,
@@ -767,12 +118,14 @@ abstract class ProductRepository {
   }) => Future.error(
     const ProductException('Workspace creation is unavailable on this server'),
   );
+  @override
   Future<void> removeManagedWorkspace({
     required String projectDirectory,
     required String id,
   }) => Future.error(
     const ProductException('Workspace removal is unavailable on this server'),
   );
+  @override
   Future<List<GlobalSessionResult>> listGlobalSessions({
     String? search,
     bool includeArchived = false,
@@ -783,18 +136,22 @@ abstract class ProductRepository {
       'All-project session search is unavailable on this server',
     ),
   );
+  @override
   Future<Session> getSessionDetails(String id) => Future.error(
     const ProductException('Session navigation is unavailable on this server'),
   );
+  @override
   Future<List<Session>> listSessionChildren(String id) => Future.error(
     const ProductException('Subagent sessions are unavailable on this server'),
   );
+  @override
   Future<List<ProjectDirectoryInfo>> listProjectDirectories(String projectID) =>
       Future.error(
         const ProductException(
           'Project directory discovery is unavailable on this server',
         ),
       );
+  @override
   Future<void> moveSession(
     String sessionID, {
     required String directory,
@@ -802,6 +159,7 @@ abstract class ProductRepository {
   }) => Future.error(
     const ProductException('Moving sessions is unavailable on this server'),
   );
+  @override
   Future<void> warpSession(
     String sessionID, {
     required String? workspaceID,
@@ -812,86 +170,119 @@ abstract class ProductRepository {
 
   /// Asks the server to start its sync loops for workspaces in the current
   /// project that have active sessions. Returns the server's own boolean.
+  @override
   Future<bool> startWorkspaceSync() => Future.error(
     const ProductException('Workspace sync is unavailable on this server'),
   );
 
   /// Reassigns [sessionID] to the currently selected workspace through the
   /// server's sync event system and returns the server-confirmed session ID.
+  @override
   Future<String> stealSessionIntoWorkspace(String sessionID) => Future.error(
     const ProductException('Session steal is unavailable on this server'),
   );
+  @override
   Future<List<ConsoleOrganization>> listConsoleOrganizations() => Future.error(
     const ProductException(
       'Organization switching is unavailable on this server',
     ),
   );
+  @override
   Future<void> switchConsoleOrganization(ConsoleOrganization organization) =>
       Future.error(
         const ProductException(
           'Organization switching is unavailable on this server',
         ),
       );
+  @override
   Future<void> addSessionLocationReminder(String sessionID, String directory) =>
       Future.value();
+  @override
   Future<VersionControlHealth> loadVersionControlHealth();
+  @override
   Future<void> initializeGitRepository() => Future.error(
     const ProductException('Git initialization is unavailable on this server'),
   );
+  @override
   Future<List<VersionControlFile>> listFileStatuses();
+  @override
   Future<List<LanguageServiceHealth>> listLanguageServices();
+  @override
   Future<List<FormatterHealth>> listFormatters();
+  @override
   Future<List<WorkspaceSymbol>> findWorkspaceSymbols(String query);
+  @override
   Future<List<TerminalProcess>> listTerminals();
+  @override
   Future<TerminalShellSettings> loadTerminalShellSettings() => Future.error(
     const ProductException('Shell settings are unavailable on this server'),
   );
+  @override
   Future<void> selectTerminalShell(String value) => Future.error(
     const ProductException('Shell settings are unavailable on this server'),
   );
+  @override
   Future<TerminalProcess> createTerminal({String? title});
+  @override
   Future<void> renameTerminal(String id, String title);
+  @override
   Future<void> resizeTerminal(
     String id, {
     required int rows,
     required int cols,
   });
+  @override
   Future<void> removeTerminal(String id);
+  @override
   Future<TerminalChannel> connectTerminal(String id, {int? cursor});
+  @override
   Future<List<FileDiff>> listVcsDiffs(VcsDiffMode mode);
+  @override
   Future<CatalogSnapshot> loadCatalog();
+  @override
   Future<ExperimentalServerCapabilities> loadExperimentalCapabilities() =>
       Future.error(
         const ProductException(
           'Experimental capability discovery is unavailable on this server',
         ),
       );
+  @override
   Future<List<String>> listCodingToolIDs() => Future.error(
     const ProductException('Tool discovery is unavailable on this server'),
   );
+  @override
   Future<List<CodingToolInfo>> listCodingTools({
     required String providerID,
     required String modelID,
   }) => Future.error(
     const ProductException('Tool discovery is unavailable on this server'),
   );
+  @override
   Future<ChatDefaults> loadChatDefaults() async => const ChatDefaults();
+  @override
   Future<List<McpServerInfo>> listMcpServers();
+  @override
   Future<List<McpResourceInfo>> listMcpResources();
+  @override
   Future<void> connectMcp(String name);
+  @override
   Future<void> disconnectMcp(String name);
+  @override
   Future<McpAuthLaunch> startMcpAuthentication(String name);
+  @override
   Future<McpServerInfo> completeMcpAuthentication(String name, String code) =>
       Future.error(
         const ProductException(
           'Completing MCP authentication is unavailable on this server',
         ),
       );
+  @override
   Future<void> cancelMcpAuthentication(String name) => Future.error(
     const ProductException(
       'Cancelling MCP authentication is unavailable on this server',
     ),
   );
+  @override
   Future<void> addMcpServer(
     McpServerDraft draft, {
     required McpConfigScope scope,
@@ -900,43 +291,64 @@ abstract class ProductRepository {
       'Persistent MCP setup is unavailable on this server',
     ),
   );
+  @override
   Future<List<IntegrationInfo>> listIntegrations();
+  @override
   Future<void> connectIntegrationKey(String id, String key, {String? label});
+  @override
   Future<void> disconnectIntegration(IntegrationInfo integration);
+  @override
   Future<void> refreshProviderRuntime();
+  @override
   Future<IntegrationAuthLaunch> startIntegrationOAuth(
     String id,
     String methodID, {
     Map<String, String> inputs,
     String? label,
   });
+  @override
   Future<IntegrationAuthStatus> integrationOAuthStatus(String attemptID);
+  @override
   Future<void> completeIntegrationOAuth(String attemptID, {String? code});
+  @override
   Future<void> cancelIntegrationOAuth(String attemptID);
+  @override
   Future<List<CommandInfo>> listCommands();
+  @override
   Future<List<SkillInfo>> listSkills();
+  @override
   Future<List<ReferenceInfo>> listReferences();
+  @override
   Future<List<PendingQuestion>> listQuestions();
+  @override
   Future<List<SavedPermission>> listSavedPermissions() => Future.error(
     const ProductException(
       'Saved permission management is unavailable on this server',
     ),
   );
+  @override
   Future<void> removeSavedPermission(String id) => Future.error(
     const ProductException(
       'Saved permission management is unavailable on this server',
     ),
   );
+  @override
   Future<void> answerQuestion(String id, List<List<String>> answers);
+  @override
   Future<void> rejectQuestion(String id);
+  @override
   Future<String?> shareSession(String id);
+  @override
   Future<void> unshareSession(String id);
+  @override
   Future<void> archiveSession(String id);
+  @override
   Future<String> forkSession(String id, {String? messageID});
 
   /// Permanently removes one message and all of its parts from the session's
   /// stored conversation, so future replies no longer see it. File changes
   /// that message made are not reverted.
+  @override
   Future<void> deleteMessage({
     required String sessionID,
     required String messageID,
@@ -944,8 +356,11 @@ abstract class ProductRepository {
     const ProductException('Message deletion is unavailable on this server'),
   );
 
+  @override
   Future<void> revertSession(String id, String messageID);
+  @override
   Future<void> restoreSession(String id);
+  @override
   Future<void> compactSession(
     String id, {
     required String providerID,
@@ -2884,14 +2299,4 @@ class _IoTerminalChannel implements TerminalChannel {
 
   @override
   Future<void> close() => _socket.close();
-}
-
-class ProductException implements Exception {
-  final String message;
-  final Object? cause;
-
-  const ProductException(this.message, {this.cause});
-
-  @override
-  String toString() => message;
 }

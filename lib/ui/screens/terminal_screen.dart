@@ -22,13 +22,13 @@ class _TerminalScreenState extends State<TerminalScreen> {
   List<TerminalProcess>? _processes;
   String? _error;
   bool _creating = false;
-  ProductRepository? _activeRepository;
+  ServerOperationsGateway? _activeRepository;
   int _locationRevision = -1;
   int _dataRefreshRevision = -1;
   int _ptyRevision = -1;
   int _loadGeneration = 0;
 
-  ProductRepository? get _repository => widget.controller.repository;
+  ServerOperationsGateway? get _repository => widget.controller.repository;
 
   @override
   void initState() {
@@ -83,14 +83,14 @@ class _TerminalScreenState extends State<TerminalScreen> {
     _load();
   }
 
-  int _revisionOf(ProductRepository? repository) => Object.hash(
+  int _revisionOf(ServerOperationsGateway? repository) => Object.hash(
     widget.controller.locationRevision,
     repository is LocationAwareProductRepository
         ? (repository as LocationAwareProductRepository).locationRevision
         : 0,
   );
 
-  bool _isCurrentLocation(ProductRepository repository, int revision) =>
+  bool _isCurrentLocation(ServerOperationsGateway repository, int revision) =>
       mounted &&
       identical(repository, _repository) &&
       revision == _revisionOf(repository);
@@ -147,7 +147,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
 
   Future<void> _open(
     TerminalProcess process, [
-    ProductRepository? repository,
+    ServerOperationsGateway? repository,
   ]) async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -415,8 +415,8 @@ class _ProcessStatusChip extends StatelessWidget {
 }
 
 class TerminalSurface extends StatefulWidget {
-  final ProductRepository repository;
-  final ProductRepository? Function()? repositoryResolver;
+  final ServerOperationsGateway repository;
+  final ServerOperationsGateway? Function()? repositoryResolver;
   final int Function()? dataRefreshRevisionResolver;
   final bool Function()? keepLiveInBackgroundResolver;
   final Listenable? repositoryChanges;
@@ -455,10 +455,10 @@ class _TerminalSurfaceState extends State<TerminalSurface>
   String _transcript = '';
   final _transcriptSanitizer = _TerminalTranscriptSanitizer();
   int? _terminalCursor;
-  ProductRepository? _activeRepository;
+  ServerOperationsGateway? _activeRepository;
   int _activeDataRefreshRevision = -1;
 
-  ProductRepository? get _repository => widget.repositoryResolver == null
+  ServerOperationsGateway? get _repository => widget.repositoryResolver == null
       ? widget.repository
       : widget.repositoryResolver!();
 

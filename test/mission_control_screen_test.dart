@@ -18,10 +18,10 @@ class _Controller extends ConnectionController {
 
   int prepareCalls = 0;
   int refreshCalls = 0;
-  final preparedRepositories = <ProductRepository?>[];
+  final preparedRepositories = <ServerOperationsGateway?>[];
 
   @override
-  Future<ProductRepository?> prepareActionRepository() async {
+  Future<ServerOperationsGateway?> prepareActionRepository() async {
     prepareCalls += 1;
     preparedRepositories.add(repository);
     return repository;
