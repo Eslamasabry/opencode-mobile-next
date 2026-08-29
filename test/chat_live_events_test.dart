@@ -16,6 +16,7 @@ import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/global_sessions_screen.dart';
 import 'package:opencode_mobile/ui/screens/project_health_screen.dart';
 import 'package:opencode_mobile/ui/screens/session_context_screen.dart';
+import 'package:opencode_mobile/ui/widgets/product_states.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeOpenCodeApi extends OpenCodeApi {
@@ -47,6 +48,7 @@ class _FakeOpenCodeApi extends OpenCodeApi {
   final List<String> deleteCalls = [];
   List<FileDiff> diffs = const [];
   List<Todo> todoItems = const [];
+  Object? todosError;
   final Map<String, FileContent> fileContents = {};
   final List<String> fileContentRequests = [];
   List<FileNode> projectFiles = const [];
@@ -74,7 +76,11 @@ class _FakeOpenCodeApi extends OpenCodeApi {
   Future<List<FileDiff>> diff(String id) async => diffs;
 
   @override
-  Future<List<Todo>> todos(String id) async => todoItems;
+  Future<List<Todo>> todos(String id) async {
+    final error = todosError;
+    if (error != null) throw error;
+    return todoItems;
+  }
 
   @override
   Future<List<FileNode>> listFiles([String path = '']) async =>
@@ -719,8 +725,54 @@ void main() {
       findsOneWidget,
     );
     expect(find.textContaining('Endpoint is unavailable'), findsOneWidget);
-    expect(find.text('Retry'), findsOneWidget);
+    expect(find.text('Try again'), findsOneWidget);
     expect(find.text('Change server'), findsOneWidget);
+  });
+
+  testWidgets('rehydrate never flashes a skeleton over existing messages', (
+    tester,
+  ) async {
+    var loads = 0;
+    Completer<List<MessageWithParts>>? pending;
+    List<MessageWithParts> transcript() => [
+      _message('assistant-1', 'assistant', [
+        Part(
+          id: 'part-1',
+          type: 'text',
+          text: 'Retained response',
+          messageID: 'assistant-1',
+        ),
+      ]),
+    ];
+    final api = _FakeOpenCodeApi();
+    api.messagesHandler = (_) {
+      loads += 1;
+      if (loads == 1) return Future.value(transcript());
+      pending = Completer<List<MessageWithParts>>();
+      return pending!.future;
+    };
+
+    final controller = await _pumpChat(tester, api);
+    expect(find.text('Retained response'), findsOneWidget);
+    expect(find.byType(LoadingList), findsNothing);
+
+    controller.signalDataRefreshForTesting();
+    await tester.pump();
+    await tester.pump();
+
+    // The reload is still in flight: the transcript stays rendered with no
+    // skeleton and no full-screen error.
+    expect(loads, 2);
+    expect(find.text('Retained response'), findsOneWidget);
+    expect(find.byType(LoadingList), findsNothing);
+    expect(find.byType(ProductErrorState), findsNothing);
+
+    // Even a failed refresh keeps the transcript instead of a dead end.
+    pending!.completeError(StateError('stream reset during rehydrate'));
+    await tester.pumpAndSettle();
+    expect(find.text('Retained response'), findsOneWidget);
+    expect(find.byType(LoadingList), findsNothing);
+    expect(find.byType(ProductErrorState), findsNothing);
   });
 
   testWidgets('renders current OpenCode unified patches and server counts', (
@@ -952,10 +1004,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(api.abortCalls, 1);
-    expect(
-      find.textContaining('Could not stop generation: server refused to stop'),
-      findsOneWidget,
-    );
+    expect(find.text('server refused to stop'), findsOneWidget);
   });
 
   test(
@@ -1770,6 +1819,48 @@ void main() {
 
     expect(find.text('Verify production release'), findsOneWidget);
     expect(find.text('in progress · high priority'), findsOneWidget);
+  });
+
+  testWidgets('todos sheet failure offers retry instead of raw exception', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..todosError = ApiException(
+        'Load todos failed (HTTP 500): session store unavailable',
+      );
+
+    await _pumpChat(tester, api);
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Todos'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Load todos failed (HTTP 500): session store unavailable'),
+      findsOneWidget,
+    );
+    expect(find.text('Try again'), findsOneWidget);
+
+    api
+      ..todosError = null
+      ..todoItems = [Todo(content: 'Recovered todo', status: 'pending')];
+    await tester.tap(find.text('Try again'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Recovered todo'), findsOneWidget);
+    expect(find.text('Try again'), findsNothing);
+  });
+
+  testWidgets('todos sheet explains an empty todo list', (tester) async {
+    final api = _FakeOpenCodeApi();
+
+    await _pumpChat(tester, api);
+    await tester.tap(find.byTooltip('Session views'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Todos'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No todos in this session'), findsOneWidget);
   });
 
   testWidgets('launcher combines mobile actions with server commands', (
@@ -2887,7 +2978,10 @@ void main() {
         tester.widget<TextField>(find.byType(TextField)).controller?.text,
         'try once',
       );
-      expect(find.textContaining('Send failed:'), findsOneWidget);
+      expect(
+        find.text('OpenCode is unreachable. Try again.'),
+        findsOneWidget,
+      );
     },
   );
 
@@ -3101,7 +3195,7 @@ void main() {
     expect(controller.sessionsById, contains('session-1'));
     await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Could not delete chat:'), findsOneWidget);
+    expect(find.text('OpenCode is unreachable. Try again.'), findsOneWidget);
     expect(controller.sessionsById, contains('session-1'));
     expect(find.text('Original title'), findsOneWidget);
     await tester.pump(const Duration(seconds: 5));
@@ -3114,7 +3208,7 @@ void main() {
     await tester.enterText(find.byType(TextField), 'Changed title');
     await tester.tap(find.widgetWithText(FilledButton, 'Save'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Could not rename chat:'), findsOneWidget);
+    expect(find.text('OpenCode is unreachable. Try again.'), findsOneWidget);
     expect(controller.sessionsById['session-1']?.title, 'Original title');
     expect(find.text('Original title'), findsOneWidget);
   });

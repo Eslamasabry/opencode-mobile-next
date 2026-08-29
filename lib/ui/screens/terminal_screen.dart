@@ -111,7 +111,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
       }
     } catch (error) {
       if (mounted && generation == _loadGeneration) {
-        setState(() => _error = error.toString());
+        setState(() => _error = productErrorText(error));
       }
     }
   }
@@ -558,7 +558,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
         return;
       }
       if (repository == null) {
-        throw StateError('The server transport is reconnecting.');
+        throw const ProductException('The server transport is reconnecting.');
       }
       _activeRepository = repository;
       _transcriptSanitizer.reset();
@@ -584,7 +584,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
         onError: (Object error) {
           if (mounted && generation == _connectionGeneration) {
             setState(() {
-              _error = error.toString();
+              _error = productErrorText(error);
               _closed = true;
             });
           }
@@ -605,7 +605,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
         setState(() {
           _connecting = false;
           _closed = true;
-          _error = error.toString();
+          _error = productErrorText(error);
         });
       }
     }
@@ -801,7 +801,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
             MaterialBanner(
               content: Text(_error!),
               actions: [
-                TextButton(onPressed: _connect, child: const Text('Retry')),
+                TextButton(onPressed: _connect, child: const Text('Try again')),
               ],
             ),
           Expanded(

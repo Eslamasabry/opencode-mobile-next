@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
+import '../widgets/product_states.dart';
 
 enum SessionDestinationMode { move, warp }
 
@@ -97,7 +98,7 @@ class _SessionDestinationSheetState extends State<_SessionDestinationSheet> {
     final repository = await widget.controller.prepareActionRepository();
     if (!mounted) return;
     if (repository == null) {
-      setState(() => _error = StateError('OpenCode is reconnecting.'));
+      setState(() => _error = const ProductException('OpenCode is reconnecting.'));
       return;
     }
     setState(() {
@@ -114,7 +115,7 @@ class _SessionDestinationSheetState extends State<_SessionDestinationSheet> {
       if (!mounted) return;
       final project = _projectForSession(projects, session, currentDirectory);
       if (project == null) {
-        throw StateError(
+        throw const ProductException(
           'The session project is not available on this server.',
         );
       }
@@ -380,10 +381,13 @@ class _SessionDestinationSheetState extends State<_SessionDestinationSheet> {
 
   Widget _buildBody(List<_SessionDestination>? visible) {
     if (_error != null && _destinations == null) {
-      return _InlineFailure(error: _error!, onRetry: _load);
+      return ProductErrorState(
+        message: productErrorText(_error!),
+        onRetry: _load,
+      );
     }
     if (visible == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const LoadingList(rows: 6);
     }
     if (visible.isEmpty) {
       return Center(
@@ -466,7 +470,7 @@ class _ConsoleOrganizationSheetState extends State<_ConsoleOrganizationSheet> {
     final repository = await widget.controller.prepareActionRepository();
     if (!mounted) return;
     if (repository == null) {
-      setState(() => _error = StateError('OpenCode is reconnecting.'));
+      setState(() => _error = const ProductException('OpenCode is reconnecting.'));
       return;
     }
     setState(() {
@@ -555,8 +559,11 @@ class _ConsoleOrganizationSheetState extends State<_ConsoleOrganizationSheet> {
         ),
         body: organizations == null
             ? _error == null
-                  ? const Center(child: CircularProgressIndicator())
-                  : _InlineFailure(error: _error!, onRetry: _load)
+                  ? const LoadingList(rows: 5)
+                  : ProductErrorState(
+                      message: productErrorText(_error!),
+                      onRetry: _load,
+                    )
             : organizations.isEmpty
             ? const Center(
                 child: Padding(
@@ -612,37 +619,6 @@ class _ConsoleOrganizationSheetState extends State<_ConsoleOrganizationSheet> {
   }
 }
 
-class _InlineFailure extends StatelessWidget {
-  const _InlineFailure({required this.error, required this.onRetry});
-
-  final Object error;
-  final Future<void> Function() onRetry;
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.sync_problem_rounded,
-            color: Theme.of(context).colorScheme.error,
-          ),
-          const SizedBox(height: 12),
-          Text(error.toString(), textAlign: TextAlign.center),
-          const SizedBox(height: 16),
-          OutlinedButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Retry'),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
 class _InlineErrorBanner extends StatelessWidget {
   const _InlineErrorBanner({required this.error});
 
@@ -652,7 +628,7 @@ class _InlineErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
     child: Text(
-      error.toString(),
+      productErrorText(error),
       style: TextStyle(color: Theme.of(context).colorScheme.error),
     ),
   );

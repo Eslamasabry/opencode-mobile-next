@@ -90,7 +90,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
         widget.controller.refreshPendingQuestions(),
       ]);
     } catch (error) {
-      if (mounted) setState(() => _error = error.toString());
+      if (mounted) setState(() => _error = productErrorText(error));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -156,7 +156,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
                       title: Text(error),
                       trailing: TextButton(
                         onPressed: _refresh,
-                        child: const Text('Retry'),
+                        child: const Text('Try again'),
                       ),
                     ),
                   if (permissions.isNotEmpty) ...[
@@ -280,7 +280,7 @@ class _PermissionTileState extends State<_PermissionTile> {
     try {
       await widget.controller.answerPermission(widget.permission.id, value);
     } catch (error) {
-      if (mounted) setState(() => _error = error.toString());
+      if (mounted) setState(() => _error = productErrorText(error));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -459,7 +459,7 @@ class _QuestionSheetState extends State<_QuestionSheet> {
       await widget.controller.answerQuestion(widget.question.id, answers);
       if (mounted) Navigator.pop(context);
     } catch (error) {
-      if (mounted) setState(() => _error = error.toString());
+      if (mounted) setState(() => _error = productErrorText(error));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -494,7 +494,7 @@ class _QuestionSheetState extends State<_QuestionSheet> {
       await widget.controller.rejectQuestion(widget.question.id);
       if (mounted) Navigator.pop(context);
     } catch (error) {
-      if (mounted) setState(() => _error = error.toString());
+      if (mounted) setState(() => _error = productErrorText(error));
     } finally {
       if (mounted) setState(() => _busy = false);
     }

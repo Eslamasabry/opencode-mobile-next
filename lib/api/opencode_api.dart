@@ -82,12 +82,12 @@ class OpenCodeApi implements ServerGateway, EventStreamTransport {
   Never _fail(DioException e, String what) {
     final code = e.response?.statusCode;
     final responseData = e.response?.data;
-    final body = responseData?.toString();
+    final detail = errorBodyDetail(responseData);
     final error = responseData is Map
         ? Map<String, dynamic>.from(responseData)
         : null;
     throw ApiException(
-      '$what failed${code != null ? ' (HTTP $code)' : ''}${body != null && code != null ? ': $body' : ''}',
+      '$what failed${code != null ? ' (HTTP $code)' : ''}${detail != null && code != null ? ': $detail' : ''}',
       statusCode: code,
       errorTag: error?['_tag']?.toString(),
       requestID: error?['requestID']?.toString(),
@@ -95,16 +95,59 @@ class OpenCodeApi implements ServerGateway, EventStreamTransport {
   }
 
   Never _failGenerated(sdk.OpenCodeApiException e, String what) {
-    final body = e.rawPayload?.toString();
+    final detail = errorBodyDetail(e.rawPayload);
     final error = e.rawPayload is Map
         ? Map<String, dynamic>.from(e.rawPayload! as Map)
         : null;
     throw ApiException(
-      '$what failed (HTTP ${e.statusCode})${body != null ? ': $body' : ''}',
+      '$what failed (HTTP ${e.statusCode})${detail != null ? ': $detail' : ''}',
       statusCode: e.statusCode,
       errorTag: error?['_tag']?.toString(),
       requestID: error?['requestID']?.toString(),
     );
+  }
+
+  static const _maxErrorDetailChars = 120;
+
+  /// Distills an HTTP error body into a short human-readable detail: the
+  /// `message` field of a JSON error envelope (top-level, `data.message`, or
+  /// `error.message`), else the raw body collapsed and truncated to
+  /// [_maxErrorDetailChars] characters so developer JSON and HTML dumps never
+  /// reach product surfaces verbatim.
+  static String? errorBodyDetail(Object? body) {
+    if (body == null) return null;
+    Object? decoded = body;
+    if (decoded is String) {
+      final text = decoded.trim();
+      if (text.isEmpty) return null;
+      try {
+        decoded = jsonDecode(text);
+      } on FormatException {
+        decoded = text;
+      }
+    }
+    if (decoded is Map) {
+      final data = decoded['data'];
+      final error = decoded['error'];
+      for (final candidate in [
+        decoded['message'],
+        if (data is Map) data['message'],
+        if (error is Map) error['message'],
+        if (error is String) error,
+      ]) {
+        if (candidate is String && candidate.trim().isNotEmpty) {
+          return _clampErrorDetail(candidate);
+        }
+      }
+    }
+    return _clampErrorDetail(decoded.toString());
+  }
+
+  static String? _clampErrorDetail(String text) {
+    final collapsed = text.replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (collapsed.isEmpty) return null;
+    if (collapsed.length <= _maxErrorDetailChars) return collapsed;
+    return '${collapsed.substring(0, _maxErrorDetailChars - 1)}…';
   }
 
   bool _wasSuccessfulResponse(DioException error) {

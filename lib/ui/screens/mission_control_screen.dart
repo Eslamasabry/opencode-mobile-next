@@ -59,7 +59,7 @@ class _MissionControlScreenState extends State<MissionControlScreen> {
       }
       await widget.controller.refreshSessions();
     } catch (error) {
-      if (mounted) setState(() => _refreshError = error.toString());
+      if (mounted) setState(() => _refreshError = productErrorText(error));
     } finally {
       if (mounted) setState(() => _refreshing = false);
     }

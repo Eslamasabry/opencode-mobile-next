@@ -732,7 +732,7 @@ void main() {
           deletions: 0,
         ),
       ];
-    await tester.tap(find.text('Retry'));
+    await tester.tap(find.text('Try again'));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('file-status-notice')), findsNothing);

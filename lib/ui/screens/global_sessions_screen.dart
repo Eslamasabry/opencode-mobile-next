@@ -169,11 +169,7 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
       if (!mounted) return;
       await Navigator.of(context).pushNamed('/chat/${session.id}');
     } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not open the session: $error')),
-        );
-      }
+      if (mounted) showProductError(context, error);
     } finally {
       if (mounted) setState(() => _openingSessionID = null);
     }
@@ -225,11 +221,7 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
       await Navigator.of(context).pushNamed('/chat/$stolenID');
       if (mounted) unawaited(_reload());
     } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not continue the session: $error')),
-        );
-      }
+      if (mounted) showProductError(context, error);
     } finally {
       if (mounted) setState(() => _stealingSessionID = null);
     }
@@ -318,7 +310,7 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
   Widget _content() {
     if (_loading) return const LoadingList(rows: 7);
     if (_error != null && _results.isEmpty) {
-      return ProductErrorState(message: _error.toString(), onRetry: _reload);
+      return ProductErrorState(message: productErrorText(_error!), onRetry: _reload);
     }
     if (_results.isEmpty) {
       final query = _search.text.trim();
@@ -359,10 +351,10 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
                   color: Theme.of(context).colorScheme.error,
                 ),
                 title: const Text('Could not load more sessions'),
-                subtitle: Text(_error.toString()),
+                subtitle: Text(productErrorText(_error!)),
                 trailing: TextButton(
                   onPressed: _loadMore,
-                  child: const Text('Retry'),
+                  child: const Text('Try again'),
                 ),
               );
             }

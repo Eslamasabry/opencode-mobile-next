@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../api/product_repository.dart' show ProductException;
 import '../../api/server_probe.dart';
 import '../../state/connection.dart';
 import '../../state/profiles.dart';
@@ -82,7 +83,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
         final conn = ref.read(connProvider);
         await conn.connect(savedProfile);
         if (conn.api == null) {
-          throw StateError(conn.lastError ?? 'The server did not connect.');
+          throw ProductException(conn.lastError ?? 'The server did not connect.');
         }
         if (isNew && mounted) {
           Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);

@@ -56,10 +56,8 @@ class _ToolsScreenState extends State<ToolsScreen> {
   Future<void> _load() async {
     final generation = ++_generation;
     final model = _model;
+    // Keep stale rows during refresh; the skeleton is for first load only.
     setState(() {
-      _tools = null;
-      _registeredIDs = null;
-      _capabilities = null;
       _toolsError = null;
       _registeredError = null;
       _capabilitiesError = null;
@@ -107,7 +105,14 @@ class _ToolsScreenState extends State<ToolsScreen> {
     if (!mounted) return;
     final selected = widget.controller.selectedModel;
     if (selected == null || selected == _model) return;
-    setState(() => _model = selected);
+    // A different model's inventory would be misleading while the new one
+    // loads, so clear the data (unlike a same-model refresh, which keeps it).
+    setState(() {
+      _model = selected;
+      _tools = null;
+      _registeredIDs = null;
+      _capabilities = null;
+    });
     await _load();
   }
 
@@ -197,7 +202,9 @@ class _ToolsScreenState extends State<ToolsScreen> {
             key: const Key('tools-search'),
             controller: _search,
             decoration: InputDecoration(
-              hintText: 'Search ${tools?.length ?? ''} tools',
+              hintText: tools == null
+                  ? 'Search tools'
+                  : 'Search ${tools.length} tools',
               prefixIcon: const Icon(Icons.search_rounded),
               suffixIcon: _query.isEmpty
                   ? null
@@ -266,8 +273,11 @@ class _ToolsScreenState extends State<ToolsScreen> {
     if (_tools == null && _toolsError == null) {
       return const LoadingList(rows: 7);
     }
-    if (_toolsError != null) {
-      return ProductErrorState(message: '$_toolsError', onRetry: _load);
+    if (_toolsError != null && _tools == null) {
+      return ProductErrorState(
+        message: productErrorText(_toolsError!),
+        onRetry: _load,
+      );
     }
     final query = _query.trim().toLowerCase();
     final callable = _tools!.where((tool) {

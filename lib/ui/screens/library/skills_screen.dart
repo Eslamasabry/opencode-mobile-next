@@ -26,12 +26,12 @@ class _SkillsScreenState extends State<SkillsScreen> {
     try {
       final repository = await widget.controller.prepareActionRepository();
       if (repository == null) {
-        throw StateError('OpenCode is reconnecting.');
+        throw const ProductException('OpenCode is reconnecting.');
       }
       final skills = await repository.listSkills();
       if (mounted) setState(() => _skills = skills);
     } catch (error) {
-      if (mounted) setState(() => _error = error.toString());
+      if (mounted) setState(() => _error = productErrorText(error));
     }
   }
 

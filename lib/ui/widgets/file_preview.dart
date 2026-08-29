@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'markdown.dart';
+import 'product_states.dart';
 
 /// Normalized file content that can be rendered by [FilePreviewBody].
 class FilePreviewData {
@@ -162,9 +163,7 @@ class _FilePreviewSheetState extends State<_FilePreviewSheet> {
       if (mounted) Navigator.of(context).pop();
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not attach file: $error')));
+      showProductError(context, error);
       setState(() => _attaching = false);
     }
   }
@@ -191,11 +190,7 @@ class _FilePreviewSheetState extends State<_FilePreviewSheet> {
         }
       }
     } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Could not save file: $error')));
-      }
+      if (mounted) showProductError(context, error);
     } finally {
       if (mounted) setState(() => _downloading = false);
     }

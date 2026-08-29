@@ -92,7 +92,7 @@ class _SessionRelationsScreenState extends State<SessionRelationsScreen> {
     final parent = _parent;
     final children = _children;
     if (_error != null && parent == null) {
-      return ProductErrorState(message: '$_error', onRetry: _load);
+      return ProductErrorState(message: productErrorText(_error!), onRetry: _load);
     }
     if (parent == null || children == null) return const LoadingList(rows: 5);
 

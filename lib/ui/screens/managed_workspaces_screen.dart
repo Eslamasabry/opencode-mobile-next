@@ -62,7 +62,7 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
       );
       workspaces.sort((a, b) => a.name.compareTo(b.name));
     } catch (error) {
-      workspaceError = error.toString();
+      workspaceError = productErrorText(error);
     }
     if (!mounted || generation != _loadGeneration) return;
     try {
@@ -71,7 +71,7 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
       );
       adapters.sort((a, b) => a.name.compareTo(b.name));
     } catch (error) {
-      adapterError = error.toString();
+      adapterError = productErrorText(error);
     }
     if (!mounted || generation != _loadGeneration) return;
     setState(() {
@@ -88,7 +88,7 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
     setState(() => _syncing = true);
     try {
       final repository = await widget.controller.prepareActionRepository();
-      if (repository == null) throw StateError('OpenCode is reconnecting.');
+      if (repository == null) throw const ProductException('OpenCode is reconnecting.');
       await repository.syncWorkspaceList(
         projectDirectory: widget.project.directory,
       );
@@ -112,7 +112,7 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
     setState(() => _creating = true);
     try {
       final repository = await widget.controller.prepareActionRepository();
-      if (repository == null) throw StateError('OpenCode is reconnecting.');
+      if (repository == null) throw const ProductException('OpenCode is reconnecting.');
       final workspace = await repository.createManagedWorkspace(
         projectDirectory: widget.project.directory,
         type: draft.type,
@@ -124,7 +124,7 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
       );
       if (!mounted) return;
       final locationError = widget.controller.locationError;
-      if (locationError != null) throw StateError(locationError);
+      if (locationError != null) throw ProductException(locationError);
       Navigator.of(context).pop(true);
     } catch (error) {
       if (mounted) _showMessage('Could not create workspace: $error');
@@ -163,10 +163,10 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
           directory: widget.project.directory,
         );
         final locationError = widget.controller.locationError;
-        if (locationError != null) throw StateError(locationError);
+        if (locationError != null) throw ProductException(locationError);
       }
       final repository = await widget.controller.prepareActionRepository();
-      if (repository == null) throw StateError('OpenCode is reconnecting.');
+      if (repository == null) throw const ProductException('OpenCode is reconnecting.');
       await repository.removeManagedWorkspace(
         projectDirectory: widget.project.directory,
         id: workspace.id,

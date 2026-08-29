@@ -11,22 +11,25 @@ class _TodosSheet extends StatefulWidget {
 
 class _TodosSheetState extends State<_TodosSheet> {
   List<Todo>? _todos;
-  String? _error;
+  Object? _error;
 
   @override
   void initState() {
     super.initState();
-    _fetch();
+    unawaited(_fetch());
   }
 
   Future<void> _fetch() async {
+    if (_error != null) setState(() => _error = null);
     try {
       final api = await widget.conn.prepareActionTransport();
-      if (api == null) throw StateError('OpenCode is reconnecting.');
+      if (api == null) {
+        throw const ProductException('OpenCode is reconnecting. Try again.');
+      }
       final t = await api.todos(widget.sessionID);
       if (mounted) setState(() => _todos = t);
     } catch (e) {
-      if (mounted) setState(() => _error = '$e');
+      if (mounted) setState(() => _error = e);
     }
   }
 
@@ -36,14 +39,22 @@ class _TodosSheetState extends State<_TodosSheet> {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(20),
-        child: _todos == null && _error == null
-            ? const Center(heightFactor: 2, child: CircularProgressIndicator())
-            : _error != null
-            ? Text(_error!, style: TextStyle(color: theme.colorScheme.error))
+        child: _error != null
+            ? SizedBox(
+                height: 260,
+                child: ProductErrorState(
+                  message: productErrorText(_error!),
+                  onRetry: _fetch,
+                ),
+              )
+            : _todos == null
+            ? const SizedBox(height: 240, child: LoadingList(rows: 4))
             : _todos!.isEmpty
-            ? Text(
-                'No todos in this session.',
-                style: TextStyle(color: theme.hintColor),
+            ? const ProductInlineEmpty(
+                icon: Icons.checklist_rounded,
+                title: 'No todos in this session',
+                message:
+                    'When the assistant plans work as a todo list, the items appear here.',
               )
             : Column(
                 mainAxisSize: MainAxisSize.min,
@@ -112,22 +123,25 @@ class _DiffSheet extends StatefulWidget {
 
 class _DiffSheetState extends State<_DiffSheet> {
   List<FileDiff>? _diffs;
-  String? _error;
+  Object? _error;
 
   @override
   void initState() {
     super.initState();
-    _fetch();
+    unawaited(_fetch());
   }
 
   Future<void> _fetch() async {
+    if (_error != null) setState(() => _error = null);
     try {
       final api = await widget.conn.prepareActionTransport();
-      if (api == null) throw StateError('OpenCode is reconnecting.');
+      if (api == null) {
+        throw const ProductException('OpenCode is reconnecting. Try again.');
+      }
       final d = await api.diff(widget.sessionID);
       if (mounted) setState(() => _diffs = d);
     } catch (e) {
-      if (mounted) setState(() => _error = '$e');
+      if (mounted) setState(() => _error = e);
     }
   }
 
@@ -139,14 +153,19 @@ class _DiffSheetState extends State<_DiffSheet> {
         height: MediaQuery.of(context).size.height * .75,
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: _diffs == null && _error == null
-              ? const Center(child: CircularProgressIndicator())
-              : _error != null
-              ? Text(_error!, style: TextStyle(color: theme.colorScheme.error))
+          child: _error != null
+              ? ProductErrorState(
+                  message: productErrorText(_error!),
+                  onRetry: _fetch,
+                )
+              : _diffs == null
+              ? const LoadingList(rows: 6)
               : _diffs!.isEmpty
-              ? Text(
-                  'No file changes yet.',
-                  style: TextStyle(color: theme.hintColor),
+              ? const ProductInlineEmpty(
+                  icon: Icons.difference_outlined,
+                  title: 'No file changes yet',
+                  message:
+                      'File edits made in this session will be listed here.',
                 )
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

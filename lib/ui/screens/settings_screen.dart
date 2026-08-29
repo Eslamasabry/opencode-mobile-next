@@ -62,11 +62,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
     try {
       final api = await widget.controller.prepareActionTransport();
-      if (api == null) throw StateError('OpenCode is reconnecting.');
+      if (api == null) throw const ProductException('OpenCode is reconnecting.');
       final health = await api.health();
       if (mounted) setState(() => _health = health);
     } catch (error) {
-      if (mounted) setState(() => _healthError = error.toString());
+      if (mounted) setState(() => _healthError = productErrorText(error));
     } finally {
       if (mounted) setState(() => _checking = false);
     }
@@ -87,7 +87,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final healthLine = _checking
         ? 'Checking server health…'
         : _healthError != null
-        ? 'Health unavailable'
+        ? 'Health unavailable — $_healthError'
         : healthy
         ? 'Server healthy · ${_health?.version ?? controller.version ?? 'unknown'}'
         : 'Version ${controller.version ?? 'unknown'}';
@@ -122,7 +122,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: const TextStyle(fontFamily: 'AppMono', fontSize: 11),
               ),
               trailing: IconButton(
-                tooltip: 'Check server health',
+                tooltip: 'Check again',
                 onPressed: _checking ? null : _checkHealth,
                 icon: _checking
                     ? const SizedBox.square(

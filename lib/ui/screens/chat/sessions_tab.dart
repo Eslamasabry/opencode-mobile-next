@@ -18,9 +18,7 @@ class SessionsTab extends StatelessWidget {
       );
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not create chat: $e')));
+      showProductError(context, e);
     }
   }
 
@@ -205,10 +203,7 @@ class SessionsTab extends StatelessWidget {
       }
     } catch (error) {
       if (!context.mounted) return;
-      final verb = action == 'delete' ? 'delete' : 'rename';
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not $verb chat: $error')));
+      showProductError(context, error);
     }
   }
 }

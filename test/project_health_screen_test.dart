@@ -295,7 +295,7 @@ void main() {
     expect(find.text('Git is not initialized'), findsOneWidget);
     expect(find.text('Git initialization failed'), findsOneWidget);
     expect(find.textContaining('read-only'), findsOneWidget);
-    expect(find.text('Retry'), findsOneWidget);
+    expect(find.text('Try again'), findsOneWidget);
   });
 
   testWidgets('Git initialization resolves the repository again at tap time', (

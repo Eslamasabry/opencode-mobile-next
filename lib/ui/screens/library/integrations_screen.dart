@@ -91,7 +91,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
       }
     } catch (error) {
       if (mounted && generation == _serverLoadGeneration) {
-        setState(() => _serverError = error.toString());
+        setState(() => _serverError = productErrorText(error));
       }
     }
   }
@@ -106,7 +106,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
       }
     } catch (error) {
       if (mounted && generation == _resourceLoadGeneration) {
-        setState(() => _resourceError = error.toString());
+        setState(() => _resourceError = productErrorText(error));
       }
     }
   }
@@ -121,7 +121,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
       }
     } catch (error) {
       if (mounted && generation == _integrationLoadGeneration) {
-        setState(() => _integrationError = error.toString());
+        setState(() => _integrationError = productErrorText(error));
       }
     }
   }
@@ -326,7 +326,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     try {
       await _loadServers(await _requireActionRepository());
     } catch (error) {
-      if (mounted) setState(() => _serverError = error.toString());
+      if (mounted) setState(() => _serverError = productErrorText(error));
     }
   }
 
@@ -334,7 +334,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     try {
       await _loadIntegrations(await _requireActionRepository());
     } catch (error) {
-      if (mounted) setState(() => _integrationError = error.toString());
+      if (mounted) setState(() => _integrationError = productErrorText(error));
     }
   }
 
@@ -342,7 +342,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     try {
       await _loadResources(await _requireActionRepository());
     } catch (error) {
-      if (mounted) setState(() => _resourceError = error.toString());
+      if (mounted) setState(() => _resourceError = productErrorText(error));
     }
   }
 
@@ -537,7 +537,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   static String _actionLabel(String status) => switch (status) {
     'connected' => 'Disconnect',
     'needs_auth' || 'needs_client_registration' => 'Authenticate',
-    'failed' => 'Retry',
+    'failed' => 'Try again',
     _ => 'Connect',
   };
 

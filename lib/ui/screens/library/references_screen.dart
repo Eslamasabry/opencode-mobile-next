@@ -33,12 +33,12 @@ class _ReferencesScreenState extends State<ReferencesScreen> {
     try {
       final repository = await widget.controller.prepareActionRepository();
       if (repository == null) {
-        throw StateError('OpenCode is reconnecting.');
+        throw const ProductException('OpenCode is reconnecting.');
       }
       final references = await repository.listReferences();
       if (mounted) setState(() => _references = references);
     } catch (error) {
-      if (mounted) setState(() => _error = error.toString());
+      if (mounted) setState(() => _error = productErrorText(error));
     }
   }
 

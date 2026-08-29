@@ -136,7 +136,13 @@ void main() {
       findsOneWidget,
     );
     expect(find.textContaining('Endpoint is unavailable'), findsOneWidget);
-    expect(find.text('Retry'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('connection-status-banner')),
+        matching: find.text('Try again'),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('Change server'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
@@ -176,7 +182,13 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Retry'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('connection-status-banner')),
+        matching: find.text('Try again'),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('Change server'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
@@ -203,7 +215,7 @@ void main() {
     await tester.pump();
 
     final retry = tester.widget<TextButton>(
-      find.widgetWithText(TextButton, 'Retry'),
+      find.widgetWithText(TextButton, 'Try again'),
     );
     expect(retry.onPressed, isNotNull);
     expect(find.text('Change server'), findsOneWidget);
