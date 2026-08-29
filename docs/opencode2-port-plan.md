@@ -106,8 +106,8 @@ live beta server, same as the facelift slices.
       natively (switch marker pills, shell rows with status, compaction
       pill and summary, notices) and tool results keep their text/file
       interleaving; the model picker applies session-scoped on v2.
-      REMAINING in this phase: capability gating of v1-only surfaces
-      (design §7) — in flight on `port/v2-gating`.
+      Capability gating of v1-only surfaces (design §7) is done and
+      tested (`test/v2_feature_gating_test.dart`).
 - [ ] **Phase 4 — v2-native.** Integrations/credentials screens (design
       §8); inbox steering beyond the strip; session export/import;
       revert; instructions; websearch; Termux bootstrap flipped to
