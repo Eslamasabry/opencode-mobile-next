@@ -267,4 +267,21 @@ void main() {
     expect(tls.message, contains('TLS certificate'));
     expect(tls.suggestsMissingServer, isFalse);
   });
+
+  test('a real v1 server answering /api/health is never read as v2', () async {
+    // Live-verified against opencode 1.18.25 on 2026-08-29: v1 DOES serve
+    // /api/health, answering {"healthy":true} — but without the `version`
+    // field v2 always carries. Detection must therefore key on the payload,
+    // not on the route existing, or every current v1 server would be
+    // misdetected as v2 and asked for a password it has no concept of.
+    final result = await probe(
+      handler: (options) => options.path.endsWith('/api/health')
+          ? _json('{"healthy":true}', 200)
+          : _json('{"healthy":true,"version":"1.18.25"}', 200),
+    );
+    expect(result.ok, isTrue);
+    expect(result.flavor, ServerFlavor.v1);
+    expect(result.version, '1.18.25');
+    expect(result.needsPassword, isFalse);
+  });
 }
