@@ -82,9 +82,40 @@ live beta server, same as the facelift slices.
 
 ## Status
 
-- [x] Beta CLI installed, spec captured, study agents dispatched.
-- [ ] Protocol notes + port matrix docs landed.
-- [ ] Phase 1.
-- [ ] Phase 2.
-- [ ] Phase 3.
-- [ ] Phase 4.
+- [x] Beta CLI installed; spec captured (`contracts/opencode2-openapi-beta-18600.json`).
+- [x] Protocol notes + port matrix + locked UI design landed.
+- [x] **Phase 1 — transport + read path.** `lib/api2/` typed client
+      (live-verified 30 steps); `lib/domain/server_gateway.dart` extracts
+      109 operations behind protocol-neutral gateways with a
+      `ServerCapabilities` surface, v1 implementing all of it with zero
+      behavior change; `lib/api2/gateway*.dart` implements the same
+      interfaces over v2 (live smoke 40/40, incl. a streamed prompt and a
+      ticketed-WebSocket PTY round-trip).
+- [x] **Phase 2 — interaction.** Connect flow: probe flavor detection
+      (401-with-empty-body on `/api/health` is the v2 signal; missing vs
+      rejected password distinguished), paste-first password field,
+      `ServerProfile.flavor` persisted, v2 gateway pair built through the
+      v1 seams, mid-session 401 → banner action. Forms replace questions
+      end to end (auto-present, inline reopen card, pending counts);
+      permission bottom sheet with reject-with-reason, wired to the
+      notification Reply action; one pending-sends strip for offline
+      drafts + v2 inbox with cancel and delivery flips; Send stays live
+      mid-turn (tap steers, long-press queues).
+- [x] **Phase 3 — surfaces.** Files/VCS/PTY/catalog/commands/skills/MCP
+      all flow through the v2 gateway; v2's message variants render
+      natively (switch marker pills, shell rows with status, compaction
+      pill and summary, notices) and tool results keep their text/file
+      interleaving; the model picker applies session-scoped on v2.
+      REMAINING in this phase: capability gating of v1-only surfaces
+      (design §7) — in flight on `port/v2-gating`.
+- [ ] **Phase 4 — v2-native.** Integrations/credentials screens (design
+      §8); inbox steering beyond the strip; session export/import;
+      revert; instructions; websearch; Termux bootstrap flipped to
+      `opencode2` (see docs/opencode2-termux.md).
+
+Known gaps carried forward: message list is cursor-walked to a bounded
+fetch-all rather than paginated in the UI; OAuth attempts can't resume
+across app restarts (v2 scopes them per integration, the domain
+addresses them by id); v2's experimental durable session log replays
+nothing on beta-18600, so transcripts reconcile via refetch; v2-only
+message variants render on hydration, not synthesized mid-turn.
