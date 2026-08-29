@@ -63,7 +63,9 @@ class SessionsTab extends StatelessWidget {
             else
               RefreshIndicator(
                 onRefresh: controller.refreshSessions,
-                child: ListView.builder(
+                child: DesktopScrollbarArea(
+                  builder: (scrollController) => ListView.builder(
+                  controller: scrollController,
                   itemCount: sessions.length,
                   itemBuilder: (context, i) {
                     final s = sessions[i];
@@ -158,6 +160,7 @@ class SessionsTab extends StatelessWidget {
                       ),
                     );
                   },
+                  ),
                 ),
               ),
             Positioned(

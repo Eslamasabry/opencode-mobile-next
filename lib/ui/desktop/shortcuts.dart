@@ -449,7 +449,8 @@ class _CommandPaletteState extends State<_CommandPalette> {
                     : Scrollbar(
                         controller: _listController,
                         thumbVisibility: true,
-                        child: ListView.builder(
+                        child: OwnScrollbar(
+                          child: ListView.builder(
                           controller: _listController,
                           shrinkWrap: true,
                           itemCount: matches.length,
@@ -478,6 +479,7 @@ class _CommandPaletteState extends State<_CommandPalette> {
                               onTap: () => _run(command),
                             );
                           },
+                        ),
                         ),
                       ),
               ),

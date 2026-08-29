@@ -5,6 +5,7 @@ import '../../api/product_repository.dart';
 import '../../api2/models.dart' show Api2FormInfo;
 import '../../state/connection.dart';
 import '../app_theme.dart';
+import '../desktop/desktop_interaction.dart';
 import '../permission_presentation.dart';
 import '../widgets/product_states.dart';
 import 'chat/form_flow.dart';
@@ -273,7 +274,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
                 ),
               ],
             )
-          : ListView(
+          : DesktopScrollbarArea(
+              builder: (scrollController) => ListView(
+              controller: scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.only(bottom: 24),
               children: [
@@ -358,6 +361,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   onTap: _openFinder,
                 ),
               ],
+              ),
             ),
     );
 

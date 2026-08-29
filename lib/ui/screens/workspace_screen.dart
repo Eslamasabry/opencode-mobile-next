@@ -7,6 +7,7 @@ import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../desktop/context_menu.dart';
+import '../desktop/desktop_interaction.dart';
 import '../navigation/chat_route.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/entrance.dart';
@@ -279,7 +280,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       children: [
         RefreshIndicator(
           onRefresh: _load,
-          child: CustomScrollView(
+          child: DesktopScrollbarArea(
+            builder: (scrollController) => CustomScrollView(
+            controller: scrollController,
             key: const PageStorageKey('workspace-scroll'),
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
@@ -434,6 +437,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 ),
               const SliverToBoxAdapter(child: SizedBox(height: 96)),
             ],
+            ),
           ),
         ),
         // 4. Start a prompt: a docked quick-ask pill opens a fresh session in

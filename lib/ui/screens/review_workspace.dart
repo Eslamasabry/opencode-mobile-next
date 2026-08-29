@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../api/models.dart';
 import '../../state/review_handoff.dart';
 import '../app_theme.dart';
+import '../desktop/desktop_interaction.dart';
 import '../widgets/product_states.dart';
 
 typedef ReviewDiffLoader = Future<List<FileDiff>> Function();
@@ -1436,7 +1437,10 @@ class _ReviewDiffCanvas extends StatelessWidget {
               height: constraints.maxHeight,
               child: Scrollbar(
                 controller: vertical,
-                child: ListView.builder(
+                // The diff pane draws its own thumbs; without this the
+                // desktop scroll behaviour would draw a second vertical one.
+                child: OwnScrollbar(
+                  child: ListView.builder(
                   controller: vertical,
                   // Always scrollable so pull-to-refresh works even when the
                   // diff fits the viewport.
@@ -1470,6 +1474,7 @@ class _ReviewDiffCanvas extends StatelessWidget {
                           : null,
                     );
                   },
+                ),
                 ),
               ),
             ),

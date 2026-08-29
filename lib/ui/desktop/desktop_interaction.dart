@@ -69,29 +69,58 @@ class AppScrollBehavior extends MaterialScrollBehavior {
   }
 }
 
-/// Wraps a long scrollable so desktop shows a permanent, draggable thumb.
+/// Gives a long scrollable a permanent, draggable scrollbar on desktop.
 ///
-/// [controller] must be the same controller the scrollable uses. On Android
-/// (and anywhere else non-desktop) the child is returned untouched.
-class DesktopScrollbar extends StatelessWidget {
-  const DesktopScrollbar({
-    super.key,
-    required this.controller,
-    required this.child,
-  });
+/// [builder] receives the controller to hand its scrollable — or null off
+/// desktop, where the scrollable is built with exactly the arguments it had
+/// before, so Android's scroll behaviour is bit-for-bit unchanged.
+///
+/// The controller is the whole point. Material already fades a scrollbar in
+/// on desktop, but one whose [ScrollableDetails.controller] is null cannot be
+/// grabbed and dragged — which is the half that matters with a mouse — and
+/// [AppScrollBehavior] can only pin the thumb when a controller exists. No
+/// [Scrollbar] widget is added here on purpose: the behaviour already builds
+/// one around every Scrollable, and a second would draw a second thumb.
+class DesktopScrollbarArea extends StatefulWidget {
+  const DesktopScrollbarArea({super.key, required this.builder});
 
-  final ScrollController controller;
+  final Widget Function(ScrollController? controller) builder;
+
+  @override
+  State<DesktopScrollbarArea> createState() => _DesktopScrollbarAreaState();
+}
+
+class _DesktopScrollbarAreaState extends State<DesktopScrollbarArea> {
+  ScrollController? _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    if (desktopInteractions) _controller = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(_controller);
+}
+
+/// Stops [AppScrollBehavior] adding a second thumb inside a subtree that
+/// already builds its own [Scrollbar].
+class OwnScrollbar extends StatelessWidget {
+  const OwnScrollbar({super.key, required this.child});
+
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
-    if (!desktopInteractions) return child;
-    return Scrollbar(
-      controller: controller,
-      thumbVisibility: true,
-      child: child,
-    );
-  }
+  Widget build(BuildContext context) => ScrollConfiguration(
+    behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+    child: child,
+  );
 }
 
 /// Makes the transcript selectable with a mouse on desktop.

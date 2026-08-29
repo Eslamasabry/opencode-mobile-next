@@ -822,7 +822,9 @@ class _FilesScreenState extends State<FilesScreen> {
     }
     return RefreshIndicator(
       onRefresh: () => _load(_path),
-      child: ListView.builder(
+      child: DesktopScrollbarArea(
+        builder: (scrollController) => ListView.builder(
+        controller: scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         itemCount: entries.length,
         itemBuilder: (context, i) {
@@ -893,6 +895,7 @@ class _FilesScreenState extends State<FilesScreen> {
             ),
           );
         },
+        ),
       ),
     );
   }
@@ -1132,7 +1135,9 @@ class _FilesScreenState extends State<FilesScreen> {
     }
     return RefreshIndicator(
       onRefresh: () => _searchSymbols(_search.text),
-      child: ListView.builder(
+      child: DesktopScrollbarArea(
+        builder: (scrollController) => ListView.builder(
+        controller: scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         itemCount: _symbols?.length ?? 0,
         itemBuilder: (context, index) {
@@ -1158,6 +1163,7 @@ class _FilesScreenState extends State<FilesScreen> {
             onTap: () => _openSymbol(symbol),
           );
         },
+        ),
       ),
     );
   }
