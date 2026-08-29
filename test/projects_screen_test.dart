@@ -6,6 +6,7 @@ import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/ui/screens/manage_project_screen.dart';
 import 'package:opencode_mobile/ui/screens/projects_screen.dart';
 import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -285,7 +286,7 @@ void main() {
     expect(find.byKey(const ValueKey('open-projects')), findsOneWidget);
   });
 
-  testWidgets('workspace groups projects behind one compact native entry', (
+  testWidgets('workspace groups projects behind one compact context entry', (
     tester,
   ) async {
     final repository = _ProjectsRepository();
@@ -299,12 +300,95 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('current-project-entry')), findsOneWidget);
+    // Audit UX-P0-02: no separate strip of horizontal workspace chips — the
+    // context header opens one coherent sheet instead.
     expect(find.byType(ChoiceChip), findsNothing);
     await tester.tap(find.byKey(const ValueKey('current-project-entry')));
     await tester.pumpAndSettle();
 
+    expect(find.byKey(const ValueKey('workspace-context-sheet')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('context-switch-project')));
+    await tester.pumpAndSettle();
+
     expect(find.byType(ProjectsScreen), findsOneWidget);
     expect(find.byKey(const ValueKey('project-project-1')), findsOneWidget);
+  });
+
+  testWidgets('workspace puts sessions above the one management route', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 3000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final repository = _ProjectsRepository();
+    final api = _WorkspaceSessionsApi();
+    final controller = await _controller(repository)
+      ..api = api
+      ..status = StreamStatus.connected;
+    addTearDown(controller.dispose);
+    controller.sessionsById = {
+      'session-1': Session(
+        id: 'session-1',
+        title: 'Swipe target',
+        time: SessionTime(created: 1, updated: 1),
+      ),
+    };
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: WorkspaceScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Audit UX-101 order: context header, sessions, then management.
+    double topOf(Key key) => tester.getTopLeft(find.byKey(key)).dy;
+    final context = topOf(const ValueKey('current-project-entry'));
+    final session = topOf(const ValueKey('session-dismiss-session-1'));
+    final manage = topOf(const ValueKey('manage-project-entry'));
+    expect(context, lessThan(session));
+    expect(session, lessThan(manage));
+
+    // Management destinations no longer sit on the sessions screen at all.
+    expect(find.byKey(const ValueKey('worktrees-entry')), findsNothing);
+    expect(find.byKey(const ValueKey('project-health-entry')), findsNothing);
+    expect(find.byKey(const ValueKey('managed-workspaces-entry')), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('manage-project-entry')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ManageProjectScreen), findsOneWidget);
+    for (final key in const [
+      'switch-project-entry',
+      'worktrees-entry',
+      'managed-workspaces-entry',
+      'project-health-entry',
+    ]) {
+      expect(find.byKey(ValueKey(key)), findsOneWidget, reason: key);
+    }
+  });
+
+  testWidgets('the quick-ask pill stays reachable without scrolling', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final repository = _ProjectsRepository();
+    final controller = await _controller(repository);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: WorkspaceScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final pill = find.byKey(const ValueKey('workspace-quick-ask'));
+    expect(pill, findsOneWidget);
+    expect(tester.getBottomLeft(pill).dy, lessThanOrEqualTo(640));
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('recent session end-swipe runs the delete confirm flow', (

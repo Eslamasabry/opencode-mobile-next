@@ -11,10 +11,8 @@ import '../widgets/confirm_sheet.dart';
 import '../widgets/entrance.dart';
 import '../widgets/product_states.dart';
 import 'global_sessions_screen.dart';
-import 'managed_workspaces_screen.dart';
-import 'project_health_screen.dart';
+import 'manage_project_screen.dart';
 import 'projects_screen.dart';
-import 'worktrees_screen.dart';
 import '../app_theme.dart';
 
 class WorkspaceScreen extends StatefulWidget {
@@ -167,6 +165,34 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         !project.worktrees.contains(directory);
   }
 
+  WorkspaceInfo? get _selectedWorkspace {
+    for (final workspace in _workspaces) {
+      if (workspace.id == _selectedWorkspaceID) return workspace;
+    }
+    return null;
+  }
+
+  /// The compact context line under the project name: which workspace and
+  /// which directory this screen's sessions will run in.
+  String get _contextSubtitle {
+    final parts = <String>[];
+    final workspace = _selectedWorkspace;
+    if (workspace != null) {
+      parts.add(
+        workspace.branch?.isNotEmpty == true
+            ? workspace.branch!
+            : workspace.name,
+      );
+    }
+    final directory = _selectedProject?.directory ?? _selectedDirectory;
+    parts.add(
+      directory?.isNotEmpty == true
+          ? directory!
+          : 'Server’s default directory',
+    );
+    return parts.join(' · ');
+  }
+
   Future<void> _selectWorkspace(WorkspaceInfo? workspace) async {
     setState(() => _selectedWorkspaceID = workspace?.id);
     await widget.controller.selectLocation(
@@ -256,6 +282,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             key: const PageStorageKey('workspace-scroll'),
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
+              // 1. Current project/workspace context — one compact header.
               SliverToBoxAdapter(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,24 +293,20 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                         leading: const Icon(Icons.info_outline_rounded),
                         title: Text(widget.controller.locationNotice!),
                       ),
-                    SectionLabel(
-                      'Project',
-                      trailing: Text('${_projects!.length} open'),
-                    ),
                     ListTile(
                       key: const ValueKey('current-project-entry'),
                       leading: const Icon(Icons.folder_rounded),
                       title: Text(_selectedProject?.name ?? 'Choose a project'),
-                      subtitle: _selectedProject == null
-                          ? null
-                          : Text(
-                              _selectedProject!.directory,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: _openProjects,
+                      subtitle: Text(
+                        _contextSubtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: const Icon(Icons.unfold_more_rounded),
+                      onTap: _openContextSheet,
                     ),
+                    // Still context, not management: the session is running
+                    // somewhere other than the project root.
                     if (_hasExternalSessionDirectory)
                       ListTile(
                         key: const ValueKey('active-session-directory'),
@@ -295,39 +318,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    if (_workspaces.isNotEmpty) ...[
-                      const SectionLabel('Workspace'),
-                      SizedBox(
-                        height: 52,
-                        child: ListView(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          scrollDirection: Axis.horizontal,
-                          children: [
-                            ChoiceChip(
-                              label: const Text('Local'),
-                              selected: _selectedWorkspaceID == null,
-                              onSelected: (_) => _selectWorkspace(null),
-                            ),
-                            const SizedBox(width: 8),
-                            for (final workspace in _workspaces) ...[
-                              ChoiceChip(
-                                label: Text(
-                                  workspace.branch?.isNotEmpty == true
-                                      ? workspace.branch!
-                                      : workspace.name,
-                                ),
-                                selected: workspace.id == _selectedWorkspaceID,
-                                onSelected: (_) => _selectWorkspace(workspace),
-                              ),
-                              const SizedBox(width: 8),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ],
                     if (_workspaceError != null)
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                         child: Text(
                           _workspaceError!,
                           style: TextStyle(
@@ -335,45 +328,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           ),
                         ),
                       ),
-                    const SectionLabel('Coding'),
-                    ListTile(
-                      key: const ValueKey('worktrees-entry'),
-                      leading: const Icon(Icons.call_split_rounded),
-                      title: const Text('Worktrees'),
-                      subtitle: const Text(
-                        'Create and manage isolated Git branches',
-                      ),
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: _selectedProject == null ? null : _openWorktrees,
-                    ),
-                    // §7 rows 1–4: no workspace inventory, adapter discovery
-                    // or sync on v2, so the whole destination goes.
-                    if (widget.controller.capabilities.managedWorkspaces)
-                      ListTile(
-                        key: const ValueKey('managed-workspaces-entry'),
-                        leading: const Icon(Icons.cloud_outlined),
-                        title: const Text('Managed workspaces'),
-                        subtitle: const Text(
-                          'Create, discover, open, and remove adapter-backed environments',
-                        ),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: _selectedProject == null
-                            ? null
-                            : _openManagedWorkspaces,
-                      ),
-                    ListTile(
-                      key: const ValueKey('project-health-entry'),
-                      leading: const Icon(Icons.monitor_heart_outlined),
-                      title: const Text('Project health'),
-                      subtitle: const Text(
-                        'Branch, changed files, language services, and formatters',
-                      ),
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: _openProjectHealth,
-                    ),
+                    // 2. Continue active sessions, with their live state.
                     if (active.isNotEmpty)
                       SectionLabel(
-                        'Active',
+                        'Active sessions',
                         trailing: Text('${active.length}'),
                       ),
                   ],
@@ -393,6 +351,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                         widget.controller.capabilities.sessionArchive,
                   ),
                 ),
+              // 3. Recent sessions.
               SliverToBoxAdapter(
                 child: SectionLabel(
                   'Recent sessions',
@@ -454,12 +413,30 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     onTap: () => _showArchived(archived),
                   ),
                 ),
+              // 5. Everything management sits below the sessions, behind one
+              // labelled route: worktrees, managed workspaces, project
+              // health, and project switching.
+              if (ManageProjectScreen.isAvailable(
+                widget.controller.capabilities,
+              ))
+                SliverToBoxAdapter(
+                  child: ListTile(
+                    key: const ValueKey('manage-project-entry'),
+                    leading: const Icon(Icons.tune_rounded),
+                    title: const Text('Manage project'),
+                    subtitle: const Text(
+                      'Switch project, worktrees, and project health',
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: _openManageProject,
+                  ),
+                ),
               const SliverToBoxAdapter(child: SizedBox(height: 96)),
             ],
           ),
         ),
-        // Composer-first home: a docked quick-ask pill opens a fresh session
-        // in the active project, replacing the New-session FAB.
+        // 4. Start a prompt: a docked quick-ask pill opens a fresh session in
+        // the active project without scrolling, replacing the New-session FAB.
         Positioned(
           left: 12,
           right: 12,
@@ -495,45 +472,104 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     if (mounted) await _load();
   }
 
-  Future<void> _openProjectHealth() async {
-    final repository = await widget.controller.prepareActionRepository();
-    if (!mounted) return;
-    if (repository == null) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => ProjectHealthScreen(
-          repository: repository,
-          repositoryResolver: widget.controller.prepareActionRepository,
-          capabilities: widget.controller.capabilities,
+  /// One coherent context sheet (audit UX-P0-02): project switching and
+  /// workspace selection live together instead of a project row plus a
+  /// separate strip of horizontal workspace chips.
+  Future<void> _openContextSheet() async {
+    final choice = await showModalBottomSheet<_ContextChoice>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheetContext) => SafeArea(
+        child: SingleChildScrollView(
+          key: const ValueKey('workspace-context-sheet'),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.folder_rounded),
+                title: Text(_selectedProject?.name ?? 'No project selected'),
+                subtitle: Text(
+                  _contextSubtitle,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                key: const ValueKey('context-switch-project'),
+                leading: const Icon(Icons.swap_horiz_rounded),
+                title: const Text('Switch project'),
+                subtitle: Text(
+                  '${_projects?.length ?? 0} open on this server',
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => Navigator.of(
+                  sheetContext,
+                ).pop(const _ContextChoice.switchProject()),
+              ),
+              if (_workspaces.isNotEmpty) ...[
+                const SectionLabel('Workspace'),
+                ListTile(
+                  key: const ValueKey('workspace-option-local'),
+                  leading: const Icon(Icons.computer_rounded),
+                  title: const Text('Local'),
+                  trailing: _selectedWorkspaceID == null
+                      ? const Icon(Icons.check_rounded)
+                      : null,
+                  selected: _selectedWorkspaceID == null,
+                  onTap: () => Navigator.of(
+                    sheetContext,
+                  ).pop(const _ContextChoice.workspace(null)),
+                ),
+                for (final workspace in _workspaces)
+                  ListTile(
+                    key: ValueKey('workspace-option-${workspace.id}'),
+                    leading: const Icon(Icons.cloud_outlined),
+                    title: Text(
+                      workspace.branch?.isNotEmpty == true
+                          ? workspace.branch!
+                          : workspace.name,
+                    ),
+                    subtitle: Text(
+                      workspace.directory ?? '',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: workspace.id == _selectedWorkspaceID
+                        ? const Icon(Icons.check_rounded)
+                        : null,
+                    selected: workspace.id == _selectedWorkspaceID,
+                    onTap: () => Navigator.of(
+                      sheetContext,
+                    ).pop(_ContextChoice.workspace(workspace)),
+                  ),
+              ],
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
     );
+    if (!mounted || choice == null) return;
+    if (choice.switchProject) {
+      await _openProjects();
+      return;
+    }
+    await _selectWorkspace(choice.workspace);
   }
 
-  Future<void> _openWorktrees() async {
-    final project = _selectedProject;
-    if (project == null) return;
+  Future<void> _openManageProject() async {
     await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
-        builder: (_) =>
-            WorktreesScreen(controller: widget.controller, project: project),
+        builder: (_) => ManageProjectScreen(
+          controller: widget.controller,
+          project: _selectedProject,
+        ),
       ),
     );
     if (mounted) await _load();
-  }
-
-  Future<void> _openManagedWorkspaces() async {
-    final project = _selectedProject;
-    if (project == null) return;
-    final changed = await Navigator.of(context).push<bool>(
-      MaterialPageRoute<bool>(
-        builder: (_) => ManagedWorkspacesScreen(
-          controller: widget.controller,
-          project: project,
-        ),
-      ),
-    );
-    if (changed == true && mounted) await _loadWorkspaces();
   }
 
   Future<void> _sessionAction(String action, Session session) async {
@@ -677,6 +713,18 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     widget.controller.removeListener(_changed);
     super.dispose();
   }
+}
+
+/// What the context sheet was dismissed with: switch project, or move to a
+/// workspace (`null` meaning the project's own local checkout).
+class _ContextChoice {
+  const _ContextChoice.switchProject()
+    : workspace = null,
+      switchProject = true;
+  const _ContextChoice.workspace(this.workspace) : switchProject = false;
+
+  final WorkspaceInfo? workspace;
+  final bool switchProject;
 }
 
 class _SessionRow extends StatelessWidget {
