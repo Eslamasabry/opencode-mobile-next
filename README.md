@@ -1,317 +1,243 @@
-# OpenCode for Android
+# OpenCode mobile
 
-A native Flutter client for [opencode](https://opencode.ai) that connects to an
-opencode server either **remotely** (your dev box / VPS) or **on-device** — the
-app drives Termux itself, so you never manage a terminal by hand. Ships with
-**Shorebird code push** so Dart-side fixes reach devices without a Play Store
-round-trip.
+A native Android client for [OpenCode](https://opencode.ai) — the coding
+agent, in your pocket. It connects to an `opencode serve` instance on your
+dev box over the network, or runs **fully on-device** with the server inside
+Termux, driven and installed by the app itself. The same codebase builds a
+working Linux desktop binary.
 
-The app's data handling is documented in the [privacy policy](PRIVACY.md), which
-is also bundled under **Settings > Privacy and data use**.
+**Watch the 2.5-minute showcase** (cut from real on-device recordings):
 
-## Features
+- [Landscape 1080p](https://github.com/Eslamasabry/oc_app/releases/download/v1.0.27%2B28-preview.7/opencode-mobile-showcase-landscape-1080p.mp4)
+- [Vertical 1080×1920](https://github.com/Eslamasabry/oc_app/releases/download/v1.0.27%2B28-preview.7/opencode-mobile-showcase-vertical-1080x1920.mp4)
+  (for shorts/stories)
 
-- Server profiles with basic-auth (`OPENCODE_SERVER_PASSWORD`), stored in the
-  Android Keystore and edited in a keyboard-safe, large-text-ready native flow
-- **Guided on-device setup**: detects Termux, unlocks the bridge, installs
-  opencode (node + npm), launches `opencode serve`, health-polls until live and
-  connects — automatically
-- Live SSE event stream (`/event`) with reconnect + backoff, polling fallback,
-  and location-preserving manual recovery that keeps active chats visible
-- Chats: create/rename/delete sessions, streaming responses, optimistic send, abort
-- All-project session finder with server-side title search, archived inclusion,
-  cursor pagination, and exact location switching
-- Rich rendering: markdown, fenced code blocks w/ copy, reasoning blocks,
-  tool-call cards with expandable input/output
-- Permission requests surfaced as dialogs (allow once / always / reject)
-- Session todos and a full Review workspace with session, working-tree, and
-  branch diff scopes, unified/split modes, line selection, and prompt comments
-- Run shell commands and slash commands in the session
-- Model & agent picker persisted per server
-- Project file browser with adjacent file/symbol search, smart previews, and
-  source-line navigation from language-server symbols
-- Project health for Git setup/changes, language services, and formatters,
-  including explicit initialization for folders that are not repositories yet
-- Smart skill previews with rendered Markdown tables, code blocks, and raw mode
-- Server-backed project references that can be copied or added to an active prompt
-- Recoverable startup and process-local, redacted app diagnostics with explicit-only reporting to OpenCode
+Both are attached to release
+[v1.0.27+28-preview.7](https://github.com/Eslamasabry/oc_app/releases/tag/v1.0.27%2B28-preview.7);
+the Remotion source lives in [`video/`](video/), with the full storyboard in
+[docs/showcase-video-plan.md](docs/showcase-video-plan.md).
 
-## Requirements
+## Screenshots
 
-| Tool | Version |
-|---|---|
-| Flutter | 3.47.1 (the version pinned for Shorebird releases) |
-| Android SDK | API 36 |
-| Shorebird CLI | 1.6.x |
+| Workspace | Live run | More hub | Session steal |
+|---|---|---|---|
+| ![Workspace](video/public/shots/still-workspace.png) | ![Live run with context meter](video/public/shots/still-rec3-end.png) | ![More grid](video/public/shots/still-more-grid.png) | ![Continue-here sheet](video/public/shots/still-steal-sheet.png) |
 
-## Build & run
+## What it does
 
-```bash
-flutter pub get
-flutter run                # debug on device/emulator
-flutter build apk --release
-```
+- **Chat with live tool streaming** — prompts stream token by token behind a
+  terminal-style blinking caret; consecutive tool calls group into a growing
+  run with a live ticker (`Shell · flutter test…`); tool cards expand to
+  full input/output; markdown, fenced code with syntax highlighting and
+  copy, reasoning blocks, image/file previews.
+- **Context window meter** — the divider under the composer is an ambient
+  gauge of the current model's context window, filling from the newest
+  assistant message's token totals, with escalating colors at 70% and 90%.
+- **Mission Control** — one glanceable cockpit for the whole fleet: pending
+  permissions and questions to resolve, running sessions with live subagent
+  counts, recent activity, and a bridge to the all-project session finder.
+  Built only on server truth.
+- **Model & agent picker** — the full server catalog (349 models on a stock
+  install) with search, variant chips, and a pinned apply bar that never
+  scrolls away. Selection persists per server.
+- **Permissions from the notification shade** — approve a tool call, deny
+  it, or answer the agent's question without opening the app; every action
+  is bound to its exact request ID. An opt-in foreground service keeps live
+  sessions streaming in the background and across device sleep.
+- **File browser + diff review** — type-aware browsing with symbol search
+  and source-line navigation from the language server; a Review workspace
+  with session, working-tree, and branch scopes, unified/split modes, line
+  selection, prompt comments, and viewed-file progress counts.
+- **A real terminal** — server-side PTY rendered through xterm.dart,
+  cursor-safe across app sleep/wake.
+- **Theme packs** — Catppuccin, Gruvbox, Solarized, or Android's own
+  Material You dynamic color; JetBrains Mono throughout.
+- **Offline compose queue** — prompts written on a dead connection queue as
+  editable bubbles and flush in order on reconnect (experimental).
+- **Home-screen widget** — up to four sessions with working/idle status
+  dots; tap a row to land in that exact chat. Updates ride the app's own
+  refreshes, so it costs no battery.
+- **Session steal & global finder** — search sessions across every project
+  on the server (title search, archived included, cursor pagination) and
+  continue a workspace session from another device on the phone.
+- **Local voice input** — on-device Whisper transcription via sherpa-onnx;
+  model packs download on demand, audio never leaves the phone.
+- **Shorebird code push** — Dart-side fixes reach installed devices without
+  a new APK; the app owns update checks, download progress, and restart.
 
-## Store releases and Shorebird patches
+Server profiles authenticate with HTTP basic auth
+(`OPENCODE_SERVER_PASSWORD`); secrets live in the Android Keystore. Data
+handling is documented in the [privacy policy](PRIVACY.md), also bundled
+under **Settings → Privacy and data use**.
 
-One-time:
+## Install
 
-```bash
-curl --proto '=https' --tlsv1.2 \
-  https://raw.githubusercontent.com/shorebirdtech/install/main/install.sh -sSf | bash
-shorebird login     # free account at console.shorebird.dev
-shorebird doctor    # expect "No issues detected!"
-```
+Grab the APK from the
+[latest release](https://github.com/Eslamasabry/oc_app/releases) — currently
+the *Operation Facelift* preview line (`oc_app-1.0.27+28-facelift-preview7.apk`);
+`v1.0.19+20` is the last stable cut.
 
-The release helper is fail-closed. It accepts only `release` or `patch`, requires
-a clean `master` synchronized with its same-named tracked upstream (normally
-`origin/master`), and runs `flutter analyze`, the complete `flutter test` suite,
-and a Shorebird dry-run. It uploads nothing unless `--publish` is supplied
-explicitly.
+**Honest signing caveat:** these APKs are sideload builds signed with the
+project's own certificate, not a Play Store production key. Android will
+warn about unknown sources — that is expected. The signing lineage is
+stable and pinned, so previews upgrade in place: certificate SHA-256
+`1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c`. Verify
+any downloaded APK with
+`apksigner verify --print-certs app.apk` and compare against that
+fingerprint and the SHA-256 listed in the release notes.
 
-Pull requests and pushes to `master` or the active
-`production/android-release-hardening` branch run the pinned Flutter analysis
-and test gate in GitHub Actions. The same job verifies the checked-in OpenCode
-contract, generated SDK, independent artifact matrix, SDK tests and analysis,
-Android `lintRelease`, and a test-signed release APK compile. The CI key is
-generated per job and its artifact is never distributed.
+## Connect to a server
 
-`shorebird.yaml` disables the engine's automatic updater because the app already
-owns checks, downloads, progress, and resume-time retries through
-`ShorebirdUpdateNotice`. Do not enable both owners: `ShorebirdUpdater.update()`
-can validly return while the automatic updater is still working, which would let
-the UI announce restart readiness before a patch is actually staged.
-
-### Signing identities and distribution lanes
-
-**Do not publish a store release yet.** The current
-[`android/app/build.gradle.kts`](android/app/build.gradle.kts) has a dedicated
-`release` signing configuration and no debug-key fallback. It reads the ignored
-`android/key.properties`; use [`android/key.properties.example`](android/key.properties.example)
-as the schema. `./scripts/release.sh release` intentionally stops unless the
-complete signing identity and expected certificate are supplied.
-
-Before the first store release, choose and protect a production upload key,
-enroll in Play App Signing, move key material and passwords outside version
-control, and populate `android/key.properties`. Do not commit a keystore or the
-populated properties file; both are ignored under `android/`. Export
-`RELEASE_CERT_SHA256` as the expected upload certificate fingerprint before
-running the helper. The properties file and keystore must be private to the
-current OS user, the keystore must be a regular file outside the repository, and
-its alias must already match `RELEASE_CERT_SHA256`. The helper rejects Android
-debug certificates, then checks the generated AAB certificate again after its
-dry-run and after any explicit upload.
-
-The existing GitHub sideload line is separate and now has a verified upgrade
-identity. Public `1.0.19+20` uses certificate SHA-256
-`1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c`.
-`./scripts/release.sh sideload` accepts only that exact fingerprint; it does not
-turn the store release's debug-certificate rejection into a general bypass.
-This preserves in-place upgrades and app data for current GitHub users. A future
-move from this legacy certificate to a production-signed GitHub or Play line
-still requires uninstalling the old app and loses its local app data unless an
-Android-supported signing migration is deliberately established.
-
-### Full Play Store release (AAB)
-
-After the signing blocker is resolved, bump `version:` in `pubspec.yaml` to a
-unique `x.y.z+build` value, commit it, and push it so local `master` exactly
-matches `origin/master`. Ensure `flutter --version` reports exactly 3.47.1, the
-same Flutter version pinned for the Shorebird build. Then validate and publish
-as two distinct actions:
-
-```bash
-./scripts/release.sh release             # gates + dry-run; uploads nothing
-./scripts/release.sh release --publish   # repeats validation, then uploads
-```
-
-The store artifact is
-`build/app/outputs/bundle/release/app-release.aab`. The helper creates the
-Shorebird release but does not upload to Google Play, create a GitHub release,
-tag, commit, or push. After verifying the published release, create an immutable
-baseline tag containing the exact `pubspec.yaml` version (including build
-number), for example `v1.0.12+13`, and push that tag explicitly. Patches fetch
-that tag from the tracked remote and require its commit to match the local tag
-before using it as the full-release source tree.
-
-### OTA patch
-
-Keep `pubspec.yaml` at the exact full-release version, commit and push the Dart
-fix, then run:
-
-```bash
-./scripts/release.sh patch             # gates + dry-run; uploads nothing
-./scripts/release.sh patch --publish   # repeats validation, then uploads
-```
-
-The patch always passes the exact `x.y.z+build` value to Shorebird; it never
-targets `latest`. It rejects changes since `v<x.y.z+build>` to Android native
-files (including Android code inside local packages), dependencies, Shorebird
-configuration, and bundled asset inputs. It also never enables Shorebird's
-`--allow-native-diffs` or `--allow-asset-diffs` escape hatches. Use a new full
-store release for any rejected change.
-
-`shorebird.yaml` already contains this app's `app_id`. Shorebird patches update
-Dart code only; the installed app applies a downloaded patch after restart.
-
-### GitHub sideload APK (separate distribution)
-
-Every installable GitHub APK must first be registered as a full Shorebird
-release. For the existing legacy upgrade line, populate ignored
-`android/key.properties` with the externally stored matching key, keep both
-files mode `600`, then validate and publish as separate actions:
-
-```bash
-./scripts/release.sh sideload             # gates + dry-run; uploads nothing
-./scripts/release.sh sideload --publish   # repeats validation, then uploads
-```
-
-This lane hard-pins the public certificate fingerprint, requires a clean synced
-`master`, validates the source version, uses Flutter `3.47.1`, and builds the APK
-through Shorebird. It then independently verifies that the artifact has exactly
-one signer, package `ai.opencode.opencode_mobile`, and the exact version name and
-code from `pubspec.yaml`. Publish mode removes the dry-run artifact, performs the
-real Shorebird release, and repeats every APK identity check on the new output.
-
-Attach that exact `build/app/outputs/flutter-apk/app-release.apk` to GitHub
-release `v<x.y.z+build>`, then create and push the immutable tag on the same
-commit. The helper intentionally does not create GitHub releases or tags. Never
-publish an APK from a raw `flutter build apk`: using Shorebird's Flutter binary
-alone does not register a release, so that install cannot receive automatic
-patches.
-
-After production signing is configured, use the store AAB derivation below so
-the GitHub channel has an explicit, stable certificate lineage.
-
-The Play Store AAB is not a sideloadable APK, and the release helper never
-publishes GitHub assets. Derive a universal APK from the exact published AAB
-with Android's `bundletool`, passing the production signing key explicitly.
-Password files and the keystore in this example must live outside the
-repository:
-
-```bash
-release_version='1.0.12+13'
-aab='build/app/outputs/bundle/release/app-release.aab'
-apks="build/sideload/$release_version/app.apks"
-apk="build/sideload/$release_version/opencode-$release_version.apk"
-
-mkdir -p "build/sideload/$release_version"
-java -jar "$BUNDLETOOL_JAR" build-apks \
-  --bundle="$aab" \
-  --output="$apks" \
-  --mode=universal \
-  --ks="$ANDROID_KEYSTORE_PATH" \
-  --ks-pass="file:$ANDROID_KEYSTORE_PASSWORD_FILE" \
-  --ks-key-alias="$ANDROID_KEY_ALIAS" \
-  --key-pass="file:$ANDROID_KEY_PASSWORD_FILE"
-unzip -p "$apks" universal.apk >"$apk"
-apksigner verify --verbose --print-certs "$apk"
-```
-
-Compare the printed SHA-256 certificate digest with `RELEASE_CERT_SHA256`, then
-native-test the universal APK on every supported device mode before attaching
-it manually to a GitHub Release for `v$release_version`. Never use an APK set
-generated without explicit bundletool signing parameters for distribution;
-bundletool otherwise falls back to a debug key. Keep GitHub sideload
-publication separate from the Shorebird/Play release so neither path silently
-publishes the other.
-
-This command signs the GitHub APK with the **upload-key** certificate represented
-by `RELEASE_CERT_SHA256`; that certificate defines the GitHub sideload upgrade
-line. With Play App Signing, Google normally signs Play-delivered APKs with the
-separate **app-signing** certificate shown in Play Console. A user generally
-cannot switch between the Play and GitHub channels in place unless those app
-certificates were intentionally made identical; switching requires uninstalling
-the existing app and loses its local data. Verify the upload-key fingerprint for
-GitHub artifacts and the Play app-signing fingerprint for Play artifacts. The
-current signing-identity decision gate applies to both production channels.
-
-## Connecting to opencode
-
-### Remote machine
+Start OpenCode on the machine with your code:
 
 ```bash
 OPENCODE_SERVER_PASSWORD=your-secret \
   opencode serve --hostname 127.0.0.1 --port 4096
 ```
 
-Expose it through an HTTPS reverse proxy or encrypted tunnel, then add the
-resulting `https://` URL in-app with user `opencode` and the password above.
-Remote HTTP is intentionally blocked. With an SSH tunnel
-(`ssh -L 4096:127.0.0.1:4096 host`) and a port-forward app, connect to
-`http://127.0.0.1:4096`.
+Then pick whichever path fits:
 
-### On-device (Termux) — automated
+- **USB / adb** — `adb reverse tcp:4096 tcp:4096`, connect to
+  `http://127.0.0.1:4096`. Zero network setup; ideal for a desk-adjacent
+  phone or emulator.
+- **LAN / tunnel** — serve on a reachable interface and connect to
+  `192.168.x.x:4096` (the first-run flow normalizes a bare `host:port` and
+  live-tests the connection before saving), or expose the server through an
+  HTTPS reverse proxy / Tailscale / SSH tunnel. Remote plain-HTTP is
+  intentionally blocked; loopback and tunnels are fine.
+- **On-device (Termux)** — tap **On-device (Termux)** on the Servers
+  screen. The app detects Termux (or opens its F-Droid page), walks you
+  through the one required unlock line, installs Ubuntu via proot-distro
+  plus Node and `opencode-ai` in the chroot, launches
+  `opencode serve` detached, health-polls until live, and connects. A "Live
+  log in Termux" button streams install/server logs at any time. The native
+  side is
+  [`MainActivity.kt`](android/app/src/main/kotlin/ai/opencode/opencode_mobile/MainActivity.kt)
+  + [`lib/termux/bridge.dart`](lib/termux/bridge.dart). (Why the chroot:
+  plain-Termux npm installs of opencode are broken upstream — npm sees
+  `os=android` and no `opencode-android-arm64` package exists. The chroot is
+  real glibc and shares the network stack, so the app reaches it at
+  `127.0.0.1:4096`.) Prefer manual? Inside Termux:
 
-Tap **On-device (Termux)** on the Servers screen. The app then:
+  ```bash
+  pkg install proot-distro
+  proot-distro install ubuntu
+  proot-distro login ubuntu     # then inside the chroot:
+    apt update && apt install -y nodejs npm
+    npm i -g opencode-ai
+    opencode serve --hostname 127.0.0.1 --port 4096 &
+    exit
+  ```
 
-1. Detects whether Termux is installed; if not, opens the F-Droid download page
-   (the only manual step — Android forbids apps from installing other apps).
-2. Copies an unlock line and jumps into Termux: you paste it once and press
-   Enter. This sets `allow-external-apps=true` in `~/.termux/termux.properties`,
-   which Termux itself requires before any external app may run commands.
-3. Installs **Ubuntu via proot-distro** inside Termux, then Node.js +
-   `opencode-ai` in the chroot, and starts
-   `opencode serve --hostname 127.0.0.1 --port 4096` detached.
-   (Plain-Termux npm installs of opencode are broken upstream — npm sees
-   `os=android` and no `opencode-android-arm64` package exists;
-   anomalyco/opencode#12515, #10504. The chroot is real glibc and shares the
-   network stack, so localhost works from the app.)
-4. Health-polls `127.0.0.1:4096` (up to 15 min on first run), saves the
-   profile and connects. A "Live log in Termux" button streams install/server
-   logs any time.
+  Run `termux-wake-lock` to keep it alive.
 
-Native side lives in [`MainActivity.kt`](android/app/src/main/kotlin/ai/opencode/opencode_mobile/MainActivity.kt)
-(method channel `oc/termux`) with the Dart wrapper in
-[`lib/termux/bridge.dart`](lib/termux/bridge.dart).
+> The server can execute commands on its host; treat app access like SSH
+> access. Always set `OPENCODE_SERVER_PASSWORD` when binding beyond
+> localhost.
 
-Prefer manual? Inside Termux:
+## OpenCode 2
+
+A port to the OpenCode v2 beta API (`opencode2`, `@opencode-ai/cli@next`)
+is in progress as a **dual-stack**: the existing v1 client keeps serving
+current 1.18.x servers (including Termux installs) while a new typed
+`lib/api2/` client speaks v2 — Basic-auth transport, the `/api/` surface,
+cursor pagination, forms, and WebSocket PTY. Protocol detection happens at
+connect time. Plan and status: [docs/opencode2-port-plan.md](docs/opencode2-port-plan.md);
+captured ground truth in [docs/opencode2-protocol-notes.md](docs/opencode2-protocol-notes.md),
+[docs/opencode2-port-matrix.md](docs/opencode2-port-matrix.md), and the live
+OpenAPI dumps under [contracts/](contracts/).
+
+## Build from source
+
+| Tool | Version |
+|---|---|
+| Flutter | **3.47.1** — the exact version pinned for Shorebird releases |
+| Android SDK | API 36 |
+| Shorebird CLI | 1.6.x (only needed for release/patch work) |
 
 ```bash
-pkg install proot-distro
-proot-distro install ubuntu
-proot-distro login ubuntu     # then inside the chroot:
-  apt update && apt install -y nodejs npm
-  npm i -g opencode-ai
-  opencode serve --hostname 127.0.0.1 --port 4096 &
-  exit
+flutter pub get
+flutter run                  # debug on device/emulator
+flutter build apk --release
+flutter build linux          # desktop build, same codebase
 ```
 
-The chroot shares the network stack, so the app reaches it at
-`http://127.0.0.1:4096`. Run `termux-wake-lock` to keep it alive.
+The Flutter pin matters: release artifacts and the 500+ test suite are
+validated against Shorebird's pinned 3.47.1
+(`~/.shorebird/bin/cache/flutter/<rev>/bin/flutter` after installing
+Shorebird). Older local Flutters may fail to resolve packages.
 
-> The server can execute commands on its host; treat app access like SSH access.
-
-## Verifying against a real server
-
-The repo ships two integration tests that run against any live opencode
-instance (no emulator needed):
+Two integration tests run against any live server, no emulator needed:
 
 ```bash
 opencode serve --port 4123 &
 dart run tool/smoke_test.dart http://127.0.0.1:4123 /server/project
-# API + SSE + model-free shell; creates and always deletes one test session
-dart run tool/prompt_test.dart http://127.0.0.1:4123   # full streamed prompt (needs model auth)
+dart run tool/prompt_test.dart http://127.0.0.1:4123   # needs model auth
 ```
 
-The smoke test accepts optional server-side directory and workspace arguments.
-It was verified passing against OpenCode 1.18.23 on 2026-08-28.
+## Releases and code push
+
+`./scripts/release.sh {release|patch|sideload}` is fail-closed: it demands a
+clean synced `master`, runs analysis, the full test suite, and a Shorebird
+dry-run, and uploads nothing without an explicit `--publish`. Release
+signing reads the gitignored `android/key.properties`
+([example](android/key.properties.example)); no keystore or populated
+properties file is ever committed. The GitHub sideload lane hard-pins the
+public certificate fingerprint above and independently verifies signer,
+package ID, and version on every artifact. Shorebird patches are Dart-only
+and always target an exact `x.y.z+build`; never distribute an APK from a raw
+`flutter build apk` — it cannot receive patches. CI
+([android-quality.yml](.github/workflows/android-quality.yml)) runs the same
+gates plus contract/SDK verification and a test-signed release compile whose
+artifact is never distributed.
 
 ## Architecture
 
 ```
 lib/
-├── api/
-│   ├── models.dart        # hand-written DTO parsers for the opencode HTTP API
-│   ├── opencode_api.dart  # Dio client: sessions, messages, prompts, files…
-│   └── sse.dart           # /event stream parser with reconnect + backoff
-├── state/
-│   ├── profiles.dart      # server profiles (prefs + Keystore secrets)
-│   ├── connection.dart    # ConnectionController: connection, events, catalogs
-│   └── termux/
-│       └── bridge.dart    # Dart wrapper for the Termux RUN_COMMAND channel
-├── ui/
-│   ├── screens/           # servers, home tabs, chat, files, guide, termux setup
-│   └── widgets/           # markdown renderer, tool cards, pickers
-└── main.dart              # bootstrap, routes, theme
+├── api/           # v1 client: DTOs, Dio HTTP client, /event SSE w/ reconnect
+├── api2/          # OpenCode 2 client: Basic-auth transport, typed models, SSE
+├── state/         # profiles (Keystore secrets), ConnectionController, offline queue
+├── termux/        # Dart side of the Termux RUN_COMMAND bridge
+├── background/    # foreground service + live-session notifications
+├── voice/         # sherpa-onnx Whisper: model manager, downloader, recognizer
+├── update/        # Shorebird update ownership
+├── diagnostics/   # redacted, explicit-only app diagnostics
+└── ui/            # screens (chat, workspace, files, review, terminal,
+                   #  mission control, settings hub…) and widgets
+packages/opencode_sdk/   # generated Dart SDK from the checked-in OpenAPI contract
+contracts/               # OpenAPI dumps (v1 + v2 beta) + SDK coverage matrix
+video/                   # Remotion showcase project
 ```
+
+## Project docs
+
+- [docs/showcase-video-plan.md](docs/showcase-video-plan.md) — the showcase
+  storyboard, shot list, and render plan
+- [docs/opencode2-port-plan.md](docs/opencode2-port-plan.md) /
+  [port matrix](docs/opencode2-port-matrix.md) /
+  [protocol notes](docs/opencode2-protocol-notes.md) — the v2 lane
+- [docs/opencode2-ui-design.md](docs/opencode2-ui-design.md) — locked UI
+  decisions for v2 surfaces (forms, integrations, inbox)
+- [docs/opencode2-termux.md](docs/opencode2-termux.md) — the on-device story
+  under OpenCode 2
+- [docs/design-inspiration.md](docs/design-inspiration.md) — the researched
+  pattern library behind the facelift
+- [docs/desktop-feasibility.md](docs/desktop-feasibility.md) — Linux desktop
+  findings
+- [docs/ubuntu-host.md](docs/ubuntu-host.md) — one-command server setup for
+  an Ubuntu host ([script](scripts/host/ubuntu-opencode.sh))
+- [docs/opencode-sdk-coverage.md](docs/opencode-sdk-coverage.md) /
+  [command feature map](docs/opencode-command-feature-map.md) — how much of
+  the server API the app exercises
+- [HANDOFF.md](HANDOFF.md) — the running engineering log: every release,
+  patch, and facelift slice with its verification evidence
+
+## License
+
+The app's own license is being finalized for the public release (tracked in
+[docs/public-release-audit.md](docs/public-release-audit.md)). Bundled
+third-party components — JetBrains Mono (OFL-1.1), sherpa-onnx
+(Apache-2.0), ONNX Runtime (MIT), OpenAI Whisper models (MIT), and others —
+are documented in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) with full
+texts under [LICENSES/](LICENSES/).
