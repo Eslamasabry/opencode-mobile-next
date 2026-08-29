@@ -1282,6 +1282,12 @@ class Api2ModelInfo {
   final List<String> variants;
   final Api2ModelLimit limit;
   final int? released;
+
+  /// The full wire object, preserved for consumers (like the domain gateway
+  /// mappers) that need fields this projection does not model — e.g. variant
+  /// settings such as `reasoningEffort`.
+  final Map<String, dynamic> raw;
+
   Api2ModelInfo({
     required this.id,
     this.modelID,
@@ -1294,6 +1300,7 @@ class Api2ModelInfo {
     this.variants = const [],
     Api2ModelLimit? limit,
     this.released,
+    this.raw = const {},
   }) : capabilities = capabilities ?? Api2ModelCapabilities(),
        limit = limit ?? Api2ModelLimit();
 
@@ -1315,6 +1322,7 @@ class Api2ModelInfo {
       ),
       limit: Api2ModelLimit.fromJson(j['limit']),
       released: _asInt(_asMap(j['time'])?['released']),
+      raw: j,
     );
   }
 
@@ -1409,7 +1417,16 @@ class Api2Skill {
   final String? name;
   final String? description;
   final String? location;
-  Api2Skill({required this.id, this.name, this.description, this.location});
+  final String? content;
+  final bool slash;
+  Api2Skill({
+    required this.id,
+    this.name,
+    this.description,
+    this.location,
+    this.content,
+    this.slash = false,
+  });
 
   static Api2Skill? fromJson(Map<String, dynamic> j) {
     final id = _asString(j['id']) ?? _asString(j['name']);
@@ -1419,6 +1436,8 @@ class Api2Skill {
       name: _asString(j['name']),
       description: _asString(j['description']),
       location: _asString(j['location']),
+      content: _asString(j['content']),
+      slash: _asBool(j['slash']) ?? false,
     );
   }
 }
