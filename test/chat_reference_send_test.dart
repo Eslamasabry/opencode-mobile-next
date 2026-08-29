@@ -206,6 +206,25 @@ void main() {
     );
   });
 
+  testWidgets('the composer says staged references are not saved', (
+    tester,
+  ) async {
+    final api = _RecordingApi();
+    final controller = await _controller(api);
+    addTearDown(controller.dispose);
+    final handoff = await _pumpChat(tester, controller);
+
+    handoff.stage('session-1', _reference());
+    await tester.pump();
+
+    // References live in memory only, so the composer says so rather than
+    // letting a restart lose them silently.
+    final note = tester.widget<Text>(
+      find.byKey(const Key('composer-reference-note')),
+    );
+    expect(note.data, contains('Not saved with your draft.'));
+  });
+
   testWidgets('references still ride along on an ordinary prompt', (
     tester,
   ) async {
