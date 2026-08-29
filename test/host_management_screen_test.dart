@@ -143,14 +143,19 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    final restartCopy = find.byKey(
+      const ValueKey('copy-host-command-Restart the server'),
+    );
     await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('copy-host-command-Restart the server')),
+      restartCopy,
       240,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.tap(
-      find.byKey(const ValueKey('copy-host-command-Restart the server')),
-    );
+    // The list grew, so the row can settle under the viewport edge where a
+    // raw tap misses it.
+    await tester.ensureVisible(restartCopy);
+    await tester.pumpAndSettle();
+    await tester.tap(restartCopy);
     await tester.pumpAndSettle();
 
     expect(copiedText, 'bash ubuntu-opencode.sh restart');

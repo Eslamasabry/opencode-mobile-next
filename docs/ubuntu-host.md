@@ -36,10 +36,9 @@ Without linger, systemd stops user services when your last session ends.
 
 ### Firewall
 
-If `ufw` is active, allow the port (ideally restricted to your LAN):
-
-```sh
-```
+Leave it closed. The service listens on `127.0.0.1` only, so opening a
+port does nothing for you and everything for anyone else on the network:
+an OpenCode server runs shell commands as your user.
 
 ## Day-to-day
 
@@ -56,10 +55,33 @@ equivalent for servers that don't.
 
 ## Connecting the phone
 
-Use `http://<the-machine's-LAN-IP>:4096` in the app's server profile. Find
-the IP with `ip -4 addr show scope global`. For networks where the phone
-cannot reach the machine directly, any TCP tunnel (Tailscale, WireGuard,
-`adb reverse` for emulators) works — the app only needs the URL.
+The server is loopback-only and the app refuses plain HTTP to anything but
+the device's own loopback, so the phone reaches it through a tunnel that
+ends at `127.0.0.1` on the phone. Read the password first:
+
+```sh
+bash ubuntu-opencode.sh password
+```
+
+**USB (simplest).** With the phone plugged in and USB debugging on:
+
+```sh
+adb reverse tcp:4096 tcp:4096
+```
+
+Then use `http://127.0.0.1:4096` in the app.
+
+**SSH.** Any SSH client on the phone that forwards a local port works;
+forward phone-local `4096` to `127.0.0.1:4096` on this machine, then use
+`http://127.0.0.1:4096`.
+
+**Tailscale Serve or another HTTPS reverse proxy.** Terminate TLS in front
+of the server and use the `https://` address. A plain
+`http://<tailscale-name>:4096` will be rejected by the app — it is
+unencrypted, and the password would cross the network in clear text.
+
+**Binding to the network directly is an advanced path.** It requires
+`OPENCODE_ALLOW_REMOTE_BIND=1`, and you should only take it behind TLS.
 
 ## Uninstall
 

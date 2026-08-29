@@ -74,8 +74,12 @@ class HostManagementScreen extends StatelessWidget {
               command: 'loginctl enable-linger "\$USER"',
             ),
             _HostCommandTile(
-              label: 'Allow the port through the firewall (if ufw is active)',
-              command: 'sudo ufw allow $port/tcp',
+              label: 'Read the server password for this app',
+              command: 'bash ubuntu-opencode.sh password',
+            ),
+            _HostCommandTile(
+              label: 'Reach it from this phone over USB',
+              command: 'adb reverse tcp:$port tcp:$port',
             ),
             const SectionLabel('Day-to-day — run on your computer'),
             _HostCommandTile(
