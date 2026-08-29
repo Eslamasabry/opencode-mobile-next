@@ -4,10 +4,10 @@ import 'dart:io' show Platform;
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:window_manager/window_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'background/live_background.dart';
+import 'desktop/window_state.dart';
 import 'diagnostics/app_diagnostics.dart';
 import 'l10n/app_localizations.dart';
 import 'platform/platform_capabilities.dart';
@@ -30,8 +30,9 @@ import 'ui/screens/app_diagnostics_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (!kIsWeb && (Platform.isLinux || Platform.isWindows || Platform.isMacOS)) {
-    // Desktop windows get a sane default and floor; Android never reaches
-    // these calls.
+    // Restores the remembered size, position and maximized state, clamped to
+    // a display that still exists, and saves it again on close. Android never
+    // reaches this call. See lib/desktop/window_state.dart.
     //
     // The one platform branch that deliberately stays on dart:io rather than
     // PlatformCapabilities: this is about the process that is actually
@@ -39,18 +40,7 @@ Future<void> main() async {
     // a test needs to pump both ways. `main` is never entered by the suite,
     // so routing it through an overridable seam would only add a way for a
     // stray override to leave a real desktop window unshown.
-    await windowManager.ensureInitialized();
-    const options = WindowOptions(
-      size: Size(900, 700),
-      minimumSize: Size(480, 600),
-      title: 'OpenCode',
-    );
-    unawaited(
-      windowManager.waitUntilReadyToShow(options, () async {
-        await windowManager.show();
-        await windowManager.focus();
-      }),
-    );
+    unawaited(setUpDesktopWindow());
   }
   final diagnostics = AppDiagnosticsController();
   installAppErrorCapture(diagnostics);

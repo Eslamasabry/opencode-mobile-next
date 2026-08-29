@@ -35,6 +35,10 @@ dependencies:
   dynamic_color: ^1.7.0
   package_info_plus: ^10.2.1
   window_manager: ^0.5.2
+  # Already present transitively via window_manager. Declared explicitly
+  # because lib/desktop/window_state.dart imports it directly to clamp the
+  # restored window to a display that is actually attached.
+  screen_retriever: ^0.2.0
 
 dev_dependencies:
   cross_file: 0.3.5+5
