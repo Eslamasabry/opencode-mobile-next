@@ -300,14 +300,25 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
           return MaterialApp(
         navigatorKey: _navigatorKey,
         scaffoldMessengerKey: _messengerKey,
-        builder: (context, child) => ShorebirdUpdateNotice(
-          service: _updateService,
-          messengerKey: _messengerKey,
-          child: DesktopReleaseNotice(
-            messengerKey: _messengerKey,
-            child: child ?? const SizedBox.shrink(),
-          ),
-        ),
+        builder: (context, child) {
+          // Global text-scale safety net: honor the system setting up to
+          // 2.0x so unguarded screens cannot overflow at extreme scales.
+          // Screens with their own tighter clamps still apply them on top.
+          final scale = MediaQuery.textScalerOf(context).scale(1);
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              textScaler: TextScaler.linear(scale.clamp(1.0, 2.0)),
+            ),
+            child: ShorebirdUpdateNotice(
+              service: _updateService,
+              messengerKey: _messengerKey,
+              child: DesktopReleaseNotice(
+                messengerKey: _messengerKey,
+                child: child ?? const SizedBox.shrink(),
+              ),
+            ),
+          );
+        },
         title: 'OpenCode',
         debugShowCheckedModeBanner: false,
         themeMode: switch (appearance) {
