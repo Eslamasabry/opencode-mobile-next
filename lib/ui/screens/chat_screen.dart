@@ -9,7 +9,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import '../../api/models.dart';
-import '../../api/opencode_api.dart' show ApiException;
 import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../api/sse.dart';

@@ -3,10 +3,14 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:opencode_sdk/opencode_sdk.dart' as sdk;
 
+import '../domain/server_gateway.dart';
 import 'models.dart';
+import 'sse.dart';
+
+export 'models.dart' show ApiException;
 
 /// HTTP client for a single opencode server (`opencode serve`).
-class OpenCodeApi {
+class OpenCodeApi implements ServerGateway, EventStreamTransport {
   final String baseUrl;
   final String? username;
   final String? password;
@@ -17,16 +21,24 @@ class OpenCodeApi {
   bool _closed = false;
 
   Dio get dio => _dio;
+  @override
   String? get directory => _directory;
+  @override
   String? get workspace => _workspace;
+  @override
   bool get isClosed => _closed;
 
+  @override
+  ServerCapabilities get capabilities => ServerCapabilities.allV1;
+
+  @override
   void setLocation({String? directory, String? workspace}) {
     _directory = directory;
     _workspace = workspace;
   }
 
   /// Cancels in-flight requests and closes the shared handwritten/SDK client.
+  @override
   void close() {
     if (_closed) return;
     _closed = true;
@@ -100,7 +112,33 @@ class OpenCodeApi {
     return status != null && status >= 200 && status < 300;
   }
 
+  @override
+  LiveEventChannel openEventChannel({
+    required void Function(EventEnvelope event) onEvent,
+    required void Function(StreamStatus status) onStatus,
+    void Function(Object error)? onError,
+  }) => EventStream(
+    api: this,
+    onEvent: onEvent,
+    onStatus: onStatus,
+    onError: onError,
+  );
+
+  @override
+  LiveEventChannel openGlobalEventChannel({
+    required void Function(EventEnvelope event) onEvent,
+    required void Function(StreamStatus status) onStatus,
+    void Function(Object error)? onError,
+  }) => EventStream(
+    api: this,
+    onEvent: onEvent,
+    onStatus: onStatus,
+    onError: onError,
+    global: true,
+  );
+
   /// Opens the long-lived `/event` SSE stream.
+  @override
   Future<Response<ResponseBody>> openEventStream({CancelToken? cancelToken}) {
     return _dio.get<ResponseBody>(
       '/event',
@@ -116,6 +154,7 @@ class OpenCodeApi {
 
   /// Opens the server-wide `/global/event` stream. Its wire envelope wraps the
   /// actual event in `payload`, unlike the location-scoped `/event` stream.
+  @override
   Future<Response<ResponseBody>> openGlobalEventStream({
     CancelToken? cancelToken,
   }) {
@@ -130,6 +169,7 @@ class OpenCodeApi {
     );
   }
 
+  @override
   Future<Health> health() async {
     try {
       final r = await _dio.get('/global/health');
@@ -141,6 +181,7 @@ class OpenCodeApi {
 
   // ----- Sessions -----
 
+  @override
   Future<List<Session>> sessions() async {
     try {
       final response = await sdkClient.getSessionApi().sessionList(
@@ -171,6 +212,7 @@ class OpenCodeApi {
     }
   }
 
+  @override
   Future<Session> createSession() async {
     try {
       final response = await sdkClient.getSessionApi().sessionCreate(
@@ -198,6 +240,7 @@ class OpenCodeApi {
     }
   }
 
+  @override
   Future<void> deleteSession(String id) async {
     try {
       await sdkClient.getSessionApi().sessionDelete(
@@ -213,6 +256,7 @@ class OpenCodeApi {
     }
   }
 
+  @override
   Future<void> renameSession(String id, String title) async {
     try {
       await sdkClient.getSessionApi().sessionUpdate(
@@ -229,6 +273,7 @@ class OpenCodeApi {
     }
   }
 
+  @override
   Future<Session> session(String id) async {
     try {
       final response = await sdkClient.getSessionApi().sessionGet(
@@ -257,6 +302,7 @@ class OpenCodeApi {
   }
 
   /// Returns {sessionID: "idle"|"busy"|"retry"}.
+  @override
   Future<Map<String, String>> sessionStatuses() async {
     try {
       final response = await sdkClient.getSessionApi().sessionStatus(
@@ -289,6 +335,7 @@ class OpenCodeApi {
     return out;
   }
 
+  @override
   Future<List<MessageWithParts>> messages(String id) async {
     try {
       final response = await sdkClient.getSessionApi().sessionMessages(
@@ -331,6 +378,7 @@ class OpenCodeApi {
   }
 
   /// Fire-and-forget prompt; responses arrive via the SSE event stream.
+  @override
   Future<void> promptAsync(
     String sessionID, {
     required String text,
@@ -382,6 +430,7 @@ class OpenCodeApi {
     }
   }
 
+  @override
   Future<void> shell(
     String sessionID, {
     required String command,
@@ -408,6 +457,7 @@ class OpenCodeApi {
     }
   }
 
+  @override
   Future<void> slashCommand(
     String sessionID,
     String command,
@@ -434,6 +484,7 @@ class OpenCodeApi {
     }
   }
 
+  @override
   Future<void> abort(String sessionID) async {
     try {
       await sdkClient.getSessionApi().sessionAbort(
@@ -448,6 +499,7 @@ class OpenCodeApi {
     }
   }
 
+  @override
   Future<List<Todo>> todos(String id) async {
     try {
       final response = await sdkClient.getSessionApi().sessionTodo(
@@ -483,6 +535,7 @@ class OpenCodeApi {
     }
   }
 
+  @override
   Future<List<FileDiff>> diff(String id) async {
     try {
       final response = await sdkClient.getSessionApi().sessionDiff(
@@ -526,6 +579,7 @@ class OpenCodeApi {
     }
   }
 
+  @override
   Future<List<PermissionRequest>> pendingPermissions() async {
     try {
       final response = await sdkClient.getPermissionApi().permissionList(
@@ -561,6 +615,7 @@ class OpenCodeApi {
   ///
   /// Unlike the location-scoped legacy endpoint, this endpoint wraps its
   /// result in `{location, data}` and uses the V2 permission field names.
+  @override
   Future<List<PermissionRequest>> pendingPermissionsV2() async {
     try {
       final response = await sdkClient
@@ -640,6 +695,7 @@ class OpenCodeApi {
 
   /// Returns raw V2 question objects from the global `{location, data}`
   /// envelope. The app's repository model owns question parsing.
+  @override
   Future<List<Map<String, dynamic>>> pendingQuestionsV2() async {
     try {
       final response = await sdkClient
@@ -693,6 +749,7 @@ class OpenCodeApi {
         .toList();
   }
 
+  @override
   Future<void> respondPermission(
     String requestID,
     String reply, {
@@ -791,6 +848,7 @@ class OpenCodeApi {
     }
   }
 
+  @override
   Future<void> respondPermissionV2(
     String sessionID,
     String requestID,
@@ -821,6 +879,7 @@ class OpenCodeApi {
     }
   }
 
+  @override
   Future<void> answerQuestionV2(
     String sessionID,
     String requestID,
@@ -839,6 +898,7 @@ class OpenCodeApi {
     }
   }
 
+  @override
   Future<void> rejectQuestionV2(String sessionID, String requestID) async {
     try {
       await sdkClient.getSessionQuestionsApi().v2SessionQuestionReject(
@@ -854,6 +914,7 @@ class OpenCodeApi {
 
   // ----- Providers / agents -----
 
+  @override
   Future<ProvidersResponse> providers() async {
     try {
       final r = await _dio.get('/provider', queryParameters: _query());
@@ -867,11 +928,13 @@ class OpenCodeApi {
     }
   }
 
+  @override
   Future<ProvidersResponse> configuredProviders() async {
     final r = await _dio.get('/config/providers', queryParameters: _query());
     return ProvidersResponse.fromJson(Map<String, dynamic>.from(r.data as Map));
   }
 
+  @override
   Future<List<AgentInfo>> agents() async {
     try {
       final r = await _dio.get('/agent', queryParameters: _query());
@@ -893,6 +956,7 @@ class OpenCodeApi {
 
   // ----- Files -----
 
+  @override
   Future<List<FileNode>> listFiles(String path) async {
     try {
       final response = await sdkClient.getFileApi().fileList(
@@ -942,6 +1006,7 @@ class OpenCodeApi {
     return nodes;
   }
 
+  @override
   Future<FileContent> fileContent(String path) async {
     try {
       final response = await sdkClient.getFileApi().fileRead(
@@ -990,6 +1055,7 @@ class OpenCodeApi {
     return FileContent(text);
   }
 
+  @override
   Future<List<String>> findFile(String query) async {
     try {
       final response = await sdkClient.getFileApi().findFiles(
@@ -1010,6 +1076,7 @@ class OpenCodeApi {
     }
   }
 
+  @override
   Future<List<FindMatch>> findText(String pattern) async {
     try {
       final response = await sdkClient.getFileApi().findText(
@@ -1045,28 +1112,4 @@ class OpenCodeApi {
       _fail(error, 'Find text');
     }
   }
-}
-
-class ApiException implements Exception {
-  final String message;
-  final int? statusCode;
-  final String? errorTag;
-  final String? requestID;
-
-  ApiException(this.message, {this.statusCode, this.errorTag, this.requestID});
-
-  bool get unauthorized => statusCode == 401 || statusCode == 403;
-
-  bool isPermissionNotFound(String id) =>
-      statusCode == 404 &&
-      errorTag == 'PermissionNotFoundError' &&
-      requestID == id;
-
-  bool isQuestionNotFound(String id) =>
-      statusCode == 404 &&
-      errorTag == 'QuestionNotFoundError' &&
-      requestID == id;
-
-  @override
-  String toString() => message;
 }
