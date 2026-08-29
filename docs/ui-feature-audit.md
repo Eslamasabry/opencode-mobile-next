@@ -1,5 +1,9 @@
 # UI / feature audit — what to add, edit, and fix
 
+> Status: re-verified 2026-08-29 — see
+> [`reverification-report.md`](reverification-report.md) for what landed
+> (23/26 here) and what remains.
+
 Audit date: 2026-08-29. Branch: `production/android-release-hardening`
 (release research tip: master + the OpenCode 2 research pair).
 

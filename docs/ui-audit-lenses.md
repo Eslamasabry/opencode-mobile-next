@@ -1,5 +1,9 @@
 # Five-lens UI/UX deep audit
 
+> Status: re-verified 2026-08-29 — see
+> [`reverification-report.md`](reverification-report.md). Lens 1/2/3/5
+> ~fully fixed; Lens 4 (visual tokens) 14 findings still open.
+
 Audit date: 2026-08-29. Branch: `production/android-release-hardening`.
 Companion to [`docs/ui-feature-audit.md`](ui-feature-audit.md) (whose F/E/A
 items are not repeated here). Five parallel lenses, each verified against

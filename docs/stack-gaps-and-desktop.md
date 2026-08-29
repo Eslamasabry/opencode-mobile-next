@@ -1,5 +1,10 @@
 # Stack, componentry, and desktop-readiness review
 
+> Status: re-verified 2026-08-29 — see
+> [`reverification-report.md`](reverification-report.md). Only staggered
+> entrances, swipe-delete rows, window min-size, and settings gating
+> landed; the database and input priorities remain open.
+
 Review date: 2026-08-29. Branch: `production/android-release-hardening`.
 Companion to [`docs/ui-feature-audit.md`](ui-feature-audit.md) and
 [`docs/ui-audit-lenses.md`](ui-audit-lenses.md). Every "missing" claim below
