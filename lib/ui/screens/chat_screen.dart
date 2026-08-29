@@ -27,7 +27,7 @@ import '../widgets/markdown.dart';
 import '../widgets/pickers.dart';
 import '../widgets/product_states.dart';
 import '../widgets/tool_card.dart';
-import '../../api2/models.dart' show Api2FormInfo;
+import '../../api2/models.dart' show Api2Delivery, Api2FormInfo, Api2InboxItem;
 import 'app_diagnostics_screen.dart';
 import 'chat/form_flow.dart';
 import 'chat/permission_sheet.dart';
@@ -951,6 +951,66 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       destructive: true,
     );
     if (confirmed) await _conn.removeQueuedPrompt(entry.id);
+  }
+
+  /// Cancels a pending server send; its text returns to the composer as a
+  /// draft — that is the edit affordance for immutable inbox items.
+  Future<void> _cancelInboxSend(Api2InboxItem item) async {
+    final confirmed = await showConfirmSheet(
+      context,
+      icon: Icons.delete_sweep_outlined,
+      title: 'Cancel this pending message?',
+      message: 'Its text returns to the composer as a draft.',
+      confirmLabel: 'Cancel message',
+      cancelLabel: 'Keep it pending',
+      destructive: true,
+    );
+    if (!confirmed || !mounted) return;
+    String? text;
+    try {
+      text = await _conn.cancelInboxItem(widget.sessionID, item.id);
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      if (error.statusCode == 409) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Already delivered')),
+        );
+        return;
+      }
+      _showActionError(error);
+      return;
+    } catch (error) {
+      if (mounted) _showActionError(error);
+      return;
+    }
+    if (!mounted || text == null || text.isEmpty) return;
+    final current = _composer.text;
+    _composer.text = current.trim().isEmpty ? text : '$text\n$current';
+    _composer.selection = TextSelection.collapsed(
+      offset: _composer.text.length,
+    );
+    _focus.requestFocus();
+  }
+
+  /// Flips a pending server send between steer and queue delivery.
+  Future<void> _flipInboxDelivery(Api2InboxItem item) async {
+    final next = item.delivery == Api2Delivery.steer
+        ? Api2Delivery.queue
+        : Api2Delivery.steer;
+    try {
+      await _conn.setInboxDelivery(widget.sessionID, item.id, delivery: next);
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      if (error.statusCode == 409) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Already delivered')),
+        );
+        return;
+      }
+      _showActionError(error);
+    } catch (error) {
+      if (mounted) _showActionError(error);
+    }
   }
 
   Future<void> _send() async {
@@ -3524,13 +3584,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                 onAnswer: () =>
                                     unawaited(_openForm(pendingForm)),
                               ),
-                            if (_conn.queuedPromptsFor(widget.sessionID)
-                                case final queuedDrafts
-                                when queuedDrafts.isNotEmpty)
-                              _QueuedPromptsStrip(
-                                entries: queuedDrafts,
+                            if ((
+                              drafts: _conn.queuedPromptsFor(widget.sessionID),
+                              inbox: _conn.inboxItemsFor(widget.sessionID),
+                            )
+                                case final pendingSends
+                                when pendingSends.drafts.isNotEmpty ||
+                                    pendingSends.inbox.isNotEmpty)
+                              _PendingSendsStrip(
+                                drafts: pendingSends.drafts,
+                                inboxItems: pendingSends.inbox,
                                 onEdit: _editQueuedPrompt,
                                 onDiscard: _discardQueuedPrompt,
+                                onCancelInbox: _cancelInboxSend,
+                                onFlipDelivery: _flipInboxDelivery,
                               ),
                             Center(
                               child: ConstrainedBox(
