@@ -658,7 +658,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
     try {
       final api = _conn.api;
-      if (api == null) throw StateError('OpenCode is reconnecting.');
+      if (api == null) throw const ProductException('OpenCode is reconnecting.');
       final msgs = await api.messages(widget.sessionID);
       msgs.sort(
         (a, b) =>
@@ -1006,9 +1006,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           offset: _composer.text.length,
         );
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Send failed: $e')));
+      showProductError(context, e);
     }
   }
 
@@ -1095,7 +1093,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       _composer.text = original;
       _composer.selection = TextSelection.collapsed(offset: original.length);
       setState(() => _sending = false);
-      _showActionError('Command failed: $error');
+      _showActionError(error);
     }
   }
 
@@ -1140,23 +1138,23 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     List<PromptAttachment> current,
   ) async {
     if (current.length >= _maxAttachmentCount) {
-      throw StateError('You can attach up to $_maxAttachmentCount files.');
+      throw ProductException('You can attach up to $_maxAttachmentCount files.');
     }
     final currentBytes = current.fold<int>(
       0,
       (total, attachment) => total + _attachmentByteLength(attachment),
     );
     if (currentBytes >= _maxAggregateAttachmentBytes) {
-      throw StateError('Attachments must total no more than 20 MB.');
+      throw const ProductException('Attachments must total no more than 20 MB.');
     }
     final file = await FilePicker.pickFile(dialogTitle: 'Attach to prompt');
     if (file == null) return null;
     final size = await file.length();
     if (size > _maxAttachmentBytes) {
-      throw StateError('Each attachment must be 10 MB or smaller.');
+      throw const ProductException('Each attachment must be 10 MB or smaller.');
     }
     if (size > 0 && currentBytes + size > _maxAggregateAttachmentBytes) {
-      throw StateError('Attachments must total no more than 20 MB.');
+      throw const ProductException('Attachments must total no more than 20 MB.');
     }
     final remainingAggregateBytes = _maxAggregateAttachmentBytes - currentBytes;
     final readLimit = remainingAggregateBytes < _maxAttachmentBytes
@@ -1167,10 +1165,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       maxBytes: readLimit,
     );
     if (bytes == null && readLimit < _maxAttachmentBytes) {
-      throw StateError('Attachments must total no more than 20 MB.');
+      throw const ProductException('Attachments must total no more than 20 MB.');
     }
     if (bytes == null) {
-      throw StateError('Each attachment must be 10 MB or smaller.');
+      throw const ProductException('Each attachment must be 10 MB or smaller.');
     }
     final mime = _mimeForFilename(file.name);
     final attachment = PromptAttachment(
@@ -1257,7 +1255,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     try {
       await actionApi.abort(widget.sessionID);
     } catch (error) {
-      if (mounted) _showActionError('Could not stop generation: $error');
+      if (mounted) _showActionError(error);
     } finally {
       if (mounted) setState(() => _aborting = false);
     }
@@ -1277,7 +1275,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     try {
       final repository = await _requireActionRepository();
       final url = await repository.shareSession(widget.sessionID);
-      if (url == null) throw StateError('No share link was returned');
+      if (url == null) throw const ProductException('No share link was returned');
       if (mounted) {
         setState(() => _localShareUrl = url);
         await _conn.refreshSessions();
@@ -1335,7 +1333,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<ProductRepository> _requireActionRepository() async {
     final repository = await _conn.prepareActionRepository();
     if (repository != null) return repository;
-    throw StateError(
+    throw ProductException(
       _conn.connectionError ?? 'OpenCode is reconnecting. Try again shortly.',
     );
   }
@@ -1716,7 +1714,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
     try {
       final api = await _conn.prepareActionTransport();
-      if (api == null) throw StateError('OpenCode is reconnecting.');
+      if (api == null) throw const ProductException('OpenCode is reconnecting.');
       await api.promptAsync(
         widget.sessionID,
         text: text,
@@ -1731,9 +1729,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   void _showActionError(Object error) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(error.toString())));
+    showProductError(context, error);
   }
 
   // ----- dialogs -----
@@ -1840,7 +1836,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (cmd == null || cmd.isEmpty) return;
     try {
       final api = await _conn.prepareActionTransport();
-      if (api == null) throw StateError('OpenCode is reconnecting.');
+      if (api == null) throw const ProductException('OpenCode is reconnecting.');
       await api.shell(
         widget.sessionID,
         command: cmd,
@@ -1849,11 +1845,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         variant: _conn.selectedVariant.isEmpty ? null : _conn.selectedVariant,
       );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed: $e')));
-      }
+      if (mounted) showProductError(context, e);
     }
   }
 
@@ -1878,7 +1870,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     try {
       final repository = await _conn.prepareActionRepository();
       if (repository == null) {
-        throw StateError('OpenCode commands are unavailable offline.');
+        throw const ProductException('OpenCode commands are unavailable offline.');
       }
       final commands = [...await repository.listCommands()];
       if (!mounted) return;
@@ -2740,21 +2732,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           loadDiffs: () async {
             final api = await _conn.prepareActionTransport();
             if (api == null) {
-              throw StateError('OpenCode is reconnecting.');
+              throw const ProductException('OpenCode is reconnecting.');
             }
             return api.diff(widget.sessionID);
           },
           loadWorkingTreeDiffs: () async {
             final repository = await _conn.prepareActionRepository();
             if (repository == null) {
-              throw StateError('OpenCode is reconnecting.');
+              throw const ProductException('OpenCode is reconnecting.');
             }
             return repository.listVcsDiffs(VcsDiffMode.workingTree);
           },
           loadBranchDiffs: () async {
             final repository = await _conn.prepareActionRepository();
             if (repository == null) {
-              throw StateError('OpenCode is reconnecting.');
+              throw const ProductException('OpenCode is reconnecting.');
             }
             return repository.listVcsDiffs(VcsDiffMode.branch);
           },
@@ -2843,7 +2835,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     try {
       final api = await _conn.prepareActionTransport();
       if (api == null) {
-        throw StateError('Not connected to the server right now.');
+        throw const ProductException('Not connected to the server right now.');
       }
       final content = await api.fileContent(path);
       final binary = content.isBinary || content.encoding == 'base64';
@@ -2862,9 +2854,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not open $name: $error')));
+      showProductError(context, error);
     }
   }
 
@@ -2925,20 +2915,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }) async {
     final bytes = data.exportBytes;
     if (data.error != null || bytes == null) {
-      throw StateError(data.error ?? 'The file has no content to attach.');
+      throw ProductException(data.error ?? 'The file has no content to attach.');
     }
     if (_attachments.length >= _maxAttachmentCount) {
-      throw StateError('You can attach up to $_maxAttachmentCount files.');
+      throw ProductException('You can attach up to $_maxAttachmentCount files.');
     }
     if (bytes.length > _maxAttachmentBytes) {
-      throw StateError('Each attachment must be 10 MB or smaller.');
+      throw const ProductException('Each attachment must be 10 MB or smaller.');
     }
     final currentBytes = _attachments.fold<int>(
       0,
       (total, attachment) => total + _attachmentByteLength(attachment),
     );
     if (currentBytes + bytes.length > _maxAggregateAttachmentBytes) {
-      throw StateError('Attachments must total no more than 20 MB.');
+      throw const ProductException('Attachments must total no more than 20 MB.');
     }
     final mime = mimeType ?? 'application/octet-stream';
     final attachment = PromptAttachment(
@@ -2974,7 +2964,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
     try {
       final api = await _conn.prepareActionTransport();
-      if (api == null) throw StateError('OpenCode is reconnecting.');
+      if (api == null) throw const ProductException('OpenCode is reconnecting.');
       final currentMessages = await api.messages(widget.sessionID);
       if (currentMessages.isNotEmpty) return null;
       await api.deleteSession(widget.sessionID);
@@ -3016,7 +3006,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   ) async {
     final bytes = data.exportBytes;
     if (data.error != null || bytes == null) {
-      throw StateError(data.error ?? 'The file has no content to save.');
+      throw ProductException(data.error ?? 'The file has no content to save.');
     }
     final savedPath = await FilePicker.saveFile(
       dialogTitle: 'Save ${file.displayName}',
@@ -3120,10 +3110,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             else if (shareUrl != null)
               _SharedSessionBanner(url: shareUrl, onStop: _stopSharing),
             Expanded(
-              child: _loading
+              // Rehydrates and refreshes must not flash a skeleton or a
+              // full-screen error over an already-visible transcript.
+              child: _loading && _messages.isEmpty
                   ? const LoadingList(rows: 6)
-                  : _error != null
-                  ? ProductErrorState(message: '$_error', onRetry: _load)
+                  : _error != null && _messages.isEmpty
+                  ? ProductErrorState(
+                      message: productErrorText(_error!),
+                      onRetry: _load,
+                    )
                   : LayoutBuilder(
                       builder: (context, bodyConstraints) {
                         // Keyboard insets reduce [bodyConstraints] but do not
