@@ -4,6 +4,7 @@ import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
+import 'package:opencode_mobile/background/live_background.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/offline_queue.dart';
 import 'package:opencode_mobile/state/profiles.dart';
@@ -93,6 +94,7 @@ class _EmptyPermissionRepository implements ProductRepository {
 Future<ConnectionController> _controllerFor(
   String baseUrl, {
   ProductRepository? repository,
+  BackgroundLiveController? backgroundLive,
 }) async {
   SharedPreferences.setMockInitialValues({});
   final profile = ServerProfile(
@@ -105,11 +107,30 @@ Future<ConnectionController> _controllerFor(
     savedProfile: profile,
   );
   await store.setActiveId(profile.id);
-  return ConnectionController(store)
+  return ConnectionController(store, backgroundLive: backgroundLive)
     ..api = _HealthyApi()
     ..repository = repository
     ..version = '1.18.23'
     ..status = StreamStatus.connected;
+}
+
+/// A live-background controller that never touches the platform channel, so
+/// the settings screen can be driven through a simulated native event.
+Future<BackgroundLiveController> _liveController(
+  SharedPreferences preferences, {
+  bool enabled = true,
+}) async {
+  final controller = BackgroundLiveController(
+    preferences: preferences,
+    invoke: (method, [arguments]) async => {
+      'enabled': enabled,
+      'active': enabled,
+      'notificationGranted': true,
+      'batteryOptimizationIgnored': true,
+    },
+  );
+  await controller.restore();
+  return controller;
 }
 
 /// The hub-and-spoke Settings places every section one level deep; open the
@@ -713,5 +734,68 @@ void main() {
     expect(find.text('0 B of unsent work — 0 queued prompts (0 B) and 0 '
         'drafts (0 B). Queued prompts are discarded after 14 days.'),
         findsOneWidget);
+  });
+
+  testWidgets('an Android service timeout turns the switch off and says why', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      BackgroundLiveController.preferenceKey: true,
+    });
+    final preferences = await SharedPreferences.getInstance();
+    final live = await _liveController(preferences);
+    final controller = await _controllerFor(
+      'http://127.0.0.1:4096',
+      repository: _EmptyPermissionRepository(),
+      backgroundLive: live,
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(home: SettingsScreen(controller: controller)),
+    );
+    await tester.pumpAndSettle();
+    await _openCategory(tester, 'settings-category-background');
+
+    // The limit is stated on the switch itself, before it is ever hit.
+    expect(
+      find.textContaining('six hours of this per 24 hours'),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('background-timeout-notice')),
+      findsNothing,
+    );
+    expect(
+      tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
+      isTrue,
+    );
+
+    // Android stops the service; Dart hears about it immediately.
+    live.handleNativeTimeout(const {'reason': 'systemTimeout'});
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('background-timeout-notice')),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Android stopped the live connection'),
+      findsOneWidget,
+    );
+    expect(
+      tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
+      isFalse,
+      reason: 'the switch must not claim a service the system killed',
+    );
+    expect(controller.keepLiveInBackground, isFalse);
+
+    // Turning it back on is the answer to the notice, so the notice goes.
+    await tester.tap(find.byType(SwitchListTile));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('background-timeout-notice')),
+      findsNothing,
+    );
   });
 }
