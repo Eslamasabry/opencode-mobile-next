@@ -162,6 +162,23 @@ rec11's PTY connects at ~26s). Both masters are attached to release
 v1.0.27+28-preview.7 with links in its notes. Video source is committed;
 out/ artifacts are not.
 
+Test-history corrections (bisect-verified): the offline-compose-queue merge
+(7c0e757 via 8297076) silently broke chat_live_events' wake-transport test —
+the suite was never actually green between that merge and the fixes; the
+"524 green" preview-7 claim predates the break's discovery. Both breakages
+are fixed on this branch: the fake controller now connects in that test's
+setup (ecbee06), and offline_queue's three widget tests hung on the unmocked
+flutter_secure_storage channel inside testWidgets — the harness registers a
+null-returning mock handler (merged dcd47f4). Behavior note the fixes
+encode: a send tapped while the stream is disconnected (including the
+suspended-wake reconnect window) becomes a queued draft — deliberate
+offline-compose UX; the no-stale-transport guarantee holds because
+flushOfflineQueue resolves prepareActionTransport per entry. If the owner
+ever wants wake-window sends to wait-and-send instead of queue, gate the
+queue branch on a `wakeTransportPending` getter
+(`_lifecycleSuspended || _lifecycleResume != null`) — designed and
+test-verified once, easy to rebuild.
+
 ## Production Android hardening branch
 
 - Branch: `production/android-release-hardening`
