@@ -50,10 +50,15 @@ class WidgetSessionSnapshot {
   /// Serializes the current root sessions and writes them only when the
   /// payload actually changed, so frequent controller notifications stay
   /// cheap and the widget redraws only on real changes.
+  ///
+  /// [profileID] names the server profile the sessions belong to. The widget
+  /// stamps it onto every row's tap intent so a tap after a profile switch
+  /// opens the app normally instead of another profile's chat.
   Future<void> update({
     required List<Session> sessions,
     required Set<String> busySessions,
     required bool connected,
+    String profileID = '',
   }) async {
     if (!_isAndroid) return;
     final entries = [
@@ -67,7 +72,11 @@ class WidgetSessionSnapshot {
           'updatedAt': session.time?.updated ?? session.time?.created ?? 0,
         },
     ];
-    final payload = jsonEncode({'connected': connected, 'sessions': entries});
+    final payload = jsonEncode({
+      'connected': connected,
+      'profileID': profileID,
+      'sessions': entries,
+    });
     if (payload == _lastWritten && prefs.getString(prefsKey) == payload) {
       return;
     }

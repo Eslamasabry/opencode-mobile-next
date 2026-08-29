@@ -179,7 +179,20 @@ void main() {
       final target = await controller.consumeCodingAlertOpen();
       expect(target?.kind, CodingAlertKind.complete);
       expect(target?.sessionID, 'session-1');
+      // Notification taps carry no profile discriminator.
+      expect(target?.profileID, '');
       expect(await controller.consumeCodingAlertOpen(), isNull);
     },
   );
+
+  test('a widget-tap destination keeps its profile discriminator', () {
+    final target = CodingAlertOpen.fromPlatform({
+      'kind': 'complete',
+      'sessionID': 'session-1',
+      'profileID': ' server-1 ',
+    });
+    expect(target?.kind, CodingAlertKind.complete);
+    expect(target?.sessionID, 'session-1');
+    expect(target?.profileID, 'server-1');
+  });
 }

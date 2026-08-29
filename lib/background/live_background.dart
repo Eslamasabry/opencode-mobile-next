@@ -27,16 +27,29 @@ enum CodingAlertKind {
 }
 
 class CodingAlertOpen {
-  const CodingAlertOpen({required this.kind, required this.sessionID});
+  const CodingAlertOpen({
+    required this.kind,
+    required this.sessionID,
+    this.profileID = '',
+  });
 
   final CodingAlertKind kind;
   final String sessionID;
+
+  /// The server profile the session belongs to, stamped by home-screen
+  /// widget taps so a stale row never routes into another profile's chat.
+  /// Notification taps leave it empty.
+  final String profileID;
 
   static CodingAlertOpen? fromPlatform(Map<String, dynamic> value) {
     final kind = CodingAlertKind.fromWireValue(value['kind']);
     final sessionID = value['sessionID']?.toString().trim() ?? '';
     if (kind == null || sessionID.isEmpty) return null;
-    return CodingAlertOpen(kind: kind, sessionID: sessionID);
+    return CodingAlertOpen(
+      kind: kind,
+      sessionID: sessionID,
+      profileID: value['profileID']?.toString().trim() ?? '',
+    );
   }
 }
 

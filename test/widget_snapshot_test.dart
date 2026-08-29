@@ -40,12 +40,16 @@ void main() {
       ],
       busySessions: {'s1', 's3'},
       connected: true,
+      profileID: 'server-1',
     );
 
     final decoded =
         jsonDecode(prefs.getString(WidgetSessionSnapshot.prefsKey)!)
             as Map<String, dynamic>;
     expect(decoded['connected'], isTrue);
+    // The widget stamps this onto every row's tap intent so a tap after a
+    // profile switch opens the app normally instead of a foreign chat.
+    expect(decoded['profileID'], 'server-1');
     final sessions = decoded['sessions'] as List;
     expect(sessions, hasLength(4));
     expect(sessions[0], {
@@ -88,6 +92,16 @@ void main() {
       connected: true,
     );
     expect(refreshes, hasLength(2));
+
+    // A profile switch changes the payload, so the widget redraws and its
+    // row intents pick up the new discriminator.
+    await snapshot.update(
+      sessions: sessions,
+      busySessions: {'s1'},
+      connected: true,
+      profileID: 'server-2',
+    );
+    expect(refreshes, hasLength(3));
   });
 
   test('non-Android platforms write nothing', () async {

@@ -319,6 +319,8 @@ class BackgroundConnectionService : Service() {
             "ai.opencode.opencode_mobile.extra.CODING_ALERT_KIND"
         const val EXTRA_CODING_ALERT_SESSION_ID =
             "ai.opencode.opencode_mobile.extra.CODING_ALERT_SESSION_ID"
+        const val EXTRA_CODING_ALERT_PROFILE_ID =
+            "ai.opencode.opencode_mobile.extra.CODING_ALERT_PROFILE_ID"
         const val EXTRA_CODING_ALERT_KEY =
             "ai.opencode.opencode_mobile.extra.CODING_ALERT_KEY"
         const val EXTRA_CODING_ALERT_DECISION =

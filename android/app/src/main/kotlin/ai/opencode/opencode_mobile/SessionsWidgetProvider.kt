@@ -88,6 +88,7 @@ class SessionsWidgetProvider : AppWidgetProvider() {
 
             val snapshot = readSnapshot(context)
             val sessions = snapshot?.optJSONArray("sessions")
+            val profileID = snapshot?.optString("profileID").orEmpty()
             val count = sessions?.length() ?: 0
 
             views.setViewVisibility(
@@ -138,6 +139,14 @@ class SessionsWidgetProvider : AppWidgetProvider() {
                         BackgroundConnectionService.EXTRA_CODING_ALERT_SESSION_ID,
                         sessionID
                     )
+                    // Which server profile wrote the snapshot; Dart opens the
+                    // app normally when it no longer matches the active one.
+                    if (profileID.isNotBlank()) {
+                        putExtra(
+                            BackgroundConnectionService.EXTRA_CODING_ALERT_PROFILE_ID,
+                            profileID
+                        )
+                    }
                 }
                 views.setOnClickPendingIntent(
                     rowIDs[index],
