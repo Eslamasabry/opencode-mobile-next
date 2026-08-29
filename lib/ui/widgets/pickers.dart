@@ -8,7 +8,20 @@ import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 
-Future<void> showModelPicker(BuildContext context) {
+/// How applying a model/agent selection is scoped and labeled.
+///
+/// [classic] keeps the v1 wording ("Use model and mode") — selection is
+/// client-side state attached to each prompt. On OpenCode 2 servers the
+/// selection is session state instead: [session] labels the apply action
+/// "Use for this session" (picker opened with an active session), and
+/// [newSessions] labels it "Use for new sessions" (no session yet — the
+/// choice becomes the default for `POST /api/session`).
+enum ModelPickerApplyScope { classic, session, newSessions }
+
+Future<void> showModelPicker(
+  BuildContext context, {
+  ModelPickerApplyScope applyScope = ModelPickerApplyScope.classic,
+}) {
   final controller = ProviderScope.containerOf(
     context,
     listen: false,
@@ -25,12 +38,14 @@ Future<void> showModelPicker(BuildContext context) {
     // collapses by dragging.
     clipBehavior: Clip.antiAlias,
     constraints: const BoxConstraints(maxWidth: 720),
-    builder: (_) => const _ModelAgentSheet(),
+    builder: (_) => _ModelAgentSheet(applyScope: applyScope),
   );
 }
 
 class _ModelAgentSheet extends ConsumerWidget {
-  const _ModelAgentSheet();
+  const _ModelAgentSheet({this.applyScope = ModelPickerApplyScope.classic});
+
+  final ModelPickerApplyScope applyScope;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => DraggableScrollableSheet(
@@ -47,6 +62,7 @@ class _ModelAgentSheet extends ConsumerWidget {
         scrollController: scrollController,
         onApplied: () => Navigator.maybePop(context),
         onClose: () => Navigator.maybePop(context),
+        applyScope: applyScope,
       ),
     ),
   );
@@ -63,6 +79,7 @@ class ModelCatalogView extends StatefulWidget {
     this.onApplied,
     this.onClose,
     this.showHeader = true,
+    this.applyScope = ModelPickerApplyScope.classic,
   });
 
   final ConnectionController controller;
@@ -70,6 +87,7 @@ class ModelCatalogView extends StatefulWidget {
   final VoidCallback? onApplied;
   final VoidCallback? onClose;
   final bool showHeader;
+  final ModelPickerApplyScope applyScope;
 
   @override
   State<ModelCatalogView> createState() => _ModelCatalogViewState();
@@ -613,6 +631,17 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
                   ),
                 ),
               const SizedBox(height: 10),
+              if (widget.applyScope == ModelPickerApplyScope.session)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    "Applies to this session's next turns.",
+                    key: const Key('model-picker-session-scope-note'),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
               FilledButton.icon(
                 key: ValueKey('use-model-${model.providerID}-${model.id}'),
                 onPressed: () async {
@@ -626,7 +655,11 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
                   }
                 },
                 icon: const Icon(Icons.check_rounded),
-                label: const Text('Use model and mode'),
+                label: Text(switch (widget.applyScope) {
+                  ModelPickerApplyScope.classic => 'Use model and mode',
+                  ModelPickerApplyScope.session => 'Use for this session',
+                  ModelPickerApplyScope.newSessions => 'Use for new sessions',
+                }),
               ),
             ],
           ),

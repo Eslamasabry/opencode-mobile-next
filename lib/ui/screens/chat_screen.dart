@@ -2506,7 +2506,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         }
         return;
       case _ChatCommandAction.model:
-        if (mounted) await showModelPicker(context);
+        if (mounted) {
+          await showModelPicker(context, applyScope: _modelApplyScope);
+        }
         return;
       case _ChatCommandAction.integrations:
         if (mounted) {
@@ -3202,6 +3204,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     return parts.isEmpty ? null : parts.join(' ');
   }
 
+  /// On OpenCode 2 servers the model/agent choice is session state, so the
+  /// picker opened from an active chat applies to this session.
+  // TODO(connect-flow): read an explicit ServerFlavor flag once the
+  // connection exposes one; today `legacyQuestionRequests` is false only for
+  // the v2 gateway (`api2ServerCapabilities`).
+  ModelPickerApplyScope get _modelApplyScope =>
+      _conn.api?.capabilities.legacyQuestionRequests == false
+      ? ModelPickerApplyScope.session
+      : ModelPickerApplyScope.classic;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -3347,6 +3359,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                                     return _TypingIndicator();
                                                   }
                                                   final m = _messages[index];
+                                                  if (v2VariantPart(m)
+                                                      case final tagged?) {
+                                                    return V2TranscriptRow(
+                                                      key: ValueKey(
+                                                        'message-${m.info.id}',
+                                                      ),
+                                                      part: tagged,
+                                                      messageId: m.info.id,
+                                                    );
+                                                  }
                                                   final meta = _messageMeta(
                                                     _messages,
                                                     index,
@@ -3480,7 +3502,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                   onVoice: _openVoice,
                                   onSend: _send,
                                   onStop: _abort,
-                                  onChooseModel: () => showModelPicker(context),
+                                  onChooseModel: () => showModelPicker(
+                                    context,
+                                    applyScope: _modelApplyScope,
+                                  ),
                                   contextUsage: _contextWindowUsage(),
                                   onRemoveAttachment: (attachment) => setState(
                                     () => _attachments.remove(attachment),

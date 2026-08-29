@@ -383,6 +383,313 @@ class _EarlierMessagesPill extends StatelessWidget {
   }
 }
 
+/// Finds the mapper's v2-only variant tag on a message, if any: a part whose
+/// `type` starts with `v2:` (see `mapApi2Message`). v1 servers never emit
+/// these, and `Part.isRenderable` is false for them, so the v1 rendering
+/// path is untouched.
+@visibleForTesting
+Part? v2VariantPart(MessageWithParts message) {
+  for (final part in message.parts) {
+    if (part.type.startsWith('v2:')) return part;
+  }
+  return null;
+}
+
+/// A quiet divider-row for session-state changes (`model-switched`,
+/// `agent-switched`, `location-switched`) and the compaction-running pill:
+/// hairline — center pill — hairline, deliberately quieter than any bubble.
+class TranscriptMarker extends StatelessWidget {
+  const TranscriptMarker({
+    super.key,
+    required this.label,
+    this.icon,
+    this.leading,
+    this.detail,
+  });
+
+  final String label;
+  final IconData? icon;
+
+  /// Replaces [icon] when set (compaction-running uses an inline spinner).
+  final Widget? leading;
+
+  /// Long-press/tooltip detail (e.g. the previous model); not shown inline.
+  final String? detail;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final hairline = Expanded(
+      child: Divider(color: theme.dividerColor.withValues(alpha: .35)),
+    );
+    final pill = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: ShapeDecoration(
+        color: theme.colorScheme.surfaceContainerHigh,
+        shape: StadiumBorder(
+          side: BorderSide(color: theme.colorScheme.outlineVariant),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          leading ??
+              Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        children: [
+          hairline,
+          const SizedBox(width: 8),
+          detail == null ? pill : Tooltip(message: detail!, child: pill),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Divider(color: theme.dividerColor.withValues(alpha: .35)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Full-width quiet card for `synthetic` / `system` / `skill` messages and
+/// completed/failed compaction: collapsed two-line preview, tap toggles the
+/// full text.
+class TranscriptNotice extends StatefulWidget {
+  const TranscriptNotice({
+    super.key,
+    required this.header,
+    required this.icon,
+    required this.text,
+    this.headerMono,
+    this.markdown = false,
+    this.error = false,
+  });
+
+  final String header;
+
+  /// Appended to [header] in the mono app font (the skill name chip).
+  final String? headerMono;
+  final IconData icon;
+  final String text;
+
+  /// Renders the expanded body through the markdown widget (compaction
+  /// summaries).
+  final bool markdown;
+  final bool error;
+
+  @override
+  State<TranscriptNotice> createState() => _TranscriptNoticeState();
+}
+
+class _TranscriptNoticeState extends State<TranscriptNotice> {
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final tint = widget.error
+        ? theme.colorScheme.error
+        : theme.colorScheme.onSurfaceVariant;
+    final body = widget.text.trim();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Semantics(
+        button: body.isNotEmpty,
+        expanded: body.isEmpty ? null : _open,
+        label: widget.headerMono == null
+            ? widget.header
+            : '${widget.header} ${widget.headerMono}',
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: body.isEmpty ? null : () => setState(() => _open = !_open),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: widget.error
+                    ? theme.colorScheme.error.withValues(alpha: .5)
+                    : theme.colorScheme.outlineVariant.withValues(alpha: .5),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(widget.icon, size: 16, color: tint),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text.rich(
+                        TextSpan(
+                          text: widget.header,
+                          children: [
+                            if (widget.headerMono case final mono?)
+                              TextSpan(
+                                text: ' $mono',
+                                style: const TextStyle(fontFamily: 'AppMono'),
+                              ),
+                          ],
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: tint,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    if (body.isNotEmpty)
+                      Icon(
+                        _open
+                            ? Icons.expand_less_rounded
+                            : Icons.expand_more_rounded,
+                        size: 14,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                  ],
+                ),
+                if (body.isNotEmpty)
+                  AnimatedSize(
+                    duration: reduceMotion
+                        ? Duration.zero
+                        : const Duration(milliseconds: 200),
+                    curve: Curves.easeOutCubic,
+                    alignment: Alignment.topCenter,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: _open && widget.markdown
+                          ? ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                maxWidth: _proseWidthCap,
+                              ),
+                              child: MarkdownText(body, selectable: false),
+                            )
+                          : Text(
+                              body,
+                              maxLines: _open ? null : 2,
+                              overflow: _open ? null : TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Dispatches a mapper-tagged v2-only message (`v2:switch` / `v2:notice` /
+/// `v2:compaction`) to its transcript treatment. Unknown tags degrade to a
+/// generic notice — never crash, never drop silently.
+class V2TranscriptRow extends StatelessWidget {
+  const V2TranscriptRow({
+    super.key,
+    required this.part,
+    required this.messageId,
+  });
+
+  final Part part;
+  final String messageId;
+
+  @override
+  Widget build(BuildContext context) {
+    final kind = part.toolName ?? '';
+    switch (part.type) {
+      case 'v2:switch':
+        final (icon, prefix) = switch (kind) {
+          'model' => (Icons.memory_rounded, 'Model'),
+          'agent' => (Icons.support_agent_rounded, 'Agent'),
+          _ => (Icons.drive_file_move_outline, 'Moved'),
+        };
+        final detail = kind == 'location'
+            ? part.url
+            : part.filename == null
+            ? null
+            : 'Previously ${part.filename}';
+        return TranscriptMarker(
+          key: ValueKey('transcript-marker-$kind-switched-$messageId'),
+          icon: icon,
+          label: '$prefix → ${part.text}',
+          detail: detail,
+        );
+      case 'v2:compaction':
+        return switch (kind) {
+          'running' => TranscriptMarker(
+            key: ValueKey('compaction-running-$messageId'),
+            label: part.text.isEmpty ? 'Compacting conversation…' : part.text,
+            leading: const SizedBox.square(
+              dimension: 12,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+          'failed' => TranscriptNotice(
+            key: ValueKey('compaction-failed-$messageId'),
+            icon: Icons.compress_rounded,
+            header: 'Compaction failed',
+            text: part.text,
+            error: true,
+          ),
+          _ => TranscriptNotice(
+            key: ValueKey('compaction-completed-$messageId'),
+            icon: Icons.compress_rounded,
+            header: 'Context compacted',
+            text: part.text,
+            markdown: true,
+          ),
+        };
+      default:
+        final (icon, header, mono) = switch (kind) {
+          'synthetic' => (
+            Icons.auto_awesome_outlined,
+            part.filename ?? 'Context added',
+            null,
+          ),
+          'system' => (
+            Icons.settings_suggest_outlined,
+            part.filename ?? 'System update',
+            null,
+          ),
+          'skill' => (
+            Icons.electric_bolt_outlined,
+            'Skill ·',
+            part.filename ?? part.text,
+          ),
+          _ => (Icons.dns_outlined, part.filename ?? 'Server message', null),
+        };
+        return TranscriptNotice(
+          key: ValueKey('transcript-notice-$messageId'),
+          icon: icon,
+          header: header,
+          headerMono: mono,
+          text: kind == 'skill' && part.filename == null ? '' : part.text,
+        );
+    }
+  }
+}
+
 const _contextToolNames = {'read', 'list', 'glob', 'grep'};
 
 bool _isToolPart(Part part) => part.type == 'tool';
@@ -829,8 +1136,17 @@ class _AssistantMessagePart extends StatelessWidget {
       );
     }
     if (part.type == 'tool') {
+      // v2 shell messages carry their shellID in metadata; the design's key
+      // list names their card `shell-card-<shellID>`.
+      String? shellID;
+      if (part.toolName == 'shell') {
+        final raw = part.toolState.metadata?['shellID'];
+        if (raw != null) shellID = raw.toString();
+      }
       return ToolCard(
-        key: ValueKey(part.id ?? part.callID),
+        key: shellID != null
+            ? ValueKey('shell-card-$shellID')
+            : ValueKey(part.id ?? part.callID),
         toolName: part.toolName ?? 'tool',
         state: part.toolState,
         expansionStore: expansionStore,

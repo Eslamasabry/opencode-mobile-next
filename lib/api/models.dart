@@ -334,6 +334,19 @@ List<ToolOutputFile> _toolOutputFiles({
   return List.unmodifiable(files);
 }
 
+/// One ordered item of a v2 tool result's `content` array: either a text run
+/// or a file attachment. v1 payloads carry a single output string and never
+/// populate these, so [ToolState.segments] stays empty on v1 servers.
+class ToolResultSegment {
+  final String? text;
+  final ToolOutputFile? file;
+
+  const ToolResultSegment.text(String this.text) : file = null;
+  const ToolResultSegment.file(ToolOutputFile this.file) : text = null;
+
+  bool get isFile => file != null;
+}
+
 /// Tool state extracted from a tool part's `state` object.
 class ToolState {
   final String status; // pending | running | completed | error
@@ -345,6 +358,10 @@ class ToolState {
   final Map<String, dynamic>? metadata;
   final List<ToolOutputFile> outputFiles;
 
+  /// Ordered text/file interleaving of the tool result (v2 `content` arrays).
+  /// Empty when the server gave a single output string (all v1 payloads).
+  final List<ToolResultSegment> segments;
+
   ToolState({
     required this.status,
     this.title,
@@ -354,6 +371,7 @@ class ToolState {
     this.outputValue,
     this.metadata,
     this.outputFiles = const [],
+    this.segments = const [],
   });
 
   static String _pretty(dynamic v) {
@@ -412,7 +430,36 @@ class ToolState {
         metadata: meta,
         toolName: toolName,
       ),
+      segments: _segmentsFromJson(v['contentSegments']),
     );
+  }
+
+  /// Parses the ordered `contentSegments` list the v2 mapper attaches; v1
+  /// payloads never carry the key.
+  static List<ToolResultSegment> _segmentsFromJson(dynamic raw) {
+    if (raw is! List) return const [];
+    final segments = <ToolResultSegment>[];
+    for (final item in raw) {
+      if (item is! Map) continue;
+      final type = item['type']?.toString();
+      if (type == 'text') {
+        final text = item['text']?.toString() ?? '';
+        if (text.isNotEmpty) segments.add(ToolResultSegment.text(text));
+      } else if (type == 'file') {
+        final url = item['url']?.toString();
+        if (url == null || url.isEmpty) continue;
+        segments.add(
+          ToolResultSegment.file(
+            ToolOutputFile(
+              url: url,
+              mimeType: item['mime']?.toString(),
+              filename: item['name']?.toString(),
+            ),
+          ),
+        );
+      }
+    }
+    return List.unmodifiable(segments);
   }
 }
 

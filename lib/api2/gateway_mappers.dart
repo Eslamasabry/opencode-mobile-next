@@ -84,35 +84,43 @@ Session mapApi2Session(Api2Session session) => Session(
 /// Maps the 10-variant v2 message union onto the v1-shaped
 /// `MessageWithParts` bundles the chat UI renders.
 ///
-/// Lossy mappings (documented here on purpose — every deviation from the v2
-/// wire truth in one place):
+/// v2-only message variants are tagged with dedicated part `type` strings the
+/// v1 rendering path ignores entirely (`Part.isRenderable` is false for
+/// unknown types, so v1 transcripts are unaffected — v1 servers never emit
+/// them). The v2-aware transcript renderer dispatches on these:
 ///
-/// - **Tool results**: v2 tool output is a `content` array of text/file
-///   items. Text items are joined with newlines into the single v1 `output`
-///   string; file items become v1 `attachments` entries (`{url, mime,
-///   name}`). Per-item ordering between text and files is not preserved.
-/// - **`synthetic` / `system` / `skill` messages** become user-role messages
-///   with a single `synthetic` text part — hidden from the transcript (v1
-///   rendered synthetic parts as invisible context), so their content is
-///   only reachable through inspection surfaces.
-/// - **`shell` messages** become an assistant-role message with one v1 tool
+/// - **`v2:switch`** (`agent-switched` / `model-switched` /
+///   `location-switched`): `toolName` = `model` | `agent` | `location`,
+///   `text` = the new value's display label, `filename` = the previous
+///   value's label (detail/tooltip only), `url` = the full directory for
+///   location switches.
+/// - **`v2:notice`** (`synthetic` / `system` / `skill`, plus unknown message
+///   types): `toolName` = `synthetic` | `system` | `skill` | `unknown`,
+///   `text` = body text, `filename` = header override (`description`, the
+///   skill name, or null).
+/// - **`v2:compaction`**: `toolName` = `running` | `completed` | `failed`,
+///   `text` = the summary (completed) or error message (failed).
+/// - **`shell` messages** stay an assistant-role message with one v1 tool
 ///   part named `shell` (input `{command}`, output = captured output,
-///   metadata `{exit, truncated, shellID}`). `running` maps to a running
-///   tool state; `timeout`/`killed`/nonzero exits map to the error state.
-/// - **`agent-switched` / `model-switched` / `location-switched` markers**
-///   become hidden synthetic parts labeled `[agent switched: …]` etc. — the
-///   v1 model has no divider concept, so they do not render as timeline
-///   markers.
-/// - **`compaction`**: `completed` becomes an assistant message whose text
-///   is the summary (like a v1 `/summarize` result); `failed` becomes an
-///   assistant message with `errorText`; `running` is a hidden synthetic.
+///   metadata `{exit, truncated, shellID, shellStatus}`), so the ToolCard
+///   shell contract renders them. `running` maps to a running tool state;
+///   `timeout`/`killed`/nonzero exits map to the error state, with the raw
+///   v2 status preserved as `shellStatus`.
+///
+/// Remaining lossy mappings (every deviation from the v2 wire truth in one
+/// place):
+///
+/// - **Tool results**: text items are joined with newlines into the single
+///   v1 `output` string and file items become v1 `attachments`, but the
+///   original text/file interleaving is preserved as `contentSegments`
+///   (rendered by [ToolState.segments]-aware tool cards).
 /// - **Reasoning time/state** and provider `state` blobs on text items are
 ///   dropped (v1 parts have no equivalent field).
 /// - **Streaming tool input** (`status: streaming`) maps to the v1
 ///   `pending` state with the raw JSON text as the pending input preview.
 /// - **User attachments** are rebuilt as `data:` URIs from the stored
 ///   base64 when the server gives no source URI.
-/// - **Unknown message/content variants** become hidden synthetic parts
+/// - **Unknown assistant content variants** become hidden synthetic parts
 ///   carrying the variant name, so new server builds degrade quietly.
 MessageWithParts mapApi2Message(String sessionID, Api2Message message) {
   switch (message) {
@@ -187,77 +195,107 @@ MessageWithParts mapApi2Message(String sessionID, Api2Message message) {
                 if (message.exit != null) 'exit': message.exit,
                 'truncated': message.outputTruncated,
                 if (message.shellID != null) 'shellID': message.shellID,
+                'shellStatus': message.status,
               },
             }, toolName: 'shell'),
           ),
         ],
       );
     case Api2CompactionMessage():
-      if (message.status == 'completed') {
-        return MessageWithParts(
-          info: _info(
-            sessionID,
-            message,
-            role: 'assistant',
-            completed: message.time.completed ?? message.time.created,
-          ),
-          parts: [
-            Part(
-              id: 'text-0',
-              type: 'text',
-              text: message.summary?.isNotEmpty == true
-                  ? message.summary!
-                  : 'Conversation compacted.',
-              messageID: message.id,
-            ),
-          ],
-        );
-      }
-      if (message.status == 'failed') {
-        return MessageWithParts(
-          info: _info(
-            sessionID,
-            message,
-            role: 'assistant',
-            completed: message.time.completed ?? message.time.created,
-            errorText:
-                message.error?.message ?? 'Conversation compaction failed',
-          ),
-        );
-      }
-      return _hiddenMessage(sessionID, message, '[compaction running]');
-    case Api2SyntheticMessage():
-      return _hiddenMessage(sessionID, message, message.text);
-    case Api2SystemMessage():
-      return _hiddenMessage(sessionID, message, message.text);
-    case Api2SkillMessage():
-      return _hiddenMessage(
+      return _taggedMessage(
         sessionID,
         message,
-        '[skill activated: ${message.name}]\n${message.text}',
+        type: 'v2:compaction',
+        kind: message.status,
+        text: switch (message.status) {
+          'completed' =>
+            message.summary?.isNotEmpty == true
+                ? message.summary!
+                : 'Conversation compacted.',
+          'failed' =>
+            message.error?.message ?? 'Conversation compaction failed',
+          _ => 'Compacting conversation…',
+        },
+      );
+    case Api2SyntheticMessage():
+      return _taggedMessage(
+        sessionID,
+        message,
+        type: 'v2:notice',
+        kind: 'synthetic',
+        text: message.text,
+        header: message.description,
+      );
+    case Api2SystemMessage():
+      return _taggedMessage(
+        sessionID,
+        message,
+        type: 'v2:notice',
+        kind: 'system',
+        text: message.text,
+        header: message.description,
+      );
+    case Api2SkillMessage():
+      return _taggedMessage(
+        sessionID,
+        message,
+        type: 'v2:notice',
+        kind: 'skill',
+        text: message.text,
+        header: message.name,
       );
     case Api2AgentSwitchedMessage():
-      return _hiddenMessage(
+      return _taggedMessage(
         sessionID,
         message,
-        '[agent switched: ${message.previous ?? '?'} → ${message.agent}]',
+        type: 'v2:switch',
+        kind: 'agent',
+        text: message.agent,
+        header: message.previous,
       );
     case Api2ModelSwitchedMessage():
-      return _hiddenMessage(
+      return _taggedMessage(
         sessionID,
         message,
-        '[model switched: ${message.previous ?? '?'} → '
-        '${message.model ?? '?'}]',
+        type: 'v2:switch',
+        kind: 'model',
+        text: _switchModelLabel(message.model) ?? '?',
+        header: _switchModelLabel(message.previous),
       );
     case Api2LocationSwitchedMessage():
-      return _hiddenMessage(
+      final directory = message.location?.directory?.trim() ?? '';
+      return _taggedMessage(
         sessionID,
         message,
-        '[location switched: ${message.location?.directory ?? '?'}]',
+        type: 'v2:switch',
+        kind: 'location',
+        text: directory.isEmpty ? '?' : _basename(directory),
+        url: directory.isEmpty ? null : directory,
       );
     case Api2UnknownMessage():
-      return _hiddenMessage(sessionID, message, '[${message.type}]');
+      return _taggedMessage(
+        sessionID,
+        message,
+        type: 'v2:notice',
+        kind: 'unknown',
+        text: message.type,
+        header: 'Server message',
+      );
   }
+}
+
+String? _switchModelLabel(Api2ModelRef? model) => model == null
+    ? null
+    : model.variant?.isNotEmpty == true
+    ? '${model.id} · ${model.variant}'
+    : model.id;
+
+String _basename(String path) {
+  final segments = path
+      .replaceAll('\\', '/')
+      .split('/')
+      .where((segment) => segment.isNotEmpty);
+  return segments.isEmpty ? path : segments.last;
 }
 
 List<MessageWithParts> mapApi2Messages(
@@ -288,11 +326,19 @@ MessageInfo _info(
   errorText: errorText,
 );
 
-MessageWithParts _hiddenMessage(
+/// Builds a message whose single part carries a `v2:`-prefixed type the v1
+/// rendering path ignores; the v2-aware transcript renderer dispatches on
+/// [type] + [kind] (stored in `toolName`). [header] rides in `filename` and
+/// [url] in `url` — structured fields piggybacked on existing Part columns.
+MessageWithParts _taggedMessage(
   String sessionID,
-  Api2Message message,
-  String text,
-) => MessageWithParts(
+  Api2Message message, {
+  required String type,
+  required String kind,
+  required String text,
+  String? header,
+  String? url,
+}) => MessageWithParts(
   info: _info(
     sessionID,
     message,
@@ -301,11 +347,13 @@ MessageWithParts _hiddenMessage(
   ),
   parts: [
     Part(
-      id: 'text-0',
-      type: 'text',
+      id: 'v2-0',
+      type: type,
+      toolName: kind,
       text: text,
+      filename: header,
+      url: url,
       messageID: message.id,
-      synthetic: true,
     ),
   ],
 );
@@ -404,6 +452,7 @@ Map<String, dynamic> v1ToolStateJson(Api2ToolState state) => switch (state) {
     'input': state.input,
     'output': _joinedToolText(state.content),
     'attachments': _toolAttachments(state.content),
+    'contentSegments': _contentSegments(state.content),
     if (state.metadata != null) 'metadata': state.metadata,
   },
   Api2ToolError() => {
@@ -415,10 +464,28 @@ Map<String, dynamic> v1ToolStateJson(Api2ToolState state) => switch (state) {
             ? _joinedToolText(state.content)
             : 'Tool failed'),
     'attachments': _toolAttachments(state.content),
+    'contentSegments': _contentSegments(state.content),
     if (state.metadata != null) 'metadata': state.metadata,
   },
   Api2ToolStateUnknown() => {'status': 'pending'},
 };
+
+/// Preserves the v2 content array's text/file interleaving as the ordered
+/// `contentSegments` list [ToolState.segments] parses.
+List<Map<String, dynamic>> _contentSegments(
+  List<Api2ToolResultItem> content,
+) => [
+  for (final item in content)
+    if (item is Api2ToolResultText && item.text.isNotEmpty)
+      {'type': 'text', 'text': item.text}
+    else if (item is Api2ToolResultFile)
+      {
+        'type': 'file',
+        'url': item.uri,
+        if (item.mime != null) 'mime': item.mime,
+        if (item.name != null) 'name': item.name,
+      },
+];
 
 String _joinedToolText(List<Api2ToolResultItem> content) => content
     .whereType<Api2ToolResultText>()

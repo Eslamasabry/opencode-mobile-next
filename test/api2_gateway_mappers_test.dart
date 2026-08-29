@@ -178,74 +178,201 @@ void main() {
       expect(part.toolState.output, contains('boom'));
     });
 
-    test('switch markers and system-ish variants become hidden parts', () {
-      for (final json in [
-        {
-          'id': 'msg_a',
-          'type': 'agent-switched',
-          'time': {'created': 1},
-          'agent': 'plan',
-          'previous': 'build',
-        },
-        {
-          'id': 'msg_b',
-          'type': 'model-switched',
-          'time': {'created': 1},
-          'model': {'id': 'm2', 'providerID': 'p'},
-        },
-        {
-          'id': 'msg_c',
-          'type': 'location-switched',
-          'time': {'created': 1},
-          'location': {'directory': '/tmp/x'},
-        },
-        {
-          'id': 'msg_d',
-          'type': 'system',
-          'time': {'created': 1},
-          'text': 'context update',
-        },
-        {
-          'id': 'msg_e',
-          'type': 'skill',
-          'time': {'created': 1},
-          'skill': 'sk',
-          'name': 'My Skill',
-          'text': 'skill body',
-        },
-        {
-          'id': 'msg_f',
-          'type': 'synthetic',
-          'time': {'created': 1},
-          'text': 'synthetic body',
-        },
-        {'id': 'msg_g', 'type': 'brand-new-variant', 'time': {'created': 1}},
-      ]) {
-        final mapped = mapApi2Message(
-          sessionID,
-          Api2Message.fromJson(Map<String, dynamic>.from(json))!,
-        );
-        expect(mapped.info.role, 'user', reason: json['type'].toString());
-        expect(mapped.parts.single.synthetic, isTrue);
-        expect(mapped.parts.single.isRenderable, isFalse);
-      }
+    test('shell metadata preserves the raw v2 status and shellID', () {
+      final message = Api2Message.fromJson({
+        'id': 'msg_shell3',
+        'type': 'shell',
+        'time': {'created': 1, 'completed': 2},
+        'shellID': 'sh_9',
+        'command': 'sleep 900',
+        'status': 'timeout',
+        'output': {'output': '', 'truncated': true},
+      });
+      final part = mapApi2Message(sessionID, message!).parts.single;
+      expect(part.toolState.status, 'error');
+      expect(part.toolState.metadata?['shellStatus'], 'timeout');
+      expect(part.toolState.metadata?['shellID'], 'sh_9');
+      expect(part.toolState.metadata?['truncated'], isTrue);
     });
 
-    test('completed compaction becomes an assistant summary message', () {
+    Part singlePart(Map<String, dynamic> json) {
       final mapped = mapApi2Message(
         sessionID,
-        Api2Message.fromJson({
-          'id': 'msg_comp',
-          'type': 'compaction',
-          'time': {'created': 1, 'completed': 2},
-          'status': 'completed',
-          'reason': 'manual',
-          'summary': 'We did things.',
-        })!,
+        Api2Message.fromJson(Map<String, dynamic>.from(json))!,
       );
-      expect(mapped.info.role, 'assistant');
-      expect(mapped.parts.single.text, 'We did things.');
-      expect(mapped.parts.single.isRenderable, isTrue);
+      expect(mapped.info.role, 'user', reason: json['type'].toString());
+      final part = mapped.parts.single;
+      // Tagged v2 parts are invisible to the v1 rendering path.
+      expect(part.isRenderable, isFalse, reason: json['type'].toString());
+      return part;
+    }
+
+    test('switch markers become tagged v2:switch parts', () {
+      final agent = singlePart({
+        'id': 'msg_a',
+        'type': 'agent-switched',
+        'time': {'created': 1},
+        'agent': 'plan',
+        'previous': 'build',
+      });
+      expect(agent.type, 'v2:switch');
+      expect(agent.toolName, 'agent');
+      expect(agent.text, 'plan');
+      expect(agent.filename, 'build');
+
+      final model = singlePart({
+        'id': 'msg_b',
+        'type': 'model-switched',
+        'time': {'created': 1},
+        'model': {'id': 'm2', 'providerID': 'p', 'variant': 'high'},
+        'previous': {'id': 'm1', 'providerID': 'p'},
+      });
+      expect(model.type, 'v2:switch');
+      expect(model.toolName, 'model');
+      expect(model.text, 'm2 · high');
+      expect(model.filename, 'm1');
+
+      final location = singlePart({
+        'id': 'msg_c',
+        'type': 'location-switched',
+        'time': {'created': 1},
+        'location': {'directory': '/tmp/other-project'},
+      });
+      expect(location.type, 'v2:switch');
+      expect(location.toolName, 'location');
+      expect(location.text, 'other-project');
+      expect(location.url, '/tmp/other-project');
+    });
+
+    test('synthetic/system/skill become tagged v2:notice parts', () {
+      final system = singlePart({
+        'id': 'msg_d',
+        'type': 'system',
+        'time': {'created': 1},
+        'text': 'context update',
+      });
+      expect(system.type, 'v2:notice');
+      expect(system.toolName, 'system');
+      expect(system.text, 'context update');
+      expect(system.filename, isNull);
+
+      final skill = singlePart({
+        'id': 'msg_e',
+        'type': 'skill',
+        'time': {'created': 1},
+        'skill': 'sk',
+        'name': 'My Skill',
+        'text': 'skill body',
+      });
+      expect(skill.type, 'v2:notice');
+      expect(skill.toolName, 'skill');
+      expect(skill.filename, 'My Skill');
+      expect(skill.text, 'skill body');
+
+      final synthetic = singlePart({
+        'id': 'msg_f',
+        'type': 'synthetic',
+        'time': {'created': 1},
+        'text': 'synthetic body',
+        'description': 'Attached context',
+      });
+      expect(synthetic.type, 'v2:notice');
+      expect(synthetic.toolName, 'synthetic');
+      expect(synthetic.filename, 'Attached context');
+    });
+
+    test('unknown message variants degrade to a generic notice', () {
+      final part = singlePart({
+        'id': 'msg_g',
+        'type': 'brand-new-variant',
+        'time': {'created': 1},
+      });
+      expect(part.type, 'v2:notice');
+      expect(part.toolName, 'unknown');
+      expect(part.filename, 'Server message');
+      expect(part.text, 'brand-new-variant');
+    });
+
+    test('compaction statuses become tagged v2:compaction parts', () {
+      final completed = singlePart({
+        'id': 'msg_comp',
+        'type': 'compaction',
+        'time': {'created': 1, 'completed': 2},
+        'status': 'completed',
+        'reason': 'manual',
+        'summary': 'We did things.',
+      });
+      expect(completed.type, 'v2:compaction');
+      expect(completed.toolName, 'completed');
+      expect(completed.text, 'We did things.');
+
+      final running = singlePart({
+        'id': 'msg_comp2',
+        'type': 'compaction',
+        'time': {'created': 1},
+        'status': 'running',
+        'reason': 'auto',
+      });
+      expect(running.type, 'v2:compaction');
+      expect(running.toolName, 'running');
+
+      final failed = singlePart({
+        'id': 'msg_comp3',
+        'type': 'compaction',
+        'time': {'created': 1, 'completed': 2},
+        'status': 'failed',
+        'reason': 'auto',
+        'error': {'type': 'CompactionError', 'message': 'ran out of room'},
+      });
+      expect(failed.type, 'v2:compaction');
+      expect(failed.toolName, 'failed');
+      expect(failed.text, 'ran out of room');
+    });
+
+    test('live-captured variant fixture maps every v2-only shape', () {
+      final page = Api2Page.fromJson(
+        fixture('messages_variants.json'),
+        Api2Message.fromJson,
+      );
+      final mapped = mapApi2Messages(sessionID, page.data);
+      final byType = <String, MessageWithParts>{};
+      for (final (index, raw) in page.data.indexed) {
+        final type = switch (raw) {
+          Api2ShellMessage(:final exit) => 'shell-${exit == 0 ? 'ok' : 'fail'}',
+          _ => raw.runtimeType.toString(),
+        };
+        byType.putIfAbsent(type, () => mapped[index]);
+      }
+
+      final shellOk = byType['shell-ok']!.parts.single;
+      expect(shellOk.type, 'tool');
+      expect(shellOk.toolState.status, 'completed');
+      expect(shellOk.toolState.output, contains('fixture-shell-ok'));
+      expect(shellOk.toolState.metadata?['shellStatus'], 'exited');
+      expect(shellOk.toolState.metadata?['shellID'], startsWith('sh_'));
+
+      final shellFail = byType['shell-fail']!.parts.single;
+      expect(shellFail.toolState.status, 'error');
+      expect(shellFail.toolState.metadata?['exit'], 3);
+
+      final model = byType['Api2ModelSwitchedMessage']!.parts.single;
+      expect(model.type, 'v2:switch');
+      expect(model.toolName, 'model');
+      expect(model.text, 'gpt-5.6-sol · high');
+
+      final agent = byType['Api2AgentSwitchedMessage']!.parts.single;
+      expect(agent.type, 'v2:switch');
+      expect(agent.text, 'plan');
+
+      final synthetic = byType['Api2SyntheticMessage']!.parts.single;
+      expect(synthetic.type, 'v2:notice');
+      expect(synthetic.toolName, 'synthetic');
+      expect(synthetic.text, contains('Plan mode'));
+
+      final compaction = byType['Api2CompactionMessage']!.parts.single;
+      expect(compaction.type, 'v2:compaction');
+      expect(compaction.toolName, 'completed');
+      expect(compaction.text, contains('## Objective'));
     });
 
     test('tool error state carries the structured message', () {
@@ -279,6 +406,38 @@ void main() {
       expect(mapped.outputFiles, hasLength(1));
       expect(mapped.outputFiles.single.isImage, isTrue);
       expect(mapped.outputFiles.single.displayName, 'shot.png');
+    });
+
+    test('tool content interleaving survives as ordered segments', () {
+      final state = Api2ToolState.fromJson({
+        'status': 'completed',
+        'input': {},
+        'content': [
+          {'type': 'text', 'text': 'first render:'},
+          {
+            'type': 'file',
+            'uri': 'file:///tmp/before.png',
+            'mime': 'image/png',
+            'name': 'before.png',
+          },
+          {'type': 'text', 'text': 'after the fix:'},
+          {
+            'type': 'file',
+            'uri': 'file:///tmp/after.png',
+            'mime': 'image/png',
+            'name': 'after.png',
+          },
+        ],
+      });
+      final mapped = mapApi2ToolState(state, toolName: 'screenshot');
+      expect(mapped.segments, hasLength(4));
+      expect(mapped.segments[0].text, 'first render:');
+      expect(mapped.segments[1].file?.displayName, 'before.png');
+      expect(mapped.segments[2].text, 'after the fix:');
+      expect(mapped.segments[3].file?.displayName, 'after.png');
+      // The joined string and scanned files stay for v1-style consumers.
+      expect(mapped.output, 'first render:\nafter the fix:');
+      expect(mapped.outputFiles, hasLength(2));
     });
 
     test('streaming tool input maps to the v1 pending preview', () {
