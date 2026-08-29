@@ -2460,17 +2460,17 @@ void main() {
     await _pumpChat(tester, api);
     await tester.pumpAndSettle();
 
-    final earlier = find.byKey(const ValueKey('earlier-messages-pill'));
-    expect(earlier, findsOneWidget);
-    expect(tester.getSize(earlier).height, greaterThanOrEqualTo(44));
-
-    // Scroll well away from the newest message to reveal the jump pill.
+    // Both pills gate on being scrolled away from the latest message.
     await tester.drag(
       find.text('prompt 34'),
       const Offset(0, 600),
       warnIfMissed: false,
     );
     await tester.pumpAndSettle();
+
+    final earlier = find.byKey(const ValueKey('earlier-messages-pill'));
+    expect(earlier, findsOneWidget);
+    expect(tester.getSize(earlier).height, greaterThanOrEqualTo(44));
 
     final jump = find.byKey(const ValueKey('jump-to-latest'));
     expect(jump, findsOneWidget);
