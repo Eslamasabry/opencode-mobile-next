@@ -29,7 +29,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
     try {
       final repository = await widget.controller.prepareActionRepository();
       if (repository == null) {
-        throw StateError('OpenCode is reconnecting.');
+        throw const ProductException('OpenCode is reconnecting.');
       }
       final value = await repository.loadCatalog();
       if (mounted && generation == _loadGeneration) {
@@ -37,7 +37,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
       }
     } catch (error) {
       if (mounted && generation == _loadGeneration) {
-        setState(() => _error = error.toString());
+        setState(() => _error = productErrorText(error));
       }
     }
   }

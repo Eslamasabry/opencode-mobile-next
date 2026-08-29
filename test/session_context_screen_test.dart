@@ -271,7 +271,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('200 of 1,000 tokens'), findsOneWidget);
-    expect(find.text('Retry'), findsOneWidget);
+    expect(find.text('Try again'), findsOneWidget);
   });
 
   testWidgets('foreground data revision refreshes the retained context view', (

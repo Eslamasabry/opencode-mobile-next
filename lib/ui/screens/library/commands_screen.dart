@@ -31,12 +31,12 @@ class _CommandsScreenState extends State<CommandsScreen> {
     try {
       final repository = await widget.controller.prepareActionRepository();
       if (repository == null) {
-        throw StateError('OpenCode is reconnecting.');
+        throw const ProductException('OpenCode is reconnecting.');
       }
       final commands = await repository.listCommands();
       if (mounted) setState(() => _commands = commands);
     } catch (error) {
-      if (mounted) setState(() => _error = error.toString());
+      if (mounted) setState(() => _error = productErrorText(error));
     }
   }
 
@@ -179,7 +179,7 @@ class _CommandsScreenState extends State<CommandsScreen> {
     if (confirmed != true) return;
     try {
       final api = await widget.controller.prepareActionTransport();
-      if (api == null) throw StateError('OpenCode is reconnecting.');
+      if (api == null) throw const ProductException('OpenCode is reconnecting.');
       await api.slashCommand(
         sessionID,
         command.name,
@@ -188,11 +188,7 @@ class _CommandsScreenState extends State<CommandsScreen> {
       );
       if (mounted) Navigator.of(context).pushNamed('/chat/$sessionID');
     } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(error.toString())));
-      }
+      if (mounted) showProductError(context, error);
     }
   }
 }

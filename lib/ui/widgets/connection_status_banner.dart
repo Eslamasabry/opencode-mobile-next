@@ -55,7 +55,7 @@ class ConnectionStatusBanner extends StatelessWidget {
             onPressed: manualRetry
                 ? null
                 : () => unawaited(controller.retryConnection()),
-            child: Text(manualRetry ? 'Retrying' : 'Retry'),
+            child: Text(manualRetry ? 'Retrying' : 'Try again'),
           ),
           if (showChangeServer && !manualRetry)
             TextButton(

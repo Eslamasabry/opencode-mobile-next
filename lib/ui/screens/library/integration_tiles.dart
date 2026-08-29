@@ -184,7 +184,7 @@ class _McpOAuthCodeDialogState extends State<_McpOAuthCodeDialog> {
       );
       Navigator.pop(context, code);
     } catch (error) {
-      setState(() => _error = error.toString());
+      setState(() => _error = productErrorText(error));
     }
   }
 
@@ -653,7 +653,7 @@ class _SectionLoadError extends StatelessWidget {
     ),
     title: const Text('Could not load this section'),
     subtitle: Text(message, maxLines: 3, overflow: TextOverflow.ellipsis),
-    trailing: TextButton(onPressed: onRetry, child: const Text('Retry')),
+    trailing: TextButton(onPressed: onRetry, child: const Text('Try again')),
   );
 }
 

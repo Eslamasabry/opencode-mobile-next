@@ -54,7 +54,7 @@ class _CodingSettingsScreenState extends State<CodingSettingsScreen>
       }
     } catch (error) {
       if (mounted && generation == _shellLoadGeneration) {
-        setState(() => _shellError = error.toString());
+        setState(() => _shellError = productErrorText(error));
       }
     } finally {
       if (mounted && generation == _shellLoadGeneration) {

@@ -110,7 +110,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       }
     } catch (error) {
       if (mounted && generation == _loadGeneration) {
-        setState(() => _projectError = error.toString());
+        setState(() => _projectError = productErrorText(error));
       }
     }
     if (generation != _loadGeneration) return;
@@ -134,7 +134,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             .toList();
       });
     } catch (error) {
-      if (mounted) setState(() => _workspaceError = error.toString());
+      if (mounted) setState(() => _workspaceError = productErrorText(error));
     }
   }
 
@@ -513,7 +513,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           final shareRepository = await _requireActionRepository();
           final url = await shareRepository.shareSession(session.id);
           if (url == null || url.isEmpty) {
-            throw StateError('No share link was returned.');
+            throw const ProductException('No share link was returned.');
           }
           await Clipboard.setData(ClipboardData(text: url));
           if (mounted) _showMessage('Share link copied');
@@ -542,7 +542,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   Future<ProductRepository> _requireActionRepository() async {
     final repository = await widget.controller.prepareActionRepository();
     if (repository != null) return repository;
-    throw StateError('OpenCode is reconnecting. Try again shortly.');
+    throw const ProductException('OpenCode is reconnecting. Try again shortly.');
   }
 
   Future<void> _rename(Session session) async {

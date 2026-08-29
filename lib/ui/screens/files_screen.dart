@@ -205,7 +205,7 @@ class _FilesScreenState extends State<FilesScreen> {
       final api = await widget.controller.prepareActionTransport();
       if (!mounted || generation != _requestGeneration) return;
       if (api == null) {
-        throw StateError('The server is not connected.');
+        throw const ProductException('The server is not connected.');
       }
       final repository = widget.controller.repository;
       if (repository != null) {
@@ -227,7 +227,7 @@ class _FilesScreenState extends State<FilesScreen> {
       });
     } catch (e) {
       if (!mounted || generation != _requestGeneration) return;
-      setState(() => _error = '$e');
+      setState(() => _error = productErrorText(e));
     } finally {
       if (mounted && generation == _requestGeneration) {
         setState(() => _loading = false);
@@ -252,7 +252,7 @@ class _FilesScreenState extends State<FilesScreen> {
       final api = await widget.controller.prepareActionTransport();
       if (!mounted || generation != _requestGeneration) return;
       if (api == null) {
-        throw StateError('The server is not connected.');
+        throw const ProductException('The server is not connected.');
       }
       final repository = widget.controller.repository;
       if (repository != null) {
@@ -269,7 +269,7 @@ class _FilesScreenState extends State<FilesScreen> {
       });
     } catch (e) {
       if (!mounted || generation != _requestGeneration) return;
-      setState(() => _error = '$e');
+      setState(() => _error = productErrorText(e));
     } finally {
       if (mounted && generation == _requestGeneration) {
         setState(() => _loading = false);
@@ -345,14 +345,14 @@ class _FilesScreenState extends State<FilesScreen> {
       if (!mounted || generation != _requestGeneration) return;
       final repository = widget.controller.repository;
       if (repository == null) {
-        throw StateError('The server is not connected.');
+        throw const ProductException('The server is not connected.');
       }
       final results = await repository.findWorkspaceSymbols(value);
       if (!mounted || generation != _requestGeneration) return;
       setState(() => _symbols = results);
     } catch (error) {
       if (!mounted || generation != _requestGeneration) return;
-      setState(() => _error = error.toString());
+      setState(() => _error = productErrorText(error));
     } finally {
       if (mounted && generation == _requestGeneration) {
         setState(() => _loading = false);
@@ -431,7 +431,7 @@ class _FilesScreenState extends State<FilesScreen> {
             final repository = await widget.controller
                 .prepareActionRepository();
             if (repository == null) {
-              throw StateError('OpenCode is reconnecting.');
+              throw const ProductException('OpenCode is reconnecting.');
             }
             return repository.listVcsDiffs(VcsDiffMode.workingTree);
           },
@@ -998,7 +998,7 @@ class _FileStatusNotice extends StatelessWidget {
                     dimension: 16,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Retry'),
+                : const Text('Try again'),
           ),
         ],
       ),
@@ -1042,18 +1042,25 @@ class __FileViewerState extends State<_FileViewer> {
 
   Future<void> _fetch() async {
     final generation = ++_generation;
-    setState(() {
-      _content = null;
-      _error = null;
-    });
+    // Keep the current content on screen during a reload; the skeleton is
+    // for the first load only.
+    setState(() => _error = null);
     try {
       final api = await widget.controller.prepareActionTransport();
       if (!mounted || generation != _generation) return;
-      if (api == null) throw StateError('The server is not connected.');
+      if (api == null) {
+        throw const ProductException('The server is not connected.');
+      }
       final c = await api.fileContent(widget.path);
       if (mounted && generation == _generation) setState(() => _content = c);
     } catch (e) {
-      if (mounted && generation == _generation) setState(() => _error = '$e');
+      if (!mounted || generation != _generation) return;
+      if (_content != null) {
+        // A failed reload keeps the stale content visible.
+        showProductError(context, e);
+      } else {
+        setState(() => _error = productErrorText(e));
+      }
     }
   }
 
@@ -1102,9 +1109,7 @@ class __FileViewerState extends State<_FileViewer> {
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not attach file: $error')));
+      showProductError(context, error);
     } finally {
       if (mounted) setState(() => _attaching = false);
     }
@@ -1128,9 +1133,7 @@ class __FileViewerState extends State<_FileViewer> {
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not save file: $error')));
+      showProductError(context, error);
     } finally {
       if (mounted) setState(() => _downloading = false);
     }

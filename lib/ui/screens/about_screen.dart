@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../widgets/markdown.dart';
+import '../widgets/product_states.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key, this.initialTab = 0});
@@ -33,7 +34,7 @@ class AboutScreen extends StatelessWidget {
           future: _loadDocuments(),
           builder: (context, snapshot) {
             if (snapshot.connectionState != ConnectionState.done) {
-              return const Center(child: CircularProgressIndicator());
+              return const LoadingList(rows: 6);
             }
             if (snapshot.hasError) {
               return Center(

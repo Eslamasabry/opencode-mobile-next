@@ -72,7 +72,7 @@ class _WorktreesScreenState extends State<WorktreesScreen> {
       });
     } catch (error) {
       if (!mounted || generation != _loadGeneration) return;
-      setState(() => _loadError = error.toString());
+      setState(() => _loadError = productErrorText(error));
     }
   }
 

@@ -386,10 +386,7 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Continue here'));
     await tester.pumpAndSettle();
 
-    expect(
-      find.textContaining('Could not continue the session'),
-      findsOneWidget,
-    );
+    expect(find.text('Sync is unavailable'), findsOneWidget);
     expect(find.byKey(const ValueKey('global-session-ses_2')), findsOneWidget);
     expect(
       find.byKey(const ValueKey('steal-session-ses_2')),

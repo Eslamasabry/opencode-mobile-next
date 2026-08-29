@@ -113,7 +113,7 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
       );
     } catch (error) {
       if (mounted) {
-        setState(() => _gitInitializationError = error.toString());
+        setState(() => _gitInitializationError = productErrorText(error));
       }
     } finally {
       if (mounted) setState(() => _initializingGit = false);
@@ -131,7 +131,7 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
       }
     } catch (error) {
       if (mounted && generation == _generation) {
-        setState(() => _versionControlError = error.toString());
+        setState(() => _versionControlError = productErrorText(error));
       }
     }
   }
@@ -147,7 +147,7 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
       }
     } catch (error) {
       if (mounted && generation == _generation) {
-        setState(() => _languageServicesError = error.toString());
+        setState(() => _languageServicesError = productErrorText(error));
       }
     }
   }
@@ -163,7 +163,7 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
       }
     } catch (error) {
       if (mounted && generation == _generation) {
-        setState(() => _formattersError = error.toString());
+        setState(() => _formattersError = productErrorText(error));
       }
     }
   }
@@ -271,7 +271,7 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
             ),
             trailing: TextButton(
               onPressed: _initializingGit ? null : _initializeGit,
-              child: const Text('Retry'),
+              child: const Text('Try again'),
             ),
           ),
       ];
@@ -470,6 +470,6 @@ class _HealthErrorTile extends StatelessWidget {
     leading: const Icon(Icons.error_outline_rounded),
     title: const Text('Status unavailable'),
     subtitle: Text(message, maxLines: 3, overflow: TextOverflow.ellipsis),
-    trailing: TextButton(onPressed: onRetry, child: const Text('Retry')),
+    trailing: TextButton(onPressed: onRetry, child: const Text('Try again')),
   );
 }

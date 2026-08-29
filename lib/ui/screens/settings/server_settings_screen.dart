@@ -36,11 +36,11 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
     });
     try {
       final api = await widget.controller.prepareActionTransport();
-      if (api == null) throw StateError('OpenCode is reconnecting.');
+      if (api == null) throw const ProductException('OpenCode is reconnecting.');
       final health = await api.health();
       if (mounted) setState(() => _health = health);
     } catch (error) {
-      if (mounted) setState(() => _healthError = error.toString());
+      if (mounted) setState(() => _healthError = productErrorText(error));
     } finally {
       if (mounted) setState(() => _checking = false);
     }
@@ -135,7 +135,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
         ),
       );
     } catch (error) {
-      if (mounted) setState(() => _serverUpgradeError = error.toString());
+      if (mounted) setState(() => _serverUpgradeError = productErrorText(error));
     } finally {
       if (mounted) setState(() => _upgradingServer = false);
     }

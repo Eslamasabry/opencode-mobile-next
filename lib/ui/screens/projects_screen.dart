@@ -62,7 +62,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       if (!mounted || generation != _loadGeneration) return;
       setState(() {
         _loading = false;
-        _error = error.toString();
+        _error = productErrorText(error);
       });
     }
   }
@@ -117,7 +117,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     setState(() => _busyProjectID = project.id);
     try {
       final repository = await widget.controller.prepareActionRepository();
-      if (repository == null) throw StateError('OpenCode is reconnecting.');
+      if (repository == null) throw const ProductException('OpenCode is reconnecting.');
       final updated = await repository.renameProject(
         projectID: project.id,
         projectDirectory: project.directory,

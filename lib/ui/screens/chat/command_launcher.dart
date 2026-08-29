@@ -320,7 +320,7 @@ class _CommandLauncherSheetState extends State<_CommandLauncherSheet>
                   overflow: TextOverflow.ellipsis,
                 ),
                 subtitle: Text(
-                  '${widget.error()}',
+                  productErrorText(widget.error()!),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),

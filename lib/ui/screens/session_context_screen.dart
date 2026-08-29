@@ -216,7 +216,7 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
     }
     try {
       final api = await widget.controller.prepareActionTransport();
-      if (api == null) throw StateError('OpenCode is reconnecting. Try again.');
+      if (api == null) throw const ProductException('OpenCode is reconnecting. Try again.');
       final messages = await api.messages(widget.sessionID);
       messages.sort(
         (a, b) =>
@@ -258,7 +258,7 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
   Widget _buildBody(SessionContextMetrics metrics) {
     if (_loading && _messages.isEmpty) return const LoadingList(rows: 7);
     if (_error != null && _messages.isEmpty) {
-      return ProductErrorState(message: '$_error', onRetry: _load);
+      return ProductErrorState(message: productErrorText(_error!), onRetry: _load);
     }
     if (metrics.currentMessage == null) {
       return ProductEmptyState(
@@ -632,13 +632,13 @@ class _InlineContextError extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Could not refresh: $error',
+              'Could not refresh: ${productErrorText(error)}',
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodySmall,
             ),
           ),
-          TextButton(onPressed: onRetry, child: const Text('Retry')),
+          TextButton(onPressed: onRetry, child: const Text('Try again')),
         ],
       ),
     );

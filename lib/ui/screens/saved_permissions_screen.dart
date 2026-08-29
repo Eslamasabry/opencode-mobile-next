@@ -64,7 +64,7 @@ class _SavedPermissionsScreenState extends State<SavedPermissionsScreen> {
       setState(() => _permissions = permissions);
     } catch (error) {
       if (mounted && generation == _generation) {
-        setState(() => _error = error.toString());
+        setState(() => _error = productErrorText(error));
       }
     } finally {
       if (mounted && generation == _generation) {
@@ -142,7 +142,7 @@ class _SavedPermissionsScreenState extends State<SavedPermissionsScreen> {
       );
     } catch (error) {
       if (!mounted) return;
-      setState(() => _error = error.toString());
+      setState(() => _error = productErrorText(error));
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(error.toString())));
