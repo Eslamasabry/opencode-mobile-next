@@ -5,6 +5,7 @@ import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
+import '../desktop/context_menu.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/product_states.dart';
 
@@ -428,7 +429,7 @@ class _GlobalSessionRow extends StatelessWidget {
       _formatTimestamp(session.time?.updated ?? session.time?.created),
       if (session.archived) 'Archived',
     ].where((value) => value.isNotEmpty).join(' · ');
-    return Semantics(
+    final row = Semantics(
       button: true,
       label: 'Open $title. $details',
       onTap: opening ? null : onTap,
@@ -481,6 +482,27 @@ class _GlobalSessionRow extends StatelessWidget {
           onTap: opening || stealing ? null : onTap,
         ),
       ),
+    );
+    // Steal is offered only where it is genuinely possible, matching the
+    // trailing button's own gate. Off desktop this wrapper is a pass-through.
+    return ContextMenuRegion(
+      actions: () => [
+        if (!opening && !stealing)
+          ContextMenuAction(
+            menuKey: const ValueKey('global-session-menu-open'),
+            label: 'Open',
+            icon: Icons.open_in_new_rounded,
+            onSelected: onTap,
+          ),
+        if (onSteal != null && !opening && !stealing)
+          ContextMenuAction(
+            menuKey: const ValueKey('global-session-menu-steal'),
+            label: 'Continue here',
+            icon: Icons.move_to_inbox_rounded,
+            onSelected: onSteal!,
+          ),
+      ],
+      child: row,
     );
   }
 

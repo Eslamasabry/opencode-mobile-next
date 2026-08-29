@@ -1169,6 +1169,11 @@ class _MessageView extends StatelessWidget {
   final bool showTimestamp;
   final bool highlighted;
   final VoidCallback? onLongPress;
+
+  /// Desktop right-click menu for this message. Built on click so it reflects
+  /// current capabilities, and it carries the same actions as the long-press
+  /// sheet [onLongPress] opens.
+  final List<ContextMenuAction> Function()? contextActions;
   final ToolOutputFileLoader filePreviewLoader;
   final ToolOutputFileAction onAttachFile;
   final ToolOutputFileAction onDownloadFile;
@@ -1182,6 +1187,7 @@ class _MessageView extends StatelessWidget {
     required this.showTimestamp,
     this.highlighted = false,
     this.onLongPress,
+    this.contextActions,
     required this.filePreviewLoader,
     required this.onAttachFile,
     required this.onDownloadFile,
@@ -1206,7 +1212,7 @@ class _MessageView extends StatelessWidget {
 
     final bubbleWidthCap = MediaQuery.of(context).size.width * .88;
 
-    return GestureDetector(
+    final body = GestureDetector(
       onLongPress: onLongPress,
       behavior: HitTestBehavior.translucent,
       // The long-press menu is a pointer shortcut for actions that remain
@@ -1342,6 +1348,9 @@ class _MessageView extends StatelessWidget {
         ),
       ),
     );
+    final menu = contextActions;
+    if (menu == null) return body;
+    return ContextMenuRegion(actions: menu, child: body);
   }
 
   static String _fmtTokens(int n) {

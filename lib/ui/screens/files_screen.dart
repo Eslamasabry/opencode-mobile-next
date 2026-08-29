@@ -9,6 +9,7 @@ import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../../state/review_handoff.dart';
+import '../desktop/context_menu.dart';
 import '../desktop/desktop_interaction.dart';
 import '../widgets/file_preview.dart';
 import '../widgets/product_states.dart';
@@ -833,62 +834,161 @@ class _FilesScreenState extends State<FilesScreen> {
                     .length
               : 0;
           final detail = _fileDetail(node, change, descendantChanges);
-          return ListTile(
-            key: ValueKey('project-file-${node.path}'),
-            dense: true,
-            selected: node.path == _selectedPath,
-            leading: Icon(
-              node.isDir
-                  ? Icons.folder_rounded
-                  : change?.status == 'deleted'
-                  ? Icons.remove_circle_outline_rounded
-                  : _fileTypeIcon(node.name),
-              size: 20,
-              color: node.isDir
-                  ? theme.colorScheme.primary
-                  : change?.status == 'deleted'
-                  ? theme.colorScheme.error
-                  : AppTheme.mutedOf(theme),
-            ),
-            title: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    node.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+          return ContextMenuRegion(
+            actions: () => _fileRowActions(node, change),
+            child: ListTile(
+              key: ValueKey('project-file-${node.path}'),
+              dense: true,
+              selected: node.path == _selectedPath,
+              leading: Icon(
+                node.isDir
+                    ? Icons.folder_rounded
+                    : change?.status == 'deleted'
+                    ? Icons.remove_circle_outline_rounded
+                    : _fileTypeIcon(node.name),
+                size: 20,
+                color: node.isDir
+                    ? theme.colorScheme.primary
+                    : change?.status == 'deleted'
+                    ? theme.colorScheme.error
+                    : AppTheme.mutedOf(theme),
+              ),
+              title: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      node.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                if (change != null)
-                  _FileReviewAction(
-                    change: change,
-                    onPressed: () => _reviewFileChange(node),
-                  )
-                else if (descendantChanges > 0)
-                  _FolderStatusMark(count: descendantChanges),
-              ],
+                  if (change != null)
+                    _FileReviewAction(
+                      change: change,
+                      onPressed: () => _reviewFileChange(node),
+                    )
+                  else if (descendantChanges > 0)
+                    _FolderStatusMark(count: descendantChanges),
+                ],
+              ),
+              subtitle: detail == null
+                  ? null
+                  : Text(
+                      detail,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: AppTheme.captionFontSize,
+                      ),
+                    ),
+              onTap: change?.status == 'deleted'
+                  ? null
+                  : () {
+                      if (node.isDir) {
+                        _navigateTo(node.path);
+                      } else {
+                        _openFile(node);
+                      }
+                    },
             ),
-            subtitle: detail == null
-                ? null
-                : Text(
-                    detail,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: AppTheme.captionFontSize),
-                  ),
-            onTap: change?.status == 'deleted'
-                ? null
-                : () {
-                    if (node.isDir) {
-                      _navigateTo(node.path);
-                    } else {
-                      _openFile(node);
-                    }
-                  },
           );
         },
       ),
     );
+  }
+
+  /// The desktop right-click menu for a file row. Every entry is something
+  /// the row already offers by tap or by the viewer it opens — the menu just
+  /// removes the round trip.
+  List<ContextMenuAction> _fileRowActions(
+    FileNode node,
+    VersionControlFile? change,
+  ) {
+    final deleted = change?.status == 'deleted';
+    final path = _relativePath(node.path);
+    return [
+      if (node.isDir && !deleted)
+        ContextMenuAction(
+          menuKey: const ValueKey('file-menu-open'),
+          label: 'Open folder',
+          icon: Icons.folder_open_rounded,
+          onSelected: () => _navigateTo(node.path),
+        )
+      else if (!deleted) ...[
+        ContextMenuAction(
+          menuKey: const ValueKey('file-menu-open'),
+          label: 'Open',
+          icon: Icons.open_in_new_rounded,
+          onSelected: () => _openFile(node),
+        ),
+        if (change != null)
+          ContextMenuAction(
+            menuKey: const ValueKey('file-menu-review'),
+            label: 'Review changes',
+            icon: Icons.difference_outlined,
+            onSelected: () => unawaited(_reviewFileChange(node)),
+          ),
+        if (widget.onAttachFile != null)
+          ContextMenuAction(
+            menuKey: const ValueKey('file-menu-attach'),
+            label: 'Attach to prompt',
+            icon: Icons.attach_file_rounded,
+            onSelected: () => unawaited(_attachFile(path)),
+          ),
+        if (widget.handoff != null)
+          ContextMenuAction(
+            menuKey: const ValueKey('file-menu-reference'),
+            label: 'Add as reference',
+            icon: Icons.add_link_rounded,
+            onSelected: () => _stageProjectFile(path, null),
+          ),
+      ],
+      ContextMenuAction(
+        menuKey: const ValueKey('file-menu-copy-path'),
+        label: 'Copy path',
+        icon: AppIcons.copy,
+        onSelected: () => unawaited(_copyPath(path)),
+      ),
+    ];
+  }
+
+  /// Attaches a file straight from the tree. The viewer's Attach button does
+  /// the same thing once it has the content; this fetches the content first
+  /// so the menu does not need the viewer open.
+  Future<void> _attachFile(String path) async {
+    final action = widget.onAttachFile;
+    if (action == null) return;
+    try {
+      final api = await widget.controller.prepareActionTransport();
+      if (api == null) {
+        throw const ProductException('The server is not connected.');
+      }
+      final content = await api.fileContent(path);
+      await action(
+        path,
+        FilePreviewData(
+          name: path.split('/').last,
+          mimeType: content.mimeType,
+          bytes: content.isBinary ? content.bytes() : null,
+          text: content.isBinary ? null : content.content,
+        ),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${path.split('/').last} attached.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      showProductError(context, error);
+    }
+  }
+
+  Future<void> _copyPath(String path) async {
+    await Clipboard.setData(ClipboardData(text: path));
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Copied $path')));
   }
 
   /// Type-aware glyphs so a directory scans by kind, matching the developer

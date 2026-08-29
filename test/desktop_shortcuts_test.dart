@@ -188,9 +188,7 @@ void main() {
       addTearDown(controller.dispose);
       await tester.pumpWidget(
         harness.app(
-          Scaffold(
-            body: TextField(controller: controller, autofocus: true),
-          ),
+          Scaffold(body: TextField(controller: controller, autofocus: true)),
         ),
       );
       await tester.pumpAndSettle();

@@ -194,7 +194,9 @@ void main() {
     addTearDown(connection.dispose);
 
     await tester.pumpWidget(
-      MaterialApp(home: Scaffold(body: FilesScreen(controller: connection))),
+      MaterialApp(
+        home: Scaffold(body: FilesScreen(controller: connection)),
+      ),
     );
     await tester.pumpAndSettle();
 

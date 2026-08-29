@@ -20,6 +20,7 @@ import '../../voice/controller.dart';
 import '../../voice/voice_ui.dart';
 import '../navigation/chat_route.dart';
 import '../app_theme.dart';
+import '../desktop/context_menu.dart';
 import '../desktop/shortcuts.dart';
 import '../widgets/appearance_picker.dart';
 import '../widgets/connection_status_banner.dart';
@@ -1754,12 +1755,50 @@ class _ChatScreenState extends State<ChatScreen>
     });
   }
 
+  static String _messageText(MessageWithParts message) => message.parts
+      .where((part) => part.type == 'text' && !part.synthetic)
+      .map((part) => part.text)
+      .where((value) => value.trim().isNotEmpty)
+      .join('\n\n');
+
+  Future<void> _copyMessageText(MessageWithParts message) async {
+    await Clipboard.setData(ClipboardData(text: _messageText(message)));
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Message text copied')));
+  }
+
+  /// The desktop right-click menu for a transcript message. Same three
+  /// actions, same gates, same handlers as the long-press sheet below —
+  /// mouse users simply reach them with the button they already use.
+  List<ContextMenuAction> _messageContextActions(MessageWithParts message) => [
+    if (_messageText(message).isNotEmpty)
+      ContextMenuAction(
+        menuKey: const ValueKey('message-menu-copy'),
+        label: 'Copy message text',
+        icon: AppIcons.copy,
+        onSelected: () => unawaited(_copyMessageText(message)),
+      ),
+    if (message.info.role == 'user')
+      ContextMenuAction(
+        menuKey: const ValueKey('message-menu-fork'),
+        label: 'Fork from this prompt',
+        icon: Icons.fork_right_rounded,
+        onSelected: () => unawaited(_forkFromMessage(message)),
+      ),
+    if (_conn.capabilities.messageDelete)
+      ContextMenuAction(
+        menuKey: const ValueKey('message-menu-delete'),
+        label: 'Delete message',
+        icon: Icons.delete_outline_rounded,
+        destructive: true,
+        onSelected: () => unawaited(_deleteMessage(message)),
+      ),
+  ];
+
   Future<void> _showMessageActions(MessageWithParts message) async {
-    final text = message.parts
-        .where((part) => part.type == 'text' && !part.synthetic)
-        .map((part) => part.text)
-        .where((value) => value.trim().isNotEmpty)
-        .join('\n\n');
+    final text = _messageText(message);
     final canFork = message.info.role == 'user';
     final theme = Theme.of(context);
     final action = await showModalBottomSheet<String>(
@@ -1808,13 +1847,7 @@ class _ChatScreenState extends State<ChatScreen>
       ),
     );
     if (!mounted || action == null) return;
-    if (action == 'copy') {
-      await Clipboard.setData(ClipboardData(text: text));
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Message text copied')));
-    }
+    if (action == 'copy') await _copyMessageText(message);
     if (action == 'fork') await _forkFromMessage(message);
     if (action == 'delete') await _deleteMessage(message);
   }
@@ -3698,6 +3731,10 @@ class _ChatScreenState extends State<ChatScreen>
                                                           _showMessageActions(
                                                             m,
                                                           ),
+                                                        ),
+                                                    contextActions: () =>
+                                                        _messageContextActions(
+                                                          m,
                                                         ),
                                                     filePreviewLoader:
                                                         _loadToolOutputFile,

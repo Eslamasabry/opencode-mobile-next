@@ -70,60 +70,90 @@ class SessionsTab extends StatelessWidget {
                     final busy = controller.busySessions.contains(s.id);
                     return EntranceReveal(
                       index: i,
-                      child: Dismissible(
-                        key: ValueKey('session-dismiss-${s.id}'),
-                        direction: DismissDirection.endToStart,
-                        // The existing confirm-and-delete flow runs inside
-                        // confirmDismiss and always resolves false: the row is
-                        // removed by the refreshed session list, never by the
-                        // Dismissible itself, so a failed delete snaps back.
-                        confirmDismiss: (_) async {
-                          await _sessionAction(context, 'delete', s);
-                          return false;
-                        },
-                        background: const SwipeDeleteBackground(),
-                        child: ListTile(
-                          leading: busy
-                              ? SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
+                      child: ContextMenuRegion(
+                        actions: () => [
+                          ContextMenuAction(
+                            menuKey: const ValueKey('session-menu-open'),
+                            label: 'Open',
+                            icon: Icons.open_in_new_rounded,
+                            onSelected: () => Navigator.of(
+                              context,
+                            ).pushNamed('/chat/${s.id}'),
+                          ),
+                          ContextMenuAction(
+                            menuKey: const ValueKey('session-menu-rename'),
+                            label: 'Rename',
+                            icon: Icons.edit_outlined,
+                            onSelected: () =>
+                                unawaited(_sessionAction(context, 'rename', s)),
+                          ),
+                          ContextMenuAction(
+                            menuKey: const ValueKey('session-menu-delete'),
+                            label: 'Delete',
+                            icon: Icons.delete_outline_rounded,
+                            destructive: true,
+                            onSelected: () =>
+                                unawaited(_sessionAction(context, 'delete', s)),
+                          ),
+                        ],
+                        child: Dismissible(
+                          key: ValueKey('session-dismiss-${s.id}'),
+                          direction: DismissDirection.endToStart,
+                          // The existing confirm-and-delete flow runs inside
+                          // confirmDismiss and always resolves false: the row is
+                          // removed by the refreshed session list, never by the
+                          // Dismissible itself, so a failed delete snaps back.
+                          confirmDismiss: (_) async {
+                            await _sessionAction(context, 'delete', s);
+                            return false;
+                          },
+                          background: const SwipeDeleteBackground(),
+                          child: ListTile(
+                            leading: busy
+                                ? SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
+                                  )
+                                : Icon(
+                                    Icons.chat_bubble_outline_rounded,
+                                    size: 20,
+                                    color: AppTheme.mutedOf(Theme.of(context)),
                                   ),
-                                )
-                              : Icon(
-                                  Icons.chat_bubble_outline_rounded,
-                                  size: 20,
-                                  color: AppTheme.mutedOf(Theme.of(context)),
-                                ),
-                          title: Text(
-                            s.title?.isNotEmpty == true ? s.title! : 'New chat',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          subtitle: Text(
-                            _fmtSessionTime(
-                              s.time?.updated ?? s.time?.created ?? 0,
+                            title: Text(
+                              s.title?.isNotEmpty == true
+                                  ? s.title!
+                                  : 'New chat',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          trailing: PopupMenuButton<String>(
-                            onSelected: (v) => _sessionAction(context, v, s),
-                            itemBuilder: (_) => const [
-                              PopupMenuItem(
-                                value: 'rename',
-                                child: Text('Rename'),
+                            subtitle: Text(
+                              _fmtSessionTime(
+                                s.time?.updated ?? s.time?.created ?? 0,
                               ),
-                              PopupMenuItem(
-                                value: 'delete',
-                                child: Text('Delete'),
-                              ),
-                            ],
+                            ),
+                            trailing: PopupMenuButton<String>(
+                              onSelected: (v) => _sessionAction(context, v, s),
+                              itemBuilder: (_) => const [
+                                PopupMenuItem(
+                                  value: 'rename',
+                                  child: Text('Rename'),
+                                ),
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Text('Delete'),
+                                ),
+                              ],
+                            ),
+                            onTap: () => Navigator.of(
+                              context,
+                            ).pushNamed('/chat/${s.id}'),
                           ),
-                          onTap: () =>
-                              Navigator.of(context).pushNamed('/chat/${s.id}'),
                         ),
                       ),
                     );

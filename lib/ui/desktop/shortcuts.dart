@@ -150,9 +150,8 @@ class AppShortcutScope extends InheritedWidget {
 
   final AppShortcutSignals signals;
 
-  static AppShortcutSignals? maybeOf(BuildContext context) => context
-      .dependOnInheritedWidgetOfExactType<AppShortcutScope>()
-      ?.signals;
+  static AppShortcutSignals? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<AppShortcutScope>()?.signals;
 
   @override
   bool updateShouldNotify(AppShortcutScope oldWidget) =>
