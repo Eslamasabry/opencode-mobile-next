@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../api/sse.dart';
 import '../../state/connection.dart';
 import '../app_theme.dart';
+import '../desktop/desktop_interaction.dart';
+import '../desktop/shortcuts.dart';
 import '../widgets/connection_status_banner.dart';
 import '../widgets/pickers.dart';
 import 'activity_screen.dart';
@@ -23,8 +25,14 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with AppShortcutSurface {
   late int _tab;
+
+  /// Bumped by Ctrl+F while the Files destination is showing. Files listens
+  /// and focuses its search field. Desktop-only in practice — nothing
+  /// dispatches shortcuts off desktop.
+  final _findInFiles = ValueNotifier<int>(0);
 
   @override
   void initState() {
@@ -38,6 +46,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
+  /// The shell's own share of the shortcut layer: primary destinations, and
+  /// routing Find to the one destination that has a find field.
+  @override
+  bool onAppShortcut(Intent intent) {
+    switch (intent) {
+      case SelectDestinationIntent(:final index) when index >= 0 && index <= 3:
+        if (_tab != index) setState(() => _tab = index);
+        return true;
+      case FindInSurfaceIntent() when _tab == 1:
+        _findInFiles.value++;
+        return true;
+      default:
+        return false;
+    }
+  }
+
   void _onConnChanged() {
     if (!mounted) return;
     setState(() {});
@@ -48,6 +72,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     try {
       ref.read(connProvider).removeListener(_onConnChanged);
     } catch (_) {}
+    _findInFiles.dispose();
     super.dispose();
   }
 
@@ -60,7 +85,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // reachable from Session and the More hub. One destination, one badge.
     final tabs = [
       WorkspaceScreen(controller: conn),
-      FilesScreen(controller: conn),
+      FilesScreen(controller: conn, focusSearchSignal: _findInFiles),
       ActivityScreen(controller: conn, embedded: true),
       LibraryScreen(controller: conn),
     ];
@@ -124,16 +149,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   );
                 }
+                if (v == 'shortcuts') showShortcutsHelp(context);
                 if (v == 'disconnect') {
                   conn.disconnect().then((_) {
                     navigator.pushNamedAndRemoveUntil('/servers', (_) => false);
                   });
                 }
               },
-              itemBuilder: (_) => const [
-                PopupMenuItem(value: 'refresh', child: Text('Refresh')),
-                PopupMenuItem(value: 'settings', child: Text('Settings')),
-                PopupMenuItem(value: 'disconnect', child: Text('Disconnect')),
+              itemBuilder: (_) => [
+                const PopupMenuItem(value: 'refresh', child: Text('Refresh')),
+                const PopupMenuItem(value: 'settings', child: Text('Settings')),
+                // Discoverability: the shortcut layer must not be reachable
+                // only by a shortcut.
+                if (desktopInteractions)
+                  const PopupMenuItem(
+                    value: 'shortcuts',
+                    child: Text('Keyboard shortcuts'),
+                  ),
+                const PopupMenuItem(
+                  value: 'disconnect',
+                  child: Text('Disconnect'),
+                ),
               ],
             ),
           ],

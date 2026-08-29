@@ -20,6 +20,7 @@ import '../../voice/controller.dart';
 import '../../voice/voice_ui.dart';
 import '../navigation/chat_route.dart';
 import '../app_theme.dart';
+import '../desktop/shortcuts.dart';
 import '../widgets/appearance_picker.dart';
 import '../widgets/connection_status_banner.dart';
 import '../widgets/entrance.dart';
@@ -235,7 +236,8 @@ List<PromptAgentMention> _promptAgentMentions(
   return mentions;
 }
 
-class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
+class _ChatScreenState extends State<ChatScreen>
+    with WidgetsBindingObserver, AppShortcutSurface {
   late final ConnectionController _conn;
   late final StreamSubscription<EventEnvelope> _sub;
   List<MessageWithParts> _messages = [];
@@ -2572,6 +2574,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         _ChatCommand.server(command),
     ];
     return [...builtins, ...dynamic];
+  }
+
+  /// Ctrl+K in a session opens the session's own command launcher rather than
+  /// the shell one: slash commands and subagents are the commands that matter
+  /// here. Everything else falls through to the shell.
+  @override
+  bool onAppShortcut(Intent intent) {
+    if (intent is! OpenCommandPaletteIntent) return false;
+    unawaited(_openCommandLauncher());
+    return true;
   }
 
   Future<void> _openCommandLauncher({

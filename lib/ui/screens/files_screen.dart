@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -32,12 +33,17 @@ class FilesScreen extends StatefulWidget {
   /// review comments fall back to the clipboard.
   final ReviewHandoffSession? handoff;
 
+  /// Bumped by the shell's Ctrl+F while this destination is showing. Desktop
+  /// only in practice: nothing dispatches app shortcuts off desktop.
+  final ValueListenable<int>? focusSearchSignal;
+
   const FilesScreen({
     super.key,
     required this.controller,
     this.onAttachFile,
     this.onReviewPrompt,
     this.handoff,
+    this.focusSearchSignal,
   });
 
   @override
@@ -58,6 +64,7 @@ class _FilesScreenState extends State<FilesScreen> {
   int? _selectedLine;
   String? _searchOriginPath;
   final _search = TextEditingController();
+  final _searchFocus = FocusNode(debugLabel: 'files-search');
   Timer? _symbolSearchDebounce;
   ServerOperationsGateway? _repository;
   int _locationRevision = -1;
@@ -71,8 +78,29 @@ class _FilesScreenState extends State<FilesScreen> {
     super.initState();
     widget.controller.addListener(_controllerChanged);
     _search.addListener(_searchChanged);
+    widget.focusSearchSignal?.addListener(_focusSearch);
     _captureLocation();
     _load('');
+  }
+
+  @override
+  void didUpdateWidget(FilesScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.focusSearchSignal != widget.focusSearchSignal) {
+      oldWidget.focusSearchSignal?.removeListener(_focusSearch);
+      widget.focusSearchSignal?.addListener(_focusSearch);
+    }
+  }
+
+  /// Ctrl+F: put the caret in the find field and select what is already there
+  /// so a second search replaces the first, the way every desktop find does.
+  void _focusSearch() {
+    if (!mounted) return;
+    _searchFocus.requestFocus();
+    _search.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: _search.text.length,
+    );
   }
 
   void _searchChanged() {
@@ -622,7 +650,9 @@ class _FilesScreenState extends State<FilesScreen> {
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
           child: TextField(
+            key: const ValueKey('files-search-field'),
             controller: _search,
+            focusNode: _searchFocus,
             decoration: InputDecoration(
               isDense: true,
               prefixIcon: const Icon(Icons.search_rounded, size: 20),
@@ -1047,8 +1077,10 @@ class _FilesScreenState extends State<FilesScreen> {
   void dispose() {
     _symbolSearchDebounce?.cancel();
     widget.controller.removeListener(_controllerChanged);
+    widget.focusSearchSignal?.removeListener(_focusSearch);
     _search.removeListener(_searchChanged);
     _search.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
 }
