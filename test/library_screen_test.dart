@@ -7,12 +7,15 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/library_screen.dart';
-import 'package:opencode_mobile/ui/screens/mission_control_screen.dart';
+import 'package:opencode_mobile/ui/screens/terminal_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Repository implements ProductRepository {
   @override
   void setLocation({String? directory, String? workspace}) {}
+
+  @override
+  Future<List<TerminalProcess>> listTerminals() async => [];
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -35,7 +38,7 @@ Widget _app(ConnectionController controller) => MaterialApp(
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('More hub leads the Browse grid with a Mission Control card', (
+  testWidgets('More hub leads the Browse grid with Models & agents', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 844);
@@ -48,31 +51,23 @@ void main() {
     await tester.pumpWidget(_app(controller));
     await tester.pumpAndSettle();
 
-    final card = find.byKey(const ValueKey('library-mission-control'));
-    expect(card, findsOneWidget);
-    expect(find.text('Mission Control'), findsOneWidget);
+    // UX-P0-01: pending work lives on the Activity destination alone, so the
+    // hub no longer repeats it as Mission Control or Requests.
+    expect(find.text('Mission Control'), findsNothing);
+    expect(find.text('Requests'), findsNothing);
+    expect(find.byKey(const ValueKey('library-mission-control')), findsNothing);
+
     // First slot of the grid: no destination card sits above or to its left.
+    final card = find.widgetWithText(Card, 'Models & agents');
     final cardRect = tester.getRect(card);
-    final modelsRect = tester.getRect(
-      find.widgetWithText(Card, 'Models & agents'),
+    final providersRect = tester.getRect(
+      find.widgetWithText(Card, 'Providers'),
     );
-    expect(cardRect.top, lessThanOrEqualTo(modelsRect.top));
-    expect(cardRect.left, lessThan(modelsRect.left));
-    // No pending work: the card carries no badge.
-    expect(
-      find.descendant(of: card, matching: find.byType(Badge)),
-      findsNothing,
-    );
-
-    await tester.tap(card);
-    await tester.pumpAndSettle();
-
-    expect(find.byType(MissionControlScreen), findsOneWidget);
+    expect(cardRect.top, lessThanOrEqualTo(providersRect.top));
+    expect(cardRect.left, lessThan(providersRect.left));
   });
 
-  testWidgets('Mission Control card surfaces the pending request count', (
-    tester,
-  ) async {
+  testWidgets('the hub carries no pending badge of its own', (tester) async {
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -106,8 +101,36 @@ void main() {
     await tester.pumpWidget(_app(controller));
     await tester.pumpAndSettle();
 
-    final card = find.byKey(const ValueKey('library-mission-control'));
+    // One global badge only, and it is not here.
+    expect(find.byType(Badge), findsNothing);
+    expect(find.text('2'), findsNothing);
+  });
+
+  testWidgets('Terminal moved into the hub and opens with an app bar', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+
+    final card = find.byKey(const ValueKey('library-terminal'));
     expect(card, findsOneWidget);
-    expect(find.descendant(of: card, matching: find.text('2')), findsOneWidget);
+
+    await tester.ensureVisible(card);
+    await tester.pumpAndSettle();
+    await tester.tap(card);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TerminalScreen), findsOneWidget);
+    expect(
+      find.descendant(of: find.byType(AppBar), matching: find.text('Terminal')),
+      findsOneWidget,
+    );
   });
 }

@@ -112,12 +112,6 @@ abstract class AppLocalizations {
   /// **'Manage'**
   String get libraryManageSection;
 
-  /// More hub card: fleet overview of pending requests and running sessions
-  ///
-  /// In en, this message translates to:
-  /// **'Mission Control'**
-  String get libraryMissionControlTitle;
-
   /// More hub card: model and agent catalog
   ///
   /// In en, this message translates to:
@@ -142,11 +136,11 @@ abstract class AppLocalizations {
   /// **'Commands & tools'**
   String get libraryCommandsToolsTitle;
 
-  /// More hub card: pending permission and question requests
+  /// More hub card: server terminal sessions
   ///
   /// In en, this message translates to:
-  /// **'Requests'**
-  String get libraryRequestsTitle;
+  /// **'Terminal'**
+  String get libraryTerminalTitle;
 
   /// More hub card: app settings
   ///

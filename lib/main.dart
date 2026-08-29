@@ -22,7 +22,7 @@ import 'ui/screens/about_screen.dart';
 import 'ui/screens/home_screen.dart';
 import 'ui/screens/servers_screen.dart';
 import 'ui/screens/chat_screen.dart';
-import 'ui/screens/requests_screen.dart';
+import 'ui/screens/activity_screen.dart';
 import 'ui/screens/termux_setup_screen.dart';
 import 'ui/screens/app_diagnostics_screen.dart';
 
@@ -270,7 +270,7 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
       if (target.kind == CodingAlertKind.question) {
         navigator.push(
           MaterialPageRoute<void>(
-            builder: (_) => RequestsScreen(
+            builder: (_) => ActivityScreen(
               controller: _controller,
               initialQuestionSessionID: target.sessionID,
             ),
@@ -341,6 +341,11 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
               '/': (_) => _Root(),
               '/servers': (_) => const ServersScreen(),
               '/home': (_) => const HomeScreen(),
+              // Activity absorbed Mission Control and Pending requests; the
+              // old deep link still resolves so notifications and shortcuts
+              // built against it keep working.
+              '/activity': (_) => ActivityScreen(controller: _controller),
+              '/requests': (_) => ActivityScreen(controller: _controller),
               '/guide': (_) => GuideScreen(embedded: false),
               '/about': (_) => const AboutScreen(),
               '/termux-setup': (_) => const TermuxSetupScreen(),

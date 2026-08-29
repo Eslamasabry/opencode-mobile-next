@@ -4,28 +4,59 @@ import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../api2/models.dart' show Api2FormInfo;
 import '../../state/connection.dart';
+import '../app_theme.dart';
 import '../permission_presentation.dart';
 import '../widgets/product_states.dart';
 import 'chat/form_flow.dart';
 import 'chat/permission_sheet.dart';
-import '../app_theme.dart';
+import 'global_sessions_screen.dart';
 
-class RequestsScreen extends StatefulWidget {
+/// Activity: the single cross-session control centre (audit §3, §8).
+///
+/// It replaces the former Mission Control and Pending requests screens, which
+/// showed the same pending count behind two mental models. One destination,
+/// one badge, three sections:
+///
+/// 1. **Needs attention** — permissions, questions, and v2 forms, each row
+///    opening the *exact* resolver (the same permission sheet and form flow
+///    chat uses), never merely a link to the related chat.
+/// 2. **Running** — sessions busy right now, with their subagent counts.
+/// 3. **Recently completed** — where recent work stopped.
+///
+/// Every row is server truth the controller already holds; nothing here is
+/// estimated. Cross-project discovery stays with the all-sessions finder,
+/// reachable from the footer.
+class ActivityScreen extends StatefulWidget {
   final ConnectionController controller;
+
+  /// A notification tap can name the session whose question should open
+  /// immediately, so the alert lands on the answer rather than a list.
   final String? initialQuestionSessionID;
 
-  const RequestsScreen({
+  /// True when Activity is hosted as a primary navigation destination, which
+  /// already supplies the app bar. Pushed routes (deep links, notifications)
+  /// keep their own Scaffold.
+  final bool embedded;
+
+  const ActivityScreen({
     super.key,
     required this.controller,
     this.initialQuestionSessionID,
+    this.embedded = false,
   });
 
   @override
-  State<RequestsScreen> createState() => _RequestsScreenState();
+  State<ActivityScreen> createState() => _ActivityScreenState();
 }
 
-class _RequestsScreenState extends State<RequestsScreen> {
-  bool _loading = true;
+class _ActivityScreenState extends State<ActivityScreen> {
+  /// The embedded tab is built by the shell's IndexedStack at launch and
+  /// stays alive; it takes its truth from the controller's own hydration and
+  /// live events, and reconciles on pull-to-refresh. Only a pushed Activity —
+  /// a deep link or a notification tap — pays for an entry refresh, exactly
+  /// as the former Requests screen did.
+  late bool _loading = !widget.embedded;
+  bool _refreshing = false;
   String? _error;
   bool _initialQuestionScheduled = false;
   bool _initialQuestionHandled = false;
@@ -36,9 +67,15 @@ class _RequestsScreenState extends State<RequestsScreen> {
     widget.controller.addListener(_changed);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _refresh();
+      if (!widget.embedded) _refreshPending();
       _scheduleInitialQuestion();
     });
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_changed);
+    super.dispose();
   }
 
   void _changed() {
@@ -70,20 +107,13 @@ class _RequestsScreenState extends State<RequestsScreen> {
       final current = widget.controller.questions[target!.id];
       if (current == null || current.sessionID != sessionID) return;
       _initialQuestionHandled = true;
-      _showQuestion(current);
+      showQuestionSheet(context, widget.controller, current);
     });
   }
 
-  Future<void> _showQuestion(PendingQuestion question) =>
-      showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        showDragHandle: true,
-        builder: (_) =>
-            _QuestionSheet(question: question, controller: widget.controller),
-      );
-
-  Future<void> _refresh() async {
+  /// Pending work only — the cheap half, run on entry so a notification tap
+  /// never shows a stale queue.
+  Future<void> _refreshPending() async {
     setState(() {
       _loading = true;
       _error = null;
@@ -101,10 +131,76 @@ class _RequestsScreenState extends State<RequestsScreen> {
     }
   }
 
+  /// Wake-safe manual refresh: reconciliation first, so a retained screen
+  /// cannot query through a repository being retired after Android idle.
+  /// Refreshes both halves — pending work and the session fleet.
+  Future<void> _refresh() async {
+    if (_refreshing) return;
+    setState(() {
+      _refreshing = true;
+      _error = null;
+    });
+    try {
+      final repository = await widget.controller.prepareActionRepository();
+      if (repository == null) {
+        throw const ProductException('OpenCode is reconnecting. Try again.');
+      }
+      await widget.controller.refreshSessions();
+    } catch (error) {
+      if (mounted) setState(() => _error = productErrorText(error));
+    } finally {
+      if (mounted) setState(() => _refreshing = false);
+    }
+    if (!mounted) return;
+    await _refreshPending();
+  }
+
+  int _subagentCount(String rootID) {
+    var count = 0;
+    for (final session in widget.controller.sessionsById.values) {
+      if (session.parentID == rootID) count += 1;
+    }
+    return count;
+  }
+
+  void _openChat(String sessionID) {
+    Navigator.of(context).pushNamed('/chat/$sessionID');
+  }
+
+  void _openFinder() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => GlobalSessionsScreen(controller: widget.controller),
+      ),
+    );
+  }
+
+  static String _relative(int? ms) {
+    if (ms == null || ms <= 0) return '';
+    final delta = DateTime.now().difference(
+      DateTime.fromMillisecondsSinceEpoch(ms),
+    );
+    if (delta.inMinutes < 1) return 'now';
+    if (delta.inHours < 1) return '${delta.inMinutes}m ago';
+    if (delta.inDays < 1) return '${delta.inHours}h ago';
+    return '${delta.inDays}d ago';
+  }
+
+  static String _place(Session session) {
+    final directory = session.directory?.trim() ?? '';
+    if (directory.isEmpty) return '';
+    final parts = directory
+        .split('/')
+        .where((part) => part.isNotEmpty)
+        .toList();
+    return parts.isEmpty ? directory : parts.last;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final permissions = widget.controller.permissions.values.toList();
-    final questions = widget.controller.questions.values.toList()
+    final controller = widget.controller;
+    final permissions = controller.permissions.values.toList();
+    final questions = controller.questions.values.toList()
       ..sort((a, b) {
         final selected = widget.initialQuestionSessionID;
         if (selected == null) return 0;
@@ -114,120 +210,190 @@ class _RequestsScreenState extends State<RequestsScreen> {
       });
     // §7 rule 5: forms are v2-only, so a v1 connection never lists them even
     // if a stale entry survived a server switch.
-    final formsAvailable = widget.controller.capabilities.forms;
+    final formsAvailable = controller.capabilities.forms;
     final sessionForms = !formsAvailable
         ? const <Api2FormInfo>[]
-        : widget.controller.forms.values
+        : controller.forms.values
               .where((form) => form.sessionID != 'global')
               .toList();
+    // Global (MCP elicitation) forms have no session to open, so they keep
+    // their own subsection rather than pretending to map to a chat.
     final globalForms = !formsAvailable
         ? const <Api2FormInfo>[]
-        : widget.controller.forms.values
+        : controller.forms.values
               .where((form) => form.sessionID == 'global')
               .toList();
+
+    final roots = controller.sortedSessions();
+    final running = roots
+        .where((session) => controller.busySessions.contains(session.id))
+        .toList();
+    final recent = roots
+        .where((session) => !controller.busySessions.contains(session.id))
+        .take(8)
+        .toList();
+
     final loading =
         _loading ||
-        widget.controller.permissionsLoading ||
-        widget.controller.questionsLoading ||
-        widget.controller.formsLoading;
+        controller.permissionsLoading ||
+        controller.questionsLoading ||
+        controller.formsLoading;
     final error =
         _error ??
-        widget.controller.permissionsError ??
-        widget.controller.questionsError ??
-        widget.controller.formsError;
-    final nothingPending =
-        permissions.isEmpty &&
-        questions.isEmpty &&
-        sessionForms.isEmpty &&
-        globalForms.isEmpty;
-    return Scaffold(
-      appBar: AppBar(title: const Text('Pending requests')),
-      body: loading && nothingPending
+        controller.permissionsError ??
+        controller.questionsError ??
+        controller.formsError;
+    final attentionCount =
+        permissions.length +
+        questions.length +
+        sessionForms.length +
+        globalForms.length;
+    final empty = attentionCount == 0 && roots.isEmpty;
+
+    final body = RefreshIndicator(
+      onRefresh: _refresh,
+      child: loading && empty
           ? const LoadingList()
-          : error != null && nothingPending
-          ? RefreshIndicator(
-              onRefresh: _refresh,
-              child: ProductErrorState(message: error, onRetry: _refresh),
+          : error != null && empty
+          ? ProductErrorState(message: error, onRetry: _refresh)
+          : empty
+          ? ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                const SizedBox(height: 80),
+                ProductEmptyState(
+                  icon: Icons.task_alt_rounded,
+                  title: 'Nothing needs attention',
+                  message:
+                      'Permission requests, questions, and running sessions '
+                      'appear here. Start one from Workspace, or find a '
+                      'session anywhere on this server.',
+                  actionLabel: 'All sessions',
+                  onAction: _openFinder,
+                ),
+              ],
             )
-          : nothingPending
-          ? RefreshIndicator(
-              onRefresh: _refresh,
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                children: const [
-                  SizedBox(height: 120),
-                  ProductEmptyState(
+          : ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.only(bottom: 24),
+              children: [
+                if (loading) const LinearProgressIndicator(minHeight: 2),
+                if (error != null)
+                  ProductInlineEmpty(
+                    icon: Icons.sync_problem_rounded,
+                    title: 'Could not refresh',
+                    message: error,
+                    actionLabel: 'Try again',
+                    onAction: _refresh,
+                  ),
+                const SectionLabel('Needs attention'),
+                if (attentionCount == 0)
+                  const ProductInlineEmpty(
                     icon: Icons.task_alt_rounded,
                     title: 'Nothing needs attention',
                     message:
-                        'Permission requests and assistant questions will appear here.',
+                        'Permission requests, assistant questions, and forms '
+                        'appear here the moment a session asks.',
                   ),
+                for (final permission in permissions)
+                  ActivityPermissionTile(
+                    key: ValueKey('activity-permission-${permission.id}'),
+                    permission: permission,
+                    controller: controller,
+                  ),
+                for (final question in questions)
+                  ActivityQuestionTile(
+                    key: ValueKey('activity-question-${question.id}'),
+                    question: question,
+                    controller: controller,
+                  ),
+                for (final form in sessionForms)
+                  ActivityFormTile(form: form, controller: controller),
+                if (globalForms.isNotEmpty) ...[
+                  const SectionLabel('Server requests'),
+                  for (final form in globalForms)
+                    ActivityFormTile(form: form, controller: controller),
                 ],
-              ),
-            )
-          : RefreshIndicator(
-              onRefresh: _refresh,
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.only(bottom: 24),
-                children: [
-                  if (loading) const LinearProgressIndicator(minHeight: 2),
-                  if (error != null)
-                    ListTile(
-                      leading: Icon(
-                        Icons.error_outline,
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                      title: Text(error),
-                      trailing: TextButton(
-                        onPressed: _refresh,
-                        child: const Text('Try again'),
-                      ),
+                const SectionLabel('Running'),
+                if (running.isEmpty)
+                  const ProductInlineEmpty(
+                    icon: AppIcons.run,
+                    title: 'Nothing running',
+                    message:
+                        'Busy sessions appear here the moment a run starts.',
+                  )
+                else
+                  for (final session in running)
+                    _SessionRow(
+                      key: ValueKey('activity-running-${session.id}'),
+                      session: session,
+                      running: true,
+                      subagents: _subagentCount(session.id),
+                      detail: _place(session),
+                      onTap: () => _openChat(session.id),
                     ),
-                  if (permissions.isNotEmpty) ...[
-                    SectionLabel('Permissions (${permissions.length})'),
-                    for (final permission in permissions)
-                      _PermissionTile(
-                        permission: permission,
-                        controller: widget.controller,
-                      ),
-                  ],
-                  if (questions.isNotEmpty) ...[
-                    SectionLabel('Questions (${questions.length})'),
-                    for (final question in questions)
-                      _QuestionTile(
-                        question: question,
-                        controller: widget.controller,
-                      ),
-                  ],
-                  if (sessionForms.isNotEmpty) ...[
-                    SectionLabel('Forms (${sessionForms.length})'),
-                    for (final form in sessionForms)
-                      _FormTile(form: form, controller: widget.controller),
-                  ],
-                  if (globalForms.isNotEmpty) ...[
-                    const SectionLabel('Server requests'),
-                    for (final form in globalForms)
-                      _FormTile(form: form, controller: widget.controller),
-                  ],
+                if (recent.isNotEmpty) ...[
+                  const SectionLabel('Recently completed'),
+                  for (final session in recent)
+                    _SessionRow(
+                      key: ValueKey('activity-recent-${session.id}'),
+                      session: session,
+                      running: false,
+                      subagents: _subagentCount(session.id),
+                      detail: [
+                        _relative(
+                          session.time?.updated ?? session.time?.created,
+                        ),
+                        _place(session),
+                      ].where((part) => part.isNotEmpty).join(' · '),
+                      onTap: () => _openChat(session.id),
+                    ),
                 ],
-              ),
+                const Divider(height: 24),
+                ListTile(
+                  key: const ValueKey('activity-all-sessions'),
+                  leading: const Icon(Icons.travel_explore_rounded),
+                  title: const Text('All sessions, every project'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: _openFinder,
+                ),
+              ],
             ),
     );
-  }
 
-  @override
-  void dispose() {
-    widget.controller.removeListener(_changed);
-    super.dispose();
+    if (widget.embedded) return body;
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Activity'),
+        actions: [
+          IconButton(
+            tooltip: 'Refresh',
+            onPressed: _refreshing ? null : _refresh,
+            icon: _refreshing
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.refresh_rounded),
+          ),
+        ],
+      ),
+      body: body,
+    );
   }
 }
 
-class _PermissionTile extends StatelessWidget {
+/// One permission component, three entry points: this row opens the same
+/// sheet the chat auto-presents, so resolving here is resolving there.
+class ActivityPermissionTile extends StatelessWidget {
   final PermissionRequest permission;
   final ConnectionController controller;
 
-  const _PermissionTile({required this.permission, required this.controller});
+  const ActivityPermissionTile({
+    super.key,
+    required this.permission,
+    required this.controller,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -253,8 +419,6 @@ class _PermissionTile extends StatelessWidget {
             : null,
       ),
       trailing: const Icon(Icons.chevron_right_rounded),
-      // One permission component, three entry points: the tile opens the
-      // same sheet the chat auto-presents.
       onTap: () => showPermissionSheet(
         context,
         permission: permission,
@@ -269,11 +433,15 @@ class _PermissionTile extends StatelessWidget {
   }
 }
 
-class _QuestionTile extends StatelessWidget {
+class ActivityQuestionTile extends StatelessWidget {
   final PendingQuestion question;
   final ConnectionController controller;
 
-  const _QuestionTile({required this.question, required this.controller});
+  const ActivityQuestionTile({
+    super.key,
+    required this.question,
+    required this.controller,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -296,22 +464,20 @@ class _QuestionTile extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
       ),
       trailing: const Icon(Icons.chevron_right_rounded),
-      onTap: () => showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        showDragHandle: true,
-        builder: (_) =>
-            _QuestionSheet(question: question, controller: controller),
-      ),
+      onTap: () => showQuestionSheet(context, controller, question),
     );
   }
 }
 
-class _FormTile extends StatelessWidget {
+class ActivityFormTile extends StatelessWidget {
   final Api2FormInfo form;
   final ConnectionController controller;
 
-  const _FormTile({required this.form, required this.controller});
+  const ActivityFormTile({
+    super.key,
+    required this.form,
+    required this.controller,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -334,6 +500,77 @@ class _FormTile extends StatelessWidget {
       ),
       trailing: const Icon(Icons.chevron_right_rounded),
       onTap: () => presentConnectionForm(context, controller, form),
+    );
+  }
+}
+
+/// The exact answer surface, shared by Activity rows and notification taps.
+Future<void> showQuestionSheet(
+  BuildContext context,
+  ConnectionController controller,
+  PendingQuestion question,
+) => showModalBottomSheet<void>(
+  context: context,
+  isScrollControlled: true,
+  showDragHandle: true,
+  builder: (_) => _QuestionSheet(question: question, controller: controller),
+);
+
+class _SessionRow extends StatelessWidget {
+  final Session session;
+  final bool running;
+  final int subagents;
+  final String detail;
+  final VoidCallback onTap;
+
+  const _SessionRow({
+    super.key,
+    required this.session,
+    required this.running,
+    required this.subagents,
+    required this.detail,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final title = session.title?.trim().isNotEmpty == true
+        ? session.title!.trim()
+        : 'Untitled session';
+    return ListTile(
+      leading: running
+          ? SizedBox.square(
+              dimension: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: theme.colorScheme.primary,
+              ),
+            )
+          : Icon(
+              Icons.chat_bubble_outline_rounded,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+      title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: detail.isEmpty
+          ? null
+          : Text(detail, maxLines: 1, overflow: TextOverflow.ellipsis),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (subagents > 0)
+            Tooltip(
+              message: '$subagents subagent${subagents == 1 ? '' : 's'}',
+              child: Badge(
+                label: Text('$subagents'),
+                child: const Icon(Icons.account_tree_outlined, size: 19),
+              ),
+            ),
+          const SizedBox(width: 4),
+          const Icon(Icons.chevron_right_rounded),
+        ],
+      ),
+      onTap: onTap,
     );
   }
 }

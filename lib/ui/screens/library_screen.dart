@@ -19,9 +19,8 @@ import '../widgets/pickers.dart';
 import 'capabilities_screen.dart';
 import 'guide_screen.dart';
 import 'mcp_setup_screen.dart';
-import 'mission_control_screen.dart';
-import 'requests_screen.dart';
 import 'settings_screen.dart';
+import 'terminal_screen.dart';
 
 part 'library/catalog_screen.dart';
 part 'library/integrations_screen.dart';
@@ -40,10 +39,8 @@ class LibraryScreen extends StatelessWidget {
       listenable: controller,
       builder: (context, _) {
         final l10n = AppLocalizations.of(context);
-        final pending =
-            controller.permissions.length +
-            controller.questions.length +
-            controller.forms.length;
+        // Audit UX-P0-01: no Mission Control or Requests card here. Pending
+        // work has exactly one home — the Activity destination and its badge.
         return ListView(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
           children: [
@@ -51,16 +48,6 @@ class LibraryScreen extends StatelessWidget {
             SectionLabel(l10n.libraryBrowseSection),
             _DestinationGrid(
               cards: [
-                _DestinationCard(
-                  key: const ValueKey('library-mission-control'),
-                  icon: Icons.space_dashboard_outlined,
-                  title: l10n.libraryMissionControlTitle,
-                  badge: pending == 0 ? null : '$pending',
-                  onTap: () => _open(
-                    context,
-                    MissionControlScreen(controller: controller),
-                  ),
-                ),
                 _DestinationCard(
                   icon: Icons.model_training_outlined,
                   title: l10n.libraryModelsAgentsTitle,
@@ -97,18 +84,20 @@ class LibraryScreen extends StatelessWidget {
                     CapabilitiesScreen(controller: controller),
                   ),
                 ),
+                // §5: Terminal gives up its navigation slot to Activity and
+                // is reached from here (and from a session) instead.
+                _DestinationCard(
+                  key: const ValueKey('library-terminal'),
+                  icon: Icons.terminal_outlined,
+                  title: l10n.libraryTerminalTitle,
+                  onTap: () =>
+                      _open(context, _TerminalPage(controller: controller)),
+                ),
               ],
             ),
             SectionLabel(l10n.libraryManageSection),
             _DestinationGrid(
               cards: [
-                _DestinationCard(
-                  icon: Icons.notifications_active_outlined,
-                  title: l10n.libraryRequestsTitle,
-                  badge: pending == 0 ? null : '$pending',
-                  onTap: () =>
-                      _open(context, RequestsScreen(controller: controller)),
-                ),
                 _DestinationCard(
                   icon: Icons.settings_outlined,
                   title: l10n.librarySettingsTitle,
@@ -131,6 +120,20 @@ class LibraryScreen extends StatelessWidget {
   static void _open(BuildContext context, Widget screen) {
     Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen));
   }
+}
+
+/// Terminal is a body-only tab widget; pushed from More it needs its own
+/// Scaffold and an identity in the app bar.
+class _TerminalPage extends StatelessWidget {
+  final ConnectionController controller;
+
+  const _TerminalPage({required this.controller});
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Terminal')),
+    body: TerminalScreen(controller: controller),
+  );
 }
 
 /// The live model/agent/variant selection, promoted to the top of More so the
@@ -215,7 +218,6 @@ class _DestinationGrid extends StatelessWidget {
 class _DestinationCard extends StatelessWidget {
   final IconData icon;
   final String title;
-  final String? badge;
   final VoidCallback onTap;
 
   const _DestinationCard({
@@ -223,7 +225,6 @@ class _DestinationCard extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.onTap,
-    this.badge,
   });
 
   @override
@@ -239,13 +240,7 @@ class _DestinationCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  _TileIcon(icon: icon),
-                  const Spacer(),
-                  if (badge != null) Badge(label: Text(badge!)),
-                ],
-              ),
+              _TileIcon(icon: icon),
               const Spacer(),
               Text(
                 title,

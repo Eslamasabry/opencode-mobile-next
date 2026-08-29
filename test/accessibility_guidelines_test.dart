@@ -13,6 +13,7 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
+import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat/permission_sheet.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
@@ -184,6 +185,55 @@ void main() {
         _scoped(
           conn,
           Scaffold(body: WorkspaceScreen(controller: conn)),
+          brightness,
+        ),
+      );
+      await _settle(tester);
+      await _expectAccessible(tester);
+    });
+
+    testWidgets('$label: Activity meets the guidelines', (tester) async {
+      final conn = await _controller();
+      addTearDown(conn.dispose);
+      conn.sessionsById = {
+        'ses_run': Session(
+          id: 'ses_run',
+          title: 'Build feature',
+          directory: '/work/oc_app',
+          time: SessionTime(
+            created: 0,
+            updated: DateTime.now().millisecondsSinceEpoch,
+          ),
+        ),
+      };
+      conn.busySessions = {'ses_run'};
+      conn.permissions = {
+        'per_1': PermissionRequest(
+          id: 'per_1',
+          sessionID: 'ses_run',
+          permission: 'bash',
+          patterns: const ['git push origin main'],
+        ),
+      };
+      conn.questions = {
+        'q_1': const PendingQuestion(
+          id: 'q_1',
+          sessionID: 'ses_run',
+          prompts: [
+            QuestionPrompt(
+              title: 'Direction',
+              question: 'Proceed with the release?',
+              multiple: false,
+              custom: true,
+              choices: [],
+            ),
+          ],
+        ),
+      };
+      await tester.pumpWidget(
+        _scoped(
+          conn,
+          Scaffold(body: ActivityScreen(controller: conn, embedded: true)),
           brightness,
         ),
       );
