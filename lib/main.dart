@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'background/live_background.dart';
+import 'desktop/window_icon.dart';
 import 'desktop/window_state.dart';
 import 'diagnostics/app_diagnostics.dart';
 import 'l10n/app_localizations.dart';
@@ -44,7 +45,11 @@ Future<void> main() async {
     // a test needs to pump both ways. `main` is never entered by the suite,
     // so routing it through an overridable seam would only add a way for a
     // stray override to leave a real desktop window unshown.
-    unawaited(setUpDesktopWindow());
+    //
+    // The icon is applied after, not inside: setUpDesktopWindow completes
+    // only once waitUntilReadyToShow has shown and focused the window, and
+    // GTK needs a realised window to hang an icon on.
+    unawaited(setUpDesktopWindow().then((_) => applyDesktopWindowIcon()));
   }
   final diagnostics = AppDiagnosticsController();
   installAppErrorCapture(diagnostics);

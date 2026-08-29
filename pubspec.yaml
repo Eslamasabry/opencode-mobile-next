@@ -71,6 +71,11 @@ flutter:
     - PRIVACY.md
     - THIRD_PARTY_NOTICES.md
     - LICENSES/
+    # The Linux window/taskbar icon, set at startup via window_manager, which
+    # resolves it against the bundle's flutter_assets. Only the 256 px variant
+    # is listed: the 1024 px master beside it is the source artifact for the
+    # platform launcher-icon pipelines and must not be bundled.
+    - assets/branding/app-icon-256.png
   fonts:
     - family: AppMono
       fonts:
