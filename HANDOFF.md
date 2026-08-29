@@ -230,16 +230,22 @@ write time: `314f31f` on `production/android-release-hardening` (pushed).
 ### IN FLIGHT at handoff — three worktree agents (branches may already
 have WIP commits; they were told to commit everything durable):
 
-1. `port/v2-connect` — probe flavor detection (v2 = 401-with-empty-body on
-   /api/health), password step in servers_screen/first-run per design §1,
-   v2 gateway construction in connection.dart's wiring seams, 401 banner.
-   Committed so far at last check: `abf4c87` (probe flavor detection),
-   `b07716b` (v2 gateway pair wired into the connection controller),
-   `4545e3a` (v2 auth in the server editor + connection banner) —
-   REMAINING: the connection-wiring tests (a
-   `test/connection_v2_gateway_test.dart` was in progress) and live
-   proof. Check the branch tip and the last commit body's CONTINUATION
-   note before resuming.
+1. ~~`port/v2-connect`~~ — DONE and MERGED (55ef83c). The app connects to
+   opencode2 end to end: probe flavor detection (401-with-empty-body on
+   /api/health is the v2 signal; missing vs rejected password
+   distinguished; every v1 verdict incl. DNS preserved), paste-first
+   password field with v2 verdict copy, ServerProfile.flavor +
+   serverVersion persisted, v2 gateway pair built through the same seams
+   v1 uses, re-probe only on protocol-shaped failures (401/404/405 — a
+   blanket re-probe hung unhealthy-server tests), and a mid-session 401
+   raising the banner's update-password action. Live-verified against
+   beta-18600: all three password verdicts, then 1150 sessions listed
+   with the event channel live. Follow-up landed in `0876745`:
+   `ConnectionController.serverFlavor` closed the transcript lane's
+   TODO seam. CAUTION for future tests: the flavor-correction path calls
+   `ProfileStore.upsert`, whose secure-storage channel hangs in unmocked
+   widget tests — use a recording store or mock the channel (see the
+   offline-queue harness fix).
 2. `port/v2-interaction` — additive FormGateway/InboxGateway in the domain,
    forms wiring to FormRenderer, permission bottom sheet with
    reject-with-message (§3), PendingSendsStrip unifying offline drafts +
