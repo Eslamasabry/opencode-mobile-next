@@ -17,6 +17,7 @@ import 'package:opencode_mobile/ui/screens/chat/permission_sheet.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
 import 'package:opencode_mobile/ui/screens/library_screen.dart';
+import 'package:opencode_mobile/ui/screens/manage_project_screen.dart';
 import 'package:opencode_mobile/ui/screens/servers_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
@@ -50,11 +51,15 @@ class _Api extends OpenCodeApi {
 }
 
 class _Repository implements ProductRepository {
+  _Repository({this.projects = const []});
+
+  final List<WorkspaceProject> projects;
+
   @override
   void setLocation({String? directory, String? workspace}) {}
 
   @override
-  Future<List<WorkspaceProject>> listProjects() async => [];
+  Future<List<WorkspaceProject>> listProjects() async => [...projects];
 
   @override
   Future<List<WorkspaceInfo>> listWorkspaces() async => [];
@@ -70,9 +75,21 @@ class _Repository implements ProductRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+/// Audit UX-101 gave Workspace a session-first shape: one context header, the
+/// session lists, and a single "Manage project" route. Both live under the
+/// guideline gate.
+const _project = WorkspaceProject(
+  id: 'project-1',
+  name: 'OpenCode Mobile',
+  directory: '/work/app',
+  worktrees: [],
+  updatedAt: 1,
+);
+
 Future<ConnectionController> _controller({
   bool withProfile = true,
   bool withRepository = true,
+  List<WorkspaceProject> projects = const [],
 }) async {
   SharedPreferences.setMockInitialValues({
     if (withProfile) ...{
@@ -93,7 +110,7 @@ Future<ConnectionController> _controller({
   final controller = ConnectionController(store)
     ..api = _Api()
     ..status = StreamStatus.connected;
-  if (withRepository) controller.repository = _Repository();
+  if (withRepository) controller.repository = _Repository(projects: projects);
   return controller;
 }
 
@@ -184,6 +201,38 @@ void main() {
         _scoped(
           conn,
           Scaffold(body: WorkspaceScreen(controller: conn)),
+          brightness,
+        ),
+      );
+      await _settle(tester);
+      await _expectAccessible(tester);
+    });
+
+    testWidgets('$label: the session-first workspace meets the guidelines', (
+      tester,
+    ) async {
+      final conn = await _controller(projects: const [_project]);
+      addTearDown(conn.dispose);
+      await tester.pumpWidget(
+        _scoped(
+          conn,
+          Scaffold(body: WorkspaceScreen(controller: conn)),
+          brightness,
+        ),
+      );
+      await _settle(tester);
+      expect(find.byKey(const ValueKey('current-project-entry')), findsOneWidget);
+      expect(find.byKey(const ValueKey('manage-project-entry')), findsOneWidget);
+      await _expectAccessible(tester);
+    });
+
+    testWidgets('$label: manage project meets the guidelines', (tester) async {
+      final conn = await _controller(projects: const [_project]);
+      addTearDown(conn.dispose);
+      await tester.pumpWidget(
+        _scoped(
+          conn,
+          ManageProjectScreen(controller: conn, project: _project),
           brightness,
         ),
       );
