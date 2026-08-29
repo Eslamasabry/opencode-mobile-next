@@ -11,7 +11,7 @@ server's actual port.
 ## One-time setup (on the Ubuntu machine)
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/Eslamasabry/oc_app/production/android-release-hardening/scripts/host/ubuntu-opencode.sh -o ubuntu-opencode.sh
+curl -fsSL https://raw.githubusercontent.com/Eslamasabry/oc_app/master/scripts/host/ubuntu-opencode.sh -o ubuntu-opencode.sh
 bash ubuntu-opencode.sh install
 ```
 

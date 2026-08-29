@@ -15,12 +15,9 @@ class HostManagementScreen extends StatelessWidget {
 
   final ConnectionController controller;
 
-  // Points at the preview branch while facelift previews ship from it;
-  // switch to master when this branch merges.
   static const scriptUrl =
       'https://raw.githubusercontent.com/Eslamasabry/oc_app/'
-      'production/android-release-hardening/'
-      'scripts/host/ubuntu-opencode.sh';
+      'master/scripts/host/ubuntu-opencode.sh';
 
   int _serverPort() {
     final uri = Uri.tryParse(controller.profile?.baseUrl ?? '');
