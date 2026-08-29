@@ -138,6 +138,43 @@ class QueuedPrompt {
   }
 }
 
+/// What [OfflineQueueStore.enforceLimits] dropped, so the caller can say so
+/// instead of letting a prompt vanish between one app start and the next.
+class OfflineQueueEviction {
+  /// The entries that stay, oldest first.
+  final List<QueuedPrompt> kept;
+
+  /// Dropped for being older than [OfflineQueueStore.maxAge].
+  final int expired;
+
+  /// Dropped because the queue held more than [OfflineQueueStore.maxEntries].
+  final int overflowed;
+
+  /// Dropped because the queue exceeded [OfflineQueueStore.maxTotalBytes].
+  final int oversized;
+
+  const OfflineQueueEviction({
+    required this.kept,
+    this.expired = 0,
+    this.overflowed = 0,
+    this.oversized = 0,
+  });
+
+  int get removed => expired + overflowed + oversized;
+
+  /// One sentence for a snackbar. Null when nothing was dropped.
+  String? get notice {
+    if (removed == 0) return null;
+    final reasons = [
+      if (expired > 0) '$expired too old to send',
+      if (overflowed + oversized > 0)
+        '${overflowed + oversized} to stay within the queue limit',
+    ];
+    final noun = removed == 1 ? 'draft' : 'drafts';
+    return 'Discarded $removed queued $noun: ${reasons.join(' and ')}.';
+  }
+}
+
 /// Persists queued prompts alongside the app's other preferences. Entries
 /// survive restarts; the composer's existing attachment caps bound each
 /// entry's size before it ever reaches the queue.
@@ -148,9 +185,77 @@ class OfflineQueueStore {
   /// never legitimately exceed what the composer allowed.
   static const maxEntryBytes = 20 * 1024 * 1024;
 
+  /// Ceiling for everything the queue persists.
+  ///
+  /// SharedPreferences is one blob the platform reads whole on every app
+  /// start, so an unbounded queue is not just disk: it is startup latency
+  /// and resident memory on the phone, growing silently because a queued
+  /// prompt only leaves when the server comes back. Three maximum-size
+  /// entries is already far past what a person composes offline.
+  static const maxTotalBytes = 3 * maxEntryBytes;
+
+  /// Ceiling on entry count, independent of size. Text-only prompts are
+  /// tiny, so bytes alone would let thousands accumulate.
+  static const maxEntries = 50;
+
+  /// How long an unsent draft stays queued.
+  ///
+  /// A prompt written against a two-week-old working tree is not a send the
+  /// user still wants delivered unseen; keeping it forever is a bigger
+  /// surprise than dropping it with a notice.
+  static const maxAge = Duration(days: 14);
+
   final SharedPreferences prefs;
 
   OfflineQueueStore({required this.prefs});
+
+  /// Timestamps below this are not wall-clock times: a missing `createdAt`
+  /// decodes to zero, and payloads written by older builds can carry
+  /// placeholders. An unreadable timestamp means the age is unknown, and
+  /// unknown age must never be grounds for deleting the user's prompt.
+  static const _plausibleEpochFloor = 946684800000; // 2000-01-01
+
+  /// Applies the age, count, and byte limits, dropping oldest first.
+  ///
+  /// Pure and total: the caller persists [OfflineQueueEviction.kept] and
+  /// shows [OfflineQueueEviction.notice].
+  static OfflineQueueEviction enforceLimits(
+    List<QueuedPrompt> entries, {
+    DateTime? now,
+  }) {
+    final at = (now ?? DateTime.now()).millisecondsSinceEpoch;
+    final cutoff = at - maxAge.inMilliseconds;
+    final ordered = [...entries]
+      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+    final fresh = [
+      for (final entry in ordered)
+        if (entry.createdAt < _plausibleEpochFloor ||
+            entry.createdAt >= cutoff)
+          entry,
+    ];
+    final expired = ordered.length - fresh.length;
+
+    var overflowed = 0;
+    if (fresh.length > maxEntries) {
+      overflowed = fresh.length - maxEntries;
+      fresh.removeRange(0, overflowed);
+    }
+
+    var oversized = 0;
+    var total = fresh.fold(0, (sum, entry) => sum + entry.payloadBytes);
+    while (fresh.length > 1 && total > maxTotalBytes) {
+      total -= fresh.removeAt(0).payloadBytes;
+      oversized += 1;
+    }
+
+    return OfflineQueueEviction(
+      kept: fresh,
+      expired: expired,
+      overflowed: overflowed,
+      oversized: oversized,
+    );
+  }
 
   List<QueuedPrompt> load() {
     final raw = prefs.getString(_key);
@@ -165,6 +270,11 @@ class OfflineQueueStore {
       return [];
     }
   }
+
+  /// Bytes the persisted queue occupies, for the storage readout in
+  /// settings. Measures the encoded blob, not the sum of the entries, so it
+  /// matches what the device actually holds.
+  int storedBytes() => prefs.getString(_key)?.length ?? 0;
 
   Future<bool> save(List<QueuedPrompt> entries) async {
     try {

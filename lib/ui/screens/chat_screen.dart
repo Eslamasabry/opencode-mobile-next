@@ -940,12 +940,25 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
     if (!mounted) return queued;
     if (queued) {
+      // The queue evicts on age and size. Whatever it dropped to make room
+      // is said here, in the same breath as the confirmation, rather than
+      // leaving the user to notice a missing draft later.
+      final evicted = _conn.takeQueueEvictionNotice();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Queued — will send when reconnected')),
+        SnackBar(
+          key: const Key('queued-draft-notice'),
+          content: Text(
+            evicted == null
+                ? 'Queued — will send when reconnected'
+                : 'Queued — will send when reconnected. $evicted',
+          ),
+          duration: Duration(seconds: evicted == null ? 4 : 6),
+        ),
       );
     } else {
       _showActionError(
-        'This draft exceeds the attachment size limits and cannot be queued.',
+        'This draft is too large to queue, or the queue is full of newer '
+        'drafts. Remove an attachment, or clear queued prompts in Settings.',
       );
     }
     return queued;

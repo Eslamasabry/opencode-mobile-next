@@ -410,4 +410,195 @@ void main() {
     expect(controller.queuedPromptCount, 0);
     expect(find.byKey(const ValueKey('queued-send-0')), findsNothing);
   });
+
+  group('queue limits', () {
+    QueuedPrompt sized(
+      String id, {
+      required int bytes,
+      required int createdAt,
+    }) => QueuedPrompt(
+      id: id,
+      profileID: 'profile-1',
+      sessionID: 'session-1',
+      text: 'x' * bytes,
+      createdAt: createdAt,
+    );
+
+    final now = DateTime.utc(2026, 8, 29);
+    int daysAgo(int days) =>
+        now.subtract(Duration(days: days)).millisecondsSinceEpoch;
+
+    test('entries past the TTL are dropped with a notice', () {
+      final result = OfflineQueueStore.enforceLimits([
+        sized('stale', bytes: 10, createdAt: daysAgo(15)),
+        sized('fresh', bytes: 10, createdAt: daysAgo(1)),
+      ], now: now);
+
+      expect(result.kept.map((entry) => entry.id), ['fresh']);
+      expect(result.expired, 1);
+      expect(result.notice, contains('1 too old to send'));
+      expect(result.notice, contains('Discarded 1 queued draft'));
+    });
+
+    test('an unreadable timestamp is kept rather than deleted', () {
+      // A missing createdAt decodes to zero. Unknown age is not evidence of
+      // staleness, and the user's prompt gets the benefit of the doubt.
+      final result = OfflineQueueStore.enforceLimits([
+        sized('unknown', bytes: 10, createdAt: 0),
+        sized('placeholder', bytes: 10, createdAt: 1),
+      ], now: now);
+
+      expect(result.kept, hasLength(2));
+      expect(result.expired, 0);
+      expect(result.notice, isNull);
+    });
+
+    test('the entry cap evicts the oldest first', () {
+      final result = OfflineQueueStore.enforceLimits([
+        for (var i = 0; i < OfflineQueueStore.maxEntries + 3; i++)
+          sized('q$i', bytes: 10, createdAt: daysAgo(1) + i),
+      ], now: now);
+
+      expect(result.kept, hasLength(OfflineQueueStore.maxEntries));
+      expect(result.overflowed, 3);
+      expect(result.kept.first.id, 'q3', reason: 'the oldest three go');
+      expect(result.notice, contains('3 to stay within the queue limit'));
+    });
+
+    test('the byte quota evicts the oldest until it fits', () {
+      final big = OfflineQueueStore.maxTotalBytes ~/ 2;
+      final result = OfflineQueueStore.enforceLimits([
+        sized('old', bytes: big, createdAt: daysAgo(3)),
+        sized('mid', bytes: big, createdAt: daysAgo(2)),
+        sized('new', bytes: big, createdAt: daysAgo(1)),
+      ], now: now);
+
+      expect(result.kept.map((entry) => entry.id), ['mid', 'new']);
+      expect(result.oversized, 1);
+      expect(
+        result.kept.fold(0, (sum, entry) => sum + entry.payloadBytes),
+        lessThanOrEqualTo(OfflineQueueStore.maxTotalBytes),
+      );
+    });
+
+    test('a single oversized entry is never evicted into nothing', () {
+      // The per-entry cap already refused anything larger; emptying the queue
+      // here would delete the only draft the user has.
+      final result = OfflineQueueStore.enforceLimits([
+        sized(
+          'only',
+          bytes: OfflineQueueStore.maxTotalBytes + 10,
+          createdAt: daysAgo(1),
+        ),
+      ], now: now);
+
+      expect(result.kept, hasLength(1));
+      expect(result.oversized, 0);
+    });
+
+    test('queuing past the entry cap evicts and reports it', () async {
+      final controller = await _controller(
+        _FakeApi(),
+        status: StreamStatus.disconnected,
+      );
+      addTearDown(controller.dispose);
+      for (var i = 0; i < OfflineQueueStore.maxEntries; i++) {
+        expect(
+          await controller.queuePrompt(
+            sized('q$i', bytes: 10, createdAt: daysAgo(1) + i),
+          ),
+          isTrue,
+        );
+      }
+      expect(controller.takeQueueEvictionNotice(), isNull);
+
+      expect(
+        await controller.queuePrompt(
+          sized('newest', bytes: 10, createdAt: daysAgo(0)),
+        ),
+        isTrue,
+      );
+
+      expect(controller.queuedPromptCount, OfflineQueueStore.maxEntries);
+      expect(
+        controller.queuedPromptsFor('session-1').map((entry) => entry.id),
+        contains('newest'),
+      );
+      final notice = controller.takeQueueEvictionNotice();
+      expect(notice, contains('1 to stay within the queue limit'));
+      // One-shot: the next read has nothing left to say.
+      expect(controller.takeQueueEvictionNotice(), isNull);
+    });
+
+    test('a stale queue is trimmed and rewritten on first read', () async {
+      SharedPreferences.setMockInitialValues({
+        'oc.profiles': jsonEncode([
+          {
+            'id': 'profile-1',
+            'name': 'Test server',
+            'baseUrl': 'http://localhost',
+            'username': '',
+          },
+        ]),
+        'oc.activeProfile': 'profile-1',
+        'oc.offlineQueue': jsonEncode([
+          {
+            'id': 'ancient',
+            'profileID': 'profile-1',
+            'sessionID': 'session-1',
+            'text': 'written a month ago',
+            'createdAt': DateTime.now()
+                .subtract(const Duration(days: 40))
+                .millisecondsSinceEpoch,
+          },
+          {
+            'id': 'recent',
+            'profileID': 'profile-1',
+            'sessionID': 'session-1',
+            'text': 'written today',
+            'createdAt': DateTime.now().millisecondsSinceEpoch,
+          },
+        ]),
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final store = ProfileStore(prefs: prefs);
+      await store.load();
+      final controller = ConnectionController(store);
+      addTearDown(controller.dispose);
+
+      expect(
+        controller.queuedPromptsFor('session-1').map((entry) => entry.id),
+        ['recent'],
+      );
+      expect(
+        controller.takeQueueEvictionNotice(),
+        contains('too old to send'),
+      );
+      // Written back, so the next start does not re-evict the same entry.
+      await Future<void>.delayed(Duration.zero);
+      expect(prefs.getString('oc.offlineQueue'), isNot(contains('ancient')));
+    });
+
+    test('bulk clears drop everything and report the sizes', () async {
+      final controller = await _controller(
+        _FakeApi(),
+        status: StreamStatus.disconnected,
+      );
+      addTearDown(controller.dispose);
+      await controller.queuePrompt(_entry('q1'));
+      await controller.saveSessionDraft('session-1', 'unsent text');
+
+      expect(controller.totalQueuedPromptCount, 1);
+      expect(controller.totalSessionDraftCount, 1);
+      expect(controller.queuedPromptBytes, greaterThan(0));
+      expect(controller.sessionDraftBytes, greaterThan(0));
+
+      expect(await controller.clearAllQueuedPrompts(), isTrue);
+      expect(await controller.clearAllSessionDrafts(), isTrue);
+      expect(controller.totalQueuedPromptCount, 0);
+      expect(controller.totalSessionDraftCount, 0);
+      expect(controller.queuedPromptBytes, 0);
+      expect(controller.sessionDraftBytes, 0);
+    });
+  });
 }

@@ -60,6 +60,9 @@ class SessionDraftStore {
 
   SessionDraftStore({required this.prefs});
 
+  /// Bytes the persisted drafts occupy, for the storage readout in settings.
+  int storedBytes() => prefs.getString(_key)?.length ?? 0;
+
   Map<String, SessionDraft> load() {
     final raw = prefs.getString(_key);
     if (raw == null || raw.isEmpty) return {};

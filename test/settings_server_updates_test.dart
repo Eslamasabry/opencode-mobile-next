@@ -5,6 +5,7 @@ import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/state/connection.dart';
+import 'package:opencode_mobile/state/offline_queue.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/app_diagnostics_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
@@ -612,5 +613,105 @@ void main() {
       expect(find.byKey(ValueKey(key)), findsOneWidget);
     }
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('privacy settings size and clear the unsent work on device', (
+    tester,
+  ) async {
+    final controller = await _controllerFor(
+      'http://127.0.0.1:4096',
+      repository: _EmptyPermissionRepository(),
+    );
+    addTearDown(controller.dispose);
+    await controller.queuePrompt(
+      QueuedPrompt(
+        id: 'queued-1',
+        profileID: 'server',
+        sessionID: 'session-1',
+        text: 'unsent prompt',
+        createdAt: DateTime.now().millisecondsSinceEpoch,
+      ),
+    );
+    await controller.saveSessionDraft('session-1', 'half-typed thought');
+
+    await tester.pumpWidget(
+      MaterialApp(home: SettingsScreen(controller: controller)),
+    );
+    await tester.pumpAndSettle();
+    await _openCategory(tester, 'settings-category-privacy');
+
+    // The readout names both stores and the expiry, so "where did my draft
+    // go" has an answer before it happens.
+    final usage = find.byKey(const ValueKey('local-storage-usage'));
+    await tester.scrollUntilVisible(
+      usage,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.textContaining('1 queued prompt'), findsOneWidget);
+    expect(find.textContaining('1 draft'), findsOneWidget);
+    expect(find.textContaining('discarded after 14 days'), findsOneWidget);
+
+    // Clearing confirms first and says what it deletes.
+    await tester.tap(find.byKey(const ValueKey('clear-queued-prompts')));
+    await tester.pumpAndSettle();
+    expect(find.text('Delete queued prompts?'), findsOneWidget);
+    expect(
+      find.textContaining('Nothing on the server is affected'),
+      findsOneWidget,
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.pumpAndSettle();
+
+    expect(controller.totalQueuedPromptCount, 0);
+    expect(find.text('Queued prompts deleted'), findsOneWidget);
+    expect(find.textContaining('Nothing is waiting to send'), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('clear-session-drafts')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.pumpAndSettle();
+
+    expect(controller.totalSessionDraftCount, 0);
+    expect(find.text('Drafts deleted'), findsOneWidget);
+  });
+
+  testWidgets('the clear rows are inert when there is nothing to clear', (
+    tester,
+  ) async {
+    final controller = await _controllerFor(
+      'http://127.0.0.1:4096',
+      repository: _EmptyPermissionRepository(),
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(home: SettingsScreen(controller: controller)),
+    );
+    await tester.pumpAndSettle();
+    await _openCategory(tester, 'settings-category-privacy');
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('clear-queued-prompts')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    expect(
+      tester
+          .widget<ListTile>(find.byKey(const ValueKey('clear-queued-prompts')))
+          .enabled,
+      isFalse,
+    );
+    expect(
+      tester
+          .widget<ListTile>(find.byKey(const ValueKey('clear-session-drafts')))
+          .enabled,
+      isFalse,
+    );
+    expect(find.text('0 B of unsent work — 0 queued prompts (0 B) and 0 '
+        'drafts (0 B). Queued prompts are discarded after 14 days.'),
+        findsOneWidget);
   });
 }
