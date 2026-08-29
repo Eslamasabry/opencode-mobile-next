@@ -234,21 +234,24 @@ have WIP commits; they were told to commit everything durable):
    /api/health), password step in servers_screen/first-run per design §1,
    v2 gateway construction in connection.dart's wiring seams, 401 banner.
    Committed so far at last check: `abf4c87` (probe flavor detection),
-   `b07716b` (v2 gateway pair wired into the connection controller) —
-   likely REMAINING: the password-step UI in servers_screen/first-run,
-   the 401 banner, live proof, tests. Check the branch tip and the last
-   commit body's CONTINUATION note before resuming.
+   `b07716b` (v2 gateway pair wired into the connection controller),
+   `4545e3a` (v2 auth in the server editor + connection banner) —
+   REMAINING: the connection-wiring tests (a
+   `test/connection_v2_gateway_test.dart` was in progress) and live
+   proof. Check the branch tip and the last commit body's CONTINUATION
+   note before resuming.
 2. `port/v2-interaction` — additive FormGateway/InboxGateway in the domain,
    forms wiring to FormRenderer, permission bottom sheet with
    reject-with-message (§3), PendingSendsStrip unifying offline drafts +
    v2 inbox (§5, tap=steer / long-press=queue).
    Committed so far at last check: `c0cfb2b` (forms/inbox gateways in
    domain + v2 transport), `291cbc9` (pending forms/inbox in connection
-   state), `3f4c682` (permission bottom sheet) — likely REMAINING: forms
-   surfacing in chat + Mission Control/Requests counts, the
-   PendingSendsStrip + steer/queue send affordance, notification Reply
-   mapping, tests, live smoke. Check the branch tip and CONTINUATION
-   notes before resuming.
+   state), `3f4c682` (permission bottom sheet), `e3a9550` (forms in
+   chat + Requests + Mission Control counts), `d7367ca` (WIP:
+   PendingSendsStrip merging offline drafts with v2 inbox) — REMAINING:
+   the composer steer/queue send affordance (`_ComposerSubmit` rewrite
+   was in progress), notification Reply mapping, tests, live smoke.
+   Check the branch tip and CONTINUATION notes before resuming.
 
 If the agents finished after this note was written, their branches will
 have more commits and a final report in their transcripts; merge
