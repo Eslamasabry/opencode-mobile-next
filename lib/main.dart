@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'background/live_background.dart';
 import 'diagnostics/app_diagnostics.dart';
 import 'l10n/app_localizations.dart';
+import 'platform/platform_capabilities.dart';
 import 'state/connection.dart';
 import 'state/profiles.dart';
 import 'update/desktop_release_check.dart';
@@ -31,6 +32,13 @@ Future<void> main() async {
   if (!kIsWeb && (Platform.isLinux || Platform.isWindows || Platform.isMacOS)) {
     // Desktop windows get a sane default and floor; Android never reaches
     // these calls.
+    //
+    // The one platform branch that deliberately stays on dart:io rather than
+    // PlatformCapabilities: this is about the process that is actually
+    // running — whether a native window exists to size — not about a feature
+    // a test needs to pump both ways. `main` is never entered by the suite,
+    // so routing it through an overridable seam would only add a way for a
+    // stray override to leave a real desktop window unshown.
     await windowManager.ensureInitialized();
     const options = WindowOptions(
       size: Size(900, 700),
@@ -214,7 +222,13 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
     unawaited(_harvestDynamicColors());
     _controller = ref.read(connProvider);
     _controller.addListener(_controllerChanged);
-    _updateService = widget.updateService ?? ShorebirdAppUpdateService();
+    // Only the Android build is Shorebird-released; desktop gets its update
+    // news from the GitHub release check in DesktopReleaseNotice below.
+    _updateService =
+        widget.updateService ??
+        (platformCapabilities.supportsCodePush
+            ? ShorebirdAppUpdateService()
+            : const UnavailableAppUpdateService());
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_controller.restoreBackgroundLiveMode());
@@ -348,7 +362,11 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
               '/requests': (_) => ActivityScreen(controller: _controller),
               '/guide': (_) => GuideScreen(embedded: false),
               '/about': (_) => const AboutScreen(),
-              '/termux-setup': (_) => const TermuxSetupScreen(),
+              // Termux is an Android app. Registering the route everywhere
+              // meant a desktop deep link, or any leftover push, landed on a
+              // setup flow with no bridge behind it.
+              if (platformCapabilities.supportsTermux)
+                '/termux-setup': (_) => const TermuxSetupScreen(),
               '/debug': (_) => AppDiagnosticsScreen(controller: _controller),
             },
             onGenerateRoute: (settings) {

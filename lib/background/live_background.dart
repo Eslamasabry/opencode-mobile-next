@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../platform/platform_capabilities.dart';
+
 typedef BackgroundMethodInvoker =
     Future<Map<String, dynamic>> Function(
       String method, [
@@ -190,6 +192,7 @@ class BackgroundLiveController extends ChangeNotifier {
     bool quickReply = false,
     String requestID = '',
   }) async {
+    if (!platformCapabilities.supportsNotifications) return false;
     if (!enabled || !notificationGranted) return false;
     try {
       final result = await _invoke('showCodingAlert', {
@@ -261,6 +264,7 @@ class BackgroundLiveController extends ChangeNotifier {
 
   /// Cancels a coding notification even if live mode has since been disabled.
   Future<bool> dismissCodingAlert(String key) async {
+    if (!platformCapabilities.supportsNotifications) return false;
     try {
       final result = await _invoke('dismissCodingAlert', {'key': key});
       return result['dismissed'] == true;
@@ -275,6 +279,7 @@ class BackgroundLiveController extends ChangeNotifier {
 
   /// Consumes one Android notification destination after a cold or warm open.
   Future<CodingAlertOpen?> consumeCodingAlertOpen() async {
+    if (!platformCapabilities.supportsNotifications) return null;
     try {
       final result = await _invoke('consumeCodingAlertOpen');
       return CodingAlertOpen.fromPlatform(result);
@@ -288,6 +293,11 @@ class BackgroundLiveController extends ChangeNotifier {
   }
 
   Future<bool> _run(String method, {bool persist = true}) async {
+    // The foreground service lives in the Android runner alone. Asking for it
+    // elsewhere only produced a MissingPluginException and an error string
+    // parked on a controller whose UI is already hidden; saying no up front
+    // keeps `lastError` meaning "something went wrong", not "wrong OS".
+    if (!platformCapabilities.supportsBackgroundService) return false;
     if (busy) return false;
     busy = true;
     lastError = null;

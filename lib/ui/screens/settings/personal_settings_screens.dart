@@ -397,15 +397,20 @@ class AboutSettingsScreen extends StatelessWidget {
               MaterialPageRoute<void>(builder: (_) => const AboutScreen()),
             ),
           ),
-          ListTile(
-            leading: const Icon(Icons.policy_outlined),
-            title: const Text('Voice licenses and provenance'),
-            subtitle: const Text(
-              'Whisper models, sherpa-onnx, ONNX Runtime, and record',
+          // The voice notices cover models this build can neither download
+          // nor run off Android; the general notices below still list every
+          // component that ships here.
+          if (platformCapabilities.supportsVoice)
+            ListTile(
+              key: const Key('settings-voice-notices'),
+              leading: const Icon(Icons.policy_outlined),
+              title: const Text('Voice licenses and provenance'),
+              subtitle: const Text(
+                'Whisper models, sherpa-onnx, ONNX Runtime, and record',
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => showVoiceNotices(context),
             ),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => showVoiceNotices(context),
-          ),
           ListTile(
             leading: const Icon(Icons.info_outline_rounded),
             title: const Text('About and open source notices'),

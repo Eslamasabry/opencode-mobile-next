@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
 import '../app_theme.dart';
@@ -77,10 +78,15 @@ class HostManagementScreen extends StatelessWidget {
               label: 'Read the server password for this app',
               command: 'bash ubuntu-opencode.sh password',
             ),
-            _HostCommandTile(
-              label: 'Reach it from this phone over USB',
-              command: 'adb reverse tcp:$port tcp:$port',
-            ),
+            // `adb reverse` forwards a port to an attached *Android* device.
+            // On desktop the app and the server share a machine, so the tile
+            // described a cable that is not there.
+            if (platformCapabilities.supportsUsbHostBridge)
+              _HostCommandTile(
+                key: const Key('host-command-adb-reverse'),
+                label: 'Reach it from this phone over USB',
+                command: 'adb reverse tcp:$port tcp:$port',
+              ),
             const SectionLabel('Day-to-day — run on your computer'),
             _HostCommandTile(
               label: 'Service status',
@@ -119,6 +125,7 @@ class HostManagementScreen extends StatelessWidget {
 
 class _HostCommandTile extends StatelessWidget {
   const _HostCommandTile({
+    super.key,
     required this.label,
     required this.command,
     this.detail,

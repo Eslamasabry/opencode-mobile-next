@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/server_probe.dart' show ServerFlavor;
+import '../platform/platform_capabilities.dart';
 
 /// One opencode server the user can connect to.
 class ServerProfile {
@@ -135,7 +136,11 @@ String? validateServerProfileUrl(
     return 'Enter a complete server URL, such as https://server.example:4096.';
   }
   if (uri.scheme != 'https' && uri.scheme != 'http') {
-    return 'Server URLs must use https://, or http:// for local Termux.';
+    // Both builds allow http only on loopback; only one of them reaches that
+    // loopback through Termux, so only one says so.
+    return platformCapabilities.supportsTermux
+        ? 'Server URLs must use https://, or http:// for local Termux.'
+        : 'Server URLs must use https://, or http:// for a local server.';
   }
   if (uri.userInfo.isNotEmpty) {
     return 'Do not put credentials in the URL. Use the fields below.';

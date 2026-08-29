@@ -13,6 +13,7 @@ import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../api/server_probe.dart' show ServerFlavor;
 import '../../api/sse.dart';
+import '../../platform/platform_capabilities.dart';
 import '../../state/offline_queue.dart';
 import '../../state/connection.dart';
 import '../../state/review_handoff.dart';
@@ -1310,6 +1311,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _openVoice() async {
+    // The tools sheet hides the entry point off Android; this keeps a
+    // programmatic call (a shortcut, a restored intent) from starting a model
+    // download for a recognizer that can never be fed.
+    if (!platformCapabilities.supportsVoice) return;
     if (_voiceOpening || _sending) return;
     setState(() => _voiceOpening = true);
     try {

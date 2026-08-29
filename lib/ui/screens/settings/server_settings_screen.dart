@@ -148,7 +148,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
     // Termux management only exists on Android; desktop loopback servers
     // follow the ordinary remote-update path.
     final managedLocally =
-        defaultTargetPlatform == TargetPlatform.android &&
+        platformCapabilities.supportsTermux &&
         TermuxBridge.managesServerUrl(profile?.baseUrl);
     final availableVersion = managedLocally
         ? null
