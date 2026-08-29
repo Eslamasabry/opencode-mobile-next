@@ -215,7 +215,13 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
     unawaited(_harvestDynamicColors());
     _controller = ref.read(connProvider);
     _controller.addListener(_controllerChanged);
-    _updateService = widget.updateService ?? ShorebirdAppUpdateService();
+    // Only the Android build is Shorebird-released; desktop gets its update
+    // news from the GitHub release check in DesktopReleaseNotice below.
+    _updateService =
+        widget.updateService ??
+        (platformCapabilities.supportsCodePush
+            ? ShorebirdAppUpdateService()
+            : const UnavailableAppUpdateService());
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_controller.restoreBackgroundLiveMode());

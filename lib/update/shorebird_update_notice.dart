@@ -36,6 +36,25 @@ class ShorebirdAppUpdateService implements AppUpdateService {
   Future<void> downloadUpdate() => _updater.update();
 }
 
+/// The update service for a build Shorebird does not patch.
+///
+/// Desktop bundles are released as GitHub artifacts, not Shorebird patches,
+/// so constructing a `ShorebirdUpdater` there only produces an updater that
+/// reports itself unavailable after doing FFI work. This says so up front,
+/// and keeps the notice from ever entering its check loop.
+class UnavailableAppUpdateService implements AppUpdateService {
+  const UnavailableAppUpdateService();
+
+  @override
+  bool get isAvailable => false;
+
+  @override
+  Future<AppUpdateState> checkForUpdate() async => AppUpdateState.unavailable;
+
+  @override
+  Future<void> downloadUpdate() async {}
+}
+
 class ShorebirdUpdateNotice extends StatefulWidget {
   const ShorebirdUpdateNotice({
     super.key,

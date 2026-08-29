@@ -1,10 +1,10 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/models.dart';
+import '../platform/platform_capabilities.dart';
 
 /// Persists a compact recent-sessions snapshot for the Android home-screen
 /// widget and asks native to redraw it.
@@ -21,9 +21,7 @@ class WidgetSessionSnapshot {
     Future<void> Function()? refreshNative,
     bool? isAndroid,
   }) : _refreshNative = refreshNative ?? _refreshViaChannel,
-       _isAndroid =
-           isAndroid ??
-           (!kIsWeb && defaultTargetPlatform == TargetPlatform.android);
+       _isAndroid = isAndroid ?? platformCapabilities.supportsHomeWidget;
 
   /// Read by the native widget as `flutter.oc.widgetSessions`.
   static const prefsKey = 'oc.widgetSessions';

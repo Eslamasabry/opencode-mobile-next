@@ -1,12 +1,11 @@
 import 'dart:async';
-import 'dart:io' show Platform;
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../platform/platform_capabilities.dart';
 import '../ui/widgets/external_link.dart';
 
 /// Desktop builds cannot receive Shorebird patches, so Linux and Windows
@@ -79,8 +78,14 @@ class DesktopReleaseChecker {
   }
 }
 
-bool get _runningOnDesktop =>
-    !kIsWeb && (Platform.isLinux || Platform.isWindows);
+/// The complement of Shorebird code push: the platforms that ship a release
+/// artifact but cannot receive a patch.
+///
+/// Read through the capability seam rather than `dart:io`'s `Platform`, which
+/// reports the *host* — under `flutter_test` on Linux that made this true for
+/// every widget test that mounted the app, so the suite quietly enabled a
+/// GitHub release check on what it was pretending was a phone.
+bool get _runningOnDesktop => platformCapabilities.supportsDesktopReleaseCheck;
 
 /// Mirrors the Shorebird notice's lifecycle: checks on start and resume,
 /// throttled, showing one snackbar per run with a View action that opens the

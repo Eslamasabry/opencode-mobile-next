@@ -10,8 +10,11 @@ import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/background/live_background.dart';
+import 'package:opencode_mobile/background/widget_snapshot.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/guide_screen.dart';
+import 'package:opencode_mobile/ui/screens/host_management_screen.dart';
 import 'package:opencode_mobile/ui/screens/servers_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/screens/termux_setup_screen.dart';
@@ -324,5 +327,131 @@ void main() {
         );
       },
     );
+  });
+
+  group('Ubuntu host management', () {
+    Future<void> pumpHost(WidgetTester tester) async {
+      final controller = await _chatController();
+      addTearDown(controller.dispose);
+      await tester.binding.setSurfaceSize(const Size(500, 2000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        MaterialApp(home: HostManagementScreen(controller: controller)),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('offers the USB port forward on Android', (tester) async {
+      await pumpHost(tester);
+      expect(
+        find.byKey(const Key('host-command-adb-reverse')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('drops the adb command on desktop', (tester) async {
+      onDesktop();
+      await pumpHost(tester);
+      expect(find.byKey(const Key('host-command-adb-reverse')), findsNothing);
+      expect(find.textContaining('adb reverse'), findsNothing);
+      // The host commands that do apply are untouched.
+      expect(find.text('Service status'), findsOneWidget);
+    });
+  });
+
+  group('the background live controller', () {
+    Future<BackgroundLiveController> build({
+      required List<String> calls,
+    }) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      return BackgroundLiveController(
+        preferences: prefs,
+        invoke: (method, [arguments]) async {
+          calls.add(method);
+          return <String, dynamic>{
+            'active': true,
+            'enabled': true,
+            'notificationGranted': true,
+          };
+        },
+      );
+    }
+
+    test('talks to the service on Android', () async {
+      final calls = <String>[];
+      final controller = await build(calls: calls);
+      addTearDown(controller.dispose);
+      await controller.restore();
+      expect(calls, ['getStatus']);
+      expect(controller.active, isTrue);
+    });
+
+    test('never reaches the channel on desktop', () async {
+      debugPlatformCapabilities = const PlatformCapabilities.linuxDesktop();
+      final calls = <String>[];
+      final controller = await build(calls: calls);
+      addTearDown(controller.dispose);
+
+      await controller.restore();
+      await controller.refreshStatus();
+      expect(await controller.setEnabled(true), isFalse);
+      expect(
+        await controller.showCodingAlert(
+          kind: CodingAlertKind.complete,
+          sessionID: 'session-1',
+          key: 'k',
+        ),
+        isFalse,
+      );
+      expect(await controller.dismissCodingAlert('k'), isFalse);
+      expect(await controller.consumeCodingAlertOpen(), isNull);
+
+      expect(calls, isEmpty);
+      expect(controller.active, isFalse);
+      // No error is parked either: nothing failed, the feature is simply not
+      // part of this build.
+      expect(controller.lastError, isNull);
+    });
+  });
+
+  group('the home-screen widget snapshot', () {
+    Future<(WidgetSessionSnapshot, List<int>)> build() async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final refreshes = <int>[];
+      return (
+        WidgetSessionSnapshot(
+          prefs: prefs,
+          refreshNative: () async => refreshes.add(1),
+        ),
+        refreshes,
+      );
+    }
+
+    test('writes and redraws on Android', () async {
+      final (snapshot, refreshes) = await build();
+      await snapshot.update(
+        sessions: [Session(id: 'a')],
+        busySessions: const {},
+        connected: true,
+        profileID: 'p',
+      );
+      expect(refreshes, hasLength(1));
+    });
+
+    test('writes nothing on desktop, where there is no widget', () async {
+      debugPlatformCapabilities = const PlatformCapabilities.linuxDesktop();
+      final (snapshot, refreshes) = await build();
+      await snapshot.update(
+        sessions: [Session(id: 'a')],
+        busySessions: const {},
+        connected: true,
+        profileID: 'p',
+      );
+      expect(refreshes, isEmpty);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString(WidgetSessionSnapshot.prefsKey), isNull);
+    });
   });
 }
