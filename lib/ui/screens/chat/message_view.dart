@@ -173,44 +173,54 @@ class _EmptyTranscript extends StatelessWidget {
                               fontFamily: 'AppMono',
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Text('Start coding', style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Describe a change, ask about this project, '
-                      'or paste an error.',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        for (final suggestion in _suggestions)
-                          ActionChip(
-                            key: ValueKey('empty-suggestion-$suggestion'),
-                            label: Text(suggestion),
-                            onPressed: () => onSuggestion(suggestion),
+                          const SizedBox(width: 8),
+                          Container(
+                            width: 11,
+                            height: 22,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: .45,
+                              ),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
                           ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Tip: long-press any message for copy, fork, and delete.',
-                      key: const ValueKey('empty-transcript-actions-hint'),
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                        ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+                      Text('Start coding', style: theme.textTheme.titleMedium),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Describe a change, ask about this project, '
+                        'or paste an error.',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final suggestion in _suggestions)
+                            ActionChip(
+                              key: ValueKey('empty-suggestion-$suggestion'),
+                              label: Text(suggestion),
+                              onPressed: () => onSuggestion(suggestion),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Tip: long-press any message for copy, fork, and delete.',
+                        key: const ValueKey('empty-transcript-actions-hint'),
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -855,115 +865,116 @@ class _MessageView extends StatelessWidget {
       // keeps each message part as its own semantics node.
       excludeFromSemantics: true,
       child: AnimatedContainer(
-      // The key must not encode the highlight flag: a highlight-driven
-      // remount would kill this fade and reset per-part expansion state.
-      key: ValueKey('message-highlight-${m.info.id}'),
-      duration: const Duration(milliseconds: 180),
-      padding: const EdgeInsets.fromLTRB(6, 4, 6, 10),
-      decoration: BoxDecoration(
-        color: highlighted
-            ? theme.colorScheme.primaryContainer.withValues(alpha: .24)
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: isUser
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
-        children: [
-          Container(
-            constraints: BoxConstraints(
-              // Keep prompts readable on wide screens instead of stretching a
-              // bubble across a tablet.
-              maxWidth: isUser && bubbleWidthCap > 640 ? 640 : bubbleWidthCap,
+        // The key must not encode the highlight flag: a highlight-driven
+        // remount would kill this fade and reset per-part expansion state.
+        key: ValueKey('message-highlight-${m.info.id}'),
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.fromLTRB(6, 4, 6, 10),
+        decoration: BoxDecoration(
+          color: highlighted
+              ? theme.colorScheme.primaryContainer.withValues(alpha: .24)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: isUser
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
+          children: [
+            Container(
+              constraints: BoxConstraints(
+                // Keep prompts readable on wide screens instead of stretching a
+                // bubble across a tablet.
+                maxWidth: isUser && bubbleWidthCap > 640 ? 640 : bubbleWidthCap,
+              ),
+              padding: isUser
+                  ? const EdgeInsets.symmetric(horizontal: 14, vertical: 10)
+                  : const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              decoration: isUser
+                  ? BoxDecoration(
+                      color: theme.colorScheme.primaryContainer.withValues(
+                        alpha: .55,
+                      ),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        topRight: Radius.circular(16),
+                        bottomLeft: Radius.circular(16),
+                        bottomRight: Radius.circular(5),
+                      ),
+                    )
+                  : null,
+              child: isUser
+                  ? _UserMessageContent(parts: visibleParts)
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (final run in assistantRuns)
+                          if (run.grouped)
+                            _ToolCallGroup(
+                              key: ValueKey(
+                                'tools:${run.parts.first.id ?? run.parts.first.callID}',
+                              ),
+                              parts: run.parts,
+                              expansionStore: expansionStore,
+                              filePreviewLoader: filePreviewLoader,
+                              onAttachFile: onAttachFile,
+                              onDownloadFile: onDownloadFile,
+                            )
+                          else
+                            _AssistantMessagePart(
+                              part: run.parts.single,
+                              reasoningExpanded: reasoningExpanded,
+                              expansionStore: expansionStore,
+                              filePreviewLoader: filePreviewLoader,
+                              onAttachFile: onAttachFile,
+                              onDownloadFile: onDownloadFile,
+                            ),
+                      ],
+                    ),
             ),
-            padding: isUser
-                ? const EdgeInsets.symmetric(horizontal: 14, vertical: 10)
-                : const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-            decoration: isUser
-                ? BoxDecoration(
-                    color: theme.colorScheme.primaryContainer.withValues(
-                      alpha: .55,
-                    ),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      topRight: Radius.circular(16),
-                      bottomLeft: Radius.circular(16),
-                      bottomRight: Radius.circular(5),
-                    ),
-                  )
-                : null,
-            child: isUser
-                ? _UserMessageContent(parts: visibleParts)
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      for (final run in assistantRuns)
-                        if (run.grouped)
-                          _ToolCallGroup(
-                            key: ValueKey(
-                              'tools:${run.parts.first.id ?? run.parts.first.callID}',
-                            ),
-                            parts: run.parts,
-                            expansionStore: expansionStore,
-                            filePreviewLoader: filePreviewLoader,
-                            onAttachFile: onAttachFile,
-                            onDownloadFile: onDownloadFile,
-                          )
-                        else
-                          _AssistantMessagePart(
-                            part: run.parts.single,
-                            reasoningExpanded: reasoningExpanded,
-                            expansionStore: expansionStore,
-                            filePreviewLoader: filePreviewLoader,
-                            onAttachFile: onAttachFile,
-                            onDownloadFile: onDownloadFile,
+            if (metaParts.isNotEmpty || onLongPress != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 1, left: 6, right: 6),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (metaParts.isNotEmpty)
+                      Flexible(
+                        child: Text(
+                          key: ValueKey('message-meta-${m.info.id}'),
+                          metaParts.join('  ·  '),
+                          style: theme.textTheme.labelSmall!.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
-                    ],
-                  ),
-          ),
-          if (metaParts.isNotEmpty || onLongPress != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 1, left: 6, right: 6),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (metaParts.isNotEmpty)
-                    Flexible(
-                      child: Text(
-                        key: ValueKey('message-meta-${m.info.id}'),
-                        metaParts.join('  ·  '),
-                        style: theme.textTheme.labelSmall!.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
-                    ),
-                  if (onLongPress != null)
-                    Semantics(
-                      button: true,
-                      label: 'Message actions',
-                      child: Tooltip(
-                        message: 'Message actions',
-                        child: InkWell(
-                          key: ValueKey('message-actions-${m.info.id}'),
-                          customBorder: const StadiumBorder(),
-                          onTap: onLongPress,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 6,
-                            ),
-                            child: Icon(
-                              Icons.more_horiz_rounded,
-                              size: 16,
-                              color: theme.colorScheme.onSurfaceVariant
-                                  .withValues(alpha: .8),
+                    if (onLongPress != null)
+                      Semantics(
+                        button: true,
+                        label: 'Message actions',
+                        child: Tooltip(
+                          message: 'Message actions',
+                          child: InkWell(
+                            key: ValueKey('message-actions-${m.info.id}'),
+                            customBorder: const StadiumBorder(),
+                            onTap: onLongPress,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 6,
+                              ),
+                              child: Icon(
+                                Icons.more_horiz_rounded,
+                                size: 16,
+                                color: theme.colorScheme.onSurfaceVariant
+                                    .withValues(alpha: .8),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             if (m.info.errorText != null)
               Padding(
