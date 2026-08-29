@@ -50,7 +50,7 @@ class _FilesScreenState extends State<FilesScreen> {
   String? _searchOriginPath;
   final _search = TextEditingController();
   Timer? _symbolSearchDebounce;
-  ProductRepository? _repository;
+  ServerOperationsGateway? _repository;
   int _locationRevision = -1;
   int _controllerLocationRevision = -1;
   int _dataRefreshRevision = -1;
@@ -145,7 +145,7 @@ class _FilesScreenState extends State<FilesScreen> {
     }
   }
 
-  int _revisionOf(ProductRepository? repository) => Object.hash(
+  int _revisionOf(ServerOperationsGateway? repository) => Object.hash(
     widget.controller.locationRevision,
     repository is LocationAwareProductRepository
         ? (repository as LocationAwareProductRepository).locationRevision
@@ -289,7 +289,7 @@ class _FilesScreenState extends State<FilesScreen> {
     await _loadFileStatuses(repository);
   }
 
-  Future<void> _loadFileStatuses(ProductRepository repository) async {
+  Future<void> _loadFileStatuses(ServerOperationsGateway repository) async {
     final generation = ++_fileStatusesGeneration;
     setState(() {
       _fileStatusesLoading = true;

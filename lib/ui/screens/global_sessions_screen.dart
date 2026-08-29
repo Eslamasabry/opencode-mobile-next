@@ -69,7 +69,7 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
     setState(() {});
   }
 
-  Future<ProductRepository> _repository() async {
+  Future<ServerOperationsGateway> _repository() async {
     final repository = await widget.controller.prepareActionRepository();
     if (repository != null) return repository;
     throw const ProductException('OpenCode is reconnecting. Try again.');

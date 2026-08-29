@@ -61,7 +61,7 @@ class _RelationsController extends ConnectionController {
   _RelationsController(super.store);
 
   @override
-  Future<ProductRepository?> prepareActionRepository() async => repository;
+  Future<ServerOperationsGateway?> prepareActionRepository() async => repository;
 }
 
 Future<_RelationsController> _controller() async {

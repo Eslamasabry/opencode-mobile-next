@@ -1329,7 +1329,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
-  Future<ProductRepository> _requireActionRepository() async {
+  Future<ServerOperationsGateway> _requireActionRepository() async {
     final repository = await _conn.prepareActionRepository();
     if (repository != null) return repository;
     throw StateError(

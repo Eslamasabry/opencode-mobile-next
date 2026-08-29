@@ -164,7 +164,7 @@ class _SessionDestinationSheetState extends State<_SessionDestinationSheet> {
   }
 
   Future<List<_SessionDestination>> _loadMoveDestinations(
-    ProductRepository repository,
+    ServerOperationsGateway repository,
     WorkspaceProject project,
     Session? session,
     String currentDirectory,
@@ -193,7 +193,7 @@ class _SessionDestinationSheetState extends State<_SessionDestinationSheet> {
   }
 
   Future<List<_SessionDestination>> _loadWarpDestinations(
-    ProductRepository repository,
+    ServerOperationsGateway repository,
     WorkspaceProject project,
     Session? session,
   ) async {
