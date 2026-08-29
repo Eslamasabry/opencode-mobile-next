@@ -119,9 +119,20 @@ class _UnhealthyV1Api extends OpenCodeApi {
   Future<Health> health() async => Health(healthy: false, version: '1.18.23');
 }
 
-Future<ProfileStore> _store() async {
+/// Records saves without touching the real secure-storage channel, which is
+/// unmocked in widget tests and would hang a real upsert.
+class _RecordingStore extends ProfileStore {
+  _RecordingStore({required super.prefs});
+
+  final saved = <ServerProfile>[];
+
+  @override
+  Future<void> upsert(ServerProfile profile) async => saved.add(profile);
+}
+
+Future<_RecordingStore> _store() async {
   SharedPreferences.setMockInitialValues({});
-  return ProfileStore(prefs: await SharedPreferences.getInstance());
+  return _RecordingStore(prefs: await SharedPreferences.getInstance());
 }
 
 ServerProfile _v2Profile() => ServerProfile(
@@ -156,6 +167,8 @@ void main() {
         return (gateway: gateway, operations: operations);
       },
     );
+    // Disposed at the end of the body, not in tearDown: the polling
+    // fallback timer must be cancelled before the tester's invariant check.
     addTearDown(controller.dispose);
 
     await controller.connect(_v2Profile());
@@ -171,6 +184,7 @@ void main() {
     // v1 EventStream factory.
     expect(gateway.channel?.started, isTrue);
     expect(gateway.globalChannel?.started, isTrue);
+    controller.dispose();
   });
 
   testWidgets('a mid-session 401 sets passwordRejected until recovery', (
@@ -185,6 +199,8 @@ void main() {
         operations: _FakeV2Operations(),
       ),
     );
+    // Disposed at the end of the body, not in tearDown: the polling
+    // fallback timer must be cancelled before the tester's invariant check.
     addTearDown(controller.dispose);
     await controller.connect(_v2Profile());
     await tester.pump();
@@ -208,6 +224,7 @@ void main() {
     gateway.streamStatus!(StreamStatus.connected);
     expect(controller.passwordRejected, isFalse);
     await tester.pump();
+    controller.dispose();
   });
 
   testWidgets('a wrong cached flavor re-probes once and retries as v2', (
@@ -223,8 +240,9 @@ void main() {
         flavor: ServerFlavor.v2,
       );
     };
+    final store = await _store();
     final controller = ConnectionController(
-      await _store(),
+      store,
       apiFactory: (_) => v1Api,
       repositoryFactory: (_) => _FakeV1Repository(),
       v2GatewayFactory: (_) => (
@@ -232,6 +250,8 @@ void main() {
         operations: _FakeV2Operations(),
       ),
     );
+    // Disposed at the end of the body, not in tearDown: the polling
+    // fallback timer must be cancelled before the tester's invariant check.
     addTearDown(controller.dispose);
 
     final profile = ServerProfile(
@@ -247,9 +267,12 @@ void main() {
     expect(probeCalls, 1);
     expect(profile.flavor, ServerFlavor.v2);
     expect(profile.serverVersion, '0.0.0-beta-18600');
+    // The corrected flavor is persisted so the next connect skips detection.
+    expect(store.saved.single.flavor, ServerFlavor.v2);
     expect(controller.api, same(gateway));
     expect(gateway.healthCalls, 1);
     expect(v1Api.healthCalls, 1);
+    controller.dispose();
   });
 
   testWidgets('an unhealthy v1 server fails closed without a re-probe', (
@@ -268,6 +291,8 @@ void main() {
       apiFactory: (_) => _UnhealthyV1Api(),
       repositoryFactory: (_) => _FakeV1Repository(),
     );
+    // Disposed at the end of the body, not in tearDown: the polling
+    // fallback timer must be cancelled before the tester's invariant check.
     addTearDown(controller.dispose);
 
     await controller.connect(
@@ -282,5 +307,6 @@ void main() {
     expect(probeCalls, 0, reason: 'unhealthy is not a flavor problem');
     expect(controller.api, isNull);
     expect(controller.lastError, contains('unhealthy'));
+    controller.dispose();
   });
 }
