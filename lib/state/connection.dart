@@ -653,6 +653,12 @@ class ConnectionController extends ChangeNotifier {
     return null;
   }
 
+  /// The protocol the live transport speaks. Reads the profile the connection
+  /// actually opened, not the selected one, so a switch mid-connection cannot
+  /// make screens describe the wrong server.
+  ServerFlavor get serverFlavor =>
+      _connectedProfile?.flavor ?? profile?.flavor ?? ServerFlavor.v1;
+
   void _acceptRunningServerVersion(String? rawVersion) {
     final next = rawVersion?.trim() ?? '';
     if (next.isEmpty) return;

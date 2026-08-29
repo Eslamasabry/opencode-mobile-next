@@ -11,6 +11,7 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../../api/models.dart';
 import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
+import '../../api/server_probe.dart' show ServerFlavor;
 import '../../api/sse.dart';
 import '../../state/offline_queue.dart';
 import '../../state/connection.dart';
@@ -3206,11 +3207,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   /// On OpenCode 2 servers the model/agent choice is session state, so the
   /// picker opened from an active chat applies to this session.
-  // TODO(connect-flow): read an explicit ServerFlavor flag once the
-  // connection exposes one; today `legacyQuestionRequests` is false only for
-  // the v2 gateway (`api2ServerCapabilities`).
   ModelPickerApplyScope get _modelApplyScope =>
-      _conn.api?.capabilities.legacyQuestionRequests == false
+      _conn.serverFlavor == ServerFlavor.v2
       ? ModelPickerApplyScope.session
       : ModelPickerApplyScope.classic;
 
