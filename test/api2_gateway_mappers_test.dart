@@ -329,6 +329,52 @@ void main() {
       expect(failed.text, 'ran out of room');
     });
 
+    test('live-captured variant fixture maps every v2-only shape', () {
+      final page = Api2Page.fromJson(
+        fixture('messages_variants.json'),
+        Api2Message.fromJson,
+      );
+      final mapped = mapApi2Messages(sessionID, page.data);
+      final byType = <String, MessageWithParts>{};
+      for (final (index, raw) in page.data.indexed) {
+        final type = switch (raw) {
+          Api2ShellMessage(:final exit) => 'shell-${exit == 0 ? 'ok' : 'fail'}',
+          _ => raw.runtimeType.toString(),
+        };
+        byType.putIfAbsent(type, () => mapped[index]);
+      }
+
+      final shellOk = byType['shell-ok']!.parts.single;
+      expect(shellOk.type, 'tool');
+      expect(shellOk.toolState.status, 'completed');
+      expect(shellOk.toolState.output, contains('fixture-shell-ok'));
+      expect(shellOk.toolState.metadata?['shellStatus'], 'exited');
+      expect(shellOk.toolState.metadata?['shellID'], startsWith('sh_'));
+
+      final shellFail = byType['shell-fail']!.parts.single;
+      expect(shellFail.toolState.status, 'error');
+      expect(shellFail.toolState.metadata?['exit'], 3);
+
+      final model = byType['Api2ModelSwitchedMessage']!.parts.single;
+      expect(model.type, 'v2:switch');
+      expect(model.toolName, 'model');
+      expect(model.text, 'gpt-5.6-sol · high');
+
+      final agent = byType['Api2AgentSwitchedMessage']!.parts.single;
+      expect(agent.type, 'v2:switch');
+      expect(agent.text, 'plan');
+
+      final synthetic = byType['Api2SyntheticMessage']!.parts.single;
+      expect(synthetic.type, 'v2:notice');
+      expect(synthetic.toolName, 'synthetic');
+      expect(synthetic.text, contains('Plan mode'));
+
+      final compaction = byType['Api2CompactionMessage']!.parts.single;
+      expect(compaction.type, 'v2:compaction');
+      expect(compaction.toolName, 'completed');
+      expect(compaction.text, contains('## Objective'));
+    });
+
     test('tool error state carries the structured message', () {
       final state = Api2ToolState.fromJson({
         'status': 'error',
