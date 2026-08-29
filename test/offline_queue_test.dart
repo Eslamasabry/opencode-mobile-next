@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
@@ -104,6 +105,19 @@ Future<void> _pumpChat(WidgetTester tester, ConnectionController conn) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    // ProfileStore.load restores passwords through flutter_secure_storage,
+    // whose unmocked platform channel never answers inside testWidgets (in
+    // plain tests it throws MissingPluginException, which load catches).
+    // Answer reads with null so widget tests that load a stored profile
+    // cannot hang.
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
+          (_) async => null,
+        );
+  });
 
   test('queued prompts persist and reload with attachments intact', () async {
     SharedPreferences.setMockInitialValues({});
