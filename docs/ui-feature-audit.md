@@ -11,6 +11,10 @@ Two inputs were combined:
 2. **Code-level audit** — a read-through of navigation, composer, theming,
    accessibility, platform behaviors, and platform-channel wiring on the
    current tree.
+3. **Follow-up lens audits** — five parallel deep passes (chat rendering,
+   states/feedback, touch ergonomics, visual consistency, first-run journey)
+   recorded in [`docs/ui-audit-lenses.md`](ui-audit-lenses.md) with their own
+   priority view and cross-lens convergences.
 
 Confidence notes: file/line references were verified against the tree on the
 audit date; the widget tap-through deep-link item is "not found" rather than
