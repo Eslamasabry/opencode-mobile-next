@@ -1,11 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/api/models.dart';
+import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
+import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/projects_screen.dart';
 import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+class _WorkspaceSessionsApi extends OpenCodeApi {
+  _WorkspaceSessionsApi() : super(baseUrl: 'http://localhost');
+
+  final deleteCalls = <String>[];
+  bool deleted = false;
+
+  @override
+  Future<List<Session>> sessions() async => deleted
+      ? const []
+      : [
+          Session(
+            id: 'session-1',
+            title: 'Swipe target',
+            time: SessionTime(created: 1, updated: 1),
+          ),
+        ];
+
+  @override
+  Future<Map<String, String>> sessionStatuses() async => const {};
+
+  @override
+  Future<void> deleteSession(String id) async {
+    deleteCalls.add(id);
+    deleted = true;
+  }
+}
 
 class _ProjectsRepository implements ProductRepository {
   List<WorkspaceProject> projects = const [
@@ -253,5 +283,43 @@ void main() {
 
     expect(find.byType(ProjectsScreen), findsOneWidget);
     expect(find.byKey(const ValueKey('project-project-1')), findsOneWidget);
+  });
+
+  testWidgets('recent session end-swipe runs the delete confirm flow', (
+    tester,
+  ) async {
+    final repository = _ProjectsRepository();
+    final api = _WorkspaceSessionsApi();
+    final controller = await _controller(repository)
+      ..api = api
+      ..status = StreamStatus.connected;
+    addTearDown(controller.dispose);
+    controller.sessionsById = {
+      'session-1': Session(
+        id: 'session-1',
+        title: 'Swipe target',
+        time: SessionTime(created: 1, updated: 1),
+      ),
+    };
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: WorkspaceScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final row = find.byKey(const ValueKey('session-dismiss-session-1'));
+    expect(row, findsOneWidget);
+    // The trailing popup menu remains alongside the swipe affordance.
+    expect(find.byType(PopupMenuButton<String>), findsWidgets);
+
+    await tester.drag(row, const Offset(-400, 0));
+    await tester.pumpAndSettle();
+    expect(find.text('Delete session?'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.pumpAndSettle();
+
+    expect(api.deleteCalls, ['session-1']);
+    expect(find.text('Swipe target'), findsNothing);
   });
 }

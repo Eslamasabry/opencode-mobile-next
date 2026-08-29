@@ -2958,6 +2958,48 @@ void main() {
     expect(find.text('Original title'), findsOneWidget);
   });
 
+  testWidgets('session row end-swipe runs the existing delete confirm flow', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi();
+    final controller = await _controller(api);
+    addTearDown(controller.dispose);
+    controller.sessionsById = {
+      'session-1': Session(
+        id: 'session-1',
+        title: 'Swipe me away',
+        time: SessionTime(created: 1, updated: 1),
+      ),
+    };
+    await tester.pumpWidget(
+      MaterialApp(home: Scaffold(body: SessionsTab(controller: controller))),
+    );
+
+    final row = find.byKey(const ValueKey('session-dismiss-session-1'));
+    expect(row, findsOneWidget);
+    // The trailing popup menu remains alongside the swipe affordance.
+    expect(find.byType(PopupMenuButton<String>), findsOneWidget);
+
+    // Cancelling the confirm sheet keeps the session.
+    await tester.drag(row, const Offset(-400, 0));
+    await tester.pumpAndSettle();
+    expect(find.text('Delete chat?'), findsOneWidget);
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await tester.pumpAndSettle();
+    expect(api.deleteCalls, isEmpty);
+    expect(find.text('Swipe me away'), findsOneWidget);
+
+    // Confirming deletes through the same flow as the popup menu.
+    await tester.drag(row, const Offset(-400, 0));
+    await tester.pumpAndSettle();
+    expect(find.text('Delete chat?'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.pumpAndSettle();
+
+    expect(api.deleteCalls, ['session-1']);
+    expect(find.text('Swipe me away'), findsNothing);
+  });
+
   testWidgets('attachment count limit is enforced before opening the picker', (
     tester,
   ) async {
