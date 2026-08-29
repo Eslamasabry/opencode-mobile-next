@@ -137,12 +137,22 @@ Then pick whichever path fits:
 
 ## OpenCode 2
 
-A port to the OpenCode v2 beta API (`opencode2`, `@opencode-ai/cli@next`)
-is in progress as a **dual-stack**: the existing v1 client keeps serving
-current 1.18.x servers (including Termux installs) while a new typed
-`lib/api2/` client speaks v2 — Basic-auth transport, the `/api/` surface,
-cursor pagination, forms, and WebSocket PTY. Protocol detection happens at
-connect time. Plan and status: [docs/opencode2-port-plan.md](docs/opencode2-port-plan.md);
+The app speaks **both protocols**. The existing v1 client keeps serving
+current 1.18.x servers (including Termux installs); a typed `lib/api2/`
+client speaks the v2 beta API (`opencode2`) — Basic-auth transport, the
+`/api/` surface, cursor pagination, forms, inbox delivery, and WebSocket
+PTY — and both sit behind one protocol-neutral gateway, so the screens
+never know which server they are talking to.
+
+Protocol detection happens at connect time: paste an address, and a v2
+server announces itself (a `401` on `/api/health`) so the app asks for
+its serve password. Against a v2 server you get streamed turns, forms
+in place of questions, permission approvals with a reason, steer-or-queue
+sends, a real terminal over ticketed WebSockets, and native rendering of
+v2's own message shapes. Every capability is negotiated, so features a
+server does not implement are not offered.
+
+Plan and status: [docs/opencode2-port-plan.md](docs/opencode2-port-plan.md);
 captured ground truth in [docs/opencode2-protocol-notes.md](docs/opencode2-protocol-notes.md),
 [docs/opencode2-port-matrix.md](docs/opencode2-port-matrix.md), and the live
 OpenAPI dumps under [contracts/](contracts/).
