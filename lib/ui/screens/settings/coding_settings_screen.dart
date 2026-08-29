@@ -38,6 +38,9 @@ class _CodingSettingsScreenState extends State<CodingSettingsScreen>
   }
 
   Future<void> _loadShellSettings() async {
+    // The row is gated (§7 row 22) rather than removed, so it must not spend a
+    // request that can only come back as an "unavailable" error.
+    if (!widget.controller.capabilities.shellSettings) return;
     final generation = ++_shellLoadGeneration;
     setState(() {
       _loadingShell = true;
@@ -203,27 +206,36 @@ class _CodingSettingsScreenState extends State<CodingSettingsScreen>
       body: ListView(
         padding: const EdgeInsets.only(bottom: 24),
         children: [
-          ListTile(
-            key: const ValueKey('default-shell-settings-entry'),
-            leading: const Icon(Icons.terminal_rounded),
-            title: const Text('Default shell'),
-            subtitle: Text(
-              _shellError != null
-                  ? '${_shellError!} Tap to retry.'
-                  : _shellSettings == null
-                  ? 'Loading shells from OpenCode…'
-                  : _selectedShellLabel(_shellSettings!),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+          if (!controller.capabilities.shellSettings)
+            const GatedRowTile(
+              feature: 'shell-settings',
+              title: 'Default shell',
+              explainer:
+                  "Shell selection isn't available on OpenCode 2 servers",
+              leading: Icon(Icons.terminal_rounded),
+            )
+          else
+            ListTile(
+              key: const ValueKey('default-shell-settings-entry'),
+              leading: const Icon(Icons.terminal_rounded),
+              title: const Text('Default shell'),
+              subtitle: Text(
+                _shellError != null
+                    ? '${_shellError!} Tap to retry.'
+                    : _shellSettings == null
+                    ? 'Loading shells from OpenCode…'
+                    : _selectedShellLabel(_shellSettings!),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: _loadingShell || _savingShell
+                  ? const SizedBox.square(
+                      dimension: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.chevron_right_rounded),
+              onTap: _loadingShell || _savingShell ? null : _chooseShell,
             ),
-            trailing: _loadingShell || _savingShell
-                ? const SizedBox.square(
-                    dimension: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.chevron_right_rounded),
-            onTap: _loadingShell || _savingShell ? null : _chooseShell,
-          ),
           ListTile(
             leading: const Icon(Icons.model_training_outlined),
             title: const Text('Selected model'),

@@ -1707,21 +1707,24 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 ),
                 onTap: () => Navigator.pop(context, 'fork'),
               ),
-            ListTile(
-              key: const ValueKey('message-action-delete'),
-              leading: Icon(
-                Icons.delete_outline_rounded,
-                color: theme.colorScheme.error,
+            // §7 row 14: v2 has no message delete, and PATCH edit is not the
+            // same promise — do not fake it.
+            if (_conn.capabilities.messageDelete)
+              ListTile(
+                key: const ValueKey('message-action-delete'),
+                leading: Icon(
+                  Icons.delete_outline_rounded,
+                  color: theme.colorScheme.error,
+                ),
+                title: Text(
+                  'Delete message',
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
+                subtitle: const Text(
+                  'Removes it from the conversation permanently',
+                ),
+                onTap: () => Navigator.pop(context, 'delete'),
               ),
-              title: Text(
-                'Delete message',
-                style: TextStyle(color: theme.colorScheme.error),
-              ),
-              subtitle: const Text(
-                'Removes it from the conversation permanently',
-              ),
-              onTap: () => Navigator.pop(context, 'delete'),
-            ),
           ],
         ),
       ),
@@ -2222,13 +2225,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         group: 'Current session',
         action: _ChatCommandAction.move,
       ),
-      _ChatCommand.mobile(
-        slash: 'warp',
-        title: 'Warp session',
-        description: 'Change this session’s experimental workspace',
-        group: 'Current session',
-        action: _ChatCommandAction.warp,
-      ),
+      // §7 row 5: warping a session into a managed workspace has no v2
+      // equivalent, so the command leaves the palette rather than failing.
+      if (_conn.capabilities.workspaceWarp)
+        _ChatCommand.mobile(
+          slash: 'warp',
+          title: 'Warp session',
+          description: 'Change this session’s experimental workspace',
+          group: 'Current session',
+          action: _ChatCommandAction.warp,
+        ),
       _ChatCommand.mobile(
         slash: 'editor',
         title: 'Prompt editor',
@@ -2297,14 +2303,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         group: 'OpenCode',
         action: _ChatCommandAction.integrations,
       ),
-      _ChatCommand.mobile(
-        slash: 'org',
-        aliases: const ['orgs', 'switch-org'],
-        title: 'Switch organization',
-        description: 'Change the active OpenCode Console organization',
-        group: 'OpenCode',
-        action: _ChatCommandAction.organization,
-      ),
+      // §7 row 8.
+      if (_conn.capabilities.consoleOrganizations)
+        _ChatCommand.mobile(
+          slash: 'org',
+          aliases: const ['orgs', 'switch-org'],
+          title: 'Switch organization',
+          description: 'Change the active OpenCode Console organization',
+          group: 'OpenCode',
+          action: _ChatCommandAction.organization,
+        ),
       _ChatCommand.mobile(
         slash: 'skills',
         title: 'Skills',
@@ -2312,13 +2320,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         group: 'OpenCode',
         action: _ChatCommandAction.skills,
       ),
-      _ChatCommand.mobile(
-        slash: 'tools',
-        title: 'Tools and capabilities',
-        description: 'Inspect tools callable by the active provider and model',
-        group: 'OpenCode',
-        action: _ChatCommandAction.tools,
-      ),
+      // §7 row 20: no tool inventory endpoint, so the destination goes too.
+      if (_conn.capabilities.toolInventory)
+        _ChatCommand.mobile(
+          slash: 'tools',
+          title: 'Tools and capabilities',
+          description:
+              'Inspect tools callable by the active provider and model',
+          group: 'OpenCode',
+          action: _ChatCommandAction.tools,
+        ),
       _ChatCommand.mobile(
         slash: 'references',
         aliases: const ['reference', 'refs'],
@@ -2368,21 +2379,24 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               message.info.role == 'assistant' && message.info.tokens.total > 0,
         ),
       ),
-      _ChatCommand.mobile(
-        slash: 'share',
-        title: _shareUrl == null ? 'Share session' : 'Copy share link',
-        description: 'Create or copy a public session link',
-        group: 'Current session',
-        action: _ChatCommandAction.share,
-      ),
-      _ChatCommand.mobile(
-        slash: 'unshare',
-        title: 'Stop sharing',
-        description: 'Disable the current public session link',
-        group: 'Current session',
-        action: _ChatCommandAction.unshare,
-        enabled: _shareUrl != null,
-      ),
+      // §7 rows 10–11.
+      if (_conn.capabilities.sessionShare) ...[
+        _ChatCommand.mobile(
+          slash: 'share',
+          title: _shareUrl == null ? 'Share session' : 'Copy share link',
+          description: 'Create or copy a public session link',
+          group: 'Current session',
+          action: _ChatCommandAction.share,
+        ),
+        _ChatCommand.mobile(
+          slash: 'unshare',
+          title: 'Stop sharing',
+          description: 'Disable the current public session link',
+          group: 'Current session',
+          action: _ChatCommandAction.unshare,
+          enabled: _shareUrl != null,
+        ),
+      ],
       _ChatCommand.mobile(
         slash: 'rename',
         title: 'Rename session',
@@ -2607,6 +2621,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               builder: (_) => ProjectHealthScreen(
                 repository: repository,
                 repositoryResolver: _conn.prepareActionRepository,
+                capabilities: _conn.capabilities,
               ),
             ),
           );
@@ -2904,6 +2919,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           child: _SessionViewsSheet(
             reasoningExpanded: _conn.transcriptReasoningExpanded,
             timestampsVisible: _conn.transcriptTimestampsVisible,
+            todosAvailable: _conn.capabilities.sessionTodos,
           ),
         ),
       ),
@@ -2939,7 +2955,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       builder: (context) => LayoutBuilder(
         builder: (context, constraints) => ConstrainedBox(
           constraints: BoxConstraints(maxHeight: constraints.maxHeight * .85),
-          child: _SessionActionsSheet(reverted: reverted, shared: shared),
+          child: _SessionActionsSheet(
+            reverted: reverted,
+            shared: shared,
+            sharingAvailable: _conn.capabilities.sessionShare,
+          ),
         ),
       ),
     );

@@ -468,25 +468,32 @@ class _FilesScreenState extends State<FilesScreen> {
 
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-          child: SizedBox(
-            width: double.infinity,
-            child: SegmentedButton<_FileSurface>(
-              key: const ValueKey('file-surface-selector'),
-              segments: const [
-                ButtonSegment(value: _FileSurface.files, label: Text('Files')),
-                ButtonSegment(
-                  value: _FileSurface.symbols,
-                  label: Text('Symbols'),
-                ),
-              ],
-              selected: {_surface},
-              showSelectedIcon: false,
-              onSelectionChanged: (value) => _selectSurface(value.single),
+        // §7 row 15: with no workspace-symbol search there is only one
+        // surface left, so the whole selector goes rather than leaving a
+        // one-segment control.
+        if (widget.controller.capabilities.workspaceSymbols)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+            child: SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<_FileSurface>(
+                key: const ValueKey('file-surface-selector'),
+                segments: const [
+                  ButtonSegment(
+                    value: _FileSurface.files,
+                    label: Text('Files'),
+                  ),
+                  ButtonSegment(
+                    value: _FileSurface.symbols,
+                    label: Text('Symbols'),
+                  ),
+                ],
+                selected: {_surface},
+                showSelectedIcon: false,
+                onSelectionChanged: (value) => _selectSurface(value.single),
+              ),
             ),
           ),
-        ),
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
           child: TextField(

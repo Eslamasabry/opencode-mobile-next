@@ -254,6 +254,107 @@ class ProductInlineEmpty extends StatelessWidget {
   }
 }
 
+/// The one explainer row for a feature the connected server cannot do.
+///
+/// Settings are where users go looking for a thing they remember, so a
+/// vanished row reads as a bug (`docs/opencode2-ui-design.md` §7, rule 2).
+/// This renders the row it replaces at 55% opacity with `enabled: false` and
+/// the [explainer] swapped in for the subtitle; tapping says which server
+/// generation the feature needs. Capability gating, not plan gating — no
+/// upsell styling, no call to action.
+///
+/// Menu actions, nav destinations and More-grid tiles are *hidden* instead;
+/// this widget is only for surviving settings/health surfaces.
+class GatedRow extends StatelessWidget {
+  /// Feature id; the row's key is `gated-<feature>`.
+  final String feature;
+
+  /// The title the enabled row would have carried.
+  final String title;
+
+  /// One honest line saying why the row is dead, e.g.
+  /// "Not available on OpenCode 2 servers".
+  final String explainer;
+
+  final Widget? leading;
+
+  /// Server generation named in the tap snackbar. 1 for v1-only features
+  /// (the usual case), 2 for the rare v2-only row we choose to show.
+  final int requiresGeneration;
+
+  const GatedRow({
+    super.key,
+    required this.feature,
+    required this.title,
+    required this.explainer,
+    this.leading,
+    this.requiresGeneration = 1,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: .55,
+      child: ListTile(
+        key: ValueKey('gated-$feature'),
+        enabled: false,
+        leading: leading,
+        title: Text(title),
+        subtitle: Text(explainer),
+        // `enabled: false` swallows ListTile.onTap, so the explanation tap
+        // target lives outside it.
+        onTap: null,
+      ),
+    );
+  }
+}
+
+/// [GatedRow] plus the tap-to-explain snackbar. Split out so the row itself
+/// stays a pure `ListTile` for callers that embed it in their own gesture
+/// handling.
+class GatedRowTile extends StatelessWidget {
+  final String feature;
+  final String title;
+  final String explainer;
+  final Widget? leading;
+  final int requiresGeneration;
+
+  const GatedRowTile({
+    super.key,
+    required this.feature,
+    required this.title,
+    required this.explainer,
+    this.leading,
+    this.requiresGeneration = 1,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text('Requires an OpenCode $requiresGeneration server'),
+            ),
+          );
+      },
+      child: GatedRow(
+        feature: feature,
+        title: title,
+        explainer: explainer,
+        leading: leading,
+        requiresGeneration: requiresGeneration,
+      ),
+    );
+  }
+}
+
+/// The stock explainer for a v1 feature with no OpenCode 2 endpoint.
+const String gatedOnV2Explainer = 'Not available on OpenCode 2 servers';
+
 class SectionLabel extends StatelessWidget {
   final String text;
   final Widget? trailing;

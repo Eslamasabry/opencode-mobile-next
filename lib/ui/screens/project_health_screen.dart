@@ -9,10 +9,16 @@ class ProjectHealthScreen extends StatefulWidget {
   final ServerOperationsGateway repository;
   final Future<ServerOperationsGateway?> Function()? repositoryResolver;
 
+  /// What the connected server can actually report. Defaults to the v1
+  /// superset so the screen keeps its full shape unless a caller narrows it
+  /// (`docs/opencode2-ui-design.md` §7, rows 17–19).
+  final ServerCapabilities capabilities;
+
   const ProjectHealthScreen({
     super.key,
     required this.repository,
     this.repositoryResolver,
+    this.capabilities = ServerCapabilities.allV1,
   });
 
   @override
@@ -60,8 +66,12 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
     }
     await Future.wait([
       _loadVersionControl(repository, generation),
-      _loadLanguageServices(repository, generation),
-      _loadFormatters(repository, generation),
+      // Hidden sections are not fetched: a gated section must not spend a
+      // request only to throw an "unavailable" error into a dropped state.
+      if (widget.capabilities.languageServiceStatus)
+        _loadLanguageServices(repository, generation),
+      if (widget.capabilities.formatterStatus)
+        _loadFormatters(repository, generation),
     ]);
     if (mounted && generation == _generation) {
       setState(() => _refreshing = false);
@@ -200,24 +210,28 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
                   : Text('${_versionControl!.changes.length} changed'),
             ),
             ..._versionControlRows(),
-            SectionLabel(
-              'Language services',
-              trailing: _languageServices == null
-                  ? null
-                  : Text(
-                      '${_languageServices!.where((item) => item.connected).length}/${_languageServices!.length}',
-                    ),
-            ),
-            ..._languageServiceRows(),
-            SectionLabel(
-              'Formatters',
-              trailing: _formatters == null
-                  ? null
-                  : Text(
-                      '${_formatters!.where((item) => item.enabled).length}/${_formatters!.length}',
-                    ),
-            ),
-            ..._formatterRows(),
+            if (widget.capabilities.languageServiceStatus) ...[
+              SectionLabel(
+                'Language services',
+                trailing: _languageServices == null
+                    ? null
+                    : Text(
+                        '${_languageServices!.where((item) => item.connected).length}/${_languageServices!.length}',
+                      ),
+              ),
+              ..._languageServiceRows(),
+            ],
+            if (widget.capabilities.formatterStatus) ...[
+              SectionLabel(
+                'Formatters',
+                trailing: _formatters == null
+                    ? null
+                    : Text(
+                        '${_formatters!.where((item) => item.enabled).length}/${_formatters!.length}',
+                      ),
+              ),
+              ..._formatterRows(),
+            ],
           ],
         ),
       ),
@@ -247,19 +261,29 @@ class _ProjectHealthScreenState extends State<ProjectHealthScreen> {
             'Initialize this project to enable branches, working-tree changes, and Review.',
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-          child: FilledButton(
-            key: const ValueKey('initialize-git-repository'),
-            onPressed: _initializingGit ? null : _initializeGit,
-            child: _initializingGit
-                ? const SizedBox.square(
-                    dimension: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Initialize Git'),
+        // §7 row 19: health screens explain rather than vanish, so the action
+        // stays visible and says where to run it instead.
+        if (!widget.capabilities.gitInit)
+          const GatedRowTile(
+            feature: 'git-init',
+            title: 'Initialize Git',
+            explainer: 'Run `git init` from a terminal',
+            leading: Icon(Icons.terminal_rounded),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: FilledButton(
+              key: const ValueKey('initialize-git-repository'),
+              onPressed: _initializingGit ? null : _initializeGit,
+              child: _initializingGit
+                  ? const SizedBox.square(
+                      dimension: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Initialize Git'),
+            ),
           ),
-        ),
         if (_gitInitializationError != null)
           ListTile(
             leading: const Icon(Icons.error_outline_rounded),

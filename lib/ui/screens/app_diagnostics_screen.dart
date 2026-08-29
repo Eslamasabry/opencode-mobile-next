@@ -130,7 +130,15 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
                           children: [
                             FilledButton.icon(
                               key: const ValueKey('send-app-diagnostics'),
-                              onPressed: entries.isEmpty || _sending
+                              // §7 row 24: the control stays, visibly dead,
+                              // with the explainer directly beneath it.
+                              onPressed:
+                                  entries.isEmpty ||
+                                      _sending ||
+                                      !widget
+                                          .controller
+                                          .capabilities
+                                          .clientDiagnostics
                                   ? null
                                   : _send,
                               icon: _sending
@@ -157,6 +165,20 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
                             ),
                           ],
                         ),
+                        if (!widget.controller.capabilities.clientDiagnostics)
+                          Padding(
+                            key: const ValueKey('gated-client-diagnostics'),
+                            padding: const EdgeInsets.only(top: 10),
+                            child: Text(
+                              "This server doesn't accept client logs",
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                          ),
                       ],
                     ),
                   ),

@@ -711,6 +711,13 @@ class ConnectionController extends ChangeNotifier {
   ServerFlavor get serverFlavor =>
       _connectedProfile?.flavor ?? profile?.flavor ?? ServerFlavor.v1;
 
+  /// Feature switches for the live transport. Screens gate on these — never on
+  /// [serverFlavor], which is only ever copy ("OpenCode 2 servers"). Before a
+  /// connection exists we report the v1 superset so nothing flickers away while
+  /// connecting; the gateway narrows them once attached.
+  ServerCapabilities get capabilities =>
+      api?.capabilities ?? ServerCapabilities.allV1;
+
   void _acceptRunningServerVersion(String? rawVersion) {
     final next = rawVersion?.trim() ?? '';
     if (next.isEmpty) return;
