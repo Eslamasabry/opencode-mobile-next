@@ -2132,9 +2132,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('oldest anchor prompt'), findsOneWidget);
+    // The key stays stable while highlighted (no remount), and the highlight
+    // itself is expressed through the animated decoration.
+    final highlightFinder = find.byKey(const Key('message-highlight-user-0'));
+    expect(highlightFinder, findsOneWidget);
+    final highlighted = tester.widget<AnimatedContainer>(highlightFinder);
     expect(
-      find.byKey(const Key('message-highlight-user-0-true')),
-      findsOneWidget,
+      (highlighted.decoration as BoxDecoration?)?.color,
+      isNot(Colors.transparent),
     );
   });
 

@@ -97,6 +97,11 @@ Future<Uint8List?> readAttachmentBytesWithinLimit(
   }
 }
 
+/// Counts coalesced streaming-rebuild flushes. Tests use it to assert that a
+/// burst of N part deltas produces a bounded number of transcript rebuilds.
+@visibleForTesting
+int debugChatStreamFlushes = 0;
+
 String _fmtSessionTime(int ms) {
   final d = DateTime.fromMillisecondsSinceEpoch(ms);
   final now = DateTime.now();
@@ -232,7 +237,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   final _composer = TextEditingController();
   final _focus = FocusNode();
   final _messageScroll = ItemScrollController();
+  final _messagePositions = ItemPositionsListener.create();
   bool _awayFromLatest = false;
+
+  /// While the reader is scrolled away from the latest message, the rendered
+  /// message count is pinned so a completing turn cannot shift the visible
+  /// content by one item (reversed-list index anchoring). Pending messages
+  /// materialize when the reader returns to the live end.
+  int? _pinnedMessageCount;
+
+  /// Session-scoped expansion state for tool cards, tool groups, and
+  /// reasoning blocks, so list recycling does not collapse them.
+  final Map<String, bool> _transcriptExpansion = {};
   final List<PromptAttachment> _attachments = [];
   final List<_PendingSend> _pendingSends = [];
   final Map<String, int> _messageVersions = {};
@@ -346,17 +362,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             partID != null &&
             partID.isNotEmpty &&
             field != null &&
-            delta != null) {
-          setState(() {
-            if (_isSupportedDeltaField(field)) {
-              _partVersions[_partKey(messageID, partID)] = ++_eventVersion;
-              if (!_applyPartDelta(messageID, partID, field, delta)) {
-                _deferredPartDeltas
-                    .putIfAbsent(_partKey(messageID, partID), () => [])
-                    .add((field: field, delta: delta));
-              }
-            }
-          });
+            delta != null &&
+            _isSupportedDeltaField(field)) {
+          // Deltas mutate the model synchronously (versioning and deferred
+          // bookkeeping must stay ordered against hydration), but the
+          // rebuild is coalesced: one setState per burst, then at most one
+          // per ~50ms while the stream keeps flowing.
+          _partVersions[_partKey(messageID, partID)] = ++_eventVersion;
+          if (!_applyPartDelta(messageID, partID, field, delta)) {
+            _deferredPartDeltas
+                .putIfAbsent(_partKey(messageID, partID), () => [])
+                .add((field: field, delta: delta));
+          }
+          _scheduleStreamFlush();
         }
         break;
       case 'message.part.removed':
@@ -443,6 +461,41 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   String _partKey(String messageID, String partID) => '$messageID\u0000$partID';
+
+  // ----- streaming delta batching (C1) -----
+  //
+  // Leading edge: the first delta of an idle stream flushes on the next
+  // microtask, so one synchronous SSE burst costs one setState. Trailing
+  // edge: each flush opens a ~50ms window; deltas landing inside it only
+  // mutate the model and are flushed together when the window closes.
+  static const _streamFlushInterval = Duration(milliseconds: 50);
+  bool _streamFlushScheduled = false;
+  bool _streamDirty = false;
+  Timer? _streamFlushTimer;
+
+  void _scheduleStreamFlush() {
+    if (_streamFlushTimer != null) {
+      _streamDirty = true;
+      return;
+    }
+    if (_streamFlushScheduled) return;
+    _streamFlushScheduled = true;
+    scheduleMicrotask(() {
+      _streamFlushScheduled = false;
+      if (mounted) _flushStreamDeltas();
+    });
+  }
+
+  void _flushStreamDeltas() {
+    debugChatStreamFlushes++;
+    _streamDirty = false;
+    setState(() {});
+    _streamFlushTimer?.cancel();
+    _streamFlushTimer = Timer(_streamFlushInterval, () {
+      _streamFlushTimer = null;
+      if (_streamDirty && mounted) _flushStreamDeltas();
+    });
+  }
 
   String _eventErrorMessage(Object? raw) {
     if (raw is Map) {
@@ -1413,13 +1466,44 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     // from the newest message.
     final away = notification.metrics.pixels > 480;
     if (away != _awayFromLatest) {
-      setState(() => _awayFromLatest = away);
+      setState(() {
+        _awayFromLatest = away;
+        _pinnedMessageCount = away ? _messages.length : null;
+      });
     }
     return false;
   }
 
+  /// How many messages the transcript currently renders — the full list, or
+  /// the pinned count while the reader is scrolled away from the live end.
+  int get _renderedMessageCount {
+    final pinned = _pinnedMessageCount;
+    if (!_awayFromLatest || pinned == null) return _messages.length;
+    return pinned < _messages.length ? pinned : _messages.length;
+  }
+
+  /// Messages sitting entirely above the viewport: the transcript's list
+  /// index grows toward older messages, so everything past the largest
+  /// visible index is "earlier".
+  int _earlierMessageCount(Iterable<ItemPosition> positions) {
+    var oldestVisible = -1;
+    for (final position in positions) {
+      if (position.itemTrailingEdge <= 0 || position.itemLeadingEdge >= 1) {
+        continue;
+      }
+      if (position.index > oldestVisible) oldestVisible = position.index;
+    }
+    if (oldestVisible < 0) return 0;
+    final earlier = _renderedMessageCount - 1 - oldestVisible;
+    return earlier > 0 ? earlier : 0;
+  }
+
   void _jumpToLatest() {
     if (!_messageScroll.isAttached) return;
+    setState(() {
+      _awayFromLatest = false;
+      _pinnedMessageCount = null;
+    });
     if (MediaQuery.disableAnimationsOf(context)) {
       _messageScroll.jumpTo(index: 0);
     } else {
@@ -1429,7 +1513,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         curve: Curves.easeOutCubic,
       );
     }
-    setState(() => _awayFromLatest = false);
   }
 
   void _insertSuggestion(String text) {
@@ -1448,7 +1531,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
     final listIndex = _messages.length - 1 - chronologicalIndex;
     _highlightTimer?.cancel();
-    setState(() => _highlightedMessageID = messageID);
+    setState(() {
+      // Materialize any messages deferred while scrolled away so the target
+      // index maps onto the rendered list.
+      _pinnedMessageCount = null;
+      _highlightedMessageID = messageID;
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_messageScroll.isAttached) return;
       _messageScroll.scrollTo(
@@ -3157,17 +3245,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                                 reverse: true,
                                                 itemScrollController:
                                                     _messageScroll,
+                                                itemPositionsListener:
+                                                    _messagePositions,
                                                 padding:
                                                     const EdgeInsets.symmetric(
                                                       horizontal: 12,
                                                       vertical: 10,
                                                     ),
                                                 itemCount:
-                                                    _messages.length +
+                                                    _renderedMessageCount +
                                                     (busy ? 1 : 0),
                                                 itemBuilder: (context, i) {
                                                   final index =
-                                                      _messages.length - 1 - i;
+                                                      _renderedMessageCount -
+                                                      1 -
+                                                      i;
                                                   if (index < 0) {
                                                     return _TypingIndicator();
                                                   }
@@ -3193,6 +3285,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                                     parts: parts,
                                                     reasoningExpanded: _conn
                                                         .transcriptReasoningExpanded,
+                                                    expansionStore:
+                                                        _transcriptExpansion,
                                                     showTimestamp: _conn
                                                         .transcriptTimestampsVisible,
                                                     highlighted:
@@ -3222,14 +3316,38 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                                   onTap: _jumpToLatest,
                                                 ),
                                               ),
-                                            if (_messages.length > 30)
+                                            // Only while reading history, and
+                                            // counting only the messages that
+                                            // actually sit above the viewport.
+                                            if (_awayFromLatest &&
+                                                _messages.length > 30)
                                               Positioned(
                                                 top: 8,
-                                                child: _EarlierMessagesPill(
-                                                  count: _messages.length,
-                                                  onTap: () => unawaited(
-                                                    _openTimeline(),
-                                                  ),
+                                                child: ValueListenableBuilder(
+                                                  valueListenable:
+                                                      _messagePositions
+                                                          .itemPositions,
+                                                  builder:
+                                                      (
+                                                        context,
+                                                        positions,
+                                                        _,
+                                                      ) {
+                                                        final earlier =
+                                                            _earlierMessageCount(
+                                                              positions,
+                                                            );
+                                                        if (earlier <= 0) {
+                                                          return const SizedBox.shrink();
+                                                        }
+                                                        return _EarlierMessagesPill(
+                                                          count: earlier,
+                                                          onTap: () =>
+                                                              unawaited(
+                                                                _openTimeline(),
+                                                              ),
+                                                        );
+                                                      },
                                                 ),
                                               ),
                                           ],
@@ -3300,6 +3418,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _conn.removeListener(_onConnectionChanged);
     _sub.cancel();
+    _streamFlushTimer?.cancel();
     _highlightTimer?.cancel();
     unawaited(_voice?.cancel());
     if (widget.voiceController == null) _voice?.dispose();
