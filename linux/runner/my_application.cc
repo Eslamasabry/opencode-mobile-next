@@ -45,11 +45,11 @@ static void my_application_activate(GApplication* application) {
   if (use_header_bar) {
     GtkHeaderBar* header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
     gtk_widget_show(GTK_WIDGET(header_bar));
-    gtk_header_bar_set_title(header_bar, "opencode_mobile");
+    gtk_header_bar_set_title(header_bar, "OpenCode");
     gtk_header_bar_set_show_close_button(header_bar, TRUE);
     gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
   } else {
-    gtk_window_set_title(window, "opencode_mobile");
+    gtk_window_set_title(window, "OpenCode");
   }
 
   gtk_window_set_default_size(window, 1280, 720);
@@ -140,7 +140,20 @@ MyApplication* my_application_new() {
   // like GTK and desktop environments map this running application to its
   // corresponding .desktop file. This ensures better integration by allowing
   // the application to be recognized beyond its binary name.
+  //
+  // On Wayland GTK reports this string as the xdg-shell app_id, which the
+  // compositor matches against ai.opencode.opencode_mobile.desktop by name.
   g_set_prgname(APPLICATION_ID);
+
+  // On X11 the shell matches the desktop file's StartupWMClass against
+  // WM_CLASS instead. GDK derives res_name from the program name above and
+  // res_class from the program class, which otherwise defaults to the program
+  // name with its first letter capitalised ("Ai.opencode.opencode_mobile").
+  // Pinning the class to the same application ID makes both halves of
+  // WM_CLASS identical and equal to StartupWMClass, so taskbar grouping and
+  // the window icon resolve the same way on X11 as on Wayland regardless of
+  // which half a given desktop environment compares.
+  gdk_set_program_class(APPLICATION_ID);
 
   return MY_APPLICATION(g_object_new(my_application_get_type(),
                                      "application-id", APPLICATION_ID, "flags",

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  OpenCode desktop icon.
+
+  The four marks are the same paths the Android adaptive launcher icon uses
+  (android/app/src/main/res/drawable/ic_launcher_foreground.xml), on the same
+  #0F1115 plate (values/colors.xml launcher_background), so Linux and Android
+  ship one identity. The foreground is scaled to 68% and centred because a
+  Linux icon has no adaptive-icon safe zone: at full bleed the top-right and
+  bottom-right points would be clipped by the rounded plate.
+
+  linux/packaging/render-icons.sh rasterises this to the hicolor PNG sizes.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512"
+     viewBox="0 0 108 108">
+  <rect x="0" y="0" width="108" height="108" rx="24" ry="24" fill="#0F1115"/>
+  <g transform="translate(54,54) scale(0.68) translate(-54,-54)">
+    <path fill="#58BCEA" d="M11.25,36 L63,2.25 L96.75,2.25 L28.13,70.31 Z"/>
+    <path fill="#58BCEA" d="M52.31,61.31 L63.56,49.5 L96.75,49.5 L68.63,78.19 Z"/>
+    <path fill="#139FE0" d="M36,78.19 L52.31,61.31 L68.63,78.19 L52.31,94.5 Z"/>
+    <path fill="#0864A9" d="M68.63,78.19 L96.19,105.75 L63.56,105.75 L52.31,94.5 Z"/>
+  </g>
+</svg>
