@@ -2783,6 +2783,89 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
+  /// One listing validates every path in the same directory, and both maps
+  /// memoize futures so transcript rebuilds never re-hit the server. A
+  /// confirmed file stays confirmed, but a miss only holds for
+  /// [_pathLinkNegativeTtl]: agents routinely mention a path moments before
+  /// creating the file, so later rebuilds must re-check.
+  static const _pathLinkNegativeTtl = Duration(seconds: 20);
+  final Map<String, Future<List<FileNode>>> _pathLinkDirs = {};
+  final Map<String, DateTime> _pathLinkDirsAt = {};
+  final Map<String, Future<bool>> _pathLinkChecks = {};
+  final Map<String, DateTime> _pathLinkMissAt = {};
+
+  Future<bool> _validatePathLink(String path) {
+    final missedAt = _pathLinkMissAt[path];
+    if (missedAt != null &&
+        DateTime.now().difference(missedAt) > _pathLinkNegativeTtl) {
+      _pathLinkMissAt.remove(path);
+      _pathLinkChecks.remove(path);
+    }
+    return _pathLinkChecks.putIfAbsent(path, () => _checkPathLink(path));
+  }
+
+  Future<bool> _checkPathLink(String path) async {
+    final slash = path.lastIndexOf('/');
+    final name = slash >= 0 ? path.substring(slash + 1) : '';
+    if (name.isEmpty) return false;
+    final dir = slash == 0 ? '/' : path.substring(0, slash);
+    try {
+      final listedAt = _pathLinkDirsAt[dir];
+      if (listedAt != null &&
+          DateTime.now().difference(listedAt) > _pathLinkNegativeTtl) {
+        _pathLinkDirs.remove(dir);
+      }
+      final nodes = await _pathLinkDirs.putIfAbsent(dir, () {
+        _pathLinkDirsAt[dir] = DateTime.now();
+        return () async {
+          final api = await _conn.prepareActionTransport();
+          if (api == null) throw StateError('offline');
+          return api.listFiles(dir);
+        }();
+      });
+      final found = nodes.any((node) => !node.isDir && node.name == name);
+      if (!found) _pathLinkMissAt[path] = DateTime.now();
+      return found;
+    } catch (_) {
+      // A transient failure must not brand the path dead for the whole
+      // session; forget both futures so a later rebuild can retry.
+      _pathLinkDirs.remove(dir);
+      _pathLinkChecks.remove(path);
+      return false;
+    }
+  }
+
+  Future<void> _openPathLink(String raw) async {
+    final path = stripPathLineSuffix(raw);
+    final name = path.substring(path.lastIndexOf('/') + 1);
+    try {
+      final api = await _conn.prepareActionTransport();
+      if (api == null) {
+        throw StateError('Not connected to the server right now.');
+      }
+      final content = await api.fileContent(path);
+      final binary = content.isBinary || content.encoding == 'base64';
+      final bytes = binary ? content.bytes() : null;
+      final data = FilePreviewData(
+        name: name,
+        mimeType: content.mimeType,
+        bytes: bytes,
+        text: binary ? null : content.content,
+      );
+      if (!mounted) return;
+      await showFilePreviewSheet(
+        context,
+        data,
+        onAttach: () => _attachProjectFile(path, data),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not open $name: $error')));
+    }
+  }
+
   Future<FilePreviewData> _loadToolOutputFile(ToolOutputFile file) async {
     final path = file.path;
     final api = await _conn.prepareActionTransport();
@@ -3056,86 +3139,99 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                   ? _EmptyTranscript(
                                       onSuggestion: _insertSuggestion,
                                     )
-                                  : NotificationListener<ScrollNotification>(
-                                      onNotification: _onTranscriptScroll,
-                                      child: Stack(
-                                        alignment: Alignment.topCenter,
-                                        children: [
-                                        ConstrainedBox(
-                                          constraints: const BoxConstraints(
-                                            maxWidth: 860,
-                                          ),
-                                        child: ScrollablePositionedList.builder(
-                                          reverse: true,
-                                          itemScrollController: _messageScroll,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 10,
-                                          ),
-                                          itemCount:
-                                              _messages.length + (busy ? 1 : 0),
-                                          itemBuilder: (context, i) {
-                                            final index =
-                                                _messages.length - 1 - i;
-                                            if (index < 0) {
-                                              return _TypingIndicator();
-                                            }
-                                            final m = _messages[index];
-                                            final meta = _messageMeta(
-                                              _messages,
-                                              index,
-                                            );
-                                            final parts = displayParts[index];
-                                            if (parts.isEmpty &&
-                                                meta.isEmpty &&
-                                                m.info.errorText == null) {
-                                              return const SizedBox.shrink();
-                                            }
-                                            return _MessageView(
-                                              key: ValueKey(
-                                                'message-${m.info.id}',
+                                  : MarkdownFileLinks(
+                                      validate: _validatePathLink,
+                                      open: _openPathLink,
+                                      child: NotificationListener<ScrollNotification>(
+                                        onNotification: _onTranscriptScroll,
+                                        child: Stack(
+                                          alignment: Alignment.topCenter,
+                                          children: [
+                                            ConstrainedBox(
+                                              constraints: const BoxConstraints(
+                                                maxWidth: 860,
                                               ),
-                                              m: m,
-                                              meta: meta,
-                                              parts: parts,
-                                              reasoningExpanded: _conn
-                                                  .transcriptReasoningExpanded,
-                                              showTimestamp: _conn
-                                                  .transcriptTimestampsVisible,
-                                              highlighted:
-                                                  _highlightedMessageID ==
-                                                  m.info.id,
-                                              onLongPress: () => unawaited(
-                                                _showMessageActions(m),
+                                              child: ScrollablePositionedList.builder(
+                                                reverse: true,
+                                                itemScrollController:
+                                                    _messageScroll,
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 12,
+                                                      vertical: 10,
+                                                    ),
+                                                itemCount:
+                                                    _messages.length +
+                                                    (busy ? 1 : 0),
+                                                itemBuilder: (context, i) {
+                                                  final index =
+                                                      _messages.length - 1 - i;
+                                                  if (index < 0) {
+                                                    return _TypingIndicator();
+                                                  }
+                                                  final m = _messages[index];
+                                                  final meta = _messageMeta(
+                                                    _messages,
+                                                    index,
+                                                  );
+                                                  final parts =
+                                                      displayParts[index];
+                                                  if (parts.isEmpty &&
+                                                      meta.isEmpty &&
+                                                      m.info.errorText ==
+                                                          null) {
+                                                    return const SizedBox.shrink();
+                                                  }
+                                                  return _MessageView(
+                                                    key: ValueKey(
+                                                      'message-${m.info.id}',
+                                                    ),
+                                                    m: m,
+                                                    meta: meta,
+                                                    parts: parts,
+                                                    reasoningExpanded: _conn
+                                                        .transcriptReasoningExpanded,
+                                                    showTimestamp: _conn
+                                                        .transcriptTimestampsVisible,
+                                                    highlighted:
+                                                        _highlightedMessageID ==
+                                                        m.info.id,
+                                                    onLongPress: () =>
+                                                        unawaited(
+                                                          _showMessageActions(
+                                                            m,
+                                                          ),
+                                                        ),
+                                                    filePreviewLoader:
+                                                        _loadToolOutputFile,
+                                                    onAttachFile:
+                                                        _attachToolOutputFile,
+                                                    onDownloadFile:
+                                                        _downloadToolOutputFile,
+                                                  );
+                                                },
                                               ),
-                                              filePreviewLoader:
-                                                  _loadToolOutputFile,
-                                              onAttachFile:
-                                                  _attachToolOutputFile,
-                                              onDownloadFile:
-                                                  _downloadToolOutputFile,
-                                            );
-                                          },
-                                        ),
-                                        ),
-                                        if (_awayFromLatest)
-                                          Positioned(
-                                            right: 14,
-                                            bottom: 10,
-                                            child: _JumpToLatestButton(
-                                              onTap: _jumpToLatest,
                                             ),
-                                          ),
-                                        if (_messages.length > 30)
-                                          Positioned(
-                                            top: 8,
-                                            child: _EarlierMessagesPill(
-                                              count: _messages.length,
-                                              onTap: () =>
-                                                  unawaited(_openTimeline()),
-                                            ),
-                                          ),
-                                        ],
+                                            if (_awayFromLatest)
+                                              Positioned(
+                                                right: 14,
+                                                bottom: 10,
+                                                child: _JumpToLatestButton(
+                                                  onTap: _jumpToLatest,
+                                                ),
+                                              ),
+                                            if (_messages.length > 30)
+                                              Positioned(
+                                                top: 8,
+                                                child: _EarlierMessagesPill(
+                                                  count: _messages.length,
+                                                  onTap: () => unawaited(
+                                                    _openTimeline(),
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                             ),
@@ -3153,36 +3249,36 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                   maxWidth: 860,
                                 ),
                                 child: _ChatComposer(
-                              compact: compactComposer,
-                              allowInlineCommands:
-                                  bodyConstraints.maxHeight >= 300,
-                              controller: _composer,
-                              focusNode: _focus,
-                              commands: _chatCommands,
-                              agents: _subagents,
-                              onSelectCommand: _selectChatCommand,
-                              onSelectAgent: _insertAgentMention,
-                              onOpenCommands: _openCommandLauncher,
-                              onOpenAgents: () => _openCommandLauncher(
-                                initialTab: _ComposerToolTab.agents,
-                              ),
-                              onOpenEditor: _openPromptEditor,
-                              attachments: _attachments,
-                              busy: busy,
-                              sending: _sending,
-                              voiceOpening: _voiceOpening,
-                              selectedAgent: _conn.selectedAgent,
-                              selectedModel: _conn.selectedModel,
-                              selectedVariant: _conn.selectedVariant,
-                              onAttach: _pickAttachment,
-                              onVoice: _openVoice,
-                              onSend: _send,
-                              onStop: _abort,
-                              onChooseModel: () => showModelPicker(context),
-                              contextUsage: _contextWindowUsage(),
-                              onRemoveAttachment: (attachment) => setState(
-                                () => _attachments.remove(attachment),
-                              ),
+                                  compact: compactComposer,
+                                  allowInlineCommands:
+                                      bodyConstraints.maxHeight >= 300,
+                                  controller: _composer,
+                                  focusNode: _focus,
+                                  commands: _chatCommands,
+                                  agents: _subagents,
+                                  onSelectCommand: _selectChatCommand,
+                                  onSelectAgent: _insertAgentMention,
+                                  onOpenCommands: _openCommandLauncher,
+                                  onOpenAgents: () => _openCommandLauncher(
+                                    initialTab: _ComposerToolTab.agents,
+                                  ),
+                                  onOpenEditor: _openPromptEditor,
+                                  attachments: _attachments,
+                                  busy: busy,
+                                  sending: _sending,
+                                  voiceOpening: _voiceOpening,
+                                  selectedAgent: _conn.selectedAgent,
+                                  selectedModel: _conn.selectedModel,
+                                  selectedVariant: _conn.selectedVariant,
+                                  onAttach: _pickAttachment,
+                                  onVoice: _openVoice,
+                                  onSend: _send,
+                                  onStop: _abort,
+                                  onChooseModel: () => showModelPicker(context),
+                                  contextUsage: _contextWindowUsage(),
+                                  onRemoveAttachment: (attachment) => setState(
+                                    () => _attachments.remove(attachment),
+                                  ),
                                 ),
                               ),
                             ),
@@ -3210,4 +3306,3 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     super.dispose();
   }
 }
-

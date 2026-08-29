@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -89,6 +91,54 @@ Future<void> openMarkdownExternalLink(
   }
 }
 
+/// Installed by screens that can resolve server file paths. Inline code
+/// spans that look like paths stay plain until [validate] confirms the file
+/// is actually readable on the connected server; only then do they render
+/// as tappable links routed through [open].
+class MarkdownFileLinks extends InheritedWidget {
+  const MarkdownFileLinks({
+    super.key,
+    required this.validate,
+    required this.open,
+    required super.child,
+  });
+
+  /// Must be memoized by the provider: spans re-request on every rebuild.
+  final Future<bool> Function(String path) validate;
+  final void Function(String path) open;
+
+  static MarkdownFileLinks? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<MarkdownFileLinks>();
+
+  @override
+  bool updateShouldNotify(MarkdownFileLinks oldWidget) =>
+      validate != oldWidget.validate || open != oldWidget.open;
+}
+
+final _pathLikePattern = RegExp(
+  r'^(?:~/|\.{0,2}/)?[A-Za-z0-9_.@+-]+(?:/[A-Za-z0-9_.@+-]+)+(?::\d{1,6})?$',
+);
+
+/// Conservative: multi-segment, no spaces, no scheme, and either anchored
+/// (`/`, `~/`, `./`) or ending in a file extension — `lib/a/b.dart:12` and
+/// `/tmp/shots/home.png` match; `and/or`, URLs and lone words do not.
+bool looksLikeFilePath(String code) {
+  if (code.length < 4 || code.length > 300) return false;
+  if (code.contains('://')) return false;
+  if (!_pathLikePattern.hasMatch(code)) return false;
+  if (code.startsWith('/') || code.startsWith('~/') || code.startsWith('./')) {
+    return true;
+  }
+  final path = stripPathLineSuffix(code);
+  final name = path.substring(path.lastIndexOf('/') + 1);
+  final dot = name.lastIndexOf('.');
+  return dot > 0 && dot < name.length - 1 && name.length - dot <= 9;
+}
+
+/// `lib/a.dart:120` -> `lib/a.dart`.
+String stripPathLineSuffix(String code) =>
+    code.replaceFirst(RegExp(r':\d{1,6}$'), '');
+
 /// Lightweight markdown renderer tuned for LLM chat output:
 /// headings, bold/italic/strikethrough, inline code, fenced code blocks,
 /// bullet/ordered lists, blockquotes, horizontal rules and links.
@@ -134,7 +184,9 @@ class MarkdownText extends StatelessWidget {
 
     void flushParagraph() {
       if (paragraph.isEmpty) return;
-      widgets.add(_RichLines(lines: List.of(paragraph), selectable: selectable));
+      widgets.add(
+        _RichLines(lines: List.of(paragraph), selectable: selectable),
+      );
       paragraph.clear();
     }
 
@@ -483,7 +535,18 @@ class _InlineParser {
           ),
         );
       } else if (m.group(6) != null) {
-        spans.add(_CodeSpan(m.group(6)!, base: base, context: context));
+        final code = m.group(6)!;
+        final links = MarkdownFileLinks.maybeOf(context);
+        if (links != null && looksLikeFilePath(code)) {
+          spans.add(
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: _PathCodeChip(code: code, links: links, base: base),
+            ),
+          );
+        } else {
+          spans.add(_CodeSpan(code, base: base, context: context));
+        }
       } else if (m.group(5) != null) {
         spans.add(
           TextSpan(
@@ -519,6 +582,127 @@ class _InlineParser {
     if (pos < src.length) spans.add(TextSpan(text: src.substring(pos)));
     if (spans.isEmpty) spans.add(const TextSpan(text: ''));
     return spans;
+  }
+}
+
+/// An inline code chip whose text looks like a file path. Renders exactly
+/// like [_CodeSpan] until the server confirms the file is readable, then
+/// gains link styling and a tap target. Invalid or unreachable paths keep
+/// the plain chip — no dead affordances.
+class _PathCodeChip extends StatefulWidget {
+  const _PathCodeChip({
+    required this.code,
+    required this.links,
+    required this.base,
+  });
+
+  final String code;
+  final MarkdownFileLinks links;
+  final TextStyle base;
+
+  @override
+  State<_PathCodeChip> createState() => _PathCodeChipState();
+}
+
+class _PathCodeChipState extends State<_PathCodeChip> {
+  bool _readable = false;
+  Timer? _retry;
+  int _retriesLeft = 5;
+
+  @override
+  void initState() {
+    super.initState();
+    _check();
+  }
+
+  @override
+  void didUpdateWidget(_PathCodeChip oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.code != widget.code || oldWidget.links != widget.links) {
+      _readable = false;
+      _retriesLeft = 5;
+    }
+    // Re-validate on every rebuild: the provider memoizes positives forever
+    // and misses for a short TTL, so this is free until a miss expires —
+    // which is exactly when a file the agent just created should light up.
+    if (!_readable) _check();
+  }
+
+  @override
+  void dispose() {
+    _retry?.cancel();
+    super.dispose();
+  }
+
+  void _check() {
+    final code = widget.code;
+    widget.links.validate(stripPathLineSuffix(code)).then((ok) {
+      if (!mounted || code != widget.code) return;
+      if (ok) {
+        _retry?.cancel();
+        setState(() => _readable = true);
+        return;
+      }
+      // An idle transcript never rebuilds, so poll a few times on the
+      // provider's cadence before giving up; any later rebuild retries too.
+      if (_retriesLeft > 0 && (_retry == null || !_retry!.isActive)) {
+        _retriesLeft--;
+        _retry = Timer(const Duration(seconds: 22), () {
+          if (mounted) _check();
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final chip = Container(
+      margin: const EdgeInsets.symmetric(horizontal: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: .6),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: _readable
+              ? theme.colorScheme.primary.withValues(alpha: .45)
+              : theme.dividerColor.withValues(alpha: .4),
+          width: _readable ? .8 : .5,
+        ),
+      ),
+      child: Text.rich(
+        TextSpan(
+          text: widget.code,
+          children: [
+            if (_readable)
+              WidgetSpan(
+                alignment: PlaceholderAlignment.middle,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 3),
+                  child: Icon(
+                    Icons.open_in_new_rounded,
+                    size: (widget.base.fontSize ?? 14) - 2,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        style: widget.base.copyWith(
+          fontFamily: 'AppMono',
+          fontSize: (widget.base.fontSize ?? 14) - 1.5,
+          color: _readable
+              ? theme.colorScheme.primary
+              : theme.colorScheme.tertiary,
+        ),
+      ),
+    );
+    if (!_readable) return chip;
+    return GestureDetector(
+      key: Key('path-link-${widget.code}'),
+      onTap: () => widget.links.open(widget.code),
+      child: chip,
+    );
   }
 }
 
