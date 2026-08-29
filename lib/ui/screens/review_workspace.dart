@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../api/models.dart';
 import '../app_theme.dart';
+import '../widgets/product_states.dart';
 
 typedef ReviewDiffLoader = Future<List<FileDiff>> Function();
 
@@ -110,7 +111,8 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
     _viewedFiles.add('$_scope:${diffs[index].file}');
   }
 
-  bool _isViewed(FileDiff diff) => _viewedFiles.contains('$_scope:${diff.file}');
+  bool _isViewed(FileDiff diff) =>
+      _viewedFiles.contains('$_scope:${diff.file}');
 
   ReviewDiffLoader _loaderFor(ReviewDiffScope scope) => switch (scope) {
     ReviewDiffScope.session => widget.loadDiffs!,
@@ -215,7 +217,12 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
           ? const _ReviewLoadingState()
           : _ReviewErrorState(error: _error!, onRetry: _load);
     }
-    if (_diffs!.isEmpty) return const _ReviewEmptyState();
+    if (_diffs!.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: _load,
+        child: const _ReviewEmptyState(),
+      );
+    }
 
     final diffs = _diffs!;
     final totalAdded = diffs.fold<int>(
@@ -256,7 +263,7 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
                       ),
                     ),
                     const VerticalDivider(width: 1),
-                    Expanded(child: _diffPane(selected, lines)),
+                    Expanded(child: _diffPane(selected, lines, wide: true)),
                   ],
                 ),
               ),
@@ -287,15 +294,20 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
     FileDiff diff,
     List<_ReviewDiffLine> lines, {
     bool compactToolbar = false,
+    bool wide = false,
   }) {
     final selectedCount = _selectionStart == null
         ? 0
         : _selectionEnd! - _selectionStart! + 1;
+    final hunks = [
+      for (final entry in lines.asMap().entries)
+        if (entry.value.kind == _ReviewLineKind.hunk) entry.key,
+    ];
     return Column(
       children: [
         _ReviewDiffToolbar(
           diff: diff,
-          lines: lines,
+          hunks: hunks,
           mode: _mode,
           onModeChanged: (mode) => setState(() {
             _mode = mode;
@@ -308,16 +320,23 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
         ),
         const Divider(height: 1),
         Expanded(
-          child: lines.isEmpty
-              ? const _NoDiffContent()
-              : _ReviewDiffCanvas(
-                  lines: lines,
-                  mode: _mode,
-                  vertical: _vertical,
-                  horizontal: _horizontal,
-                  isSelected: _isSelected,
-                  onSelect: _selectLine,
-                ),
+          // Pull-to-refresh mirrors the app-wide idiom; the top-right refresh
+          // icon remains for pointer users.
+          child: RefreshIndicator(
+            onRefresh: _load,
+            notificationPredicate: (notification) =>
+                notification.metrics.axis == Axis.vertical,
+            child: lines.isEmpty
+                ? const _NoDiffContent()
+                : _ReviewDiffCanvas(
+                    lines: lines,
+                    mode: _mode,
+                    vertical: _vertical,
+                    horizontal: _horizontal,
+                    isSelected: _isSelected,
+                    onSelect: _selectLine,
+                  ),
+          ),
         ),
         if (selectedCount > 0)
           _ReviewSelectionBar(
@@ -325,7 +344,11 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
             onClear: () => setState(_clearSelection),
             onCopy: () => _copyText(_selectedSnippet(lines)),
             onComment: () => _openCommentComposer(diff, lines),
-          ),
+          )
+        else if (!wide && !compactToolbar && hunks.isNotEmpty)
+          // Mirror hunk navigation into the thumb-reachable bottom slot so
+          // one-handed review does not require repeated top-corner reaches.
+          _ReviewHunkBar(hunks: hunks, onHunk: _jumpToHunk),
       ],
     );
   }
@@ -826,7 +849,7 @@ class _ReviewFileList extends StatelessWidget {
 class _ReviewDiffToolbar extends StatelessWidget {
   const _ReviewDiffToolbar({
     required this.diff,
-    required this.lines,
+    required this.hunks,
     required this.mode,
     required this.onModeChanged,
     required this.onCopy,
@@ -836,7 +859,7 @@ class _ReviewDiffToolbar extends StatelessWidget {
   });
 
   final FileDiff diff;
-  final List<_ReviewDiffLine> lines;
+  final List<int> hunks;
   final ReviewDiffMode mode;
   final ValueChanged<ReviewDiffMode> onModeChanged;
   final VoidCallback onCopy;
@@ -848,10 +871,6 @@ class _ReviewDiffToolbar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final counts = diff.counts;
-    final hunks = [
-      for (final entry in lines.asMap().entries)
-        if (entry.value.kind == _ReviewLineKind.hunk) entry.key,
-    ];
     return LayoutBuilder(
       builder: (context, constraints) {
         if (!compact && constraints.maxWidth < 560) {
@@ -1181,6 +1200,9 @@ class _ModeButton extends StatelessWidget {
             ? scheme.primaryContainer
             : Colors.transparent,
         shape: const RoundedRectangleBorder(),
+        // 44dp minimum keeps the densest review control row comfortably
+        // tappable on phones.
+        minimumSize: const Size(64, 44),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
       child: Text(label),
@@ -1231,6 +1253,9 @@ class _ReviewDiffCanvas extends StatelessWidget {
                 controller: vertical,
                 child: ListView.builder(
                   controller: vertical,
+                  // Always scrollable so pull-to-refresh works even when the
+                  // diff fits the viewport.
+                  physics: const AlwaysScrollableScrollPhysics(),
                   itemExtent: rowExtent,
                   itemCount: splitRows?.length ?? lines.length,
                   itemBuilder: (context, index) {
@@ -1457,6 +1482,53 @@ class _ReviewSelectionBar extends StatelessWidget {
   }
 }
 
+/// Bottom-slot mirror of the toolbar's hunk navigation for one-handed phone
+/// review; hidden while a selection is active so the selection bar keeps its
+/// slot.
+class _ReviewHunkBar extends StatelessWidget {
+  const _ReviewHunkBar({required this.hunks, required this.onHunk});
+
+  final List<int> hunks;
+  final void Function(int direction, List<int> hunks) onHunk;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      key: const Key('review-hunk-bar'),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHigh,
+        border: Border(top: BorderSide(color: theme.dividerColor)),
+      ),
+      padding: const EdgeInsets.fromLTRB(14, 2, 6, 2),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              '${hunks.length} ${hunks.length == 1 ? 'hunk' : 'hunks'}',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          IconButton(
+            key: const Key('review-hunk-bar-previous'),
+            tooltip: 'Previous hunk',
+            onPressed: () => onHunk(-1, hunks),
+            icon: const Icon(Icons.arrow_upward_rounded, size: 20),
+          ),
+          IconButton(
+            key: const Key('review-hunk-bar-next'),
+            tooltip: 'Next hunk',
+            onPressed: () => onHunk(1, hunks),
+            icon: const Icon(Icons.arrow_downward_rounded, size: 20),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ReviewCommentComposer extends StatefulWidget {
   const _ReviewCommentComposer({
     required this.file,
@@ -1483,61 +1555,74 @@ class _ReviewCommentComposerState extends State<_ReviewCommentComposer> {
   Widget build(BuildContext context) {
     final keyboard = MediaQuery.viewInsetsOf(context).bottom;
     final theme = Theme.of(context);
-    return Padding(
-      padding: EdgeInsets.fromLTRB(18, 12, 18, 18 + keyboard),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Comment on change',
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-              letterSpacing: -.3,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${widget.file} · ${widget.selectionLabel}',
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 14),
-          TextField(
-            key: const Key('review-comment-field'),
-            controller: _controller,
-            autofocus: true,
-            minLines: 3,
-            maxLines: 7,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(
-              hintText: 'What should OpenCode inspect or change?',
-            ),
-            onSubmitted: (_) => _submit(),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+    // Cap the sheet and let it scroll: at short heights or large text the
+    // autofocused field plus keyboard would otherwise overflow and push
+    // "Add to prompt" off screen.
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * .9,
+      ),
+      child: SingleChildScrollView(
+        key: const Key('review-comment-composer-scroll'),
+        padding: EdgeInsets.fromLTRB(18, 12, 18, 18 + keyboard),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Comment on change',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+                letterSpacing: -.3,
               ),
-              const SizedBox(width: 8),
-              ListenableBuilder(
-                listenable: _controller,
-                builder: (context, _) => FilledButton(
-                  key: const Key('review-add-to-prompt'),
-                  onPressed: _controller.text.trim().isEmpty ? null : _submit,
-                  child: const Text('Add to prompt'),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${widget.file} · ${widget.selectionLabel}',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              key: const Key('review-comment-field'),
+              controller: _controller,
+              autofocus: true,
+              minLines: 3,
+              maxLines: 7,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(
+                hintText: 'What should OpenCode inspect or change?',
+              ),
+              onSubmitted: (_) => _submit(),
+            ),
+            const SizedBox(height: 12),
+            // OverflowBar wraps the actions when large text scales make the
+            // pair wider than the sheet, instead of overflowing the Row.
+            OverflowBar(
+              alignment: MainAxisAlignment.end,
+              overflowAlignment: OverflowBarAlignment.end,
+              spacing: 8,
+              overflowSpacing: 4,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
                 ),
-              ),
-            ],
-          ),
-        ],
+                ListenableBuilder(
+                  listenable: _controller,
+                  builder: (context, _) => FilledButton(
+                    key: const Key('review-add-to-prompt'),
+                    onPressed: _controller.text.trim().isEmpty ? null : _submit,
+                    child: const Text('Add to prompt'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1597,11 +1682,14 @@ class _Skeleton extends StatelessWidget {
   );
 }
 
+// The review empty/error/notice states delegate to the shared product-state
+// components so padding, icon treatment, and the "Try again" action match the
+// rest of the app.
 class _ReviewEmptyState extends StatelessWidget {
   const _ReviewEmptyState();
 
   @override
-  Widget build(BuildContext context) => const _ReviewNotice(
+  Widget build(BuildContext context) => const ProductEmptyState(
     key: Key('review-empty'),
     icon: Icons.difference_outlined,
     title: 'No changes to review',
@@ -1613,15 +1701,13 @@ class _ReviewErrorState extends StatelessWidget {
   const _ReviewErrorState({required this.error, required this.onRetry});
 
   final Object error;
-  final VoidCallback onRetry;
+  final Future<void> Function() onRetry;
 
   @override
-  Widget build(BuildContext context) => _ReviewNotice(
+  Widget build(BuildContext context) => ProductErrorState(
     key: const Key('review-error'),
-    icon: Icons.error_outline_rounded,
-    title: 'Could not load changes',
     message: error.toString(),
-    action: TextButton(onPressed: onRetry, child: const Text('Try again')),
+    onRetry: onRetry,
   );
 }
 
@@ -1629,68 +1715,13 @@ class _NoDiffContent extends StatelessWidget {
   const _NoDiffContent();
 
   @override
-  Widget build(BuildContext context) => const _ReviewNotice(
+  Widget build(BuildContext context) => const ProductEmptyState(
     key: Key('review-no-content'),
     icon: Icons.description_outlined,
     title: 'Diff content unavailable',
     message:
         'The server reported this file but did not include a patch or file contents.',
   );
-}
-
-class _ReviewNotice extends StatelessWidget {
-  const _ReviewNotice({
-    super.key,
-    required this.icon,
-    required this.title,
-    required this.message,
-    this.action,
-  });
-
-  final IconData icon;
-  final String title;
-  final String message;
-  final Widget? action;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      // Scrollable so short viewports (Review opened inside chat) degrade
-      // instead of overflowing when surrounding chrome grows.
-      child: SingleChildScrollView(
-        child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 360),
-        child: Padding(
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 34, color: theme.colorScheme.onSurfaceVariant),
-              const SizedBox(height: 14),
-              Text(
-                title,
-                style: theme.textTheme.titleMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 7),
-              Text(
-                message,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 5,
-                overflow: TextOverflow.ellipsis,
-              ),
-              if (action != null) ...[const SizedBox(height: 12), action!],
-            ],
-          ),
-        ),
-        ),
-      ),
-    );
-  }
 }
 
 enum _ReviewLineKind { context, added, removed, hunk, metadata }

@@ -120,7 +120,7 @@ void main() {
     });
 
     expect(find.byKey(const Key('review-error')), findsOneWidget);
-    expect(find.text('Could not load changes'), findsOneWidget);
+    expect(find.text('Bad state: server unavailable'), findsOneWidget);
     await tester.tap(find.text('Try again'));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('review-empty')), findsOneWidget);
@@ -312,6 +312,147 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Ask about file'), findsOneWidget);
     expect(find.text('Copy patch'), findsOneWidget);
+  });
+
+  testWidgets('comment composer stays usable at 320dp height with 2x text', (
+    tester,
+  ) async {
+    await _pumpReview(
+      tester,
+      () async => [
+        FileDiff(
+          file: 'lib/short.dart',
+          patch: '@@ -1 +1 @@\n-before\n+after',
+          additions: 1,
+          deletions: 1,
+        ),
+      ],
+      size: const Size(640, 320),
+      textScale: 2,
+    );
+
+    // Compact-height toolbar exposes the whole-file Ask entry point.
+    await tester.ensureVisible(find.text('Ask'));
+    await tester.pump();
+    final askRect = tester.getRect(find.text('Ask'));
+    await tester.tapAt(askRect.center);
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.byKey(const Key('review-comment-field')), findsOneWidget);
+    await tester.enterText(
+      find.byKey(const Key('review-comment-field')),
+      'Tighten this diff',
+    );
+    await tester.pump();
+
+    // The action row stays reachable by scrolling the capped sheet.
+    await tester.ensureVisible(find.byKey(const Key('review-add-to-prompt')));
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    await tester.tap(
+      find.byKey(const Key('review-add-to-prompt')),
+      warnIfMissed: false,
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('review-comment-field')), findsNothing);
+  });
+
+  testWidgets('phone toolbar mode buttons meet 44dp targets', (tester) async {
+    await _pumpReview(
+      tester,
+      () async => [
+        FileDiff(
+          file: 'lib/targets.dart',
+          patch: '@@ -1 +1 @@\n-old\n+new',
+          additions: 1,
+          deletions: 1,
+        ),
+      ],
+      size: const Size(360, 800),
+    );
+
+    expect(find.byKey(const Key('review-phone-toolbar')), findsOneWidget);
+    for (final key in const [
+      Key('review-mode-unified'),
+      Key('review-mode-split'),
+    ]) {
+      final size = tester.getSize(find.byKey(key));
+      expect(size.height, greaterThanOrEqualTo(44), reason: '$key height');
+    }
+  });
+
+  testWidgets('phone layout mirrors hunk navigation into the bottom bar', (
+    tester,
+  ) async {
+    final patch = StringBuffer();
+    for (var hunk = 0; hunk < 6; hunk++) {
+      patch.write('@@ -${hunk * 40 + 1},20 +${hunk * 40 + 1},20 @@\n');
+      for (var line = 0; line < 20; line++) {
+        patch.write(' context $hunk-$line\n');
+      }
+    }
+    await _pumpReview(
+      tester,
+      () async => [
+        FileDiff(
+          file: 'lib/hunks.dart',
+          patch: patch.toString().trimRight(),
+          additions: 0,
+          deletions: 0,
+        ),
+      ],
+      size: const Size(360, 800),
+    );
+
+    expect(find.byKey(const Key('review-hunk-bar')), findsOneWidget);
+    final next = find.byKey(const Key('review-hunk-bar-next'));
+    final previous = find.byKey(const Key('review-hunk-bar-previous'));
+    expect(next, findsOneWidget);
+    expect(previous, findsOneWidget);
+
+    expect(find.byKey(const Key('review-line-0')), findsOneWidget);
+    await tester.tap(next);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('review-line-0')), findsNothing);
+    expect(tester.takeException(), isNull);
+
+    // Selecting lines swaps the bottom slot to the selection bar. Diff rows
+    // are wider than the phone viewport, so tap near their left edge.
+    final lineRect = tester.getRect(find.byKey(const Key('review-line-22')));
+    await tester.tapAt(Offset(lineRect.left + 120, lineRect.center.dy));
+    await tester.pump();
+    expect(find.byKey(const Key('review-selection-bar')), findsOneWidget);
+    expect(find.byKey(const Key('review-hunk-bar')), findsNothing);
+  });
+
+  testWidgets('diff pane refreshes with pull-to-refresh', (tester) async {
+    var loads = 0;
+    await _pumpReview(tester, () async {
+      loads++;
+      return [
+        FileDiff(
+          file: 'lib/refresh.dart',
+          patch: '@@ -1 +1 @@\n-old load\n+load $loads',
+          additions: 1,
+          deletions: 1,
+        ),
+      ];
+    }, size: const Size(360, 800));
+
+    expect(loads, 1);
+    expect(find.text('+load 1'), findsOneWidget);
+
+    final rowRect = tester.getRect(find.byKey(const Key('review-line-0')));
+    await tester.flingFrom(
+      Offset(rowRect.left + 120, rowRect.top + 10),
+      const Offset(0, 320),
+      1000,
+    );
+    await tester.pumpAndSettle();
+
+    expect(loads, 2);
+    expect(find.text('+load 2'), findsOneWidget);
   });
 
   testWidgets('viewed progress counts files whose diff was opened', (

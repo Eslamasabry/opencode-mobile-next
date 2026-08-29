@@ -667,53 +667,67 @@ class _SessionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final updated = session.time?.updated ?? session.time?.created;
-    return ListTile(
-      minTileHeight: 64,
-      leading: busy
-          ? SizedBox.square(
-              dimension: 22,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: theme.colorScheme.primary,
-              ),
-            )
-          : const Icon(Icons.chat_bubble_outline_rounded, size: 21),
-      title: Text(
-        session.title?.isNotEmpty == true ? session.title! : 'Untitled session',
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Text(
-        [
-          if (session.shareUrl != null) 'Shared: ${session.shareUrl}',
-          if (busy) 'Working',
-          if (updated != null) _relativeTime(updated),
-          if (session.directory?.isNotEmpty == true)
-            _basename(session.directory!),
-        ].join(' · '),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      trailing: PopupMenuButton<String>(
-        tooltip: 'Session actions',
-        onSelected: (value) => onAction(value, session),
-        itemBuilder: (context) => [
-          const PopupMenuItem(value: 'rename', child: Text('Rename')),
-          PopupMenuItem(
-            value: session.shareUrl == null ? 'share' : 'unshare',
-            child: Text(session.shareUrl == null ? 'Share' : 'Stop sharing'),
-          ),
-          const PopupMenuItem(value: 'archive', child: Text('Archive')),
-          PopupMenuItem(
-            value: 'delete',
-            child: Text(
-              'Delete',
-              style: TextStyle(color: theme.colorScheme.error),
+    return Dismissible(
+      key: ValueKey('session-dismiss-${session.id}'),
+      direction: DismissDirection.endToStart,
+      // Runs the existing confirm-and-delete flow, then resolves false: the
+      // refreshed session list removes the row, so a cancelled or failed
+      // delete simply snaps back.
+      confirmDismiss: (_) async {
+        await onAction('delete', session);
+        return false;
+      },
+      background: const SwipeDeleteBackground(),
+      child: ListTile(
+        minTileHeight: 64,
+        leading: busy
+            ? SizedBox.square(
+                dimension: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: theme.colorScheme.primary,
+                ),
+              )
+            : const Icon(Icons.chat_bubble_outline_rounded, size: 21),
+        title: Text(
+          session.title?.isNotEmpty == true
+              ? session.title!
+              : 'Untitled session',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        subtitle: Text(
+          [
+            if (session.shareUrl != null) 'Shared: ${session.shareUrl}',
+            if (busy) 'Working',
+            if (updated != null) _relativeTime(updated),
+            if (session.directory?.isNotEmpty == true)
+              _basename(session.directory!),
+          ].join(' · '),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        trailing: PopupMenuButton<String>(
+          tooltip: 'Session actions',
+          onSelected: (value) => onAction(value, session),
+          itemBuilder: (context) => [
+            const PopupMenuItem(value: 'rename', child: Text('Rename')),
+            PopupMenuItem(
+              value: session.shareUrl == null ? 'share' : 'unshare',
+              child: Text(session.shareUrl == null ? 'Share' : 'Stop sharing'),
             ),
-          ),
-        ],
+            const PopupMenuItem(value: 'archive', child: Text('Archive')),
+            PopupMenuItem(
+              value: 'delete',
+              child: Text(
+                'Delete',
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            ),
+          ],
+        ),
+        onTap: () => onOpen(session),
       ),
-      onTap: () => onOpen(session),
     );
   }
 

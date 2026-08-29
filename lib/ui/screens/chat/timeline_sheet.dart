@@ -306,6 +306,10 @@ class _TimelineSheetState extends State<_TimelineSheet> {
                     )
                   : ListView.separated(
                       controller: scrollController,
+                      // Dragging the results dismisses the search keyboard so
+                      // it stops covering the list.
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       padding: const EdgeInsets.fromLTRB(8, 0, 8, 20),
                       itemCount: visible.length,
                       separatorBuilder: (_, _) => const Divider(height: 1),
@@ -370,4 +374,3 @@ class _TimelineSheetState extends State<_TimelineSheet> {
     );
   }
 }
-

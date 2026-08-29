@@ -161,57 +161,57 @@ class _EmptyTranscript extends StatelessWidget {
                 child: _entrance(
                   reduceMotion,
                   Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '❯',
-                          style: theme.textTheme.headlineSmall!.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontFamily: 'AppMono',
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          width: 11,
-                          height: 22,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withValues(
-                              alpha: .45,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '❯',
+                            style: theme.textTheme.headlineSmall!.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontFamily: 'AppMono',
                             ),
-                            borderRadius: BorderRadius.circular(2),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Text('Start coding', style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Describe a change, ask about this project, '
-                      'or paste an error.',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.hintColor,
+                          const SizedBox(width: 8),
+                          Container(
+                            width: 11,
+                            height: 22,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: .45,
+                              ),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 18),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        for (final suggestion in _suggestions)
-                          ActionChip(
-                            key: ValueKey('empty-suggestion-$suggestion'),
-                            label: Text(suggestion),
-                            onPressed: () => onSuggestion(suggestion),
-                          ),
-                      ],
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+                      Text('Start coding', style: theme.textTheme.titleMedium),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Describe a change, ask about this project, '
+                        'or paste an error.',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.hintColor,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final suggestion in _suggestions)
+                            ActionChip(
+                              key: ValueKey('empty-suggestion-$suggestion'),
+                              label: Text(suggestion),
+                              onPressed: () => onSuggestion(suggestion),
+                            ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -259,8 +259,10 @@ class _JumpToLatestButton extends StatelessWidget {
         onTap: onTap,
         child: Tooltip(
           message: 'Jump to latest',
+          // 48dp target: this pill floats over a scrolling list, where
+          // undersized targets cause accidental transcript scrolls.
           child: Padding(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(14),
             child: Icon(
               Icons.arrow_downward_rounded,
               size: 20,
@@ -303,8 +305,11 @@ class _EarlierMessagesPill extends StatelessWidget {
       child: InkWell(
         customBorder: const StadiumBorder(),
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 6, 8, 6),
+        // 44dp floor: the pill floats over the scrolling transcript, so an
+        // undersized target scrolls the list instead of opening the timeline.
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 44),
+          padding: const EdgeInsets.fromLTRB(14, 6, 10, 6),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -314,11 +319,7 @@ class _EarlierMessagesPill extends StatelessWidget {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-              Icon(
-                Icons.expand_more_rounded,
-                size: 15,
-                color: theme.hintColor,
-              ),
+              Icon(Icons.expand_more_rounded, size: 15, color: theme.hintColor),
             ],
           ),
         ),
@@ -573,7 +574,10 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
       }
     }
     final summary = runningPart != null
-        ? runningToolTicker(runningPart.toolName ?? 'tool', runningPart.toolState)
+        ? runningToolTicker(
+            runningPart.toolName ?? 'tool',
+            runningPart.toolState,
+          )
         : _toolRunSummary(widget.parts);
     final allContext = widget.parts.every(
       (part) => _contextToolNames.contains(part.toolName?.trim().toLowerCase()),
@@ -803,92 +807,92 @@ class _MessageView extends StatelessWidget {
       // keeps each message part as its own semantics node.
       excludeFromSemantics: true,
       child: AnimatedContainer(
-      key: ValueKey('message-highlight-${m.info.id}-$highlighted'),
-      duration: const Duration(milliseconds: 180),
-      padding: const EdgeInsets.fromLTRB(6, 4, 6, 10),
-      decoration: BoxDecoration(
-        color: highlighted
-            ? theme.colorScheme.primaryContainer.withValues(alpha: .24)
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: isUser
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
-        children: [
-          Container(
-            constraints: BoxConstraints(
-              // Keep prompts readable on wide screens instead of stretching a
-              // bubble across a tablet.
-              maxWidth: isUser && bubbleWidthCap > 640 ? 640 : bubbleWidthCap,
-            ),
-            padding: isUser
-                ? const EdgeInsets.symmetric(horizontal: 14, vertical: 10)
-                : const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-            decoration: isUser
-                ? BoxDecoration(
-                    color: theme.colorScheme.primaryContainer.withValues(
-                      alpha: .55,
-                    ),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      topRight: Radius.circular(16),
-                      bottomLeft: Radius.circular(16),
-                      bottomRight: Radius.circular(5),
-                    ),
-                  )
-                : null,
-            child: isUser
-                ? _UserMessageContent(parts: visibleParts)
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      for (final run in assistantRuns)
-                        if (run.grouped)
-                          _ToolCallGroup(
-                            key: ValueKey(
-                              'tools:${run.parts.first.id ?? run.parts.first.callID}',
+        key: ValueKey('message-highlight-${m.info.id}-$highlighted'),
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.fromLTRB(6, 4, 6, 10),
+        decoration: BoxDecoration(
+          color: highlighted
+              ? theme.colorScheme.primaryContainer.withValues(alpha: .24)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: isUser
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
+          children: [
+            Container(
+              constraints: BoxConstraints(
+                // Keep prompts readable on wide screens instead of stretching a
+                // bubble across a tablet.
+                maxWidth: isUser && bubbleWidthCap > 640 ? 640 : bubbleWidthCap,
+              ),
+              padding: isUser
+                  ? const EdgeInsets.symmetric(horizontal: 14, vertical: 10)
+                  : const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              decoration: isUser
+                  ? BoxDecoration(
+                      color: theme.colorScheme.primaryContainer.withValues(
+                        alpha: .55,
+                      ),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        topRight: Radius.circular(16),
+                        bottomLeft: Radius.circular(16),
+                        bottomRight: Radius.circular(5),
+                      ),
+                    )
+                  : null,
+              child: isUser
+                  ? _UserMessageContent(parts: visibleParts)
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (final run in assistantRuns)
+                          if (run.grouped)
+                            _ToolCallGroup(
+                              key: ValueKey(
+                                'tools:${run.parts.first.id ?? run.parts.first.callID}',
+                              ),
+                              parts: run.parts,
+                              filePreviewLoader: filePreviewLoader,
+                              onAttachFile: onAttachFile,
+                              onDownloadFile: onDownloadFile,
+                            )
+                          else
+                            _AssistantMessagePart(
+                              part: run.parts.single,
+                              reasoningExpanded: reasoningExpanded,
+                              filePreviewLoader: filePreviewLoader,
+                              onAttachFile: onAttachFile,
+                              onDownloadFile: onDownloadFile,
                             ),
-                            parts: run.parts,
-                            filePreviewLoader: filePreviewLoader,
-                            onAttachFile: onAttachFile,
-                            onDownloadFile: onDownloadFile,
-                          )
-                        else
-                          _AssistantMessagePart(
-                            part: run.parts.single,
-                            reasoningExpanded: reasoningExpanded,
-                            filePreviewLoader: filePreviewLoader,
-                            onAttachFile: onAttachFile,
-                            onDownloadFile: onDownloadFile,
-                          ),
-                    ],
+                      ],
+                    ),
+            ),
+            if (metaParts.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 3, left: 6, right: 6),
+                child: Text(
+                  key: ValueKey('message-meta-${m.info.id}'),
+                  metaParts.join('  ·  '),
+                  style: theme.textTheme.labelSmall!.copyWith(
+                    color: theme.hintColor,
                   ),
-          ),
-          if (metaParts.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 3, left: 6, right: 6),
-              child: Text(
-                key: ValueKey('message-meta-${m.info.id}'),
-                metaParts.join('  ·  '),
-                style: theme.textTheme.labelSmall!.copyWith(
-                  color: theme.hintColor,
                 ),
               ),
-            ),
-          if (m.info.errorText != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 3),
-              child: Text(
-                m.info.errorText!,
-                style: theme.textTheme.bodySmall!.copyWith(
-                  color: theme.colorScheme.error,
+            if (m.info.errorText != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 3),
+                child: Text(
+                  m.info.errorText!,
+                  style: theme.textTheme.bodySmall!.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
                 ),
               ),
-            ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -1465,4 +1469,3 @@ class _QueuedPromptBubble extends StatelessWidget {
     );
   }
 }
-

@@ -89,3 +89,20 @@ Future<bool> showConfirmSheet(
   );
   return result == true;
 }
+
+/// End-swipe reveal behind list rows whose swipe leads into the destructive
+/// confirm flow above: a destructive field with a trailing delete glyph.
+class SwipeDeleteBackground extends StatelessWidget {
+  const SwipeDeleteBackground({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      color: scheme.errorContainer,
+      alignment: AlignmentDirectional.centerEnd,
+      padding: const EdgeInsetsDirectional.only(end: 24),
+      child: Icon(Icons.delete_outline_rounded, color: scheme.onErrorContainer),
+    );
+  }
+}
