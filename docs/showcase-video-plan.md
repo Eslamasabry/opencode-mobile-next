@@ -9,7 +9,7 @@
 
 Planning date: 2026-08-28. Sources: `.claude/skills/motion-design/` and
 `.claude/skills/remotion-motion-graphics/` (rules cited per scene),
-HANDOFF.md Operation Facelift records, docs/design-inspiration.md.
+docs/internal/handoff.md Operation Facelift records, docs/design-inspiration.md.
 
 ## 1. Concept and narrative arc
 

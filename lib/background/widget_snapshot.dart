@@ -84,4 +84,31 @@ class WidgetSessionSnapshot {
     await prefs.setString(prefsKey, payload);
     await _refreshNative();
   }
+
+  /// Drops the snapshot when it belongs to [profileID], so removing a server
+  /// also removes the session titles its widget was still showing on the home
+  /// screen. A snapshot written before rows carried a profile has no
+  /// identifiable owner and is dropped too. Returns whether anything was
+  /// cleared.
+  ///
+  /// Runs on every platform: the stored payload is the privacy-relevant
+  /// artifact, and only the native redraw is Android-specific.
+  Future<bool> clearForProfile(String profileID) async {
+    final raw = prefs.getString(prefsKey);
+    if (raw == null) return false;
+    String? owner;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map) owner = decoded['profileID']?.toString() ?? '';
+    } catch (_) {
+      // Unreadable payload: it cannot be shown to be another profile's, so
+      // treat it as removable rather than leaving it behind.
+      owner = '';
+    }
+    if (owner == null || (owner.isNotEmpty && owner != profileID)) return false;
+    await prefs.remove(prefsKey);
+    _lastWritten = null;
+    if (_isAndroid) await _refreshNative();
+    return true;
+  }
 }

@@ -15,7 +15,7 @@ import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
 import 'package:opencode_mobile/ui/screens/requests_screen.dart';
 import 'package:opencode_mobile/ui/screens/session_destination_sheet.dart';
-import 'package:opencode_mobile/ui/widgets/markdown.dart';
+import 'package:opencode_mobile/ui/widgets/external_link.dart';
 import 'package:opencode_mobile/ui/widgets/tool_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -335,11 +335,11 @@ void main() {
               children: [
                 TextButton(
                   onPressed: () =>
-                      openMarkdownExternalLink(context, 'intent://steal'),
+                      openExternalLink(context, 'intent://steal'),
                   child: const Text('Blocked'),
                 ),
                 TextButton(
-                  onPressed: () => openMarkdownExternalLink(
+                  onPressed: () => openExternalLink(
                     context,
                     'http://docs.example/path',
                     launcher: (uri) async {

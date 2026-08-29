@@ -9,17 +9,25 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// chat and app restarts, and disappears once the text is sent or deleted.
 class SessionDraft {
   final String sessionID;
+
+  /// The server profile the drafted session belongs to, so removing that
+  /// server can take its drafts with it. Drafts written before this field
+  /// existed carry `''` and are treated as unattributable — see
+  /// [SessionDraftStore.withoutProfile].
+  final String profileID;
   final String text;
   final int updatedAt;
 
   const SessionDraft({
     required this.sessionID,
+    this.profileID = '',
     required this.text,
     required this.updatedAt,
   });
 
   Map<String, dynamic> toJson() => {
     'sessionID': sessionID,
+    if (profileID.isNotEmpty) 'profileID': profileID,
     'text': text,
     'updatedAt': updatedAt,
   };
@@ -31,6 +39,7 @@ class SessionDraft {
     if (sessionID.isEmpty || text.isEmpty) return null;
     return SessionDraft(
       sessionID: sessionID,
+      profileID: value['profileID']?.toString() ?? '',
       text: text,
       updatedAt: (value['updatedAt'] as num?)?.toInt() ?? 0,
     );
@@ -67,6 +76,23 @@ class SessionDraftStore {
       return {};
     }
   }
+
+  /// [drafts] minus everything owned by [profileID].
+  ///
+  /// A draft written before drafts recorded their profile has no owner this
+  /// app can identify, and a draft belongs to exactly one server's session.
+  /// Removing a server is an explicit "delete this server's local data"
+  /// request, so unattributable drafts go with it rather than lingering as
+  /// text the user believes they deleted.
+  static Map<String, SessionDraft> withoutProfile(
+    Map<String, SessionDraft> drafts,
+    String profileID,
+  ) => {
+    for (final entry in drafts.entries)
+      if (entry.value.profileID.isNotEmpty &&
+          entry.value.profileID != profileID)
+        entry.key: entry.value,
+  };
 
   Future<bool> save(Map<String, SessionDraft> drafts) async {
     try {

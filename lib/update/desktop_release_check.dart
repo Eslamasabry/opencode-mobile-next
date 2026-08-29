@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../ui/widgets/external_link.dart';
+
 /// Desktop builds cannot receive Shorebird patches, so Linux and Windows
 /// check the project's GitHub releases instead and point at the release
 /// page. Nothing downloads automatically.
@@ -59,12 +61,18 @@ class DesktopReleaseChecker {
       if (entry['draft'] == true) continue;
       final tag = entry['tag_name'];
       if (tag is! String || tag.isEmpty) continue;
+      // `html_url` arrives over the network, so it only survives if it is an
+      // https GitHub URL with no embedded credentials; anything else falls
+      // back to the compiled-in releases page rather than being launched.
       final htmlUrl = entry['html_url'];
+      final parsed = htmlUrl is String ? safeExternalLinkUri(htmlUrl) : null;
+      final trusted =
+          parsed != null &&
+          parsed.scheme == 'https' &&
+          (parsed.host == 'github.com' || parsed.host.endsWith('.github.com'));
       return DesktopReleaseInfo(
         tag: tag,
-        htmlUrl: htmlUrl is String && htmlUrl.isNotEmpty
-            ? htmlUrl
-            : desktopReleasesPageUrl,
+        htmlUrl: trusted ? parsed.toString() : desktopReleasesPageUrl,
       );
     }
     return null;
@@ -172,7 +180,9 @@ class _DesktopReleaseNoticeState extends State<DesktopReleaseNotice>
         action: SnackBarAction(
           label: 'View',
           onPressed: () {
-            final url = Uri.parse(release.htmlUrl);
+            final url =
+                safeExternalLinkUri(release.htmlUrl) ??
+                Uri.parse(desktopReleasesPageUrl);
             final launch =
                 widget.launcher ??
                 (uri) => launchUrl(uri, mode: LaunchMode.externalApplication);

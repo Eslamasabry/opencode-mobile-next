@@ -240,8 +240,12 @@ video/                   # Remotion showcase project
 - [docs/opencode-sdk-coverage.md](docs/opencode-sdk-coverage.md) /
   [command feature map](docs/opencode-command-feature-map.md) — how much of
   the server API the app exercises
-- [HANDOFF.md](HANDOFF.md) — the running engineering log: every release,
-  patch, and facelift slice with its verification evidence
+- [CONTRIBUTING.md](CONTRIBUTING.md) — toolchain pin, the gates a change must
+  pass, architecture boundaries, and PR expectations
+- [docs/internal/handoff.md](docs/internal/handoff.md) — the append-only
+  engineering working log. Archaeology, not documentation: it carries stale
+  release claims and one machine's local details, and nothing in it is
+  authoritative.
 
 ## License
 

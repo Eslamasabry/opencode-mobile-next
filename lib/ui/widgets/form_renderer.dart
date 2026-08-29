@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../api2/models.dart';
 import 'confirm_sheet.dart';
+import 'external_link.dart';
 
 /// Delivers the assembled answer payload (active fields only) to the caller.
 /// Throwing keeps the form open and surfaces the message in the pinned error
@@ -1074,19 +1074,22 @@ class _FormRendererState extends State<FormRenderer> {
 
   // ---------------- external ----------------
 
+  /// The URL is server-supplied, so it goes through the same gate as a
+  /// markdown link: https (or confirmed http) only, no embedded credentials,
+  /// and the real host shown before anything opens. The caption names that
+  /// host instead of the old generic "Opens in your browser", and a link the
+  /// policy refuses says so on the card rather than presenting a tap target
+  /// that silently does nothing.
   Widget _externalCard(BuildContext context, Api2FormField field) {
     final theme = Theme.of(context);
+    final destination = safeExternalLinkUri(field.url);
     return Material(
+      key: const Key('form-external-card'),
       color: theme.colorScheme.surfaceContainerHigh,
       borderRadius: BorderRadius.circular(16),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () {
-          final uri = Uri.tryParse(field.url ?? '');
-          if (uri != null) {
-            unawaited(launchUrl(uri, mode: LaunchMode.externalApplication));
-          }
-        },
+        onTap: () => unawaited(openExternalLink(context, field.url)),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
           child: Row(
@@ -1111,9 +1114,14 @@ class _FormRendererState extends State<FormRenderer> {
                     ],
                     const SizedBox(height: 6),
                     Text(
-                      'Opens in your browser',
+                      destination == null
+                          ? 'This server sent a link this app will not open.'
+                          : 'Opens ${externalLinkHost(destination)} in your '
+                                'browser',
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                        color: destination == null
+                            ? theme.colorScheme.error
+                            : theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],

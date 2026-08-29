@@ -1,4 +1,19 @@
-# oc_app handoff
+# oc_app handoff (internal working log)
+
+> **This is a development log, not documentation.** It is an append-only
+> record of what was built, tried, measured, and shipped, written for whoever
+> picks the work up next. It contains stale release claims, one machine's
+> paths and emulator names, and decisions that were later reversed.
+>
+> It is **not** authoritative for anything a user or contributor needs:
+>
+> - what the app does → [README](../../README.md)
+> - how to build, test, and contribute → [CONTRIBUTING](../../CONTRIBUTING.md)
+> - what data stays on the device → [PRIVACY](../../PRIVACY.md)
+> - the current release, its hash and its signer → the
+>   [GitHub releases page](https://github.com/Eslamasabry/oc_app/releases)
+>
+> Read anything below as "this was true when it was written".
 
 Last updated: 2026-08-28 (Asia/Dubai)
 
