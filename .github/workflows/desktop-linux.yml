@@ -1,0 +1,208 @@
+# UNVERIFIED. This workflow has never been observed running.
+#
+# Every recorded run of this repository's Actions (35/35 as of 2026-08-28,
+# see .github/workflows/android-quality.yml) failed in ~5s with zero steps
+# and runner_id 0, annotated:
+#   "The job was not started because recent account payments have failed or
+#    your spending limit needs to be increased."
+# That is an account-level block at https://github.com/settings/billing, not
+# a workflow defect, and nothing in this file can lift it. The steps below
+# mirror commands that were run and passed on a developer machine, but the
+# GitHub-hosted-runner specifics — apt package availability on the runner
+# image, cache hits, artifact upload, the release job — are reasoned, not
+# observed. Treat the first green run as the real verification.
+
+name: Linux desktop
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - production/android-release-hardening
+      - desktop/window-packaging
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-linux-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Must match the Shorebird-pinned Flutter used for local builds and
+  # releases: `flutter --version` from
+  # ~/.shorebird/bin/cache/flutter/91f8bd75.../bin/flutter reports
+  # "Flutter 3.47.1 ... Tools • Dart 3.13.1". Shorebird's fork is not
+  # installable here, so CI uses upstream stable at the same version.
+  FLUTTER_VERSION: "3.47.1"
+
+jobs:
+  build:
+    name: Analyze, test, build and package
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install Linux desktop toolchain
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          # clang/cmake/ninja/pkg-config: the Flutter Linux build itself.
+          # libgtk-3-dev: the runner and every plugin.
+          # libsecret-1-dev: flutter_secure_storage_linux is the only plugin
+          #   in this app that needs anything beyond GTK.
+          # liblzma-dev: pulled in by the Flutter tool's Linux build.
+          # desktop-file-utils: desktop-file-validate, used by the packaging
+          #   script to reject a malformed .desktop entry.
+          # dpkg-dev: dpkg-shlibdeps, which derives the .deb's Depends from
+          #   the ELF objects actually shipped.
+          sudo apt-get install -y --no-install-recommends \
+            clang cmake ninja-build pkg-config \
+            libgtk-3-dev libsecret-1-dev liblzma-dev \
+            desktop-file-utils dpkg-dev
+
+      - name: Install a matching libstdc++ development package
+        # Best effort. clang picks the newest GCC tree it can see; if that
+        # tree has headers but no libstdc++.so the link fails with
+        # `cannot find -lstdc++`. Installing the dev package for the newest
+        # available GCC keeps the default toolchain complete, and
+        # linux/packaging/gcc-install-dir.sh covers the case where it is not.
+        run: |
+          set -uo pipefail
+          for v in 14 13 12; do
+            if sudo apt-get install -y --no-install-recommends "libstdc++-$v-dev"; then
+              echo "installed libstdc++-$v-dev"
+              break
+            fi
+          done
+          exit 0
+
+      - name: Set up pinned Flutter
+        uses: subosito/flutter-action@fd55f4c5af5b953cc57a2be44cb082c8f6635e8e # v2.21.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Cache pub packages
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.pub-cache
+          key: pub-linux-${{ env.FLUTTER_VERSION }}-${{ hashFiles('pubspec.lock', 'packages/opencode_sdk/pubspec.lock') }}
+          restore-keys: |
+            pub-linux-${{ env.FLUTTER_VERSION }}-
+
+      - name: Enable the Linux desktop target
+        run: flutter config --enable-linux-desktop
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Resolve generated SDK dependencies
+        run: dart pub get --directory packages/opencode_sdk --enforce-lockfile
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        # Chunked into thirds so one hung invocation cannot consume the whole
+        # job timeout; each chunk keeps the repo's serial --concurrency=1.
+        # Same shape as the Android gate, deliberately.
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(ls test/*_test.dart | sort)
+          total=${#files[@]}
+          test "$total" -gt 0
+          third=$(( (total + 2) / 3 ))
+          for start in 0 "$third" $((third * 2)); do
+            chunk=("${files[@]:start:third}")
+            [ ${#chunk[@]} -eq 0 ] && continue
+            flutter test --concurrency=1 "${chunk[@]}"
+          done
+
+      - name: Build the Linux release bundle
+        run: |
+          set -euo pipefail
+          # Prints nothing when clang links C++ on its own, which is the
+          # expected case on a GitHub runner. It only speaks up on hosts whose
+          # newest GCC tree is incomplete, and it proves the flag works before
+          # recommending it, so this stays correct either way.
+          gcc_dir="$(linux/packaging/gcc-install-dir.sh)"
+          if [ -n "$gcc_dir" ]; then
+            echo "clang needs a toolchain hint: --gcc-install-dir=$gcc_dir"
+            export CXXFLAGS="${CXXFLAGS:-} --gcc-install-dir=$gcc_dir"
+            export LDFLAGS="${LDFLAGS:-} --gcc-install-dir=$gcc_dir"
+          fi
+          flutter build linux --release
+
+      - name: Verify the bundle
+        run: |
+          set -euo pipefail
+          bundle=build/linux/x64/release/bundle
+          test -x "$bundle/opencode_mobile"
+          test -s "$bundle/data/flutter_assets/version.json"
+          # Nothing outside the bundle may be needed at runtime beyond system
+          # libraries; a missing bundled plugin shows up here as "not found".
+          ldd "$bundle/opencode_mobile"
+          ! ldd "$bundle/opencode_mobile" | grep -q "not found"
+
+      - name: Package
+        # Refuses to run if the bundle's version.json disagrees with
+        # pubspec.yaml, and prints SHA-256 for every artifact it writes.
+        run: scripts/package-linux.sh
+
+      - name: Record the version
+        id: version
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's/^version:[[:space:]]*\([^[:space:]#]*\).*/\1/p' pubspec.yaml | head -1)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Packaged $version"
+
+      - name: Upload the Linux artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: opencode-linux-x64-${{ steps.version.outputs.version }}
+          path: |
+            build/linux/packages/*.tar.gz
+            build/linux/packages/*.deb
+            build/linux/packages/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    name: Attach to the GitHub release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Download the packaged artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: opencode-linux-x64-*
+          merge-multiple: true
+          path: dist
+
+      - name: Attach the artifacts to the release for this tag
+        # The tag is the release identity that lib/update/
+        # desktop_release_check.dart reads: it parses the +buildNumber out of
+        # tag_name (e.g. v1.0.29+30-preview.9 -> 30) and compares it with the
+        # running build. Asset names are never parsed, so they only need to
+        # be recognisable. Uploading to an existing release rather than
+        # creating one keeps scripts/release.sh the single author of releases.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          ls -l dist
+          gh release upload "${GITHUB_REF_NAME}" dist/* \
+            --repo "$GITHUB_REPOSITORY" --clobber
