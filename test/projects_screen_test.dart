@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
@@ -86,6 +87,28 @@ class _ProjectsController extends ConnectionController {
     locationError = null;
     notifyListeners();
   }
+}
+
+/// A fresh server with zero projects: no location is ever selected, and the
+/// session-create call must still work against the server's own default
+/// directory (the transport omits the directory parameter when none is set).
+class _FreshServerController extends _ProjectsController {
+  _FreshServerController(super.store, super.projectsRepository) {
+    directory = null;
+  }
+
+  int createSessionCalls = 0;
+  String? createSessionDirectory;
+
+  @override
+  Future<Session> createSession() async {
+    createSessionCalls++;
+    createSessionDirectory = directory;
+    return Session(id: 'session-fresh');
+  }
+
+  @override
+  Future<void> refreshSessions() async {}
 }
 
 Future<_ProjectsController> _controller(_ProjectsRepository repository) async {
@@ -254,4 +277,61 @@ void main() {
     expect(find.byType(ProjectsScreen), findsOneWidget);
     expect(find.byKey(const ValueKey('project-project-1')), findsOneWidget);
   });
+
+  testWidgets('a fresh server with zero projects keeps the quick-ask pill', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final repository = _ProjectsRepository()..projects = const [];
+    final controller = _FreshServerController(
+      ProfileStore(prefs: await SharedPreferences.getInstance()),
+      repository,
+    );
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: WorkspaceScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // The empty state explains the situation without dead-ending the flow.
+    expect(find.text('No projects opened'), findsOneWidget);
+    expect(find.byKey(const ValueKey('workspace-quick-ask')), findsOneWidget);
+  });
+
+  testWidgets(
+    'the quick-ask pill creates a first session with no directory selected',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final repository = _ProjectsRepository()..projects = const [];
+      final controller = _FreshServerController(
+        ProfileStore(prefs: await SharedPreferences.getInstance()),
+        repository,
+      );
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          onGenerateRoute: (settings) => MaterialPageRoute<void>(
+            settings: settings,
+            builder: (_) => Scaffold(
+              appBar: AppBar(title: const Text('Chat route')),
+              body: Text('opened:${settings.name}'),
+            ),
+          ),
+          home: Scaffold(body: WorkspaceScreen(controller: controller)),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('workspace-quick-ask')));
+      await tester.pumpAndSettle();
+
+      expect(controller.createSessionCalls, 1);
+      // No project means no directory parameter: the transport omits it and
+      // the server scopes the session to its own default directory.
+      expect(controller.createSessionDirectory, isNull);
+      expect(find.text('opened:/chat/session-fresh'), findsOneWidget);
+    },
+  );
 }

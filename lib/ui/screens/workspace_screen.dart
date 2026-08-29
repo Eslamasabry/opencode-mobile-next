@@ -206,12 +206,33 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       return ProductErrorState(message: _projectError!, onRetry: _load);
     }
     if (_projects?.isEmpty == true) {
-      return ProductEmptyState(
-        icon: Icons.folder_off_outlined,
-        title: 'No projects opened',
-        message: 'Open a project on this OpenCode server, then refresh here.',
-        actionLabel: 'Refresh',
-        onAction: _load,
+      // A fresh server has no projects yet, but it can still host a session:
+      // with no directory selected the session-create call omits the
+      // directory parameter and the server scopes the session to its own
+      // default directory. Keep the quick-ask pill so the first prompt is
+      // never a dead end.
+      return Stack(
+        children: [
+          ProductEmptyState(
+            icon: Icons.folder_off_outlined,
+            title: 'No projects opened',
+            message:
+                'Open a project on this OpenCode server, then refresh here — '
+                'or ask below to start a session in the server’s default '
+                'directory.',
+            actionLabel: 'Refresh',
+            onAction: _load,
+          ),
+          Positioned(
+            left: 12,
+            right: 12,
+            bottom: 12,
+            child: _QuickAskPill(
+              creating: _creating,
+              onTap: _creating ? null : _createSession,
+            ),
+          ),
+        ],
       );
     }
 
