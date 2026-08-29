@@ -242,6 +242,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   int _eventVersion = 0;
   int _loadGeneration = 0;
   int _dataRefreshRevision = 0;
+  int _offlineFlushRevision = 0;
   bool _sending = false;
   bool _aborting = false;
   bool _permissionDialogScheduled = false;
@@ -280,6 +281,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _composer.text = widget.initialText;
     _attachments.addAll(widget.initialAttachments);
     _conn = _readConn();
+    _offlineFlushRevision = _conn.offlineFlushRevision;
     if (widget.initialText.isEmpty) {
       final draft = _conn.sessionDraft(widget.sessionID);
       if (draft != null) {
@@ -1790,6 +1792,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   void _onConnectionChanged() {
     if (!mounted) return;
+    _announceCompletedFlush();
     final shouldRehydrate =
         _dataRefreshRevision != _conn.dataRefreshRevision && _conn.api != null;
     _dataRefreshRevision = _conn.dataRefreshRevision;
@@ -1797,6 +1800,29 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     setState(() {});
     if (shouldRehydrate) unawaited(_load());
     _schedulePermissionDialog();
+  }
+
+  /// Confirms a reconnect flush that delivered queued drafts, closing the
+  /// loop the "Queued — will send when reconnected" snackbar opened. Also
+  /// names drafts the flush deliberately left for other servers.
+  void _announceCompletedFlush() {
+    if (_offlineFlushRevision == _conn.offlineFlushRevision) return;
+    _offlineFlushRevision = _conn.offlineFlushRevision;
+    final sent = _conn.lastFlushedPromptCount;
+    if (sent <= 0) return;
+    final waiting = _conn.lastFlushSkippedForOtherProfiles;
+    final message = StringBuffer(
+      'Sent $sent queued prompt${sent == 1 ? '' : 's'}',
+    );
+    if (waiting > 0) {
+      message.write(
+        ' · $waiting draft${waiting == 1 ? '' : 's'} waiting for other '
+        'servers',
+      );
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message.toString())));
   }
 
   void _dismissResolvedPermissionDialog() {
@@ -3087,6 +3113,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
+  /// The offline banner's queue line: drafts the next flush will send,
+  /// plus drafts a flush will deliberately skip for other servers.
+  String? _queuedNote() {
+    final mine = _conn.queuedPromptCount;
+    final others = _conn.queuedPromptCountForOtherProfiles;
+    final parts = <String>[
+      if (mine > 0)
+        '$mine draft${mine == 1 ? '' : 's'} queued to send on reconnect.',
+      if (others > 0)
+        '$others draft${others == 1 ? '' : 's'} waiting for other servers.',
+    ];
+    return parts.isEmpty ? null : parts.join(' ');
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -3151,14 +3191,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         body: Column(
           children: [
             if (_conn.status != StreamStatus.connected)
-              ConnectionStatusBanner(
-                controller: _conn,
-                note: _conn.queuedPromptCount > 0
-                    ? '${_conn.queuedPromptCount} draft'
-                          '${_conn.queuedPromptCount == 1 ? '' : 's'} queued '
-                          'to send on reconnect.'
-                    : null,
-              ),
+              ConnectionStatusBanner(controller: _conn, note: _queuedNote()),
             // At most one contextual strip below the connection truth, so
             // banners cannot stack three deep over the transcript: a prompt
             // error outranks subagent context, which outranks the share

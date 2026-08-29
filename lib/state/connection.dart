@@ -2238,6 +2238,22 @@ class ConnectionController extends ChangeNotifier {
     return _queue.where((entry) => entry.profileID == profileID).length;
   }
 
+  /// Queued prompts that belong to profiles other than the active one. A
+  /// flush never sends these; the count lets banners and the flush notice
+  /// say "N drafts waiting for other servers" instead of staying silent.
+  int get queuedPromptCountForOtherProfiles {
+    final profileID = profile?.id;
+    return _queue.where((entry) => entry.profileID != profileID).length;
+  }
+
+  /// Advances after a flush cycle that delivered at least one queued
+  /// prompt; [lastFlushedPromptCount] and [lastFlushSkippedForOtherProfiles]
+  /// describe that cycle. Screens compare revisions in their listener to
+  /// show a one-shot "Sent N queued prompts" confirmation.
+  int offlineFlushRevision = 0;
+  int lastFlushedPromptCount = 0;
+  int lastFlushSkippedForOtherProfiles = 0;
+
   /// Adds a drafted prompt to the offline queue. Returns false when the
   /// entry exceeds the composer's aggregate attachment cap and was not
   /// queued; the caller keeps its existing limits messaging.
@@ -2298,6 +2314,7 @@ class ConnectionController extends ChangeNotifier {
     if (!_queue.any((entry) => entry.profileID == profileID)) return;
     _flushingOfflineQueue = true;
     var mutated = false;
+    var sent = 0;
     try {
       for (final entry in List.of(_queue)) {
         if (entry.profileID != profileID) continue;
@@ -2315,6 +2332,7 @@ class ConnectionController extends ChangeNotifier {
           );
           _queue.removeWhere((queued) => queued.id == entry.id);
           mutated = true;
+          sent += 1;
         } on ApiException catch (error) {
           if (error.statusCode == null) break;
           final index = _queue.indexWhere((queued) => queued.id == entry.id);
@@ -2328,6 +2346,11 @@ class ConnectionController extends ChangeNotifier {
       }
     } finally {
       _flushingOfflineQueue = false;
+      if (sent > 0) {
+        lastFlushedPromptCount = sent;
+        lastFlushSkippedForOtherProfiles = queuedPromptCountForOtherProfiles;
+        offlineFlushRevision += 1;
+      }
       if (mutated) {
         await _queueStore.save(_queue);
         notifyListeners();
