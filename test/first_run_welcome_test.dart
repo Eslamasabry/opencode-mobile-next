@@ -223,7 +223,11 @@ void main() {
 
     expect(probed, ['https://box.example:4096']);
     expect(find.byKey(const ValueKey('server-test-success')), findsOneWidget);
-    expect(find.textContaining('OpenCode 1.18.23'), findsOneWidget);
+    expect(
+      find.text('OpenCode 1 · 1.18.23 — limited feature set'),
+      findsOneWidget,
+    );
+    expect(find.text('Connected — save to finish.'), findsOneWidget);
   });
 
   testWidgets('test connection explains a refused connection', (tester) async {

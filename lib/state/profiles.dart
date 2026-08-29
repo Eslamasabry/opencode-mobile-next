@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../api/server_probe.dart' show ServerFlavor;
+
 /// One opencode server the user can connect to.
 class ServerProfile {
   final String id;
@@ -13,6 +15,15 @@ class ServerProfile {
   /// Runtime-only signal that the saved password could not be decrypted.
   bool requiresPasswordReentry;
 
+  /// Protocol generation detected at Test/connect time. Additive: profiles
+  /// saved before flavor detection default to [ServerFlavor.v1]. Cached so a
+  /// reconnect skips re-detection; a failed connect re-probes and corrects it.
+  ServerFlavor flavor;
+
+  /// Server version reported by the last successful probe/connect, cached
+  /// alongside [flavor] for the servers list.
+  String? serverVersion;
+
   ServerProfile({
     required this.id,
     required this.name,
@@ -20,6 +31,8 @@ class ServerProfile {
     this.username = '',
     this.password = '',
     this.requiresPasswordReentry = false,
+    this.flavor = ServerFlavor.v1,
+    this.serverVersion,
   });
 
   Map<String, dynamic> toJson() => {
@@ -27,6 +40,8 @@ class ServerProfile {
     'name': name,
     'baseUrl': baseUrl,
     'username': username,
+    'flavor': flavor.name,
+    if (serverVersion != null) 'serverVersion': serverVersion,
   };
 
   static ServerProfile fromJson(Map<String, dynamic> j) => ServerProfile(
@@ -34,6 +49,10 @@ class ServerProfile {
     name: (j['name'] ?? '').toString(),
     baseUrl: (j['baseUrl'] ?? '').toString(),
     username: (j['username'] ?? '').toString(),
+    flavor: j['flavor'] == ServerFlavor.v2.name
+        ? ServerFlavor.v2
+        : ServerFlavor.v1,
+    serverVersion: j['serverVersion']?.toString(),
   );
 }
 

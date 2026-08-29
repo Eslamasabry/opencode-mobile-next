@@ -35,7 +35,10 @@ class _RecordingConnection extends ConnectionController {
   final connected = <ServerProfile>[];
 
   @override
-  Future<void> connect(ServerProfile profile) async {
+  Future<void> connect(
+    ServerProfile profile, {
+    bool redetectOnFailure = true,
+  }) async {
     connected.add(profile);
     if (succeed) {
       api = OpenCodeApi(baseUrl: profile.baseUrl);
@@ -134,7 +137,7 @@ void main() {
         find.byKey(const ValueKey('server-password-field')),
         'test-secret',
       );
-      await tester.tap(find.byKey(const ValueKey('toggle-server-password')));
+      await tester.tap(find.byKey(const ValueKey('server-password-visibility')));
       await tester.pump();
 
       expect(

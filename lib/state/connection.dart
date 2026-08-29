@@ -8,7 +8,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../api/models.dart';
 import '../api/opencode_api.dart';
 import '../api/product_repository.dart';
+import '../api/server_probe.dart';
 import '../api/sse.dart';
+import '../api2/client.dart';
+import '../api2/gateway.dart';
+import '../api2/gateway_operations.dart';
+import '../api2/transport.dart' show Api2AuthRequired;
 import '../background/live_background.dart';
 import '../background/widget_snapshot.dart';
 import '../diagnostics/app_diagnostics.dart';
@@ -106,6 +111,14 @@ final connProvider = Provider<ConnectionController>(
 
 typedef OpenCodeApiFactory = OpenCodeApi Function(ServerProfile profile);
 typedef ProductRepositoryFactory = ProductRepository Function(OpenCodeApi api);
+
+/// Builds the OpenCode 2 gateway pair for a profile whose detected flavor is
+/// [ServerFlavor.v2]. Injected by tests; production uses the Api2Transport →
+/// Api2Client → Api2Gateway/Api2OperationsGateway stack.
+typedef V2GatewayPairFactory =
+    ({ServerGateway gateway, ServerOperationsGateway operations}) Function(
+      ServerProfile profile,
+    );
 typedef LocalWakeLockEnsurer = Future<void> Function();
 typedef EventStreamFactory =
     EventStream Function({
@@ -126,14 +139,15 @@ class ConnectionController extends ChangeNotifier {
   late final ValueNotifier<ThemePackId> themePack;
   final OpenCodeApiFactory _apiFactory;
   final ProductRepositoryFactory _repositoryFactory;
+  final V2GatewayPairFactory _v2GatewayFactory;
   final EventStreamFactory _eventStreamFactory;
   final EventStreamFactory? _globalEventStreamFactory;
   final LocalWakeLockEnsurer _localWakeLockEnsurer;
 
   ServerGateway? api;
   ServerOperationsGateway? repository;
-  EventStream? _events;
-  EventStream? _globalEvents;
+  LiveEventChannel? _events;
+  LiveEventChannel? _globalEvents;
   Timer? _poll;
   Future<void>? _busyStatusRefresh;
   ServerProfile? _connectedProfile;
@@ -152,6 +166,14 @@ class ConnectionController extends ChangeNotifier {
   String? availableServerVersion;
   String? installedServerVersion;
   String? lastError;
+
+  /// True after the connected v2 server answered 401 mid-session — the serve
+  /// password rotated (it changes on every restart unless OPENCODE_PASSWORD
+  /// is set). Basic auth cannot self-heal, so retry loops stay off and the
+  /// connection banner offers "Update password" instead (never a modal).
+  /// Cleared when a new connect starts, on disconnect, and when the stream
+  /// recovers.
+  bool passwordRejected = false;
 
   int connectionRevision = 0;
 
@@ -253,6 +275,7 @@ class ConnectionController extends ChangeNotifier {
     this.store, {
     OpenCodeApiFactory? apiFactory,
     ProductRepositoryFactory? repositoryFactory,
+    V2GatewayPairFactory? v2GatewayFactory,
     EventStreamFactory? eventStreamFactory,
     EventStreamFactory? globalEventStreamFactory,
     BackgroundLiveController? backgroundLive,
@@ -260,6 +283,7 @@ class ConnectionController extends ChangeNotifier {
     LocalWakeLockEnsurer? localWakeLockEnsurer,
   }) : _apiFactory = apiFactory ?? _createApi,
        _repositoryFactory = repositoryFactory ?? _createRepository,
+       _v2GatewayFactory = v2GatewayFactory ?? _createV2GatewayPair,
        _eventStreamFactory = eventStreamFactory ?? _createEventStream,
        _globalEventStreamFactory =
            globalEventStreamFactory ??
@@ -567,6 +591,32 @@ class ConnectionController extends ChangeNotifier {
   static ProductRepository _createRepository(OpenCodeApi api) =>
       SdkProductRepository(api.sdkClient);
 
+  /// Production wiring for an OpenCode 2 profile: one Basic-auth transport
+  /// and client shared by both gateway halves. Username stays `opencode` on
+  /// the wire (protocol notes §1); the profile's stored password rides every
+  /// request.
+  static ({ServerGateway gateway, ServerOperationsGateway operations})
+  _createV2GatewayPair(ServerProfile profile) {
+    final client = Api2Client.connect(
+      baseUrl: profile.baseUrl,
+      password: profile.password,
+    );
+    return (
+      gateway: Api2Gateway(client: client),
+      operations: Api2OperationsGateway(client: client),
+    );
+  }
+
+  /// Constructs the transport pair for [profile]'s cached flavor. The two
+  /// v1 factories stay the injected test seams; v2 goes through
+  /// [_v2GatewayFactory].
+  ({ServerGateway gateway, ServerOperationsGateway operations})
+  _buildTransportPair(ServerProfile profile) {
+    if (profile.flavor == ServerFlavor.v2) return _v2GatewayFactory(profile);
+    final v1Api = _apiFactory(profile);
+    return (gateway: v1Api, operations: _repositoryFactory(v1Api));
+  }
+
   static EventStream _createEventStream({
     required OpenCodeApi api,
     required void Function(EventEnvelope event) onEvent,
@@ -675,7 +725,14 @@ class ConnectionController extends ChangeNotifier {
     }
   }
 
-  Future<void> connect(ServerProfile profile) async {
+  /// [redetectOnFailure] lets one failed connect re-probe the address and
+  /// correct a stale cached [ServerProfile.flavor] (a server swapped between
+  /// `opencode serve` generations) before giving up; the corrected retry runs
+  /// with it false so detection can never loop.
+  Future<void> connect(
+    ServerProfile profile, {
+    bool redetectOnFailure = true,
+  }) async {
     _lifecycleSuspended = false;
     _lifecycleWasBackgrounded = false;
     _lifecycleResume = null;
@@ -694,9 +751,10 @@ class ConnectionController extends ChangeNotifier {
     }
     final generation = _beginGeneration();
     _retireTransport();
-    final currentApi = _apiFactory(profile)
+    final pair = _buildTransportPair(profile);
+    final currentApi = pair.gateway
       ..setLocation(directory: null, workspace: null);
-    final currentRepository = _repositoryFactory(currentApi)
+    final currentRepository = pair.operations
       ..setLocation(directory: null, workspace: null);
     api = currentApi;
     repository = currentRepository;
@@ -709,6 +767,7 @@ class ConnectionController extends ChangeNotifier {
     _clearLocationData();
     status = StreamStatus.connecting;
     lastError = null;
+    passwordRejected = false;
     locationError = null;
     locationNotice = null;
     notifyListeners();
@@ -735,6 +794,20 @@ class ConnectionController extends ChangeNotifier {
       _acceptRunningServerVersion(health.version);
     } catch (e) {
       if (!_isCurrent(generation, currentApi)) return;
+      if (redetectOnFailure && _suggestsWrongFlavor(e)) {
+        final corrected = await _redetectFlavor(profile);
+        if (!_isCurrent(generation, currentApi)) return;
+        if (corrected != null) {
+          if (corrected.ok) {
+            await connect(profile, redetectOnFailure: false);
+          } else {
+            _failCurrentConnection(
+              corrected.message ?? 'Cannot reach ${profile.baseUrl}: $e',
+            );
+          }
+          return;
+        }
+      }
       _failCurrentConnection(
         e is ApiException ? e.message : 'Cannot reach ${profile.baseUrl}: $e',
       );
@@ -1059,66 +1132,143 @@ class ConnectionController extends ChangeNotifier {
     }
   }
 
-  void _startEvents(int generation, OpenCodeApi currentApi) {
-    late final EventStream stream;
-    stream = _eventStreamFactory(
-      api: currentApi,
-      onEvent: (event) {
-        if (!_isCurrentStream(generation, currentApi, stream)) return;
-        _onEvent(event);
-      },
-      onStatus: (s) {
-        if (!_isCurrentStream(generation, currentApi, stream)) return;
-        final previousStatus = status;
-        status = s;
-        if (s == StreamStatus.connected) {
-          lastError = null;
-          unawaited(refreshPendingPermissions());
-          unawaited(refreshPendingQuestions());
-          unawaited(flushOfflineQueue());
-          if (previousStatus == StreamStatus.reconnecting ||
-              previousStatus == StreamStatus.disconnected) {
-            _markDataRefreshReady(generation, currentApi);
-            unawaited(refreshSessions());
-          }
-        } else {
-          _cancelPermissionHydration();
+  void _startEvents(int generation, ServerGateway currentApi) {
+    late final LiveEventChannel stream;
+    void handleEvent(EventEnvelope event) {
+      if (!_isCurrentStream(generation, currentApi, stream)) return;
+      _onEvent(event);
+    }
+
+    void handleStatus(StreamStatus s) {
+      if (!_isCurrentStream(generation, currentApi, stream)) return;
+      final previousStatus = status;
+      status = s;
+      if (s == StreamStatus.connected) {
+        lastError = null;
+        passwordRejected = false;
+        unawaited(refreshPendingPermissions());
+        unawaited(refreshPendingQuestions());
+        unawaited(flushOfflineQueue());
+        if (previousStatus == StreamStatus.reconnecting ||
+            previousStatus == StreamStatus.disconnected) {
+          _markDataRefreshReady(generation, currentApi);
+          unawaited(refreshSessions());
         }
-        notifyListeners();
-      },
-      onError: (e) {
-        if (!_isCurrentStream(generation, currentApi, stream)) return;
-        lastError = e.toString();
-        notifyListeners();
-      },
-    );
+      } else {
+        _cancelPermissionHydration();
+      }
+      notifyListeners();
+    }
+
+    void handleError(Object e) {
+      if (!_isCurrentStream(generation, currentApi, stream)) return;
+      _noteAuthFailure(e);
+      lastError = e.toString();
+      notifyListeners();
+    }
+
+    // The v1 factory stays the injected test seam (typed on OpenCodeApi);
+    // every other gateway supplies its own channel through the EventGateway
+    // interface — the v2 SSE consumer lives behind that seam.
+    stream = currentApi is OpenCodeApi
+        ? _eventStreamFactory(
+            api: currentApi,
+            onEvent: handleEvent,
+            onStatus: handleStatus,
+            onError: handleError,
+          )
+        : currentApi.openEventChannel(
+            onEvent: handleEvent,
+            onStatus: handleStatus,
+            onError: handleError,
+          );
     _events = stream;
     stream.start();
     _startGlobalEvents(generation, currentApi);
   }
 
-  void _startGlobalEvents(int generation, OpenCodeApi currentApi) {
-    final factory = _globalEventStreamFactory;
-    if (factory == null) return;
-    late final EventStream stream;
-    stream = factory(
-      api: currentApi,
-      onEvent: (event) {
-        if (!_isCurrentGlobalStream(generation, currentApi, stream)) return;
-        if (event.type == 'installation.update-available' ||
-            event.type == 'installation.updated' ||
-            event.type == 'worktree.ready' ||
-            event.type == 'worktree.failed') {
-          _onEvent(event);
-        }
-      },
-      // The location-scoped stream owns visible connection state. A global
-      // update-notification retry must never make a healthy chat look offline.
-      onStatus: (_) {},
-      onError: (_) {},
-    );
+  void _startGlobalEvents(int generation, ServerGateway currentApi) {
+    late final LiveEventChannel stream;
+    void handleEvent(EventEnvelope event) {
+      if (!_isCurrentGlobalStream(generation, currentApi, stream)) return;
+      if (event.type == 'installation.update-available' ||
+          event.type == 'installation.updated' ||
+          event.type == 'worktree.ready' ||
+          event.type == 'worktree.failed') {
+        _onEvent(event);
+      }
+    }
+
+    if (currentApi is OpenCodeApi) {
+      final factory = _globalEventStreamFactory;
+      if (factory == null) return;
+      stream = factory(
+        api: currentApi,
+        onEvent: handleEvent,
+        // The location-scoped stream owns visible connection state. A global
+        // update-notification retry must never make a healthy chat look
+        // offline.
+        onStatus: (_) {},
+        onError: (_) {},
+      );
+    } else {
+      stream = currentApi.openGlobalEventChannel(
+        onEvent: handleEvent,
+        onStatus: (_) {},
+        onError: (_) {},
+      );
+    }
     _globalEvents = stream;
     stream.start();
+  }
+
+  /// Marks a mid-session Basic-auth rejection from the v2 transport so the
+  /// connection banner can offer "Update password" instead of retry loops.
+  void _noteAuthFailure(Object error) {
+    if (error is Api2AuthRequired ||
+        (error is ApiException &&
+            error.statusCode == 401 &&
+            _connectedProfile?.flavor == ServerFlavor.v2)) {
+      passwordRejected = true;
+    }
+  }
+
+  /// True for connect failures shaped like talking to the wrong server
+  /// generation: a 401 (v1 client meeting v2's Basic-auth gate) or a 404/405
+  /// (v2 client asking a v1 server for `/api/...`). Unreachable addresses and
+  /// unhealthy servers are not flavor problems, so they never trigger a
+  /// re-probe.
+  static bool _suggestsWrongFlavor(Object error) =>
+      error is ApiException &&
+      (error.statusCode == 401 ||
+          error.statusCode == 404 ||
+          error.statusCode == 405);
+
+  /// After a failed connect, asks the probe which protocol generation the
+  /// address actually speaks. Returns the probe result when it disagrees with
+  /// the profile's cached flavor (persisting the correction), null otherwise.
+  Future<ServerProbeResult?> _redetectFlavor(ServerProfile profile) async {
+    try {
+      final result = await serverProbe(
+        baseUrl: profile.baseUrl,
+        username: profile.username,
+        password: profile.password,
+      );
+      final detected = result.flavor;
+      if (detected == ServerFlavor.unknown || detected == profile.flavor) {
+        return null;
+      }
+      profile.flavor = detected;
+      if (result.version != null) profile.serverVersion = result.version;
+      try {
+        await store.upsert(profile);
+      } catch (_) {
+        // The corrected flavor still applies to this in-memory connect.
+      }
+      return result;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> disconnect({
@@ -1142,6 +1292,7 @@ class ConnectionController extends ChangeNotifier {
     locationLoading = false;
     locationError = null;
     locationNotice = null;
+    passwordRejected = false;
     status = StreamStatus.disconnected;
     if (!silent) notifyListeners();
     if (!keepActive) {
@@ -2456,9 +2607,10 @@ class ConnectionController extends ChangeNotifier {
     final generation = _beginGeneration();
     _retireTransport();
     _connectedProfile = profile;
-    final currentApi = _apiFactory(profile)
+    final pair = _buildTransportPair(profile);
+    final currentApi = pair.gateway
       ..setLocation(directory: directory, workspace: workspace);
-    final currentRepository = _repositoryFactory(currentApi)
+    final currentRepository = pair.operations
       ..setLocation(directory: directory, workspace: workspace);
     api = currentApi;
     repository = currentRepository;
@@ -2477,6 +2629,7 @@ class ConnectionController extends ChangeNotifier {
       _acceptRunningServerVersion(health.version ?? version);
     } catch (error) {
       if (!_isCurrent(generation, currentApi)) return;
+      _noteAuthFailure(error);
       _failCurrentConnection(
         error is ApiException
             ? error.message
@@ -2789,13 +2942,13 @@ class ConnectionController extends ChangeNotifier {
   bool _isCurrentStream(
     int generation,
     ServerGateway currentApi,
-    EventStream stream,
+    LiveEventChannel stream,
   ) => _isCurrent(generation, currentApi) && identical(_events, stream);
 
   bool _isCurrentGlobalStream(
     int generation,
     ServerGateway currentApi,
-    EventStream stream,
+    LiveEventChannel stream,
   ) => _isCurrent(generation, currentApi) && identical(_globalEvents, stream);
 
   bool _isCurrentSessionsRefresh(

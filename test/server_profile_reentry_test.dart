@@ -48,7 +48,10 @@ class _RecordingConnection extends ConnectionController {
   int disconnectCalls = 0;
 
   @override
-  Future<void> connect(ServerProfile profile) async {
+  Future<void> connect(
+    ServerProfile profile, {
+    bool redetectOnFailure = true,
+  }) async {
     connectCalls++;
   }
 
