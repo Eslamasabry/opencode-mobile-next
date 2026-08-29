@@ -21,7 +21,8 @@ Future<void> showModelPicker(BuildContext context) {
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    showDragHandle: false,
+    // Theme default drag handle: the visible affordance that this sheet
+    // collapses by dragging.
     clipBehavior: Clip.antiAlias,
     constraints: const BoxConstraints(maxWidth: 720),
     builder: (_) => const _ModelAgentSheet(),
@@ -495,8 +496,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
               '$providerName · ${model.id}',
               if (model.contextLimit > 0)
                 '${_number(model.contextLimit)} context',
-              if (model.outputLimit > 0)
-                '${_number(model.outputLimit)} output',
+              if (model.outputLimit > 0) '${_number(model.outputLimit)} output',
             ].join(' · '),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -593,8 +593,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
                           key: ValueKey('model-variant-${model.id}-default'),
                           label: const Text('Default'),
                           selected: _draftVariant.isEmpty,
-                          onSelected: (_) =>
-                              setState(() => _draftVariant = ''),
+                          onSelected: (_) => setState(() => _draftVariant = ''),
                         ),
                       ),
                       for (final variant in variants)

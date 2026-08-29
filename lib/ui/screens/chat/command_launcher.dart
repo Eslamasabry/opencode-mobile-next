@@ -352,6 +352,10 @@ class _CommandLauncherSheetState extends State<_CommandLauncherSheet>
                   : ListView(
                       key: const Key('command-launcher-list'),
                       controller: scrollController,
+                      // Dragging the results dismisses the search keyboard so
+                      // it stops covering the list.
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       padding: const EdgeInsets.only(bottom: 24),
                       children: [
                         for (final group in groups.entries) ...[
@@ -416,6 +420,7 @@ class _AgentPickerList extends StatelessWidget {
         child: ListView(
           controller: scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           children: [
             SizedBox(height: MediaQuery.sizeOf(context).height * .12),
             Icon(
@@ -453,6 +458,7 @@ class _AgentPickerList extends StatelessWidget {
         key: const Key('composer-agent-list'),
         controller: scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: const EdgeInsets.only(top: 6, bottom: 24),
         itemCount: agents.length,
         separatorBuilder: (_, _) => const Divider(height: 1),
@@ -580,7 +586,10 @@ class _InlineCommandSuggestions extends StatelessWidget {
           InkWell(
             key: Key('inline-command-${command.slash}'),
             onTap: () => onSelected(command),
-            child: Padding(
+            // 44dp floor: these rows sit directly under the thumbs while
+            // typing, where ~30dp rows invite mis-taps.
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 44),
               padding: EdgeInsets.fromLTRB(
                 14,
                 compact ? 6 : 8,
@@ -673,7 +682,10 @@ class _InlineAgentSuggestions extends StatelessWidget {
           InkWell(
             key: Key('inline-agent-${agent.id}'),
             onTap: () => onSelected(agent),
-            child: Padding(
+            // 44dp floor: these rows sit directly under the thumbs while
+            // typing, where ~30dp rows invite mis-taps.
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 44),
               padding: EdgeInsets.fromLTRB(
                 14,
                 compact ? 6 : 8,
@@ -732,4 +744,3 @@ class _InlineAgentSuggestions extends StatelessWidget {
     );
   }
 }
-

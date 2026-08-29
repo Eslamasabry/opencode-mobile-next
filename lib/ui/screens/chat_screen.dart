@@ -1346,7 +1346,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      showDragHandle: false,
       constraints: const BoxConstraints(maxWidth: 720),
       builder: (context) =>
           _TimelineSheet(messages: _messages, forkMode: forkMode),
@@ -2197,7 +2196,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      showDragHandle: false,
       constraints: const BoxConstraints(maxWidth: 720),
       builder: (sheetContext) => _CommandLauncherSheet(
         controller: _conn,
