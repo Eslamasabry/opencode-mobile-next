@@ -255,6 +255,12 @@ class ToolCard extends StatefulWidget {
   final String toolName;
   final ToolState state;
   final bool embedded;
+
+  /// Optional longer-lived store (e.g. session-scoped) keyed by
+  /// [expansionKey], so expansion survives list recycling in a virtualized
+  /// transcript instead of resetting when the item State is rebuilt.
+  final Map<String, bool>? expansionStore;
+  final String? expansionKey;
   final ToolOutputFileLoader? filePreviewLoader;
   final ToolOutputFileAction? onAttachFile;
   final ToolOutputFileAction? onDownloadFile;
@@ -263,6 +269,8 @@ class ToolCard extends StatefulWidget {
     required this.toolName,
     required this.state,
     this.embedded = false,
+    this.expansionStore,
+    this.expansionKey,
     this.filePreviewLoader,
     this.onAttachFile,
     this.onDownloadFile,
@@ -280,10 +288,23 @@ class _ToolCardState extends State<ToolCard> {
   List<ToolOutputFile> get _images =>
       _files.where((file) => file.isImage).toList();
 
+  bool? get _storedExpansion => widget.expansionKey == null
+      ? null
+      : widget.expansionStore?[widget.expansionKey!];
+
+  void _toggleExpanded() {
+    setState(() {
+      _expanded = !_expanded;
+      if (widget.expansionKey case final key?) {
+        widget.expansionStore?[key] = _expanded;
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-    _expanded = widget.state.status == 'error';
+    _expanded = _storedExpansion ?? (widget.state.status == 'error');
     _syncPreviewLoads();
   }
 
@@ -407,9 +428,7 @@ class _ToolCardState extends State<ToolCard> {
             expanded: hasBody ? _expanded : null,
             label: '${contract.title}, ${widget.state.status}',
             child: InkWell(
-              onTap: hasBody
-                  ? () => setState(() => _expanded = !_expanded)
-                  : null,
+              onTap: hasBody ? _toggleExpanded : null,
               borderRadius: widget.embedded
                   ? BorderRadius.zero
                   : BorderRadius.circular(8),
@@ -1050,41 +1069,56 @@ class _DiffPreview extends StatelessWidget {
 
   final String diff;
 
+  /// Inline rows before "See all" takes over; small enough (~240px) that the
+  /// old IntrinsicWidth-over-500-lines layout cost is gone and the body
+  /// never becomes a nested vertical scroll trap.
+  static const _inlineLineCap = 13;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final lines = diff.split('\n');
-    final visible = lines.take(500).toList();
-    return Container(
-      constraints: const BoxConstraints(maxHeight: 420),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: .35)),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) => SingleChildScrollView(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: IntrinsicWidth(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minWidth: constraints.maxWidth),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (final line in visible) _DiffPreviewLine(line: line),
-                    if (lines.length > visible.length)
-                      const Padding(
-                        padding: EdgeInsets.all(8),
-                        child: Text('… diff truncated in preview'),
-                      ),
-                  ],
+    final visible = lines.take(_inlineLineCap).toList();
+    final truncated = lines.length > visible.length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: theme.dividerColor.withValues(alpha: .35),
+            ),
+          ),
+          child: LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: IntrinsicWidth(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (final line in visible) _DiffPreviewLine(line: line),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ),
+        if (truncated)
+          _SeeAllButton(
+            label: 'See all · ${lines.length} lines',
+            onPressed: () => showFilePreviewSheet(
+              context,
+              FilePreviewData(name: 'changes.diff', text: diff),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -1341,10 +1375,23 @@ class _ToolOutputPreview extends StatelessWidget {
                       maxHeight: 260,
                     ),
                     color: theme.colorScheme.surfaceContainerLowest,
-                    child: Image.memory(
-                      imageBytes,
-                      key: const Key('tool-output-image'),
-                      fit: BoxFit.contain,
+                    child: LayoutBuilder(
+                      builder: (context, imageConstraints) {
+                        // Decode at the preview's own pixel size: a full
+                        // screenshot otherwise decodes at native resolution
+                        // (tens of MB) for a ~260px-tall thumbnail.
+                        final dpr = MediaQuery.devicePixelRatioOf(context);
+                        final cacheWidth = imageConstraints.maxWidth.isFinite
+                            ? (imageConstraints.maxWidth * dpr).round()
+                            : null;
+                        return Image.memory(
+                          imageBytes,
+                          key: const Key('tool-output-image'),
+                          fit: BoxFit.contain,
+                          cacheWidth: cacheWidth,
+                          gaplessPlayback: true,
+                        );
+                      },
                     ),
                   ),
                   Positioned(
@@ -1495,6 +1542,34 @@ class _ToolOutputFileTileState extends State<_ToolOutputFileTile> {
   }
 }
 
+/// Inline caps for expanded tool bodies (~240px of monospace) so they never
+/// become nested vertical scroll traps inside the transcript; anything
+/// longer routes through "See all" to the file preview sheet.
+const _monoInlineLineCap = 13;
+const _monoInlineCharCap = 4000;
+
+class _SeeAllButton extends StatelessWidget {
+  const _SeeAllButton({required this.label, required this.onPressed});
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => Align(
+    alignment: Alignment.centerLeft,
+    child: TextButton.icon(
+      key: const Key('tool-body-see-all'),
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        visualDensity: VisualDensity.compact,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+      ),
+      icon: const Icon(Icons.open_in_full_rounded, size: 14),
+      label: Text(label, style: Theme.of(context).textTheme.labelSmall),
+    ),
+  );
+}
+
 class _Mono extends StatelessWidget {
   final String text;
   final String name;
@@ -1504,26 +1579,44 @@ class _Mono extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(8),
-      constraints: BoxConstraints(maxHeight: maxLines * 18.0),
-      decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark
-            ? Colors.black.withValues(alpha: .4)
-            : Colors.black.withValues(alpha: .04),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: SingleChildScrollView(
-        child: SmartTextPreview(
-          data: FilePreviewData(
-            name: name,
-            text: text.length > 8000
-                ? '${text.substring(0, 8000)}\n… truncated'
-                : text,
+    final lines = text.split('\n');
+    final lineCap = maxLines < _monoInlineLineCap ? maxLines : _monoInlineLineCap;
+    var visible = lines.length > lineCap
+        ? lines.take(lineCap).join('\n')
+        : text;
+    if (visible.length > _monoInlineCharCap) {
+      visible = visible.substring(0, _monoInlineCharCap);
+    }
+    final truncated = visible.length < text.length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: theme.brightness == Brightness.dark
+                ? Colors.black.withValues(alpha: .4)
+                : Colors.black.withValues(alpha: .04),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: SmartTextPreview(
+            data: FilePreviewData(
+              name: name,
+              text: truncated ? '$visible\n…' : visible,
+            ),
           ),
         ),
-      ),
+        if (truncated)
+          _SeeAllButton(
+            label: 'See all · ${lines.length} lines',
+            onPressed: () => showFilePreviewSheet(
+              context,
+              FilePreviewData(name: name, text: text),
+            ),
+          ),
+      ],
     );
   }
 }
