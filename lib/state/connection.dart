@@ -3317,9 +3317,15 @@ class ConnectionController extends ChangeNotifier {
     final generation = _beginGeneration();
     final previousVersion = version;
     _retireTransport();
-    final currentApi = _apiFactory(profile)
+    // Rebuild through the flavor-aware builder: a v2 profile must not be
+    // rescoped onto a v1 transport, whose health check cannot succeed and
+    // reads to the user as a rotated password. Guarded by
+    // test/connection_transport_factory_guard_test.dart, because this fix
+    // has already been lost to a merge once.
+    final pair = _buildTransportPair(profile);
+    final currentApi = pair.gateway
       ..setLocation(directory: directory, workspace: workspace);
-    final currentRepository = _repositoryFactory(currentApi)
+    final currentRepository = pair.operations
       ..setLocation(directory: directory, workspace: workspace);
     api = currentApi;
     repository = currentRepository;
