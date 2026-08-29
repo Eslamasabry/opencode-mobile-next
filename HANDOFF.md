@@ -246,26 +246,27 @@ have WIP commits; they were told to commit everything durable):
    `ProfileStore.upsert`, whose secure-storage channel hangs in unmocked
    widget tests — use a recording store or mock the channel (see the
    offline-queue harness fix).
-2. `port/v2-interaction` — additive FormGateway/InboxGateway in the domain,
-   forms wiring to FormRenderer, permission bottom sheet with
-   reject-with-message (§3), PendingSendsStrip unifying offline drafts +
-   v2 inbox (§5, tap=steer / long-press=queue).
-   Committed so far at last check: `c0cfb2b` (forms/inbox gateways in
-   domain + v2 transport), `291cbc9` (pending forms/inbox in connection
-   state), `3f4c682` (permission bottom sheet), `e3a9550` (forms in
-   chat + Requests + Mission Control counts), `d7367ca` (WIP:
-   PendingSendsStrip merging offline drafts with v2 inbox) — REMAINING:
-   the composer steer/queue send affordance (`_ComposerSubmit` rewrite
-   was in progress), notification Reply mapping, tests, live smoke.
-   Check the branch tip and CONTINUATION notes before resuming.
+2. ~~`port/v2-interaction`~~ — DONE and MERGED (f2760db). Additive
+   FormGateway/InboxGateway on the domain (+ `forms`/`inbox`
+   capabilities, optional `PromptDelivery` on promptAsync, optional
+   reject `message` on permission replies — all inert on v1); forms
+   auto-present once per request in chat with an inline card as the
+   reopen path and counts on Requests/Mission Control/More; the
+   permission prompt is now `chat/permission_sheet.dart` (the old
+   permission_dialog.dart is deleted) with inline reject-with-reason,
+   and notification Reply maps to reject-with-message on v2 with the
+   requestID binding rules unchanged; one `_PendingSendsStrip` carries
+   offline drafts plus v2 inbox items with cancel and delivery flips;
+   Send stays live during a turn (tap steers, long-press queues).
+   Live-verified: form reply/invalid/already-settled/cancel and inbox
+   queue/cancel/steer/flip-conflict. Traps recorded by that lane: an
+   AnimatedSize around the strip inside a scroll view never settles, and
+   a Tooltip on the busy Send button swallows the long-press menu.
+   Merge fixups on top: `cfa195c` (the connect lane's fake gateway needed
+   `capabilities` once connect-time form polling landed).
 
-If the agents finished after this note was written, their branches will
-have more commits and a final report in their transcripts; merge
-whatever exists (verify analyze + affected suites per merge, as every
-merge this session did). Both agents were instructed to leave
-CONTINUATION sections in final commit messages. Expect conflicts in
-lib/state/connection.dart (both branches touch it; wiring vs
-forms/inbox regions) and in message_view.dart's strip region.
+**THE V2 PORT'S PLANNED LANES ARE ALL MERGED.** The app connects to,
+streams from, and interacts with opencode2 servers, and still speaks v1.
 3. ~~`port/v2-transcript`~~ — DONE and MERGED (b29ec48): tagged part
    types (`v2:switch`/`v2:notice`/`v2:compaction`), TranscriptMarker
    pills, notices, compaction rows, shell status chips, interleaved tool
