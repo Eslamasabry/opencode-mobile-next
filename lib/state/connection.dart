@@ -137,6 +137,10 @@ class ConnectionController extends ChangeNotifier {
 
   /// The most recent home-screen widget write started by [notifyListeners].
   Future<void>? _pendingWidgetSnapshotWrite;
+
+  /// Set while [deleteProfileAndLocalData] runs, so a notification cannot
+  /// republish the sessions of the profile being erased.
+  bool _widgetSnapshotSuspended = false;
   final AppDiagnosticsController diagnostics;
   final bool _ownsDiagnostics;
   late final ValueNotifier<AppAppearance> appearance;
@@ -2873,10 +2877,19 @@ class ConnectionController extends ChangeNotifier {
   /// surviving cache would write deleted prompts straight back on the next
   /// save.
   ///
-  /// The profile itself is removed first and its failure propagates, because
-  /// a server that is still saved must keep its data. Once it is gone the
-  /// dependent data is orphaned either way, so the rest runs to completion and
-  /// reports what it cleared.
+  /// The order is a transaction, and it runs backwards from the obvious one.
+  /// Every dependent blob — queued prompts, drafts, the widget snapshot,
+  /// the scoped preferences — is rewritten and *verified* first, while the
+  /// profile is still saved and the operation is still abortable. Only once
+  /// all of that is confirmed gone does the profile row and its Keystore
+  /// password go.
+  ///
+  /// Deleting the profile first, as this used to, meant a later failed write
+  /// left prompts and drafts on disk with no server row to attribute them to
+  /// while the user was told the server had been removed. Every store here
+  /// answers with a success flag; none of them is ignored, and anything that
+  /// refuses is reported through [DeleteProfileResult.failures] rather than
+  /// being rounded up to success.
   ///
   /// Server-side and provider-side data is untouched; only this device is
   /// cleared.
@@ -2884,34 +2897,95 @@ class ConnectionController extends ChangeNotifier {
     String profileId,
   ) async {
     final scopedKeys = store.profileScopedPreferenceKeys(profileId);
-    await store.remove(profileId);
+    final failures = <String>[];
 
-    final queuedBefore = _queue.length;
-    _queue.removeWhere((entry) => entry.profileID == profileId);
-    final removedQueued = queuedBefore - _queue.length;
-    if (removedQueued > 0) await _queueStore.save(_queue);
+    // Snapshot writes stay suspended for the whole transaction: any
+    // notification would republish the deleted profile's session titles
+    // straight back over the snapshot this method just cleared.
+    _widgetSnapshotSuspended = true;
+    try {
+      // 1. Queued prompts — the largest and most sensitive blob, holding
+      //    prompt text and attachment data URLs.
+      final keptQueue = [
+        for (final entry in _queue)
+          if (entry.profileID != profileId) entry,
+      ];
+      final removedQueued = _queue.length - keptQueue.length;
+      var clearedQueued = 0;
+      if (removedQueued > 0) {
+        if (await _queueStore.save(keptQueue)) {
+          _offlineQueue = keptQueue;
+          clearedQueued = removedQueued;
+        } else {
+          failures.add(
+            '$removedQueued queued '
+            '${removedQueued == 1 ? 'prompt' : 'prompts'}',
+          );
+        }
+      }
 
-    final draftsBefore = _drafts.length;
-    final keptDrafts = SessionDraftStore.withoutProfile(_drafts, profileId);
-    final removedDrafts = draftsBefore - keptDrafts.length;
-    if (removedDrafts > 0) {
-      _sessionDrafts = keptDrafts;
-      await _draftStore.save(keptDrafts);
+      // 2. Composer drafts.
+      final keptDrafts = SessionDraftStore.withoutProfile(_drafts, profileId);
+      final removedDrafts = _drafts.length - keptDrafts.length;
+      var clearedDrafts = 0;
+      if (removedDrafts > 0) {
+        if (await _draftStore.save(keptDrafts)) {
+          _sessionDrafts = keptDrafts;
+          clearedDrafts = removedDrafts;
+        } else {
+          failures.add(
+            '$removedDrafts unsent '
+            '${removedDrafts == 1 ? 'draft' : 'drafts'}',
+          );
+        }
+      }
+
+      // 3. The home-screen widget's session titles.
+      await _pendingWidgetSnapshotWrite;
+      final widgetOutcome = await _widgetSnapshot.clearForProfile(profileId);
+      if (widgetOutcome == WidgetSnapshotClear.failed) {
+        failures.add('the home-screen widget’s sessions');
+      }
+
+      // 4. Profile-scoped preferences: model, agent, variant, location.
+      final unclearedKeys = await store.removeScopedPreferences(profileId);
+      if (unclearedKeys.isNotEmpty) {
+        failures.add(
+          '${unclearedKeys.length} saved '
+          '${unclearedKeys.length == 1 ? 'setting' : 'settings'}',
+        );
+      }
+
+      // 5. Only now the profile row and the Keystore password. A server
+      //    whose data is still on disk keeps its row, so the user is never
+      //    told a deletion happened that did not.
+      if (failures.isNotEmpty) {
+        return DeleteProfileResult(
+          removedPreferenceKeys: scopedKeys.difference(unclearedKeys),
+          removedQueuedPrompts: clearedQueued,
+          removedDrafts: clearedDrafts,
+          clearedWidgetSnapshot:
+              widgetOutcome == WidgetSnapshotClear.cleared,
+          removedProfile: false,
+          failures: List.unmodifiable(failures),
+        );
+      }
+      await store.remove(profileId);
+
+      return DeleteProfileResult(
+        removedPreferenceKeys: scopedKeys,
+        removedQueuedPrompts: clearedQueued,
+        removedDrafts: clearedDrafts,
+        clearedWidgetSnapshot: widgetOutcome == WidgetSnapshotClear.cleared,
+      );
+    } finally {
+      // Notify while republishing is still suspended, then lift it: this
+      // controller keeps the deleted profile's sessions in memory until the
+      // caller disconnects, and a republish would put their titles straight
+      // back onto the home screen.
+      notifyListeners();
+      _widgetSnapshotSuspended = false;
     }
-
-    // Notify before clearing the widget snapshot: the notification itself
-    // republishes that snapshot, so clearing first would let the republish
-    // write the deleted profile's rows back.
-    notifyListeners();
-    await _pendingWidgetSnapshotWrite;
-    final clearedWidget = await _widgetSnapshot.clearForProfile(profileId);
-
-    return DeleteProfileResult(
-      removedPreferenceKeys: scopedKeys,
-      removedQueuedPrompts: removedQueued,
-      removedDrafts: removedDrafts,
-      clearedWidgetSnapshot: clearedWidget,
-    );
   }
 
   /// Sends queued prompts for the active profile, oldest first, through the
@@ -3104,8 +3178,10 @@ class ConnectionController extends ChangeNotifier {
   void notifyListeners() {
     super.notifyListeners();
     // Keep the Android home-screen widget's snapshot in step with session
-    // truth; the writer itself skips unchanged payloads.
-    if (!_disposed) {
+    // truth; the writer itself skips unchanged payloads. Profile deletion
+    // suspends this: the sessions it would republish belong to the profile
+    // being erased.
+    if (!_disposed && !_widgetSnapshotSuspended) {
       // Retained so a caller that must observe the settled snapshot — profile
       // deletion — can wait for this write instead of racing it.
       final write = _widgetSnapshot.update(

@@ -136,12 +136,44 @@ class DeleteProfileResult {
   /// Whether the home-screen widget's session snapshot was cleared.
   final bool clearedWidgetSnapshot;
 
+  /// Whether the server profile itself and its Keystore password are gone.
+  ///
+  /// False means the deletion stopped before touching them: the local data
+  /// this profile owns could not be erased, so the server stays saved rather
+  /// than leaving orphaned prompts and drafts behind a removed row.
+  final bool removedProfile;
+
+  /// Plain-language descriptions of what could not be deleted, in the order
+  /// the deletion tried. Empty means the promise the UI makes — "this
+  /// server's data leaves the device" — was actually kept.
+  final List<String> failures;
+
   const DeleteProfileResult({
     this.removedPreferenceKeys = const {},
     this.removedQueuedPrompts = 0,
     this.removedDrafts = 0,
     this.clearedWidgetSnapshot = false,
+    this.removedProfile = true,
+    this.failures = const [],
   });
+
+  /// Whether every piece of local data this app knows about is gone.
+  bool get complete => failures.isEmpty && removedProfile;
+
+  /// One sentence naming what survived, for a message the user can act on.
+  /// Null when the deletion was complete.
+  String? get partialDeletionMessage {
+    if (complete) return null;
+    final kept = failures.isEmpty
+        ? 'some of its local data'
+        : failures.join(', ');
+    return removedProfile
+        ? 'The server was removed, but $kept could not be deleted from this '
+              'device. Free up storage and remove it again.'
+        : 'The server was kept: $kept could not be deleted from this device, '
+              'and removing the server would have left that data behind. '
+              'Free up storage and try again.';
+  }
 }
 
 class ProfileLocation {
@@ -268,6 +300,26 @@ class ProfileStore {
     };
   }
 
+  /// Removes every preference scoped to [profileId], reporting the keys the
+  /// store refused to drop.
+  ///
+  /// `SharedPreferences.remove` answers with a bool that the old deletion
+  /// path threw away, so a full disk or a broken store left a profile's
+  /// model, agent, and location on the device while the user was told the
+  /// server had been removed. The caller decides what to do about a
+  /// non-empty result; this method only refuses to lie about it.
+  Future<Set<String>> removeScopedPreferences(String profileId) async {
+    final failed = <String>{};
+    for (final key in profileScopedPreferenceKeys(profileId)) {
+      try {
+        if (!await prefs.remove(key)) failed.add(key);
+      } catch (_) {
+        failed.add(key);
+      }
+    }
+    return failed;
+  }
+
   /// Removes the profile, its active-profile pointer, its Keystore password,
   /// and every preference key scoped to it.
   ///
@@ -275,7 +327,9 @@ class ProfileStore {
   /// delete fails, the saved profiles come back exactly as they were. The
   /// scoped preference sweep runs only once that succeeded, at which point
   /// the keys are orphaned regardless, so a failure there cannot resurrect a
-  /// deleted server.
+  /// deleted server. [ConnectionController.deleteProfileAndLocalData] sweeps
+  /// them *before* calling this and verifies the result, so on that path the
+  /// sweep below finds nothing left to do.
   ///
   /// This clears only what [ProfileStore] owns. Queued prompts, drafts, and
   /// the home-screen widget snapshot live in shared blobs; the full cascade
@@ -299,9 +353,7 @@ class ProfileStore {
       rethrow;
     }
     _cache = next;
-    for (final key in profileScopedPreferenceKeys(id)) {
-      await prefs.remove(key);
-    }
+    await removeScopedPreferences(id);
   }
 
   String? get activeId => prefs.getString(_activeKey);

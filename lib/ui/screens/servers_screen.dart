@@ -190,9 +190,15 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     var removed = false;
     setState(() => _busy = true);
     try {
-      // Remove the durable profile and everything keyed to it first. A failed
-      // delete must not tear down a still-saved active connection.
-      await connection.deleteProfileAndLocalData(p.id);
+      // The cascade verifies every store it writes and reports what refused.
+      // A partial deletion is stated, never rounded up to the silent success
+      // the list rebuild would otherwise imply.
+      final result = await connection.deleteProfileAndLocalData(p.id);
+      final partial = result.partialDeletionMessage;
+      if (partial != null) {
+        _showFailure(partial);
+        if (!result.removedProfile) return;
+      }
       removed = true;
       if (wasActive) {
         await connection.disconnect(keepActive: true);
