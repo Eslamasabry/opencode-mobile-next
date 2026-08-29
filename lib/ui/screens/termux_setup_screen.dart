@@ -315,7 +315,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
           [
             if (currentVersion?.isNotEmpty == true)
               'Installed version: $currentVersion.',
-            'The app will install the latest stable OpenCode release, refresh its model catalog, restart only the managed local server, and reconnect this profile.',
+            'The app will install OpenCode ${TermuxBridge.defaultOpenCodeVersion} — the release this app version is tested against — refresh its model catalog, restart only the managed local server, and reconnect this profile.',
             'The server will be briefly unavailable. Active generation should be stopped first.',
           ].join('\n\n'),
         ),

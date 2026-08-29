@@ -7,7 +7,25 @@ class TermuxBridge {
   static const _managerPath = '$termuxHome/.oc/manager.sh';
   static const managedServerPort = 4096;
   static const managedServerUrl = 'http://127.0.0.1:$managedServerPort';
-  static const defaultOpenCodeVersion = 'latest';
+  /// The OpenCode server version a published build installs and updates to.
+  ///
+  /// Pinned, deliberately. `latest` meant an APK sitting on a phone for
+  /// months would one day install a server release published long after this
+  /// client was written and tested against it — a protocol change on the
+  /// server side would then break setup on a device whose owner changed
+  /// nothing. This is the version the app's contracts and fixtures are
+  /// verified against; raising it is a code change with a test run behind it,
+  /// not something that happens on its own.
+  ///
+  /// Keep this in step with the shell fallback in [_managerScript]
+  /// (`requested_version="${2:-…}"`); a test asserts the two agree.
+  static const defaultOpenCodeVersion = '1.18.25';
+
+  /// The npm dist-tag, available only when a caller passes it to
+  /// [installAndServeScript] on purpose. Nothing in the app does today: it
+  /// exists so a deliberate "install whatever is newest" flow has a name
+  /// rather than a magic string.
+  static const latestOpenCodeVersion = 'latest';
 
   static bool managesServerUrl(String? value) {
     final uri = value == null ? null : Uri.tryParse(value);
@@ -928,7 +946,7 @@ install_ubuntu_base() {
 
 setup() {
   CURRENT_PORT="${1:-4096}"
-  local requested_version="${2:-latest}"
+  local requested_version="${2:-1.18.25}"
   local dispatcher_pid="${3:-}"
   local dispatcher_start="${4:-}"
   SETUP_SUCCEEDED=0

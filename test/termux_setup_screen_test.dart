@@ -8,6 +8,7 @@ import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/termux/bridge.dart';
 import 'package:opencode_mobile/ui/screens/termux_setup_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -254,8 +255,13 @@ pid=
     await tester.tap(find.byKey(const Key('update-managed-opencode')));
     await tester.pumpAndSettle();
     expect(find.text('Update managed OpenCode?'), findsOneWidget);
+    // The dialog names the exact pinned release, not "latest": the user is
+    // agreeing to install a specific server version.
     expect(
-      find.textContaining('latest stable OpenCode release'),
+      find.textContaining(
+        'OpenCode ${TermuxBridge.defaultOpenCodeVersion} — the release this '
+        'app version is tested against',
+      ),
       findsOneWidget,
     );
     await tester.tap(find.widgetWithText(FilledButton, 'Update'));
