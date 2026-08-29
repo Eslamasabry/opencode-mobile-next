@@ -266,6 +266,105 @@ void main() {
     expect(find.byKey(const ValueKey('server-test-failure')), findsNothing);
   });
 
+  testWidgets(
+    'timeout and refused verdicts point at the host setup guide',
+    (tester) async {
+      final previous = serverProbe;
+      addTearDown(() => serverProbe = previous);
+      serverProbe = ({required baseUrl, username, password}) async =>
+          const ServerProbeResult.failure(
+            'The connection was refused. Is opencode serve running on that '
+            'host and port?',
+            suggestsMissingServer: true,
+          );
+
+      final (store, controller) = await _state();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        _app(
+          store,
+          controller,
+          routes: {
+            '/guide': (_) => Scaffold(
+              appBar: AppBar(title: const Text('Guide')),
+              body: const Text('guide-route'),
+            ),
+          },
+        ),
+      );
+      await tester.tap(find.byKey(const ValueKey('welcome-connect-card')));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const ValueKey('server-url-field')),
+        'https://box.example:4096',
+      );
+      await tester.pump();
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('test-server-connection')),
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await tester.tap(find.byKey(const ValueKey('test-server-connection')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('server-test-failure')), findsOneWidget);
+      expect(find.textContaining('No server there yet?'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('server-test-guide')),
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byKey(const ValueKey('server-profile-fields')),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('server-test-guide')));
+      await tester.pumpAndSettle();
+      expect(find.text('guide-route'), findsOneWidget);
+    },
+  );
+
+  testWidgets('a DNS failure verdict stays about the address, not the server', (
+    tester,
+  ) async {
+    final previous = serverProbe;
+    addTearDown(() => serverProbe = previous);
+    serverProbe = ({required baseUrl, username, password}) async =>
+        const ServerProbeResult.failure(
+          'That host name could not be found. Check the address spelling.',
+        );
+
+    final (store, controller) = await _state();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(store, controller));
+    await tester.tap(find.byKey(const ValueKey('welcome-connect-card')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const ValueKey('server-url-field')),
+      'https://box.exampel:4096',
+    );
+    await tester.pump();
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('test-server-connection')),
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.tap(find.byKey(const ValueKey('test-server-connection')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('server-test-failure')), findsOneWidget);
+    expect(
+      find.textContaining('Check the address spelling'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('No server there yet?'), findsNothing);
+  });
+
   testWidgets('an invalid url never reaches the probe', (tester) async {
     final previous = serverProbe;
     addTearDown(() => serverProbe = previous);

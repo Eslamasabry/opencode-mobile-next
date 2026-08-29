@@ -67,12 +67,15 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     if (result == null || !mounted) return;
     final store = ref.read(bootstrapProvider).store;
     final wasActive = store.activeId == result.id;
+    // A brand-new profile promises "Save to finish", so saving it also
+    // connects it. Edits of existing non-active profiles keep saving only.
+    final isNew = existing == null;
     var saved = false;
     setState(() => _busy = true);
     try {
       await store.upsert(result);
       saved = true;
-      if (wasActive) {
+      if (wasActive || isNew) {
         final savedProfile = store.profiles.firstWhere(
           (profile) => profile.id == result.id,
         );
@@ -81,11 +84,15 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
         if (conn.api == null) {
           throw StateError(conn.lastError ?? 'The server did not connect.');
         }
+        if (isNew && mounted) {
+          Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
+        }
       }
     } catch (error) {
       if (saved) {
         _showFailure(
-          '${result.name} was saved, but it could not reconnect. Check the '
+          '${result.name} was saved, but it could not '
+          '${isNew ? 'connect' : 'reconnect'}. Check the '
           'server address and credentials, then try again. ($error)',
         );
       } else {
@@ -925,18 +932,46 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                         ),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: Text(
-                            result.ok
-                                ? 'Connected — OpenCode '
-                                      '${result.version ?? 'server'} '
-                                      'answered. Save to finish.'
-                                : result.message!,
-                            style: TextStyle(
-                              color: result.ok
-                                  ? theme.colorScheme.onSurface
-                                  : theme.colorScheme.onErrorContainer,
-                              height: 1.35,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                result.ok
+                                    ? 'Connected — OpenCode '
+                                          '${result.version ?? 'server'} '
+                                          'answered. Save to finish.'
+                                    : result.message!,
+                                style: TextStyle(
+                                  color: result.ok
+                                      ? theme.colorScheme.onSurface
+                                      : theme.colorScheme.onErrorContainer,
+                                  height: 1.35,
+                                ),
+                              ),
+                              if (!result.ok &&
+                                  result.suggestsMissingServer) ...[
+                                const SizedBox(height: 6),
+                                Text(
+                                  'No server there yet? The setup guide '
+                                  'shows how to start one.',
+                                  style: TextStyle(
+                                    color: theme.colorScheme.onErrorContainer,
+                                    height: 1.35,
+                                  ),
+                                ),
+                                TextButton(
+                                  key: const ValueKey('server-test-guide'),
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    foregroundColor:
+                                        theme.colorScheme.onErrorContainer,
+                                  ),
+                                  onPressed: () =>
+                                      Navigator.pushNamed(context, '/guide'),
+                                  child: const Text('Open the setup guide'),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                       ],
