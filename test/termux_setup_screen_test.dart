@@ -361,6 +361,9 @@ __OC_SETUP_OUTPUT__
       find.textContaining('SSL_set_quic_tls_transport_params'),
       findsWidgets,
     );
-    expect(find.text('Stop & retry'), findsOneWidget);
+    expect(
+      find.text('Retry — resumes where setup left off'),
+      findsOneWidget,
+    );
   });
 }
