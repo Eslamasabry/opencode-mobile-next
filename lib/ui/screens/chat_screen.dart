@@ -732,6 +732,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       _loading = true;
       _error = null;
     });
+    // Inbox events are volatile: reconcile this session's pending sends
+    // from REST whenever the transcript (re)hydrates. No-op on v1.
+    unawaited(_conn.refreshInbox(widget.sessionID));
     try {
       final api = _conn.api;
       if (api == null) throw StateError('OpenCode is reconnecting.');

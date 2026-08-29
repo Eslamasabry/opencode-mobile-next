@@ -468,18 +468,31 @@ class _ComposerSubmit extends StatelessWidget {
         icon: const Icon(Icons.stop_rounded),
       );
     }
-    final send = IconButton.filled(
-      key: const Key('chat-send-button'),
-      tooltip: busy ? 'Send — steers the current run' : 'Send',
-      onPressed: sending || !enabled ? null : onSend,
-      icon: sending
-          ? const SizedBox.square(
-              dimension: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : const Icon(Icons.arrow_upward_rounded),
+    final icon = sending
+        ? const SizedBox.square(
+            dimension: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : const Icon(Icons.arrow_upward_rounded);
+    if (!busy) {
+      return IconButton.filled(
+        key: const Key('chat-send-button'),
+        tooltip: 'Send',
+        onPressed: sending || !enabled ? null : onSend,
+        icon: icon,
+      );
+    }
+    // While busy the button carries no tooltip: Tooltip installs its own
+    // long-press recognizer, which would swallow the delivery menu gesture.
+    // The hint lives in the semantics label instead.
+    final send = Semantics(
+      label: 'Send — steers the current run. Long press to choose delivery.',
+      child: IconButton.filled(
+        key: const Key('chat-send-button'),
+        onPressed: sending || !enabled ? null : onSend,
+        icon: icon,
+      ),
     );
-    if (!busy) return send;
     // OpenCode 2 while busy: Stop keeps its own adjacent button; tap Send
     // steers (the v2 default), long-press offers the delivery choice.
     return Row(

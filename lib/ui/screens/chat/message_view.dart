@@ -1547,7 +1547,6 @@ class _PendingSendsStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     // Merge both kinds into arrival order.
     final entries = <({int time, Widget child})>[
       for (var index = 0; index < drafts.length; index++)
@@ -1574,23 +1573,19 @@ class _PendingSendsStrip extends StatelessWidget {
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 860, maxHeight: 180),
+        // No container-level size animation here: the strip lives inside a
+        // scroll view, where an AnimatedSize re-measures every frame and
+        // never settles. Items animate individually instead.
         child: SingleChildScrollView(
-          child: AnimatedSize(
-            duration: reduceMotion
-                ? Duration.zero
-                : const Duration(milliseconds: 150),
-            curve: Curves.easeOutCubic,
-            alignment: Alignment.bottomCenter,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                for (final entry in entries)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(48, 2, 16, 2),
-                    child: entry.child,
-                  ),
-              ],
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              for (final entry in entries)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(48, 2, 16, 2),
+                  child: entry.child,
+                ),
+            ],
           ),
         ),
       ),
