@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/models.dart';
 import '../api/opencode_api.dart';
+import '../api2/models.dart' show Api2Delivery, Api2FormInfo, Api2InboxItem;
 import '../api/product_repository.dart';
 import '../api/sse.dart';
 import '../background/live_background.dart';
@@ -209,6 +210,20 @@ class ConnectionController extends ChangeNotifier {
   /// Outstanding permission asks keyed by request ID.
   Map<String, PermissionRequest> permissions = {};
   Map<String, PendingQuestion> questions = {};
+
+  /// Outstanding OpenCode 2 form requests keyed by form ID. Includes global
+  /// (MCP elicitation) forms whose `sessionID` is the `"global"` sentinel.
+  /// Always empty on v1 (capability `forms` is false).
+  Map<String, Api2FormInfo> forms = {};
+  bool formsLoading = false;
+  String? formsError;
+
+  /// Pending OpenCode 2 inbox items (admitted, not-yet-delivered sends) per
+  /// session, keyed by inbox ID. Feeds the pending-sends strip; empty on v1.
+  final Map<String, Map<String, Api2InboxItem>> _inboxBySession = {};
+
+  /// Bumps whenever the inbox slice of any session changes.
+  int inboxRevision = 0;
   int ptyRevision = 0;
   EventEnvelope? lastPtyEvent;
   final Set<String> _resolvedPermissionIDs = {};
@@ -217,6 +232,9 @@ class ConnectionController extends ChangeNotifier {
   final Map<String, String> _v2PermissionSessions = {};
   final Map<String, String> _v2QuestionSessions = {};
   final Set<String> _resolvedQuestionIDs = {};
+  final Set<String> _resolvedFormIDs = {};
+  int _formRevision = 0;
+  int _formRefreshGeneration = 0;
   final Set<String> _attentionActiveSessions = {};
   final Map<String, ({CodingAlertKind kind, String requestID})>
   _alertedInputKinds = {};
@@ -311,6 +329,28 @@ class ConnectionController extends ChangeNotifier {
         case 'reply':
           final text = action.reply?.trim() ?? '';
           if (text.isEmpty) return false;
+          if (action.kind == CodingAlertKind.permission) {
+            // On OpenCode 2 permissions, Reply maps to reject-with-message
+            // (the message is shown to the model — steering by rejection).
+            // RequestID binding rules stay exactly as for allow/deny: the
+            // reply resolves only the exact request this notification
+            // represented, otherwise the alert refreshes.
+            final permission = permissions[action.requestID];
+            if (permission == null ||
+                permission.sessionID != action.sessionID ||
+                !_v2PermissionSessions.containsKey(action.requestID)) {
+              _syncInputAlerts();
+              return true;
+            }
+            if (currentApi == null) return false;
+            await _sendPermissionReply(
+              currentApi,
+              permission.id,
+              'reject',
+              message: text,
+            );
+            return true;
+          }
           final question = questions[action.requestID];
           if (question == null ||
               question.sessionID != action.sessionID ||
@@ -464,10 +504,18 @@ class ConnectionController extends ChangeNotifier {
     final quickReplyQuestion = kind == CodingAlertKind.question
         ? _quickReplyQuestionForSession(sessionID)
         : null;
+    // Forms deliberately never quick-reply (multi-field forms cannot be
+    // answered from a RemoteInput); their alert deep-links into the app.
     final requestID = kind == CodingAlertKind.permission
         ? permissionForSession(sessionID)?.id
-        : (quickReplyQuestion ?? questionForSession(sessionID))?.id;
+        : (quickReplyQuestion ?? questionForSession(sessionID))?.id ??
+              formForSession(sessionID)?.id;
     if (requestID == null || requestID.isEmpty) return;
+    // v2 permission alerts carry the RemoteInput Reply action: its text
+    // maps to reject-with-message (see _handleCodingAlertAction).
+    final permissionReply =
+        kind == CodingAlertKind.permission &&
+        _v2PermissionSessions.containsKey(requestID);
     final alerted = (kind: kind, requestID: requestID);
     if (_alertedInputKinds[sessionID] == alerted) return;
     _alertedInputKinds[sessionID] = alerted;
@@ -477,7 +525,7 @@ class ConnectionController extends ChangeNotifier {
             kind: kind,
             sessionID: sessionID,
             key: _inputAlertKey(sessionID),
-            quickReply: quickReplyQuestion != null,
+            quickReply: quickReplyQuestion != null || permissionReply,
             requestID: requestID,
           )
           .then((shown) {
@@ -497,6 +545,10 @@ class ConnectionController extends ChangeNotifier {
     }..removeWhere((id) => id.isEmpty);
     final questionSessions = {
       for (final question in questions.values) question.sessionID,
+      // Pending forms alert like questions (kind `question`, no quick
+      // reply); global forms have no session to alert on.
+      for (final form in forms.values)
+        if (form.sessionID != 'global') form.sessionID,
     }..removeWhere((id) => id.isEmpty);
     final pendingSessions = {...permissionSessions, ...questionSessions};
 
@@ -1075,6 +1127,9 @@ class ConnectionController extends ChangeNotifier {
           lastError = null;
           unawaited(refreshPendingPermissions());
           unawaited(refreshPendingQuestions());
+          // Form events are ephemeral: re-poll the pending list after every
+          // (re)connect. No-op on servers without forms.
+          unawaited(refreshPendingForms());
           unawaited(flushOfflineQueue());
           if (previousStatus == StreamStatus.reconnecting ||
               previousStatus == StreamStatus.disconnected) {
@@ -1228,6 +1283,15 @@ class ConnectionController extends ChangeNotifier {
               (_, sessionID) => sessionID == id,
             );
             _v2QuestionSessions.removeWhere((_, sessionID) => sessionID == id);
+            final removedFormIDs = forms.values
+                .where((form) => form.sessionID == id)
+                .map((form) => form.id)
+                .toList();
+            if (removedFormIDs.isNotEmpty) _formRevision += 1;
+            for (final formID in removedFormIDs) {
+              forms.remove(formID);
+            }
+            if (_inboxBySession.remove(id) != null) inboxRevision += 1;
             _syncInputAlerts();
             notifyListeners();
           }
@@ -1277,6 +1341,38 @@ class ConnectionController extends ChangeNotifier {
       case 'permission.replied':
       case 'permission.v2.replied':
         _handlePermissionReply(props);
+        break;
+
+      // ---- OpenCode 2 interaction envelopes ----
+      // Emitted by the v2 event adapter (lib/api2/gateway_events.dart):
+      //   form.v2.created                 {form: Form.Info (raw v2 JSON)}
+      //   form.v2.replied                 {id, sessionID}
+      //   form.v2.cancelled               {id, sessionID}
+      //   session.inbox.enqueued          {sessionID, inboxID, item}
+      //   session.inbox.delivered         {sessionID, inboxID}
+      //   session.inbox.cancelled         {sessionID, inboxID}
+      //   session.inbox.delivery.changed  {sessionID, inboxID, delivery}
+      case 'form.v2.created':
+        _handleFormCreated(props);
+        break;
+
+      case 'form.v2.replied':
+      case 'form.v2.cancelled':
+        final formID = props['id']?.toString() ?? '';
+        if (formID.isNotEmpty) _resolveForm(formID);
+        break;
+
+      case 'session.inbox.enqueued':
+        _handleInboxEnqueued(props);
+        break;
+
+      case 'session.inbox.delivered':
+      case 'session.inbox.cancelled':
+        _handleInboxRemoved(props);
+        break;
+
+      case 'session.inbox.delivery.changed':
+        _handleInboxDeliveryChanged(props);
         break;
 
       case 'question.asked':
@@ -1675,15 +1771,27 @@ class ConnectionController extends ChangeNotifier {
     permissionsLoading = false;
   }
 
-  Future<void> answerPermission(String requestID, String response) async {
+  /// [message] rides only on v2 rejections (steering-by-rejection); the v1
+  /// reply shape has no field for it and ignores it.
+  Future<void> answerPermission(
+    String requestID,
+    String response, {
+    String? message,
+  }) async {
     final permission = permissions[requestID];
     if (permission == null) {
       if (_resolvedPermissionIDs.contains(requestID)) return;
       throw StateError('Permission request $requestID is no longer pending');
     }
     final currentApi = await _requireActionTransport();
-    await _sendPermissionReply(currentApi, requestID, response);
+    await _sendPermissionReply(currentApi, requestID, response, message: message);
   }
+
+  /// True when [requestID] arrived over the OpenCode 2 permission contract,
+  /// whose reject reply accepts an optional message shown to the model. The
+  /// permission sheet omits its reject-message field otherwise.
+  bool permissionSupportsRejectMessage(String requestID) =>
+      _v2PermissionSessions.containsKey(requestID);
 
   /// Sends one permission reply on an already-resolved transport. Notification
   /// actions use this directly with the live background transport because the
@@ -1692,8 +1800,9 @@ class ConnectionController extends ChangeNotifier {
   Future<void> _sendPermissionReply(
     ServerGateway currentApi,
     String requestID,
-    String response,
-  ) async {
+    String response, {
+    String? message,
+  }) async {
     final permission = permissions[requestID];
     if (permission == null) {
       if (_resolvedPermissionIDs.contains(requestID)) return;
@@ -1708,6 +1817,7 @@ class ConnectionController extends ChangeNotifier {
           v2SessionID,
           permission.id,
           response,
+          message: message,
         );
       } else {
         await currentApi.respondPermission(
@@ -1715,6 +1825,7 @@ class ConnectionController extends ChangeNotifier {
           response,
           legacySessionID: legacyIdentity?.sessionID,
           legacyPermissionID: legacyIdentity?.permissionID,
+          message: message,
         );
       }
       if (!_isCurrent(generation, currentApi)) return;
@@ -1953,6 +2064,265 @@ class ConnectionController extends ChangeNotifier {
           raw['requestID']?.toString() == requestID;
     }
     return false;
+  }
+
+  // ---------------- Forms (OpenCode 2) ----------------
+
+  /// True when the connected server speaks the v2 forms contract.
+  bool get supportsForms => api?.capabilities.forms ?? false;
+
+  /// True when the connected server exposes the v2 session inbox.
+  bool get supportsInbox => api?.capabilities.inbox ?? false;
+
+  List<Api2FormInfo> formsForSession(String sessionID) => forms.values
+      .where((form) => form.sessionID == sessionID)
+      .toList(growable: false);
+
+  Api2FormInfo? formForSession(String sessionID) {
+    for (final form in forms.values) {
+      if (form.sessionID == sessionID) return form;
+    }
+    return null;
+  }
+
+  void _handleFormCreated(Map<String, dynamic> props) {
+    final raw = props['form'];
+    if (raw is! Map) return;
+    final form = Api2FormInfo.fromJson(Map<String, dynamic>.from(raw));
+    if (form == null || form.id.isEmpty) return;
+    formsLoading = false;
+    _resolvedFormIDs.remove(form.id);
+    forms[form.id] = form;
+    _formRevision += 1;
+    _syncInputAlerts();
+    notifyListeners();
+  }
+
+  void _resolveForm(String formID) {
+    formsLoading = false;
+    _resolvedFormIDs.add(formID);
+    _formRevision += 1;
+    if (forms.remove(formID) != null) {
+      _syncInputAlerts();
+    }
+    notifyListeners();
+  }
+
+  /// Re-polls the pending form lists. Form events are ephemeral, so this
+  /// runs after every SSE (re)connect; it is a no-op on v1 servers.
+  Future<void> refreshPendingForms() async {
+    final currentApi = api;
+    final generation = _generation;
+    if (currentApi == null || !currentApi.capabilities.forms) return;
+    final refreshGeneration = ++_formRefreshGeneration;
+    final revision = _formRevision;
+    formsLoading = true;
+    formsError = null;
+    notifyListeners();
+    try {
+      final pending = await currentApi.pendingForms();
+      if (!_isCurrent(generation, currentApi) ||
+          refreshGeneration != _formRefreshGeneration) {
+        return;
+      }
+      final hydrated = {
+        for (final form in pending)
+          if (!_resolvedFormIDs.contains(form.id)) form.id: form,
+      };
+      if (revision != _formRevision) {
+        // Events moved the set mid-fetch; they are fresher than the poll.
+        hydrated.addAll(forms);
+        hydrated.removeWhere((id, _) => _resolvedFormIDs.contains(id));
+      }
+      forms = hydrated;
+      formsLoading = false;
+      _syncInputAlerts();
+      notifyListeners();
+    } catch (error) {
+      if (!_isCurrent(generation, currentApi) ||
+          refreshGeneration != _formRefreshGeneration) {
+        return;
+      }
+      formsLoading = false;
+      formsError = error.toString();
+      _recordLocationError(formsError!);
+      notifyListeners();
+    }
+  }
+
+  /// Sends the assembled answer of a pending form. Rethrows transport
+  /// failures for the presenter (400 invalid-answer keeps the form open with
+  /// a banner); a 409 already-settled also resolves the form locally so the
+  /// presenter can toast-and-close.
+  Future<void> replyForm(String formID, Map<String, dynamic> answer) async {
+    final form = forms[formID];
+    if (form == null) {
+      if (_resolvedFormIDs.contains(formID)) return;
+      throw StateError('Form request $formID is no longer pending');
+    }
+    final currentApi = await _requireActionTransport();
+    try {
+      await currentApi.replyForm(form.sessionID, formID, answer);
+    } on ApiException catch (error) {
+      if (error.errorTag == 'FormAlreadySettledError' ||
+          error.errorTag == 'FormNotFoundError') {
+        _resolveForm(formID);
+      }
+      rethrow;
+    }
+    _resolveForm(formID);
+  }
+
+  /// Cancels (dismisses) a pending form; the agent continues unanswered.
+  Future<void> cancelForm(String formID) async {
+    final form = forms[formID];
+    if (form == null) {
+      if (_resolvedFormIDs.contains(formID)) return;
+      throw StateError('Form request $formID is no longer pending');
+    }
+    final currentApi = await _requireActionTransport();
+    try {
+      await currentApi.cancelForm(form.sessionID, formID);
+    } on ApiException catch (error) {
+      if (error.errorTag == 'FormAlreadySettledError' ||
+          error.errorTag == 'FormNotFoundError') {
+        _resolveForm(formID);
+        return;
+      }
+      rethrow;
+    }
+    _resolveForm(formID);
+  }
+
+  // ---------------- Inbox (OpenCode 2) ----------------
+
+  /// Pending (admitted, undelivered) sends of one session, oldest first.
+  List<Api2InboxItem> inboxItemsFor(String sessionID) {
+    final items = _inboxBySession[sessionID];
+    if (items == null || items.isEmpty) return const [];
+    final sorted = items.values.toList()
+      ..sort((a, b) => (a.timeCreated ?? 0).compareTo(b.timeCreated ?? 0));
+    return sorted;
+  }
+
+  void _handleInboxEnqueued(Map<String, dynamic> props) {
+    final sessionID = props['sessionID']?.toString() ?? '';
+    final inboxID = props['inboxID']?.toString() ?? '';
+    final rawItem = props['item'];
+    if (sessionID.isEmpty || inboxID.isEmpty || rawItem is! Map) return;
+    final item = Api2InboxItem.fromJson({
+      'id': inboxID,
+      'sessionID': sessionID,
+      'timeCreated': DateTime.now().millisecondsSinceEpoch,
+      ...Map<String, dynamic>.from(rawItem),
+    });
+    if (item == null) return;
+    (_inboxBySession[sessionID] ??= {})[inboxID] = item;
+    inboxRevision += 1;
+    notifyListeners();
+  }
+
+  void _handleInboxRemoved(Map<String, dynamic> props) {
+    final sessionID = props['sessionID']?.toString() ?? '';
+    final inboxID = props['inboxID']?.toString() ?? '';
+    final items = _inboxBySession[sessionID];
+    if (items == null || items.remove(inboxID) == null) return;
+    if (items.isEmpty) _inboxBySession.remove(sessionID);
+    inboxRevision += 1;
+    notifyListeners();
+  }
+
+  void _handleInboxDeliveryChanged(Map<String, dynamic> props) {
+    final sessionID = props['sessionID']?.toString() ?? '';
+    final inboxID = props['inboxID']?.toString() ?? '';
+    final delivery = Api2Delivery.parse(props['delivery']);
+    final item = _inboxBySession[sessionID]?[inboxID];
+    if (item == null || delivery == null) return;
+    _inboxBySession[sessionID]![inboxID] = Api2InboxItem(
+      id: item.id,
+      sessionID: item.sessionID,
+      timeCreated: item.timeCreated,
+      type: item.type,
+      payload: item.payload,
+      delivery: delivery,
+    );
+    inboxRevision += 1;
+    notifyListeners();
+  }
+
+  /// Reconciles one session's pending sends from REST (events are volatile).
+  /// No-op on servers without an inbox.
+  Future<void> refreshInbox(String sessionID) async {
+    final currentApi = api;
+    final generation = _generation;
+    if (currentApi == null || !currentApi.capabilities.inbox) return;
+    final revisionAtStart = inboxRevision;
+    List<Api2InboxItem> items;
+    try {
+      items = await currentApi.inboxItems(sessionID);
+    } catch (_) {
+      // The strip is a convenience surface; a failed reconcile keeps the
+      // event-projected state rather than erroring the chat.
+      return;
+    }
+    if (!_isCurrent(generation, currentApi) ||
+        revisionAtStart != inboxRevision) {
+      return;
+    }
+    final next = {for (final item in items) item.id: item};
+    if (next.isEmpty) {
+      if (_inboxBySession.remove(sessionID) == null) return;
+    } else {
+      _inboxBySession[sessionID] = next;
+    }
+    inboxRevision += 1;
+    notifyListeners();
+  }
+
+  /// Cancels a pending send. Returns its text so the composer can restore
+  /// it as a draft (cancel-back-to-composer is the edit affordance for
+  /// immutable server items). A 409 already-delivered rethrows after
+  /// dropping the item locally.
+  Future<String?> cancelInboxItem(String sessionID, String inboxID) async {
+    final text = _inboxBySession[sessionID]?[inboxID]?.promptText;
+    final currentApi = await _requireActionTransport();
+    try {
+      await currentApi.cancelInboxItem(sessionID, inboxID);
+    } on ApiException catch (error) {
+      if (error.statusCode == 409 || error.statusCode == 404) {
+        _handleInboxRemoved({'sessionID': sessionID, 'inboxID': inboxID});
+      }
+      rethrow;
+    }
+    _handleInboxRemoved({'sessionID': sessionID, 'inboxID': inboxID});
+    return text;
+  }
+
+  /// Flips a pending send between steer and queue delivery. A 409
+  /// already-delivered drops the local item and rethrows for the toast.
+  Future<void> setInboxDelivery(
+    String sessionID,
+    String inboxID, {
+    required Api2Delivery delivery,
+  }) async {
+    final currentApi = await _requireActionTransport();
+    try {
+      if (delivery == Api2Delivery.queue) {
+        await currentApi.queueInboxItem(sessionID, inboxID);
+      } else {
+        await currentApi.steerInboxItem(sessionID, inboxID);
+      }
+    } on ApiException catch (error) {
+      if (error.statusCode == 409 || error.statusCode == 404) {
+        _handleInboxRemoved({'sessionID': sessionID, 'inboxID': inboxID});
+      }
+      rethrow;
+    }
+    _handleInboxDeliveryChanged({
+      'sessionID': sessionID,
+      'inboxID': inboxID,
+      'delivery': delivery.wire,
+    });
   }
 
   @visibleForTesting
@@ -2872,6 +3242,14 @@ class ConnectionController extends ChangeNotifier {
     busySessions = {};
     permissions = {};
     questions = {};
+    forms = {};
+    _resolvedFormIDs.clear();
+    _formRevision = 0;
+    _formRefreshGeneration += 1;
+    formsLoading = false;
+    formsError = null;
+    _inboxBySession.clear();
+    inboxRevision += 1;
     _resolvedPermissionIDs.clear();
     _legacyPermissionIdentities.clear();
     _v2PermissionSessions.clear();
