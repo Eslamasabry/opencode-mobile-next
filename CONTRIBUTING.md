@@ -42,6 +42,10 @@ dart run tool/prompt_test.dart http://127.0.0.1:4123   # needs model auth
 
 - **Run them serially.** `--concurrency=1` is the repo default; parallel runs
   are flaky and, on some machines, get killed outright.
+- If your shell or harness kills long-running commands, split the suite rather
+  than parallelizing it:
+  `ls test/*.dart | split -n l/6 - /tmp/chunk_`, then
+  `flutter test --concurrency=1 $(cat /tmp/chunk_aa)` per chunk.
 - **Any test that touches `ProfileStore.load`/`upsert` must mock the
   `plugins.it_nomads.com/flutter_secure_storage` channel**, or it hangs
   forever waiting for a platform reply that never comes. See
@@ -112,8 +116,34 @@ committed there, and what a future pack would have to record before it could
 be, is in
 [docs/internal/developer-skills.md](docs/internal/developer-skills.md).
 
-## Internal engineering log
+## Things that will waste your afternoon
 
-[docs/internal/handoff.md](docs/internal/handoff.md) is an append-only working
-log — useful for archaeology, not authoritative for anything. Current facts
-live in the README, this file, PRIVACY.md, and the GitHub releases page.
+Hard-won facts that are not discoverable from the code:
+
+- **Debug APK builds do not work against the Shorebird-pinned engine.** The
+  Shorebird artifact mirror carries release engine jars only. Use
+  `flutter build apk --release` for compile checks; without
+  `android/key.properties` it fails at `validateSigningRelease`, which still
+  proves the Kotlin and Dart sides compile.
+- **`flutter_animate` is not allowed in this repo.** It leaves pending timers
+  that fail widget tests. Use the framework's own animation APIs.
+- **Android 15+ caps `dataSync` foreground services** at six background hours
+  per rolling 24-hour period. The battery-optimization exemption the app can
+  request does not lift that platform limit, so nothing in
+  `lib/background/` may assume an unbounded live session.
+- **Never echo provider credentials.** `/config/providers` returns API keys;
+  they must not reach logs, diagnostics, notification copy, or test output.
+- **Verifying against an OpenCode 2 beta server:**
+  `opencode2 serve --port 4097 --hostname 127.0.0.1`. It prints a per-run
+  password on its "server password" line (HTTP Basic user `opencode`) — never
+  commit or echo it. Known beta quirk: the experimental session-log endpoint
+  replays nothing, so transcripts reconcile by refetch rather than replay.
+
+## Project history
+
+This repository used to carry an append-only engineering working log at
+`docs/internal/handoff.md`. It was internal scratch — machine-specific paths,
+device names, and release claims that went stale the week they were written —
+and it has been removed from the tree. Git history still has it if you need
+archaeology. Current facts live in the README, this file, PRIVACY.md,
+[SECURITY.md](SECURITY.md), and the GitHub releases page.

@@ -246,10 +246,6 @@ video/                   # Remotion showcase project
   the server API the app exercises
 - [CONTRIBUTING.md](CONTRIBUTING.md) — toolchain pin, the gates a change must
   pass, architecture boundaries, and PR expectations
-- [docs/internal/handoff.md](docs/internal/handoff.md) — the append-only
-  engineering working log. Archaeology, not documentation: it carries stale
-  release claims and one machine's local details, and nothing in it is
-  authoritative.
 
 ## License
 

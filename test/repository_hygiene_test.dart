@@ -5,21 +5,21 @@ import 'package:flutter_test/flutter_test.dart';
 /// Guards the public boundary of the repository itself: what a first-time
 /// reader meets at the root, and what third-party material the tree carries.
 void main() {
-  test('the internal engineering log is out of the repository root', () {
-    expect(
-      File('HANDOFF.md').existsSync(),
-      isFalse,
-      reason: 'the working log belongs under docs/internal/, not the root a '
-          'new reader lands on',
-    );
-
-    final handoff = File('docs/internal/handoff.md');
-    expect(handoff.existsSync(), isTrue);
-    final head = handoff.readAsStringSync().split('\n').take(20).join('\n');
-    // It must announce what it is, so nobody reads a stale release claim as
-    // current fact.
-    expect(head, contains('internal working log'));
-    expect(head, contains('README'));
+  test('the internal engineering log is out of the public tree', () {
+    // The append-only working log carried machine paths, device names, and
+    // release claims that were stale the week they were written. It is gone
+    // from the tree entirely; git history keeps it for archaeology.
+    for (final path in const [
+      'HANDOFF.md',
+      'docs/internal/handoff.md',
+    ]) {
+      expect(
+        File(path).existsSync(),
+        isFalse,
+        reason: '$path is internal scratch, not a document a public reader '
+            'should be handed',
+      );
+    }
   });
 
   test('the root points contributors at CONTRIBUTING, not the log', () {
@@ -34,12 +34,21 @@ void main() {
 
     final readme = File('README.md').readAsStringSync();
     expect(readme, contains('CONTRIBUTING.md'));
-    expect(readme, contains('docs/internal/handoff.md'));
+    expect(
+      readme,
+      isNot(contains('handoff.md')),
+      reason: 'the docs index still links the removed engineering log',
+    );
     expect(
       readme,
       isNot(contains('[HANDOFF.md](HANDOFF.md)')),
       reason: 'the docs index still links the removed root log',
     );
+
+    // The facts the log used to be the only home for now live where a
+    // contributor will actually look for them.
+    expect(text, contains('flutter_animate'));
+    expect(text, contains('validateSigningRelease'));
   });
 
   test('third-party agent skill packs are not carried in the tree', () {
