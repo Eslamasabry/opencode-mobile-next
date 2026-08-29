@@ -96,4 +96,53 @@ void main() {
       reason: 'a license text sits in LICENSES/ that no notice accounts for',
     );
   });
+
+  test('the notice inventory matches the resolved dependency versions', () {
+    // The notices shipped `record` 6.2.1 for a build that carried 7.1.1, and
+    // reproduced the 6.2.1 text with it. Attribution that names the wrong
+    // version is worse than no table, so pin the two together.
+    final notices = File('THIRD_PARTY_NOTICES.md').readAsStringSync();
+    final documented = <String, String>{
+      for (final row in RegExp(
+        r'^\| `([a-z0-9_]+)` \| ([^|]+?) \|',
+        multiLine: true,
+      ).allMatches(notices))
+        row.group(1)!: row.group(2)!.trim(),
+    };
+    expect(documented, isNotEmpty);
+
+    final lock = File('pubspec.lock').readAsStringSync().split('\n');
+    final resolved = <String, String>{};
+    String? current;
+    var hosted = false;
+    for (final line in lock) {
+      final entry = RegExp(r'^  ([a-z0-9_]+):$').firstMatch(line);
+      if (entry != null) {
+        current = entry.group(1);
+        hosted = false;
+        continue;
+      }
+      if (current == null) continue;
+      if (line == '    source: hosted') hosted = true;
+      final version = RegExp(r'^    version: "(.+)"$').firstMatch(line);
+      if (version != null && hosted) resolved[current] = version.group(1)!;
+    }
+    expect(resolved.length, greaterThan(100));
+
+    for (final entry in resolved.entries) {
+      expect(
+        documented[entry.key],
+        entry.value,
+        reason: 'THIRD_PARTY_NOTICES.md is out of date for ${entry.key}: '
+            'pubspec.lock resolves ${entry.value}, the notice says '
+            '${documented[entry.key] ?? "nothing"}',
+      );
+    }
+    expect(
+      documented.keys.toSet().difference(resolved.keys.toSet()),
+      isEmpty,
+      reason: 'the notice inventory lists a package that is no longer '
+          'resolved in pubspec.lock',
+    );
+  });
 }
