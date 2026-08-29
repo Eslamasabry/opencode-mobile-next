@@ -343,8 +343,9 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                               context,
                             ).colorScheme.surfaceContainerHighest,
                       child: Icon(
-                        p.baseUrl.contains('127.0.0.1') ||
-                                p.baseUrl.contains('localhost')
+                        isLoopbackHost(
+                              Uri.tryParse(p.baseUrl)?.host ?? '',
+                            )
                             ? Icons.smartphone_rounded
                             : Icons.dns_rounded,
                         size: 18,

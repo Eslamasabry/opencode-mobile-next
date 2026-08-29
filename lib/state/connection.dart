@@ -636,9 +636,9 @@ class ConnectionController extends ChangeNotifier {
 
   static bool _isLoopbackUrl(String value) {
     final uri = Uri.tryParse(value);
-    if (uri == null) return false;
-    final host = uri.host.toLowerCase();
-    return host == '127.0.0.1' || host == 'localhost' || host == '::1';
+    // One shared predicate, so this cannot drift from what the URL
+    // normalizer and the profile validator consider local.
+    return uri != null && isLoopbackHost(uri.host);
   }
 
   static OpenCodeApi _createApi(ServerProfile profile) => OpenCodeApi(

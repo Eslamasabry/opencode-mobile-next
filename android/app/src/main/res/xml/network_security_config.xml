@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
     <base-config cleartextTrafficPermitted="false" />
+    <!--
+      Cleartext reaches this device and nothing else. Keep this list in step
+      with isLoopbackHost() in lib/state/profiles.dart: a host the Dart layer
+      accepts but Android does not simply fails at connect time with no
+      explanation the user can act on.
+    -->
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="false">localhost</domain>
         <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">::1</domain>
     </domain-config>
 </network-security-config>

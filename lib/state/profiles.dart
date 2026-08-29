@@ -56,14 +56,56 @@ class ServerProfile {
   );
 }
 
+/// The hosts this app will speak cleartext HTTP to: this device, by every
+/// name it has.
+///
+/// Kept as one predicate on purpose. The app used to have three loopback
+/// checks that disagreed — the URL normalizer split on `:` and so read the
+/// host of `[::1]:4096` as `[`, the validator's allowlist had no IPv6 entry
+/// at all, and the connection controller's did. `::1` reached different
+/// verdicts depending on which one you hit. Anything added here must also be
+/// added to `android/app/src/main/res/xml/network_security_config.xml`, or
+/// Android blocks the request after this code has allowed it.
+bool isLoopbackHost(String host) {
+  final normalized = host.toLowerCase();
+  return normalized == 'localhost' ||
+      normalized == '127.0.0.1' ||
+      normalized == '::1';
+}
+
+/// Splits a bare `host[:port]` into the host to judge and the authority to
+/// put in a URL, or null when it is not a plausible single address.
+///
+/// IPv6 needs both halves: `[::1]:4096` carries its port outside the
+/// brackets, while a bare `::1` has to gain brackets before it can appear in
+/// a URL at all — `http://::1` does not parse.
+({String host, String authority})? _bareAuthority(String raw) {
+  if (raw.startsWith('[')) {
+    final close = raw.indexOf(']');
+    if (close < 2) return null;
+    final rest = raw.substring(close + 1);
+    if (rest.isNotEmpty && !RegExp(r'^:\d{1,5}$').hasMatch(rest)) return null;
+    return (host: raw.substring(1, close), authority: raw);
+  }
+  final colons = ':'.allMatches(raw).length;
+  if (colons >= 2) {
+    // An unbracketed IPv6 literal: its last group cannot be told apart from
+    // a port, so the whole value is the address and the brackets are ours.
+    return (host: raw, authority: '[$raw]');
+  }
+  final host = colons == 1 ? raw.substring(0, raw.indexOf(':')) : raw;
+  if (host.isEmpty) return null;
+  return (host: host, authority: raw);
+}
+
 /// Validates the transport boundary used by both profile editing and connect.
-/// Android only permits cleartext traffic to the two Termux loopback names.
-/// Expands a pasted bare address into a full server URL so setup does not
-/// require knowing URL syntax. `host[:port]` and bare IPs gain a scheme:
-/// loopback becomes `http://` (the only place HTTP is allowed) and everything
-/// else becomes `https://`. Values that already carry a scheme, and values
-/// that are not a plausible single address, come back unchanged for the
-/// validator to explain.
+/// Android only permits cleartext traffic to the Termux loopback names in
+/// [isLoopbackHost]. Expands a pasted bare address into a full server URL so
+/// setup does not require knowing URL syntax. `host[:port]` and bare IPs
+/// (v4 and v6) gain a scheme: loopback becomes `http://` (the only place
+/// HTTP is allowed) and everything else becomes `https://`. Values that
+/// already carry a scheme, and values that are not a plausible single
+/// address, come back unchanged for the validator to explain.
 String normalizeServerProfileUrl(String value) {
   final raw = value.trim();
   if (raw.isEmpty || raw.contains('://')) return raw;
@@ -71,9 +113,10 @@ String normalizeServerProfileUrl(String value) {
     r'^\[?[A-Za-z0-9._\-:]+\]?(:\d{1,5})?$',
   );
   if (!bare.hasMatch(raw)) return raw;
-  final host = raw.split(':').first.toLowerCase();
-  final loopback = host == 'localhost' || host == '127.0.0.1';
-  return '${loopback ? 'http' : 'https'}://$raw';
+  final parsed = _bareAuthority(raw);
+  if (parsed == null) return raw;
+  final scheme = isLoopbackHost(parsed.host) ? 'http' : 'https';
+  return '$scheme://${parsed.authority}';
 }
 
 String? validateServerProfileUrl(
@@ -84,7 +127,8 @@ String? validateServerProfileUrl(
   final raw = value.trim();
   if (raw.isEmpty) return 'Enter a server URL.';
   if (!raw.contains('://')) {
-    return 'Include https://. Use http:// only for localhost or 127.0.0.1.';
+    return 'Include https://. Use http:// only for localhost, 127.0.0.1, '
+        'or [::1].';
   }
   final uri = Uri.tryParse(raw);
   if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
@@ -102,15 +146,12 @@ String? validateServerProfileUrl(
   if (uri.path.isNotEmpty && uri.path != '/') {
     return 'Remove the path from the server URL. Enter only its origin.';
   }
-  if (uri.scheme == 'http') {
-    final host = uri.host.toLowerCase();
-    final loopback = host == 'localhost' || host == '127.0.0.1';
-    if (!loopback) {
-      if (username.trim().isNotEmpty || password.isNotEmpty) {
-        return 'HTTPS is required outside this device. Basic credentials must never be sent over HTTP.';
-      }
-      return 'HTTP is allowed only for localhost or 127.0.0.1. Use HTTPS for LAN and remote servers.';
+  if (uri.scheme == 'http' && !isLoopbackHost(uri.host)) {
+    if (username.trim().isNotEmpty || password.isNotEmpty) {
+      return 'HTTPS is required outside this device. Basic credentials must never be sent over HTTP.';
     }
+    return 'HTTP is allowed only for localhost, 127.0.0.1, or [::1]. Use '
+        'HTTPS for LAN and remote servers.';
   }
   return null;
 }
