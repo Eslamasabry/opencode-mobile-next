@@ -1,0 +1,54 @@
+# Code owners for OpenCode Mobile.
+#
+# This is a single-maintainer project: @Eslamasabry owns everything by
+# default. The explicit entries below are not a different owner — they mark
+# the paths where a review is load-bearing rather than routine, so that a
+# future co-maintainer inherits the map instead of guessing.
+#
+# CODEOWNERS only enforces review if branch protection requires it. Enabling
+# that is an owner-side setting, not something this file can do.
+
+*                                       @Eslamasabry
+
+# Credentials, profile-scoped storage, and the deletion sweep. A missed key
+# here means data survives a profile the user deleted.
+/lib/state/profiles.dart                @Eslamasabry
+/lib/state/connection.dart              @Eslamasabry
+/lib/state/offline_queue.dart           @Eslamasabry
+/lib/state/session_drafts.dart          @Eslamasabry
+
+# The one hardened opener every server-supplied URL must go through.
+/lib/ui/widgets/external_link.dart      @Eslamasabry
+/lib/ui/widgets/markdown.dart           @Eslamasabry
+
+# Native surface: exported components, permissions, cleartext policy,
+# notification actions bound to request IDs, and the Termux bridge.
+/android/                               @Eslamasabry
+/lib/termux/                            @Eslamasabry
+/lib/background/                        @Eslamasabry
+
+# A server this app talks to runs shell commands as its user. This script
+# decides what that server is exposed to.
+/scripts/host/                          @Eslamasabry
+/docs/ubuntu-host.md                    @Eslamasabry
+
+# Release and update ownership: signing lineage, fail-closed gates, code push.
+/scripts/release.sh                     @Eslamasabry
+/shorebird.yaml                         @Eslamasabry
+/lib/update/                            @Eslamasabry
+/.github/workflows/                     @Eslamasabry
+
+# Generated from the checked-in contracts; never hand-edited.
+/packages/opencode_sdk/                 @Eslamasabry
+/contracts/                             @Eslamasabry
+
+# Legally load-bearing, and the last two of these ship inside the app.
+/LICENSE                                @Eslamasabry
+/LICENSES/                              @Eslamasabry
+/THIRD_PARTY_NOTICES.md                 @Eslamasabry
+/PRIVACY.md                             @Eslamasabry
+
+# Governance.
+/SECURITY.md                            @Eslamasabry
+/CODE_OF_CONDUCT.md                     @Eslamasabry
+/.github/CODEOWNERS                     @Eslamasabry

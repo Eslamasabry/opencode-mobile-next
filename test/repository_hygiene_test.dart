@@ -97,6 +97,63 @@ void main() {
     );
   });
 
+  test('a public repository carries its governance files', () {
+    for (final path in const [
+      'SECURITY.md',
+      'SUPPORT.md',
+      'CODE_OF_CONDUCT.md',
+      'CONTRIBUTING.md',
+      'LICENSE',
+      '.github/CODEOWNERS',
+      '.github/dependabot.yml',
+      '.github/PULL_REQUEST_TEMPLATE.md',
+      '.github/ISSUE_TEMPLATE/config.yml',
+      '.github/ISSUE_TEMPLATE/bug_report.yml',
+      '.github/ISSUE_TEMPLATE/feature_request.yml',
+    ]) {
+      expect(File(path).existsSync(), isTrue, reason: '$path is missing');
+    }
+
+    // The two facts that make this app's reporting rules different from a
+    // typical app's, and the one supported-version rule.
+    final security = File('SECURITY.md').readAsStringSync();
+    expect(security, contains('security/advisories/new'));
+    expect(security, contains('shell-capable'));
+    expect(security, contains('current preview'));
+
+    // Security reports must not be routed into public issues.
+    final config = File('.github/ISSUE_TEMPLATE/config.yml').readAsStringSync();
+    expect(config, contains('blank_issues_enabled: false'));
+    expect(config, contains('security/advisories/new'));
+  });
+
+  test('the non-affiliation statement reaches every public entry point', () {
+    // Upstream asks third-party projects using the OpenCode name to say so.
+    // It is asserted in-app by release_blockers_test; these are the repository
+    // surfaces a reader or reporter meets first.
+    for (final path in const [
+      'README.md',
+      'SECURITY.md',
+      'SUPPORT.md',
+      '.github/ISSUE_TEMPLATE/bug_report.yml',
+      '.github/ISSUE_TEMPLATE/feature_request.yml',
+      'THIRD_PARTY_NOTICES.md',
+    ]) {
+      final text = File(path).readAsStringSync().replaceAll(
+        RegExp(r'[>*\s]+'),
+        ' ',
+      );
+      expect(
+        text,
+        contains(
+          'not built, maintained, endorsed by, or affiliated with the '
+          'official OpenCode team',
+        ),
+        reason: '$path does not state the project is unaffiliated',
+      );
+    }
+  });
+
   test('the notice inventory matches the resolved dependency versions', () {
     // The notices shipped `record` 6.2.1 for a build that carried 7.1.1, and
     // reproduced the 6.2.1 text with it. Attribution that names the wrong
