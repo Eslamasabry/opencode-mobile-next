@@ -1,0 +1,88 @@
+name: Feature request
+description: Suggest a change to the Android app
+labels: ["enhancement", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **OpenCode Mobile is an independent community project. It is not
+        built, maintained, endorsed by, or affiliated with the official
+        OpenCode team.** Requests that need the OpenCode *server* to do
+        something new belong upstream — this app can only surface what a
+        server exposes.
+
+        This is a preview line maintained by one person. A good request
+        describes the work you were trying to do, not the control you want
+        added.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before filing
+      options:
+        - label: I searched existing issues and discussions
+          required: true
+        - label: This is a change to the app, not to the OpenCode server or a model provider
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: The task, on the phone, that is currently awkward or impossible.
+      placeholder: |
+        I review a diff on the phone and want to ask about three files at
+        once, but I can only stage them one at a time from separate screens.
+    validations:
+      required: true
+
+  - type: textarea
+    id: today
+    attributes:
+      label: How do you handle it today?
+      description: Including "I give up and open a laptop" — that is useful information.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like to happen?
+      description: Optional. A sketch is fine; so is leaving this blank.
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Which part of the app?
+      options:
+        - Workspace / sessions
+        - Chat and the composer
+        - Files, Changes, Review
+        - Activity (permissions, questions, forms)
+        - Terminal
+        - More hub / Settings
+        - Connecting to a server (including Termux)
+        - Voice input
+        - Notifications and background
+        - Linux desktop build
+        - Something else / across the app
+    validations:
+      required: true
+
+  - type: dropdown
+    id: protocol
+    attributes:
+      label: Does this depend on a server generation?
+      options:
+        - Works with any server
+        - Needs OpenCode v1
+        - Needs the OpenCode 2 beta
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Prior art in other clients, accessibility impact, why now.
