@@ -192,7 +192,7 @@ class _WorktreesScreenState extends State<WorktreesScreen> {
       );
       _showMessage('${created.name} created. OpenCode is preparing it.');
     } catch (error) {
-      if (mounted) _showError(error.toString());
+      if (mounted) _showError(error);
     } finally {
       if (mounted) setState(() => _creating = false);
     }
@@ -213,7 +213,7 @@ class _WorktreesScreenState extends State<WorktreesScreen> {
       }
       Navigator.of(context).pop(true);
     } catch (error) {
-      if (mounted) _showError(error.toString());
+      if (mounted) _showError(error);
     } finally {
       if (mounted) setState(() => _busyDirectory = null);
     }
@@ -259,7 +259,7 @@ class _WorktreesScreenState extends State<WorktreesScreen> {
       _showMessage('${worktree.name} reset to the default branch');
       await _load();
     } catch (error) {
-      if (mounted) _showError(error.toString());
+      if (mounted) _showError(error);
     } finally {
       if (mounted) setState(() => _busyDirectory = null);
     }
@@ -290,7 +290,7 @@ class _WorktreesScreenState extends State<WorktreesScreen> {
       _showMessage('${worktree.name} and its branch were removed');
       await _load();
     } catch (error) {
-      if (mounted) _showError(error.toString());
+      if (mounted) _showError(error);
     } finally {
       if (mounted) setState(() => _busyDirectory = null);
     }
@@ -422,8 +422,7 @@ class _WorktreesScreenState extends State<WorktreesScreen> {
                   onOpen: () => _open(worktrees[index].directory),
                   onReset: () => _reset(worktrees[index]),
                   onRemove: () => _remove(worktrees[index]),
-                  resetAvailable:
-                      widget.controller.capabilities.worktreeReset,
+                  resetAvailable: widget.controller.capabilities.worktreeReset,
                 ),
                 if (index != worktrees.length - 1)
                   const Divider(height: 1, indent: 56),
@@ -446,16 +445,9 @@ class _WorktreesScreenState extends State<WorktreesScreen> {
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
-  void _showError(String message) {
+  void _showError(Object error) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
+    showProductError(context, error);
   }
 
   @override

@@ -144,9 +144,7 @@ class _SavedPermissionsScreenState extends State<SavedPermissionsScreen> {
     } catch (error) {
       if (!mounted) return;
       setState(() => _error = productErrorText(error));
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.toString())));
+      showProductError(context, error);
     } finally {
       if (mounted) setState(() => _removing.remove(permission.id));
     }

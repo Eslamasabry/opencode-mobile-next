@@ -1583,9 +1583,14 @@ class _ReasoningState extends State<_Reasoning> {
   void didUpdateWidget(covariant _Reasoning oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.expanded != widget.expanded) {
-      // The transcript-wide toggle overrides any per-part choice.
+      // The transcript-wide toggle sets a new default. Per-part overrides are
+      // dropped rather than overwritten with the toggle's value: stamping the
+      // store meant one flip permanently erased every per-part choice in the
+      // session, and flipping back could not restore them.
+      if (widget.expansionKey case final key?) {
+        widget.expansionStore?.remove(key);
+      }
       _open = widget.expanded;
-      _persist(_open);
     }
   }
 

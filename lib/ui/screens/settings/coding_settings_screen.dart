@@ -139,11 +139,7 @@ class _CodingSettingsScreenState extends State<CodingSettingsScreen>
         context,
       ).showSnackBar(const SnackBar(content: Text('Default shell updated')));
     } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(error.toString())));
-      }
+      if (mounted) showProductError(context, error);
     } finally {
       if (mounted) setState(() => _savingShell = false);
     }

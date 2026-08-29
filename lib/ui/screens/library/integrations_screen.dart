@@ -144,11 +144,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
       }
       await _load();
     } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(error.toString())));
-      }
+      if (mounted) showProductError(context, error);
     } finally {
       if (mounted) setState(() => _busy.remove(server.name));
     }
@@ -821,11 +817,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     }
   }
 
-  void _showError(Object error) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(error.toString())));
-  }
+  void _showError(Object error) => showProductError(context, error);
 
   Future<Map<String, String>?> _oauthInputs(
     IntegrationMethodInfo method,
@@ -846,11 +838,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     try {
       await action();
     } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(error.toString())));
-      }
+      if (mounted) showProductError(context, error);
     } finally {
       if (mounted) setState(() => _busy.remove(id));
     }

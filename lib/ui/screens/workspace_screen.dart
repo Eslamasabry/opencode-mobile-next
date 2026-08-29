@@ -569,7 +569,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       }
       await widget.controller.refreshSessions();
     } catch (error) {
-      if (mounted) _showError(error.toString());
+      if (mounted) _showError(error);
     }
   }
 
@@ -669,14 +669,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Theme.of(context).colorScheme.error,
-      ),
-    );
-  }
+  void _showError(Object error) => showProductError(context, error);
 
   @override
   void dispose() {

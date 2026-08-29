@@ -1554,6 +1554,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _toggleReasoningDisplay() async {
     final expanded = !_conn.transcriptReasoningExpanded;
+    // The transcript-wide choice is the new default for every reasoning
+    // block, so per-part overrides are dropped instead of being silently
+    // rewritten with the toggle's value. Rewriting them meant one flip
+    // erased the session's per-part choices, and an off-screen block kept
+    // resisting the toggle because its stale override outlived it.
+    setState(
+      () => _transcriptExpansion.removeWhere(
+        (key, _) => key.startsWith('reasoning:'),
+      ),
+    );
     await _conn.setTranscriptReasoningExpanded(expanded);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(

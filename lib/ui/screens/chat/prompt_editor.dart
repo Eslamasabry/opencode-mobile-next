@@ -63,9 +63,7 @@ class _PromptEditorScreenState extends State<_PromptEditorScreen> {
       setState(() => _attachments.add(attachment));
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.toString())));
+      showProductError(context, error);
     }
   }
 

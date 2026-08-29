@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
+import '../widgets/product_states.dart';
 
 class McpSetupScreen extends StatefulWidget {
   final ConnectionController controller;
@@ -95,8 +96,9 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
       if (mounted) {
         setState(() {
           _saveError = _configurationSaved
-              ? 'Saved in OpenCode, but the app could not reconnect: $error'
-              : error.toString();
+              ? 'Saved in OpenCode, but the app could not reconnect. '
+                    '${productErrorText(error)}'
+              : productErrorText(error);
         });
       }
     } finally {

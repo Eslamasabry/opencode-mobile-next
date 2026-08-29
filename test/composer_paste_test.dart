@@ -101,6 +101,16 @@ void main() {
 
     expect(find.textContaining('pasted-image-'), findsOneWidget);
     expect(find.textContaining('.png'), findsOneWidget);
+    // Audit 7.4: draft text survives navigation but attachment bytes do
+    // not, so the composer says so the moment one is staged.
+    expect(
+      find.byKey(const Key('composer-attachment-draft-note')),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Attachments are not saved with your draft.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('inserted content without bytes is ignored', (tester) async {

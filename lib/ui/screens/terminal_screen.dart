@@ -136,7 +136,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
       await _load();
     } catch (error) {
       if (_isCurrentLocation(repository, revision)) {
-        _showError(error.toString());
+        _showError(error);
       }
     } finally {
       if (_isCurrentLocation(repository, revision)) {
@@ -207,7 +207,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
       await _load();
     } catch (error) {
       if (_isCurrentLocation(repository, revision)) {
-        _showError(error.toString());
+        _showError(error);
       }
     }
   }
@@ -216,9 +216,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
     final locationRevision = widget.controller.locationRevision;
     final confirmed = await showConfirmSheet(
       context,
-      icon: process.running
-          ? AppIcons.stop
-          : Icons.delete_outline_rounded,
+      icon: process.running ? AppIcons.stop : Icons.delete_outline_rounded,
       title: process.running ? 'Stop terminal?' : 'Remove terminal?',
       message: process.running
           ? 'The running process and its child processes will be terminated.'
@@ -242,7 +240,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
       await _load();
     } catch (error) {
       if (_isCurrentLocation(repository, revision)) {
-        _showError(error.toString());
+        _showError(error);
       }
     }
   }
@@ -344,14 +342,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
     );
   }
 
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Theme.of(context).colorScheme.error,
-      ),
-    );
-  }
+  void _showError(Object error) => showProductError(context, error);
 
   @override
   void dispose() {

@@ -157,7 +157,7 @@ class _ChatComposer extends StatelessWidget {
                     delivery: delivery,
                     onChanged: onDeliveryChanged!,
                   ),
-                if (attachments.isNotEmpty)
+                if (attachments.isNotEmpty) ...[
                   Padding(
                     padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
                     child: SizedBox(
@@ -176,6 +176,20 @@ class _ChatComposer extends StatelessWidget {
                       ),
                     ),
                   ),
+                  // §7.4: draft text is persisted per session, attachment
+                  // bytes are not. Say so at selection time rather than
+                  // letting navigation lose them silently.
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 6, 14, 0),
+                    child: Text(
+                      key: const Key('composer-attachment-draft-note'),
+                      'Attachments are not saved with your draft.',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: AppTheme.mutedOf(theme),
+                      ),
+                    ),
+                  ),
+                ],
                 if (compact)
                   _compactComposer(context)
                 else

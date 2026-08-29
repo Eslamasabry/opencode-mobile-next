@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'code_highlight.dart';
 import '../app_theme.dart';
+import 'product_states.dart';
 
 Future<void> openMarkdownExternalLink(
   BuildContext context,
@@ -85,9 +86,7 @@ Future<void> openMarkdownExternalLink(
     }
   } catch (error) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not open link: $error')));
+      showProductError(context, error);
     }
   }
 }
