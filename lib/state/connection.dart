@@ -134,6 +134,9 @@ class ConnectionController extends ChangeNotifier {
   final ProfileStore store;
   final BackgroundLiveController backgroundLive;
   final WidgetSessionSnapshot _widgetSnapshot;
+
+  /// The most recent home-screen widget write started by [notifyListeners].
+  Future<void>? _pendingWidgetSnapshotWrite;
   final AppDiagnosticsController diagnostics;
   final bool _ownsDiagnostics;
   late final ValueNotifier<AppAppearance> appearance;
@@ -2796,6 +2799,16 @@ class ConnectionController extends ChangeNotifier {
   int lastFlushedPromptCount = 0;
   int lastFlushSkippedForOtherProfiles = 0;
 
+  /// Queued prompts belonging to [profileID], whether or not it is active —
+  /// what a "remove this server" confirmation has to disclose.
+  int queuedPromptCountForProfile(String profileID) =>
+      _queue.where((entry) => entry.profileID == profileID).length;
+
+  /// Unsent composer drafts that removing [profileID] would delete.
+  int draftCountForProfile(String profileID) =>
+      _drafts.length -
+      SessionDraftStore.withoutProfile(_drafts, profileID).length;
+
   /// Adds a drafted prompt to the offline queue. Returns false when the
   /// entry exceeds the composer's aggregate attachment cap and was not
   /// queued; the caller keeps its existing limits messaging.
@@ -2831,6 +2844,8 @@ class ConnectionController extends ChangeNotifier {
     } else {
       _drafts[sessionID] = SessionDraft(
         sessionID: sessionID,
+        // Stamped so removing this server can take its drafts with it.
+        profileID: profile?.id ?? store.activeId ?? '',
         text: text,
         updatedAt: DateTime.now().millisecondsSinceEpoch,
       );
@@ -2843,6 +2858,60 @@ class ConnectionController extends ChangeNotifier {
       }
     }
     await _draftStore.save(_drafts);
+  }
+
+  /// Removes [profileId] and every piece of local data keyed to it, as one
+  /// operation.
+  ///
+  /// "Remove server" reads — in the UI and in the privacy policy — as a
+  /// promise that the server's data leaves the device. Honouring that means
+  /// more than dropping the profile row: the Keystore password, the
+  /// profile-scoped preferences (model, agent, variant, location, provider
+  /// migration flags), queued prompts with their embedded attachments,
+  /// composer drafts, and the home-screen widget's session titles all have to
+  /// go, including the copies this controller is holding in memory — a
+  /// surviving cache would write deleted prompts straight back on the next
+  /// save.
+  ///
+  /// The profile itself is removed first and its failure propagates, because
+  /// a server that is still saved must keep its data. Once it is gone the
+  /// dependent data is orphaned either way, so the rest runs to completion and
+  /// reports what it cleared.
+  ///
+  /// Server-side and provider-side data is untouched; only this device is
+  /// cleared.
+  Future<DeleteProfileResult> deleteProfileAndLocalData(
+    String profileId,
+  ) async {
+    final scopedKeys = store.profileScopedPreferenceKeys(profileId);
+    await store.remove(profileId);
+
+    final queuedBefore = _queue.length;
+    _queue.removeWhere((entry) => entry.profileID == profileId);
+    final removedQueued = queuedBefore - _queue.length;
+    if (removedQueued > 0) await _queueStore.save(_queue);
+
+    final draftsBefore = _drafts.length;
+    final keptDrafts = SessionDraftStore.withoutProfile(_drafts, profileId);
+    final removedDrafts = draftsBefore - keptDrafts.length;
+    if (removedDrafts > 0) {
+      _sessionDrafts = keptDrafts;
+      await _draftStore.save(keptDrafts);
+    }
+
+    // Notify before clearing the widget snapshot: the notification itself
+    // republishes that snapshot, so clearing first would let the republish
+    // write the deleted profile's rows back.
+    notifyListeners();
+    await _pendingWidgetSnapshotWrite;
+    final clearedWidget = await _widgetSnapshot.clearForProfile(profileId);
+
+    return DeleteProfileResult(
+      removedPreferenceKeys: scopedKeys,
+      removedQueuedPrompts: removedQueued,
+      removedDrafts: removedDrafts,
+      clearedWidgetSnapshot: clearedWidget,
+    );
   }
 
   /// Sends queued prompts for the active profile, oldest first, through the
@@ -3037,14 +3106,16 @@ class ConnectionController extends ChangeNotifier {
     // Keep the Android home-screen widget's snapshot in step with session
     // truth; the writer itself skips unchanged payloads.
     if (!_disposed) {
-      unawaited(
-        _widgetSnapshot.update(
-          sessions: sortedSessions(),
-          busySessions: busySessions,
-          connected: status == StreamStatus.connected,
-          profileID: _connectedProfile?.id ?? store.activeId ?? '',
-        ),
+      // Retained so a caller that must observe the settled snapshot — profile
+      // deletion — can wait for this write instead of racing it.
+      final write = _widgetSnapshot.update(
+        sessions: sortedSessions(),
+        busySessions: busySessions,
+        connected: status == StreamStatus.connected,
+        profileID: _connectedProfile?.id ?? store.activeId ?? '',
       );
+      _pendingWidgetSnapshotWrite = write;
+      unawaited(write);
     }
   }
 

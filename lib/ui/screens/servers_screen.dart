@@ -138,14 +138,34 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     }
   }
 
+  /// Names what removal actually deletes. Queued prompts and drafts are the
+  /// only unsent work at stake, so they are counted rather than described in
+  /// the abstract; the rest is settings the user cannot inspect anyway.
+  String _deletionDisclosure(ConnectionController connection, String id) {
+    final queued = connection.queuedPromptCountForProfile(id);
+    final drafts = connection.draftCountForProfile(id);
+    final losses = [
+      if (queued > 0) '$queued queued ${queued == 1 ? 'prompt' : 'prompts'}',
+      if (drafts > 0) '$drafts unsent ${drafts == 1 ? 'draft' : 'drafts'}',
+    ];
+    return [
+      'This deletes everything this device stored for the server: its '
+          'password, selected model and agent, workspace choice'
+          '${losses.isEmpty ? '' : ', ${losses.join(' and ')}'}, and any '
+          'sessions shown in the home-screen widget.',
+      'Nothing is deleted on the server itself or at your AI providers.',
+    ].join('\n\n');
+  }
+
   Future<void> _delete(ServerProfile p) async {
+    final connection = ref.read(connProvider);
+    final disclosure = _deletionDisclosure(connection, p.id);
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        scrollable: true,
         title: Text('Remove ${p.name}?'),
-        content: const Text(
-          'The saved server will be removed from this device.',
-        ),
+        content: Text(disclosure),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -167,12 +187,12 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     var removed = false;
     setState(() => _busy = true);
     try {
-      // Remove the durable profile first. A failed delete must not tear down a
-      // still-saved active connection.
-      await store.remove(p.id);
+      // Remove the durable profile and everything keyed to it first. A failed
+      // delete must not tear down a still-saved active connection.
+      await connection.deleteProfileAndLocalData(p.id);
       removed = true;
       if (wasActive) {
-        await ref.read(connProvider).disconnect(keepActive: true);
+        await connection.disconnect(keepActive: true);
       }
     } catch (error) {
       if (removed) {

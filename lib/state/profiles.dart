@@ -120,6 +120,30 @@ enum AppAppearance { system, light, dark }
 /// Selectable color identity; palettes live in lib/ui/theme_packs.dart.
 enum ThemePackId { opencode, catppuccin, gruvbox, solarized, dynamic }
 
+/// What a profile deletion actually erased, so the UI can say so and tests
+/// can assert it rather than inferring from side effects.
+class DeleteProfileResult {
+  /// Preference keys scoped to the profile (model, agent, variant, location,
+  /// provider-runtime migration flags) that were removed.
+  final Set<String> removedPreferenceKeys;
+
+  /// Offline-queue entries — prompts and their embedded attachments — dropped.
+  final int removedQueuedPrompts;
+
+  /// Unsent composer drafts dropped.
+  final int removedDrafts;
+
+  /// Whether the home-screen widget's session snapshot was cleared.
+  final bool clearedWidgetSnapshot;
+
+  const DeleteProfileResult({
+    this.removedPreferenceKeys = const {},
+    this.removedQueuedPrompts = 0,
+    this.removedDrafts = 0,
+    this.clearedWidgetSnapshot = false,
+  });
+}
+
 class ProfileLocation {
   final String? directory;
   final String? workspace;
@@ -221,6 +245,41 @@ class ProfileStore {
     _cache = next;
   }
 
+  /// Every preference key this app scopes to [profileId].
+  ///
+  /// Profile-scoped keys are namespaced as `oc.<what>.<profileId>` — model,
+  /// explicit-model flag, agent, variant, and location — or carry the id as an
+  /// interior segment, as the provider-runtime migration flag does
+  /// (`oc.providerRuntimeRefresh.v1.<profileId>.<location>`). Matching the
+  /// shape rather than a fixed list means a key added later is deleted with
+  /// the profile even if nobody remembers to update this method; the app-wide
+  /// keys (`oc.profiles`, `oc.activeProfile`, `oc.offlineQueue`,
+  /// `oc.sessionDrafts`, `oc.widgetSessions`, appearance, theme) carry no id
+  /// segment and are never matched.
+  Set<String> profileScopedPreferenceKeys(String profileId) {
+    if (profileId.isEmpty) return const {};
+    final suffix = '.$profileId';
+    final infix = '.$profileId.';
+    return {
+      for (final key in prefs.getKeys())
+        if (key.startsWith('oc.') &&
+            (key.endsWith(suffix) || key.contains(infix)))
+          key,
+    };
+  }
+
+  /// Removes the profile, its active-profile pointer, its Keystore password,
+  /// and every preference key scoped to it.
+  ///
+  /// Profile metadata and the password stay transactional: if the Keystore
+  /// delete fails, the saved profiles come back exactly as they were. The
+  /// scoped preference sweep runs only once that succeeded, at which point
+  /// the keys are orphaned regardless, so a failure there cannot resurrect a
+  /// deleted server.
+  ///
+  /// This clears only what [ProfileStore] owns. Queued prompts, drafts, and
+  /// the home-screen widget snapshot live in shared blobs; the full cascade
+  /// is [ConnectionController.deleteProfileAndLocalData].
   Future<void> remove(String id) async {
     final previousRaw = prefs.getString(_profilesKey);
     final previousActive = prefs.getString(_activeKey);
@@ -240,6 +299,9 @@ class ProfileStore {
       rethrow;
     }
     _cache = next;
+    for (final key in profileScopedPreferenceKeys(id)) {
+      await prefs.remove(key);
+    }
   }
 
   String? get activeId => prefs.getString(_activeKey);
