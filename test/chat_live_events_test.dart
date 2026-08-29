@@ -3254,20 +3254,49 @@ void main() {
 
   testWidgets('empty transcript suggestions fill the composer', (tester) async {
     final api = _FakeOpenCodeApi();
+    // No directory is selected, so the project- and git-dependent chips give
+    // way to one that works in the server's default directory.
     await _pumpChat(tester, api);
 
     expect(find.text('Start coding'), findsOneWidget);
+    expect(find.byKey(const ValueKey('empty-transcript-tip')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('empty-suggestion-What changed recently?')),
+      findsNothing,
+    );
 
     await tester.tap(
-      find.byKey(const ValueKey('empty-suggestion-Explain this project')),
+      find.byKey(
+        const ValueKey("empty-suggestion-List what's in this directory"),
+      ),
     );
     await tester.pump();
 
     expect(
       tester.widget<TextField>(find.byType(TextField)).controller?.text,
-      'Explain this project',
+      "List what's in this directory",
     );
     expect(api.promptCalls, 0);
+  });
+
+  testWidgets('empty transcript chips are seeded from the active project', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi();
+    final controller = await _controller(api);
+    controller.directory = '/work/oc_app';
+    await _pumpChat(tester, api, controller: controller);
+
+    expect(
+      find.byKey(
+        const ValueKey('empty-suggestion-Explain the oc_app project'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('empty-suggestion-What changed recently?')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('long-pressing a user message offers copy and fork actions', (

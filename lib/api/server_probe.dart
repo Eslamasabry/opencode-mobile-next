@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 
@@ -14,8 +15,20 @@ class ServerProbeResult {
   /// A product-facing explanation when the probe failed.
   final String? message;
 
-  const ServerProbeResult.success(this.version) : ok = true, message = null;
-  const ServerProbeResult.failure(this.message) : ok = false, version = null;
+  /// True for timeout/connection-refused failures, where the likeliest cause
+  /// is that no OpenCode server exists at the address yet — the editor points
+  /// at the host setup guide for those.
+  final bool suggestsMissingServer;
+
+  const ServerProbeResult.success(this.version)
+    : ok = true,
+      message = null,
+      suggestsMissingServer = false;
+  const ServerProbeResult.failure(
+    this.message, {
+    this.suggestsMissingServer = false,
+  }) : ok = false,
+       version = null;
 }
 
 typedef ServerProbe =
@@ -71,7 +84,7 @@ Future<ServerProbeResult> probeServerConnection({
     }
     return ServerProbeResult.success(health.version);
   } on DioException catch (error) {
-    return ServerProbeResult.failure(_explain(error));
+    return explainServerProbeFailure(error);
   } catch (error) {
     return ServerProbeResult.failure('Connection test failed: $error');
   } finally {
@@ -79,28 +92,64 @@ Future<ServerProbeResult> probeServerConnection({
   }
 }
 
-String _explain(DioException error) {
+/// Maps a transport failure to a truthful product-facing probe verdict.
+/// Public so tests can exercise the mapping without a live network.
+ServerProbeResult explainServerProbeFailure(DioException error) {
   final status = error.response?.statusCode;
   if (status == 401 || status == 403) {
-    return 'The server refused the credentials. '
-        'Check the username and password.';
+    return const ServerProbeResult.failure(
+      'The server refused the credentials. '
+      'Check the username and password.',
+    );
   }
   if (status != null) {
-    return 'The address responded, but not like an OpenCode server '
-        '(HTTP $status). Check that the URL points at opencode serve.';
+    return ServerProbeResult.failure(
+      'The address responded, but not like an OpenCode server '
+      '(HTTP $status). Check that the URL points at opencode serve.',
+    );
+  }
+  // A hostname that never resolved is a spelling problem, not a server
+  // problem — send the user to the address, not to the server.
+  if (_isHostLookupFailure(error)) {
+    return const ServerProbeResult.failure(
+      'That host name could not be found. Check the address spelling.',
+    );
   }
   return switch (error.type) {
     DioExceptionType.connectionTimeout ||
     DioExceptionType.receiveTimeout ||
-    DioExceptionType.sendTimeout =>
+    DioExceptionType.sendTimeout => const ServerProbeResult.failure(
       'The connection timed out. Check the address, and that the server '
-          'is reachable from this phone.',
-    DioExceptionType.badCertificate =>
+      'is reachable from this phone.',
+      suggestsMissingServer: true,
+    ),
+    DioExceptionType.badCertificate => const ServerProbeResult.failure(
       'The server’s TLS certificate was rejected. '
-          'Use a certificate this phone trusts.',
-    DioExceptionType.connectionError =>
+      'Use a certificate this phone trusts.',
+    ),
+    DioExceptionType.connectionError => const ServerProbeResult.failure(
       'The connection was refused. Is opencode serve running on that '
-          'host and port?',
-    _ => 'Connection test failed: ${error.message ?? error.type.name}',
+      'host and port?',
+      suggestsMissingServer: true,
+    ),
+    _ => ServerProbeResult.failure(
+      'Connection test failed: ${error.message ?? error.type.name}',
+    ),
   };
+}
+
+/// True when the failure is DNS resolution (the host name never resolved),
+/// as opposed to a reachable host refusing the connection. Checked through
+/// [SocketException.osError] so a typo'd hostname is not mislabeled
+/// "connection refused".
+bool _isHostLookupFailure(DioException error) {
+  final cause = error.error;
+  if (cause is! SocketException) return false;
+  final details = '${cause.message} ${cause.osError?.message ?? ''}'
+      .toLowerCase();
+  return details.contains('failed host lookup') ||
+      details.contains('no address associated with hostname') ||
+      details.contains('name or service not known') ||
+      details.contains('nodename nor servname') ||
+      details.contains('temporary failure in name resolution');
 }

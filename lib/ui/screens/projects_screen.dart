@@ -212,7 +212,9 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                 icon: Icons.folder_off_outlined,
                 title: 'No projects opened',
                 message:
-                    'Open a project on this OpenCode server, then refresh here.',
+                    'Open a project on this OpenCode server, then refresh '
+                    'here. You can still start a session from Workspace — '
+                    'it runs in the server’s default directory.',
               )
             else if (visible.isEmpty)
               const ProductEmptyState(

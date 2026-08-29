@@ -189,9 +189,9 @@ else
        fi ;;
   esac
   if [ -z "\$owner_pid" ] || [ -z "\$owner_start" ]; then
-    echo 'setup-lock-owner-missing; use Stop & retry' >&2
+    echo 'setup-lock-owner-missing; use Retry' >&2
   else
-    echo 'setup-lock-stale; use Stop & retry' >&2
+    echo 'setup-lock-stale; use Retry' >&2
   fi
   exit 75
 fi

@@ -770,8 +770,9 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'The first install downloads Ubuntu and can take several minutes. '
-                        'You can leave this screen and return later.',
+                        'The first install downloads Ubuntu and typically '
+                        'takes 10–15 minutes. You can leave this screen and '
+                        'return — setup keeps running.',
                         style: theme.textTheme.bodySmall!.copyWith(
                           color: theme.hintColor,
                         ),
@@ -865,7 +866,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                             ),
                             OutlinedButton(
                               onPressed: _busy ? null : _retry,
-                              child: const Text('Stop & retry'),
+                              child: const Text('Retry — resumes where setup left off'),
                             ),
                           ],
                         )
@@ -873,7 +874,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                         FilledButton.icon(
                           onPressed: _busy ? null : _retry,
                           icon: const Icon(Icons.refresh_rounded),
-                          label: const Text('Stop & retry'),
+                          label: const Text('Retry — resumes where setup left off'),
                         ),
                     ],
                   ),

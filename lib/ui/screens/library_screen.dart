@@ -16,6 +16,7 @@ import '../widgets/confirm_sheet.dart';
 import '../widgets/product_states.dart';
 import '../widgets/pickers.dart';
 import 'capabilities_screen.dart';
+import 'guide_screen.dart';
 import 'mcp_setup_screen.dart';
 import 'mission_control_screen.dart';
 import 'requests_screen.dart';
@@ -110,6 +111,11 @@ class LibraryScreen extends StatelessWidget {
                   title: l10n.librarySettingsTitle,
                   onTap: () =>
                       _open(context, SettingsScreen(controller: controller)),
+                ),
+                _DestinationCard(
+                  icon: Icons.menu_book_outlined,
+                  title: 'Setup guide',
+                  onTap: () => _open(context, const GuideScreen()),
                 ),
               ],
             ),
