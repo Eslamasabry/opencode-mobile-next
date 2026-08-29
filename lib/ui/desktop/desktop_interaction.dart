@@ -1,5 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
+import '../../platform/platform_capabilities.dart';
 
 /// Whether this build should present desktop-native interaction: a keyboard
 /// shortcut layer, right-click context menus, persistent scrollbars, mouse
@@ -8,26 +9,20 @@ import 'package:flutter/material.dart';
 /// Everything gated behind this getter is additive. On Android it is always
 /// false, so the touch product keeps the exact behaviour it shipped with.
 ///
-/// Reconciliation note: a parallel workstream is landing a shared platform
-/// capability seam for `lib/voice/**` and `lib/termux/**`. This is a
-/// deliberately tiny local helper so the interaction layer does not block on
-/// it — when the shared seam lands, this getter delegates to it and every
-/// call site below stays put.
-bool get desktopInteractions =>
-    !kIsWeb &&
-    switch (defaultTargetPlatform) {
-      TargetPlatform.linux ||
-      TargetPlatform.macOS ||
-      TargetPlatform.windows => true,
-      TargetPlatform.android ||
-      TargetPlatform.iOS ||
-      TargetPlatform.fuchsia => false,
-    };
+/// Delegates to [PlatformCapabilities] — the shared seam landed while this
+/// layer was in flight, and one answer to "is this desktop?" is the whole
+/// point of it. Kept as a named getter rather than inlining
+/// `platformCapabilities.isDesktop` at ~40 call sites so the *reason* each
+/// gate exists stays legible, and so `debugPlatformCapabilities` swaps every
+/// one of them at once.
+bool get desktopInteractions => platformCapabilities.isDesktop;
 
 /// The modifier a desktop user expects for accelerators: Command on macOS,
 /// Control everywhere else. Both are accepted by every binding so a keyboard
 /// attached to any platform keeps working.
-bool get _isApple => !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS;
+bool get _isApple =>
+    !platformCapabilities.isWeb &&
+    platformCapabilities.platform == TargetPlatform.macOS;
 
 /// Human-readable prefix for the shortcut help sheet.
 String get shortcutModifierLabel => _isApple ? '⌘' : 'Ctrl';
