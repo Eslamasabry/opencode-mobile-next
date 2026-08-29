@@ -55,6 +55,8 @@ const ServerCapabilities api2ServerCapabilities = ServerCapabilities(
   globalEventStream: true,
   worktreeReset: false,
   legacyQuestionRequests: false,
+  forms: true,
+  inbox: true,
 );
 
 // ---------------- Health / sessions ----------------
@@ -516,6 +518,7 @@ PermissionRequest mapApi2PermissionRequest(Api2PermissionRequest request) =>
       patterns: request.resources,
       metadata: request.metadata ?? const {},
       always: request.save,
+      message: request.message,
       tool:
           request.source?.messageID?.isNotEmpty == true &&
               request.source?.id?.isNotEmpty == true

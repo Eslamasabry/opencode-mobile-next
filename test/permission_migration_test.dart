@@ -51,6 +51,7 @@ class _ReplyApi extends OpenCodeApi {
     String reply, {
     String? legacySessionID,
     String? legacyPermissionID,
+    String? message,
   }) async {
     replies.add((
       requestID: requestID,

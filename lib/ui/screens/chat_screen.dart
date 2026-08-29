@@ -18,7 +18,6 @@ import '../../state/connection.dart';
 import '../../voice/controller.dart';
 import '../../voice/voice_ui.dart';
 import '../navigation/chat_route.dart';
-import '../permission_presentation.dart';
 import '../app_theme.dart';
 import '../widgets/appearance_picker.dart';
 import '../widgets/connection_status_banner.dart';
@@ -29,7 +28,10 @@ import '../widgets/markdown.dart';
 import '../widgets/pickers.dart';
 import '../widgets/product_states.dart';
 import '../widgets/tool_card.dart';
+import '../../api2/models.dart' show Api2Delivery, Api2FormInfo, Api2InboxItem;
 import 'app_diagnostics_screen.dart';
+import 'chat/form_flow.dart';
+import 'chat/permission_sheet.dart';
 import 'files_screen.dart';
 import 'global_sessions_screen.dart';
 import 'home_screen.dart';
@@ -48,7 +50,6 @@ part 'chat/timeline_sheet.dart';
 part 'chat/command_launcher.dart';
 part 'chat/prompt_editor.dart';
 part 'chat/composer.dart';
-part 'chat/permission_dialog.dart';
 part 'chat/message_view.dart';
 part 'chat/session_sheets.dart';
 
@@ -265,6 +266,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool _permissionDismissScheduled = false;
   String? _activePermissionID;
   Route<void>? _activePermissionRoute;
+  bool _formPresenterScheduled = false;
+  String? _activeFormID;
+
+  /// Forms already auto-presented once; dismissing the sheet leaves the
+  /// inline card as the reopen affordance instead of nagging.
+  final Set<String> _autoPresentedFormIDs = {};
   Future<VoiceComposerController>? _voiceFuture;
   VoiceComposerController? _voice;
   bool _voiceOpening = false;
@@ -726,6 +733,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       _loading = true;
       _error = null;
     });
+    // Inbox events are volatile: reconcile this session's pending sends
+    // from REST whenever the transcript (re)hydrates. No-op on v1.
+    unawaited(_conn.refreshInbox(widget.sessionID));
     try {
       final api = _conn.api;
       if (api == null) throw const ProductException('OpenCode is reconnecting.');
@@ -947,7 +957,70 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (confirmed) await _conn.removeQueuedPrompt(entry.id);
   }
 
-  Future<void> _send() async {
+  /// Cancels a pending server send; its text returns to the composer as a
+  /// draft — that is the edit affordance for immutable inbox items.
+  Future<void> _cancelInboxSend(Api2InboxItem item) async {
+    final confirmed = await showConfirmSheet(
+      context,
+      icon: Icons.delete_sweep_outlined,
+      title: 'Cancel this pending message?',
+      message: 'Its text returns to the composer as a draft.',
+      confirmLabel: 'Cancel message',
+      cancelLabel: 'Keep it pending',
+      destructive: true,
+    );
+    if (!confirmed || !mounted) return;
+    String? text;
+    try {
+      text = await _conn.cancelInboxItem(widget.sessionID, item.id);
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      if (error.statusCode == 409) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Already delivered')),
+        );
+        return;
+      }
+      _showActionError(error);
+      return;
+    } catch (error) {
+      if (mounted) _showActionError(error);
+      return;
+    }
+    if (!mounted || text == null || text.isEmpty) return;
+    final current = _composer.text;
+    _composer.text = current.trim().isEmpty ? text : '$text\n$current';
+    _composer.selection = TextSelection.collapsed(
+      offset: _composer.text.length,
+    );
+    _focus.requestFocus();
+  }
+
+  /// Flips a pending server send between steer and queue delivery.
+  Future<void> _flipInboxDelivery(Api2InboxItem item) async {
+    final next = item.delivery == Api2Delivery.steer
+        ? Api2Delivery.queue
+        : Api2Delivery.steer;
+    try {
+      await _conn.setInboxDelivery(widget.sessionID, item.id, delivery: next);
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      if (error.statusCode == 409) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Already delivered')),
+        );
+        return;
+      }
+      _showActionError(error);
+    } catch (error) {
+      if (mounted) _showActionError(error);
+    }
+  }
+
+  /// [delivery] rides only on OpenCode 2 sends made while a turn runs:
+  /// null lets the server default (steer) apply; the long-press menu passes
+  /// an explicit steer or queue.
+  Future<void> _send({PromptDelivery? delivery}) async {
     await _voice?.cancel();
     if (_sending || (_composer.text.trim().isEmpty && _attachments.isEmpty)) {
       return;
@@ -1046,6 +1119,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         variant: _conn.selectedVariant.isEmpty ? null : _conn.selectedVariant,
         attachments: attachments,
         agentMentions: agentMentions,
+        delivery: delivery,
       );
       if (!mounted) return;
       setState(() {
@@ -1883,6 +1957,43 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     setState(() {});
     if (shouldRehydrate) unawaited(_load());
     _schedulePermissionDialog();
+    _scheduleFormPresenter();
+  }
+
+  /// Auto-opens the form renderer for a form arriving in the active chat —
+  /// only while no permission sheet or form presenter is already up, and at
+  /// most once per form (the inline card reopens it manually).
+  void _scheduleFormPresenter() {
+    if (!mounted ||
+        _formPresenterScheduled ||
+        _activeFormID != null ||
+        _activePermissionID != null) {
+      return;
+    }
+    final form = _conn.formForSession(widget.sessionID);
+    if (form == null || _autoPresentedFormIDs.contains(form.id)) return;
+    _formPresenterScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _formPresenterScheduled = false;
+      if (!mounted || _activeFormID != null || _activePermissionID != null) {
+        return;
+      }
+      final current = _conn.forms[form.id];
+      if (current == null || current.sessionID != widget.sessionID) return;
+      unawaited(_openForm(current));
+    });
+  }
+
+  Future<void> _openForm(Api2FormInfo form) async {
+    if (_activeFormID != null) return;
+    _activeFormID = form.id;
+    _autoPresentedFormIDs.add(form.id);
+    try {
+      await presentConnectionForm(context, _conn, form);
+    } finally {
+      _activeFormID = null;
+    }
+    if (mounted) _scheduleFormPresenter();
   }
 
   /// Confirms a reconnect flush that delivered queued drafts, closing the
@@ -1926,6 +2037,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       final route = _activePermissionRoute;
       if (route != null && route.isActive) {
         route.navigator?.removeRoute(route);
+        // The request settled without this sheet replying — someone else
+        // (another device, the TUI, a notification action) handled it.
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Handled on another device')),
+        );
       }
     });
   }
@@ -1952,15 +2068,37 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _showPermissionDialog(PermissionRequest permission) async {
     _activePermissionID = permission.id;
-    await showDialog<void>(
+    final tool = permission.tool;
+    await showModalBottomSheet<void>(
       context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        _activePermissionRoute = ModalRoute.of<void>(dialogContext);
+      isScrollControlled: true,
+      isDismissible: false,
+      enableDrag: false,
+      useSafeArea: true,
+      clipBehavior: Clip.antiAlias,
+      constraints: const BoxConstraints(maxWidth: 720),
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        _activePermissionRoute = ModalRoute.of<void>(sheetContext);
         _dismissResolvedPermissionDialog();
-        return _PermissionDialog(
-          permission: permission,
-          onReply: (reply) => _conn.answerPermission(permission.id, reply),
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+          ),
+          child: PermissionSheet(
+            permission: permission,
+            supportsRejectMessage: _conn.permissionSupportsRejectMessage(
+              permission.id,
+            ),
+            onReply: (reply, {message}) =>
+                _conn.answerPermission(permission.id, reply, message: message),
+            onShowSource: tool == null
+                ? null
+                : () => _jumpToMessage(tool.messageID),
+          ),
         );
       },
     );
@@ -3458,13 +3596,30 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                       ),
                                     ),
                             ),
-                            if (_conn.queuedPromptsFor(widget.sessionID)
-                                case final queuedDrafts
-                                when queuedDrafts.isNotEmpty)
-                              _QueuedPromptsStrip(
-                                entries: queuedDrafts,
+                            if (_conn.formForSession(widget.sessionID)
+                                case final pendingForm?)
+                              _FormRequestCard(
+                                key: ValueKey(
+                                  'form-request-card-${pendingForm.id}',
+                                ),
+                                form: pendingForm,
+                                onAnswer: () =>
+                                    unawaited(_openForm(pendingForm)),
+                              ),
+                            if ((
+                              drafts: _conn.queuedPromptsFor(widget.sessionID),
+                              inbox: _conn.inboxItemsFor(widget.sessionID),
+                            )
+                                case final pendingSends
+                                when pendingSends.drafts.isNotEmpty ||
+                                    pendingSends.inbox.isNotEmpty)
+                              _PendingSendsStrip(
+                                drafts: pendingSends.drafts,
+                                inboxItems: pendingSends.inbox,
                                 onEdit: _editQueuedPrompt,
                                 onDiscard: _discardQueuedPrompt,
+                                onCancelInbox: _cancelInboxSend,
+                                onFlipDelivery: _flipInboxDelivery,
                               ),
                             Center(
                               child: ConstrainedBox(
@@ -3489,6 +3644,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                   attachments: _attachments,
                                   busy: busy,
                                   sending: _sending,
+                                  canSendWhileBusy: _conn.supportsInbox,
                                   voiceOpening: _voiceOpening,
                                   selectedAgent: _conn.selectedAgent,
                                   selectedModel: _conn.selectedModel,
@@ -3499,6 +3655,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                   ),
                                   onVoice: _openVoice,
                                   onSend: _send,
+                                  onSendDelivery: (delivery) =>
+                                      unawaited(_send(delivery: delivery)),
                                   onStop: _abort,
                                   onChooseModel: () => showModelPicker(
                                     context,
@@ -3535,5 +3693,81 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _composer.dispose();
     _focus.dispose();
     super.dispose();
+  }
+}
+
+/// Compact attention card for a pending form of the open session (design
+/// doc §2): icon, form title, question count, and an Answer button that
+/// opens the shared form renderer.
+class _FormRequestCard extends StatelessWidget {
+  const _FormRequestCard({super.key, required this.form, required this.onAnswer});
+
+  final Api2FormInfo form;
+  final VoidCallback onAnswer;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final count = form.fields.length;
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 860),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 2),
+          child: Material(
+            color: theme.colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(12),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onAnswer,
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 72),
+                padding: const EdgeInsets.fromLTRB(14, 10, 12, 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: theme.colorScheme.outlineVariant),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.fact_check_outlined,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            form.title ?? 'Input requested',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleSmall,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '$count question${count == 1 ? '' : 's'}',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    FilledButton.tonal(
+                      key: ValueKey('form-request-answer-${form.id}'),
+                      onPressed: onAnswer,
+                      child: const Text('Answer'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -93,8 +93,9 @@ class _V2Api extends OpenCodeApi {
   Future<void> respondPermissionV2(
     String sessionID,
     String requestID,
-    String reply,
-  ) async {
+    String reply, {
+    String? message,
+  }) async {
     permissionReplies.add((sessionID, requestID, reply));
   }
 

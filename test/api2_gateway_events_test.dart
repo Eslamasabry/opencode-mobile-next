@@ -161,8 +161,10 @@ void main() {
 
     // Events with no v1 analogue emit nothing.
     expect(types, isNot(contains('session.instructions.updated')));
-    expect(types, isNot(contains('session.inbox.delivered')));
     expect(types, isNot(contains('session.usage.updated')));
+    // Inbox bookkeeping passes through under its v2 type for the
+    // pending-sends state.
+    expect(types, contains('session.inbox.delivered'));
   });
 
   test('session.status idle maps to the v1 session.idle event', () {
@@ -304,7 +306,7 @@ void main() {
       }).single.properties['version'],
       '0.0.0-beta-19000',
     );
-    // Unknown v2-only types emit nothing rather than inventing envelopes.
+    // Forms surface under the form.v2.* envelope family.
     expect(
       adaptApi2EventJson(adapter, {
         'type': 'form.created',
@@ -317,6 +319,14 @@ void main() {
             ],
           },
         },
+      }).single.type,
+      'form.v2.created',
+    );
+    // Unknown v2-only types emit nothing rather than inventing envelopes.
+    expect(
+      adaptApi2EventJson(adapter, {
+        'type': 'made.up.event',
+        'data': <String, dynamic>{},
       }),
       isEmpty,
     );

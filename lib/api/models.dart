@@ -929,6 +929,10 @@ class PermissionRequest {
   final List<String> always;
   final PermissionTool? tool;
 
+  /// Optional human context supplied with an OpenCode 2 request; v1
+  /// requests never carry one.
+  final String? message;
+
   PermissionRequest({
     required this.id,
     required this.sessionID,
@@ -937,6 +941,7 @@ class PermissionRequest {
     this.metadata = const {},
     this.always = const [],
     this.tool,
+    this.message,
   });
 
   factory PermissionRequest.fromJson(Map<String, dynamic> json) =>
@@ -958,6 +963,7 @@ class PermissionRequest {
                 Map<String, dynamic>.from(json['tool'] as Map),
               )
             : null,
+        message: json['message']?.toString(),
       );
 }
 

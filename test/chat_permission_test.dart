@@ -26,6 +26,7 @@ class _FakeOpenCodeApi extends OpenCodeApi {
     String reply, {
     String? legacySessionID,
     String? legacyPermissionID,
+    String? message,
   }) async {
     replies.add((requestID: requestID, reply: reply));
     if (permissionNotFound) {
@@ -127,7 +128,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Requested for this action'), findsOneWidget);
+    expect(find.byKey(const Key('permission-sheet')), findsOneWidget);
+    expect(find.byKey(const Key('permission-resources')), findsOneWidget);
     expect(find.text('git status'), findsOneWidget);
     expect(find.text('Always allow would also cover'), findsOneWidget);
     expect(find.text('git *\ngh *'), findsOneWidget);

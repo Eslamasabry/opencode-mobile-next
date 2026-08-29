@@ -86,7 +86,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         label: 'More',
       ),
     ];
-    final pending = conn.permissions.length + conn.questions.length;
+    final pending =
+        conn.permissions.length + conn.questions.length + conn.forms.length;
 
     return PopScope(
       canPop: false,

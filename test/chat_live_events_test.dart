@@ -103,6 +103,7 @@ class _FakeOpenCodeApi extends OpenCodeApi {
     String? variant,
     List<PromptAttachment> attachments = const [],
     List<PromptAgentMention> agentMentions = const [],
+    PromptDelivery? delivery,
   }) {
     promptCalls += 1;
     prompts.add((

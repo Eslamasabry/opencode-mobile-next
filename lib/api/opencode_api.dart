@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:opencode_sdk/opencode_sdk.dart' as sdk;
 
+import '../api2/models.dart' show Api2FormInfo, Api2FormState, Api2InboxItem;
 import '../domain/server_gateway.dart';
 import 'models.dart';
 import 'sse.dart';
@@ -421,6 +422,7 @@ class OpenCodeApi implements ServerGateway, EventStreamTransport {
   }
 
   /// Fire-and-forget prompt; responses arrive via the SSE event stream.
+  /// [delivery] is an OpenCode 2 concept and is ignored on v1.
   @override
   Future<void> promptAsync(
     String sessionID, {
@@ -430,6 +432,7 @@ class OpenCodeApi implements ServerGateway, EventStreamTransport {
     String? variant,
     List<PromptAttachment> attachments = const [],
     List<PromptAgentMention> agentMentions = const [],
+    PromptDelivery? delivery,
   }) async {
     try {
       await sdkClient.getSessionApi().sessionPromptAsync(
@@ -792,12 +795,15 @@ class OpenCodeApi implements ServerGateway, EventStreamTransport {
         .toList();
   }
 
+  /// [message] (reject steering text) is an OpenCode 2 concept: the v1 reply
+  /// shape has no field for it, so it is accepted and ignored here.
   @override
   Future<void> respondPermission(
     String requestID,
     String reply, {
     String? legacySessionID,
     String? legacyPermissionID,
+    String? message,
   }) async {
     final replyValue = switch (reply) {
       'once' => sdk.PermissionReplyRequestReplyEnum.once,
@@ -891,12 +897,14 @@ class OpenCodeApi implements ServerGateway, EventStreamTransport {
     }
   }
 
+  /// [message] is ignored on v1 (see [respondPermission]).
   @override
   Future<void> respondPermissionV2(
     String sessionID,
     String requestID,
-    String reply,
-  ) async {
+    String reply, {
+    String? message,
+  }) async {
     final replyValue = switch (reply) {
       'once' => sdk.PermissionV2Reply.once,
       'always' => sdk.PermissionV2Reply.always,
@@ -954,6 +962,56 @@ class OpenCodeApi implements ServerGateway, EventStreamTransport {
       _fail(error, 'Reject question');
     }
   }
+
+  // ----- Forms / inbox (OpenCode 2 only; inert on v1) -----
+  //
+  // v1 servers have neither structured forms nor a session inbox
+  // (capabilities `forms`/`inbox` are false). Lists come back empty so
+  // pending-count sums need no protocol branch; mutations are a typed
+  // failure because reaching them implies a UI gating bug.
+
+  static const _formsUnavailable = ProductException(
+    'Forms are unavailable on this server',
+  );
+  static const _inboxUnavailable = ProductException(
+    'The send queue is unavailable on this server',
+  );
+
+  @override
+  Future<List<Api2FormInfo>> sessionForms(String sessionID) async => const [];
+
+  @override
+  Future<List<Api2FormInfo>> pendingForms() async => const [];
+
+  @override
+  Future<Api2FormState> formState(String sessionID, String formID) =>
+      Future.error(_formsUnavailable);
+
+  @override
+  Future<void> replyForm(
+    String sessionID,
+    String formID,
+    Map<String, dynamic> answer,
+  ) => Future.error(_formsUnavailable);
+
+  @override
+  Future<void> cancelForm(String sessionID, String formID) =>
+      Future.error(_formsUnavailable);
+
+  @override
+  Future<List<Api2InboxItem>> inboxItems(String sessionID) async => const [];
+
+  @override
+  Future<void> cancelInboxItem(String sessionID, String inboxID) =>
+      Future.error(_inboxUnavailable);
+
+  @override
+  Future<void> steerInboxItem(String sessionID, String inboxID) =>
+      Future.error(_inboxUnavailable);
+
+  @override
+  Future<void> queueInboxItem(String sessionID, String inboxID) =>
+      Future.error(_inboxUnavailable);
 
   // ----- Providers / agents -----
 
