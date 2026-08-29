@@ -13,6 +13,20 @@ dependencies:
     sdk: flutter
   intl: any
   cupertino_icons: ^1.0.8
+  # Dropping files onto the composer. Flutter exposes no native file-drop
+  # channel of its own on desktop, so this is the one dependency the desktop
+  # interaction work needs. Pinned exactly, because it registers a platform
+  # plugin.
+  #
+  # Known cost, stated rather than hidden: the package also declares an
+  # Android plugin class, so the Android build now compiles one more Gradle
+  # subproject and prints "Your app uses the following plugins that apply
+  # Kotlin Gradle Plugin (KGP): desktop_drop". Android runtime behaviour is
+  # unchanged — DesktopFileDropTarget never builds a DropTarget off desktop,
+  # so nothing ever talks to that channel — but the warning is real and a
+  # future Flutter will turn it into an error. Revisit when upstream ships a
+  # Built-in Kotlin release (0.8.2 still applies KGP under AGP < 9).
+  desktop_drop: 0.8.2
   dio: ^5.7.0
   file_picker: 12.1.1
   flutter_riverpod: ^2.6.1

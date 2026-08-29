@@ -11,6 +11,8 @@ import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../app_theme.dart';
+import '../desktop/desktop_interaction.dart';
+import '../desktop/shortcuts.dart';
 import '../widgets/entrance.dart';
 import '../widgets/file_preview.dart';
 import '../widgets/confirm_sheet.dart';
@@ -41,7 +43,9 @@ class LibraryScreen extends StatelessWidget {
         final l10n = AppLocalizations.of(context);
         // Audit UX-P0-01: no Mission Control or Requests card here. Pending
         // work has exactly one home — the Activity destination and its badge.
-        return ListView(
+        return DesktopScrollbarArea(
+          builder: (scrollController) => ListView(
+          controller: scrollController,
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
           children: [
             _ActiveSetupCard(controller: controller),
@@ -109,9 +113,19 @@ class LibraryScreen extends StatelessWidget {
                   title: 'Setup guide',
                   onTap: () => _open(context, const GuideScreen()),
                 ),
+                // The shortcut layer must be discoverable without already
+                // knowing a shortcut.
+                if (desktopInteractions)
+                  _DestinationCard(
+                    key: const ValueKey('library-keyboard-shortcuts'),
+                    icon: Icons.keyboard_outlined,
+                    title: 'Keyboard shortcuts',
+                    onTap: () => unawaited(showShortcutsHelp(context)),
+                  ),
               ],
             ),
           ],
+          ),
         );
       },
     );

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -8,6 +9,8 @@ import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../../state/review_handoff.dart';
+import '../desktop/context_menu.dart';
+import '../desktop/desktop_interaction.dart';
 import '../widgets/file_preview.dart';
 import '../widgets/product_states.dart';
 import 'review_workspace.dart';
@@ -32,12 +35,17 @@ class FilesScreen extends StatefulWidget {
   /// review comments fall back to the clipboard.
   final ReviewHandoffSession? handoff;
 
+  /// Bumped by the shell's Ctrl+F while this destination is showing. Desktop
+  /// only in practice: nothing dispatches app shortcuts off desktop.
+  final ValueListenable<int>? focusSearchSignal;
+
   const FilesScreen({
     super.key,
     required this.controller,
     this.onAttachFile,
     this.onReviewPrompt,
     this.handoff,
+    this.focusSearchSignal,
   });
 
   @override
@@ -57,7 +65,12 @@ class _FilesScreenState extends State<FilesScreen> {
   String? _selectedPath;
   int? _selectedLine;
   String? _searchOriginPath;
+
+  /// Width of the tree pane in the wide two-pane layout. Draggable on
+  /// desktop; the default is the width the split has always shipped with.
+  double _treeWidth = 340;
   final _search = TextEditingController();
+  final _searchFocus = FocusNode(debugLabel: 'files-search');
   Timer? _symbolSearchDebounce;
   ServerOperationsGateway? _repository;
   int _locationRevision = -1;
@@ -71,8 +84,29 @@ class _FilesScreenState extends State<FilesScreen> {
     super.initState();
     widget.controller.addListener(_controllerChanged);
     _search.addListener(_searchChanged);
+    widget.focusSearchSignal?.addListener(_focusSearch);
     _captureLocation();
     _load('');
+  }
+
+  @override
+  void didUpdateWidget(FilesScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.focusSearchSignal != widget.focusSearchSignal) {
+      oldWidget.focusSearchSignal?.removeListener(_focusSearch);
+      widget.focusSearchSignal?.addListener(_focusSearch);
+    }
+  }
+
+  /// Ctrl+F: put the caret in the find field and select what is already there
+  /// so a second search replaces the first, the way every desktop find does.
+  void _focusSearch() {
+    if (!mounted) return;
+    _searchFocus.requestFocus();
+    _search.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: _search.text.length,
+    );
   }
 
   void _searchChanged() {
@@ -622,7 +656,9 @@ class _FilesScreenState extends State<FilesScreen> {
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
           child: TextField(
+            key: const ValueKey('files-search-field'),
             controller: _search,
+            focusNode: _searchFocus,
             decoration: InputDecoration(
               isDense: true,
               prefixIcon: const Icon(Icons.search_rounded, size: 20),
@@ -694,10 +730,25 @@ class _FilesScreenState extends State<FilesScreen> {
             builder: (context, constraints) {
               final files = _fileList(theme);
               if (constraints.maxWidth < 900) return files;
+              final maxTree = constraints.maxWidth - 320;
+              final treeWidth = _treeWidth.clamp(
+                240.0,
+                maxTree < 240 ? 240.0 : maxTree,
+              );
               return Row(
                 children: [
-                  SizedBox(width: 340, child: files),
-                  const VerticalDivider(width: 1),
+                  SizedBox(width: treeWidth, child: files),
+                  _SplitHandle(
+                    // Accumulate on the stored width, not the one this build
+                    // captured: several drag updates can land before the
+                    // next frame, and each must add to the last.
+                    onDrag: (delta) => setState(
+                      () => _treeWidth = (_treeWidth + delta).clamp(
+                        240.0,
+                        maxTree < 240 ? 240.0 : maxTree,
+                      ),
+                    ),
+                  ),
                   Expanded(
                     child: _selectedPath == null
                         ? Center(
@@ -771,7 +822,9 @@ class _FilesScreenState extends State<FilesScreen> {
     }
     return RefreshIndicator(
       onRefresh: () => _load(_path),
-      child: ListView.builder(
+      child: DesktopScrollbarArea(
+        builder: (scrollController) => ListView.builder(
+        controller: scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         itemCount: entries.length,
         itemBuilder: (context, i) {
@@ -783,62 +836,162 @@ class _FilesScreenState extends State<FilesScreen> {
                     .length
               : 0;
           final detail = _fileDetail(node, change, descendantChanges);
-          return ListTile(
-            key: ValueKey('project-file-${node.path}'),
-            dense: true,
-            selected: node.path == _selectedPath,
-            leading: Icon(
-              node.isDir
-                  ? Icons.folder_rounded
-                  : change?.status == 'deleted'
-                  ? Icons.remove_circle_outline_rounded
-                  : _fileTypeIcon(node.name),
-              size: 20,
-              color: node.isDir
-                  ? theme.colorScheme.primary
-                  : change?.status == 'deleted'
-                  ? theme.colorScheme.error
-                  : AppTheme.mutedOf(theme),
-            ),
-            title: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    node.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+          return ContextMenuRegion(
+            actions: () => _fileRowActions(node, change),
+            child: ListTile(
+              key: ValueKey('project-file-${node.path}'),
+              dense: true,
+              selected: node.path == _selectedPath,
+              leading: Icon(
+                node.isDir
+                    ? Icons.folder_rounded
+                    : change?.status == 'deleted'
+                    ? Icons.remove_circle_outline_rounded
+                    : _fileTypeIcon(node.name),
+                size: 20,
+                color: node.isDir
+                    ? theme.colorScheme.primary
+                    : change?.status == 'deleted'
+                    ? theme.colorScheme.error
+                    : AppTheme.mutedOf(theme),
+              ),
+              title: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      node.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                if (change != null)
-                  _FileReviewAction(
-                    change: change,
-                    onPressed: () => _reviewFileChange(node),
-                  )
-                else if (descendantChanges > 0)
-                  _FolderStatusMark(count: descendantChanges),
-              ],
+                  if (change != null)
+                    _FileReviewAction(
+                      change: change,
+                      onPressed: () => _reviewFileChange(node),
+                    )
+                  else if (descendantChanges > 0)
+                    _FolderStatusMark(count: descendantChanges),
+                ],
+              ),
+              subtitle: detail == null
+                  ? null
+                  : Text(
+                      detail,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: AppTheme.captionFontSize,
+                      ),
+                    ),
+              onTap: change?.status == 'deleted'
+                  ? null
+                  : () {
+                      if (node.isDir) {
+                        _navigateTo(node.path);
+                      } else {
+                        _openFile(node);
+                      }
+                    },
             ),
-            subtitle: detail == null
-                ? null
-                : Text(
-                    detail,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: AppTheme.captionFontSize),
-                  ),
-            onTap: change?.status == 'deleted'
-                ? null
-                : () {
-                    if (node.isDir) {
-                      _navigateTo(node.path);
-                    } else {
-                      _openFile(node);
-                    }
-                  },
           );
         },
+        ),
       ),
     );
+  }
+
+  /// The desktop right-click menu for a file row. Every entry is something
+  /// the row already offers by tap or by the viewer it opens — the menu just
+  /// removes the round trip.
+  List<ContextMenuAction> _fileRowActions(
+    FileNode node,
+    VersionControlFile? change,
+  ) {
+    final deleted = change?.status == 'deleted';
+    final path = _relativePath(node.path);
+    return [
+      if (node.isDir && !deleted)
+        ContextMenuAction(
+          menuKey: const ValueKey('file-menu-open'),
+          label: 'Open folder',
+          icon: Icons.folder_open_rounded,
+          onSelected: () => _navigateTo(node.path),
+        )
+      else if (!deleted) ...[
+        ContextMenuAction(
+          menuKey: const ValueKey('file-menu-open'),
+          label: 'Open',
+          icon: Icons.open_in_new_rounded,
+          onSelected: () => _openFile(node),
+        ),
+        if (change != null)
+          ContextMenuAction(
+            menuKey: const ValueKey('file-menu-review'),
+            label: 'Review changes',
+            icon: Icons.difference_outlined,
+            onSelected: () => unawaited(_reviewFileChange(node)),
+          ),
+        if (widget.onAttachFile != null)
+          ContextMenuAction(
+            menuKey: const ValueKey('file-menu-attach'),
+            label: 'Attach to prompt',
+            icon: Icons.attach_file_rounded,
+            onSelected: () => unawaited(_attachFile(path)),
+          ),
+        if (widget.handoff != null)
+          ContextMenuAction(
+            menuKey: const ValueKey('file-menu-reference'),
+            label: 'Add as reference',
+            icon: Icons.add_link_rounded,
+            onSelected: () => _stageProjectFile(path, null),
+          ),
+      ],
+      ContextMenuAction(
+        menuKey: const ValueKey('file-menu-copy-path'),
+        label: 'Copy path',
+        icon: AppIcons.copy,
+        onSelected: () => unawaited(_copyPath(path)),
+      ),
+    ];
+  }
+
+  /// Attaches a file straight from the tree. The viewer's Attach button does
+  /// the same thing once it has the content; this fetches the content first
+  /// so the menu does not need the viewer open.
+  Future<void> _attachFile(String path) async {
+    final action = widget.onAttachFile;
+    if (action == null) return;
+    try {
+      final api = await widget.controller.prepareActionTransport();
+      if (api == null) {
+        throw const ProductException('The server is not connected.');
+      }
+      final content = await api.fileContent(path);
+      await action(
+        path,
+        FilePreviewData(
+          name: path.split('/').last,
+          mimeType: content.mimeType,
+          bytes: content.isBinary ? content.bytes() : null,
+          text: content.isBinary ? null : content.content,
+        ),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${path.split('/').last} attached.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      showProductError(context, error);
+    }
+  }
+
+  Future<void> _copyPath(String path) async {
+    await Clipboard.setData(ClipboardData(text: path));
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Copied $path')));
   }
 
   /// Type-aware glyphs so a directory scans by kind, matching the developer
@@ -982,7 +1135,9 @@ class _FilesScreenState extends State<FilesScreen> {
     }
     return RefreshIndicator(
       onRefresh: () => _searchSymbols(_search.text),
-      child: ListView.builder(
+      child: DesktopScrollbarArea(
+        builder: (scrollController) => ListView.builder(
+        controller: scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         itemCount: _symbols?.length ?? 0,
         itemBuilder: (context, index) {
@@ -1008,6 +1163,7 @@ class _FilesScreenState extends State<FilesScreen> {
             onTap: () => _openSymbol(symbol),
           );
         },
+        ),
       ),
     );
   }
@@ -1047,8 +1203,10 @@ class _FilesScreenState extends State<FilesScreen> {
   void dispose() {
     _symbolSearchDebounce?.cancel();
     widget.controller.removeListener(_controllerChanged);
+    widget.focusSearchSignal?.removeListener(_focusSearch);
     _search.removeListener(_searchChanged);
     _search.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
 }
@@ -1061,6 +1219,34 @@ String _fileStatusLabel(String status) => switch (status) {
 };
 
 enum _ChangeAction { reviewAll, review, stage }
+
+/// The divider between the tree and the preview.
+///
+/// On Android it stays the hairline [VerticalDivider] it has always been. On
+/// desktop it becomes a real splitter: a wider grab strip, the resize-column
+/// pointer, and a horizontal drag that resizes the tree pane.
+class _SplitHandle extends StatelessWidget {
+  const _SplitHandle({required this.onDrag});
+
+  final ValueChanged<double> onDrag;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!desktopInteractions) return const VerticalDivider(width: 1);
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeColumn,
+      child: GestureDetector(
+        key: const ValueKey('files-split-handle'),
+        behavior: HitTestBehavior.opaque,
+        onHorizontalDragUpdate: (details) => onDrag(details.delta.dx),
+        child: const SizedBox(
+          width: 7,
+          child: Center(child: VerticalDivider(width: 1)),
+        ),
+      ),
+    );
+  }
+}
 
 class _ChangeChoice {
   const _ChangeChoice(this.action, [this.path = '']);

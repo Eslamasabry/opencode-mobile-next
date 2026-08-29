@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
+import '../desktop/context_menu.dart';
+import '../desktop/desktop_interaction.dart';
 import '../navigation/chat_route.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/entrance.dart';
@@ -278,7 +280,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       children: [
         RefreshIndicator(
           onRefresh: _load,
-          child: CustomScrollView(
+          child: DesktopScrollbarArea(
+            builder: (scrollController) => CustomScrollView(
+            controller: scrollController,
             key: const PageStorageKey('workspace-scroll'),
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
@@ -433,6 +437,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 ),
               const SliverToBoxAdapter(child: SizedBox(height: 96)),
             ],
+            ),
           ),
         ),
         // 4. Start a prompt: a docked quick-ask pill opens a fresh session in
@@ -750,7 +755,7 @@ class _SessionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final updated = session.time?.updated ?? session.time?.created;
-    return Dismissible(
+    final row = Dismissible(
       key: ValueKey('session-dismiss-${session.id}'),
       direction: DismissDirection.endToStart,
       // Runs the existing confirm-and-delete flow, then resolves false: the
@@ -815,6 +820,48 @@ class _SessionRow extends StatelessWidget {
         ),
         onTap: () => onOpen(session),
       ),
+    );
+    // The same entries the trailing overflow menu lists, on the button a
+    // mouse user actually reaches for. A pass-through off desktop.
+    return ContextMenuRegion(
+      actions: () => [
+        ContextMenuAction(
+          menuKey: const ValueKey('session-menu-open'),
+          label: 'Open',
+          icon: Icons.open_in_new_rounded,
+          onSelected: () => onOpen(session),
+        ),
+        ContextMenuAction(
+          menuKey: const ValueKey('session-menu-rename'),
+          label: 'Rename',
+          icon: Icons.edit_outlined,
+          onSelected: () => unawaited(onAction('rename', session)),
+        ),
+        if (sharingAvailable)
+          ContextMenuAction(
+            menuKey: const ValueKey('session-menu-share'),
+            label: session.shareUrl == null ? 'Share' : 'Stop sharing',
+            icon: Icons.public_rounded,
+            onSelected: () => unawaited(
+              onAction(session.shareUrl == null ? 'share' : 'unshare', session),
+            ),
+          ),
+        if (archiveAvailable)
+          ContextMenuAction(
+            menuKey: const ValueKey('session-menu-archive'),
+            label: 'Archive',
+            icon: Icons.archive_outlined,
+            onSelected: () => unawaited(onAction('archive', session)),
+          ),
+        ContextMenuAction(
+          menuKey: const ValueKey('session-menu-delete'),
+          label: 'Delete',
+          icon: Icons.delete_outline_rounded,
+          destructive: true,
+          onSelected: () => unawaited(onAction('delete', session)),
+        ),
+      ],
+      child: row,
     );
   }
 

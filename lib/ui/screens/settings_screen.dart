@@ -12,6 +12,7 @@ import '../../state/offline_queue.dart';
 import '../../state/profiles.dart';
 import '../../termux/bridge.dart';
 import '../app_theme.dart';
+import '../desktop/desktop_interaction.dart';
 import '../theme_packs.dart';
 import '../../voice/notices.dart';
 import '../widgets/appearance_picker.dart';
@@ -92,7 +93,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         : 'Version ${controller.version ?? 'unknown'}';
     return Scaffold(
       appBar: AppBar(title: const Text('Settings and server')),
-      body: ListView(
+      body: DesktopScrollbarArea(
+        builder: (scrollController) => ListView(
+        controller: scrollController,
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
         children: [
           Card(
@@ -204,6 +207,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
         ],
+        ),
       ),
     );
   }

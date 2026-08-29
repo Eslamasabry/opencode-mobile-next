@@ -12,6 +12,7 @@ import '../../state/connection.dart';
 import '../../state/profiles.dart';
 import '../../termux/bridge.dart';
 import '../app_theme.dart';
+import '../desktop/desktop_interaction.dart';
 
 class TermuxSetupScreen extends ConsumerStatefulWidget {
   const TermuxSetupScreen({super.key});
@@ -1117,7 +1118,10 @@ class _LiveSetupTerminal extends StatelessWidget {
             child: Scrollbar(
               controller: controller,
               thumbVisibility: true,
-              child: SingleChildScrollView(
+              // This log pane draws its own thumb on every platform; without
+              // this the desktop scroll behaviour would draw a second one.
+              child: OwnScrollbar(
+                child: SingleChildScrollView(
                 controller: controller,
                 padding: const EdgeInsets.all(12),
                 child: SizedBox(
@@ -1132,6 +1136,7 @@ class _LiveSetupTerminal extends StatelessWidget {
                     ),
                   ),
                 ),
+              ),
               ),
             ),
           ),
