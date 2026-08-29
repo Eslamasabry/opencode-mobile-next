@@ -4,6 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/sse.dart';
+import 'package:opencode_mobile/api2/gateway_mappers.dart'
+    show api2ServerCapabilities;
+import 'package:opencode_mobile/domain/server_gateway.dart'
+    show ServerCapabilities;
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
@@ -11,6 +15,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class _FormChatApi extends OpenCodeApi {
   _FormChatApi() : super(baseUrl: 'http://localhost');
+
+  // Forms are a v2 capability, and the chat now gates the renderer and the
+  // inline card on it, so a fake that serves forms must report it.
+  @override
+  ServerCapabilities get capabilities => api2ServerCapabilities;
 
   final formReplies = <(String, String, Map<String, dynamic>)>[];
   final formCancels = <(String, String)>[];

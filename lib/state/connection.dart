@@ -3278,6 +3278,9 @@ class ConnectionController extends ChangeNotifier {
     required ServerOperationsGateway currentRepository,
     required ServerProfile profile,
   }) async {
+    // §7 row 25: v2 hot-reloads provider config, so there is no runtime to
+    // kick — skip the probe entirely instead of failing it once per connect.
+    if (!currentApi.capabilities.providerRuntimeRefresh) return;
     if (store.providerRuntimeWasRefreshed(
       profile.id,
       directory: directory,

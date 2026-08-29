@@ -422,6 +422,8 @@ class _WorktreesScreenState extends State<WorktreesScreen> {
                   onOpen: () => _open(worktrees[index].directory),
                   onReset: () => _reset(worktrees[index]),
                   onRemove: () => _remove(worktrees[index]),
+                  resetAvailable:
+                      widget.controller.capabilities.worktreeReset,
                 ),
                 if (index != worktrees.length - 1)
                   const Divider(height: 1, indent: 56),
@@ -517,6 +519,10 @@ class _WorktreeTile extends StatelessWidget {
   final VoidCallback onReset;
   final VoidCallback onRemove;
 
+  /// The destructive worktree reset is v1-only (`worktreeReset`). §7 rule 3:
+  /// menus list possible actions, so it leaves the menu on a v2 server.
+  final bool resetAvailable;
+
   const _WorktreeTile({
     required this.worktree,
     required this.current,
@@ -526,6 +532,7 @@ class _WorktreeTile extends StatelessWidget {
     required this.onOpen,
     required this.onReset,
     required this.onRemove,
+    this.resetAvailable = true,
   });
 
   @override
@@ -575,7 +582,7 @@ class _WorktreeTile extends StatelessWidget {
             itemBuilder: (context) => [
               if (!current && !preparing && failure == null)
                 const PopupMenuItem(value: 'open', child: Text('Open')),
-              if (!preparing && failure == null)
+              if (resetAvailable && !preparing && failure == null)
                 const PopupMenuItem(value: 'reset', child: Text('Reset')),
               const PopupMenuItem(value: 'remove', child: Text('Remove')),
             ],

@@ -1967,6 +1967,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   /// only while no permission sheet or form presenter is already up, and at
   /// most once per form (the inline card reopens it manually).
   void _scheduleFormPresenter() {
+    // Forms are v2-only (§7 rule 5); the auto-presenter and the inline card
+    // are one surface, so they share one gate.
+    if (!_conn.capabilities.forms) return;
     if (!mounted ||
         _formPresenterScheduled ||
         _activeFormID != null ||
@@ -3616,8 +3619,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                       ),
                                     ),
                             ),
+                            // §7 rule 5: v2-only surfaces stay silent on v1.
+                            // The map is already empty there, but the gate is
+                            // explicit so a stale entry cannot leak a form
+                            // card onto a server that cannot answer it.
                             if (_conn.formForSession(widget.sessionID)
-                                case final pendingForm?)
+                                case final pendingForm?
+                                when _conn.capabilities.forms)
                               _FormRequestCard(
                                 key: ValueKey(
                                   'form-request-card-${pendingForm.id}',
@@ -3626,9 +3634,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                 onAnswer: () =>
                                     unawaited(_openForm(pendingForm)),
                               ),
+                            // The offline-draft half of the strip is v1-safe;
+                            // only the inbox bubbles are v2-only (§7 rule 5).
                             if ((
                               drafts: _conn.queuedPromptsFor(widget.sessionID),
-                              inbox: _conn.inboxItemsFor(widget.sessionID),
+                              inbox: _conn.capabilities.inbox
+                                  ? _conn.inboxItemsFor(widget.sessionID)
+                                  : const <Api2InboxItem>[],
                             )
                                 case final pendingSends
                                 when pendingSends.drafts.isNotEmpty ||

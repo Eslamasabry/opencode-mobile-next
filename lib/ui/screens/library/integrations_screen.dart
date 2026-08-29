@@ -403,7 +403,10 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
                       _busy.contains(server.name) ||
                       (_pendingMcpOAuth?.server.name == server.name &&
                           _finishingMcpOAuth),
-                  onAction: _pendingMcpOAuth?.server.name == server.name
+                  authGated: _mcpAuthGated(server.status),
+                  onAction:
+                      _pendingMcpOAuth?.server.name == server.name ||
+                          _mcpAuthGated(server.status)
                       ? null
                       : () => _action(server),
                 ),
@@ -524,6 +527,12 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
         ) ??
         false;
   }
+
+  /// True when the server needs interactive MCP authorization that this
+  /// connection has no endpoints to run (§7 row 9).
+  bool _mcpAuthGated(String status) =>
+      !widget.controller.capabilities.mcpOAuth &&
+      (status == 'needs_auth' || status == 'needs_client_registration');
 
   static String _statusLabel(String status) => switch (status) {
     'connected' => 'Connected and tools are available',
@@ -781,7 +790,11 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
 
   Future<void> _finishOAuth(_PendingIntegrationOAuth pending) async {
     final repository = await _requireActionRepository();
-    await repository.refreshProviderRuntime();
+    // §7 row 25: v2 hot-reloads its provider config, so the explicit runtime
+    // refresh is skipped rather than failing a connect that already worked.
+    if (widget.controller.capabilities.providerRuntimeRefresh) {
+      await repository.refreshProviderRuntime();
+    }
     await Future.wait([_load(), widget.controller.refreshCatalog()]);
     if (!mounted || _pendingOAuth != pending) return;
     setState(() => _pendingOAuth = null);
