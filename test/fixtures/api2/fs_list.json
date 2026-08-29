@@ -1,0 +1,48 @@
+{
+  "location": {
+    "directory": "/home/eslam/Storage/Code/oc_app",
+    "project": {
+      "id": "5e625357c202857bf3cd6f591d76b2bec8b5093d",
+      "directory": "/home/eslam/Storage/Code/oc_app",
+      "canonical": "/home/eslam/Storage/Code/oc_app"
+    }
+  },
+  "data": [
+    {
+      "path": "lib/api/",
+      "type": "directory"
+    },
+    {
+      "path": "lib/background/",
+      "type": "directory"
+    },
+    {
+      "path": "lib/diagnostics/",
+      "type": "directory"
+    },
+    {
+      "path": "lib/state/",
+      "type": "directory"
+    },
+    {
+      "path": "lib/termux/",
+      "type": "directory"
+    },
+    {
+      "path": "lib/ui/",
+      "type": "directory"
+    },
+    {
+      "path": "lib/update/",
+      "type": "directory"
+    },
+    {
+      "path": "lib/voice/",
+      "type": "directory"
+    },
+    {
+      "path": "lib/main.dart",
+      "type": "file"
+    }
+  ]
+}

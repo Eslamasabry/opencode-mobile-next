@@ -1,0 +1,93 @@
+{
+  "data": [
+    {
+      "id": "ses_fb5c08101ffef0R2ldyIoWpgaW",
+      "projectID": "5e625357c202857bf3cd6f591d76b2bec8b5093d",
+      "agent": "build",
+      "model": {
+        "id": "gpt-5.6-sol",
+        "providerID": "openai",
+        "variant": "default"
+      },
+      "cost": 0,
+      "tokens": {
+        "input": 59422,
+        "output": 861,
+        "reasoning": 61,
+        "cache": {
+          "read": 78336,
+          "write": 0
+        }
+      },
+      "time": {
+        "created": 1787952070398,
+        "updated": 1787952242199
+      },
+      "title": "Repo test strategy overview",
+      "location": {
+        "directory": "/home/eslam/Storage/Code/oc_app"
+      }
+    },
+    {
+      "id": "ses_fb5fc9dcfffexGUXQHNpaU8or2",
+      "parentID": "ses_fb605903fffeXEvQTkm7ciT5wg",
+      "projectID": "b4cc186ad6c7edbce076624543d0474d55a898cc",
+      "agent": "explore",
+      "model": {
+        "id": "big-pickle",
+        "providerID": "opencode",
+        "variant": "default"
+      },
+      "cost": 0,
+      "tokens": {
+        "input": 234137,
+        "output": 13763,
+        "reasoning": 0,
+        "cache": {
+          "read": 1043200,
+          "write": 0
+        }
+      },
+      "time": {
+        "created": 1787948130864,
+        "updated": 1787948780798
+      },
+      "title": "Review crypto_prime providers and evaluators (@explore subagent)",
+      "location": {
+        "directory": "/home/eslam/Storage/Code/TradeNet"
+      }
+    },
+    {
+      "id": "ses_fb6058dcfffeyIJIsJ4YU39ki4",
+      "projectID": "b4cc186ad6c7edbce076624543d0474d55a898cc",
+      "agent": "build",
+      "model": {
+        "id": "glm-5.3",
+        "providerID": "opencode-go",
+        "variant": "default"
+      },
+      "cost": 1.9628420799999997,
+      "tokens": {
+        "input": 174516,
+        "output": 3649,
+        "reasoning": 15031,
+        "cache": {
+          "read": 6293568,
+          "write": 0
+        }
+      },
+      "time": {
+        "created": 1787947545136,
+        "updated": 1787948408870
+      },
+      "title": "Crypto Prime P1 review: SHIP or HOLD verdict",
+      "location": {
+        "directory": "/home/eslam/Storage/Code/TradeNet"
+      }
+    }
+  ],
+  "cursor": {
+    "previous": "eyJhbmNob3IiOnsiaWQiOiJzZXNfZmI1YzA4MTAxZmZlZjBSMmxkeUlvV3BnYVciLCJ0aW1lIjoxNzg3OTUyMjQyMTk5LCJkaXJlY3Rpb24iOiJwcmV2aW91cyJ9fQ",
+    "next": "eyJhbmNob3IiOnsiaWQiOiJzZXNfZmI2MDU4ZGNmZmZleUlKSXNKNFlVMzlraTQiLCJ0aW1lIjoxNzg3OTQ4NDA4ODcwLCJkaXJlY3Rpb24iOiJuZXh0In19"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "location": {
+    "directory": "/home/eslam/Storage/Code/oc_app",
+    "project": {
+      "id": "5e625357c202857bf3cd6f591d76b2bec8b5093d",
+      "directory": "/home/eslam/Storage/Code/oc_app",
+      "canonical": "/home/eslam/Storage/Code/oc_app"
+    }
+  },
+  "data": [
+    {
+      "name": "init",
+      "description": "guided AGENTS.md setup"
+    },
+    {
+      "name": "review",
+      "description": "review changes [commit|branch|pr], defaults to uncommitted"
+    },
+    {
+      "name": "opentui",
+      "description": "Load OpenTUI skill and get contextual guidance for building terminal user interfaces"
+    }
+  ]
+}
