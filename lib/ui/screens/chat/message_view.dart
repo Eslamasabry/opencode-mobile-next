@@ -670,11 +670,7 @@ class V2TranscriptRow extends StatelessWidget {
             part.filename ?? 'System update',
             null,
           ),
-          'skill' => (
-            AppIcons.run,
-            'Skill ·',
-            part.filename ?? part.text,
-          ),
+          'skill' => (AppIcons.run, 'Skill ·', part.filename ?? part.text),
           _ => (Icons.dns_outlined, part.filename ?? 'Server message', null),
         };
         return TranscriptNotice(
@@ -1311,10 +1307,13 @@ class _MessageView extends StatelessWidget {
                             key: ValueKey('message-actions-${m.info.id}'),
                             customBorder: const StadiumBorder(),
                             onTap: onLongPress,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 6,
+                            // The glyph stays quiet in the meta row, but the
+                            // target itself meets the 44dp floor the rest of
+                            // the product enforces.
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                minWidth: 44,
+                                minHeight: 44,
                               ),
                               child: Icon(
                                 Icons.more_horiz_rounded,

@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../api/models.dart';
 import '../../permission_presentation.dart';
@@ -222,7 +225,7 @@ class _PermissionSheetState extends State<PermissionSheet> {
                     style: theme.textTheme.labelLarge,
                   ),
                   const SizedBox(height: 4),
-                  SelectableText(
+                  Text(
                     permission.always.join('\n'),
                     style: const TextStyle(
                       fontFamily: AppTheme.monoFamily,
@@ -275,10 +278,12 @@ class _PermissionSheetState extends State<PermissionSheet> {
           mainAxisSize: MainAxisSize.min,
           children: [
             for (final resource in rows)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3),
+              // Plain text plus a real Copy button: selection-by-long-press
+              // was both an invisible gesture and a 16dp-tall tap target.
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 48),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(
                       _resourceIcon,
@@ -287,12 +292,23 @@ class _PermissionSheetState extends State<PermissionSheet> {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: SelectableText(
+                      child: Text(
                         resource,
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontFamily: AppTheme.monoFamily,
                         ),
                       ),
+                    ),
+                    IconButton(
+                      tooltip: 'Copy $resource',
+                      constraints: const BoxConstraints.tightFor(
+                        width: 48,
+                        height: 48,
+                      ),
+                      onPressed: () => unawaited(
+                        Clipboard.setData(ClipboardData(text: resource)),
+                      ),
+                      icon: const Icon(AppIcons.copy, size: 18),
                     ),
                   ],
                 ),
