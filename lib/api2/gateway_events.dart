@@ -363,6 +363,7 @@ class Api2EventAdapter {
             'action': request.action,
             'resources': request.resources,
             'save': request.save,
+            if (request.message != null) 'message': request.message,
             if (request.metadata != null) 'metadata': request.metadata,
             if (request.source != null)
               'source': {

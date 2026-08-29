@@ -5,6 +5,7 @@ import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../permission_presentation.dart';
 import '../widgets/product_states.dart';
+import 'chat/permission_sheet.dart';
 
 class RequestsScreen extends StatefulWidget {
   final ConnectionController controller;
@@ -188,178 +189,46 @@ class _RequestsScreenState extends State<RequestsScreen> {
   }
 }
 
-class _PermissionTile extends StatefulWidget {
+class _PermissionTile extends StatelessWidget {
   final PermissionRequest permission;
   final ConnectionController controller;
 
   const _PermissionTile({required this.permission, required this.controller});
 
   @override
-  State<_PermissionTile> createState() => _PermissionTileState();
-}
-
-class _PermissionTileState extends State<_PermissionTile> {
-  bool _busy = false;
-  String? _error;
-
-  Future<void> _reply(String value) async {
-    if (_busy) return;
-    if (value == 'reject') {
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Reject permission?'),
-          content: const Text(
-            'The current OpenCode action will not receive this permission.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Reject'),
-            ),
-          ],
-        ),
-      );
-      if (confirmed != true) return;
-    } else if (value == 'always') {
-      final broader = widget.permission.always.isNotEmpty
-          ? widget.permission.always
-          : widget.permission.patterns;
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          scrollable: true,
-          title: const Text('Confirm broader access'),
-          content: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Context: ${permissionRequestTitle(widget.permission.permission)} for '
-                '${_sessionTitle(widget.controller, widget.permission.sessionID)}',
-              ),
-              const SizedBox(height: 12),
-              const Text('Always allow patterns:'),
-              const SizedBox(height: 4),
-              SelectableText(
-                broader.isEmpty
-                    ? '(all matching requests)'
-                    : broader.join('\n'),
-                style: const TextStyle(fontFamily: 'AppMono'),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Future matching actions can run without another prompt until OpenCode restarts. Allow once is safer.',
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Keep asking'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Confirm always allow'),
-            ),
-          ],
-        ),
-      );
-      if (confirmed != true) return;
-    }
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-    try {
-      await widget.controller.answerPermission(widget.permission.id, value);
-    } catch (error) {
-      if (mounted) setState(() => _error = error.toString());
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final permission = widget.permission;
     final theme = Theme.of(context);
     final title = permission.permission.isEmpty
         ? 'Permission required'
         : permissionRequestTitle(permission.permission);
-    return ExpansionTile(
+    return ListTile(
+      minTileHeight: 66,
       leading: Icon(Icons.shield_outlined, color: theme.colorScheme.tertiary),
       title: Text(title),
       subtitle: Text(
-        _sessionTitle(widget.controller, permission.sessionID),
+        permission.patterns.isNotEmpty
+            ? permission.patterns.first
+            : _sessionTitle(controller, permission.sessionID),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
+        style: permission.patterns.isNotEmpty
+            ? const TextStyle(fontFamily: 'AppMono', fontSize: 12.5)
+            : null,
       ),
-      childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: SelectableText(
-            permission.patterns.isEmpty
-                ? 'OpenCode requested ${permission.permission} access.'
-                : permission.patterns.join('\n'),
-            style: const TextStyle(fontFamily: 'AppMono', fontSize: 12.5),
-          ),
+      trailing: const Icon(Icons.chevron_right_rounded),
+      // One permission component, three entry points: the tile opens the
+      // same sheet the chat auto-presents.
+      onTap: () => showPermissionSheet(
+        context,
+        permission: permission,
+        supportsRejectMessage: controller.permissionSupportsRejectMessage(
+          permission.id,
         ),
-        if (permission.always.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'Always allow scope: ${permission.always.join(', ')}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.hintColor,
-              ),
-            ),
-          ),
-        ],
-        if (_error != null) ...[
-          const SizedBox(height: 10),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              _error!,
-              style: TextStyle(color: theme.colorScheme.error),
-            ),
-          ),
-        ],
-        const SizedBox(height: 14),
-        Wrap(
-          alignment: WrapAlignment.end,
-          spacing: 6,
-          runSpacing: 8,
-          children: [
-            TextButton(
-              onPressed: _busy ? null : () => _reply('reject'),
-              child: const Text('Reject'),
-            ),
-            OutlinedButton(
-              onPressed: _busy ? null : () => _reply('always'),
-              child: const Text('Always'),
-            ),
-            FilledButton(
-              onPressed: _busy ? null : () => _reply('once'),
-              child: _busy
-                  ? const SizedBox.square(
-                      dimension: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Allow once'),
-            ),
-          ],
-        ),
-      ],
+        contextLabel:
+            'for ${_sessionTitle(controller, permission.sessionID)}',
+        onReply: (reply, {message}) =>
+            controller.answerPermission(permission.id, reply, message: message),
+      ),
     );
   }
 }

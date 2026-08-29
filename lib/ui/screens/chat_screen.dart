@@ -17,7 +17,6 @@ import '../../state/connection.dart';
 import '../../voice/controller.dart';
 import '../../voice/voice_ui.dart';
 import '../navigation/chat_route.dart';
-import '../permission_presentation.dart';
 import '../app_theme.dart';
 import '../widgets/appearance_picker.dart';
 import '../widgets/connection_status_banner.dart';
@@ -29,6 +28,7 @@ import '../widgets/pickers.dart';
 import '../widgets/product_states.dart';
 import '../widgets/tool_card.dart';
 import 'app_diagnostics_screen.dart';
+import 'chat/permission_sheet.dart';
 import 'files_screen.dart';
 import 'global_sessions_screen.dart';
 import 'home_screen.dart';
@@ -47,7 +47,6 @@ part 'chat/timeline_sheet.dart';
 part 'chat/command_launcher.dart';
 part 'chat/prompt_editor.dart';
 part 'chat/composer.dart';
-part 'chat/permission_dialog.dart';
 part 'chat/message_view.dart';
 part 'chat/session_sheets.dart';
 
@@ -1929,6 +1928,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       final route = _activePermissionRoute;
       if (route != null && route.isActive) {
         route.navigator?.removeRoute(route);
+        // The request settled without this sheet replying — someone else
+        // (another device, the TUI, a notification action) handled it.
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Handled on another device')),
+        );
       }
     });
   }
@@ -1955,15 +1959,37 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _showPermissionDialog(PermissionRequest permission) async {
     _activePermissionID = permission.id;
-    await showDialog<void>(
+    final tool = permission.tool;
+    await showModalBottomSheet<void>(
       context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        _activePermissionRoute = ModalRoute.of<void>(dialogContext);
+      isScrollControlled: true,
+      isDismissible: false,
+      enableDrag: false,
+      useSafeArea: true,
+      clipBehavior: Clip.antiAlias,
+      constraints: const BoxConstraints(maxWidth: 720),
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        _activePermissionRoute = ModalRoute.of<void>(sheetContext);
         _dismissResolvedPermissionDialog();
-        return _PermissionDialog(
-          permission: permission,
-          onReply: (reply) => _conn.answerPermission(permission.id, reply),
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+          ),
+          child: PermissionSheet(
+            permission: permission,
+            supportsRejectMessage: _conn.permissionSupportsRejectMessage(
+              permission.id,
+            ),
+            onReply: (reply, {message}) =>
+                _conn.answerPermission(permission.id, reply, message: message),
+            onShowSource: tool == null
+                ? null
+                : () => _jumpToMessage(tool.messageID),
+          ),
         );
       },
     );

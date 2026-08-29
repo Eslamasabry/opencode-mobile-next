@@ -1517,6 +1517,7 @@ class ConnectionController extends ChangeNotifier {
       'patterns': props['resources'],
       'metadata': props['metadata'],
       'always': props['save'],
+      'message': props['message'],
       if (props['source'] is Map) 'tool': props['source'],
     });
     if (permission.sessionID.isEmpty || permission.id.isEmpty) return;
