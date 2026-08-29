@@ -265,8 +265,14 @@ have WIP commits; they were told to commit everything durable):
    Merge fixups on top: `cfa195c` (the connect lane's fake gateway needed
    `capabilities` once connect-time form polling landed).
 
-**THE V2 PORT'S PLANNED LANES ARE ALL MERGED.** The app connects to,
-streams from, and interacts with opencode2 servers, and still speaks v1.
+**THE V2 PORT IS COMPLETE AND SHIPPED.** All lanes merged, plus the
+capability gating sweep (ba7acec: v1-only surfaces hidden where they are
+navigation, disabled-with-explainer where they are settings; it also
+caught two live bugs where the v2 provider-runtime refresh failed an
+otherwise-good integration connect). Full suite green: 810 tests in six
+foreground chunks. Published as **v1.0.28+29-preview.8** (signer
+1de5bf08…d60c verified; key.properties deleted after the build).
+docs/opencode2-port-plan.md carries per-phase status and the known gaps.
 3. ~~`port/v2-transcript`~~ — DONE and MERGED (b29ec48): tagged part
    types (`v2:switch`/`v2:notice`/`v2:compaction`), TranscriptMarker
    pills, notices, compaction rows, shell status chips, interleaved tool
