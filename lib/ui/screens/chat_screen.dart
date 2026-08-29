@@ -1013,7 +1013,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _send() async {
+  /// [delivery] rides only on OpenCode 2 sends made while a turn runs:
+  /// null lets the server default (steer) apply; the long-press menu passes
+  /// an explicit steer or queue.
+  Future<void> _send({PromptDelivery? delivery}) async {
     await _voice?.cancel();
     if (_sending || (_composer.text.trim().isEmpty && _attachments.isEmpty)) {
       return;
@@ -1112,6 +1115,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         variant: _conn.selectedVariant.isEmpty ? null : _conn.selectedVariant,
         attachments: attachments,
         agentMentions: agentMentions,
+        delivery: delivery,
       );
       if (!mounted) return;
       setState(() {
@@ -3622,6 +3626,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                   attachments: _attachments,
                                   busy: busy,
                                   sending: _sending,
+                                  canSendWhileBusy: _conn.supportsInbox,
                                   voiceOpening: _voiceOpening,
                                   selectedAgent: _conn.selectedAgent,
                                   selectedModel: _conn.selectedModel,
@@ -3632,6 +3637,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                   ),
                                   onVoice: _openVoice,
                                   onSend: _send,
+                                  onSendDelivery: (delivery) =>
+                                      unawaited(_send(delivery: delivery)),
                                   onStop: _abort,
                                   onChooseModel: () => showModelPicker(context),
                                   contextUsage: _contextWindowUsage(),

@@ -16,6 +16,7 @@ class _ChatComposer extends StatelessWidget {
     required this.attachments,
     required this.busy,
     required this.sending,
+    this.canSendWhileBusy = false,
     required this.voiceOpening,
     required this.selectedAgent,
     required this.selectedModel,
@@ -24,6 +25,7 @@ class _ChatComposer extends StatelessWidget {
     required this.onContentInserted,
     required this.onVoice,
     required this.onSend,
+    this.onSendDelivery,
     required this.onStop,
     required this.onChooseModel,
     required this.onRemoveAttachment,
@@ -44,6 +46,11 @@ class _ChatComposer extends StatelessWidget {
   final List<PromptAttachment> attachments;
   final bool busy;
   final bool sending;
+
+  /// OpenCode 2 only (§5): Send stays live while a turn runs — tap steers
+  /// (the server default), long-press offers the steer/queue choice. On v1
+  /// the busy composer keeps its lone Stop button.
+  final bool canSendWhileBusy;
   final bool voiceOpening;
   final String selectedAgent;
   final ModelRef? selectedModel;
@@ -55,6 +62,9 @@ class _ChatComposer extends StatelessWidget {
   final ValueChanged<KeyboardInsertedContent> onContentInserted;
   final VoidCallback onVoice;
   final VoidCallback onSend;
+
+  /// Sends with an explicit delivery mode from the long-press menu.
+  final ValueChanged<PromptDelivery>? onSendDelivery;
   final VoidCallback onStop;
   final VoidCallback onChooseModel;
   final ValueChanged<PromptAttachment> onRemoveAttachment;
@@ -67,7 +77,7 @@ class _ChatComposer extends StatelessWidget {
       controller.text.trim().isNotEmpty || attachments.isNotEmpty;
 
   void _submitFromKeyboard() {
-    if (_hasPrompt && !busy && !sending) onSend();
+    if (_hasPrompt && !sending && (!busy || canSendWhileBusy)) onSend();
   }
 
   @override
@@ -225,7 +235,9 @@ class _ChatComposer extends StatelessWidget {
                 busy: busy,
                 sending: sending,
                 enabled: _hasPrompt,
+                canSendWhileBusy: canSendWhileBusy,
                 onSend: onSend,
+                onSendDelivery: onSendDelivery,
                 onStop: onStop,
               ),
             ],
@@ -288,7 +300,9 @@ class _ChatComposer extends StatelessWidget {
             busy: busy,
             sending: sending,
             enabled: _hasPrompt,
+            canSendWhileBusy: canSendWhileBusy,
             onSend: onSend,
+            onSendDelivery: onSendDelivery,
             onStop: onStop,
           ),
         ],
@@ -414,20 +428,35 @@ class _ComposerSubmit extends StatelessWidget {
     required this.busy,
     required this.sending,
     required this.enabled,
+    this.canSendWhileBusy = false,
     required this.onSend,
+    this.onSendDelivery,
     required this.onStop,
   });
 
   final bool busy;
   final bool sending;
   final bool enabled;
+  final bool canSendWhileBusy;
   final VoidCallback onSend;
+  final ValueChanged<PromptDelivery>? onSendDelivery;
   final VoidCallback onStop;
 
   @override
   Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    return AnimatedSwitcher(
+      duration: reduceMotion
+          ? Duration.zero
+          : const Duration(milliseconds: 150),
+      child: _slot(context),
+    );
+  }
+
+  Widget _slot(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    if (busy) {
+    if (busy && !canSendWhileBusy) {
+      // v1 semantics unchanged: sending is impossible while a turn runs.
       return IconButton.filledTonal(
         key: const Key('chat-send-button'),
         tooltip: 'Stop',
@@ -439,9 +468,9 @@ class _ComposerSubmit extends StatelessWidget {
         icon: const Icon(Icons.stop_rounded),
       );
     }
-    return IconButton.filled(
+    final send = IconButton.filled(
       key: const Key('chat-send-button'),
-      tooltip: 'Send',
+      tooltip: busy ? 'Send — steers the current run' : 'Send',
       onPressed: sending || !enabled ? null : onSend,
       icon: sending
           ? const SizedBox.square(
@@ -449,6 +478,68 @@ class _ComposerSubmit extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : const Icon(Icons.arrow_upward_rounded),
+    );
+    if (!busy) return send;
+    // OpenCode 2 while busy: Stop keeps its own adjacent button; tap Send
+    // steers (the v2 default), long-press offers the delivery choice.
+    return Row(
+      key: const Key('chat-busy-submit-row'),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton.filledTonal(
+          key: const Key('chat-stop-button'),
+          tooltip: 'Stop',
+          onPressed: onStop,
+          style: IconButton.styleFrom(
+            foregroundColor: scheme.error,
+            backgroundColor: scheme.errorContainer.withValues(alpha: .55),
+          ),
+          icon: const Icon(Icons.stop_rounded),
+        ),
+        const SizedBox(width: 4),
+        GestureDetector(
+          onLongPress: sending || !enabled
+              ? null
+              : () => _showDeliveryMenu(context),
+          child: send,
+        ),
+      ],
+    );
+  }
+
+  void _showDeliveryMenu(BuildContext context) {
+    final onDelivery = onSendDelivery;
+    if (onDelivery == null) return;
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          key: const Key('send-delivery-menu'),
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              key: const Key('send-delivery-steer'),
+              leading: const Icon(Icons.bolt_rounded),
+              title: const Text('Send now'),
+              subtitle: const Text('Steers the current run'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                onDelivery(PromptDelivery.steer);
+              },
+            ),
+            ListTile(
+              key: const Key('send-delivery-queue'),
+              leading: const Icon(Icons.hourglass_bottom_rounded),
+              title: const Text('Queue for after this run'),
+              subtitle: const Text('Waits for the current run to finish'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                onDelivery(PromptDelivery.queue);
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
