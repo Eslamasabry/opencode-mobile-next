@@ -142,7 +142,7 @@ String stripPathLineSuffix(String code) =>
 /// Lightweight markdown renderer tuned for LLM chat output:
 /// headings, bold/italic/strikethrough, inline code, fenced code blocks,
 /// bullet/ordered lists, blockquotes, horizontal rules and links.
-class MarkdownText extends StatelessWidget {
+class MarkdownText extends StatefulWidget {
   final String data;
   final TextStyle? baseStyle;
   final String? codeBlockLanguage;
@@ -159,9 +159,39 @@ class MarkdownText extends StatelessWidget {
     this.selectable = true,
   });
 
+  /// Counts full block re-parses. Tests use it to assert that streaming
+  /// rebuilds do not re-parse unchanged markdown.
+  @visibleForTesting
+  static int debugParseCount = 0;
+
+  @override
+  State<MarkdownText> createState() => _MarkdownTextState();
+}
+
+class _MarkdownTextState extends State<MarkdownText> {
+  /// Parsed block widgets, reused verbatim while [MarkdownText.data] is
+  /// unchanged so transcript-wide rebuilds during streaming skip re-parsing
+  /// (and therefore re-highlighting) every other message.
+  List<Widget>? _blocks;
+  String? _parsedData;
+  bool? _parsedSelectable;
+
+  List<Widget> _blocksFor() {
+    final cached = _blocks;
+    if (cached != null &&
+        _parsedData == widget.data &&
+        _parsedSelectable == widget.selectable) {
+      return cached;
+    }
+    MarkdownText.debugParseCount++;
+    _parsedData = widget.data;
+    _parsedSelectable = widget.selectable;
+    return _blocks = _splitBlocks(widget.data);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final blocks = _splitBlocks(data);
+    final blocks = _blocksFor();
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -171,12 +201,13 @@ class MarkdownText extends StatelessWidget {
         ],
       ],
     );
-    return baseStyle == null
+    return widget.baseStyle == null
         ? content
-        : DefaultTextStyle.merge(style: baseStyle, child: content);
+        : DefaultTextStyle.merge(style: widget.baseStyle, child: content);
   }
 
   List<Widget> _splitBlocks(String src) {
+    final selectable = widget.selectable;
     final widgets = <Widget>[];
     final lines = src.replaceAll('\r\n', '\n').split('\n');
     var i = 0;
@@ -226,8 +257,19 @@ class MarkdownText extends StatelessWidget {
           code.add(lines[i]);
           i++;
         }
+        // While a fence is still open (streaming), the block re-parses on
+        // every delta flush — defer syntax highlighting until it closes so
+        // `highlight.parse` never runs per token on a growing buffer. The
+        // code still appears streamed, as plain monospace.
+        final closed = i < lines.length;
         i++; // skip closing fence
-        widgets.add(CodeBlock(code: code.join('\n'), language: lang));
+        widgets.add(
+          CodeBlock(
+            code: code.join('\n'),
+            language: lang,
+            highlightEnabled: closed,
+          ),
+        );
         continue;
       }
 
@@ -738,49 +780,80 @@ class _CodeSpan extends WidgetSpan {
        );
 }
 
-/// Scrollable, selectable monospace block with a copy button.
+/// Scrollable, selectable monospace block with a header row carrying the
+/// language chip and copy button — a real row instead of an overlay, so the
+/// first code lines are never covered and a top-right tap cannot copy by
+/// accident.
 class CodeBlock extends StatelessWidget {
   final String code;
   final String? language;
-  const CodeBlock({super.key, required this.code, this.language});
+
+  /// Streaming callers pass false while the fence is still open so the
+  /// grammar never re-parses a growing buffer per delta.
+  final bool highlightEnabled;
+
+  const CodeBlock({
+    super.key,
+    required this.code,
+    this.language,
+    this.highlightEnabled = true,
+  });
+
+  /// Hard-wraps pathological single lines (minified payloads) so a streamed
+  /// 100k-char line cannot become a ~100k-px layout/selection surface. Copy
+  /// still uses the original [code].
+  static String _displayCode(String source) {
+    const limit = 1000;
+    var needsWrap = false;
+    var runLength = 0;
+    for (var i = 0; i < source.length; i++) {
+      if (source.codeUnitAt(i) == 0x0A) {
+        runLength = 0;
+      } else if (++runLength > limit) {
+        needsWrap = true;
+        break;
+      }
+    }
+    if (!needsWrap) return source;
+    final out = StringBuffer();
+    for (final line in source.split('\n')) {
+      if (out.isNotEmpty) out.write('\n');
+      if (line.length <= limit) {
+        out.write(line);
+        continue;
+      }
+      for (var start = 0; start < line.length; start += limit) {
+        if (start > 0) out.write('\n');
+        final end = start + limit < line.length ? start + limit : line.length;
+        out.write(line.substring(start, end));
+      }
+    }
+    return out.toString();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Stack(
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-          decoration: BoxDecoration(
-            color: theme.brightness == Brightness.dark
-                ? Colors.black.withValues(alpha: .45)
-                : Colors.black.withValues(alpha: .05),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: theme.dividerColor.withValues(alpha: .5)),
-          ),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: SelectableText.rich(
-              highlightedCode(code, language, CodeHighlightTheme.of(context)),
-              style: theme.textTheme.bodySmall!.copyWith(
-                fontFamily: 'AppMono',
-                fontSize: 12.5,
-                height: 1.45,
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          top: 2,
-          right: 2,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (language != null && language!.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(right: 4),
-                  child: Container(
+    final muted = theme.colorScheme.onSurfaceVariant;
+    final display = _displayCode(code);
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: theme.brightness == Brightness.dark
+            ? Colors.black.withValues(alpha: .45)
+            : Colors.black.withValues(alpha: .05),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: .5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 2, 2, 0),
+            child: Row(
+              children: [
+                if (language != null && language!.isNotEmpty)
+                  Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 6,
                       vertical: 1,
@@ -794,32 +867,53 @@ class CodeBlock extends StatelessWidget {
                       language!,
                       style: theme.textTheme.labelSmall!.copyWith(
                         fontSize: 10,
-                        color: theme.hintColor,
+                        color: muted,
                       ),
                     ),
                   ),
+                const Spacer(),
+                IconButton(
+                  tooltip: 'Copy code',
+                  visualDensity: VisualDensity.compact,
+                  iconSize: 16,
+                  icon: Icon(Icons.copy_rounded, color: muted),
+                  onPressed: () async {
+                    await Clipboard.setData(ClipboardData(text: code));
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Copied ${language ?? 'code'}'),
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
+                    }
+                  },
                 ),
-              IconButton(
-                tooltip: 'Copy code',
-                visualDensity: VisualDensity.compact,
-                iconSize: 16,
-                icon: Icon(Icons.copy_rounded, color: theme.hintColor),
-                onPressed: () async {
-                  await Clipboard.setData(ClipboardData(text: code));
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Copied ${language ?? 'code'}'),
-                        duration: const Duration(seconds: 1),
-                      ),
-                    );
-                  }
-                },
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SelectableText.rich(
+                highlightEnabled
+                    ? highlightedCode(
+                        display,
+                        language,
+                        CodeHighlightTheme.of(context),
+                      )
+                    : TextSpan(text: display),
+                style: theme.textTheme.bodySmall!.copyWith(
+                  fontFamily: 'AppMono',
+                  fontSize: 12.5,
+                  height: 1.45,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
