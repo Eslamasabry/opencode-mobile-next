@@ -15,6 +15,7 @@ import '../../api/server_probe.dart' show ServerFlavor;
 import '../../api/sse.dart';
 import '../../state/offline_queue.dart';
 import '../../state/connection.dart';
+import '../../state/review_handoff.dart';
 import '../../voice/controller.dart';
 import '../../voice/voice_ui.dart';
 import '../navigation/chat_route.dart';
@@ -139,6 +140,10 @@ class ChatScreen extends StatefulWidget {
   final List<PromptAttachment> initialAttachments;
   final bool discardIfUntouched;
 
+  /// Overrides the app-wide review handoff store; tests inject their own so
+  /// staged references do not leak between cases.
+  final ReviewHandoffStore? handoffStore;
+
   const ChatScreen({
     super.key,
     required this.sessionID,
@@ -146,6 +151,7 @@ class ChatScreen extends StatefulWidget {
     this.initialText = '',
     this.initialAttachments = const [],
     this.discardIfUntouched = false,
+    this.handoffStore,
   });
 
   @override
@@ -257,6 +263,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   /// reasoning blocks, so list recycling does not collapse them.
   final Map<String, bool> _transcriptExpansion = {};
   final List<PromptAttachment> _attachments = [];
+
+  // UX-103 review handoff (start) — Files, Changes, and Review stage
+  // structured references here; the composer renders them as chips and
+  // `_applyStagedReferences` folds them into the prompt text on send.
+  late final ReviewHandoffSession _handoff = ReviewHandoffSession(
+    store: widget.handoffStore ?? ReviewHandoffStore.instance,
+    sessionID: widget.sessionID,
+  );
+
+  List<ReviewReference> get _stagedReferences => _handoff.references;
+  // UX-103 review handoff (end).
+
   final List<_PendingSend> _pendingSends = [];
   final Map<String, int> _messageVersions = {};
   final Map<String, int> _partVersions = {};
@@ -320,6 +338,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
     _dataRefreshRevision = _conn.dataRefreshRevision;
     _conn.addListener(_onConnectionChanged);
+    _handoff.store.addListener(_onHandoffChanged); // UX-103 review handoff
     _load();
     unawaited(_loadServerCommands());
     _sub = _conn.events.listen(_onEvent);
@@ -1039,6 +1058,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _send({PromptDelivery? delivery}) async {
     delivery ??= _activeDelivery;
     await _voice?.cancel();
+    if (!_sending) _applyStagedReferences(); // UX-103 review handoff
     if (_sending || (_composer.text.trim().isEmpty && _attachments.isEmpty)) {
       return;
     }
@@ -2634,6 +2654,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   controller: _conn,
                   onAttachFile: _attachProjectFile,
                   onReviewPrompt: _addReviewPrompt,
+                  handoff: _handoff, // UX-103 review handoff
                 ),
               ),
             ),
@@ -3082,6 +3103,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final prompt = await Navigator.of(context).push<String>(
       MaterialPageRoute<String>(
         builder: (_) => ReviewWorkspace(
+          handoff: _handoff, // UX-103 review handoff
           loadDiffs: () async {
             final api = await _conn.prepareActionTransport();
             if (api == null) {
@@ -3109,6 +3131,33 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (!mounted || prompt == null || prompt.trim().isEmpty) return;
     _addReviewPrompt(prompt);
   }
+
+  // UX-103 review handoff (start).
+  void _onHandoffChanged() {
+    if (mounted) setState(() {});
+  }
+
+  /// Folds every staged reference into the prompt text just before it is
+  /// sent. References are pointers, not attachments: they leave the composer
+  /// as structured markdown the agent can read, and the chips clear with
+  /// them.
+  void _applyStagedReferences() {
+    final references = _handoff.references;
+    if (references.isEmpty) return;
+    final block = ReviewReference.format(references);
+    if (block.isEmpty) return;
+    final current = _composer.text.trim();
+    final text = current.isEmpty ? block : '$current\n\n$block';
+    _composer.value = TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+    _handoff.store.clear(widget.sessionID);
+  }
+
+  void _removeStagedReference(ReviewReference reference) =>
+      _handoff.store.remove(widget.sessionID, reference.id);
+  // UX-103 review handoff (end).
 
   void _addReviewPrompt(String prompt) {
     if (!mounted || prompt.trim().isEmpty) return;
@@ -3728,6 +3777,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                   onRemoveAttachment: (attachment) => setState(
                                     () => _attachments.remove(attachment),
                                   ),
+                                  // UX-103 review handoff (start).
+                                  references: _stagedReferences,
+                                  onRemoveReference: _removeStagedReference,
+                                  // UX-103 review handoff (end).
                                 ),
                               ),
                             ),
@@ -3747,6 +3800,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _persistDraft();
     WidgetsBinding.instance.removeObserver(this);
     _conn.removeListener(_onConnectionChanged);
+    _handoff.store.removeListener(_onHandoffChanged); // UX-103 review handoff
     _sub.cancel();
     _streamFlushTimer?.cancel();
     _highlightTimer?.cancel();
