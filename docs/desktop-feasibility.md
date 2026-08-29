@@ -1,5 +1,19 @@
 # Desktop feasibility: Linux and Windows
 
+> **This is the original feasibility study, kept for its dependency audit and
+> its Windows analysis. For how to build, package, install and ship the Linux
+> target as it exists today, read [docs/desktop.md](desktop.md).**
+>
+> Since this study was written, Phase 2's window management and all of
+> Phase 3 except AppImage/MSIX have landed: window size, position and
+> maximized state persist and are clamped to a live display; the Linux build
+> has a `.desktop` entry, hicolor icons, AppStream metadata and a pinned
+> `WM_CLASS`; `scripts/package-linux.sh` produces a versioned tarball and a
+> `.deb`; and `.github/workflows/desktop-linux.yml` analyzes, tests, builds,
+> packages and uploads. The GitHub-releases update check described under
+> "Distribution" below now exists as `lib/update/desktop_release_check.dart`.
+> Keyboard shortcuts, pointer polish and desktop voice are still open.
+
 Study date: 2026-08-28. Proven on this machine: the unmodified app **builds a
 working Linux release binary today** (`flutter build linux --release`,
 pinned Flutter 3.47.1) after `flutter create --platforms=linux` added the
@@ -94,6 +108,9 @@ the GCC 14 tree, which is present but incomplete (no `libstdc++.so`).
 Workaround used (no root needed):
 `CXXFLAGS/CFLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/13`.
 Permanent fix: `sudo apt install libstdc++-14-dev` (or `g++-14`).
+This is now detected automatically by `linux/packaging/gcc-install-dir.sh`,
+which the packaging script and CI both use; see
+[docs/desktop.md](desktop.md#the-clang--libstdc-caveat).
 
 ## Phased plan
 
