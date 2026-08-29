@@ -111,7 +111,10 @@ class _NoUpdateService implements AppUpdateService {
   Future<void> downloadUpdate() async {}
 }
 
-Future<ConnectionController> _controllerFor(CodingAlertKind kind) async {
+Future<ConnectionController> _controllerFor(
+  CodingAlertKind kind, {
+  String? tapProfileID,
+}) async {
   SharedPreferences.setMockInitialValues({
     BackgroundLiveController.preferenceKey: true,
   });
@@ -129,7 +132,11 @@ Future<ConnectionController> _controllerFor(CodingAlertKind kind) async {
     invoke: (method, [arguments]) async {
       if (method == 'consumeCodingAlertOpen' && !consumed) {
         consumed = true;
-        return {'kind': kind.wireValue, 'sessionID': 'session-1'};
+        return {
+          'kind': kind.wireValue,
+          'sessionID': 'session-1',
+          'profileID': ?tapProfileID,
+        };
       }
       return const {
         'enabled': true,
@@ -216,5 +223,44 @@ void main() {
     expect(find.text('Deployment'), findsWidgets);
     expect(find.text('Which target should be used?'), findsWidgets);
     expect(find.text('Send answers'), findsOneWidget);
+  });
+
+  testWidgets('widget row tap on the active profile opens its exact chat', (
+    tester,
+  ) async {
+    final controller = await _controllerFor(
+      CodingAlertKind.complete,
+      tapProfileID: 'server-1',
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(_app(controller));
+    await tester.pump();
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    final chat = tester.widget<ChatScreen>(find.byType(ChatScreen));
+    expect(chat.sessionID, 'session-1');
+  });
+
+  testWidgets('widget row tap from another profile opens the app normally', (
+    tester,
+  ) async {
+    final controller = await _controllerFor(
+      CodingAlertKind.complete,
+      tapProfileID: 'server-2',
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(_app(controller));
+    await tester.pump();
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    // No silent profile switch: the stale destination is dropped and the
+    // app stays on its normal root instead of pushing a chat.
+    expect(find.byType(ChatScreen), findsNothing);
+    expect(find.byType(RequestsScreen), findsNothing);
+    expect(controller.pendingCodingAlertOpen, isNull);
   });
 }

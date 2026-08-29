@@ -150,14 +150,21 @@ class MainActivity : FlutterActivity() {
         val sessionID = intent.getStringExtra(
             BackgroundConnectionService.EXTRA_CODING_ALERT_SESSION_ID
         ).orEmpty()
+        val profileID = intent.getStringExtra(
+            BackgroundConnectionService.EXTRA_CODING_ALERT_PROFILE_ID
+        ).orEmpty()
         if (kind.isNotBlank() && sessionID.isNotBlank()) {
             pendingCodingAlertOpen = mapOf(
                 "kind" to kind,
-                "sessionID" to sessionID
+                "sessionID" to sessionID,
+                // Set by widget-row taps only; Dart drops the destination
+                // when it names a profile other than the active one.
+                "profileID" to profileID
             )
         }
         intent.removeExtra(BackgroundConnectionService.EXTRA_CODING_ALERT_KIND)
         intent.removeExtra(BackgroundConnectionService.EXTRA_CODING_ALERT_SESSION_ID)
+        intent.removeExtra(BackgroundConnectionService.EXTRA_CODING_ALERT_PROFILE_ID)
     }
 
     override fun onRequestPermissionsResult(

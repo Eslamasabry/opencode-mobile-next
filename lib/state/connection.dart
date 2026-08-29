@@ -366,6 +366,13 @@ class ConnectionController extends ChangeNotifier {
   Future<void> consumeCodingAlertOpen() async {
     final value = await backgroundLive.consumeCodingAlertOpen();
     if (_disposed || value == null) return;
+    // Home-screen widget rows outlive profile switches: a tap stamped with
+    // another profile's ID opens the app normally rather than silently
+    // routing into (or switching to) that profile's chat. Notification taps
+    // carry no profile ID and keep routing as before.
+    if (value.profileID.isNotEmpty && value.profileID != store.activeId) {
+      return;
+    }
     _pendingCodingAlertOpen = value;
     notifyListeners();
   }
@@ -2436,6 +2443,7 @@ class ConnectionController extends ChangeNotifier {
           sessions: sortedSessions(),
           busySessions: busySessions,
           connected: status == StreamStatus.connected,
+          profileID: _connectedProfile?.id ?? store.activeId ?? '',
         ),
       );
     }
