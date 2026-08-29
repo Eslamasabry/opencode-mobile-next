@@ -9,6 +9,7 @@ import '../../api/server_probe.dart';
 import '../../state/connection.dart';
 import '../../state/profiles.dart';
 import '../app_theme.dart';
+import '../widgets/product_states.dart';
 
 /// Manage opencode server profiles and connect.
 class ServersScreen extends ConsumerStatefulWidget {
@@ -114,7 +115,9 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
         final conn = ref.read(connProvider);
         await conn.connect(savedProfile);
         if (conn.api == null) {
-          throw ProductException(conn.lastError ?? 'The server did not connect.');
+          throw ProductException(
+            conn.lastError ?? 'The server did not connect.',
+          );
         }
         if (isNew && mounted) {
           Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
@@ -265,14 +268,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
-              Text(
-                'SERVERS',
-                style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                  color: Theme.of(context).hintColor,
-                  letterSpacing: 1,
-                ),
-              ),
-              const SizedBox(height: 6),
+              const SectionLabel.inline('Servers'),
               if (needsPassword) ...[
                 Semantics(
                   container: true,
@@ -364,8 +360,8 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontFamily: 'AppMono',
-                            fontSize: 11,
+                            fontFamily: AppTheme.monoFamily,
+                            fontSize: AppTheme.captionFontSize,
                           ),
                         ),
                         if (p.requiresPasswordReentry)
@@ -404,7 +400,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
               Text(
                 'QUICK ADD',
                 style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                  color: Theme.of(context).hintColor,
+                  color: AppTheme.mutedOf(Theme.of(context)),
                   letterSpacing: 1,
                 ),
               ),
@@ -483,7 +479,7 @@ class _WelcomeView extends StatelessWidget {
                             fontFamily: AppTheme.monoFamily,
                           ),
                         ),
-                        const SizedBox(width: 9),
+                        const SizedBox(width: 8),
                         Container(
                           width: 13,
                           height: 26,
@@ -1026,9 +1022,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                   liveRegion: true,
                   child: Container(
                     key: ValueKey(
-                      result.ok
-                          ? 'server-test-success'
-                          : 'server-test-failure',
+                      result.ok ? 'server-test-success' : 'server-test-failure',
                     ),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(

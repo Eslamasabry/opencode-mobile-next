@@ -136,7 +136,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
       await _load();
     } catch (error) {
       if (_isCurrentLocation(repository, revision)) {
-        _showError(error.toString());
+        _showError(error);
       }
     } finally {
       if (_isCurrentLocation(repository, revision)) {
@@ -207,7 +207,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
       await _load();
     } catch (error) {
       if (_isCurrentLocation(repository, revision)) {
-        _showError(error.toString());
+        _showError(error);
       }
     }
   }
@@ -216,9 +216,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
     final locationRevision = widget.controller.locationRevision;
     final confirmed = await showConfirmSheet(
       context,
-      icon: process.running
-          ? Icons.stop_circle_outlined
-          : Icons.delete_outline_rounded,
+      icon: process.running ? AppIcons.stop : Icons.delete_outline_rounded,
       title: process.running ? 'Stop terminal?' : 'Remove terminal?',
       message: process.running
           ? 'The running process and its child processes will be terminated.'
@@ -226,8 +224,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
       confirmLabel: process.running ? 'Stop' : 'Remove',
       destructive: true,
     );
-    if (!confirmed ||
-        locationRevision != widget.controller.locationRevision) {
+    if (!confirmed || locationRevision != widget.controller.locationRevision) {
       return;
     }
     final repository = await widget.controller.prepareActionRepository();
@@ -243,7 +240,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
       await _load();
     } catch (error) {
       if (_isCurrentLocation(repository, revision)) {
-        _showError(error.toString());
+        _showError(error);
       }
     }
   }
@@ -300,8 +297,8 @@ class _TerminalScreenState extends State<TerminalScreen> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontFamily: 'AppMono',
-                      fontSize: 12,
+                      fontFamily: AppTheme.monoFamily,
+                      fontSize: AppTheme.codeFontSize,
                     ),
                   ),
                   trailing: PopupMenuButton<String>(
@@ -345,14 +342,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
     );
   }
 
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Theme.of(context).colorScheme.error,
-      ),
-    );
-  }
+  void _showError(Object error) => showProductError(context, error);
 
   @override
   void dispose() {
@@ -369,9 +359,10 @@ class _ProcessIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = running
-        ? AppTheme.success(theme.colorScheme)
-        : theme.hintColor;
+    final color = AppTheme.statusColor(
+      theme,
+      running ? AppStatusTone.ok : AppStatusTone.neutral,
+    );
     return Semantics(
       label: running ? 'Running' : 'Exited',
       child: Container(
@@ -380,7 +371,7 @@ class _ProcessIndicator extends StatelessWidget {
         decoration: BoxDecoration(
           color: color.withValues(alpha: .12),
           border: Border.all(color: color.withValues(alpha: .55)),
-          borderRadius: BorderRadius.circular(9),
+          borderRadius: BorderRadius.circular(AppTheme.radiusControl),
         ),
         child: Icon(Icons.terminal_rounded, size: 20, color: color),
       ),
@@ -397,11 +388,12 @@ class _ProcessStatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = running
-        ? AppTheme.success(theme.colorScheme)
-        : theme.hintColor;
+    final color = AppTheme.statusColor(
+      theme,
+      running ? AppStatusTone.ok : AppStatusTone.neutral,
+    );
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: .14),
         borderRadius: BorderRadius.circular(999),
@@ -762,7 +754,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
               child: Text(
                 status,
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.hintColor,
+                  color: AppTheme.mutedOf(theme),
                 ),
               ),
             ),
@@ -772,7 +764,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
           IconButton(
             tooltip: 'Copy terminal selection or transcript',
             onPressed: _copyOutput,
-            icon: const Icon(Icons.copy_rounded),
+            icon: const Icon(AppIcons.copy),
           ),
           IconButton(
             key: const Key('terminal-accessible-mode'),
@@ -832,8 +824,8 @@ class _TerminalSurfaceState extends State<TerminalSurface>
                           readOnly: !canWrite,
                           padding: const EdgeInsets.all(10),
                           textStyle: const xterm.TerminalStyle(
-                            fontFamily: 'AppMono',
-                            fontSize: 12.5,
+                            fontFamily: AppTheme.monoFamily,
+                            fontSize: AppTheme.codeFontSize,
                           ),
                         ),
                       ),
@@ -983,7 +975,7 @@ class _AccessibleTerminal extends StatelessWidget {
                   reverse: true,
                   child: SelectableText(
                     transcript.isEmpty ? 'No terminal output yet.' : transcript,
-                    style: const TextStyle(fontFamily: 'AppMono'),
+                    style: const TextStyle(fontFamily: AppTheme.monoFamily),
                   ),
                 ),
               ),

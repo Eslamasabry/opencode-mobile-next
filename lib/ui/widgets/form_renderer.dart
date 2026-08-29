@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../api2/models.dart';
+import '../app_theme.dart';
 import 'confirm_sheet.dart';
 import 'external_link.dart';
 
@@ -458,18 +459,31 @@ class _FormRendererState extends State<FormRenderer> {
       key: const Key('form-sheet'),
       mainAxisSize: MainAxisSize.min,
       children: [
-        _header(context),
-        const Divider(height: 1),
+        // The header scrolls with the fields rather than being pinned: at
+        // large text scales a long form title alone can be taller than the
+        // viewport, and a pinned header would squeeze the fields to nothing.
+        // Only the apply bar stays fixed, which is the part that must always
+        // be reachable.
         Flexible(
           child: SingleChildScrollView(
             controller: widget.scrollController,
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
+            padding: const EdgeInsets.only(bottom: 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (final field in widget.form.fields)
-                  _slot(context, field, eval.active, reduceMotion),
+                _header(context),
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (final field in widget.form.fields)
+                        _slot(context, field, eval.active, reduceMotion),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -1179,6 +1193,36 @@ class _FormRendererState extends State<FormRenderer> {
     );
   }
 
+  /// Side by side normally; stacked once the text scale leaves each label
+  /// too little width to stay on one or two lines.
+  Widget _actions(BuildContext context) {
+    final submit = FilledButton(
+      key: const Key('form-submit'),
+      onPressed: _busy ? null : _submit,
+      child: _busy
+          ? const SizedBox.square(
+              dimension: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Text('Send answers', textAlign: TextAlign.center),
+    );
+    final dismiss = TextButton(
+      key: const Key('form-cancel'),
+      onPressed: _busy ? null : _dismiss,
+      child: const Text('Dismiss', textAlign: TextAlign.center),
+    );
+    if (AppTheme.stackedActions(context)) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [submit, const SizedBox(height: 4), dismiss],
+      );
+    }
+    return Row(
+      children: [dismiss, const SizedBox(width: 12), Expanded(child: submit)],
+    );
+  }
+
   Widget _applyBar(BuildContext context) {
     final theme = Theme.of(context);
     return Material(
@@ -1189,28 +1233,7 @@ class _FormRendererState extends State<FormRenderer> {
         top: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-          child: Row(
-            children: [
-              TextButton(
-                key: const Key('form-cancel'),
-                onPressed: _busy ? null : _dismiss,
-                child: const Text('Dismiss'),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton(
-                  key: const Key('form-submit'),
-                  onPressed: _busy ? null : _submit,
-                  child: _busy
-                      ? const SizedBox.square(
-                          dimension: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Send answers'),
-                ),
-              ),
-            ],
-          ),
+          child: _actions(context),
         ),
       ),
     );

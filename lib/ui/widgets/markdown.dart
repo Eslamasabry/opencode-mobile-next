@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../app_theme.dart';
 import 'code_highlight.dart';
 import 'external_link.dart';
 
@@ -624,7 +625,7 @@ class _PathCodeChipState extends State<_PathCodeChip> {
         border: Border.all(
           color: _readable
               ? theme.colorScheme.primary.withValues(alpha: .45)
-              : theme.dividerColor.withValues(alpha: .4),
+              : AppTheme.hairline(theme),
           width: _readable ? .8 : .5,
         ),
       ),
@@ -647,7 +648,7 @@ class _PathCodeChipState extends State<_PathCodeChip> {
           ],
         ),
         style: widget.base.copyWith(
-          fontFamily: 'AppMono',
+          fontFamily: AppTheme.monoFamily,
           fontSize: (widget.base.fontSize ?? 14) - 1.5,
           color: _readable
               ? theme.colorScheme.primary
@@ -680,14 +681,14 @@ class _CodeSpan extends WidgetSpan {
              ).colorScheme.surfaceContainerHighest.withValues(alpha: .6),
              borderRadius: BorderRadius.circular(4),
              border: Border.all(
-               color: Theme.of(context).dividerColor.withValues(alpha: .4),
+               color: AppTheme.hairline(Theme.of(context)),
                width: .5,
              ),
            ),
            child: Text(
              code,
              style: base.copyWith(
-               fontFamily: 'AppMono',
+               fontFamily: AppTheme.monoFamily,
                fontSize: (base.fontSize ?? 14) - 1.5,
                color: Theme.of(context).colorScheme.tertiary,
              ),
@@ -759,7 +760,7 @@ class CodeBlock extends StatelessWidget {
             ? Colors.black.withValues(alpha: .45)
             : Colors.black.withValues(alpha: .05),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: .5)),
+        border: Border.all(color: AppTheme.hairline(theme)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -792,7 +793,7 @@ class CodeBlock extends StatelessWidget {
                   tooltip: 'Copy code',
                   visualDensity: VisualDensity.compact,
                   iconSize: 16,
-                  icon: Icon(Icons.copy_rounded, color: muted),
+                  icon: Icon(AppIcons.copy, color: muted),
                   onPressed: () async {
                     await Clipboard.setData(ClipboardData(text: code));
                     if (context.mounted) {
@@ -821,8 +822,8 @@ class CodeBlock extends StatelessWidget {
                       )
                     : TextSpan(text: display),
                 style: theme.textTheme.bodySmall!.copyWith(
-                  fontFamily: 'AppMono',
-                  fontSize: 12.5,
+                  fontFamily: AppTheme.monoFamily,
+                  fontSize: AppTheme.codeFontSize,
                   height: 1.45,
                 ),
               ),

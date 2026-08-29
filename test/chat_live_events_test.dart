@@ -1662,6 +1662,86 @@ void main() {
     expect(find.text(reasoning), findsNothing);
   });
 
+  testWidgets('the transcript-wide reasoning toggle replaces per-part choices '
+      'instead of stamping over them', (tester) async {
+    const first =
+        'A deliberately long first reasoning explanation that spans several lines on a phone and so starts collapsed.';
+    const second =
+        'A deliberately long second reasoning explanation that also spans several lines and starts collapsed too.';
+    final created = DateTime.now().millisecondsSinceEpoch;
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('assistant-one', 'assistant', [
+          Part(
+            id: 'reasoning-one',
+            messageID: 'assistant-one',
+            type: 'reasoning',
+            text: first,
+          ),
+          Part(
+            id: 'text-one',
+            messageID: 'assistant-one',
+            type: 'text',
+            text: 'First answer.',
+          ),
+        ], created: created),
+        _message('assistant-two', 'assistant', [
+          Part(
+            id: 'reasoning-two',
+            messageID: 'assistant-two',
+            type: 'reasoning',
+            text: second,
+          ),
+          Part(
+            id: 'text-two',
+            messageID: 'assistant-two',
+            type: 'text',
+            text: 'Second answer.',
+          ),
+        ], created: created + 1),
+      ];
+
+    final controller = await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+    expect(find.text(first), findsNothing);
+    expect(find.text(second), findsNothing);
+
+    // One per-part expansion, which the session store remembers. The
+    // transcript renders reversed, so assert on the count rather than on
+    // which of the two blocks the first toggle belongs to.
+    await tester.tap(find.byKey(const Key('reasoning-toggle')).first);
+    await tester.pumpAndSettle();
+    expect(find.text(first).evaluate().length +
+        find.text(second).evaluate().length, 1);
+
+    Future<void> flipGlobal() async {
+      await tester.tap(find.byTooltip('Session views'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('session-view-thinking')));
+      await tester.pumpAndSettle();
+    }
+
+    // The transcript-wide default wins while it is being set...
+    await flipGlobal();
+    expect(controller.transcriptReasoningExpanded, isTrue);
+    expect(find.text(first), findsOneWidget);
+    expect(find.text(second), findsOneWidget);
+
+    // ...and flipping it back collapses everything, including the block the
+    // user had opened, rather than leaving the store stamped with values the
+    // user never chose.
+    await flipGlobal();
+    expect(controller.transcriptReasoningExpanded, isFalse);
+    expect(find.text(first), findsNothing);
+    expect(find.text(second), findsNothing);
+
+    // Per-part control still works after the round trip.
+    await tester.tap(find.byKey(const Key('reasoning-toggle')).last);
+    await tester.pumpAndSettle();
+    expect(find.text(first).evaluate().length +
+        find.text(second).evaluate().length, 1);
+  });
+
   testWidgets('command launcher maps diff to the native session viewer', (
     tester,
   ) async {

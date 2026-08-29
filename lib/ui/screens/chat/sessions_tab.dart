@@ -35,7 +35,7 @@ class SessionsTab extends StatelessWidget {
                 child: Text(
                   'Not connected',
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    color: Theme.of(context).hintColor,
+                    color: AppTheme.mutedOf(Theme.of(context)),
                   ),
                 ),
               )
@@ -47,7 +47,7 @@ class SessionsTab extends StatelessWidget {
                     Icon(
                       Icons.forum_outlined,
                       size: 44,
-                      color: Theme.of(context).hintColor,
+                      color: AppTheme.mutedOf(Theme.of(context)),
                     ),
                     const SizedBox(height: 12),
                     const Text('No chats yet'),
@@ -97,7 +97,7 @@ class SessionsTab extends StatelessWidget {
                               : Icon(
                                   Icons.chat_bubble_outline_rounded,
                                   size: 20,
-                                  color: Theme.of(context).hintColor,
+                                  color: AppTheme.mutedOf(Theme.of(context)),
                                 ),
                           title: Text(
                             s.title?.isNotEmpty == true ? s.title! : 'New chat',

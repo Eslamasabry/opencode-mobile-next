@@ -5,7 +5,11 @@ class SkillsScreen extends StatefulWidget {
 
   /// Embedded mode renders the body only, for the Commands & tools tabs.
   final bool embedded;
-  const SkillsScreen({super.key, required this.controller, this.embedded = false});
+  const SkillsScreen({
+    super.key,
+    required this.controller,
+    this.embedded = false,
+  });
 
   @override
   State<SkillsScreen> createState() => _SkillsScreenState();
@@ -38,43 +42,46 @@ class _SkillsScreenState extends State<SkillsScreen> {
   @override
   Widget build(BuildContext context) => widget.embedded
       ? _body()
-      : Scaffold(appBar: AppBar(title: const Text('Skills')), body: _body());
+      : Scaffold(
+          appBar: AppBar(title: const Text('Skills')),
+          body: _body(),
+        );
 
   Widget _body() => _skills == null && _error == null
-        ? const LoadingList()
-        : _error != null && _skills == null
-        ? ProductErrorState(message: _error!, onRetry: _load)
-        : _skills!.isEmpty
-        ? RefreshIndicator(
-            onRefresh: _load,
-            child: const ProductEmptyState(
-              icon: Icons.extension_off_outlined,
-              title: 'No skills available',
-              message: 'Project and global OpenCode skills appear here.',
-            ),
-          )
-        : RefreshIndicator(
-            onRefresh: _load,
-            child: ListView.separated(
-              physics: const AlwaysScrollableScrollPhysics(),
-              itemCount: _skills!.length,
-              separatorBuilder: (_, _) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final skill = _skills![index];
-                return ListTile(
-                  leading: const Icon(Icons.extension_outlined),
-                  title: Text(skill.name),
-                  subtitle: Text(
-                    skill.description ?? skill.location,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () => _showSkill(skill),
-                );
-              },
-            ),
-          );
+      ? const LoadingList()
+      : _error != null && _skills == null
+      ? ProductErrorState(message: _error!, onRetry: _load)
+      : _skills!.isEmpty
+      ? RefreshIndicator(
+          onRefresh: _load,
+          child: const ProductEmptyState(
+            icon: Icons.extension_off_outlined,
+            title: 'No skills available',
+            message: 'Project and global OpenCode skills appear here.',
+          ),
+        )
+      : RefreshIndicator(
+          onRefresh: _load,
+          child: ListView.separated(
+            physics: const AlwaysScrollableScrollPhysics(),
+            itemCount: _skills!.length,
+            separatorBuilder: (_, _) => const Divider(height: 1),
+            itemBuilder: (context, index) {
+              final skill = _skills![index];
+              return ListTile(
+                leading: const Icon(Icons.extension_outlined),
+                title: Text(skill.name),
+                subtitle: Text(
+                  skill.description ?? skill.location,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => _showSkill(skill),
+              );
+            },
+          ),
+        );
 
   void _showSkill(SkillInfo skill) {
     showModalBottomSheet<void>(
@@ -99,9 +106,9 @@ class _SkillsScreenState extends State<SkillsScreen> {
                 child: SelectableText(
                   skill.location,
                   style: TextStyle(
-                    color: Theme.of(context).hintColor,
-                    fontFamily: 'AppMono',
-                    fontSize: 11,
+                    color: AppTheme.mutedOf(Theme.of(context)),
+                    fontFamily: AppTheme.monoFamily,
+                    fontSize: AppTheme.captionFontSize,
                   ),
                 ),
               ),
@@ -123,4 +130,3 @@ class _SkillsScreenState extends State<SkillsScreen> {
     );
   }
 }
-

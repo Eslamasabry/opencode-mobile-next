@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
+import '../app_theme.dart';
 
 /// Host-side management for a remote OpenCode server.
 ///
@@ -43,14 +44,15 @@ class HostManagementScreen extends StatelessWidget {
               title: Text(profile?.name ?? 'OpenCode server'),
               subtitle: SelectableText(
                 profile?.baseUrl ?? 'Not connected',
-                style: const TextStyle(fontFamily: 'AppMono', fontSize: 12),
+                style: const TextStyle(
+                  fontFamily: AppTheme.monoFamily,
+                  fontSize: AppTheme.codeFontSize,
+                ),
               ),
             ),
             ListTile(
               leading: const Icon(Icons.info_outline_rounded),
-              title: Text(
-                'Server version ${controller.version ?? 'unknown'}',
-              ),
+              title: Text('Server version ${controller.version ?? 'unknown'}'),
               subtitle: const Text(
                 'These commands run on the computer that hosts this server — '
                 'the app cannot run them for you. Copy each one into a '
@@ -100,7 +102,7 @@ class HostManagementScreen extends StatelessWidget {
               child: Text(
                 'Full walkthrough: docs/ubuntu-host.md in the app repository.',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.hintColor,
+                  color: AppTheme.mutedOf(theme),
                 ),
               ),
             ),
@@ -133,9 +135,7 @@ class _HostCommandTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: theme.colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: .6),
-          ),
+          border: Border.all(color: AppTheme.hairline(theme)),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -156,7 +156,7 @@ class _HostCommandTile extends StatelessWidget {
                       child: Text(
                         detail!,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.hintColor,
+                          color: AppTheme.mutedOf(theme),
                         ),
                       ),
                     ),
@@ -164,8 +164,8 @@ class _HostCommandTile extends StatelessWidget {
                   SelectableText(
                     command,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      fontFamily: 'AppMono',
-                      fontSize: 12,
+                      fontFamily: AppTheme.monoFamily,
+                      fontSize: AppTheme.codeFontSize,
                     ),
                   ),
                 ],
@@ -190,7 +190,7 @@ class _HostCommandTile extends StatelessWidget {
                     );
                   }
                 },
-                icon: const Icon(Icons.copy_rounded, size: 19),
+                icon: const Icon(AppIcons.copy, size: 19),
               ),
             ),
           ],

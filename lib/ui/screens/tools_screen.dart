@@ -9,6 +9,7 @@ import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../widgets/pickers.dart';
 import '../widgets/product_states.dart';
+import '../app_theme.dart';
 
 class ToolsScreen extends StatefulWidget {
   final ConnectionController controller;
@@ -173,7 +174,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
                         '${model.providerID}/${model.modelID}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontFamily: 'AppMono'),
+                        style: const TextStyle(fontFamily: AppTheme.monoFamily),
                       ),
                     ],
                   ),
@@ -249,7 +250,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
       excludeSemantics: true,
       label: [...values, ...errors].join(', '),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 9, 16, 10),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
         child: Wrap(
           spacing: 12,
           runSpacing: 4,
@@ -343,7 +344,10 @@ class _ToolsScreenState extends State<ToolsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(tool.id, style: const TextStyle(fontFamily: 'AppMono')),
+                Text(
+                  tool.id,
+                  style: const TextStyle(fontFamily: AppTheme.monoFamily),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   tool.description.isEmpty
@@ -368,7 +372,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(id, style: const TextStyle(fontFamily: 'AppMono')),
+        Text(id, style: const TextStyle(fontFamily: AppTheme.monoFamily)),
         const SizedBox(height: 4),
         Text(
           'Registered on this project but not returned for '
@@ -401,9 +405,9 @@ class _ToolsScreenState extends State<ToolsScreen> {
                   Expanded(
                     child: Text(
                       tool.id,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.titleLarge?.copyWith(fontFamily: 'AppMono'),
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontFamily: AppTheme.monoFamily,
+                      ),
                     ),
                   ),
                   IconButton(
@@ -416,7 +420,7 @@ class _ToolsScreenState extends State<ToolsScreen> {
                         );
                       }
                     },
-                    icon: const Icon(Icons.copy_all_outlined),
+                    icon: const Icon(AppIcons.copy),
                   ),
                 ],
               ),
@@ -441,8 +445,8 @@ class _ToolsScreenState extends State<ToolsScreen> {
                         schema,
                         key: const Key('tool-parameter-schema'),
                         style: const TextStyle(
-                          fontFamily: 'AppMono',
-                          fontSize: 12,
+                          fontFamily: AppTheme.monoFamily,
+                          fontSize: AppTheme.codeFontSize,
                           height: 1.45,
                         ),
                       ),

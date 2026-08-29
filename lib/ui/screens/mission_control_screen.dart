@@ -7,6 +7,7 @@ import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
 import 'global_sessions_screen.dart';
+import '../app_theme.dart';
 
 /// Mission Control: one glanceable surface for everything the agent fleet is
 /// doing at the active location — requests waiting on the user, sessions
@@ -217,7 +218,7 @@ class _MissionControlScreenState extends State<MissionControlScreen> {
                   const SectionLabel('Running'),
                   if (running.isEmpty)
                     const ProductInlineEmpty(
-                      icon: Icons.bolt_outlined,
+                      icon: AppIcons.run,
                       title: 'Nothing running',
                       message:
                           'Busy sessions appear here the moment a run starts.',

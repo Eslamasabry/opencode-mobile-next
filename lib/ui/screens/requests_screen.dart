@@ -8,6 +8,7 @@ import '../permission_presentation.dart';
 import '../widgets/product_states.dart';
 import 'chat/form_flow.dart';
 import 'chat/permission_sheet.dart';
+import '../app_theme.dart';
 
 class RequestsScreen extends StatefulWidget {
   final ConnectionController controller;
@@ -245,7 +246,10 @@ class _PermissionTile extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: permission.patterns.isNotEmpty
-            ? const TextStyle(fontFamily: 'AppMono', fontSize: 12.5)
+            ? const TextStyle(
+                fontFamily: AppTheme.monoFamily,
+                fontSize: AppTheme.codeFontSize,
+              )
             : null,
       ),
       trailing: const Icon(Icons.chevron_right_rounded),
@@ -257,8 +261,7 @@ class _PermissionTile extends StatelessWidget {
         supportsRejectMessage: controller.permissionSupportsRejectMessage(
           permission.id,
         ),
-        contextLabel:
-            'for ${_sessionTitle(controller, permission.sessionID)}',
+        contextLabel: 'for ${_sessionTitle(controller, permission.sessionID)}',
         onReply: (reply, {message}) =>
             controller.answerPermission(permission.id, reply, message: message),
       ),
@@ -466,7 +469,7 @@ class _QuestionSheetState extends State<_QuestionSheet> {
                           widget.question.sessionID,
                         ),
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.hintColor,
+                          color: AppTheme.mutedOf(theme),
                         ),
                       ),
                       const SizedBox(height: 12),

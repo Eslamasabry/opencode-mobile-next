@@ -51,48 +51,48 @@ class _ReferencesScreenState extends State<ReferencesScreen> {
         );
 
   Widget _body() => _references == null && _error == null
-        ? const LoadingList()
-        : _error != null && _references == null
-        ? ProductErrorState(message: _error!, onRetry: _load)
-        : _references!.isEmpty
-        ? RefreshIndicator(
-            onRefresh: _load,
-            child: const ProductEmptyState(
-              icon: Icons.bookmarks_outlined,
-              title: 'No references configured',
-              message: 'References attached to this project appear here.',
-            ),
-          )
-        : RefreshIndicator(
-            onRefresh: _load,
-            child: ListView.separated(
-              physics: const AlwaysScrollableScrollPhysics(),
-              itemCount: _references!.length,
-              separatorBuilder: (_, _) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final reference = _references![index];
-                return ListTile(
-                  key: ValueKey('reference-${reference.name}'),
-                  leading: const Icon(Icons.bookmark_outline_rounded),
-                  title: Text(reference.name),
-                  subtitle: Text(
-                    reference.description?.isNotEmpty == true
-                        ? '${reference.description}\n${reference.path}'
-                        : reference.path,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  trailing: Icon(
-                    widget.onSelected == null
-                        ? Icons.copy_rounded
-                        : Icons.add_comment_outlined,
-                  ),
-                  onTap: () => _useReference(reference),
-                );
-              },
-            ),
-          );
+      ? const LoadingList()
+      : _error != null && _references == null
+      ? ProductErrorState(message: _error!, onRetry: _load)
+      : _references!.isEmpty
+      ? RefreshIndicator(
+          onRefresh: _load,
+          child: const ProductEmptyState(
+            icon: Icons.bookmarks_outlined,
+            title: 'No references configured',
+            message: 'References attached to this project appear here.',
+          ),
+        )
+      : RefreshIndicator(
+          onRefresh: _load,
+          child: ListView.separated(
+            physics: const AlwaysScrollableScrollPhysics(),
+            itemCount: _references!.length,
+            separatorBuilder: (_, _) => const Divider(height: 1),
+            itemBuilder: (context, index) {
+              final reference = _references![index];
+              return ListTile(
+                key: ValueKey('reference-${reference.name}'),
+                leading: const Icon(Icons.bookmark_outline_rounded),
+                title: Text(reference.name),
+                subtitle: Text(
+                  reference.description?.isNotEmpty == true
+                      ? '${reference.description}\n${reference.path}'
+                      : reference.path,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: AppTheme.codeFontSize),
+                ),
+                trailing: Icon(
+                  widget.onSelected == null
+                      ? AppIcons.copy
+                      : Icons.add_comment_outlined,
+                ),
+                onTap: () => _useReference(reference),
+              );
+            },
+          ),
+        );
 
   Future<void> _useReference(ReferenceInfo reference) async {
     final onSelected = widget.onSelected;

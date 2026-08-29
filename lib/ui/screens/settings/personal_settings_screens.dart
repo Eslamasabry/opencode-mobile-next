@@ -115,9 +115,7 @@ class _ThemePackTile extends StatelessWidget {
                         color: color,
                         borderRadius: BorderRadius.circular(3),
                         border: Border.all(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.outlineVariant.withValues(alpha: .6),
+                          color: Theme.of(context).colorScheme.outlineVariant,
                         ),
                       ),
                     ),
@@ -260,7 +258,9 @@ class AboutSettingsScreen extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.info_outline_rounded),
             title: const Text('About and open source notices'),
-            subtitle: const Text('App details, components, and license notices'),
+            subtitle: const Text(
+              'App details, components, and license notices',
+            ),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(

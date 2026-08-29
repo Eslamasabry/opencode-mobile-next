@@ -241,6 +241,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   final _messagePositions = ItemPositionsListener.create();
   bool _awayFromLatest = false;
 
+  /// What Send does while a turn is running, on servers that support the
+  /// inbox. Steer matches the server default; the visible delivery control
+  /// in the composer both shows and sets this, and the Send long-press
+  /// shortcut updates it too so the label never lies (UX-P0-04).
+  PromptDelivery _delivery = PromptDelivery.steer;
+
   /// While the reader is scrolled away from the latest message, the rendered
   /// message count is pinned so a completing turn cannot shift the visible
   /// content by one item (reversed-list index anchoring). Pending messages
@@ -1017,10 +1023,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
-  /// [delivery] rides only on OpenCode 2 sends made while a turn runs:
-  /// null lets the server default (steer) apply; the long-press menu passes
-  /// an explicit steer or queue.
+  /// The delivery mode that rides on an OpenCode 2 send made while a turn
+  /// runs. Off a running turn — and on v1, which has no inbox — nothing is
+  /// sent, so the server default applies. While a turn runs the composer's
+  /// visible delivery control decides, and Steer stays the default, matching
+  /// the server.
+  PromptDelivery? get _activeDelivery =>
+      _conn.supportsInbox && _conn.busySessions.contains(widget.sessionID)
+      ? _delivery
+      : null;
+
+  /// [delivery] rides only on OpenCode 2 sends made while a turn runs. When
+  /// it is omitted the composer's current delivery choice applies; the
+  /// long-press shortcut passes an explicit steer or queue.
   Future<void> _send({PromptDelivery? delivery}) async {
+    delivery ??= _activeDelivery;
     await _voice?.cancel();
     if (_sending || (_composer.text.trim().isEmpty && _attachments.isEmpty)) {
       return;
@@ -1537,6 +1554,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _toggleReasoningDisplay() async {
     final expanded = !_conn.transcriptReasoningExpanded;
+    // The transcript-wide choice is the new default for every reasoning
+    // block, so per-part overrides are dropped instead of being silently
+    // rewritten with the toggle's value. Rewriting them meant one flip
+    // erased the session's per-part choices, and an off-screen block kept
+    // resisting the toggle because its stale override outlived it.
+    setState(
+      () => _transcriptExpansion.removeWhere(
+        (key, _) => key.startsWith('reasoning:'),
+      ),
+    );
     await _conn.setTranscriptReasoningExpanded(expanded);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -1693,7 +1720,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             if (text.isNotEmpty)
               ListTile(
                 key: const ValueKey('message-action-copy'),
-                leading: const Icon(Icons.copy_rounded),
+                leading: const Icon(AppIcons.copy),
                 title: const Text('Copy message text'),
                 onTap: () => Navigator.pop(context, 'copy'),
               ),
@@ -3416,7 +3443,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               IconButton(
                 tooltip: 'Stop',
                 icon: Icon(
-                  Icons.stop_circle_outlined,
+                  AppIcons.stop,
                   color: theme.colorScheme.error,
                 ),
                 onPressed: _aborting ? null : _abort,
@@ -3677,6 +3704,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                   busy: busy,
                                   sending: _sending,
                                   canSendWhileBusy: _conn.supportsInbox,
+                                  delivery: _delivery,
+                                  onDeliveryChanged: (delivery) =>
+                                      setState(() => _delivery = delivery),
                                   voiceOpening: _voiceOpening,
                                   selectedAgent: _conn.selectedAgent,
                                   selectedModel: _conn.selectedModel,

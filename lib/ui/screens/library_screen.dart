@@ -10,6 +10,7 @@ import '../../l10n/app_localizations.dart';
 import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
+import '../app_theme.dart';
 import '../widgets/entrance.dart';
 import '../widgets/file_preview.dart';
 import '../widgets/confirm_sheet.dart';
@@ -183,7 +184,11 @@ class _DestinationGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 2.0);
+    // Tile height tracks the text scale all the way to the app's ceiling;
+    // stopping at 2.0 would clip the labels of users above it.
+    final scale = MediaQuery.textScalerOf(
+      context,
+    ).scale(1).clamp(1.0, AppTheme.maxTextScale);
     return LayoutBuilder(
       builder: (context, constraints) {
         final columns = constraints.maxWidth >= 280 ? 2 : 1;
@@ -271,7 +276,7 @@ class _TileIcon extends StatelessWidget {
       height: 36,
       decoration: BoxDecoration(
         color: tint.withValues(alpha: .12),
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(AppTheme.radiusControl),
       ),
       child: Icon(icon, size: 20, color: tint),
     );

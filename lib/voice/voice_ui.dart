@@ -7,6 +7,7 @@ import 'audio.dart';
 import 'device.dart';
 import 'model_manager.dart';
 import 'model_manifest.dart';
+import '../ui/app_theme.dart';
 
 Future<bool> showVoiceModelSetupSheet(
   BuildContext context,
@@ -733,7 +734,7 @@ class _VoiceStatus extends StatelessWidget {
                 minimumSize: const Size(48, 48),
               ),
               onPressed: controller.stopListening,
-              icon: const Icon(Icons.stop_rounded),
+              icon: const Icon(AppIcons.stop),
               label: const Text('Stop recording'),
             ),
           ),

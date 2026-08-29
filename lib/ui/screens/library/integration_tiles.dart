@@ -681,12 +681,12 @@ class _McpStatus extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = switch (status) {
-      'connected' => Colors.green.shade400,
-      'failed' => Theme.of(context).colorScheme.error,
-      'needs_auth' || 'needs_client_registration' => Colors.orange.shade400,
-      _ => Theme.of(context).hintColor,
-    };
+    final color = AppTheme.statusColor(Theme.of(context), switch (status) {
+      'connected' => AppStatusTone.ok,
+      'failed' => AppStatusTone.failure,
+      'needs_auth' || 'needs_client_registration' => AppStatusTone.attention,
+      _ => AppStatusTone.neutral,
+    });
     return Semantics(
       label: status.replaceAll('_', ' '),
       child: Container(
@@ -697,4 +697,3 @@ class _McpStatus extends StatelessWidget {
     );
   }
 }
-

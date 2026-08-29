@@ -541,7 +541,7 @@ class _ReviewSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 11, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       child: Row(
         children: [
           Expanded(
@@ -559,7 +559,7 @@ class _ReviewSummary extends StatelessWidget {
                   key: const ValueKey('review-viewed-progress'),
                   '$viewed of $files viewed',
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.hintColor,
+                    color: AppTheme.mutedOf(theme),
                   ),
                 ),
               ],
@@ -584,7 +584,7 @@ class _ChangeCount extends StatelessWidget {
   Widget build(BuildContext context) => Text(
     value,
     style: TextStyle(
-      fontFamily: 'AppMono',
+      fontFamily: AppTheme.monoFamily,
       fontWeight: FontWeight.w600,
       color: added
           ? _additionColor(Theme.of(context))
@@ -659,18 +659,18 @@ class _ReviewFileTab extends StatelessWidget {
           '${counts.added} additions, ${counts.removed} deletions',
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTheme.radiusControl),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
           constraints: const BoxConstraints(minWidth: 150, maxWidth: 220),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             // A filled active tab reads at a glance; unselected tabs keep a
             // faint surface so the strip scans as tabs, not floating text.
             color: selected
                 ? theme.colorScheme.primaryContainer.withValues(alpha: .85)
                 : theme.colorScheme.surfaceContainerHigh.withValues(alpha: .35),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppTheme.radiusControl),
             border: Border(
               bottom: BorderSide(
                 width: 2,
@@ -688,7 +688,7 @@ class _ReviewFileTab extends StatelessWidget {
                 height: 28,
                 color: _statusColor(context, diff),
               ),
-              const SizedBox(width: 9),
+              const SizedBox(width: 8),
               Flexible(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -703,7 +703,7 @@ class _ReviewFileTab extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.labelLarge?.copyWith(
-                              fontFamily: 'AppMono',
+                              fontFamily: AppTheme.monoFamily,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -713,7 +713,7 @@ class _ReviewFileTab extends StatelessWidget {
                           Icon(
                             Icons.check_circle_rounded,
                             size: 13,
-                            color: AppTheme.success(theme.colorScheme),
+                            color: AppTheme.successOf(theme),
                           ),
                         ],
                       ],
@@ -721,7 +721,7 @@ class _ReviewFileTab extends StatelessWidget {
                     Text(
                       '+${counts.added}  -${counts.removed}',
                       style: theme.textTheme.labelSmall?.copyWith(
-                        fontFamily: 'AppMono',
+                        fontFamily: AppTheme.monoFamily,
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
@@ -791,7 +791,7 @@ class _ReviewFileList extends StatelessWidget {
                         ),
                       ),
                     ),
-                    padding: const EdgeInsets.fromLTRB(13, 10, 14, 10),
+                    padding: const EdgeInsets.fromLTRB(12, 10, 14, 10),
                     child: Row(
                       children: [
                         Container(
@@ -809,7 +809,7 @@ class _ReviewFileList extends StatelessWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
-                                  fontFamily: 'AppMono',
+                                  fontFamily: AppTheme.monoFamily,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -829,7 +829,7 @@ class _ReviewFileList extends StatelessWidget {
                           '+${counts.added}\n-${counts.removed}',
                           textAlign: TextAlign.right,
                           style: theme.textTheme.labelSmall?.copyWith(
-                            fontFamily: 'AppMono',
+                            fontFamily: AppTheme.monoFamily,
                             height: 1.35,
                           ),
                         ),
@@ -955,7 +955,7 @@ class _ReviewDiffToolbar extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleSmall?.copyWith(
-                        fontFamily: 'AppMono',
+                        fontFamily: AppTheme.monoFamily,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -972,7 +972,7 @@ class _ReviewDiffToolbar extends StatelessWidget {
               TextButton(onPressed: onAsk, child: const Text('Ask about file')),
             ],
           ),
-          const SizedBox(height: 7),
+          const SizedBox(height: 8),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -1050,7 +1050,7 @@ class _ReviewPhoneDiffToolbar extends StatelessWidget {
       label: 'Reviewing ${diff.file}',
       child: Padding(
         key: const Key('review-phone-toolbar'),
-        padding: const EdgeInsets.fromLTRB(12, 7, 4, 6),
+        padding: const EdgeInsets.fromLTRB(12, 8, 4, 6),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -1061,7 +1061,7 @@ class _ReviewPhoneDiffToolbar extends StatelessWidget {
                   height: 34,
                   color: _statusColor(context, diff),
                 ),
-                const SizedBox(width: 9),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Tooltip(
                     message: diff.file,
@@ -1074,7 +1074,7 @@ class _ReviewPhoneDiffToolbar extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.titleSmall?.copyWith(
-                            fontFamily: 'AppMono',
+                            fontFamily: AppTheme.monoFamily,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -1115,7 +1115,7 @@ class _ReviewPhoneDiffToolbar extends StatelessWidget {
                       enabled: canCopy,
                       child: const ListTile(
                         contentPadding: EdgeInsets.zero,
-                        leading: Icon(Icons.content_copy_rounded),
+                        leading: Icon(AppIcons.copy),
                         title: Text('Copy patch'),
                       ),
                     ),
@@ -1327,8 +1327,8 @@ class _UnifiedDiffRow extends StatelessWidget {
                   overflow: TextOverflow.clip,
                   softWrap: false,
                   style: TextStyle(
-                    fontFamily: 'AppMono',
-                    fontSize: 12.5,
+                    fontFamily: AppTheme.monoFamily,
+                    fontSize: AppTheme.codeFontSize,
                     height: 1.55,
                     color: _lineForeground(theme, line.kind),
                   ),
@@ -1368,7 +1368,7 @@ class _SplitDiffRow extends StatelessWidget {
         child: Row(
           children: [
             Expanded(child: _SplitCell(line: left, old: true)),
-            VerticalDivider(width: 1, color: theme.dividerColor),
+            VerticalDivider(width: 1, color: AppTheme.hairline(theme)),
             Expanded(child: _SplitCell(line: right, old: false)),
           ],
         ),
@@ -1402,8 +1402,8 @@ class _SplitCell extends StatelessWidget {
               softWrap: false,
               overflow: TextOverflow.clip,
               style: TextStyle(
-                fontFamily: 'AppMono',
-                fontSize: 12.5,
+                fontFamily: AppTheme.monoFamily,
+                fontSize: AppTheme.codeFontSize,
                 height: 1.55,
                 color: _lineForeground(theme, value.kind),
               ),
@@ -1429,8 +1429,8 @@ class _LineNumber extends StatelessWidget {
     child: Text(
       value?.toString() ?? '',
       style: TextStyle(
-        fontFamily: 'AppMono',
-        fontSize: 11,
+        fontFamily: AppTheme.monoFamily,
+        fontSize: AppTheme.captionFontSize,
         color: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
     ),
@@ -1457,7 +1457,7 @@ class _ReviewSelectionBar extends StatelessWidget {
       key: const Key('review-selection-bar'),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHigh,
-        border: Border(top: BorderSide(color: theme.dividerColor)),
+        border: Border(top: BorderSide(color: AppTheme.hairline(theme))),
       ),
       padding: const EdgeInsets.fromLTRB(14, 8, 10, 8),
       child: Row(
@@ -1498,7 +1498,7 @@ class _ReviewHunkBar extends StatelessWidget {
       key: const Key('review-hunk-bar'),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHigh,
-        border: Border(top: BorderSide(color: theme.dividerColor)),
+        border: Border(top: BorderSide(color: AppTheme.hairline(theme))),
       ),
       padding: const EdgeInsets.fromLTRB(14, 2, 6, 2),
       child: Row(
@@ -1569,13 +1569,7 @@ class _ReviewCommentComposerState extends State<_ReviewCommentComposer> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Comment on change',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-                letterSpacing: -.3,
-              ),
-            ),
+            Text('Comment on change', style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(
               '${widget.file} · ${widget.selectionLabel}',
@@ -2022,11 +2016,10 @@ Color _statusColor(BuildContext context, FileDiff diff) =>
       _ => Theme.of(context).colorScheme.primary,
     };
 
-Color _additionColor(ThemeData theme) => theme.brightness == Brightness.dark
-    ? const Color(0xff78c59d)
-    : const Color(0xff176b4b);
+Color _additionColor(ThemeData theme) => AppTheme.successOf(theme);
 
-Color _additionBackground(ThemeData theme) =>
-    theme.brightness == Brightness.dark
-    ? const Color(0xff174b35).withValues(alpha: .42)
-    : const Color(0xffd0f2df).withValues(alpha: .7);
+/// The diff-addition wash, derived from the pack's success color so it
+/// tracks theme packs instead of two hardcoded greens.
+Color _additionBackground(ThemeData theme) => AppTheme.successOf(
+  theme,
+).withValues(alpha: theme.brightness == Brightness.dark ? .18 : .22);

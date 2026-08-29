@@ -464,9 +464,7 @@ class _ToolCardState extends State<ToolCard> {
                 alpha: .35,
               ),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: theme.dividerColor.withValues(alpha: .4),
-              ),
+              border: Border.all(color: AppTheme.hairline(theme)),
             ),
       child: Column(
         children: [
@@ -482,13 +480,13 @@ class _ToolCardState extends State<ToolCard> {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(minHeight: 48),
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 7, 8, 7),
+                  padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
                   child: Row(
                     children: [
                       Icon(
                         _iconFor(contract.kind),
                         size: 16,
-                        color: theme.hintColor,
+                        color: AppTheme.mutedOf(theme),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -515,7 +513,7 @@ class _ToolCardState extends State<ToolCard> {
                                   style: theme.textTheme.labelSmall?.copyWith(
                                     color: theme.colorScheme.onSurfaceVariant,
                                     fontFamily: contract.kind == _ToolKind.shell
-                                        ? 'AppMono'
+                                        ? AppTheme.monoFamily
                                         : null,
                                   ),
                                 ),
@@ -570,7 +568,7 @@ class _ToolCardState extends State<ToolCard> {
                           child: Icon(
                             Icons.expand_more_rounded,
                             size: 16,
-                            color: theme.hintColor,
+                            color: AppTheme.mutedOf(theme),
                           ),
                         ),
                       ],
@@ -980,14 +978,14 @@ class _ErrorOutput extends StatelessWidget {
       message.replaceFirst(RegExp(r'^Error:\s*'), ''),
       style: Theme.of(context).textTheme.bodySmall?.copyWith(
         color: scheme.onErrorContainer,
-        fontFamily: 'AppMono',
+        fontFamily: AppTheme.monoFamily,
       ),
     );
     if (embedded) {
       return Container(
         key: const Key('embedded-tool-error-output'),
         width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(9, 5, 0, 5),
+        padding: const EdgeInsets.fromLTRB(8, 5, 0, 5),
         decoration: BoxDecoration(
           border: Border(
             left: BorderSide(
@@ -1005,7 +1003,7 @@ class _ErrorOutput extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: scheme.errorContainer.withValues(alpha: .28),
-        borderRadius: BorderRadius.circular(7),
+        borderRadius: BorderRadius.circular(AppTheme.radiusControl),
         border: Border.all(color: scheme.error.withValues(alpha: .28)),
       ),
       child: text,
@@ -1030,7 +1028,7 @@ class _PathCaption extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: Theme.of(
             context,
-          ).textTheme.labelSmall?.copyWith(fontFamily: 'AppMono'),
+          ).textTheme.labelSmall?.copyWith(fontFamily: AppTheme.monoFamily),
         ),
       ),
     ],
@@ -1062,7 +1060,7 @@ class _PathList extends StatelessWidget {
           child: SelectableText(
             entries.take(200).join('\n'),
             style: theme.textTheme.bodySmall?.copyWith(
-              fontFamily: 'AppMono',
+              fontFamily: AppTheme.monoFamily,
               height: 1.4,
             ),
           ),
@@ -1102,7 +1100,7 @@ class _PatchFileSection extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.labelMedium?.copyWith(
-                  fontFamily: 'AppMono',
+                  fontFamily: AppTheme.monoFamily,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1110,9 +1108,7 @@ class _PatchFileSection extends StatelessWidget {
             if (additions > 0)
               Text(
                 '+$additions',
-                style: TextStyle(
-                  color: AppTheme.successOf(Theme.of(context)),
-                ),
+                style: TextStyle(color: AppTheme.successOf(Theme.of(context))),
               ),
             if (additions > 0 && deletions > 0) const SizedBox(width: 6),
             if (deletions > 0)
@@ -1160,9 +1156,7 @@ class _DiffPreview extends StatelessWidget {
           decoration: BoxDecoration(
             color: theme.colorScheme.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: theme.dividerColor.withValues(alpha: .35),
-            ),
+            border: Border.all(color: AppTheme.hairline(theme)),
           ),
           child: LayoutBuilder(
             builder: (context, constraints) => SingleChildScrollView(
@@ -1228,7 +1222,7 @@ class _DiffPreviewLine extends StatelessWidget {
           line.isEmpty ? ' ' : line,
           style: theme.textTheme.bodySmall?.copyWith(
             color: foreground,
-            fontFamily: 'AppMono',
+            fontFamily: AppTheme.monoFamily,
             height: 1.35,
           ),
         ),
@@ -1260,7 +1254,7 @@ class _TodoRow extends StatelessWidget {
                 ? Icons.hourglass_top_rounded
                 : Icons.checklist_rounded,
             size: 17,
-            color: done ? AppTheme.successOf(theme) : theme.hintColor,
+            color: done ? AppTheme.successOf(theme) : AppTheme.mutedOf(theme),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -1268,7 +1262,7 @@ class _TodoRow extends StatelessWidget {
               _valueString(todo['content']) ?? '(untitled task)',
               style: theme.textTheme.bodySmall?.copyWith(
                 decoration: done ? TextDecoration.lineThrough : null,
-                color: done ? theme.hintColor : null,
+                color: done ? AppTheme.mutedOf(theme) : null,
               ),
             ),
           ),
@@ -1306,7 +1300,7 @@ class _QuestionAnswer extends StatelessWidget {
             answerText ?? 'No answer',
             style: theme.textTheme.bodySmall?.copyWith(
               color: answerText == null
-                  ? theme.hintColor
+                  ? AppTheme.mutedOf(theme)
                   : theme.colorScheme.primary,
             ),
           ),
@@ -1651,7 +1645,9 @@ class _Mono extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final lines = text.split('\n');
-    final lineCap = maxLines < _monoInlineLineCap ? maxLines : _monoInlineLineCap;
+    final lineCap = maxLines < _monoInlineLineCap
+        ? maxLines
+        : _monoInlineLineCap;
     var visible = lines.length > lineCap
         ? lines.take(lineCap).join('\n')
         : text;

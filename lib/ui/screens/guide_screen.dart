@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../app_theme.dart';
+import '../widgets/product_states.dart';
 
 /// Setup guide for both connection modes:
 /// remote machine and on-device (Termux).
@@ -137,15 +139,7 @@ class _Section extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title.toUpperCase(),
-            style: Theme.of(context).textTheme.labelMedium!.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w700,
-              letterSpacing: .8,
-            ),
-          ),
-          const SizedBox(height: 8),
+          SectionLabel.inline(title),
           ...children,
         ],
       ),
@@ -169,7 +163,7 @@ class Cmd extends StatelessWidget {
             ? Colors.black.withValues(alpha: .45)
             : Colors.black.withValues(alpha: .05),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: .5)),
+        border: Border.all(color: AppTheme.hairline(theme)),
       ),
       child: Stack(
         children: [
@@ -178,8 +172,8 @@ class Cmd extends StatelessWidget {
             child: SelectableText(
               text,
               style: theme.textTheme.bodySmall!.copyWith(
-                fontFamily: 'AppMono',
-                fontSize: 12.5,
+                fontFamily: AppTheme.monoFamily,
+                fontSize: AppTheme.codeFontSize,
               ),
             ),
           ),
@@ -190,7 +184,7 @@ class Cmd extends StatelessWidget {
               tooltip: 'Copy command',
               visualDensity: VisualDensity.compact,
               iconSize: 15,
-              icon: Icon(Icons.copy_rounded, color: theme.hintColor),
+              icon: Icon(AppIcons.copy, color: AppTheme.mutedOf(theme)),
               onPressed: () async {
                 await Clipboard.setData(ClipboardData(text: text));
                 if (context.mounted) {

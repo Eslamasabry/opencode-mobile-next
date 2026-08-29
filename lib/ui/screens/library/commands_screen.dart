@@ -71,7 +71,7 @@ class _CommandsScreenState extends State<CommandsScreen> {
                       ? RefreshIndicator(
                           onRefresh: _load,
                           child: const ProductEmptyState(
-                            icon: Icons.electric_bolt_outlined,
+                            icon: AppIcons.run,
                             title: 'No server commands found',
                             message:
                                 'Commands from your project and skills appear here.',
@@ -88,7 +88,7 @@ class _CommandsScreenState extends State<CommandsScreen> {
                               final command = commands[index];
                               return ListTile(
                                 leading: const Icon(
-                                  Icons.electric_bolt_outlined,
+                                  AppIcons.run,
                                 ),
                                 title: Text('/${command.name}'),
                                 subtitle: Text(

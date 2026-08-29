@@ -301,13 +301,18 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
             navigatorKey: _navigatorKey,
             scaffoldMessengerKey: _messengerKey,
             builder: (context, child) {
-              // Global text-scale safety net: honor the system setting up to
-              // 2.0x so unguarded screens cannot overflow at extreme scales.
-              // Screens with their own tighter clamps still apply them on top.
+              // Global text-scale safety net: the system setting passes
+              // through untouched below the ceiling — including scales under
+              // 1.0, which users pick deliberately — and only the extreme top
+              // end is capped so a runaway scale cannot break the shell.
               final scale = MediaQuery.textScalerOf(context).scale(1);
               return MediaQuery(
                 data: MediaQuery.of(context).copyWith(
-                  textScaler: TextScaler.linear(scale.clamp(1.0, 2.0)),
+                  textScaler: TextScaler.linear(
+                    scale > AppTheme.maxTextScale
+                        ? AppTheme.maxTextScale
+                        : scale,
+                  ),
                 ),
                 child: ShorebirdUpdateNotice(
                   service: _updateService,
@@ -546,7 +551,9 @@ class _SavedServerConnectionView extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: scheme.surfaceContainer,
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(
+                          AppTheme.radiusControl,
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -555,7 +562,7 @@ class _SavedServerConnectionView extends StatelessWidget {
                             size: 18,
                             color: scheme.onSurfaceVariant,
                           ),
-                          const SizedBox(width: 9),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               baseUrl,
@@ -563,7 +570,7 @@ class _SavedServerConnectionView extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: scheme.onSurfaceVariant,
-                                fontFamily: 'AppMono',
+                                fontFamily: AppTheme.monoFamily,
                               ),
                             ),
                           ),

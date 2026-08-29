@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../state/connection.dart';
 import '../../state/profiles.dart';
+import 'product_states.dart';
 
 String appearanceLabel(AppAppearance appearance) => switch (appearance) {
   AppAppearance.system => 'Follow Android',
@@ -69,8 +70,6 @@ Future<void> showAppearancePicker(
     );
   } catch (error) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Could not save appearance: $error')),
-    );
+    showProductError(context, error);
   }
 }
