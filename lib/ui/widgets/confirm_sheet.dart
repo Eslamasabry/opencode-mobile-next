@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Mobile-idiomatic confirmation: a bottom sheet with one clear primary
 /// action, replacing centered [AlertDialog] confirms. Returns true only when
@@ -66,7 +67,12 @@ Future<bool> showConfirmSheet(
                           foregroundColor: theme.colorScheme.onError,
                         )
                       : null,
-                  onPressed: () => Navigator.pop(context, true),
+                  onPressed: () {
+                    if (destructive) {
+                      HapticFeedback.mediumImpact();
+                    }
+                    Navigator.pop(context, true);
+                  },
                   child: Text(confirmLabel),
                 ),
                 const SizedBox(height: 8),

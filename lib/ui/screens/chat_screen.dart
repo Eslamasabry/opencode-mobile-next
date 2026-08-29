@@ -882,6 +882,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (_sending || (_composer.text.trim().isEmpty && _attachments.isEmpty)) {
       return;
     }
+    unawaited(HapticFeedback.lightImpact());
     if (_attachments.isEmpty &&
         _composer.text.trimLeft().startsWith('/') &&
         _serverCommands == null) {
@@ -1242,6 +1243,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _abort() async {
     if (_aborting) return;
+    unawaited(HapticFeedback.mediumImpact());
     setState(() => _aborting = true);
     final actionApi = await _conn.prepareActionTransport();
     if (!mounted) return;

@@ -41,7 +41,7 @@ class LibraryScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
           children: [
             _ActiveSetupCard(controller: controller),
-            const SectionLabel('Library'),
+            const SectionLabel('Browse'),
             _DestinationGrid(
               cards: [
                 _DestinationCard(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/sse.dart';
@@ -87,116 +88,144 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ];
     final pending = conn.permissions.length + conn.questions.length;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: _WorkspaceAppBarTitle(
-          profileName: conn.profile?.name ?? 'OpenCode',
-          tabTitle: _titles[_tab],
-          status: conn.status,
-          compact: MediaQuery.sizeOf(context).width < 600,
-        ),
-        actions: [
-          IconButton(
-            tooltip: 'Model / agent',
-            icon: const Icon(Icons.tune_rounded),
-            onPressed: () => showModelPicker(context),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: _onRootPop,
+      child: Scaffold(
+        appBar: AppBar(
+          title: _WorkspaceAppBarTitle(
+            profileName: conn.profile?.name ?? 'OpenCode',
+            tabTitle: _titles[_tab],
+            status: conn.status,
+            compact: MediaQuery.sizeOf(context).width < 600,
           ),
-          Badge(
-            isLabelVisible: pending > 0,
-            label: Text('$pending'),
-            child: IconButton(
-              key: const ValueKey('mission-control-button'),
-              tooltip: 'Mission Control',
-              icon: const Icon(Icons.space_dashboard_outlined),
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => MissionControlScreen(controller: conn),
-                ),
-              ),
+          actions: [
+            IconButton(
+              tooltip: 'Model / agent',
+              icon: const Icon(Icons.tune_rounded),
+              onPressed: () => showModelPicker(context),
             ),
-          ),
-          Badge(
-            isLabelVisible: pending > 0,
-            label: Text('$pending'),
-            child: IconButton(
-              tooltip: 'Pending requests',
-              icon: const Icon(Icons.notifications_outlined),
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => RequestsScreen(controller: conn),
-                ),
-              ),
-            ),
-          ),
-          PopupMenuButton<String>(
-            onSelected: (v) {
-              if (v == 'refresh') conn.refreshSessions();
-              if (v == 'settings') {
-                navigator.push(
+            Badge(
+              isLabelVisible: pending > 0,
+              label: Text('$pending'),
+              child: IconButton(
+                key: const ValueKey('mission-control-button'),
+                tooltip: 'Mission Control',
+                icon: const Icon(Icons.space_dashboard_outlined),
+                onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (_) => SettingsScreen(controller: conn),
+                    builder: (_) => MissionControlScreen(controller: conn),
                   ),
-                );
-              }
-              if (v == 'disconnect') {
-                conn.disconnect().then((_) {
-                  navigator.pushNamedAndRemoveUntil('/servers', (_) => false);
-                });
-              }
-            },
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'refresh', child: Text('Refresh')),
-              PopupMenuItem(value: 'settings', child: Text('Settings')),
-              PopupMenuItem(value: 'disconnect', child: Text('Disconnect')),
-            ],
-          ),
-        ],
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final content = Column(
-            children: [
-              if (conn.status != StreamStatus.connected)
-                ConnectionStatusBanner(controller: conn),
-              Expanded(
-                child: IndexedStack(index: _tab, children: tabs),
+                ),
               ),
-            ],
-          );
-          if (constraints.maxWidth < 760) return content;
-          return Row(
-            children: [
-              NavigationRail(
-                selectedIndex: _tab,
-                extended: constraints.maxWidth >= 1040,
-                onDestinationSelected: (index) => setState(() => _tab = index),
-                destinations: [
-                  for (final destination in destinations)
-                    NavigationRailDestination(
-                      icon: destination.icon,
-                      selectedIcon: destination.selectedIcon,
-                      label: Text(destination.label),
+            ),
+            Badge(
+              isLabelVisible: pending > 0,
+              label: Text('$pending'),
+              child: IconButton(
+                tooltip: 'Pending requests',
+                icon: const Icon(Icons.notifications_outlined),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => RequestsScreen(controller: conn),
+                  ),
+                ),
+              ),
+            ),
+            PopupMenuButton<String>(
+              onSelected: (v) {
+                if (v == 'refresh') conn.refreshSessions();
+                if (v == 'settings') {
+                  navigator.push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => SettingsScreen(controller: conn),
                     ),
-                ],
-              ),
-              const VerticalDivider(width: 1),
-              Expanded(child: content),
-            ],
-          );
-        },
+                  );
+                }
+                if (v == 'disconnect') {
+                  conn.disconnect().then((_) {
+                    navigator.pushNamedAndRemoveUntil('/servers', (_) => false);
+                  });
+                }
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'refresh', child: Text('Refresh')),
+                PopupMenuItem(value: 'settings', child: Text('Settings')),
+                PopupMenuItem(value: 'disconnect', child: Text('Disconnect')),
+              ],
+            ),
+          ],
+        ),
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            final content = Column(
+              children: [
+                if (conn.status != StreamStatus.connected)
+                  ConnectionStatusBanner(controller: conn),
+                Expanded(
+                  child: IndexedStack(index: _tab, children: tabs),
+                ),
+              ],
+            );
+            if (constraints.maxWidth < 760) return content;
+            return Row(
+              children: [
+                NavigationRail(
+                  selectedIndex: _tab,
+                  extended: constraints.maxWidth >= 1040,
+                  onDestinationSelected: (index) =>
+                      setState(() => _tab = index),
+                  destinations: [
+                    for (final destination in destinations)
+                      NavigationRailDestination(
+                        icon: destination.icon,
+                        selectedIcon: destination.selectedIcon,
+                        label: Text(destination.label),
+                      ),
+                  ],
+                ),
+                const VerticalDivider(width: 1),
+                Expanded(child: content),
+              ],
+            );
+          },
+        ),
+        bottomNavigationBar: MediaQuery.sizeOf(context).width < 760
+            ? NavigationBar(
+                selectedIndex: _tab,
+                height: 64,
+                onDestinationSelected: (i) => setState(() => _tab = i),
+                destinations: destinations,
+              )
+            : null,
       ),
-      bottomNavigationBar: MediaQuery.sizeOf(context).width < 760
-          ? NavigationBar(
-              selectedIndex: _tab,
-              height: 64,
-              onDestinationSelected: (i) => setState(() => _tab = i),
-              destinations: destinations,
-            )
-          : null,
     );
   }
 
-  static const _titles = ['Workspace', 'Files', 'Terminal', 'Library'];
+  /// Root back press: first press hints, a second within the window exits.
+  /// Guards against losing a connected session to an accidental gesture.
+  void _onRootPop(bool didPop, Object? result) {
+    if (didPop) return;
+    final now = DateTime.now();
+    if (_lastBackAt != null &&
+        now.difference(_lastBackAt!) < const Duration(seconds: 2)) {
+      SystemNavigator.pop();
+      return;
+    }
+    _lastBackAt = now;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('Press back again to exit'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+  }
+
+  DateTime? _lastBackAt;
+
+  static const _titles = ['Workspace', 'Files', 'Terminal', 'More'];
 }
 
 class _WorkspaceAppBarTitle extends StatelessWidget {
@@ -279,24 +308,28 @@ class _StatusDot extends StatelessWidget {
       StreamStatus.reconnecting => (theme.colorScheme.tertiary, true),
       StreamStatus.disconnected => (theme.colorScheme.error, false),
     };
-    return Tooltip(
-      message: switch (status) {
-        StreamStatus.connected => 'Connected',
-        StreamStatus.connecting => 'Connecting',
-        StreamStatus.reconnecting => 'Reconnecting',
-        StreamStatus.disconnected => 'Offline',
-      },
-      child: pulse
-          ? SizedBox(
-              width: 12,
-              height: 12,
-              child: CircularProgressIndicator(strokeWidth: 2, color: color),
-            )
-          : Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-            ),
+    final label = switch (status) {
+      StreamStatus.connected => 'Connected',
+      StreamStatus.connecting => 'Connecting',
+      StreamStatus.reconnecting => 'Reconnecting',
+      StreamStatus.disconnected => 'Offline',
+    };
+    return Semantics(
+      label: 'Server $label',
+      child: Tooltip(
+        message: label,
+        child: pulse
+            ? SizedBox(
+                width: 12,
+                height: 12,
+                child: CircularProgressIndicator(strokeWidth: 2, color: color),
+              )
+            : Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
+      ),
     );
   }
 }
