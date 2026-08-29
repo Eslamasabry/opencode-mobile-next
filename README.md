@@ -235,8 +235,7 @@ video/                   # Remotion showcase project
 
 ## License
 
-The app's own license is being finalized for the public release (tracked in
-[docs/public-release-audit.md](docs/public-release-audit.md)). Bundled
+[MIT](LICENSE). Bundled
 third-party components — JetBrains Mono (OFL-1.1), sherpa-onnx
 (Apache-2.0), ONNX Runtime (MIT), OpenAI Whisper models (MIT), and others —
 are documented in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) with full
