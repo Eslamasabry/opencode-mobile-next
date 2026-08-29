@@ -286,6 +286,33 @@ Merge order for the remaining two: connect → interaction (or any,
 resolving conflicts in connection.dart / message_view.dart; every merge so
 far verified with analyze + affected suites before push).
 
+### Open follow-ups from the re-verification (docs/reverification-report.md)
+
+- FIXED already: the High-severity `_selectLocation` flavor bug (ceb3fe2 —
+  it rebuilt the v1 transport for v2 profiles, so choosing a directory, or
+  connecting a v2 profile that had a saved location, replaced the working
+  v2 pair with a v1 client whose health check can never succeed and reads
+  as a rotated password).
+- **NO TEST COVERS THAT FIX.** The regression test written for it was
+  removed in 41dcddb: it drives the full async rescope (health, catalog,
+  pending refreshes) against a bare fake gateway, so it failed in file
+  order and hung when run alone. To cover it properly, extend
+  `_FakeV2Gateway` in test/connection_v2_gateway_test.dart to answer the
+  post-rescope refresh chain (or add a seam asserting the chosen
+  transport), then assert `v1ApiBuilds == 0` after `selectLocation` on a
+  flavor=v2 profile. Verify the test genuinely fails with the fix reverted.
+- Still open from that report: two Medium v2 issues (every v2 send
+  re-issues switchModel/switchAgent — two extra round-trips and it
+  overrides another client's change; `session.diff` returns the
+  working-tree diff, so chat diff counts can over-report), the Lens-4
+  visual sweep (14 findings; start with the hardcoded green added in
+  review_workspace.dart), the fix-regression cluster (reasoning-toggle
+  overwrite, raw error.toString() snackbars bypassing the funnel in
+  worktrees/mcp/coding-settings, S11 voice notices, 28dp message-actions
+  affordance, drafts losing attachments), the drift/SQLite baseline, and
+  desktop Phase 1 (bridge MissingPluginException guard, gate the Termux
+  screen/route/entry, hide the desktop voice mic).
+
 ### NOT started (queued, in order)
 
 4. **Gating sweep**: consume ServerCapabilities across the 26-row table in
