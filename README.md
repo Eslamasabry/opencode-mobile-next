@@ -238,7 +238,7 @@ flutter build apk --release
 flutter build linux          # desktop build, same codebase
 ```
 
-The Flutter pin matters: release artifacts and the 909-test suite are
+The Flutter pin matters: release artifacts and the 912-test suite are
 validated against Shorebird's pinned 3.47.1
 (`~/.shorebird/bin/cache/flutter/<rev>/bin/flutter` after installing
 Shorebird). Older local Flutters may fail to resolve packages. Run tests

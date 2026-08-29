@@ -234,7 +234,7 @@ not run (P0-03), so a lane cannot be added to it.
 | ID | Lane | Status |
 |---|---|---|
 | PL-CI-01 | `flutter analyze` on the pinned Flutter | **Open** in CI; run locally on every change |
-| PL-CI-02 | Full suite, serial or reliably sharded | **Open** in CI; run locally (909 tests) |
+| PL-CI-02 | Full suite, serial or reliably sharded | **Open** in CI; run locally (912 tests, serial) |
 | PL-CI-03 | Android lint on the merged release manifest | **Open** |
 | PL-CI-04 | Debug and test-signed release builds | **Open** |
 | PL-CI-05 | Generated SDK / contract drift verification | **Open** in CI; the workflow encodes it |
