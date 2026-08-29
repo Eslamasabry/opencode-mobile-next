@@ -118,7 +118,6 @@ class _ProjectsController extends ConnectionController {
   }
 }
 
-
 /// A fresh server with zero projects: no location is ever selected, and the
 /// session-create call must still work against the server's own default
 /// directory (the transport omits the directory parameter when none is set).
