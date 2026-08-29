@@ -25,7 +25,7 @@ import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/app_diagnostics_screen.dart';
 import 'package:opencode_mobile/ui/screens/capabilities_screen.dart';
 import 'package:opencode_mobile/ui/screens/project_health_screen.dart';
-import 'package:opencode_mobile/ui/screens/requests_screen.dart';
+import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/screens/tools_screen.dart';
 import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
@@ -527,7 +527,7 @@ void main() {
       addTearDown(controller.dispose);
       controller.handleEventForTesting(_formCreated());
 
-      await tester.pumpWidget(_app(RequestsScreen(controller: controller)));
+      await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
       await tester.pumpAndSettle();
 
       expect(find.text('Connect to Sentry'), findsOneWidget);
@@ -541,7 +541,7 @@ void main() {
       addTearDown(controller.dispose);
       controller.handleEventForTesting(_formCreated());
 
-      await tester.pumpWidget(_app(RequestsScreen(controller: controller)));
+      await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
       await tester.pumpAndSettle();
 
       expect(find.text('Connect to Sentry'), findsNothing);

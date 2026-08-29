@@ -7,12 +7,10 @@ import '../../state/connection.dart';
 import '../app_theme.dart';
 import '../widgets/connection_status_banner.dart';
 import '../widgets/pickers.dart';
+import 'activity_screen.dart';
 import 'files_screen.dart';
 import 'library_screen.dart';
-import 'mission_control_screen.dart';
-import 'requests_screen.dart';
 import 'settings_screen.dart';
-import 'terminal_screen.dart';
 import 'workspace_screen.dart';
 
 /// Main mobile product shell for a connected OpenCode server.
@@ -58,36 +56,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final conn = ref.watch(connProvider);
     final navigator = Navigator.of(context);
 
+    // Audit §5: Activity replaces Terminal in primary navigation; Terminal is
+    // reachable from Session and the More hub. One destination, one badge.
     final tabs = [
       WorkspaceScreen(controller: conn),
       FilesScreen(controller: conn),
-      TerminalScreen(controller: conn),
+      ActivityScreen(controller: conn, embedded: true),
       LibraryScreen(controller: conn),
     ];
-    const destinations = [
-      NavigationDestination(
+    final pending =
+        conn.permissions.length + conn.questions.length + conn.forms.length;
+    final destinations = [
+      const NavigationDestination(
         icon: Icon(Icons.workspaces_outline),
         selectedIcon: Icon(Icons.workspaces_rounded),
         label: 'Workspace',
       ),
-      NavigationDestination(
+      const NavigationDestination(
         icon: Icon(Icons.folder_outlined),
         selectedIcon: Icon(Icons.folder_rounded),
         label: 'Files',
       ),
       NavigationDestination(
-        icon: Icon(Icons.terminal_outlined),
-        selectedIcon: Icon(Icons.terminal_rounded),
-        label: 'Terminal',
+        icon: _ActivityIcon(
+          pending: pending,
+          icon: Icons.notifications_outlined,
+        ),
+        selectedIcon: _ActivityIcon(
+          pending: pending,
+          icon: Icons.notifications_rounded,
+        ),
+        label: 'Activity',
       ),
-      NavigationDestination(
+      const NavigationDestination(
         icon: Icon(Icons.more_horiz_rounded),
         selectedIcon: Icon(Icons.more_rounded),
         label: 'More',
       ),
     ];
-    final pending =
-        conn.permissions.length + conn.questions.length + conn.forms.length;
 
     return PopScope(
       canPop: false,
@@ -101,37 +107,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             compact: MediaQuery.sizeOf(context).width < 600,
           ),
           actions: [
+            // §5 Root app bar: one contextual action plus overflow. The
+            // pending badge lives on the Activity destination alone.
             IconButton(
               tooltip: 'Model / agent',
               icon: const Icon(Icons.tune_rounded),
               onPressed: () => showModelPicker(context),
-            ),
-            Badge(
-              isLabelVisible: pending > 0,
-              label: Text('$pending'),
-              child: IconButton(
-                key: const ValueKey('mission-control-button'),
-                tooltip: 'Mission Control',
-                icon: const Icon(Icons.space_dashboard_outlined),
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => MissionControlScreen(controller: conn),
-                  ),
-                ),
-              ),
-            ),
-            Badge(
-              isLabelVisible: pending > 0,
-              label: Text('$pending'),
-              child: IconButton(
-                tooltip: 'Pending requests',
-                icon: const Icon(Icons.notifications_outlined),
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => RequestsScreen(controller: conn),
-                  ),
-                ),
-              ),
             ),
             PopupMenuButton<String>(
               onSelected: (v) {
@@ -225,7 +206,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   DateTime? _lastBackAt;
 
-  static const _titles = ['Workspace', 'Files', 'Terminal', 'More'];
+  static const _titles = ['Workspace', 'Files', 'Activity', 'More'];
+}
+
+/// The product's single pending badge (audit UX-P0-01). Semantics carry the
+/// count in words so the number is not colour- or shape-only.
+class _ActivityIcon extends StatelessWidget {
+  final int pending;
+  final IconData icon;
+
+  const _ActivityIcon({required this.pending, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    if (pending <= 0) return Icon(icon);
+    return Semantics(
+      label: '$pending item${pending == 1 ? '' : 's'} need attention',
+      child: Badge(
+        key: const ValueKey('activity-pending-badge'),
+        label: Text('$pending'),
+        child: Icon(icon),
+      ),
+    );
+  }
 }
 
 class _WorkspaceAppBarTitle extends StatelessWidget {

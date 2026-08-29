@@ -12,10 +12,6 @@
   "@libraryManageSection": {
     "description": "Section label above the More hub's manage destination grid"
   },
-  "libraryMissionControlTitle": "Mission Control",
-  "@libraryMissionControlTitle": {
-    "description": "More hub card: fleet overview of pending requests and running sessions"
-  },
   "libraryModelsAgentsTitle": "Models & agents",
   "@libraryModelsAgentsTitle": {
     "description": "More hub card: model and agent catalog"
@@ -32,9 +28,9 @@
   "@libraryCommandsToolsTitle": {
     "description": "More hub card: commands, skills, and native tools"
   },
-  "libraryRequestsTitle": "Requests",
-  "@libraryRequestsTitle": {
-    "description": "More hub card: pending permission and question requests"
+  "libraryTerminalTitle": "Terminal",
+  "@libraryTerminalTitle": {
+    "description": "More hub card: server terminal sessions"
   },
   "librarySettingsTitle": "Settings",
   "@librarySettingsTitle": {

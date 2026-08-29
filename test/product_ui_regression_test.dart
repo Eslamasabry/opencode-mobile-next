@@ -13,7 +13,7 @@ import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/files_screen.dart';
 import 'package:opencode_mobile/ui/screens/library_screen.dart';
-import 'package:opencode_mobile/ui/screens/requests_screen.dart';
+import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/servers_screen.dart';
 import 'package:opencode_mobile/ui/screens/terminal_screen.dart';
 import 'package:opencode_mobile/ui/widgets/file_preview.dart';
@@ -1304,7 +1304,7 @@ void main() {
     };
     addTearDown(controller.dispose);
     await tester.pumpWidget(
-      MaterialApp(home: RequestsScreen(controller: controller)),
+      MaterialApp(home: ActivityScreen(controller: controller)),
     );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Run a shell command'));

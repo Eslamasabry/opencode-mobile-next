@@ -4,7 +4,7 @@ import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/ui/screens/requests_screen.dart';
+import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _QuestionRepository extends ProductRepository {
@@ -60,7 +60,7 @@ Future<void> _openQuestion(
   final controller = await _controller(repository);
   addTearDown(controller.dispose);
   await tester.pumpWidget(
-    MaterialApp(home: RequestsScreen(controller: controller)),
+    MaterialApp(home: ActivityScreen(controller: controller)),
   );
   await tester.pumpAndSettle();
   await tester.tap(find.text(question.prompts.single.title));

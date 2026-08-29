@@ -18,9 +18,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryManageSection => 'Manage';
 
   @override
-  String get libraryMissionControlTitle => 'Mission Control';
-
-  @override
   String get libraryModelsAgentsTitle => 'Models & agents';
 
   @override
@@ -33,7 +30,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryCommandsToolsTitle => 'Commands & tools';
 
   @override
-  String get libraryRequestsTitle => 'Requests';
+  String get libraryTerminalTitle => 'Terminal';
 
   @override
   String get librarySettingsTitle => 'Settings';

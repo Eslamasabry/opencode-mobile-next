@@ -8,6 +8,7 @@ import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -107,10 +108,70 @@ void main() {
     expect(find.byType(NavigationRail), findsNothing);
     expect(find.text('Workspace'), findsWidgets);
     expect(find.text('Files'), findsOneWidget);
-    expect(find.text('Terminal'), findsOneWidget);
+    // Audit §5: Activity took Terminal's navigation slot.
+    expect(find.text('Activity'), findsWidgets);
+    expect(find.text('Terminal'), findsNothing);
     expect(find.text('More'), findsOneWidget);
     expect(find.text('API'), findsNothing);
     expect(find.text('Guide'), findsNothing);
+  });
+
+  testWidgets('one pending badge, on the Activity destination', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+
+    await _pumpShell(tester, controller);
+    expect(find.byType(Badge), findsNothing);
+
+    controller.permissions = {
+      'perm-1': PermissionRequest(
+        id: 'perm-1',
+        sessionID: 'session-1',
+        permission: 'edit',
+        patterns: const ['lib/main.dart'],
+      ),
+    };
+    controller.notifyListeners();
+    await tester.pump();
+
+    // UX-P0-01: exactly one global badge, and the duplicate app-bar entry
+    // points are gone.
+    final badge = find.byKey(const ValueKey('activity-pending-badge'));
+    expect(badge, findsOneWidget);
+    expect(find.byType(Badge), findsOneWidget);
+    expect(
+      find.descendant(of: find.byType(NavigationBar), matching: badge),
+      findsOneWidget,
+    );
+    expect(find.byTooltip('Mission Control'), findsNothing);
+    expect(find.byTooltip('Pending requests'), findsNothing);
+    // The tune/model action stays per the audit.
+    expect(find.byTooltip('Model / agent'), findsOneWidget);
+  });
+
+  testWidgets('the Activity tab shows cross-session sections', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+
+    await _pumpShell(tester, controller);
+    await tester.tap(find.byIcon(Icons.notifications_outlined));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.byType(ActivityScreen), findsOneWidget);
+    expect(
+      tester.widget<Text>(find.byKey(const ValueKey('current-tab-title'))).data,
+      'Activity',
+    );
+    expect(find.text('Nothing needs attention'), findsWidgets);
   });
 
   testWidgets('failed reconnect keeps the product shell and location visible', (

@@ -13,7 +13,7 @@ import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/about_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
-import 'package:opencode_mobile/ui/screens/requests_screen.dart';
+import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/session_destination_sheet.dart';
 import 'package:opencode_mobile/ui/widgets/external_link.dart';
 import 'package:opencode_mobile/ui/widgets/tool_card.dart';
@@ -431,7 +431,7 @@ void main() {
       );
       addTearDown(controller.dispose);
       await tester.pumpWidget(
-        _scaledApp(RequestsScreen(controller: controller), bottomInset: 96),
+        _scaledApp(ActivityScreen(controller: controller), bottomInset: 96),
       );
       await tester.pumpAndSettle();
       await tester.tap(find.text('Deployment'));

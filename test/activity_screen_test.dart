@@ -5,7 +5,7 @@ import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
-import 'package:opencode_mobile/ui/screens/mission_control_screen.dart';
+import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Repository implements ProductRepository {
@@ -19,6 +19,8 @@ class _Controller extends ConnectionController {
   int prepareCalls = 0;
   int refreshCalls = 0;
   final preparedRepositories = <ServerOperationsGateway?>[];
+  String? answeredPermissionID;
+  String? permissionReply;
 
   @override
   Future<ServerOperationsGateway?> prepareActionRepository() async {
@@ -30,6 +32,25 @@ class _Controller extends ConnectionController {
   @override
   Future<void> refreshSessions() async {
     refreshCalls += 1;
+  }
+
+  @override
+  Future<void> refreshPendingPermissions() async {}
+
+  @override
+  Future<void> refreshPendingQuestions() async {}
+
+  @override
+  Future<void> refreshPendingForms() async {}
+
+  @override
+  Future<void> answerPermission(
+    String id,
+    String reply, {
+    String? message,
+  }) async {
+    answeredPermissionID = id;
+    permissionReply = reply;
   }
 }
 
@@ -97,41 +118,85 @@ Widget _app(Widget home, {Map<String, WidgetBuilder> routes = const {}}) =>
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('sections render running, attention, and recent truth', (
+  testWidgets('the three sections render attention, running, and recent', (
     tester,
   ) async {
     final controller = await _controller();
     addTearDown(controller.dispose);
-    await tester.pumpWidget(
-      _app(MissionControlScreen(controller: controller)),
-    );
+    await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
+    await tester.pump();
 
     expect(find.text('Needs attention'.toUpperCase()), findsOneWidget);
-    expect(find.text('Permission · edit'), findsOneWidget);
-    expect(find.text('Question · Direction'), findsOneWidget);
-    expect(find.byKey(const ValueKey('mission-running-ses_run')), findsOneWidget);
-    expect(find.byKey(const ValueKey('mission-recent-ses_idle')), findsOneWidget);
+    expect(find.text('Running'.toUpperCase()), findsOneWidget);
+    expect(find.text('Recently completed'.toUpperCase()), findsOneWidget);
+    // Permissions and questions are resolvable rows, not links.
+    expect(find.text('Edit a file'), findsOneWidget);
+    expect(find.text('Direction'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('activity-running-ses_run')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('activity-recent-ses_idle')),
+      findsOneWidget,
+    );
     // The running root shows its cached subagent count.
     expect(
       find.descendant(
-        of: find.byKey(const ValueKey('mission-running-ses_run')),
+        of: find.byKey(const ValueKey('activity-running-ses_run')),
         matching: find.text('1'),
       ),
       findsOneWidget,
     );
     // Children never appear as their own rows.
-    expect(find.byKey(const ValueKey('mission-recent-ses_child')), findsNothing);
-    expect(find.byKey(const ValueKey('mission-all-sessions')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('activity-recent-ses_child')),
+      findsNothing,
+    );
+    expect(find.byKey(const ValueKey('activity-all-sessions')), findsOneWidget);
   });
 
-  testWidgets('attention and running rows open the exact chat', (
+  testWidgets('a permission row resolves that permission in place', (
     tester,
   ) async {
     final controller = await _controller();
     addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
+    await tester.pump();
+
+    await tester.tap(find.text('Edit a file'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    // The exact resolver, not the related chat.
+    expect(find.byKey(const Key('permission-sheet')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('permission-allow-once')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(controller.answeredPermissionID, 'perm-1');
+  });
+
+  testWidgets('a question row opens the exact answer sheet', (tester) async {
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
+    await tester.pump();
+
+    await tester.tap(find.text('Direction'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('OpenCode needs input'), findsOneWidget);
+    expect(find.text('Send answers'), findsOneWidget);
+  });
+
+  testWidgets('session rows open the exact chat', (tester) async {
+    final controller = await _controller();
+    addTearDown(controller.dispose);
     await tester.pumpWidget(
       _app(
-        MissionControlScreen(controller: controller),
+        ActivityScreen(controller: controller),
         routes: {
           '/chat/ses_run': (_) =>
               Scaffold(appBar: AppBar(), body: const Text('run chat')),
@@ -140,10 +205,10 @@ void main() {
         },
       ),
     );
+    await tester.pump();
 
-    // Bounded pumps throughout: Mission Control's live spinner never
-    // settles while it is the visible route.
-    await tester.tap(find.text('Permission · edit'));
+    // Bounded pumps throughout: the Running row's live spinner never settles.
+    await tester.tap(find.byKey(const ValueKey('activity-running-ses_run')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.text('run chat'), findsOneWidget);
@@ -151,7 +216,7 @@ void main() {
     await tester.pageBack();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
-    await tester.tap(find.byKey(const ValueKey('mission-recent-ses_idle')));
+    await tester.tap(find.byKey(const ValueKey('activity-recent-ses_idle')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.text('idle chat'), findsOneWidget);
@@ -162,9 +227,8 @@ void main() {
   ) async {
     final controller = await _controller();
     addTearDown(controller.dispose);
-    await tester.pumpWidget(
-      _app(MissionControlScreen(controller: controller)),
-    );
+    await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
+    await tester.pump();
 
     // Android wake replaced the repository; the refresh must resolve the
     // replacement before the session query runs.
@@ -186,15 +250,32 @@ void main() {
   testWidgets('an empty fleet invites action', (tester) async {
     final controller = await _controller(seed: false);
     addTearDown(controller.dispose);
-    await tester.pumpWidget(
-      _app(MissionControlScreen(controller: controller)),
-    );
+    await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
+    await tester.pumpAndSettle();
 
-    expect(find.text('Nothing in flight'), findsOneWidget);
+    expect(find.text('Nothing needs attention'), findsOneWidget);
     expect(find.text('All sessions'), findsOneWidget);
   });
 
-  testWidgets('mission control fits a 320dp phone at 2x text', (tester) async {
+  testWidgets('running sessions with no pending work still say so', (
+    tester,
+  ) async {
+    final controller = await _controller();
+    controller.permissions = {};
+    controller.questions = {};
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
+    await tester.pump();
+
+    expect(find.text('Needs attention'.toUpperCase()), findsOneWidget);
+    expect(find.text('Nothing needs attention'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('activity-running-ses_run')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('activity fits a 320dp phone at 2x text', (tester) async {
     await tester.binding.setSurfaceSize(const Size(320, 640));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final controller = await _controller();
@@ -207,11 +288,15 @@ void main() {
           ).copyWith(textScaler: const TextScaler.linear(2)),
           child: child!,
         ),
-        home: MissionControlScreen(controller: controller),
+        home: ActivityScreen(controller: controller),
       ),
     );
+    await tester.pump();
 
-    expect(find.byKey(const ValueKey('mission-running-ses_run')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('activity-running-ses_run')),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 }

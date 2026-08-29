@@ -10,7 +10,7 @@ import 'package:opencode_mobile/main.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
-import 'package:opencode_mobile/ui/screens/requests_screen.dart';
+import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/update/shorebird_update_notice.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -219,7 +219,7 @@ void main() {
     await tester.pump();
     await tester.pumpAndSettle();
 
-    expect(find.byType(RequestsScreen), findsOneWidget);
+    expect(find.byType(ActivityScreen), findsOneWidget);
     expect(find.text('Deployment'), findsWidgets);
     expect(find.text('Which target should be used?'), findsWidgets);
     expect(find.text('Send answers'), findsOneWidget);
@@ -260,7 +260,7 @@ void main() {
     // No silent profile switch: the stale destination is dropped and the
     // app stays on its normal root instead of pushing a chat.
     expect(find.byType(ChatScreen), findsNothing);
-    expect(find.byType(RequestsScreen), findsNothing);
+    expect(find.byType(ActivityScreen), findsNothing);
     expect(controller.pendingCodingAlertOpen, isNull);
   });
 }
