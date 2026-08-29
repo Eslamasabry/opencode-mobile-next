@@ -82,12 +82,8 @@ Future<void> _press(WidgetTester tester, LogicalKeyboardKey key) async {
 }
 
 class _Harness {
-  _Harness({this.onNewSession, this.onOpenSettings});
-
   final navigatorKey = GlobalKey<NavigatorState>();
   final signals = AppShortcutSignals();
-  final VoidCallback? onNewSession;
-  final VoidCallback? onOpenSettings;
   int newSessions = 0;
   int settingsOpens = 0;
 
@@ -100,14 +96,8 @@ class _Harness {
       navigatorKey: navigatorKey,
       signals: signals,
       handlers: AppShortcutHandlers(
-        onNewSession: () {
-          newSessions++;
-          onNewSession?.call();
-        },
-        onOpenSettings: () {
-          settingsOpens++;
-          onOpenSettings?.call();
-        },
+        onNewSession: () => newSessions++,
+        onOpenSettings: () => settingsOpens++,
         paletteCommands: (context) => [
           DesktopCommand(
             label: 'New session',

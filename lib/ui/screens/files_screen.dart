@@ -9,6 +9,7 @@ import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../../state/review_handoff.dart';
+import '../desktop/desktop_interaction.dart';
 import '../widgets/file_preview.dart';
 import '../widgets/product_states.dart';
 import 'review_workspace.dart';
@@ -63,6 +64,10 @@ class _FilesScreenState extends State<FilesScreen> {
   String? _selectedPath;
   int? _selectedLine;
   String? _searchOriginPath;
+
+  /// Width of the tree pane in the wide two-pane layout. Draggable on
+  /// desktop; the default is the width the split has always shipped with.
+  double _treeWidth = 340;
   final _search = TextEditingController();
   final _searchFocus = FocusNode(debugLabel: 'files-search');
   Timer? _symbolSearchDebounce;
@@ -724,10 +729,25 @@ class _FilesScreenState extends State<FilesScreen> {
             builder: (context, constraints) {
               final files = _fileList(theme);
               if (constraints.maxWidth < 900) return files;
+              final maxTree = constraints.maxWidth - 320;
+              final treeWidth = _treeWidth.clamp(
+                240.0,
+                maxTree < 240 ? 240.0 : maxTree,
+              );
               return Row(
                 children: [
-                  SizedBox(width: 340, child: files),
-                  const VerticalDivider(width: 1),
+                  SizedBox(width: treeWidth, child: files),
+                  _SplitHandle(
+                    // Accumulate on the stored width, not the one this build
+                    // captured: several drag updates can land before the
+                    // next frame, and each must add to the last.
+                    onDrag: (delta) => setState(
+                      () => _treeWidth = (_treeWidth + delta).clamp(
+                        240.0,
+                        maxTree < 240 ? 240.0 : maxTree,
+                      ),
+                    ),
+                  ),
                   Expanded(
                     child: _selectedPath == null
                         ? Center(
@@ -1093,6 +1113,34 @@ String _fileStatusLabel(String status) => switch (status) {
 };
 
 enum _ChangeAction { reviewAll, review, stage }
+
+/// The divider between the tree and the preview.
+///
+/// On Android it stays the hairline [VerticalDivider] it has always been. On
+/// desktop it becomes a real splitter: a wider grab strip, the resize-column
+/// pointer, and a horizontal drag that resizes the tree pane.
+class _SplitHandle extends StatelessWidget {
+  const _SplitHandle({required this.onDrag});
+
+  final ValueChanged<double> onDrag;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!desktopInteractions) return const VerticalDivider(width: 1);
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeColumn,
+      child: GestureDetector(
+        key: const ValueKey('files-split-handle'),
+        behavior: HitTestBehavior.opaque,
+        onHorizontalDragUpdate: (details) => onDrag(details.delta.dx),
+        child: const SizedBox(
+          width: 7,
+          child: Center(child: VerticalDivider(width: 1)),
+        ),
+      ),
+    );
+  }
+}
 
 class _ChangeChoice {
   const _ChangeChoice(this.action, [this.path = '']);

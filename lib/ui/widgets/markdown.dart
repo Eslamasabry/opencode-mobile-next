@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../app_theme.dart';
+import '../desktop/desktop_interaction.dart';
 import 'code_highlight.dart';
 import 'external_link.dart';
 
@@ -657,10 +658,14 @@ class _PathCodeChipState extends State<_PathCodeChip> {
       ),
     );
     if (!_readable) return chip;
-    return GestureDetector(
-      key: Key('path-link-${widget.code}'),
-      onTap: () => widget.links.open(widget.code),
-      child: chip,
+    // A bare GestureDetector leaves the desktop pointer as an arrow, so a
+    // live file link reads as prose. ClickCursor is a no-op on Android.
+    return ClickCursor(
+      child: GestureDetector(
+        key: Key('path-link-${widget.code}'),
+        onTap: () => widget.links.open(widget.code),
+        child: chip,
+      ),
     );
   }
 }
