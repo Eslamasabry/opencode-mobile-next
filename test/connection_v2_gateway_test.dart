@@ -4,6 +4,8 @@ import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/server_probe.dart';
 import 'package:opencode_mobile/api/sse.dart' show LiveEventChannel, StreamStatus;
+import 'package:opencode_mobile/api2/gateway_mappers.dart'
+    show api2ServerCapabilities;
 import 'package:opencode_mobile/api2/transport.dart' show Api2AuthRequired;
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
@@ -23,6 +25,9 @@ class _FakeChannel implements LiveEventChannel {
 /// Minimal live v2 gateway: health + event channels succeed, everything else
 /// throws and is absorbed by the controller's per-surface error handling.
 class _FakeV2Gateway implements ServerGateway {
+  @override
+  ServerCapabilities get capabilities => api2ServerCapabilities;
+
   int healthCalls = 0;
   bool closed = false;
   String? _directory;
