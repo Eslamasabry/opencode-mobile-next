@@ -3352,6 +3352,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                                     return _TypingIndicator();
                                                   }
                                                   final m = _messages[index];
+                                                  if (v2VariantPart(m)
+                                                      case final tagged?) {
+                                                    return V2TranscriptRow(
+                                                      key: ValueKey(
+                                                        'message-${m.info.id}',
+                                                      ),
+                                                      part: tagged,
+                                                      messageId: m.info.id,
+                                                    );
+                                                  }
                                                   final meta = _messageMeta(
                                                     _messages,
                                                     index,
