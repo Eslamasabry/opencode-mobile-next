@@ -275,6 +275,26 @@ class Api2Client {
     return item;
   }
 
+  // ---------------- Inbox ----------------
+
+  /// Durably admitted, not-yet-delivered work for one session.
+  Future<List<Api2InboxItem>> inbox(String sessionID) async {
+    final json = await transport.getJson('/session/$sessionID/inbox');
+    return _dataList(json, Api2InboxItem.fromJson);
+  }
+
+  /// Cancels an undelivered inbox item (409 when already delivered).
+  Future<void> cancelInboxItem(String sessionID, String inboxID) =>
+      transport.deleteJson('/session/$sessionID/inbox/$inboxID');
+
+  /// Flips a pending item's delivery to steer (send at next step boundary).
+  Future<void> steerInboxItem(String sessionID, String inboxID) =>
+      transport.postJson('/session/$sessionID/inbox/$inboxID/steer');
+
+  /// Flips a pending item's delivery to queue (wait for the run to finish).
+  Future<void> queueInboxItem(String sessionID, String inboxID) =>
+      transport.postJson('/session/$sessionID/inbox/$inboxID/queue');
+
   /// Builds a `data:<mime>;base64,...` attachment from raw bytes.
   static Api2PromptFile inlineAttachment(
     List<int> bytes, {

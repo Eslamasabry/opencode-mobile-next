@@ -55,6 +55,8 @@ const ServerCapabilities api2ServerCapabilities = ServerCapabilities(
   globalEventStream: true,
   worktreeReset: false,
   legacyQuestionRequests: false,
+  forms: true,
+  inbox: true,
 );
 
 // ---------------- Health / sessions ----------------

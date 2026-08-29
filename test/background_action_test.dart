@@ -18,8 +18,9 @@ class _ReplyApi extends OpenCodeApi {
   Future<void> respondPermissionV2(
     String sessionID,
     String requestID,
-    String reply,
-  ) async {
+    String reply, {
+    String? message,
+  }) async {
     if (failure case final error?) throw error;
     permissionReplies.add((sessionID, requestID, reply));
   }

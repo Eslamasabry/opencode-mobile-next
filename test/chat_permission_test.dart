@@ -26,6 +26,7 @@ class _FakeOpenCodeApi extends OpenCodeApi {
     String reply, {
     String? legacySessionID,
     String? legacyPermissionID,
+    String? message,
   }) async {
     replies.add((requestID: requestID, reply: reply));
     if (permissionNotFound) {

@@ -129,16 +129,22 @@ class Api2EventAdapter {
         ];
 
       case Api2SessionInboxEvent():
-        // Only the enqueue of a user prompt has a v1 analogue: the server
-        // echoing the new user message. Delivery bookkeeping has none.
+        // Every inbox phase passes through under its v2 wire type
+        // (`session.inbox.enqueued|delivered|cancelled|delivery.changed`,
+        // props = the raw v2 data payload) so the pending-sends state in
+        // `connection.dart` can track the strip. Additionally, the enqueue
+        // of a user prompt keeps its v1 analogue: the server echoing the
+        // new user message.
+        final passthrough = _env(envelope.type, envelope.data);
         final item = event.item;
         if (event.phase != Api2Phase.enqueued ||
             item == null ||
             item.type != 'user') {
-          return const [];
+          return [passthrough];
         }
         final text = item.promptText ?? '';
         return [
+          passthrough,
           _env('message.updated', {
             'info': {
               'id': event.inboxID,
@@ -376,6 +382,29 @@ class Api2EventAdapter {
             'sessionID': event.sessionID,
             'requestID': event.requestID,
             if (event.reply != null) 'reply': event.reply,
+          }),
+        ];
+
+      // Forms surface under `form.v2.*` envelopes consumed by the pending-
+      // form state in `connection.dart`: `form.v2.created` carries the raw
+      // `{form: Form.Info}` payload; replied/cancelled carry `{id,
+      // sessionID}` (answer omitted — the client only settles the form).
+      case Api2FormCreatedEvent():
+        return [_env('form.v2.created', envelope.data)];
+
+      case Api2FormRepliedEvent():
+        return [
+          _env('form.v2.replied', {
+            'id': event.id,
+            'sessionID': event.sessionID,
+          }),
+        ];
+
+      case Api2FormCancelledEvent():
+        return [
+          _env('form.v2.cancelled', {
+            'id': event.id,
+            'sessionID': event.sessionID,
           }),
         ];
 

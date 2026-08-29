@@ -171,11 +171,17 @@ class Api2Gateway implements ServerGateway {
     String? variant,
     List<PromptAttachment> attachments = const [],
     List<PromptAgentMention> agentMentions = const [],
+    PromptDelivery? delivery,
   }) => _run(() async {
     await _applySelection(sessionID, model: model, agent: agent, variant: variant);
     await client.prompt(
       sessionID,
       text: text,
+      delivery: switch (delivery) {
+        null => null,
+        PromptDelivery.steer => Api2Delivery.steer,
+        PromptDelivery.queue => Api2Delivery.queue,
+      },
       files: [
         for (final attachment in attachments)
           Api2PromptFile(
@@ -272,6 +278,7 @@ class Api2Gateway implements ServerGateway {
     String reply, {
     String? legacySessionID,
     String? legacyPermissionID,
+    String? message,
   }) => _run(() async {
     var sessionID = legacySessionID;
     if (sessionID == null || sessionID.isEmpty) {
@@ -297,6 +304,7 @@ class Api2Gateway implements ServerGateway {
       sessionID,
       requestID,
       mapPermissionReply(reply),
+      message: message,
     );
   });
 
@@ -304,14 +312,59 @@ class Api2Gateway implements ServerGateway {
   Future<void> respondPermissionV2(
     String sessionID,
     String requestID,
-    String reply,
-  ) => _run(
+    String reply, {
+    String? message,
+  }) => _run(
     () => client.replyPermission(
       sessionID,
       requestID,
       mapPermissionReply(reply),
+      message: message,
     ),
   );
+
+  // ---------------- Forms ----------------
+
+  @override
+  Future<List<Api2FormInfo>> sessionForms(String sessionID) =>
+      _run(() => client.sessionForms(sessionID));
+
+  @override
+  Future<List<Api2FormInfo>> pendingForms() =>
+      _run(() => client.pendingForms());
+
+  @override
+  Future<Api2FormState> formState(String sessionID, String formID) =>
+      _run(() => client.formState(sessionID, formID));
+
+  @override
+  Future<void> replyForm(
+    String sessionID,
+    String formID,
+    Map<String, dynamic> answer,
+  ) => _run(() => client.replyForm(sessionID, formID, answer));
+
+  @override
+  Future<void> cancelForm(String sessionID, String formID) =>
+      _run(() => client.cancelForm(sessionID, formID));
+
+  // ---------------- Inbox ----------------
+
+  @override
+  Future<List<Api2InboxItem>> inboxItems(String sessionID) =>
+      _run(() => client.inbox(sessionID));
+
+  @override
+  Future<void> cancelInboxItem(String sessionID, String inboxID) =>
+      _run(() => client.cancelInboxItem(sessionID, inboxID));
+
+  @override
+  Future<void> steerInboxItem(String sessionID, String inboxID) =>
+      _run(() => client.steerInboxItem(sessionID, inboxID));
+
+  @override
+  Future<void> queueInboxItem(String sessionID, String inboxID) =>
+      _run(() => client.queueInboxItem(sessionID, inboxID));
 
   // ---------------- Questions ----------------
   //

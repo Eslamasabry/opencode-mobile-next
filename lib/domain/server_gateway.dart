@@ -1,5 +1,6 @@
 import '../api/mcp_oauth.dart';
 import '../api/models.dart';
+import '../api2/models.dart' show Api2FormInfo, Api2FormState, Api2InboxItem;
 
 /// Connection lifecycle surfaced to the UI.
 enum StreamStatus { connecting, connected, reconnecting, disconnected }
@@ -718,6 +719,14 @@ class ServerCapabilities {
   final bool worktreeReset;
   final bool legacyQuestionRequests;
 
+  /// OpenCode 2 structured forms (`/api/session/{id}/form`); replaces the
+  /// v1 question dialogs. False on v1 — [FormGateway] methods are inert.
+  final bool forms;
+
+  /// OpenCode 2 session inbox (`/api/session/{id}/inbox`): pending sends
+  /// with steer/queue delivery. False on v1 — [InboxGateway] is inert.
+  final bool inbox;
+
   const ServerCapabilities({
     this.managedWorkspaces = true,
     this.workspaceWarp = true,
@@ -744,6 +753,8 @@ class ServerCapabilities {
     this.globalEventStream = true,
     this.worktreeReset = true,
     this.legacyQuestionRequests = true,
+    this.forms = false,
+    this.inbox = false,
   });
 
   static const allV1 = ServerCapabilities();
@@ -767,6 +778,11 @@ abstract class SessionGateway {
   Future<List<FileDiff>> diff(String id);
 }
 
+/// How a prompt sent while a turn runs reaches the agent (OpenCode 2 only):
+/// [steer] interjects at the next step boundary (the v2 default), [queue]
+/// waits for the current run to finish. v1 gateways ignore the choice.
+enum PromptDelivery { steer, queue }
+
 /// Prompt execution against one session.
 abstract class PromptGateway {
   Future<void> promptAsync(
@@ -777,6 +793,7 @@ abstract class PromptGateway {
     String? variant,
     List<PromptAttachment> attachments,
     List<PromptAgentMention> agentMentions,
+    PromptDelivery? delivery,
   });
   Future<void> shell(
     String sessionID, {
@@ -796,6 +813,10 @@ abstract class PromptGateway {
 }
 
 /// Pending permission requests and replies.
+///
+/// [message] rides only on OpenCode 2 rejections (shown to the model —
+/// steering-by-rejection); v1 gateways accept and ignore it so callers need
+/// no protocol branch.
 abstract class PermissionGateway {
   Future<List<PermissionRequest>> pendingPermissions();
   Future<List<PermissionRequest>> pendingPermissionsV2();
@@ -804,12 +825,54 @@ abstract class PermissionGateway {
     String reply, {
     String? legacySessionID,
     String? legacyPermissionID,
+    String? message,
   });
   Future<void> respondPermissionV2(
     String sessionID,
     String requestID,
-    String reply,
+    String reply, {
+    String? message,
+  });
+}
+
+/// OpenCode 2 structured forms (protocol notes §8). v1 implementations are
+/// inert: list methods return empty lists and mutations fail with a typed
+/// [ProductException] (capability [ServerCapabilities.forms] is false).
+abstract class FormGateway {
+  /// Pending forms owned by one session.
+  Future<List<Api2FormInfo>> sessionForms(String sessionID);
+
+  /// Pending forms across every session of the pinned location, including
+  /// global (MCP elicitation) forms with `sessionID == "global"`.
+  Future<List<Api2FormInfo>> pendingForms();
+
+  Future<Api2FormState> formState(String sessionID, String formID);
+
+  /// Replies with the assembled answer payload. 400 invalid-answer and
+  /// 409 already-settled surface as [ApiException] with the v2 error tag.
+  Future<void> replyForm(
+    String sessionID,
+    String formID,
+    Map<String, dynamic> answer,
   );
+
+  Future<void> cancelForm(String sessionID, String formID);
+}
+
+/// OpenCode 2 session inbox (protocol notes §6.2): durably admitted,
+/// not-yet-delivered work. v1 implementations are inert (empty list, typed
+/// unavailable mutations; capability [ServerCapabilities.inbox] is false).
+abstract class InboxGateway {
+  Future<List<Api2InboxItem>> inboxItems(String sessionID);
+
+  /// Cancels an undelivered item (409 [ApiException] if already delivered).
+  Future<void> cancelInboxItem(String sessionID, String inboxID);
+
+  /// Flips a pending item to steer delivery (send at next step boundary).
+  Future<void> steerInboxItem(String sessionID, String inboxID);
+
+  /// Flips a pending item to queue delivery (wait for the run to finish).
+  Future<void> queueInboxItem(String sessionID, String inboxID);
 }
 
 /// Pending question requests routed through the session-scoped endpoints.
@@ -861,6 +924,8 @@ abstract class ServerGateway
         PromptGateway,
         PermissionGateway,
         QuestionGateway,
+        FormGateway,
+        InboxGateway,
         ProviderGateway,
         FileGateway,
         EventGateway {
