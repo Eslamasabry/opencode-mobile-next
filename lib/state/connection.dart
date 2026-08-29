@@ -15,6 +15,7 @@ import '../diagnostics/app_diagnostics.dart';
 import '../termux/bridge.dart';
 import 'offline_queue.dart';
 import 'profiles.dart';
+import 'session_drafts.dart';
 
 Map<String, dynamic> _catalogMap(Object? value) =>
     value is Map ? Map<String, dynamic>.from(value) : const {};
@@ -164,6 +165,12 @@ class ConnectionController extends ChangeNotifier {
   List<QueuedPrompt>? _offlineQueue;
   OfflineQueueStore? _offlineQueueStore;
   bool _flushingOfflineQueue = false;
+
+  /// Composer text typed in a chat but never sent, kept per session so
+  /// navigating between sessions loses nothing. Loaded lazily from
+  /// [SessionDraftStore] and kept in memory afterward.
+  Map<String, SessionDraft>? _sessionDrafts;
+  SessionDraftStore? _sessionDraftStore;
   int locationRevision = 0;
   String? directory;
   String? workspace;
@@ -2246,6 +2253,38 @@ class ConnectionController extends ChangeNotifier {
     _queue.removeWhere((entry) => entry.id == id);
     await _queueStore.save(_queue);
     notifyListeners();
+  }
+
+  SessionDraftStore get _draftStore =>
+      _sessionDraftStore ??= SessionDraftStore(prefs: store.prefs);
+
+  Map<String, SessionDraft> get _drafts =>
+      _sessionDrafts ??= _draftStore.load();
+
+  /// The unsent composer text remembered for [sessionID], if any.
+  String? sessionDraft(String sessionID) => _drafts[sessionID]?.text;
+
+  /// Remembers (or, when [text] is blank, forgets) the composer draft for
+  /// one session. No [notifyListeners]: drafts drive nothing outside the
+  /// chat screen that saved them.
+  Future<void> saveSessionDraft(String sessionID, String text) async {
+    if (text.trim().isEmpty) {
+      if (_drafts.remove(sessionID) == null) return;
+    } else {
+      _drafts[sessionID] = SessionDraft(
+        sessionID: sessionID,
+        text: text,
+        updatedAt: DateTime.now().millisecondsSinceEpoch,
+      );
+      // Mirror the store's cap in memory: oldest drafts fall off first.
+      if (_drafts.length > SessionDraftStore.maxDrafts) {
+        final oldest = _drafts.values.reduce(
+          (a, b) => a.updatedAt <= b.updatedAt ? a : b,
+        );
+        _drafts.remove(oldest.sessionID);
+      }
+    }
+    await _draftStore.save(_drafts);
   }
 
   /// Sends queued prompts for the active profile, oldest first, through the

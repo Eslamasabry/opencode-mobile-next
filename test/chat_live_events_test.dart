@@ -445,6 +445,7 @@ Future<ConnectionController> _pumpProvisionalChat(
   WidgetTester tester,
   _FakeOpenCodeApi api, {
   double textScale = 1,
+  List<PromptAttachment> attachments = const [],
 }) async {
   final controller = await _controller(api);
   addTearDown(controller.dispose);
@@ -466,9 +467,10 @@ Future<ConnectionController> _pumpProvisionalChat(
                 key: const ValueKey('open-provisional-chat'),
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (_) => const ChatScreen(
+                    builder: (_) => ChatScreen(
                       sessionID: 'session-1',
                       discardIfUntouched: true,
+                      initialAttachments: attachments,
                     ),
                   ),
                 ),
@@ -570,15 +572,13 @@ void main() {
     );
   });
 
-  testWidgets('unsent draft requires confirmation on a compact phone', (
-    tester,
-  ) async {
+  testWidgets('leaving with a typed draft keeps it silently', (tester) async {
     tester.view.physicalSize = const Size(640, 1280);
     tester.view.devicePixelRatio = 2;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     final api = _FakeOpenCodeApi()..messagesHandler = (_) async => [];
-    await _pumpProvisionalChat(tester, api, textScale: 2);
+    final controller = await _pumpProvisionalChat(tester, api, textScale: 2);
     await tester.enterText(
       find.byKey(const Key('chat-composer-field')),
       'Keep this draft',
@@ -586,34 +586,33 @@ void main() {
 
     await tester.pageBack();
     await tester.pumpAndSettle();
+
+    // No confirmation: the text persists as a per-session draft, and the
+    // provisional session survives so the draft has a home to return to.
     expect(
       find.byKey(const ValueKey('discard-chat-draft-dialog')),
-      findsOneWidget,
+      findsNothing,
     );
-    expect(tester.takeException(), isNull);
-    await tester.tap(find.text('Keep editing'));
-    await tester.pumpAndSettle();
-    expect(find.byType(ChatScreen), findsOneWidget);
-    expect(api.deleteCalls, isEmpty);
-
-    await tester.pageBack();
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Discard draft'));
-    await tester.pumpAndSettle();
-
-    expect(api.deleteCalls, ['session-1']);
     expect(find.byKey(const ValueKey('provisional-chat-host')), findsOneWidget);
+    expect(api.deleteCalls, isEmpty);
+    expect(controller.sessionDraft('session-1'), 'Keep this draft');
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('mobile new command cannot silently replace an unsent draft', (
+  testWidgets('mobile new command cannot silently drop unsent attachments', (
     tester,
   ) async {
     final api = _FakeOpenCodeApi()..messagesHandler = (_) async => [];
-    await _pumpProvisionalChat(tester, api);
-    await tester.enterText(
-      find.byKey(const Key('chat-composer-field')),
-      'Keep this draft',
+    await _pumpProvisionalChat(
+      tester,
+      api,
+      attachments: const [
+        PromptAttachment(
+          mime: 'text/plain',
+          filename: 'notes.txt',
+          url: 'data:text/plain;base64,bm90ZXM=',
+        ),
+      ],
     );
 
     await tester.tap(find.byKey(const Key('command-launcher-button')));
@@ -630,10 +629,7 @@ void main() {
 
     expect(api.createCalls, 0);
     expect(api.deleteCalls, isEmpty);
-    final composer = tester.widget<TextField>(
-      find.byKey(const Key('chat-composer-field')),
-    );
-    expect(composer.controller?.text, 'Keep this draft');
+    expect(find.textContaining('notes.txt'), findsWidgets);
   });
 
   testWidgets('child chat exposes parent and sibling navigation', (

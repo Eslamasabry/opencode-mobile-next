@@ -280,6 +280,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _composer.text = widget.initialText;
     _attachments.addAll(widget.initialAttachments);
     _conn = _readConn();
+    if (widget.initialText.isEmpty) {
+      final draft = _conn.sessionDraft(widget.sessionID);
+      if (draft != null) {
+        _composer.text = draft;
+        _composer.selection = TextSelection.collapsed(offset: draft.length);
+      }
+    }
     _dataRefreshRevision = _conn.dataRefreshRevision;
     _conn.addListener(_onConnectionChanged);
     _load();
@@ -304,7 +311,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) {
       unawaited(_voice?.handleLifecyclePause());
+      _persistDraft();
     }
+  }
+
+  /// Saves the composer text as this session's draft (or clears the draft
+  /// when the composer is empty). Runs on navigation away, app pause, and
+  /// after sends so the persisted draft always mirrors the composer.
+  void _persistDraft() {
+    unawaited(_conn.saveSessionDraft(widget.sessionID, _composer.text));
   }
 
   ConnectionController _readConn() {
@@ -904,6 +919,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         if (!mounted) return;
         setState(() => _attachments.clear());
         _composer.clear();
+        _persistDraft();
         _focus.requestFocus();
       }
       return;
@@ -937,6 +953,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       createdAt: createdAt,
     );
     _composer.clear();
+    _persistDraft();
     _focus.requestFocus();
 
     // Optimistic user bubble.
@@ -2248,10 +2265,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _executeMobileCommand(_ChatCommandAction action) async {
     switch (action) {
       case _ChatCommandAction.newSession:
-        if (_hasUnsentDraft) {
+        if (_attachments.isNotEmpty) {
           final discard = await _confirmDiscardDraft();
           if (!mounted || !discard) return;
         }
+        _persistDraft();
         final session = await _conn.createSession();
         if (mounted) {
           final cleanupWarning = await _discardUntouchedMobileSession();
@@ -2950,16 +2968,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     setState(() => _attachments.add(attachment));
   }
 
-  bool get _hasUnsentDraft =>
-      _composer.text.isNotEmpty || _attachments.isNotEmpty;
-
+  // Composer text needs no leave-time confirmation: it persists as a
+  // per-session draft and is restored when the chat reopens. Attachments
+  // are not persisted (their bytes are too heavy for the draft store), so
+  // losing them still asks first.
   Future<bool> _confirmDiscardDraft() => showConfirmSheet(
     context,
     sheetKey: const ValueKey('discard-chat-draft-dialog'),
     icon: Icons.delete_sweep_outlined,
-    title: 'Discard unsent draft?',
-    message: 'Your text and attachments have not been sent to OpenCode.',
-    confirmLabel: 'Discard draft',
+    title: 'Discard unsent attachments?',
+    message:
+        'Attachments are not kept with your draft text and have not been '
+        'sent to OpenCode.',
+    confirmLabel: 'Discard attachments',
     cancelLabel: 'Keep editing',
     destructive: true,
   );
@@ -2969,6 +2990,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         _messages.isNotEmpty ||
         _pendingSends.isNotEmpty ||
         _sending ||
+        // A typed draft persists per session, so the session must survive
+        // to give that draft a home to be restored into.
+        _composer.text.trim().isNotEmpty ||
         _conn.busySessions.contains(widget.sessionID)) {
       return null;
     }
@@ -2992,10 +3016,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _leaveChat() async {
     if (_leavingProvisionalSession) return;
-    if (_hasUnsentDraft) {
+    if (_attachments.isNotEmpty) {
       final discard = await _confirmDiscardDraft();
       if (!mounted || !discard) return;
     }
+    _persistDraft();
     _leavingProvisionalSession = true;
     final messenger = ScaffoldMessenger.maybeOf(context);
     final warning = await _discardUntouchedMobileSession();
@@ -3297,6 +3322,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _persistDraft();
     WidgetsBinding.instance.removeObserver(this);
     _conn.removeListener(_onConnectionChanged);
     _sub.cancel();
