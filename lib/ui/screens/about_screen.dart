@@ -4,6 +4,14 @@ import 'package:flutter/services.dart';
 import '../widgets/markdown.dart';
 import '../widgets/product_states.dart';
 
+/// Upstream OpenCode asks third-party projects that use the OpenCode name to
+/// say plainly that they are not the official project. This is that statement,
+/// and it is shown on every tab of this screen rather than buried in a
+/// document the reader has to scroll.
+const String nonAffiliationDisclaimer =
+    'OpenCode Mobile is an independent community project. It is not built, '
+    'maintained, endorsed by, or affiliated with the official OpenCode team.';
+
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key, this.initialTab = 0});
 
@@ -73,6 +81,8 @@ class _DocumentView extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         children: [
+          const _NonAffiliationNotice(),
+          const SizedBox(height: 16),
           if (showAppSummary) ...[
             const ListTile(
               contentPadding: EdgeInsets.zero,
@@ -85,6 +95,42 @@ class _DocumentView extends StatelessWidget {
             const Divider(height: 28),
           ],
           MarkdownText(data),
+        ],
+      ),
+    );
+  }
+}
+
+class _NonAffiliationNotice extends StatelessWidget {
+  const _NonAffiliationNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      key: const Key('about-non-affiliation'),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.info_outline_rounded,
+            size: 20,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              nonAffiliationDisclaimer,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -655,10 +655,29 @@ void main() {
     expect(find.text('About and open source notices'), findsOneWidget);
     expect(find.text('Privacy Policy'), findsOneWidget);
     expect(find.text('Where your data goes'), findsOneWidget);
+
+    // Upstream asks third-party projects that use the OpenCode name to say
+    // plainly that they are not the official project. It has to be on the tab
+    // the reader lands on, not only behind a tap.
+    expect(find.byKey(const Key('about-non-affiliation')), findsOneWidget);
+    expect(find.text(nonAffiliationDisclaimer), findsOneWidget);
+    expect(
+      nonAffiliationDisclaimer,
+      contains('not built, maintained, endorsed by, or affiliated with'),
+    );
+
     await tester.tap(find.text('Open source'));
     await tester.pumpAndSettle();
     expect(find.text('Third-Party Notices'), findsOneWidget);
     expect(find.text('sherpa-onnx'), findsWidgets);
+    expect(find.byKey(const Key('about-non-affiliation')), findsOneWidget);
+
+    // The same sentence is the public README's opening claim, so the two
+    // cannot drift apart.
+    final readme = File('README.md')
+        .readAsStringSync()
+        .replaceAll(RegExp(r'[>\s]+'), ' ');
+    expect(readme, contains(nonAffiliationDisclaimer));
   });
 
   testWidgets('offline banner states that displayed data may be stale', (

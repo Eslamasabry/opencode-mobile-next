@@ -1,5 +1,9 @@
 # OpenCode mobile
 
+> **Not affiliated with OpenCode.** OpenCode Mobile is an independent
+> community project. It is not built, maintained, endorsed by, or affiliated
+> with the official OpenCode team.
+
 A native Android client for [OpenCode](https://opencode.ai) — the coding
 agent, in your pocket. It connects to an `opencode serve` instance on your
 dev box over the network, or runs **fully on-device** with the server inside
