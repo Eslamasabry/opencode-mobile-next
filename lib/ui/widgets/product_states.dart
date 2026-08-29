@@ -1,5 +1,39 @@
 import 'package:flutter/material.dart';
 
+import '../../api/mcp_oauth.dart' show McpOAuthCallbackException;
+import '../../api/opencode_api.dart';
+import '../../api/product_repository.dart';
+
+/// Maps any thrown object onto copy that is safe to show users.
+///
+/// - [ProductException], [ApiException], and [McpOAuthCallbackException]
+///   carry product-facing messages and pass through unchanged.
+/// - A [String] is treated as already-composed product copy.
+/// - Everything else — [StateError]s, socket/transport failures, and other
+///   internals — collapses to one generic connectivity line instead of leaking
+///   `Bad state:` prefixes or raw exception dumps.
+String productErrorText(Object error) {
+  if (error is ProductException) return error.message;
+  if (error is ApiException) return error.message;
+  if (error is McpOAuthCallbackException) return error.message;
+  if (error is String && error.trim().isNotEmpty) return error;
+  return 'OpenCode is unreachable. Try again.';
+}
+
+/// The one styled error snackbar for mutation failures: error-red background,
+/// replaces any snackbar currently showing, and routes the thrown object
+/// through [productErrorText] so raw exceptions never reach users.
+void showProductError(BuildContext context, Object error) {
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        content: Text(productErrorText(error)),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ),
+    );
+}
+
 class LoadingList extends StatelessWidget {
   final int rows;
   const LoadingList({super.key, this.rows = 5});
