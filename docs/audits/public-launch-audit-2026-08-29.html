@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OpenCode Mobile — Public Launch Readiness Audit</title>
+<style>
+:root{color-scheme:light dark;--bg:#0f1311;--panel:#171d19;--text:#e8eee9;--muted:#aebbb2;--accent:#83cdaa;--danger:#ffb4ab;--line:#35423a}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}main{max-width:980px;margin:auto;padding:48px 22px 72px}h1{font-size:clamp(2rem,5vw,3.6rem);line-height:1.05;margin:0 0 12px}h2{margin-top:42px}a{color:var(--accent)}.meta,.muted{color:var(--muted)}.verdict{margin:30px 0;padding:22px;border:1px solid color-mix(in srgb,var(--danger) 55%,var(--line));border-radius:18px;background:color-mix(in srgb,var(--danger) 8%,var(--panel))}.score{font-size:2.2rem;font-weight:800;color:var(--danger)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:12px}.card{padding:18px;border:1px solid var(--line);border-radius:16px;background:var(--panel)}.tag{display:inline-block;padding:3px 9px;border-radius:999px;background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent);font-size:.82rem;font-weight:700}ol,ul{padding-left:22px}.cta{display:inline-block;margin-top:20px;padding:12px 16px;border-radius:12px;background:var(--accent);color:#052117;text-decoration:none;font-weight:800}code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}@media(prefers-color-scheme:light){:root{--bg:#f6f9f6;--panel:#fff;--text:#172019;--muted:#526158;--accent:#176b4b;--danger:#ba1a1a;--line:#c5d0c8}}
+</style>
+</head>
+<body><main>
+<span class="tag">Repository audit · 29 August 2026</span>
+<h1>OpenCode Mobile<br>Public Launch Readiness Audit</h1>
+<p class="meta"><code>Eslamasabry/oc_app</code> · audited commit <code>9e7d5ce5431f8d20b8da028c20e8c71787d29384</code></p>
+<section class="verdict"><div class="score">5.6 / 10</div><h2>Conditional no-go</h2><p>Do not make the current repository/history public or promote the current APK as stable until the critical deployment, server-controlled-link, CI, deletion, provenance, and release-trust issues are closed.</p><p>The app itself is substantially more mature than the headline score suggests. Android boundaries, Keystore credentials, loopback-only cleartext, notification request binding, OAuth handling, diagnostics redaction, verified model downloads, protocol abstraction, and the fail-closed release script are strong.</p></section>
+<h2>Hard blockers</h2>
+<div class="grid">
+<div class="card"><h3>Unsafe Ubuntu helper</h3><p>Defaults can bind OpenCode to all interfaces without a required password and encourage LAN HTTP/firewall exposure.</p></div>
+<div class="card"><h3>External form links</h3><p>Server-supplied form URLs bypass the hardened Markdown link policy and can invoke unsafe schemes.</p></div>
+<div class="card"><h3>CI is not authoritative</h3><p>The current Actions gate is blocked before meaningful jobs run, so release claims lack exact-commit evidence.</p></div>
+<div class="card"><h3>Incomplete local deletion</h3><p>Removing a profile can leave queued prompts, drafts, preferences, and other profile-owned state behind.</p></div>
+<div class="card"><h3>Public-history hygiene</h3><p>Internal handoff material, WIP instructions, local details, and AI session URLs should remain in a private archive.</p></div>
+<div class="card"><h3>Third-party provenance</h3><p>Bundled developer skill packs need removal or complete source, version, license, and notice documentation.</p></div>
+<div class="card"><h3>Fresh artifact required</h3><p>Publish only a new, green, signed, hashed, SBOM-backed artifact from the remediated launch commit.</p></div>
+</div>
+<h2>Recommended publication sequence</h2>
+<ol><li>Secure the Ubuntu installer and all copied/documented commands.</li><li>Use one safe external-link service across Markdown, forms, updates, and OAuth-adjacent flows.</li><li>Restore CI and require a green exact-commit gate.</li><li>Create a clean public lineage while preserving the current private repository as the internal archive.</li><li>Implement transactional cascade deletion and correct privacy copy.</li><li>Resolve third-party provenance and add public governance/security files.</li><li>Cut a new preview with hashes, signer fingerprint, SBOM, provenance, per-ABI artifacts, and real-device evidence.</li></ol>
+<h2>Launch gates</h2>
+<ul><li><strong>Repository public:</strong> clean tree/history, secret scan, provenance, safe deployment/link policies, accurate privacy, governance.</li><li><strong>Preview APK:</strong> exact commit green, controlled release lane, published artifact identity/provenance, real-device smoke.</li><li><strong>Stable:</strong> complete data lifecycle, accessibility gates, no unresolved high-risk issue, usability validation, support/incident process.</li></ul>
+<p>The complete evidence, file-level fixes, acceptance criteria, architecture recommendations, test plan, governance requirements, 37-item backlog, and launch checklist are in the Markdown report.</p>
+<a class="cta" href="public-launch-audit-2026-08-29.md">Open the full detailed report</a>
+<p class="muted">This HTML file is a compact reader. GitHub renders the linked Markdown report directly.</p>
+</main></body></html>
