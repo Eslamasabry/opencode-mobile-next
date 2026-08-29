@@ -861,10 +861,13 @@ void main() {
     final retainedApi = _FakeOpenCodeApi();
     final replacementApi = _FakeOpenCodeApi();
     final readyApi = Completer<OpenCodeApi?>();
-    final controller = _DelayedActionController(
-      ProfileStore(prefs: prefs),
-      readyApi,
-    )..api = retainedApi;
+    final controller =
+        _DelayedActionController(ProfileStore(prefs: prefs), readyApi)
+          ..api = retainedApi
+          // Connected: offline sends queue instead of hitting the transport, and
+          // this test covers the wake path where the stream is already live but
+          // the action transport is still being replaced.
+          ..status = StreamStatus.connected;
     addTearDown(controller.dispose);
 
     await tester.pumpWidget(
@@ -3167,9 +3170,14 @@ void main() {
   ) async {
     final api = _FakeOpenCodeApi()
       ..messagesHandler = (_) async => [
-        _message('assistant-1', 'assistant', [
-          Part(type: 'text', text: 'done'),
-        ], providerID: 'p', modelID: 'm', tokens: Tokens(input: 45000, output: 5000)),
+        _message(
+          'assistant-1',
+          'assistant',
+          [Part(type: 'text', text: 'done')],
+          providerID: 'p',
+          modelID: 'm',
+          tokens: Tokens(input: 45000, output: 5000),
+        ),
       ];
     final controller = await _controller(api);
     controller.catalog = const CatalogSnapshot(
