@@ -3,93 +3,9 @@ import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'code_highlight.dart';
-
-Future<void> openMarkdownExternalLink(
-  BuildContext context,
-  String value, {
-  Future<bool> Function(Uri uri)? launcher,
-}) async {
-  final uri = Uri.tryParse(value);
-  final scheme = uri?.scheme.toLowerCase();
-  if (uri == null ||
-      uri.host.isEmpty ||
-      uri.userInfo.isNotEmpty ||
-      (scheme != 'https' && scheme != 'http')) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Link blocked. Chat links may open only https:// URLs, or confirmed http:// URLs.',
-          ),
-        ),
-      );
-    }
-    return;
-  }
-
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      icon: Icon(
-        scheme == 'http'
-            ? Icons.warning_amber_rounded
-            : Icons.open_in_new_rounded,
-      ),
-      title: Text(
-        scheme == 'http' ? 'Open insecure HTTP link?' : 'Open external link?',
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Host'),
-          const SizedBox(height: 4),
-          SelectableText(
-            uri.host,
-            style: const TextStyle(fontFamily: 'AppMono'),
-          ),
-          if (scheme == 'http') ...[
-            const SizedBox(height: 12),
-            const Text(
-              'HTTP is not encrypted. Other devices on the network may read or change what you send and receive.',
-            ),
-          ],
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: Text(scheme == 'http' ? 'Open HTTP link' : 'Open link'),
-        ),
-      ],
-    ),
-  );
-  if (confirmed != true || !context.mounted) return;
-
-  try {
-    final opened =
-        await (launcher?.call(uri) ??
-            launchUrl(uri, mode: LaunchMode.externalApplication));
-    if (!opened && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No app could open this link.')),
-      );
-    }
-  } catch (error) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not open link: $error')));
-    }
-  }
-}
+import 'external_link.dart';
 
 /// Installed by screens that can resolve server file paths. Inline code
 /// spans that look like paths stay plain until [validate] confirms the file
@@ -565,7 +481,7 @@ class _InlineParser {
         // [label](url)
         final url = m.group(8)!;
         final gesture = TapGestureRecognizer()
-          ..onTap = () => openMarkdownExternalLink(context, url);
+          ..onTap = () => openExternalLink(context, url);
         spans.add(
           TextSpan(
             text: m.group(7),

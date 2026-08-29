@@ -455,12 +455,82 @@ void main() {
     expect(find.byKey(const Key('form-field-connect')), findsOneWidget);
     expect(find.text('Authorize Sentry'), findsOneWidget);
     expect(find.text('Grants read access'), findsOneWidget);
-    expect(find.text('Opens in your browser'), findsOneWidget);
+    expect(find.text('Opens example.com in your browser'), findsOneWidget);
     expect(find.byIcon(Icons.open_in_new_rounded), findsOneWidget);
 
     await submit(tester);
     expect(sent, {'note': 'done'});
     expect(sent!.containsKey('connect'), isFalse);
+  });
+
+  for (final hostile in const [
+    'javascript:alert(1)',
+    'file:///data/data/com.opencode.mobile/shared_prefs/prefs.xml',
+    'data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==',
+    'intent://scan/#Intent;scheme=zxing;end',
+    'content://com.android.providers.downloads/all_downloads/1',
+    'https://user:secret@example.com/oauth',
+  ]) {
+    testWidgets('external field refuses to launch $hostile', (tester) async {
+      await pumpRenderer(
+        tester,
+        makeForm([
+          Api2FormField(
+            key: 'connect',
+            type: Api2FormFieldType.external,
+            title: 'Authorize Sentry',
+            url: hostile,
+          ),
+        ]),
+      );
+
+      // The card says up front that this link is not openable instead of
+      // offering a browser it will never reach.
+      expect(
+        find.text('This server sent a link this app will not open.'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.byKey(const Key('form-external-card')));
+      await tester.pumpAndSettle();
+
+      // No confirmation, no launch — just the refusal.
+      expect(find.textContaining('Link blocked'), findsOneWidget);
+      expect(find.text('Open external link?'), findsNothing);
+      expect(find.text('Open insecure HTTP link?'), findsNothing);
+    });
+  }
+
+  testWidgets('external https field confirms with the real host first', (
+    tester,
+  ) async {
+    await pumpRenderer(
+      tester,
+      makeForm([
+        Api2FormField(
+          key: 'connect',
+          type: Api2FormFieldType.external,
+          title: 'Authorize Sentry',
+          url: 'https://login.example.org:8443/oauth?next=/a',
+        ),
+      ]),
+    );
+
+    expect(
+      find.text('Opens login.example.org:8443 in your browser'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const Key('form-external-card')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Open external link?'), findsOneWidget);
+    expect(find.text('login.example.org:8443'), findsOneWidget);
+
+    // Declining is a real outcome: nothing opens.
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('Open external link?'), findsNothing);
   });
 
   testWidgets(
