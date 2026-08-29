@@ -35,7 +35,10 @@ class _RecordingConnection extends ConnectionController {
   final connected = <ServerProfile>[];
 
   @override
-  Future<void> connect(ServerProfile profile) async {
+  Future<void> connect(
+    ServerProfile profile, {
+    bool redetectOnFailure = true,
+  }) async {
     connected.add(profile);
     if (succeed) {
       api = OpenCodeApi(baseUrl: profile.baseUrl);

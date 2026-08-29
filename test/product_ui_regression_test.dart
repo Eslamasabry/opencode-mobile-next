@@ -215,7 +215,10 @@ class _ReconnectController extends ConnectionController {
   final Completer<void> ready;
 
   @override
-  Future<void> connect(ServerProfile profile) async {
+  Future<void> connect(
+    ServerProfile profile, {
+    bool redetectOnFailure = true,
+  }) async {
     status = StreamStatus.connecting;
     notifyListeners();
     await ready.future;
@@ -231,7 +234,10 @@ class _ImmediateController extends ConnectionController {
   _ImmediateController(super.store);
 
   @override
-  Future<void> connect(ServerProfile profile) async {
+  Future<void> connect(
+    ServerProfile profile, {
+    bool redetectOnFailure = true,
+  }) async {
     await store.setActiveId(profile.id);
     api = _TestApi();
     repository = _LocationRepository();
