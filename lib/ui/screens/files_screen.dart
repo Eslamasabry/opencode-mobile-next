@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
+import '../../state/review_handoff.dart';
 import '../widgets/file_preview.dart';
 import '../widgets/product_states.dart';
 import 'review_workspace.dart';
@@ -25,11 +26,18 @@ class FilesScreen extends StatefulWidget {
   final ProjectFileAttachment? onAttachFile;
   final ProjectReviewPrompt? onReviewPrompt;
 
+  /// UX-103: when Files is opened from a chat, add-to-prompt affordances
+  /// stage structured references on that session's composer. Without it —
+  /// Files opened from the workspace home — those affordances are hidden and
+  /// review comments fall back to the clipboard.
+  final ReviewHandoffSession? handoff;
+
   const FilesScreen({
     super.key,
     required this.controller,
     this.onAttachFile,
     this.onReviewPrompt,
+    this.handoff,
   });
 
   @override
@@ -407,6 +415,30 @@ class _FilesScreenState extends State<FilesScreen> {
         path: path,
         initialLine: initialLine,
         onAttachFile: widget.onAttachFile,
+        onAddReference: widget.handoff == null
+            ? null
+            : () => _stageProjectFile(path, initialLine),
+      ),
+    );
+  }
+
+  /// A plain project file staged as a reference: the agent is pointed at the
+  /// path (and the line the user was reading), nothing is uploaded.
+  void _stageProjectFile(String path, int? line) {
+    final handoff = widget.handoff;
+    if (handoff == null) return;
+    final change = _fileStatuses[path];
+    _stageReference(
+      ReviewReference(
+        id: handoff.nextID('project-file'),
+        kind: change == null
+            ? ReviewReferenceKind.file
+            : ReviewReferenceKind.changedFile,
+        path: path,
+        lineLabel: line == null ? null : 'line $line',
+        added: change?.additions,
+        removed: change?.deletions,
+        status: change?.status,
       ),
     );
   }
@@ -422,12 +454,76 @@ class _FilesScreenState extends State<FilesScreen> {
     );
   }
 
-  Future<void> _reviewFileChange(FileNode node) async {
+  /// UX-102: the completion path. One tap from Files to the changed set,
+  /// grouped by status, with per-file review and add-to-prompt.
+  Future<void> _openChanges() async {
+    final changes = _fileStatuses.values.toList()
+      ..sort((a, b) => a.path.compareTo(b.path));
+    if (changes.isEmpty) return;
+    final choice = await showModalBottomSheet<_ChangeChoice>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) =>
+          _ChangesSheet(changes: changes, canStage: widget.handoff != null),
+    );
+    if (!mounted || choice == null) return;
+    switch (choice.action) {
+      case _ChangeAction.reviewAll:
+        await _reviewChanges();
+      case _ChangeAction.review:
+        await _reviewFileChange(
+          FileNode(
+            name: choice.path.split('/').last,
+            path: choice.path,
+            isDir: false,
+          ),
+        );
+      case _ChangeAction.stage:
+        final change = _fileStatuses[choice.path];
+        _stageReference(
+          ReviewReference(
+            id: widget.handoff!.nextID('changed-file'),
+            kind: ReviewReferenceKind.changedFile,
+            path: choice.path,
+            scope: ReviewReferenceScope.workingTree,
+            added: change?.additions,
+            removed: change?.deletions,
+            status: change?.status,
+          ),
+        );
+    }
+  }
+
+  /// Non-modal confirmation shared by every Files add-to-prompt affordance.
+  void _stageReference(ReviewReference reference) {
+    final handoff = widget.handoff;
+    if (handoff == null) return;
+    final outcome = handoff.stage(reference);
+    if (!mounted) return;
+    final message = switch (outcome) {
+      ReviewStageOutcome.staged => 'Added ${reference.label} to the prompt',
+      ReviewStageOutcome.duplicate =>
+        '${reference.label} is already on the prompt',
+      ReviewStageOutcome.full =>
+        'The prompt already holds '
+            '${ReviewHandoffStore.maxPerSession} references',
+    };
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        key: const Key('files-staged-notice'),
+        content: Text(message),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> _reviewChanges() async {
     final prompt = await Navigator.of(context).push<String>(
       MaterialPageRoute<String>(
         builder: (_) => ReviewWorkspace(
           initialScope: ReviewDiffScope.workingTree,
-          initialFile: node.path,
+          handoff: widget.handoff,
           loadWorkingTreeDiffs: () async {
             final repository = await widget.controller
                 .prepareActionRepository();
@@ -439,6 +535,34 @@ class _FilesScreenState extends State<FilesScreen> {
         ),
       ),
     );
+    _handleReviewPrompt(prompt);
+  }
+
+  Future<void> _reviewFileChange(FileNode node) async {
+    final prompt = await Navigator.of(context).push<String>(
+      MaterialPageRoute<String>(
+        builder: (_) => ReviewWorkspace(
+          initialScope: ReviewDiffScope.workingTree,
+          initialFile: node.path,
+          handoff: widget.handoff,
+          loadWorkingTreeDiffs: () async {
+            final repository = await widget.controller
+                .prepareActionRepository();
+            if (repository == null) {
+              throw const ProductException('OpenCode is reconnecting.');
+            }
+            return repository.listVcsDiffs(VcsDiffMode.workingTree);
+          },
+        ),
+      ),
+    );
+    _handleReviewPrompt(prompt);
+  }
+
+  /// Legacy return path, used only when there is no handoff session: the
+  /// review workspace pops with formatted text that goes to the host chat if
+  /// one supplied a callback, and to the clipboard otherwise.
+  Future<void> _handleReviewPrompt(String? prompt) async {
     if (!mounted || prompt == null || prompt.trim().isEmpty) return;
     final reviewPrompt = prompt.trim();
     final callback = widget.onReviewPrompt;
@@ -557,6 +681,14 @@ class _FilesScreenState extends State<FilesScreen> {
               ],
             ),
           ),
+        // UX-102: after a run the question is "what changed?", so the
+        // changed set gets a standing card above the tree rather than
+        // living only as per-row markers.
+        if (_surface == _FileSurface.files && _fileStatuses.isNotEmpty)
+          _ChangesCard(
+            changes: _fileStatuses.values,
+            onOpen: () => unawaited(_openChanges()),
+          ),
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -581,6 +713,12 @@ class _FilesScreenState extends State<FilesScreen> {
                             initialLine: _selectedLine,
                             embedded: true,
                             onAttachFile: widget.onAttachFile,
+                            onAddReference: widget.handoff == null
+                                ? null
+                                : () => _stageProjectFile(
+                                    _selectedPath!,
+                                    _selectedLine,
+                                  ),
                           ),
                   ),
                 ],
@@ -922,6 +1060,210 @@ String _fileStatusLabel(String status) => switch (status) {
   _ => 'Changed',
 };
 
+enum _ChangeAction { reviewAll, review, stage }
+
+class _ChangeChoice {
+  const _ChangeChoice(this.action, [this.path = '']);
+
+  final _ChangeAction action;
+  final String path;
+}
+
+/// UX-102: the changed-file card. Counts and totals are the summary the
+/// audit asks for; the whole card is one tap into the changed set.
+class _ChangesCard extends StatelessWidget {
+  const _ChangesCard({required this.changes, required this.onOpen});
+
+  final Iterable<VersionControlFile> changes;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final files = changes.length;
+    final added = changes.fold<int>(0, (sum, file) => sum + file.additions);
+    final removed = changes.fold<int>(0, (sum, file) => sum + file.deletions);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      child: Material(
+        key: const ValueKey('files-changes-card'),
+        color: theme.colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(14),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onOpen,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.difference_outlined,
+                  size: 20,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$files changed ${files == 1 ? 'file' : 'files'}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        '+$added −$removed · Review the changes',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: AppTheme.mutedOf(theme),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The changed set, grouped by version-control status. Tapping a row opens
+/// Review at that file; the add action stages the file as a prompt
+/// reference instead of opening anything.
+class _ChangesSheet extends StatelessWidget {
+  const _ChangesSheet({required this.changes, required this.canStage});
+
+  final List<VersionControlFile> changes;
+  final bool canStage;
+
+  static const _order = ['modified', 'added', 'deleted'];
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final groups = <String, List<VersionControlFile>>{};
+    for (final change in changes) {
+      groups.putIfAbsent(change.status, () => []).add(change);
+    }
+    final statuses = groups.keys.toList()
+      ..sort((a, b) {
+        final left = _order.indexOf(a);
+        final right = _order.indexOf(b);
+        return (left < 0 ? _order.length : left).compareTo(
+          right < 0 ? _order.length : right,
+        );
+      });
+    final added = changes.fold<int>(0, (sum, file) => sum + file.additions);
+    final removed = changes.fold<int>(0, (sum, file) => sum + file.deletions);
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * .85,
+      ),
+      child: Column(
+        key: const ValueKey('files-changes-sheet'),
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 14, 12, 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Changes', style: theme.textTheme.titleLarge),
+                const SizedBox(height: 2),
+                Text(
+                  '${changes.length} '
+                  '${changes.length == 1 ? 'file' : 'files'} · +$added −$removed',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.tonalIcon(
+                    key: const ValueKey('review-all-changes'),
+                    onPressed: () => Navigator.pop(
+                      context,
+                      const _ChangeChoice(_ChangeAction.reviewAll),
+                    ),
+                    icon: const Icon(Icons.rate_review_outlined, size: 18),
+                    label: const Text('Review all changes'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Flexible(
+            child: ListView(
+              shrinkWrap: true,
+              padding: const EdgeInsets.only(bottom: 12),
+              children: [
+                for (final status in statuses) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 12, 18, 4),
+                    child: Text(
+                      '${_fileStatusLabel(status)} · ${groups[status]!.length}',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  for (final change in groups[status]!)
+                    ListTile(
+                      key: ValueKey('changed-file-${change.path}'),
+                      dense: true,
+                      title: Text(
+                        change.path.split('/').last,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text(
+                        '${change.path} · +${change.additions} −${change.deletions}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: AppTheme.captionFontSize,
+                        ),
+                      ),
+                      trailing: canStage
+                          ? IconButton(
+                              key: ValueKey('stage-change-${change.path}'),
+                              tooltip: 'Add ${change.path} to the prompt',
+                              icon: const Icon(
+                                Icons.add_comment_outlined,
+                                size: 20,
+                              ),
+                              onPressed: () => Navigator.pop(
+                                context,
+                                _ChangeChoice(_ChangeAction.stage, change.path),
+                              ),
+                            )
+                          : null,
+                      onTap: () => Navigator.pop(
+                        context,
+                        _ChangeChoice(_ChangeAction.review, change.path),
+                      ),
+                    ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _FileReviewAction extends StatelessWidget {
   final VersionControlFile change;
   final VoidCallback onPressed;
@@ -1020,6 +1362,10 @@ class _FileViewer extends StatefulWidget {
   final int? initialLine;
   final bool embedded;
   final ProjectFileAttachment? onAttachFile;
+
+  /// UX-103: stages the file as a prompt reference — a path the agent will
+  /// read itself, not an upload.
+  final VoidCallback? onAddReference;
   const _FileViewer({
     super.key,
     required this.controller,
@@ -1027,6 +1373,7 @@ class _FileViewer extends StatefulWidget {
     this.initialLine,
     this.embedded = false,
     this.onAttachFile,
+    this.onAddReference,
   });
 
   @override
@@ -1187,10 +1534,19 @@ class __FileViewerState extends State<_FileViewer> {
                             }
                           },
                   ),
+                  if (widget.onAddReference != null)
+                    IconButton(
+                      key: const Key('project-file-add-reference'),
+                      tooltip: 'Add to prompt',
+                      onPressed: widget.onAddReference,
+                      icon: const Icon(Icons.add_comment_outlined, size: 19),
+                    ),
                   if (widget.onAttachFile != null)
                     IconButton(
                       key: const Key('project-file-attach'),
-                      tooltip: 'Attach to prompt',
+                      // Named apart from "Add to prompt": this one uploads
+                      // the file's contents with the message.
+                      tooltip: 'Attach file to prompt',
                       onPressed: _content == null || _attaching
                           ? null
                           : _attach,

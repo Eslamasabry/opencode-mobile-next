@@ -10,6 +10,7 @@ import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/state/review_handoff.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/screens/app_diagnostics_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
@@ -434,6 +435,7 @@ Future<ConnectionController> _pumpChat(
   _FakeOpenCodeApi api, {
   ProductRepository? repository,
   ConnectionController? controller,
+  ReviewHandoffStore? handoffStore,
 }) async {
   final activeController = controller ?? await _controller(api);
   activeController.repository = repository;
@@ -441,7 +443,14 @@ Future<ConnectionController> _pumpChat(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [connProvider.overrideWithValue(activeController)],
-      child: const MaterialApp(home: ChatScreen(sessionID: 'session-1')),
+      child: MaterialApp(
+        home: ChatScreen(
+          sessionID: 'session-1',
+          // Per-test store so staged review references never leak between
+          // cases through the app-wide singleton.
+          handoffStore: handoffStore ?? ReviewHandoffStore(),
+        ),
+      ),
     ),
   );
   await tester.pump();
@@ -818,7 +827,7 @@ void main() {
     expect(find.byKey(const Key('review-mode-split')), findsOneWidget);
   });
 
-  testWidgets('adds a selected diff comment back to the chat composer', (
+  testWidgets('stages a selected diff comment as a composer reference', (
     tester,
   ) async {
     final api = _FakeOpenCodeApi()
@@ -851,17 +860,34 @@ void main() {
     await tester.tap(find.byKey(const Key('review-add-to-prompt')));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('review-workspace')), findsNothing);
+    // UX-103: review stays open so a pass can stage several findings, and
+    // says how many are waiting on the prompt.
+    expect(find.byKey(const Key('review-workspace')), findsOneWidget);
+    expect(find.byKey(const Key('review-staged-count')), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    // Let the staging snack bar clear the composer before tapping Send.
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+
+    // The finding is a removable chip, not pre-rendered composer text.
+    expect(find.byKey(const Key('composer-reference-strip')), findsOneWidget);
+    expect(find.textContaining('client.dart'), findsWidgets);
     final composer = tester.widget<TextField>(
       find.byKey(const Key('chat-composer-field')),
     );
-    expect(composer.controller?.text, contains('Review `lib/client.dart`'));
-    expect(composer.controller?.text, contains('new line 8'));
-    expect(
-      composer.controller?.text,
-      contains('Keep the retry behavior explicit.'),
-    );
-    expect(composer.controller?.text, contains('+new request'));
+    expect(composer.controller?.text, isEmpty);
+
+    await tester.tap(find.byKey(const Key('chat-send-button')));
+    await tester.pumpAndSettle();
+
+    final sent = api.prompts.single.text;
+    expect(sent, contains('`lib/client.dart`'));
+    expect(sent, contains('new line 8'));
+    expect(sent, contains('Keep the retry behavior explicit.'));
+    expect(sent, contains('+new request'));
+    expect(find.byKey(const Key('composer-reference-strip')), findsNothing);
   });
 
   testWidgets('foreground data refresh rehydrates messages missed while away', (

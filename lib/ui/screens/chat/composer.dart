@@ -35,6 +35,10 @@ class _ChatComposer extends StatelessWidget {
     required this.onStop,
     required this.onChooseModel,
     required this.onRemoveAttachment,
+    // UX-103 review handoff (start).
+    this.references = const [],
+    this.onRemoveReference,
+    // UX-103 review handoff (end).
     this.contextUsage,
   });
 
@@ -84,12 +88,21 @@ class _ChatComposer extends StatelessWidget {
   final VoidCallback onChooseModel;
   final ValueChanged<PromptAttachment> onRemoveAttachment;
 
+  // UX-103 review handoff (start): staged Files/Changes/Review references.
+  // Unlike attachments these upload nothing — they become text in the
+  // prompt when it is sent.
+  final List<ReviewReference> references;
+  final ValueChanged<ReviewReference>? onRemoveReference;
+  // UX-103 review handoff (end).
+
   /// Fraction of the model's context window the session has consumed, or
   /// null when the limit is unknown.
   final double? contextUsage;
 
   bool get _hasPrompt =>
-      controller.text.trim().isNotEmpty || attachments.isNotEmpty;
+      controller.text.trim().isNotEmpty ||
+      attachments.isNotEmpty ||
+      references.isNotEmpty;
 
   void _submitFromKeyboard() {
     if (_hasPrompt && !sending && (!busy || canSendWhileBusy)) onSend();
@@ -178,6 +191,46 @@ class _ChatComposer extends StatelessWidget {
                     delivery: delivery,
                     onChanged: onDeliveryChanged!,
                   ),
+                // UX-103 review handoff (start): staged references ride
+                // above the attachment strip so the two never read as one
+                // kind of thing.
+                if (references.isNotEmpty) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+                    child: SizedBox(
+                      height: 48,
+                      child: ListView.separated(
+                        key: const Key('composer-reference-strip'),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: references.length,
+                        separatorBuilder: (_, _) => const SizedBox(width: 6),
+                        itemBuilder: (context, index) {
+                          final reference = references[index];
+                          return _StagedReferenceChip(
+                            reference: reference,
+                            onRemove: onRemoveReference == null
+                                ? null
+                                : () => onRemoveReference!(reference),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 6, 14, 0),
+                    child: Text(
+                      key: const Key('composer-reference-note'),
+                      references.length == 1
+                          ? '1 reference is added as text when you send.'
+                          : '${references.length} references are added as '
+                                'text when you send.',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: AppTheme.mutedOf(theme),
+                      ),
+                    ),
+                  ),
+                ],
+                // UX-103 review handoff (end).
                 if (attachments.isNotEmpty) ...[
                   Padding(
                     padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
@@ -925,6 +978,95 @@ class _PendingAttachmentChip extends StatelessWidget {
               constraints: const BoxConstraints.tightFor(width: 48, height: 48),
               onPressed: onRemove,
               icon: const Icon(Icons.close_rounded, size: 18),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// UX-103: a review finding staged from Files, Changes, or the Review
+/// workspace. It mirrors [_PendingAttachmentChip]'s shape so the strip reads
+/// as one family, but stays visibly a *reference* — a tinted chip with a
+/// code glyph and a line range, not a paperclip and a filename — because
+/// nothing is uploaded: on send it becomes text in the prompt.
+class _StagedReferenceChip extends StatelessWidget {
+  const _StagedReferenceChip({required this.reference, required this.onRemove});
+
+  final ReviewReference reference;
+  final VoidCallback? onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final removeLabel = 'Remove reference ${reference.label}';
+    return Material(
+      key: Key('composer-reference-${reference.id}'),
+      color: scheme.secondaryContainer,
+      shape: StadiumBorder(side: BorderSide(color: scheme.outlineVariant)),
+      clipBehavior: Clip.antiAlias,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Semantics(
+            container: true,
+            excludeSemantics: true,
+            label: reference.description,
+            child: Tooltip(
+              message: reference.description,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 48),
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 12),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        switch (reference.kind) {
+                          ReviewReferenceKind.comment =>
+                            Icons.mode_comment_outlined,
+                          ReviewReferenceKind.file =>
+                            Icons.description_outlined,
+                          ReviewReferenceKind.changedFile =>
+                            Icons.difference_outlined,
+                          _ => Icons.code_rounded,
+                        },
+                        size: 16,
+                        color: scheme.onSecondaryContainer,
+                      ),
+                      const SizedBox(width: 6),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 200),
+                        child: Text(
+                          reference.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: scheme.onSecondaryContainer),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Semantics(
+            container: true,
+            excludeSemantics: true,
+            label: removeLabel,
+            button: true,
+            onTap: onRemove,
+            child: IconButton(
+              tooltip: removeLabel,
+              constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+              onPressed: onRemove,
+              icon: Icon(
+                Icons.close_rounded,
+                size: 18,
+                color: scheme.onSecondaryContainer,
+              ),
             ),
           ),
         ],

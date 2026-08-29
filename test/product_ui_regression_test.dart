@@ -11,6 +11,7 @@ import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/main.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/state/review_handoff.dart';
 import 'package:opencode_mobile/ui/screens/files_screen.dart';
 import 'package:opencode_mobile/ui/screens/library_screen.dart';
 import 'package:opencode_mobile/ui/screens/activity_screen.dart';
@@ -699,6 +700,132 @@ void main() {
       find.text('Review comment copied. Paste it into a chat.'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('changes card opens the changed set grouped by status', (
+    tester,
+  ) async {
+    final api = _TestApi(
+      files: (_) async => [
+        FileNode(name: 'README.md', path: 'README.md', isDir: false),
+        FileNode(name: 'lib', path: 'lib', isDir: true),
+      ],
+    );
+    final repository = _FileStatusRepository()
+      ..statuses = const [
+        VersionControlFile(
+          path: 'README.md',
+          status: 'modified',
+          additions: 8,
+          deletions: 2,
+        ),
+        VersionControlFile(
+          path: 'lib/main.dart',
+          status: 'added',
+          additions: 34,
+          deletions: 0,
+        ),
+      ]
+      ..diffs = [
+        FileDiff(
+          file: 'lib/main.dart',
+          patch: '@@ -0,0 +1 @@\n+library change',
+          additions: 1,
+          deletions: 0,
+        ),
+      ];
+    final controller = await _controller(api: api, repository: repository);
+    addTearDown(controller.dispose);
+    final store = ReviewHandoffStore();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: FilesScreen(
+            controller: controller,
+            handoff: ReviewHandoffSession(store: store, sessionID: 's1'),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // UX-102: the card summarises the changed set above the tree.
+    expect(find.byKey(const ValueKey('files-changes-card')), findsOneWidget);
+    expect(find.text('2 changed files'), findsOneWidget);
+    expect(find.text('+42 −2 · Review the changes'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('files-changes-card')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('files-changes-sheet')), findsOneWidget);
+    expect(find.text('Modified · 1'), findsOneWidget);
+    expect(find.text('Added · 1'), findsOneWidget);
+    expect(find.byKey(const ValueKey('review-all-changes')), findsOneWidget);
+
+    // A changed file stages as a reference without opening review.
+    await tester.tap(find.byKey(const ValueKey('stage-change-lib/main.dart')));
+    await tester.pumpAndSettle();
+    final staged = store.referencesFor('s1').single;
+    expect(staged.kind, ReviewReferenceKind.changedFile);
+    expect(staged.path, 'lib/main.dart');
+    expect(staged.added, 34);
+    expect(staged.status, 'added');
+    expect(find.byKey(const Key('review-workspace')), findsNothing);
+
+    // Tapping the row itself opens review at that file.
+    await tester.tap(find.byKey(const ValueKey('files-changes-card')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('changed-file-lib/main.dart')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('review-workspace')), findsOneWidget);
+    expect(find.text('+library change'), findsOneWidget);
+  });
+
+  testWidgets('project files stage as references distinct from attachments', (
+    tester,
+  ) async {
+    final api = _TestApi(
+      files: (_) async => [
+        FileNode(name: 'README.md', path: 'README.md', isDir: false),
+      ],
+      contents: {
+        'README.md': const FileContent('hello', mimeType: 'text/plain'),
+      },
+    );
+    final controller = await _controller(
+      api: api,
+      repository: _LocationRepository(),
+    );
+    addTearDown(controller.dispose);
+    final store = ReviewHandoffStore();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: FilesScreen(
+            controller: controller,
+            handoff: ReviewHandoffSession(store: store, sessionID: 's1'),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('README.md'));
+    await tester.pumpAndSettle();
+
+    // Add-to-prompt (a reference) and attach (an upload) are separate
+    // affordances; only the reference one exists without an attach handler.
+    expect(find.byKey(const Key('project-file-add-reference')), findsOneWidget);
+    expect(find.byKey(const Key('project-file-attach')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('project-file-add-reference')));
+    await tester.pumpAndSettle();
+    final staged = store.referencesFor('s1').single;
+    expect(staged.kind, ReviewReferenceKind.file);
+    expect(staged.path, 'README.md');
+    expect(staged.snippet, isNull);
   });
 
   testWidgets('file status failure stays scoped and retries independently', (
