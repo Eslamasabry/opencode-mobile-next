@@ -129,6 +129,32 @@ class __TypingIndicatorState extends State<_TypingIndicator>
   }
 }
 
+/// Suggestion chips for an empty transcript, seeded from the active location.
+///
+/// With a project directory selected, the first chip names that project so
+/// the invitation matches where the session actually runs. With no directory
+/// (a fresh server with zero projects serves its own default directory, which
+/// usually has no git repository), the project- and git-dependent chips are
+/// replaced with one that always works.
+@visibleForTesting
+List<String> emptyTranscriptSuggestions({required String? directory}) {
+  final trimmed = directory?.trim() ?? '';
+  if (trimmed.isEmpty) {
+    return const ["List what's in this directory", 'Find and fix a bug'];
+  }
+  final parts = trimmed
+      .replaceAll('\\', '/')
+      .split('/')
+      .where((part) => part.isNotEmpty)
+      .toList();
+  final name = parts.isEmpty ? trimmed : parts.last;
+  return [
+    'Explain the $name project',
+    'What changed recently?',
+    'Find and fix a bug',
+  ];
+}
+
 /// The first thing a new session shows: a prompt-shaped invitation to act,
 /// with suggestions that insert real starting points into the composer.
 class _EmptyTranscript extends StatelessWidget {
@@ -136,11 +162,26 @@ class _EmptyTranscript extends StatelessWidget {
 
   final ValueChanged<String> onSuggestion;
 
-  static const _suggestions = [
+  static const _fallbackSuggestions = [
     'Explain this project',
     'What changed recently?',
     'Find and fix a bug',
   ];
+
+  /// Resolves the chip list from the live connection when a provider scope is
+  /// available; hosts without one (isolated widget tests) keep the static
+  /// defaults.
+  List<String> _suggestionsFor(BuildContext context) {
+    try {
+      final directory = ProviderScope.containerOf(
+        context,
+        listen: false,
+      ).read(connProvider).directory;
+      return emptyTranscriptSuggestions(directory: directory);
+    } catch (_) {
+      return _fallbackSuggestions;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -203,13 +244,23 @@ class _EmptyTranscript extends StatelessWidget {
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        for (final suggestion in _suggestions)
+                        for (final suggestion in _suggestionsFor(context))
                           ActionChip(
                             key: ValueKey('empty-suggestion-$suggestion'),
                             label: Text(suggestion),
                             onPressed: () => onSuggestion(suggestion),
                           ),
                       ],
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Tip: type / for commands · long-press a message '
+                      'for actions',
+                      key: const ValueKey('empty-transcript-tip'),
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.hintColor,
+                      ),
                     ),
                   ],
                   ),
