@@ -112,7 +112,7 @@ class __TypingIndicatorState extends State<_TypingIndicator>
             Text(
               'working',
               style: theme.textTheme.labelMedium!.copyWith(
-                color: theme.hintColor,
+                color: theme.colorScheme.onSurfaceVariant,
                 letterSpacing: .4,
               ),
             ),
@@ -173,45 +173,44 @@ class _EmptyTranscript extends StatelessWidget {
                               fontFamily: 'AppMono',
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Container(
-                            width: 11,
-                            height: 22,
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withValues(
-                                alpha: .45,
-                              ),
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Text('Start coding', style: theme.textTheme.titleMedium),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Describe a change, ask about this project, '
-                        'or paste an error.',
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.hintColor,
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text('Start coding', style: theme.textTheme.titleMedium),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Describe a change, ask about this project, '
+                      'or paste an error.',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
-                      const SizedBox(height: 18),
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          for (final suggestion in _suggestions)
-                            ActionChip(
-                              key: ValueKey('empty-suggestion-$suggestion'),
-                              label: Text(suggestion),
-                              onPressed: () => onSuggestion(suggestion),
-                            ),
-                        ],
+                    ),
+                    const SizedBox(height: 18),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final suggestion in _suggestions)
+                          ActionChip(
+                            key: ValueKey('empty-suggestion-$suggestion'),
+                            label: Text(suggestion),
+                            onPressed: () => onSuggestion(suggestion),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Tip: long-press any message for copy, fork, and delete.',
+                      key: const ValueKey('empty-transcript-actions-hint'),
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
-                    ],
+                    ),
+                  ],
                   ),
                 ),
               ),
@@ -319,7 +318,11 @@ class _EarlierMessagesPill extends StatelessWidget {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-              Icon(Icons.expand_more_rounded, size: 15, color: theme.hintColor),
+              Icon(
+                Icons.expand_more_rounded,
+                size: 15,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ],
           ),
         ),
@@ -508,12 +511,14 @@ class _ToolCallGroup extends StatefulWidget {
   const _ToolCallGroup({
     super.key,
     required this.parts,
+    required this.expansionStore,
     required this.filePreviewLoader,
     required this.onAttachFile,
     required this.onDownloadFile,
   });
 
   final List<Part> parts;
+  final Map<String, bool> expansionStore;
   final ToolOutputFileLoader filePreviewLoader;
   final ToolOutputFileAction onAttachFile;
   final ToolOutputFileAction onDownloadFile;
@@ -525,21 +530,41 @@ class _ToolCallGroup extends StatefulWidget {
 class _ToolCallGroupState extends State<_ToolCallGroup> {
   late bool _expanded;
 
+  String get _storeKey =>
+      'tools:${widget.parts.first.id ?? widget.parts.first.callID}';
+
+  /// The user's explicit toggle, surviving list recycling; null when the
+  /// group has never been toggled by hand.
+  bool? get _userChoice => widget.expansionStore[_storeKey];
+
   @override
   void initState() {
     super.initState();
-    _expanded = _shouldOpen(widget.parts);
+    _expanded = _userChoice ?? _shouldOpen(widget.parts);
   }
 
   @override
   void didUpdateWidget(covariant _ToolCallGroup oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // A manual collapse is never undone by the run itself: auto-expansion
+    // only applies while the user has not toggled the group.
+    if (_userChoice case final choice?) {
+      _expanded = choice;
+      return;
+    }
     if ((!_expanded &&
             widget.parts.length > oldWidget.parts.length &&
             _running) ||
         _shouldOpen(widget.parts)) {
       _expanded = true;
     }
+  }
+
+  void _toggle() {
+    setState(() {
+      _expanded = !_expanded;
+      widget.expansionStore[_storeKey] = _expanded;
+    });
   }
 
   bool _shouldOpen(List<Part> parts) => parts.any(
@@ -601,7 +626,7 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
             label: '$title, ${widget.parts.length} tools',
             child: InkWell(
               key: const Key('tool-call-group-header'),
-              onTap: () => setState(() => _expanded = !_expanded),
+              onTap: _toggle,
               borderRadius: BorderRadius.circular(8),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(minHeight: 48),
@@ -612,7 +637,7 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
                       Icon(
                         Icons.search_rounded,
                         size: 16,
-                        color: theme.hintColor,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -662,7 +687,7 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
                         child: Icon(
                           Icons.expand_more_rounded,
                           size: 16,
-                          color: theme.hintColor,
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -692,6 +717,9 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
                     toolName: widget.parts[index].toolName!,
                     state: widget.parts[index].toolState,
                     embedded: true,
+                    expansionStore: widget.expansionStore,
+                    expansionKey:
+                        'tool:${widget.parts[index].id ?? widget.parts[index].callID}',
                     filePreviewLoader: widget.filePreviewLoader,
                     onAttachFile: widget.onAttachFile,
                     onDownloadFile: widget.onDownloadFile,
@@ -705,10 +733,15 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
   }
 }
 
+/// Upper bound for assistant prose line length on wide screens; tool cards
+/// and diffs keep the full transcript width.
+const _proseWidthCap = 640.0;
+
 class _AssistantMessagePart extends StatelessWidget {
   const _AssistantMessagePart({
     required this.part,
     required this.reasoningExpanded,
+    required this.expansionStore,
     required this.filePreviewLoader,
     required this.onAttachFile,
     required this.onDownloadFile,
@@ -716,6 +749,7 @@ class _AssistantMessagePart extends StatelessWidget {
 
   final Part part;
   final bool reasoningExpanded;
+  final Map<String, bool> expansionStore;
   final ToolOutputFileLoader filePreviewLoader;
   final ToolOutputFileAction onAttachFile;
   final ToolOutputFileAction onDownloadFile;
@@ -726,17 +760,29 @@ class _AssistantMessagePart extends StatelessWidget {
       return Padding(
         key: const Key('assistant-text-block'),
         padding: const EdgeInsets.only(bottom: 4),
-        child: MarkdownText(part.text),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: _proseWidthCap),
+          // Non-selectable so a long-press reaches the message actions menu
+          // (the rule the user bubble already follows).
+          child: MarkdownText(part.text, selectable: false),
+        ),
       );
     }
     if (part.type == 'reasoning') {
-      return _Reasoning(text: part.text, expanded: reasoningExpanded);
+      return _Reasoning(
+        text: part.text,
+        expanded: reasoningExpanded,
+        expansionStore: expansionStore,
+        expansionKey: 'reasoning:${part.id ?? part.messageID}',
+      );
     }
     if (part.type == 'tool') {
       return ToolCard(
         key: ValueKey(part.id ?? part.callID),
         toolName: part.toolName ?? 'tool',
         state: part.toolState,
+        expansionStore: expansionStore,
+        expansionKey: 'tool:${part.id ?? part.callID}',
         filePreviewLoader: filePreviewLoader,
         onAttachFile: onAttachFile,
         onDownloadFile: onDownloadFile,
@@ -760,6 +806,7 @@ class _MessageView extends StatelessWidget {
   final _MessageMeta meta;
   final List<Part> parts;
   final bool reasoningExpanded;
+  final Map<String, bool> expansionStore;
   final bool showTimestamp;
   final bool highlighted;
   final VoidCallback? onLongPress;
@@ -772,6 +819,7 @@ class _MessageView extends StatelessWidget {
     required this.meta,
     required this.parts,
     required this.reasoningExpanded,
+    required this.expansionStore,
     required this.showTimestamp,
     this.highlighted = false,
     this.onLongPress,
@@ -807,79 +855,115 @@ class _MessageView extends StatelessWidget {
       // keeps each message part as its own semantics node.
       excludeFromSemantics: true,
       child: AnimatedContainer(
-        key: ValueKey('message-highlight-${m.info.id}-$highlighted'),
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.fromLTRB(6, 4, 6, 10),
-        decoration: BoxDecoration(
-          color: highlighted
-              ? theme.colorScheme.primaryContainer.withValues(alpha: .24)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: isUser
-              ? CrossAxisAlignment.end
-              : CrossAxisAlignment.start,
-          children: [
-            Container(
-              constraints: BoxConstraints(
-                // Keep prompts readable on wide screens instead of stretching a
-                // bubble across a tablet.
-                maxWidth: isUser && bubbleWidthCap > 640 ? 640 : bubbleWidthCap,
-              ),
-              padding: isUser
-                  ? const EdgeInsets.symmetric(horizontal: 14, vertical: 10)
-                  : const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-              decoration: isUser
-                  ? BoxDecoration(
-                      color: theme.colorScheme.primaryContainer.withValues(
-                        alpha: .55,
-                      ),
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        topRight: Radius.circular(16),
-                        bottomLeft: Radius.circular(16),
-                        bottomRight: Radius.circular(5),
-                      ),
-                    )
-                  : null,
-              child: isUser
-                  ? _UserMessageContent(parts: visibleParts)
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        for (final run in assistantRuns)
-                          if (run.grouped)
-                            _ToolCallGroup(
-                              key: ValueKey(
-                                'tools:${run.parts.first.id ?? run.parts.first.callID}',
-                              ),
-                              parts: run.parts,
-                              filePreviewLoader: filePreviewLoader,
-                              onAttachFile: onAttachFile,
-                              onDownloadFile: onDownloadFile,
-                            )
-                          else
-                            _AssistantMessagePart(
-                              part: run.parts.single,
-                              reasoningExpanded: reasoningExpanded,
-                              filePreviewLoader: filePreviewLoader,
-                              onAttachFile: onAttachFile,
-                              onDownloadFile: onDownloadFile,
-                            ),
-                      ],
-                    ),
+      // The key must not encode the highlight flag: a highlight-driven
+      // remount would kill this fade and reset per-part expansion state.
+      key: ValueKey('message-highlight-${m.info.id}'),
+      duration: const Duration(milliseconds: 180),
+      padding: const EdgeInsets.fromLTRB(6, 4, 6, 10),
+      decoration: BoxDecoration(
+        color: highlighted
+            ? theme.colorScheme.primaryContainer.withValues(alpha: .24)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: isUser
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
+        children: [
+          Container(
+            constraints: BoxConstraints(
+              // Keep prompts readable on wide screens instead of stretching a
+              // bubble across a tablet.
+              maxWidth: isUser && bubbleWidthCap > 640 ? 640 : bubbleWidthCap,
             ),
-            if (metaParts.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 3, left: 6, right: 6),
-                child: Text(
-                  key: ValueKey('message-meta-${m.info.id}'),
-                  metaParts.join('  ·  '),
-                  style: theme.textTheme.labelSmall!.copyWith(
-                    color: theme.hintColor,
+            padding: isUser
+                ? const EdgeInsets.symmetric(horizontal: 14, vertical: 10)
+                : const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            decoration: isUser
+                ? BoxDecoration(
+                    color: theme.colorScheme.primaryContainer.withValues(
+                      alpha: .55,
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      topRight: Radius.circular(16),
+                      bottomLeft: Radius.circular(16),
+                      bottomRight: Radius.circular(5),
+                    ),
+                  )
+                : null,
+            child: isUser
+                ? _UserMessageContent(parts: visibleParts)
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final run in assistantRuns)
+                        if (run.grouped)
+                          _ToolCallGroup(
+                            key: ValueKey(
+                              'tools:${run.parts.first.id ?? run.parts.first.callID}',
+                            ),
+                            parts: run.parts,
+                            expansionStore: expansionStore,
+                            filePreviewLoader: filePreviewLoader,
+                            onAttachFile: onAttachFile,
+                            onDownloadFile: onDownloadFile,
+                          )
+                        else
+                          _AssistantMessagePart(
+                            part: run.parts.single,
+                            reasoningExpanded: reasoningExpanded,
+                            expansionStore: expansionStore,
+                            filePreviewLoader: filePreviewLoader,
+                            onAttachFile: onAttachFile,
+                            onDownloadFile: onDownloadFile,
+                          ),
+                    ],
                   ),
-                ),
+          ),
+          if (metaParts.isNotEmpty || onLongPress != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 1, left: 6, right: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (metaParts.isNotEmpty)
+                    Flexible(
+                      child: Text(
+                        key: ValueKey('message-meta-${m.info.id}'),
+                        metaParts.join('  ·  '),
+                        style: theme.textTheme.labelSmall!.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  if (onLongPress != null)
+                    Semantics(
+                      button: true,
+                      label: 'Message actions',
+                      child: Tooltip(
+                        message: 'Message actions',
+                        child: InkWell(
+                          key: ValueKey('message-actions-${m.info.id}'),
+                          customBorder: const StadiumBorder(),
+                          onTap: onLongPress,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 6,
+                            ),
+                            child: Icon(
+                              Icons.more_horiz_rounded,
+                              size: 16,
+                              color: theme.colorScheme.onSurfaceVariant
+                                  .withValues(alpha: .8),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             if (m.info.errorText != null)
               Padding(
@@ -1092,7 +1176,14 @@ class _AttachmentPart extends StatelessWidget {
 class _Reasoning extends StatefulWidget {
   final String text;
   final bool expanded;
-  const _Reasoning({required this.text, required this.expanded});
+  final Map<String, bool>? expansionStore;
+  final String? expansionKey;
+  const _Reasoning({
+    required this.text,
+    required this.expanded,
+    this.expansionStore,
+    this.expansionKey,
+  });
 
   @override
   State<_Reasoning> createState() => _ReasoningState();
@@ -1101,18 +1192,67 @@ class _Reasoning extends StatefulWidget {
 class _ReasoningState extends State<_Reasoning> {
   late bool _open;
 
+  // Measurement cache: the painter is retained by the State and re-laid-out
+  // only when the text, style, direction, or width actually changes, instead
+  // of allocating a fresh TextPainter on every rebuild of a streaming turn.
+  TextPainter? _painter;
+  String? _measuredText;
+  TextStyle? _measuredStyle;
+  TextDirection? _measuredDirection;
+  double? _measuredWidth;
+  bool _short = true;
+
+  bool? get _stored => widget.expansionKey == null
+      ? null
+      : widget.expansionStore?[widget.expansionKey!];
+
+  void _persist(bool open) {
+    if (widget.expansionKey case final key?) {
+      widget.expansionStore?[key] = open;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    _open = widget.expanded;
+    _open = _stored ?? widget.expanded;
   }
 
   @override
   void didUpdateWidget(covariant _Reasoning oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.expanded != widget.expanded) {
+      // The transcript-wide toggle overrides any per-part choice.
       _open = widget.expanded;
+      _persist(_open);
     }
+  }
+
+  @override
+  void dispose() {
+    _painter?.dispose();
+    super.dispose();
+  }
+
+  bool _isShort(TextStyle style, TextDirection direction, double maxWidth) {
+    if (_painter == null ||
+        _measuredText != widget.text ||
+        _measuredStyle != style ||
+        _measuredDirection != direction ||
+        _measuredWidth != maxWidth) {
+      final painter = _painter ?? TextPainter();
+      painter
+        ..text = TextSpan(text: widget.text, style: style)
+        ..textDirection = direction
+        ..layout(maxWidth: maxWidth);
+      _painter = painter;
+      _measuredText = widget.text;
+      _measuredStyle = style;
+      _measuredDirection = direction;
+      _measuredWidth = maxWidth;
+      _short = painter.computeLineMetrics().length < 2;
+    }
+    return _short;
   }
 
   @override
@@ -1120,15 +1260,15 @@ class _ReasoningState extends State<_Reasoning> {
     final theme = Theme.of(context);
     final textStyle = theme.textTheme.bodySmall!.copyWith(
       fontStyle: FontStyle.italic,
-      color: theme.hintColor,
+      color: theme.colorScheme.onSurfaceVariant,
     );
     return LayoutBuilder(
       builder: (context, constraints) {
-        final painter = TextPainter(
-          text: TextSpan(text: widget.text, style: textStyle),
-          textDirection: Directionality.of(context),
-        )..layout(maxWidth: constraints.maxWidth - 14);
-        final short = painter.computeLineMetrics().length < 2;
+        final short = _isShort(
+          textStyle,
+          Directionality.of(context),
+          constraints.maxWidth - 14,
+        );
         return Container(
           key: const Key('assistant-reasoning-block'),
           margin: const EdgeInsets.only(bottom: 6),
@@ -1145,7 +1285,16 @@ class _ReasoningState extends State<_Reasoning> {
                   key: const Key('reasoning-inline'),
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(8, 5, 4, 5),
-                    child: MarkdownText(widget.text, baseStyle: textStyle),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: _proseWidthCap,
+                      ),
+                      child: MarkdownText(
+                        widget.text,
+                        baseStyle: textStyle,
+                        selectable: false,
+                      ),
+                    ),
                   ),
                 )
               : Column(
@@ -1160,7 +1309,10 @@ class _ReasoningState extends State<_Reasoning> {
                           : 'Expand reasoning details',
                       child: InkWell(
                         key: const Key('reasoning-toggle'),
-                        onTap: () => setState(() => _open = !_open),
+                        onTap: () => setState(() {
+                          _open = !_open;
+                          _persist(_open);
+                        }),
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(minHeight: 48),
                           child: Padding(
@@ -1171,7 +1323,7 @@ class _ReasoningState extends State<_Reasoning> {
                                 Icon(
                                   Icons.psychology_alt_outlined,
                                   size: 13,
-                                  color: theme.hintColor,
+                                  color: theme.colorScheme.onSurfaceVariant,
                                 ),
                                 const SizedBox(width: 5),
                                 Flexible(
@@ -1180,7 +1332,7 @@ class _ReasoningState extends State<_Reasoning> {
                                         ? 'reasoning'
                                         : 'reasoning (tap to expand)',
                                     style: theme.textTheme.labelSmall!.copyWith(
-                                      color: theme.hintColor,
+                                      color: theme.colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                 ),
@@ -1193,7 +1345,16 @@ class _ReasoningState extends State<_Reasoning> {
                     if (_open)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 4, 4, 4),
-                        child: MarkdownText(widget.text, baseStyle: textStyle),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            maxWidth: _proseWidthCap,
+                          ),
+                          child: MarkdownText(
+                            widget.text,
+                            baseStyle: textStyle,
+                            selectable: false,
+                          ),
+                        ),
                       ),
                   ],
                 ),
@@ -1412,7 +1573,7 @@ class _QueuedPromptBubble extends StatelessWidget {
                         : Icons.error_outline_rounded,
                     size: 13,
                     color: entry.error == null
-                        ? theme.hintColor
+                        ? theme.colorScheme.onSurfaceVariant
                         : theme.colorScheme.error,
                   ),
                   const SizedBox(width: 5),
@@ -1423,7 +1584,7 @@ class _QueuedPromptBubble extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: entry.error == null
-                            ? theme.hintColor
+                            ? theme.colorScheme.onSurfaceVariant
                             : theme.colorScheme.error,
                       ),
                     ),
