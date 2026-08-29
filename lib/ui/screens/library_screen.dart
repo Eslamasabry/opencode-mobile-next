@@ -40,7 +40,9 @@ class LibraryScreen extends StatelessWidget {
       builder: (context, _) {
         final l10n = AppLocalizations.of(context);
         final pending =
-            controller.permissions.length + controller.questions.length;
+            controller.permissions.length +
+            controller.questions.length +
+            controller.forms.length;
         return ListView(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
           children: [

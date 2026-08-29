@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../api/models.dart';
 import '../../api/product_repository.dart';
+import '../../api2/models.dart' show Api2FormInfo;
 import '../../state/connection.dart';
 import '../permission_presentation.dart';
 import '../widgets/product_states.dart';
+import 'chat/form_flow.dart';
 import 'chat/permission_sheet.dart';
 
 class RequestsScreen extends StatefulWidget {
@@ -89,6 +91,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
       await Future.wait([
         widget.controller.refreshPendingPermissions(),
         widget.controller.refreshPendingQuestions(),
+        widget.controller.refreshPendingForms(),
       ]);
     } catch (error) {
       if (mounted) setState(() => _error = error.toString());
@@ -108,24 +111,37 @@ class _RequestsScreenState extends State<RequestsScreen> {
         final bSelected = b.sessionID == selected;
         return aSelected == bSelected ? 0 : (aSelected ? -1 : 1);
       });
+    final sessionForms = widget.controller.forms.values
+        .where((form) => form.sessionID != 'global')
+        .toList();
+    final globalForms = widget.controller.forms.values
+        .where((form) => form.sessionID == 'global')
+        .toList();
     final loading =
         _loading ||
         widget.controller.permissionsLoading ||
-        widget.controller.questionsLoading;
+        widget.controller.questionsLoading ||
+        widget.controller.formsLoading;
     final error =
         _error ??
         widget.controller.permissionsError ??
-        widget.controller.questionsError;
+        widget.controller.questionsError ??
+        widget.controller.formsError;
+    final nothingPending =
+        permissions.isEmpty &&
+        questions.isEmpty &&
+        sessionForms.isEmpty &&
+        globalForms.isEmpty;
     return Scaffold(
       appBar: AppBar(title: const Text('Pending requests')),
-      body: loading && permissions.isEmpty && questions.isEmpty
+      body: loading && nothingPending
           ? const LoadingList()
-          : error != null && permissions.isEmpty && questions.isEmpty
+          : error != null && nothingPending
           ? RefreshIndicator(
               onRefresh: _refresh,
               child: ProductErrorState(message: error, onRetry: _refresh),
             )
-          : permissions.isEmpty && questions.isEmpty
+          : nothingPending
           ? RefreshIndicator(
               onRefresh: _refresh,
               child: ListView(
@@ -175,6 +191,16 @@ class _RequestsScreenState extends State<RequestsScreen> {
                         question: question,
                         controller: widget.controller,
                       ),
+                  ],
+                  if (sessionForms.isNotEmpty) ...[
+                    SectionLabel('Forms (${sessionForms.length})'),
+                    for (final form in sessionForms)
+                      _FormTile(form: form, controller: widget.controller),
+                  ],
+                  if (globalForms.isNotEmpty) ...[
+                    const SectionLabel('Server requests'),
+                    for (final form in globalForms)
+                      _FormTile(form: form, controller: widget.controller),
                   ],
                 ],
               ),
@@ -267,6 +293,37 @@ class _QuestionTile extends StatelessWidget {
         builder: (_) =>
             _QuestionSheet(question: question, controller: controller),
       ),
+    );
+  }
+}
+
+class _FormTile extends StatelessWidget {
+  final Api2FormInfo form;
+  final ConnectionController controller;
+
+  const _FormTile({required this.form, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    final count = form.fields.length;
+    return ListTile(
+      key: ValueKey('form-request-tile-${form.id}'),
+      minTileHeight: 66,
+      leading: Icon(
+        Icons.fact_check_outlined,
+        color: Theme.of(context).colorScheme.primary,
+      ),
+      title: Text(form.title ?? 'Input requested'),
+      subtitle: Text(
+        form.sessionID == 'global'
+            ? 'Asked by an MCP server'
+            : '$count question${count == 1 ? '' : 's'} · '
+                  '${_sessionTitle(controller, form.sessionID)}',
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: const Icon(Icons.chevron_right_rounded),
+      onTap: () => presentConnectionForm(context, controller, form),
     );
   }
 }

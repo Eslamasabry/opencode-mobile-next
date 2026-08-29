@@ -27,7 +27,9 @@ import '../widgets/markdown.dart';
 import '../widgets/pickers.dart';
 import '../widgets/product_states.dart';
 import '../widgets/tool_card.dart';
+import '../../api2/models.dart' show Api2FormInfo;
 import 'app_diagnostics_screen.dart';
+import 'chat/form_flow.dart';
 import 'chat/permission_sheet.dart';
 import 'files_screen.dart';
 import 'global_sessions_screen.dart';
@@ -263,6 +265,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool _permissionDismissScheduled = false;
   String? _activePermissionID;
   Route<void>? _activePermissionRoute;
+  bool _formPresenterScheduled = false;
+  String? _activeFormID;
+
+  /// Forms already auto-presented once; dismissing the sheet leaves the
+  /// inline card as the reopen affordance instead of nagging.
+  final Set<String> _autoPresentedFormIDs = {};
   Future<VoiceComposerController>? _voiceFuture;
   VoiceComposerController? _voice;
   bool _voiceOpening = false;
@@ -1885,6 +1893,43 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     setState(() {});
     if (shouldRehydrate) unawaited(_load());
     _schedulePermissionDialog();
+    _scheduleFormPresenter();
+  }
+
+  /// Auto-opens the form renderer for a form arriving in the active chat —
+  /// only while no permission sheet or form presenter is already up, and at
+  /// most once per form (the inline card reopens it manually).
+  void _scheduleFormPresenter() {
+    if (!mounted ||
+        _formPresenterScheduled ||
+        _activeFormID != null ||
+        _activePermissionID != null) {
+      return;
+    }
+    final form = _conn.formForSession(widget.sessionID);
+    if (form == null || _autoPresentedFormIDs.contains(form.id)) return;
+    _formPresenterScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _formPresenterScheduled = false;
+      if (!mounted || _activeFormID != null || _activePermissionID != null) {
+        return;
+      }
+      final current = _conn.forms[form.id];
+      if (current == null || current.sessionID != widget.sessionID) return;
+      unawaited(_openForm(current));
+    });
+  }
+
+  Future<void> _openForm(Api2FormInfo form) async {
+    if (_activeFormID != null) return;
+    _activeFormID = form.id;
+    _autoPresentedFormIDs.add(form.id);
+    try {
+      await presentConnectionForm(context, _conn, form);
+    } finally {
+      _activeFormID = null;
+    }
+    if (mounted) _scheduleFormPresenter();
   }
 
   /// Confirms a reconnect flush that delivered queued drafts, closing the
@@ -3469,6 +3514,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                       ),
                                     ),
                             ),
+                            if (_conn.formForSession(widget.sessionID)
+                                case final pendingForm?)
+                              _FormRequestCard(
+                                key: ValueKey(
+                                  'form-request-card-${pendingForm.id}',
+                                ),
+                                form: pendingForm,
+                                onAnswer: () =>
+                                    unawaited(_openForm(pendingForm)),
+                              ),
                             if (_conn.queuedPromptsFor(widget.sessionID)
                                 case final queuedDrafts
                                 when queuedDrafts.isNotEmpty)
@@ -3543,5 +3598,81 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _composer.dispose();
     _focus.dispose();
     super.dispose();
+  }
+}
+
+/// Compact attention card for a pending form of the open session (design
+/// doc §2): icon, form title, question count, and an Answer button that
+/// opens the shared form renderer.
+class _FormRequestCard extends StatelessWidget {
+  const _FormRequestCard({super.key, required this.form, required this.onAnswer});
+
+  final Api2FormInfo form;
+  final VoidCallback onAnswer;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final count = form.fields.length;
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 860),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 2),
+          child: Material(
+            color: theme.colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(12),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onAnswer,
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 72),
+                padding: const EdgeInsets.fromLTRB(14, 10, 12, 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: theme.colorScheme.outlineVariant),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.fact_check_outlined,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            form.title ?? 'Input requested',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleSmall,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '$count question${count == 1 ? '' : 's'}',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    FilledButton.tonal(
+                      key: ValueKey('form-request-answer-${form.id}'),
+                      onPressed: onAnswer,
+                      child: const Text('Answer'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

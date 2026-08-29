@@ -133,6 +133,16 @@ class _MissionControlScreenState extends State<MissionControlScreen> {
               : 'Question',
           detail: _sessionTitle(controller.sessionsById[question.sessionID]),
         ),
+      // Global (MCP elicitation) forms have no session to open; they live
+      // on the Requests screen only.
+      for (final form in controller.forms.values)
+        if (form.sessionID != 'global')
+          _AttentionItem(
+            sessionID: form.sessionID,
+            icon: Icons.fact_check_outlined,
+            title: 'Form · ${form.title ?? 'Input requested'}',
+            detail: _sessionTitle(controller.sessionsById[form.sessionID]),
+          ),
     ];
     final empty = roots.isEmpty && attention.isEmpty;
 
