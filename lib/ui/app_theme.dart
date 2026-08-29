@@ -22,6 +22,40 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
         );
 }
 
+/// The semantic states every status dot, chip, badge, and status icon in the
+/// product maps onto. Screens name the *state*; the palette stays here so a
+/// theme pack reaches every surface at once instead of screens reaching for
+/// raw `Colors.green`/`Colors.orange`.
+enum AppStatusTone {
+  /// Idle, unknown, disconnected — nothing is happening and nothing is wrong.
+  neutral,
+
+  /// Something is under way: connecting, installing, running.
+  progress,
+
+  /// Healthy, connected, completed, diff addition.
+  ok,
+
+  /// Needs the user: authentication required, degraded, warning.
+  attention,
+
+  /// Failed, errored, diff removal.
+  failure,
+}
+
+/// One glyph per verb. Icon synonyms for the same action (three copies, two
+/// bolts, two stops) read as different actions, so the vocabulary lives here
+/// and call sites name the verb.
+abstract final class AppIcons {
+  static const copy = Icons.content_copy_rounded;
+  static const run = Icons.bolt_rounded;
+  static const stop = Icons.stop_rounded;
+  static const send = Icons.arrow_upward_rounded;
+  static const queue = Icons.hourglass_bottom_rounded;
+  static const retry = Icons.refresh_rounded;
+  static const externalLink = Icons.open_in_new_rounded;
+}
+
 /// The shared visual system for the mobile client.
 ///
 /// Keeping component defaults here prevents individual screens from drifting
@@ -30,6 +64,21 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
 abstract final class AppTheme {
   /// Bundled JetBrains Mono; code is this product's primary material.
   static const monoFamily = 'AppMono';
+
+  /// Ceiling for the global text scaler. The system setting passes through
+  /// untouched below this — smaller-than-default choices included — and only
+  /// runaway scales are capped. Critical flows are tested at this value.
+  static const maxTextScale = 2.5;
+
+  /// Font sizes for the roles that sit outside Material's type scale.
+  static const codeFontSize = 12.0;
+  static const captionFontSize = 11.0;
+  static const bodyFontSize = 14.0;
+
+  /// The canonical corner-radius grid. Controls and inline surfaces take
+  /// [radiusControl]; cards and raised surfaces take [radiusCard].
+  static const radiusControl = 12.0;
+  static const radiusCard = 14.0;
 
   /// Pack-aware success green for status dots, done states, and diff
   /// additions. Prefer this over [success] wherever a ThemeData is in reach.
@@ -43,6 +92,36 @@ abstract final class AppTheme {
       scheme.brightness == Brightness.dark
       ? const Color(0xFF86D8A5)
       : const Color(0xFF1E7A44);
+
+  /// The single source of status color. [AppStatusTone.progress] and
+  /// [AppStatusTone.attention] share the tertiary role deliberately: no
+  /// Material scheme carries a warning slot, and both states are always
+  /// carried by a distinct icon and label as well as color.
+  static Color statusColor(ThemeData theme, AppStatusTone tone) =>
+      switch (tone) {
+        AppStatusTone.neutral => theme.colorScheme.onSurfaceVariant,
+        AppStatusTone.progress => theme.colorScheme.tertiary,
+        AppStatusTone.ok => successOf(theme),
+        AppStatusTone.attention => theme.colorScheme.tertiary,
+        AppStatusTone.failure => theme.colorScheme.error,
+      };
+
+  /// The muted-text role. `theme.hintColor` is a fixed black54/white60 that
+  /// does not track the pack palette and drops under 4:1 on tinted light
+  /// packs; every supporting label resolves through here instead.
+  static Color mutedOf(ThemeData theme) => theme.colorScheme.onSurfaceVariant;
+
+  /// One hairline recipe, matching [DividerThemeData], instead of five
+  /// hand-picked alphas over `outlineVariant`.
+  static Color hairline(ThemeData theme) =>
+      theme.colorScheme.outlineVariant.withValues(alpha: .7);
+
+  /// True once the text scale makes side-by-side action buttons too narrow
+  /// to hold their labels; action bars stack vertically past this point
+  /// instead of wrapping every label into a four-line block.
+  static bool stackedActions(BuildContext context) =>
+      MediaQuery.textScalerOf(context).scale(bodyFontSize) >
+      bodyFontSize * 1.6;
 
   static const background = Color(0xFF101310);
   static const surface = Color(0xFF151A17);
