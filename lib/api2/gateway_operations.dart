@@ -239,13 +239,20 @@ class Api2OperationsGateway extends ProductRepository {
   @override
   Future<WorkspaceProject?> loadCurrentProject() =>
       _guard('Could not load the current project', () async {
-        final json = await _transport.getJson(
-          '/project/current',
-          query: _loc(),
-        );
-        final data = _dataMap(json);
+        final data = await _currentProjectJson();
         return data.isEmpty ? null : _project(data);
       });
+
+  /// `GET /api/project/current` returns the bare project object (no `data`
+  /// envelope, live-verified on beta-18600).
+  Future<Map<String, dynamic>> _currentProjectJson() async {
+    final json = await _transport.getJson('/project/current', query: _loc());
+    final enveloped = _dataMap(json);
+    if (enveloped.isNotEmpty) return enveloped;
+    return json is Map<String, dynamic> && json['id'] != null
+        ? json
+        : const {};
+  }
 
   @override
   Future<List<ProjectDirectoryInfo>> listProjectDirectories(
@@ -434,6 +441,14 @@ class Api2OperationsGateway extends ProductRepository {
       _guard('Could not load version control status', () async {
         final vcsFuture = _transport.getJson('/vcs', query: _loc());
         final statusFuture = _transport.getJson('/vcs/status', query: _loc());
+        final projectFuture = () async {
+          try {
+            return await _currentProjectJson();
+          } catch (_) {
+            // VCS truth is still useful without project metadata.
+            return const <String, dynamic>{};
+          }
+        }();
         Map<String, dynamic> info;
         try {
           info = _dataMap(await vcsFuture);
@@ -449,6 +464,7 @@ class Api2OperationsGateway extends ProductRepository {
         } on Api2Error {
           changes = const [];
         }
+        final project = await projectFuture;
         final branch = info['branch'];
         final current = branch is Map ? branch['current']?.toString() : null;
         final fallback = branch is Map ? branch['default']?.toString() : null;
@@ -456,8 +472,15 @@ class Api2OperationsGateway extends ProductRepository {
           branch: current,
           defaultBranch: fallback,
           changes: changes,
-          setupState: current?.isNotEmpty == true || fallback?.isNotEmpty == true
+          // `/project/current` omits `vcs` on beta-18600 (only the project
+          // list rows carry it), so live branch data is the primary signal.
+          setupState:
+              project['vcs']?.toString() == 'git' ||
+                  current?.isNotEmpty == true ||
+                  fallback?.isNotEmpty == true
               ? VersionControlSetupState.git
+              : project.containsKey('id')
+              ? VersionControlSetupState.absent
               : VersionControlSetupState.unknown,
         );
       });

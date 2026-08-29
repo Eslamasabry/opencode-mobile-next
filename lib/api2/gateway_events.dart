@@ -102,6 +102,9 @@ class Api2EventAdapter {
           case Api2Phase.started:
             return [_status(event.sessionID, 'busy')];
           case Api2Phase.failed:
+            // session.error alone clears the busy flag and settles the
+            // attention alert as an error; adding an idle event would
+            // overwrite that settle with a "complete" one.
             return [
               _env('session.error', {
                 'sessionID': event.sessionID,
@@ -112,11 +115,12 @@ class Api2EventAdapter {
                       'The session run failed',
                 },
               }),
-              _status(event.sessionID, 'idle'),
             ];
           default:
-            // succeeded / interrupted → idle transition.
-            return [_status(event.sessionID, 'idle')];
+            // succeeded / interrupted → the v1 idle transition.
+            return [
+              _env('session.idle', {'sessionID': event.sessionID}),
+            ];
         }
 
       case Api2SessionCompactedEvent():

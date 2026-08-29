@@ -42,7 +42,11 @@ void main() {
         )
         .toList();
     expect(statuses.first, 'busy');
-    expect(statuses.last, 'idle');
+    expect(
+      types.indexOf('session.idle'),
+      greaterThan(types.indexOf('session.status')),
+      reason: 'execution.succeeded must land as the v1 idle transition',
+    );
 
     // The enqueued user prompt becomes a v1 user message + text part.
     final userUpdate = out.firstWhere(
@@ -184,7 +188,7 @@ void main() {
     expect((busy.single.properties['status'] as Map)['type'], 'busy');
   });
 
-  test('execution failure surfaces as session.error plus idle', () {
+  test('execution failure surfaces as session.error', () {
     final adapter = Api2EventAdapter();
     final out = adaptApi2EventJson(adapter, {
       'type': 'session.execution.failed',
@@ -193,14 +197,23 @@ void main() {
         'error': {'type': 'ProviderError', 'message': 'model exploded'},
       },
     });
-    expect(out, hasLength(2));
-    expect(out.first.type, 'session.error');
+    expect(out.single.type, 'session.error');
     expect(
-      (out.first.properties['error'] as Map)['message'],
+      (out.single.properties['error'] as Map)['message'],
       'model exploded',
     );
-    expect(out.last.type, 'session.status');
-    expect((out.last.properties['status'] as Map)['type'], 'idle');
+
+    final done = adaptApi2EventJson(adapter, {
+      'type': 'session.execution.succeeded',
+      'data': {'sessionID': 'ses_x'},
+    });
+    expect(done.single.type, 'session.idle');
+
+    final interrupted = adaptApi2EventJson(adapter, {
+      'type': 'session.execution.interrupted',
+      'data': {'sessionID': 'ses_x', 'reason': 'user'},
+    });
+    expect(interrupted.single.type, 'session.idle');
   });
 
   test('permission.asked maps to the v2-shaped v1 envelope', () {
