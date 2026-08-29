@@ -1153,6 +1153,39 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
+  /// Attaches an image committed into the composer by the IME — keyboard
+  /// GIF/sticker insertions and Android's clipboard-image paste chip both
+  /// arrive here via InputConnection.commitContent.
+  ///
+  /// This is the only zero-dependency image-paste path on Android: the
+  /// framework's [Clipboard] service API reads `text/plain` exclusively, so
+  /// a manual "Paste image" menu action cannot read image bytes without a
+  /// platform plugin. Content without inline bytes (a URI-only commit) is
+  /// ignored rather than half-attached.
+  Future<void> _handleInsertedContent(KeyboardInsertedContent content) async {
+    final bytes = content.data;
+    if (bytes == null || bytes.isEmpty) return;
+    final mime = content.mimeType.isEmpty ? 'image/png' : content.mimeType;
+    final extension = switch (mime.toLowerCase()) {
+      'image/jpeg' || 'image/jpg' => 'jpg',
+      'image/gif' => 'gif',
+      'image/webp' => 'webp',
+      'image/bmp' => 'bmp',
+      _ => 'png',
+    };
+    final name =
+        'pasted-image-${DateTime.now().millisecondsSinceEpoch}.$extension';
+    try {
+      await _addPreviewAttachment(
+        filename: name,
+        mimeType: mime,
+        data: FilePreviewData(name: name, mimeType: mime, bytes: bytes),
+      );
+    } catch (error) {
+      if (mounted) _showActionError(error);
+    }
+  }
+
   Future<PromptAttachment?> _chooseAttachment(
     List<PromptAttachment> current,
   ) async {
@@ -3298,6 +3331,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                   selectedModel: _conn.selectedModel,
                                   selectedVariant: _conn.selectedVariant,
                                   onAttach: _pickAttachment,
+                                  onContentInserted: (content) => unawaited(
+                                    _handleInsertedContent(content),
+                                  ),
                                   onVoice: _openVoice,
                                   onSend: _send,
                                   onStop: _abort,
