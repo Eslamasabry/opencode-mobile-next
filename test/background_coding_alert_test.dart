@@ -82,7 +82,9 @@ void main() {
         'kind': 'permission',
         'sessionID': 'session-1',
         'key': 'input:session-1',
-        'quickReply': false,
+        // A v2 permission alert carries the RemoteInput Reply action: its
+        // text maps to reject-with-message (steering by rejection).
+        'quickReply': true,
         'requestID': 'permission-1',
       });
 
