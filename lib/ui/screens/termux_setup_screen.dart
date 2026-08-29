@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
 import '../../state/profiles.dart';
 import '../../termux/bridge.dart';
@@ -69,6 +70,9 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
   }
 
   Future<void> _refresh() async {
+    // Off Android the build below is the unsupported card; there is no state
+    // worth polling for and no channel to poll.
+    if (!platformCapabilities.supportsTermux) return;
     if (_refreshing) return;
     _refreshing = true;
     try {
@@ -606,6 +610,49 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Nothing routes here off Android, but a deep link, a restored route, or
+    // a future entry point could. The screen says so plainly instead of
+    // presenting six steps that can never complete.
+    if (!platformCapabilities.supportsTermux) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('On-device setup')),
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Padding(
+              key: const Key('termux-setup-unsupported'),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.phonelink_off_rounded,
+                    size: 40,
+                    color: AppTheme.mutedOf(theme),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'On-device setup is Android only',
+                    style: theme.textTheme.titleMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'It drives Termux, which has no desktop equivalent. On '
+                    'this machine, run `opencode serve` yourself and add it '
+                    'as a server.',
+                    style: theme.textTheme.bodySmall!.copyWith(
+                      color: AppTheme.mutedOf(theme),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     return Scaffold(
       appBar: AppBar(title: const Text('On-device setup')),
       body: Center(

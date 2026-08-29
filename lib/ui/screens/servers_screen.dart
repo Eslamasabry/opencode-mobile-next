@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/product_repository.dart' show ProductException;
 import '../../api/server_probe.dart';
+import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
 import '../../state/profiles.dart';
 import '../app_theme.dart';
@@ -343,9 +344,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                               context,
                             ).colorScheme.surfaceContainerHighest,
                       child: Icon(
-                        isLoopbackHost(
-                              Uri.tryParse(p.baseUrl)?.host ?? '',
-                            )
+                        isLoopbackHost(Uri.tryParse(p.baseUrl)?.host ?? '')
                             ? Icons.smartphone_rounded
                             : Icons.dns_rounded,
                         size: 18,
@@ -412,17 +411,21 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                 ),
               ),
               const SizedBox(height: 6),
-              Card.filled(
-                margin: const EdgeInsets.symmetric(vertical: 4),
-                child: ListTile(
-                  onTap: () => Navigator.pushNamed(context, '/termux-setup'),
-                  leading: const Icon(Icons.smartphone_rounded),
-                  title: const Text('On-device (Termux)'),
-                  subtitle: const Text(
-                    'Guided setup — the app drives Termux for you',
+              // Termux is Android-only; on desktop the sole quick-add path is
+              // a remote (or local) server the user runs themselves.
+              if (platformCapabilities.supportsTermux)
+                Card.filled(
+                  key: const ValueKey('quick-add-termux-card'),
+                  margin: const EdgeInsets.symmetric(vertical: 4),
+                  child: ListTile(
+                    onTap: () => Navigator.pushNamed(context, '/termux-setup'),
+                    leading: const Icon(Icons.smartphone_rounded),
+                    title: const Text('On-device (Termux)'),
+                    subtitle: const Text(
+                      'Guided setup — the app drives Termux for you',
+                    ),
                   ),
                 ),
-              ),
               Card.filled(
                 margin: const EdgeInsets.symmetric(vertical: 4),
                 child: ListTile(
@@ -525,21 +528,25 @@ class _WelcomeView extends StatelessWidget {
                           'the app fills in the rest',
                       onTap: busy ? null : onConnect,
                     ),
-                    const SizedBox(height: 10),
-                    _WelcomeCard(
-                      cardKey: const ValueKey('welcome-termux-card'),
-                      icon: Icons.smartphone_rounded,
-                      title: 'Run OpenCode on this phone',
-                      subtitle:
-                          'Guided Termux setup — the app drives it for you',
-                      onTap: busy ? null : onTermux,
-                    ),
+                    if (platformCapabilities.supportsTermux) ...[
+                      const SizedBox(height: 10),
+                      _WelcomeCard(
+                        cardKey: const ValueKey('welcome-termux-card'),
+                        icon: Icons.smartphone_rounded,
+                        title: 'Run OpenCode on this phone',
+                        subtitle:
+                            'Guided Termux setup — the app drives it for you',
+                        onTap: busy ? null : onTermux,
+                      ),
+                    ],
                     const SizedBox(height: 10),
                     _WelcomeCard(
                       cardKey: const ValueKey('welcome-guide-card'),
                       icon: Icons.menu_book_outlined,
                       title: 'Learn how OpenCode works',
-                      subtitle: 'A two-minute guide to both paths',
+                      subtitle: platformCapabilities.supportsTermux
+                          ? 'A two-minute guide to both paths'
+                          : 'A two-minute guide to running the server',
                       onTap: onGuide,
                     ),
                   ],

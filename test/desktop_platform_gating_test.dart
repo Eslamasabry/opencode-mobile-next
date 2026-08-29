@@ -1,0 +1,184 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:opencode_mobile/platform/platform_capabilities.dart';
+import 'package:opencode_mobile/state/connection.dart';
+import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/ui/screens/guide_screen.dart';
+import 'package:opencode_mobile/ui/screens/servers_screen.dart';
+import 'package:opencode_mobile/ui/screens/termux_setup_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// Presents saved profiles without touching the real secure-storage channel,
+/// which is unmocked in widget tests and would hang a real upsert.
+class _SeededStore extends ProfileStore {
+  _SeededStore({required super.prefs, required this.seeded});
+
+  final List<ServerProfile> seeded;
+
+  @override
+  List<ServerProfile> get profiles => List.unmodifiable(seeded);
+}
+
+Future<(ProfileStore, ConnectionController)> _emptyState() async {
+  SharedPreferences.setMockInitialValues({});
+  final prefs = await SharedPreferences.getInstance();
+  final store = ProfileStore(prefs: prefs);
+  await store.load();
+  return (store, ConnectionController(store));
+}
+
+Future<(ProfileStore, ConnectionController)> _seededState() async {
+  SharedPreferences.setMockInitialValues({});
+  final prefs = await SharedPreferences.getInstance();
+  final store = _SeededStore(
+    prefs: prefs,
+    seeded: [
+      ServerProfile(
+        id: 'server-1',
+        name: 'Workstation',
+        baseUrl: 'https://box.example:4096',
+        username: '',
+        password: '',
+      ),
+    ],
+  );
+  return (store, ConnectionController(store));
+}
+
+Widget _servers(ProfileStore store, ConnectionController controller) =>
+    ProviderScope(
+      overrides: [
+        bootstrapProvider.overrideWithValue(AppBootstrap(store)),
+        connProvider.overrideWithValue(controller),
+      ],
+      child: const MaterialApp(home: ServersScreen()),
+    );
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  tearDown(() => debugPlatformCapabilities = null);
+
+  void onDesktop() =>
+      debugPlatformCapabilities = const PlatformCapabilities.linuxDesktop();
+
+  group('the first-run welcome', () {
+    testWidgets('offers the Termux path on Android', (tester) async {
+      final (store, controller) = await _emptyState();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(_servers(store, controller));
+
+      expect(find.byKey(const ValueKey('welcome-termux-card')), findsOneWidget);
+      expect(find.text('Run OpenCode on this phone'), findsOneWidget);
+      expect(find.text('A two-minute guide to both paths'), findsOneWidget);
+    });
+
+    testWidgets('never mentions Termux on desktop', (tester) async {
+      onDesktop();
+      final (store, controller) = await _emptyState();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(_servers(store, controller));
+
+      expect(find.byKey(const ValueKey('welcome-termux-card')), findsNothing);
+      expect(find.textContaining('Termux'), findsNothing);
+      expect(find.textContaining('phone'), findsNothing);
+      // The remaining paths are intact — this is a gate, not a deletion.
+      expect(find.byKey(const ValueKey('welcome-connect-card')), findsOneWidget);
+      expect(find.byKey(const ValueKey('welcome-guide-card')), findsOneWidget);
+    });
+  });
+
+  group('the servers quick-add list', () {
+    testWidgets('offers on-device setup on Android', (tester) async {
+      final (store, controller) = await _seededState();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(_servers(store, controller));
+
+      expect(
+        find.byKey(const ValueKey('quick-add-termux-card')),
+        findsOneWidget,
+      );
+      expect(find.text('On-device (Termux)'), findsOneWidget);
+    });
+
+    testWidgets('offers only the remote path on desktop', (tester) async {
+      onDesktop();
+      final (store, controller) = await _seededState();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(_servers(store, controller));
+
+      expect(find.byKey(const ValueKey('quick-add-termux-card')), findsNothing);
+      expect(find.text('On-device (Termux)'), findsNothing);
+      expect(find.text('Remote machine (LAN)'), findsOneWidget);
+    });
+  });
+
+  group('the setup guide', () {
+    // The guide is a lazy ListView; a tall surface builds all of it so
+    // "findsNothing" means absent rather than merely unbuilt.
+    Future<void> pumpGuide(WidgetTester tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 3000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(const MaterialApp(home: GuideScreen()));
+    }
+
+    testWidgets('documents both paths on Android', (tester) async {
+      await pumpGuide(tester);
+
+      expect(
+        find.byKey(const ValueKey('guide-termux-section')),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Android Keystore'), findsOneWidget);
+      expect(find.text('1 · REMOTE MACHINE'), findsOneWidget);
+    });
+
+    testWidgets('drops the Termux path on desktop', (tester) async {
+      onDesktop();
+      await pumpGuide(tester);
+
+      expect(find.byKey(const ValueKey('guide-termux-section')), findsNothing);
+      expect(find.textContaining('Termux'), findsNothing);
+      expect(find.textContaining('Android Keystore'), findsNothing);
+      // The remote-server instructions, the only path a desktop user has,
+      // are still there and no longer numbered as one of two.
+      expect(find.text('RUNNING THE SERVER'), findsOneWidget);
+      expect(find.textContaining('libsecret'), findsOneWidget);
+    });
+  });
+
+  group('the Termux setup screen', () {
+    testWidgets('says so plainly if it is ever reached on desktop', (
+      tester,
+    ) async {
+      onDesktop();
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final store = ProfileStore(prefs: prefs);
+      await store.load();
+      final controller = ConnectionController(store);
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            bootstrapProvider.overrideWithValue(AppBootstrap(store)),
+            connProvider.overrideWithValue(controller),
+          ],
+          child: const MaterialApp(home: TermuxSetupScreen()),
+        ),
+      );
+      await tester.pump();
+
+      expect(
+        find.byKey(const Key('termux-setup-unsupported')),
+        findsOneWidget,
+      );
+      expect(find.text('On-device setup is Android only'), findsOneWidget);
+      // No step list, so nothing invites a tap that cannot work.
+      expect(find.text('Get Termux'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  });
+}

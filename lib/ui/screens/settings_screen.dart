@@ -1,12 +1,12 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../api/provider_presentation.dart';
+import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
 import '../../state/offline_queue.dart';
 import '../../state/profiles.dart';
@@ -150,7 +150,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           // The live background service and its notifications are Android
           // platform features; the category hides elsewhere.
-          if (defaultTargetPlatform == TargetPlatform.android)
+          if (platformCapabilities.supportsBackgroundService)
             _CategoryRow(
               rowKey: 'settings-category-background',
               icon: Icons.notifications_active_outlined,

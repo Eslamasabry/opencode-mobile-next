@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'background/live_background.dart';
 import 'diagnostics/app_diagnostics.dart';
 import 'l10n/app_localizations.dart';
+import 'platform/platform_capabilities.dart';
 import 'state/connection.dart';
 import 'state/profiles.dart';
 import 'update/desktop_release_check.dart';
@@ -348,7 +349,11 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
               '/requests': (_) => ActivityScreen(controller: _controller),
               '/guide': (_) => GuideScreen(embedded: false),
               '/about': (_) => const AboutScreen(),
-              '/termux-setup': (_) => const TermuxSetupScreen(),
+              // Termux is an Android app. Registering the route everywhere
+              // meant a desktop deep link, or any leftover push, landed on a
+              // setup flow with no bridge behind it.
+              if (platformCapabilities.supportsTermux)
+                '/termux-setup': (_) => const TermuxSetupScreen(),
               '/debug': (_) => AppDiagnosticsScreen(controller: _controller),
             },
             onGenerateRoute: (settings) {
