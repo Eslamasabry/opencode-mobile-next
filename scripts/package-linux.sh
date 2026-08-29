@@ -12,6 +12,12 @@
 # packages the result, and a local run should package exactly the bundle you
 # just tested.
 #
+# Reproducibility: packaging is deterministic, so the same bundle packaged
+# twice yields byte-identical artifacts. The *Flutter build* is not itself
+# reproducible (the linker stamps build ids), so rebuilding first will change
+# the hashes even on an unchanged commit. Publish the checksums of the
+# artifacts CI actually uploaded rather than ones regenerated later.
+#
 # Options:
 #   --bundle DIR    built bundle (default build/linux/x64/release/bundle)
 #   --out DIR       output directory (default build/linux/packages)
@@ -76,22 +82,15 @@ build_number="${version#*+}"
 # ------------------------------------------------------------------ build ---
 if ((do_build)); then
   note "flutter build linux --release"
-  # Clang on some hosts cannot find a complete GCC toolchain and fails with
-  # `cannot find -lstdc++`. Passing an explicit --gcc-install-dir fixes it and
-  # is harmless where it is not needed, so it is only added when a working
-  # directory is actually found.
-  gcc_dir=""
-  for candidate in /usr/lib/gcc/*/*; do
-    [ -e "$candidate/libstdc++.so" ] && gcc_dir="$candidate"
-  done
+  # Only hosts whose clang cannot link C++ on its own get the extra flag; the
+  # helper prints nothing on a healthy toolchain. See its header for why.
+  gcc_dir="$("$packaging_dir/gcc-install-dir.sh")"
   if [ -n "$gcc_dir" ]; then
-    note "using --gcc-install-dir=$gcc_dir"
-    CXXFLAGS="${CXXFLAGS:-} --gcc-install-dir=$gcc_dir" \
-    LDFLAGS="${LDFLAGS:-} --gcc-install-dir=$gcc_dir" \
-      flutter build linux --release
-  else
-    flutter build linux --release
+    note "clang needs a toolchain hint: --gcc-install-dir=$gcc_dir"
+    export CXXFLAGS="${CXXFLAGS:-} --gcc-install-dir=$gcc_dir"
+    export LDFLAGS="${LDFLAGS:-} --gcc-install-dir=$gcc_dir"
   fi
+  flutter build linux --release
 fi
 
 # ----------------------------------------------------------------- verify ---
