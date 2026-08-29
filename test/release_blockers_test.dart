@@ -458,10 +458,18 @@ void main() {
     await tester.pumpAndSettle();
     final send = find.byTooltip('Send');
     expect(send, findsOneWidget);
-    expect(find.byTooltip('Attach file'), findsOneWidget);
-    expect(find.byKey(const Key('voice-input-button')), findsOneWidget);
     expect(find.byKey(const Key('chat-composer-surface')), findsOneWidget);
-    expect(find.byKey(const Key('command-launcher-button')), findsOneWidget);
+    // UX-P0-03: Commands, Attach, and Voice collapsed into one leading
+    // tools button; all three stay reachable from its sheet.
+    final tools = find.byKey(const Key('composer-tools-button'));
+    expect(tools, findsOneWidget);
+    await tester.tap(tools);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('composer-tool-commands')), findsOneWidget);
+    expect(find.byKey(const Key('composer-tool-attach')), findsOneWidget);
+    expect(find.byKey(const Key('composer-tool-voice')), findsOneWidget);
+    await tester.tapAt(const Offset(4, 4));
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('chat-workbench')), findsNothing);
     final sendButton = find.byKey(const Key('chat-send-button'));
     expect(tester.widget<IconButton>(sendButton).onPressed, isNull);
