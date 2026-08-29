@@ -542,3 +542,40 @@ MCP OAuth.
 - No v2 equivalent found: **~25** (concentrated in workspace inventory/
   sync/console, MCP auth, LSP/formatter/symbols, global admin,
   share/todo/archive).
+
+---
+
+## 6. Deferred seams (domain-interface extraction, 2026-08-29)
+
+The `port/domain-interface` pass put `lib/domain/server_gateway.dart` between
+consumers and the v1 client. These raw v1 accesses were deliberately left in
+place rather than funneled, because funneling them needs real redesign:
+
+- **SSE construction stays on the v1 factory seam.** `ConnectionController`
+  still builds `EventStream` (lib/api/sse.dart) through its injected
+  `EventStreamFactory`, which is typed on `OpenCodeApi` — that typedef is the
+  test-injection seam (test/connection_sse_test.dart and friends fake it).
+  The interface funnel exists — `EventGateway.openEventChannel` /
+  `openGlobalEventChannel` on `ServerGateway` return a `LiveEventChannel` of
+  parsed `EventEnvelope` objects — so a v2 gateway can supply its own channel,
+  but rerouting the controller and its tests onto `EventGateway` is a
+  follow-up.
+- **Event payload shapes.** `ConnectionController._onEvent`
+  (lib/state/connection.dart) still decodes v1 JSON payloads out of
+  `EventEnvelope.properties` for its ~30 cases; only the envelope is
+  protocol-neutral.
+- **PTY WebSocket URL.** `SdkProductRepository.connectTerminal` derives the
+  socket URL from the v1 SDK client's Dio `baseUrl` — a raw transport
+  reach-around inside the v1 implementation of `TerminalGateway`.
+- **Wiring stays concrete by design.** `OpenCodeApiFactory`,
+  `ProductRepositoryFactory` (`SdkProductRepository(api.sdkClient)`), and the
+  event-stream factories keep v1 types; these are the construction sites where
+  the protocol switch will be introduced.
+- **First-run probe.** `probeServerConnection` (lib/api/server_probe.dart)
+  issues a raw Dio `GET /global/health`; it runs before any gateway exists and
+  is where Phase 0 protocol detection lands.
+- **MCP loopback OAuth.** `lib/api/mcp_oauth.dart` is a v1-only flow with no
+  v2 backend; it stays as-is behind `ServerCapabilities.mcpOAuth`.
+- **Catalog merge semantics.** `_loadCatalog` in connection.dart reads
+  `providers()`/`configuredProviders()` through `ProviderGateway` but its
+  merge/fallback logic assumes the v1 `ProvidersResponse` shape.
