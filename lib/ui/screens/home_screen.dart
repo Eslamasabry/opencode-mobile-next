@@ -193,7 +193,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         bottomNavigationBar: MediaQuery.sizeOf(context).width < 760
             ? NavigationBar(
                 selectedIndex: _tab,
-                height: 64,
                 onDestinationSelected: (i) => setState(() => _tab = i),
                 destinations: destinations,
               )

@@ -280,6 +280,12 @@ abstract final class AppTheme {
           borderRadius: BorderRadius.all(Radius.circular(14)),
         ),
       ),
+      chipTheme: const ChipThemeData(
+        // Comfortable density: chips act as primary filters in this product
+        // (model intents, variants, file breadcrumbs), so raise them from
+        // M3's 32dp toward a >=40dp visual target.
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      ),
       dividerTheme: DividerThemeData(
         color: scheme.outlineVariant.withValues(alpha: .7),
         thickness: 1,

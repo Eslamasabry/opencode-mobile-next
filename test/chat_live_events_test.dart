@@ -10,6 +10,7 @@ import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/screens/app_diagnostics_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/global_sessions_screen.dart';
@@ -2410,6 +2411,162 @@ void main() {
     await tester.pump();
     expect(find.byKey(const Key('inline-command-tools')), findsOneWidget);
   });
+
+  testWidgets('inline command suggestion rows meet 44dp targets', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi();
+    final repository = _FakeProductRepository(const [
+      CommandInfo(
+        name: 'review',
+        description: 'Review current changes',
+        subtask: false,
+      ),
+    ]);
+
+    await _pumpChat(tester, api, repository: repository);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('chat-composer-field')), '/rev');
+    await tester.pump();
+
+    final row = find.byKey(const Key('inline-command-review'));
+    expect(row, findsOneWidget);
+    expect(tester.getSize(row).height, greaterThanOrEqualTo(44));
+  });
+
+  testWidgets('floating transcript pills meet tap-target minimums', (
+    tester,
+  ) async {
+    final messages = <MessageWithParts>[
+      for (var index = 0; index < 35; index += 1)
+        _message('user-$index', 'user', [
+          Part(
+            id: 'part-$index',
+            messageID: 'user-$index',
+            type: 'text',
+            text: 'prompt $index',
+          ),
+        ], created: index + 1),
+    ];
+    final api = _FakeOpenCodeApi()..messagesHandler = (_) async => messages;
+    await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+
+    final earlier = find.byKey(const ValueKey('earlier-messages-pill'));
+    expect(earlier, findsOneWidget);
+    expect(tester.getSize(earlier).height, greaterThanOrEqualTo(44));
+
+    // Scroll well away from the newest message to reveal the jump pill.
+    await tester.drag(
+      find.text('prompt 34'),
+      const Offset(0, 600),
+      warnIfMissed: false,
+    );
+    await tester.pumpAndSettle();
+
+    final jump = find.byKey(const ValueKey('jump-to-latest'));
+    expect(jump, findsOneWidget);
+    final jumpSize = tester.getSize(jump);
+    expect(jumpSize.width, greaterThanOrEqualTo(48));
+    expect(jumpSize.height, greaterThanOrEqualTo(48));
+  });
+
+  testWidgets(
+    'searchable sheets keep drag handles and dismiss the keyboard on drag',
+    (tester) async {
+      final messages = <MessageWithParts>[
+        for (var index = 0; index < 8; index += 1)
+          _message('user-$index', 'user', [
+            Part(
+              id: 'part-$index',
+              messageID: 'user-$index',
+              type: 'text',
+              text: 'prompt $index',
+            ),
+          ], created: index + 1),
+      ];
+      final api = _FakeOpenCodeApi()..messagesHandler = (_) async => messages;
+      // The product theme supplies the default drag handle under test.
+      final controller = await _controller(api);
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [connProvider.overrideWithValue(controller)],
+          child: MaterialApp(
+            theme: AppTheme.dark(),
+            home: const ChatScreen(sessionID: 'session-1'),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Session views'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Timeline'));
+      await tester.pumpAndSettle();
+
+      // The sheet no longer opts out of the theme drag handle.
+      expect(
+        tester.widget<BottomSheet>(find.byType(BottomSheet)).showDragHandle,
+        isNot(false),
+      );
+      final timelineList = tester.widget<ListView>(
+        find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.byType(ListView),
+        ),
+      );
+      expect(
+        timelineList.keyboardDismissBehavior,
+        ScrollViewKeyboardDismissBehavior.onDrag,
+      );
+
+      // Focus the search, then drag the results: the keyboard focus releases.
+      await tester.tap(find.byKey(const Key('timeline-search')));
+      await tester.pump();
+      final editable = tester.widget<EditableText>(
+        find.descendant(
+          of: find.byKey(const Key('timeline-search')),
+          matching: find.byType(EditableText),
+        ),
+      );
+      expect(editable.focusNode.hasFocus, isTrue);
+      // First drag expands the draggable sheet to its max; the second one
+      // scrolls the result list itself, which releases the keyboard focus.
+      await tester.drag(
+        find.byKey(const ValueKey('timeline-row-user-7')),
+        const Offset(0, -300),
+        warnIfMissed: false,
+      );
+      await tester.pumpAndSettle();
+      await tester.drag(
+        find.byKey(const ValueKey('timeline-row-user-7')),
+        const Offset(0, -120),
+        warnIfMissed: false,
+      );
+      await tester.pumpAndSettle();
+      expect(editable.focusNode.hasFocus, isFalse);
+
+      await tester.tap(find.byTooltip('Close timeline'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('command-launcher-button')));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<BottomSheet>(find.byType(BottomSheet)).showDragHandle,
+        isNot(false),
+      );
+      final launcherList = tester.widget<ListView>(
+        find.byKey(const Key('command-launcher-list')),
+      );
+      expect(
+        launcherList.keyboardDismissBehavior,
+        ScrollViewKeyboardDismissBehavior.onDrag,
+      );
+    },
+  );
 
   testWidgets('composer tools delegates only to visible server subagents', (
     tester,
