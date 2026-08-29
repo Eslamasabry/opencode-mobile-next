@@ -22,6 +22,7 @@ import '../navigation/chat_route.dart';
 import '../app_theme.dart';
 import '../desktop/context_menu.dart';
 import '../desktop/desktop_interaction.dart';
+import '../desktop/file_drop.dart';
 import '../desktop/shortcuts.dart';
 import '../widgets/appearance_picker.dart';
 import '../widgets/connection_status_banner.dart';
@@ -3405,6 +3406,41 @@ class _ChatScreenState extends State<ChatScreen>
         data: data,
       );
 
+  /// Files dropped onto the composer from the desktop file manager.
+  ///
+  /// Goes through the same `_addPreviewAttachment` pipeline the picker and
+  /// the file viewer use, so the count, per-file and aggregate caps apply
+  /// identically. The size is checked from the drop's own metadata first, so
+  /// an oversized file is refused without ever being read into memory.
+  Future<void> _handleDroppedFiles(List<DroppedFile> files) async {
+    for (final file in files) {
+      try {
+        if (await file.length() > _maxAttachmentBytes) {
+          throw const ProductException(
+            'Each attachment must be 10 MB or smaller.',
+          );
+        }
+        final bytes = await file.readBytes();
+        if (!mounted) return;
+        await _addPreviewAttachment(
+          filename: file.name,
+          mimeType: file.mimeType,
+          data: FilePreviewData(
+            name: file.name,
+            mimeType: file.mimeType,
+            bytes: bytes,
+          ),
+        );
+      } catch (error) {
+        if (!mounted) return;
+        showProductError(context, error);
+        return;
+      }
+    }
+    if (!mounted) return;
+    _focus.requestFocus();
+  }
+
   Future<void> _addPreviewAttachment({
     required String filename,
     required String? mimeType,
@@ -3835,7 +3871,9 @@ class _ChatScreenState extends State<ChatScreen>
                                 constraints: const BoxConstraints(
                                   maxWidth: 860,
                                 ),
-                                child: _ChatComposer(
+                                child: DesktopFileDropTarget(
+                                  onDrop: _handleDroppedFiles,
+                                  child: _ChatComposer(
                                   compact: compactComposer,
                                   allowInlineCommands:
                                       bodyConstraints.maxHeight >= 300,
@@ -3882,6 +3920,7 @@ class _ChatScreenState extends State<ChatScreen>
                                   references: _stagedReferences,
                                   onRemoveReference: _removeStagedReference,
                                   // UX-103 review handoff (end).
+                                ),
                                 ),
                               ),
                             ),

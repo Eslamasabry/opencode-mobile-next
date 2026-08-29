@@ -148,10 +148,11 @@ lives in `packages/opencode_sdk/`, and is covered by this project's
 | `code_assets` | 2.0.0 | BSD-3-Clause | Copyright 2025, the Dart project authors | runtime |
 | `collection` | 1.19.1 | BSD-3-Clause | Copyright 2015, the Dart project authors | runtime |
 | `convert` | 3.1.2 | BSD-3-Clause | Copyright 2015, the Dart project authors | runtime |
-| `cross_file` | 0.3.5+5 | BSD-3-Clause | Copyright 2013 The Flutter Authors | test-only |
+| `cross_file` | 0.3.5+5 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
 | `crypto` | 3.0.7 | BSD-3-Clause | Copyright 2015, the Dart project authors | runtime |
 | `cupertino_icons` | 1.0.9 | MIT | Copyright (c) 2016 Vladimir Kharlampidi | runtime |
 | `dbus` | 0.7.15 | MPL-2.0 | — | runtime |
+| `desktop_drop` | 0.8.2 | Apache-2.0 | Copyright 2021 Mixin | runtime |
 | `dio` | 5.11.0 | MIT | Copyright (c) 2018 Wen Du (wendux) | runtime |
 | `dio_web_adapter` | 2.2.1 | MIT | Copyright (c) 2018 Wen Du (wendux) | runtime |
 | `dynamic_color` | 1.9.0 | Apache-2.0 | — | runtime |
@@ -250,6 +251,7 @@ lives in `packages/opencode_sdk/`, and is covered by this project's
 | `term_glyph` | 1.2.2 | BSD-3-Clause | Copyright 2017, the Dart project authors | runtime |
 | `test_api` | 0.7.12 | BSD-3-Clause | Copyright 2018, the Dart project authors | runtime |
 | `typed_data` | 1.4.0 | BSD-3-Clause | Copyright 2015, the Dart project authors | runtime |
+| `universal_platform` | 1.1.0 | MIT | Copyright (c) 2019 gskinner.com | runtime |
 | `url_launcher` | 6.3.2 | BSD-3-Clause | Copyright 2013 The Flutter Authors. All rights reserved | runtime |
 | `url_launcher_android` | 6.3.32 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
 | `url_launcher_ios` | 6.4.1 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |

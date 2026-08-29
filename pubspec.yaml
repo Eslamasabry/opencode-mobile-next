@@ -13,6 +13,11 @@ dependencies:
     sdk: flutter
   intl: any
   cupertino_icons: ^1.0.8
+  # Dropping files onto the composer. Flutter exposes no native file-drop
+  # channel of its own on desktop, so this is the one dependency the desktop
+  # interaction work needs. Pinned exactly: it registers a platform plugin,
+  # and it has no Android implementation, so the touch build is untouched.
+  desktop_drop: 0.8.2
   dio: ^5.7.0
   file_picker: 12.1.1
   flutter_riverpod: ^2.6.1
