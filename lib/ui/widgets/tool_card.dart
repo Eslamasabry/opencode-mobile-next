@@ -133,6 +133,12 @@ class _ToolContract {
         subtitle = _valueString(input['command']);
         final exit = _valueNumber(metadata['exit']);
         if (exit != null) details.add('exit $exit');
+        // v2 shell messages surface their terminal status when the command
+        // did not run to completion.
+        final shellStatus = _valueString(metadata['shellStatus']) ?? '';
+        if (shellStatus == 'timeout' || shellStatus == 'killed') {
+          details.add(shellStatus);
+        }
         if (metadata['truncated'] == true) details.add('truncated');
         break;
       case 'edit':
@@ -288,6 +294,23 @@ class _ToolCardState extends State<ToolCard> {
   List<ToolOutputFile> get _images =>
       _files.where((file) => file.isImage).toList();
 
+  /// The ordered v2 content segments, but only when their order carries
+  /// information a joined string loses — a text run after a file. Trivial
+  /// orders (all text, or text followed only by trailing files) keep the
+  /// existing v1 rendering exactly.
+  List<ToolResultSegment>? get _interleavedSegments {
+    final segments = widget.state.segments;
+    var seenFile = false;
+    for (final segment in segments) {
+      if (segment.isFile) {
+        seenFile = true;
+      } else if (seenFile) {
+        return segments;
+      }
+    }
+    return null;
+  }
+
   bool? get _storedExpansion => widget.expansionKey == null
       ? null
       : widget.expansionStore?[widget.expansionKey!];
@@ -392,6 +415,30 @@ class _ToolCardState extends State<ToolCard> {
 
   bool get _running =>
       widget.state.status == 'pending' || widget.state.status == 'running';
+
+  /// One ordered v2 content segment: a mono text run, an image preview, or a
+  /// file tile.
+  Widget _segmentWidget(ToolResultSegment segment) {
+    final file = segment.file;
+    if (file == null) {
+      return _Mono(text: segment.text!, name: 'tool-output.txt', maxLines: 220);
+    }
+    if (file.isImage) {
+      return _ToolOutputPreview(
+        file: file,
+        load: _loadCached(file),
+        onRetry: () => _retryPreview(file),
+        onAttach: widget.onAttachFile,
+        onDownload: widget.onDownloadFile,
+      );
+    }
+    return _ToolOutputFileTile(
+      file: file,
+      load: () => _loadCached(file),
+      onAttach: widget.onAttachFile,
+      onDownload: widget.onDownloadFile,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -533,7 +580,22 @@ class _ToolCardState extends State<ToolCard> {
               ),
             ),
           ),
-          if (_files.isNotEmpty)
+          if (_interleavedSegments case final segments?)
+            Padding(
+              key: const Key('tool-interleaved-output'),
+              padding: const EdgeInsets.fromLTRB(10, 2, 10, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final segment in segments)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: _segmentWidget(segment),
+                    ),
+                ],
+              ),
+            )
+          else if (_files.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 2, 10, 10),
               child: Column(
@@ -569,6 +631,9 @@ class _ToolCardState extends State<ToolCard> {
                 contract: contract,
                 state: widget.state,
                 embedded: widget.embedded,
+                // Output already rendered in order above; the expanded body
+                // keeps input/metadata only.
+                suppressOutput: _interleavedSegments != null,
               ),
             ),
         ],
@@ -582,11 +647,16 @@ class _ToolContractBody extends StatelessWidget {
     required this.contract,
     required this.state,
     required this.embedded,
+    this.suppressOutput = false,
   });
 
   final _ToolContract contract;
   final ToolState state;
   final bool embedded;
+
+  /// True when the ordered segment rendering already shows the output; the
+  /// expanded body then only adds the input JSON.
+  final bool suppressOutput;
 
   Map<String, dynamic> get _metadata =>
       state.metadata ?? const <String, dynamic>{};
@@ -599,6 +669,7 @@ class _ToolContractBody extends StatelessWidget {
         embedded: embedded,
       );
     }
+    if (suppressOutput) return _genericInput();
     return switch (contract.kind) {
       _ToolKind.read => _readBody(),
       _ToolKind.shell => _shellBody(),
