@@ -16,14 +16,14 @@ bash ubuntu-opencode.sh install
 ```
 
 This installs OpenCode with the official installer if it is missing, writes a
-`systemd --user` unit that runs `opencode serve --hostname 0.0.0.0 --port
+`systemd --user` unit that runs `opencode serve --hostname 127.0.0.1 --port
 4096`, enables it, and starts it. Re-running `install` is safe; it refreshes
 the unit in place.
 
 Want a different port or bind address?
 
 ```sh
-OPENCODE_PORT=5000 OPENCODE_HOSTNAME=0.0.0.0 bash ubuntu-opencode.sh install
+OPENCODE_PORT=5000 OPENCODE_HOSTNAME=127.0.0.1 bash ubuntu-opencode.sh install
 ```
 
 ### Keep it running after logout
@@ -39,7 +39,6 @@ Without linger, systemd stops user services when your last session ends.
 If `ufw` is active, allow the port (ideally restricted to your LAN):
 
 ```sh
-sudo ufw allow 4096/tcp
 ```
 
 ## Day-to-day
