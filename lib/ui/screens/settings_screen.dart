@@ -73,9 +73,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _open(Widget screen) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => screen),
-    );
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen));
   }
 
   @override
@@ -119,7 +117,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 '${profile?.baseUrl ?? 'Not connected'}\n$healthLine',
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontFamily: 'AppMono', fontSize: 11),
+                style: const TextStyle(
+                  fontFamily: AppTheme.monoFamily,
+                  fontSize: AppTheme.captionFontSize,
+                ),
               ),
               trailing: IconButton(
                 tooltip: 'Check again',
@@ -254,7 +255,7 @@ class _CategoryIcon extends StatelessWidget {
       height: 36,
       decoration: BoxDecoration(
         color: tint.withValues(alpha: .12),
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(AppTheme.radiusControl),
       ),
       child: Icon(icon, size: 20, color: tint),
     );

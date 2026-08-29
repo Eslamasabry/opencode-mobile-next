@@ -15,6 +15,7 @@ import 'managed_workspaces_screen.dart';
 import 'project_health_screen.dart';
 import 'projects_screen.dart';
 import 'worktrees_screen.dart';
+import '../app_theme.dart';
 
 class WorkspaceScreen extends StatefulWidget {
   final ConnectionController controller;
@@ -575,7 +576,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   Future<ServerOperationsGateway> _requireActionRepository() async {
     final repository = await widget.controller.prepareActionRepository();
     if (repository != null) return repository;
-    throw const ProductException('OpenCode is reconnecting. Try again shortly.');
+    throw const ProductException(
+      'OpenCode is reconnecting. Try again shortly.',
+    );
   }
 
   Future<void> _rename(Session session) async {
@@ -827,7 +830,7 @@ class _QuickAskPill extends StatelessWidget {
                   '❯',
                   style: theme.textTheme.titleMedium!.copyWith(
                     color: scheme.primary,
-                    fontFamily: 'AppMono',
+                    fontFamily: AppTheme.monoFamily,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -837,7 +840,7 @@ class _QuickAskPill extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.hintColor,
+                      color: AppTheme.mutedOf(theme),
                     ),
                   ),
                 ),

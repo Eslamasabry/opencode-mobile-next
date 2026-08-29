@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
+import '../app_theme.dart';
 
 class ManagedWorkspacesScreen extends StatefulWidget {
   final ConnectionController controller;
@@ -345,33 +346,27 @@ class _WorkspaceTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = workspace.status?.toLowerCase();
-    final (icon, color, label) = switch (status) {
-      'connected' => (
-        Icons.cloud_done_outlined,
-        Colors.green.shade400,
-        'Connected',
-      ),
+    final theme = Theme.of(context);
+    final (icon, tone, label) = switch (status) {
+      'connected' => (Icons.cloud_done_outlined, AppStatusTone.ok, 'Connected'),
       'connecting' => (
         Icons.cloud_sync_outlined,
-        Theme.of(context).colorScheme.primary,
+        AppStatusTone.progress,
         'Connecting',
       ),
-      'error' => (
-        Icons.cloud_off_outlined,
-        Theme.of(context).colorScheme.error,
-        'Error',
-      ),
+      'error' => (Icons.cloud_off_outlined, AppStatusTone.failure, 'Error'),
       'disconnected' => (
         Icons.cloud_off_outlined,
-        Theme.of(context).colorScheme.onSurfaceVariant,
+        AppStatusTone.neutral,
         'Disconnected',
       ),
       _ => (
         Icons.cloud_queue_outlined,
-        Theme.of(context).colorScheme.onSurfaceVariant,
+        AppStatusTone.neutral,
         'Status unknown',
       ),
     };
+    final color = AppTheme.statusColor(theme, tone);
     final detail = [
       if (workspace.branch?.isNotEmpty == true) workspace.branch!,
       workspace.type,

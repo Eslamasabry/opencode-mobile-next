@@ -247,7 +247,10 @@ class _CodingSettingsScreenState extends State<CodingSettingsScreen>
                       if (controller.selectedVariant.isNotEmpty)
                         controller.selectedVariant,
                     ].join(' · '),
-              style: const TextStyle(fontFamily: 'AppMono', fontSize: 12),
+              style: const TextStyle(
+                fontFamily: AppTheme.monoFamily,
+                fontSize: AppTheme.codeFontSize,
+              ),
             ),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => showModelPicker(context),

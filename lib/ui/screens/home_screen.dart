@@ -254,7 +254,7 @@ class _WorkspaceAppBarTitle extends StatelessWidget {
           key: const ValueKey('server-profile-title'),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 17),
+          style: theme.textTheme.titleMedium,
         ),
       ),
     );
@@ -263,7 +263,9 @@ class _WorkspaceAppBarTitle extends StatelessWidget {
       key: const ValueKey('current-tab-title'),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
+      style: theme.textTheme.labelSmall?.copyWith(
+        color: AppTheme.mutedOf(theme),
+      ),
     );
     final server = Row(
       children: [
@@ -302,12 +304,13 @@ class _StatusDot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final (color, pulse) = switch (status) {
-      StreamStatus.connected => (AppTheme.successOf(theme), false),
+    final (tone, pulse) = switch (status) {
+      StreamStatus.connected => (AppStatusTone.ok, false),
       StreamStatus.connecting ||
-      StreamStatus.reconnecting => (theme.colorScheme.tertiary, true),
-      StreamStatus.disconnected => (theme.colorScheme.error, false),
+      StreamStatus.reconnecting => (AppStatusTone.progress, true),
+      StreamStatus.disconnected => (AppStatusTone.failure, false),
     };
+    final color = AppTheme.statusColor(theme, tone);
     final label = switch (status) {
       StreamStatus.connected => 'Connected',
       StreamStatus.connecting => 'Connecting',

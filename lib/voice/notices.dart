@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../ui/app_theme.dart';
 
 const voiceNoticeAssets = <String>[
   'THIRD_PARTY_NOTICES.md',
@@ -40,7 +41,10 @@ class VoiceNoticesView extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Text(
             snapshot.data!,
-            style: const TextStyle(fontFamily: 'AppMono', fontSize: 12),
+            style: const TextStyle(
+              fontFamily: AppTheme.monoFamily,
+              fontSize: AppTheme.codeFontSize,
+            ),
           ),
         ),
       );

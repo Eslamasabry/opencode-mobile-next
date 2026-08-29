@@ -633,7 +633,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                 'The app installs OpenCode in a private Ubuntu environment, starts '
                 'an authenticated local server, and reconnects automatically.',
                 style: theme.textTheme.bodySmall!.copyWith(
-                  color: theme.hintColor,
+                  color: AppTheme.mutedOf(theme),
                 ),
               ),
               const SizedBox(height: 20),
@@ -774,7 +774,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                         'takes 10–15 minutes. You can leave this screen and '
                         'return — setup keeps running.',
                         style: theme.textTheme.bodySmall!.copyWith(
-                          color: theme.hintColor,
+                          color: AppTheme.mutedOf(theme),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -794,7 +794,10 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                           Icon(
                             Icons.check_circle_rounded,
                             size: 18,
-                            color: Colors.green.shade400,
+                            color: AppTheme.statusColor(
+                              Theme.of(context),
+                              AppStatusTone.ok,
+                            ),
                           ),
                           const SizedBox(width: 8),
                           const Expanded(
@@ -808,7 +811,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                             ? 'Version ${_status!.version} · $localUrl'
                             : localUrl,
                         style: theme.textTheme.bodySmall!.copyWith(
-                          color: theme.hintColor,
+                          color: AppTheme.mutedOf(theme),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -829,7 +832,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                           ),
                           OutlinedButton.icon(
                             onPressed: _busy ? null : _stopServer,
-                            icon: const Icon(Icons.stop_circle_outlined),
+                            icon: const Icon(AppIcons.stop),
                             label: Text(
                               _busy ? 'Stopping...' : 'Stop local server',
                             ),
@@ -866,7 +869,9 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                             ),
                             OutlinedButton(
                               onPressed: _busy ? null : _retry,
-                              child: const Text('Retry — resumes where setup left off'),
+                              child: const Text(
+                                'Retry — resumes where setup left off',
+                              ),
                             ),
                           ],
                         )
@@ -874,7 +879,9 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                         FilledButton.icon(
                           onPressed: _busy ? null : _retry,
                           icon: const Icon(Icons.refresh_rounded),
-                          label: const Text('Retry — resumes where setup left off'),
+                          label: const Text(
+                            'Retry — resumes where setup left off',
+                          ),
                         ),
                     ],
                   ),
@@ -905,7 +912,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
             alpha: .3,
           ),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: theme.dividerColor.withValues(alpha: .4)),
+          border: Border.all(color: AppTheme.hairline(theme)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -938,7 +945,10 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                             )
                           : Text(
                               '$n',
-                              style: TextStyle(fontSize: 12, color: foreground),
+                              style: TextStyle(
+                                fontSize: AppTheme.codeFontSize,
+                                color: foreground,
+                              ),
                             ),
                     );
                   },
@@ -1012,7 +1022,7 @@ class _LiveSetupTerminal extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: terminalBackground,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTheme.radiusControl),
         border: Border.all(color: overlay.withValues(alpha: .1)),
       ),
       child: Column(
@@ -1038,7 +1048,7 @@ class _LiveSetupTerminal extends StatelessWidget {
                   running ? 'LIVE OUTPUT' : 'LAST OUTPUT',
                   style: TextStyle(
                     color: overlay.withValues(alpha: .6),
-                    fontFamily: 'AppMono',
+                    fontFamily: AppTheme.monoFamily,
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.1,
@@ -1048,7 +1058,7 @@ class _LiveSetupTerminal extends StatelessWidget {
                 IconButton(
                   onPressed: onCopy,
                   tooltip: copyTooltip,
-                  icon: const Icon(Icons.copy_rounded, size: 16),
+                  icon: const Icon(AppIcons.copy, size: 16),
                   color: overlay.withValues(alpha: .7),
                   disabledColor: overlay.withValues(alpha: .24),
                   visualDensity: VisualDensity.compact,
@@ -1069,8 +1079,8 @@ class _LiveSetupTerminal extends StatelessWidget {
                     visibleOutput,
                     style: TextStyle(
                       color: terminalText,
-                      fontFamily: 'AppMono',
-                      fontSize: 11,
+                      fontFamily: AppTheme.monoFamily,
+                      fontSize: AppTheme.captionFontSize,
                       height: 1.45,
                     ),
                   ),
@@ -1102,8 +1112,8 @@ class CmdPreview extends StatelessWidget {
       child: SelectableText(
         TermuxBridge.unlockCommand,
         style: theme.textTheme.bodySmall!.copyWith(
-          fontFamily: 'AppMono',
-          fontSize: 11,
+          fontFamily: AppTheme.monoFamily,
+          fontSize: AppTheme.captionFontSize,
         ),
       ),
     );

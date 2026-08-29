@@ -145,7 +145,7 @@ class _SessionActionsSheet extends StatelessWidget {
               value: 'shell',
             ),
             _SessionSheetRow(
-              icon: Icons.electric_bolt_outlined,
+              icon: AppIcons.run,
               label: 'Commands',
               value: 'slash',
             ),
@@ -317,7 +317,7 @@ class _TimelineSheetState extends State<_TimelineSheet> {
                   ? Center(
                       child: Text(
                         'No matching messages',
-                        style: TextStyle(color: theme.hintColor),
+                        style: TextStyle(color: AppTheme.mutedOf(theme)),
                       ),
                     )
                   : ListView.separated(

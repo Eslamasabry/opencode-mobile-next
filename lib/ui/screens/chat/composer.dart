@@ -204,14 +204,14 @@ class _ChatComposer extends StatelessWidget {
         ),
         _ContextMeterLine(usage: contextUsage),
         Padding(
-          padding: const EdgeInsets.fromLTRB(8, 7, 8, 8),
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
           child: Row(
             children: [
               _ComposerAction(
                 key: const Key('command-launcher-button'),
                 tooltip: 'Commands',
                 onPressed: onOpenCommands,
-                icon: const Icon(Icons.electric_bolt_outlined),
+                icon: const Icon(AppIcons.run),
               ),
               const SizedBox(width: 2),
               _ComposerAction(
@@ -280,7 +280,7 @@ class _ChatComposer extends StatelessWidget {
             key: const Key('command-launcher-button'),
             tooltip: 'Commands',
             onPressed: onOpenCommands,
-            icon: const Icon(Icons.electric_bolt_outlined),
+            icon: const Icon(AppIcons.run),
           ),
           _ComposerAction(
             key: const Key('composer-model-context'),
@@ -314,7 +314,7 @@ class _ChatComposer extends StatelessWidget {
               maxLines: 3,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 10,
-                vertical: 11,
+                vertical: 12,
               ),
             ),
           ),
@@ -494,7 +494,7 @@ class _ComposerSubmit extends StatelessWidget {
           foregroundColor: scheme.error,
           backgroundColor: scheme.errorContainer.withValues(alpha: .55),
         ),
-        icon: const Icon(Icons.stop_rounded),
+        icon: const Icon(AppIcons.stop),
       );
     }
     final icon = sending
@@ -540,7 +540,7 @@ class _ComposerSubmit extends StatelessWidget {
             foregroundColor: scheme.error,
             backgroundColor: scheme.errorContainer.withValues(alpha: .55),
           ),
-          icon: const Icon(Icons.stop_rounded),
+          icon: const Icon(AppIcons.stop),
         ),
         const SizedBox(width: 4),
         GestureDetector(
@@ -781,7 +781,6 @@ class _PendingAttachmentChip extends StatelessWidget {
     );
   }
 }
-
 
 /// The hairline between the prompt field and the composer actions doubles as
 /// an ambient context-window meter: it fills from the left as the session

@@ -6,6 +6,7 @@ import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../permission_presentation.dart';
 import '../widgets/product_states.dart';
+import '../app_theme.dart';
 
 typedef SavedPermissionRepositoryResolver =
     Future<ServerOperationsGateway?> Function();
@@ -98,7 +99,7 @@ class _SavedPermissionsScreenState extends State<SavedPermissionsScreen> {
               permission.resource.trim().isEmpty
                   ? '(all matching resources)'
                   : permission.resource,
-              style: const TextStyle(fontFamily: 'AppMono'),
+              style: const TextStyle(fontFamily: AppTheme.monoFamily),
             ),
             const SizedBox(height: 12),
             const Text('This does not stop an action that is already running.'),
@@ -214,8 +215,8 @@ class _SavedPermissionsScreenState extends State<SavedPermissionsScreen> {
                             : permission.resource,
                         maxLines: 3,
                         style: const TextStyle(
-                          fontFamily: 'AppMono',
-                          fontSize: 12.5,
+                          fontFamily: AppTheme.monoFamily,
+                          fontSize: AppTheme.codeFontSize,
                         ),
                       ),
                       trailing: _removing.contains(permission.id)

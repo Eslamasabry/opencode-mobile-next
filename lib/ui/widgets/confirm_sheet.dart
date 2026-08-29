@@ -47,7 +47,7 @@ Future<bool> showConfirmSheet(
                 Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.titleMedium,
+                  style: theme.textTheme.titleLarge,
                 ),
                 const SizedBox(height: 6),
                 Text(

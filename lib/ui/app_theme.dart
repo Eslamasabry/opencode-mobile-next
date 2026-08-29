@@ -47,8 +47,8 @@ enum AppStatusTone {
 /// bolts, two stops) read as different actions, so the vocabulary lives here
 /// and call sites name the verb.
 abstract final class AppIcons {
-  static const copy = Icons.content_copy_rounded;
-  static const run = Icons.bolt_rounded;
+  static const copy = Icons.copy_rounded;
+  static const run = Icons.electric_bolt_outlined;
   static const stop = Icons.stop_rounded;
   static const send = Icons.arrow_upward_rounded;
   static const queue = Icons.hourglass_bottom_rounded;

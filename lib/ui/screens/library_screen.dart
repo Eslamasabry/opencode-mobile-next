@@ -276,7 +276,7 @@ class _TileIcon extends StatelessWidget {
       height: 36,
       decoration: BoxDecoration(
         color: tint.withValues(alpha: .12),
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(AppTheme.radiusControl),
       ),
       child: Icon(icon, size: 20, color: tint),
     );

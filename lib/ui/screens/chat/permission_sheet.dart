@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../api/models.dart';
 import '../../permission_presentation.dart';
+import '../../app_theme.dart';
 
 /// Presents the OpenCode 2 permission prompt as a modal bottom sheet
 /// (design doc §3). One component serves three entry points: the chat
@@ -139,7 +140,7 @@ class _PermissionSheetState extends State<PermissionSheet> {
                   broader.isEmpty
                       ? '(all matching requests)'
                       : broader.join('\n'),
-                  style: const TextStyle(fontFamily: 'AppMono'),
+                  style: const TextStyle(fontFamily: AppTheme.monoFamily),
                 ),
                 const SizedBox(height: 12),
                 const Text(
@@ -224,8 +225,8 @@ class _PermissionSheetState extends State<PermissionSheet> {
                   SelectableText(
                     permission.always.join('\n'),
                     style: const TextStyle(
-                      fontFamily: 'AppMono',
-                      fontSize: 12.5,
+                      fontFamily: AppTheme.monoFamily,
+                      fontSize: AppTheme.codeFontSize,
                     ),
                   ),
                 ],
@@ -289,7 +290,7 @@ class _PermissionSheetState extends State<PermissionSheet> {
                       child: SelectableText(
                         resource,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          fontFamily: 'AppMono',
+                          fontFamily: AppTheme.monoFamily,
                         ),
                       ),
                     ),

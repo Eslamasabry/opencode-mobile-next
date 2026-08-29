@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import 'markdown.dart';
 import 'product_states.dart';
+import '../app_theme.dart';
 
 /// Normalized file content that can be rendered by [FilePreviewBody].
 class FilePreviewData {
@@ -254,7 +255,7 @@ class _FilePreviewSheetState extends State<_FilePreviewSheet> {
                         ),
                       );
                     },
-                    icon: const Icon(Icons.copy_rounded, size: 19),
+                    icon: const Icon(AppIcons.copy, size: 19),
                   ),
                 if (widget.onAttach != null)
                   IconButton(
@@ -348,7 +349,10 @@ class FilePreviewBody extends StatelessWidget {
                 ),
                 child: const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  child: Text('Pinch to zoom', style: TextStyle(fontSize: 11)),
+                  child: Text(
+                    'Pinch to zoom',
+                    style: TextStyle(fontSize: AppTheme.captionFontSize),
+                  ),
                 ),
               ),
             ),
@@ -450,7 +454,7 @@ class _FocusedSourcePreviewState extends State<_FocusedSourcePreview> {
                             '${index + 1}',
                             textAlign: TextAlign.right,
                             style: theme.textTheme.labelSmall?.copyWith(
-                              fontFamily: 'AppMono',
+                              fontFamily: AppTheme.monoFamily,
                               color: selected
                                   ? theme.colorScheme.primary
                                   : theme.colorScheme.onSurfaceVariant,
@@ -462,7 +466,7 @@ class _FocusedSourcePreviewState extends State<_FocusedSourcePreview> {
                           _lines[index].isEmpty ? ' ' : _lines[index],
                           maxLines: 1,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            fontFamily: 'AppMono',
+                            fontFamily: AppTheme.monoFamily,
                             height: 1.35,
                           ),
                         ),

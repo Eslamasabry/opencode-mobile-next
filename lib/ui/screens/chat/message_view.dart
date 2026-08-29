@@ -211,7 +211,7 @@ class _EmptyTranscript extends StatelessWidget {
                             '❯',
                             style: theme.textTheme.headlineSmall!.copyWith(
                               color: theme.colorScheme.primary,
-                              fontFamily: 'AppMono',
+                              fontFamily: AppTheme.monoFamily,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -419,9 +419,7 @@ class TranscriptMarker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final hairline = Expanded(
-      child: Divider(color: theme.dividerColor.withValues(alpha: .35)),
-    );
+    final hairline = Expanded(child: Divider(color: AppTheme.hairline(theme)));
     final pill = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: ShapeDecoration(
@@ -457,9 +455,7 @@ class TranscriptMarker extends StatelessWidget {
           const SizedBox(width: 8),
           detail == null ? pill : Tooltip(message: detail!, child: pill),
           const SizedBox(width: 8),
-          Expanded(
-            child: Divider(color: theme.dividerColor.withValues(alpha: .35)),
-          ),
+          Expanded(child: Divider(color: AppTheme.hairline(theme))),
         ],
       ),
     );
@@ -544,7 +540,9 @@ class _TranscriptNoticeState extends State<TranscriptNotice> {
                             if (widget.headerMono case final mono?)
                               TextSpan(
                                 text: ' $mono',
-                                style: const TextStyle(fontFamily: 'AppMono'),
+                                style: const TextStyle(
+                                  fontFamily: AppTheme.monoFamily,
+                                ),
                               ),
                           ],
                         ),
@@ -673,7 +671,7 @@ class V2TranscriptRow extends StatelessWidget {
             null,
           ),
           'skill' => (
-            Icons.electric_bolt_outlined,
+            AppIcons.run,
             'Skill ·',
             part.filename ?? part.text,
           ),
@@ -975,7 +973,7 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: .28),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: .35)),
+        border: Border.all(color: AppTheme.hairline(theme)),
       ),
       child: Column(
         children: [
@@ -990,7 +988,7 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(minHeight: 48),
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 7, 8, 7),
+                  padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
                   child: Row(
                     children: [
                       Icon(
@@ -1005,7 +1003,7 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(width: 7),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           summary,
@@ -1058,16 +1056,13 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
           if (_expanded)
             Column(
               children: [
-                Divider(
-                  height: 1,
-                  color: theme.dividerColor.withValues(alpha: .35),
-                ),
+                Divider(height: 1, color: AppTheme.hairline(theme)),
                 for (var index = 0; index < widget.parts.length; index++) ...[
                   if (index > 0)
                     Divider(
                       height: 1,
                       indent: 34,
-                      color: theme.dividerColor.withValues(alpha: .28),
+                      color: AppTheme.hairline(theme),
                     ),
                   ToolCard(
                     key: ValueKey(
@@ -1483,17 +1478,15 @@ class _AttachmentPart extends StatelessWidget {
             ? 'Project reference @$_filename'
             : 'Preview attachment',
         child: InkWell(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppTheme.radiusControl),
           onTap: reference ? null : openPreview,
           child: Container(
             margin: const EdgeInsets.only(bottom: 4),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
               color: theme.colorScheme.surface.withValues(alpha: .5),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: theme.colorScheme.outlineVariant.withValues(alpha: .7),
-              ),
+              borderRadius: BorderRadius.circular(AppTheme.radiusControl),
+              border: Border.all(color: AppTheme.hairline(theme)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -1504,7 +1497,7 @@ class _AttachmentPart extends StatelessWidget {
                       : Icons.attach_file_rounded,
                   size: 17,
                 ),
-                const SizedBox(width: 7),
+                const SizedBox(width: 8),
                 Flexible(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -1817,8 +1810,8 @@ class _SharedSessionBanner extends StatelessWidget {
                       url,
                       maxLines: 1,
                       style: const TextStyle(
-                        fontFamily: 'AppMono',
-                        fontSize: 11,
+                        fontFamily: AppTheme.monoFamily,
+                        fontSize: AppTheme.captionFontSize,
                       ),
                     ),
                   ),
@@ -1828,7 +1821,7 @@ class _SharedSessionBanner extends StatelessWidget {
             IconButton(
               tooltip: 'Copy share link',
               onPressed: () => Clipboard.setData(ClipboardData(text: url)),
-              icon: const Icon(Icons.copy_rounded),
+              icon: const Icon(AppIcons.copy),
             ),
             TextButton(onPressed: onStop, child: const Text('Stop sharing')),
           ],
@@ -2094,8 +2087,8 @@ class _InboxSendBubble extends StatelessWidget {
       icon: !_isUser
           ? Icons.auto_awesome_outlined
           : _steering
-          ? Icons.bolt_rounded
-          : Icons.hourglass_bottom_rounded,
+          ? AppIcons.run
+          : AppIcons.queue,
       label: label,
       semanticsLabel: 'Pending send. $label',
       onTap: _isUser ? () => _showActions(context) : null,
@@ -2115,7 +2108,7 @@ class _InboxSendBubble extends StatelessWidget {
             if (_steering)
               ListTile(
                 key: const ValueKey('inbox-action-queue'),
-                leading: const Icon(Icons.hourglass_bottom_rounded),
+                leading: const Icon(AppIcons.queue),
                 title: const Text('Wait for this run'),
                 subtitle: const Text('Deliver after the current run ends'),
                 onTap: () {
@@ -2126,7 +2119,7 @@ class _InboxSendBubble extends StatelessWidget {
             else
               ListTile(
                 key: const ValueKey('inbox-action-steer'),
-                leading: const Icon(Icons.bolt_rounded),
+                leading: const Icon(AppIcons.run),
                 title: const Text('Send now'),
                 subtitle: const Text('Steers the current run'),
                 onTap: () {

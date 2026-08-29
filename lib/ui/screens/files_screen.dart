@@ -10,6 +10,7 @@ import '../../state/connection.dart';
 import '../widgets/file_preview.dart';
 import '../widgets/product_states.dart';
 import 'review_workspace.dart';
+import '../app_theme.dart';
 
 /// Project file browser backed by `/file`, with name search (`/find/file`)
 /// and content viewer.
@@ -570,7 +571,7 @@ class _FilesScreenState extends State<FilesScreen> {
                         ? Center(
                             child: Text(
                               'Select a file to preview',
-                              style: TextStyle(color: theme.hintColor),
+                              style: TextStyle(color: AppTheme.mutedOf(theme)),
                             ),
                           )
                         : _FileViewer(
@@ -659,7 +660,7 @@ class _FilesScreenState extends State<FilesScreen> {
                   ? theme.colorScheme.primary
                   : change?.status == 'deleted'
                   ? theme.colorScheme.error
-                  : theme.hintColor,
+                  : AppTheme.mutedOf(theme),
             ),
             title: Row(
               children: [
@@ -685,7 +686,7 @@ class _FilesScreenState extends State<FilesScreen> {
                     detail,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 11),
+                    style: const TextStyle(fontSize: AppTheme.captionFontSize),
                   ),
             onTap: change?.status == 'deleted'
                 ? null
@@ -958,7 +959,7 @@ class _FolderStatusMark extends StatelessWidget {
         key: const ValueKey('folder-change-count'),
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
           color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w700,
         ),
       ),
     ),
@@ -1169,7 +1170,7 @@ class __FileViewerState extends State<_FileViewer> {
                   ),
                   IconButton(
                     tooltip: 'Copy file contents',
-                    icon: const Icon(Icons.copy_rounded, size: 18),
+                    icon: const Icon(AppIcons.copy, size: 18),
                     onPressed: _content?.isBinary == true
                         ? null
                         : () async {
@@ -1228,7 +1229,7 @@ class __FileViewerState extends State<_FileViewer> {
                     ? widget.path
                     : '${widget.path} · Line ${widget.initialLine}',
                 style: theme.textTheme.labelSmall!.copyWith(
-                  color: theme.hintColor,
+                  color: AppTheme.mutedOf(theme),
                 ),
               ),
             ),

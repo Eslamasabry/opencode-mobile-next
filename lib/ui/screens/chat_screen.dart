@@ -1710,7 +1710,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             if (text.isNotEmpty)
               ListTile(
                 key: const ValueKey('message-action-copy'),
-                leading: const Icon(Icons.copy_rounded),
+                leading: const Icon(AppIcons.copy),
                 title: const Text('Copy message text'),
                 onTap: () => Navigator.pop(context, 'copy'),
               ),
@@ -3433,7 +3433,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               IconButton(
                 tooltip: 'Stop',
                 icon: Icon(
-                  Icons.stop_circle_outlined,
+                  AppIcons.stop,
                   color: theme.colorScheme.error,
                 ),
                 onPressed: _aborting ? null : _abort,
