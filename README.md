@@ -149,9 +149,31 @@ OPENCODE_SERVER_PASSWORD=your-secret \
   opencode serve --hostname 127.0.0.1 --port 4096
 ```
 
-The app refuses plain HTTP to anything but the phone's own loopback, so the
-server stays on `127.0.0.1` and you bring the connection to the phone
-through a tunnel that ends at `127.0.0.1` there too:
+**Pair, don't type.** On an OpenCode 2 server, `opencode2 pair` prints the
+server's addresses, the username, and the current serve password, together
+with a QR encoding all three:
+
+```bash
+opencode2 pair
+```
+
+In the app's server editor, tap **Scan** and point the camera at that QR
+(Android), or copy what it printed and tap **Paste pairing code** (anywhere,
+no permissions). The app fills the address, username and password in one
+step, tries each address the code carries, and names the one it connected
+to. It is strictly less work than copying a 32-byte random password by hand,
+and there is nothing to mistype.
+
+The pairing code carries the serve password, so it is as good as shell
+access to that machine — treat it accordingly, and note that it goes stale
+whenever the server restarts without `OPENCODE_SERVER_PASSWORD` set.
+OpenCode 1 servers have no `pair` command, so the manual path below remains
+for them, and for anyone who prefers it.
+
+Pairing supplies credentials, not a route. The app refuses plain HTTP to
+anything but the phone's own loopback, so the server stays on `127.0.0.1`
+and you bring the connection to the phone through a tunnel that ends at
+`127.0.0.1` there too:
 
 - **USB / adb (simplest)** — with the phone plugged in and USB debugging on,
   `adb reverse tcp:4096 tcp:4096`, then connect the app to

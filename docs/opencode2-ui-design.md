@@ -87,11 +87,60 @@ and password reveal toggles —
   affordance and sits closest to the field edge.
 - `autocorrect: false`, `enableSuggestions: false`,
   `keyboardType: TextInputType.visiblePassword`.
-- **QR / `?auth_token` path: deferred.** The server prints no QR today; we
-  will not build a scanner speculatively. The transport must still support
-  `?auth_token=` internally (SSE/WS contexts), so the QR pairing flow
-  (cf. [Comet add-device sync code + QR](https://mobbin.com/screens/be6cec44-92b3-489e-a896-0377573be8fb))
-  can be added later without protocol work. Do not stub UI for it now.
+- ~~**QR / `?auth_token` path: deferred.** The server prints no QR today; we
+  will not build a scanner speculatively.~~ **Superseded — QR pairing
+  shipped.** The premise was falsified: OpenCode 2's CLI has an
+  `opencode2 pair` command that prints the server's addresses, the username,
+  and the serve password, *and* a QR encoding exactly
+  `JSON.stringify({urls, username: "opencode", password})`. The deferral was
+  correct while the server printed nothing to scan and a scanner would have
+  been speculative; it stopped being correct the moment the server started
+  printing one. Pairing is now strictly less work than the paste-first
+  password flow — one action fills the address, the username and the
+  password — so it leads the editor rather than sitting behind it.
+
+  Shipped shape (cf. [Comet add-device sync code + QR](https://mobbin.com/screens/be6cec44-92b3-489e-a896-0377573be8fb)):
+
+  - **Parsing is one path** (`lib/state/pairing.dart`,
+    `parsePairingPayload`) for every entry point: the clipboard, a payload
+    pasted into the URL field, and a decoded QR. A camera is just another
+    way to move a string; it gets no second, laxer parser.
+  - **Paste is always available and needs no permission** — button key
+    `server-pairing-paste`. The URL field intercepts a pasted payload and
+    empties itself first: the JSON carries the serve password, and a text
+    field renders it, a screenshot captures it, and autofill may offer it.
+  - **Scanning is Android-only**, gated on
+    `platformCapabilities.supportsQrPairing`. Button key
+    `server-pairing-scan`; screen `pairing-scanner-screen`. Desktop renders
+    no affordance at all: `mobile_scanner` has no Linux implementation, and a
+    desktop user would be pointing a webcam at the screen that printed the
+    code.
+  - **Camera permission is a three-state answer** (`lib/platform/camera.dart`
+    over the `oc/camera` channel), mirroring the microphone seam, because
+    `mobile_scanner` reports only "denied" and Android's *denied* and
+    *permanently denied* need different recoveries — retry versus the app
+    settings deep link. Keys: `pairing-scanner-denied`,
+    `pairing-scanner-blocked`, `pairing-scanner-no-camera`,
+    `pairing-scanner-failed`. Every one of them offers "Paste it instead".
+  - **Address selection is the substance** (`selectPairingUrl`). `urls` is an
+    array — loopback always, plus a LAN address after
+    `opencode service set hostname 0.0.0.0`. Candidates go through the
+    existing `validateServerProfileUrl` transport policy first, so a
+    cleartext LAN address is reported as skipped with the reason rather than
+    dialed. The rest are probed in preference order (routable first on a
+    phone, loopback first on desktop) and the first that connects wins; the
+    chosen host is named in `server-pairing-notice`. When nothing connects,
+    `server-pairing-failure` lists every address with its own verdict,
+    because "run `adb reverse`" and "put it behind TLS" are different
+    answers and only the per-address verdict distinguishes them.
+  - **No layout budget was spent on chrome.** A titled card, and even two
+    extra sentences of intro copy, pushed the URL and password fields below
+    the fold at 2× text scale. The affordance is a bare button row; the
+    explaining happens in the failure copy and the docs.
+
+  `?auth_token=` remains deleted and must stay deleted (see
+  `lib/api2/transport.dart`); pairing puts credentials in the Keystore and
+  the `Authorization` header, never in a URL.
 
 ### Storage & mid-session re-auth
 
