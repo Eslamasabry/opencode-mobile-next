@@ -91,6 +91,16 @@ class PlatformCapabilities {
   /// machine running the server — `adb reverse`, USB bridging.
   bool get supportsUsbHostBridge => isAndroid;
 
+  /// Scanning the QR that `opencode2 pair` prints: the camera permission, the
+  /// `oc/camera` channel, and the `mobile_scanner` preview.
+  ///
+  /// Android only. `mobile_scanner` ships no Linux implementation, and a
+  /// desktop user reading a QR off the same machine that printed it would be
+  /// pointing a webcam at their own screen — pasting is simply better there.
+  /// Desktop therefore renders no scan affordance at all rather than one that
+  /// opens and fails.
+  bool get supportsQrPairing => isAndroid;
+
   @override
   bool operator ==(Object other) =>
       other is PlatformCapabilities &&

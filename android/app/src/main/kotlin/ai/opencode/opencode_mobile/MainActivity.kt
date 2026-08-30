@@ -26,6 +26,7 @@ class MainActivity : FlutterActivity() {
     private var permissionResult: MethodChannel.Result? = null
     private var microphonePermissionResult: MethodChannel.Result? = null
     private var backgroundPermissionResult: MethodChannel.Result? = null
+    private var cameraPermissionResult: MethodChannel.Result? = null
     private var pendingCodingAlertOpen: Map<String, String>? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -55,6 +56,23 @@ class MainActivity : FlutterActivity() {
                 when (call.method) {
                     "getDeviceInfo" -> result.success(voiceDeviceInfo())
                     "requestMicrophonePermission" -> requestMicrophonePermission(result)
+                    "openAppSettings" -> {
+                        startActivity(
+                            Intent(
+                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                Uri.parse("package:$packageName")
+                            )
+                        )
+                        result.success(null)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CAMERA_CHANNEL_NAME)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "hasCamera" -> result.success(hasCamera())
+                    "requestCameraPermission" -> requestCameraPermission(result)
                     "openAppSettings" -> {
                         startActivity(
                             Intent(
@@ -192,6 +210,19 @@ class MainActivity : FlutterActivity() {
                 }
                 result.success(status)
             }
+            CAMERA_PERMISSION_REQUEST -> {
+                val result = cameraPermissionResult ?: return
+                cameraPermissionResult = null
+                val granted = grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED
+                val status = if (granted) {
+                    "granted"
+                } else if (!shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
+                    "permanentlyDenied"
+                } else {
+                    "denied"
+                }
+                result.success(status)
+            }
             BACKGROUND_NOTIFICATION_PERMISSION_REQUEST -> {
                 val result = backgroundPermissionResult ?: return
                 backgroundPermissionResult = null
@@ -275,6 +306,33 @@ class MainActivity : FlutterActivity() {
             "supportedAbis" to Build.SUPPORTED_ABIS.toList(),
             "hasMicrophone" to packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE)
         )
+    }
+
+    private fun hasCamera(): Boolean =
+        packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)
+
+    /// Mirrors [requestMicrophonePermission]. `shouldShowRequestPermissionRationale`
+    /// is false both before the very first prompt and after "don't ask again",
+    /// so a remembered "we have asked once" flag is what separates the two.
+    private fun requestCameraPermission(result: MethodChannel.Result) {
+        if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            result.success("granted")
+            return
+        }
+        val permissionPreferences = getSharedPreferences("camera_permissions", MODE_PRIVATE)
+        if (permissionPreferences.getBoolean("camera_requested", false) &&
+            !shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)
+        ) {
+            result.success("permanentlyDenied")
+            return
+        }
+        if (cameraPermissionResult != null) {
+            result.error("permission_in_progress", "A camera permission request is already open.", null)
+            return
+        }
+        cameraPermissionResult = result
+        permissionPreferences.edit().putBoolean("camera_requested", true).apply()
+        requestPermissions(arrayOf(Manifest.permission.CAMERA), CAMERA_PERMISSION_REQUEST)
     }
 
     private fun requestMicrophonePermission(result: MethodChannel.Result) {
@@ -464,6 +522,7 @@ class MainActivity : FlutterActivity() {
 
         private const val CHANNEL_NAME = "oc/termux"
         private const val VOICE_CHANNEL_NAME = "oc/voice"
+        private const val CAMERA_CHANNEL_NAME = "oc/camera"
         private const val BACKGROUND_CHANNEL_NAME = "oc/background"
         private const val TERMUX_PACKAGE = "com.termux"
         private const val TERMUX_HOME = "/data/data/com.termux/files/home"
@@ -472,6 +531,7 @@ class MainActivity : FlutterActivity() {
         private const val RUN_COMMAND_PERMISSION_REQUEST = 4701
         private const val MICROPHONE_PERMISSION_REQUEST = 4702
         private const val BACKGROUND_NOTIFICATION_PERMISSION_REQUEST = 4703
+        private const val CAMERA_PERMISSION_REQUEST = 4704
         private const val ACTION_RUN_COMMAND = "com.termux.RUN_COMMAND"
         private const val RUN_COMMAND_SERVICE = "com.termux.app.RunCommandService"
         private const val EXTRA_COMMAND_PATH = "com.termux.RUN_COMMAND_PATH"

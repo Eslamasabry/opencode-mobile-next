@@ -12,6 +12,7 @@ import '../../state/pairing.dart';
 import '../../state/profiles.dart';
 import '../app_theme.dart';
 import '../widgets/product_states.dart';
+import 'pairing_scanner_screen.dart';
 
 /// Manage opencode server profiles and connect.
 class ServersScreen extends ConsumerStatefulWidget {
@@ -791,6 +792,25 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
     await _applyPairing(parsed.payload!);
   }
 
+  /// Opens the camera scanner and applies whatever pairing code it decodes.
+  ///
+  /// The scanner owns every camera failure — permission, hardware, a QR that
+  /// is not a pairing code — and returns null for all of them, so there is
+  /// nothing to explain here beyond a payload that arrived.
+  Future<void> _scanPairing() async {
+    if (!platformCapabilities.supportsQrPairing) return;
+    final payload = await Navigator.of(context).push<PairingPayload>(
+      MaterialPageRoute<PairingPayload>(
+        builder: (_) => const PairingScannerScreen(),
+      ),
+    );
+    if (payload == null || !mounted) {
+      payload?.consume();
+      return;
+    }
+    await _applyPairing(payload);
+  }
+
   /// Probes a pairing payload's addresses and fills the editor from the one
   /// that answers.
   ///
@@ -838,23 +858,18 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
     final result = selection.chosenResult;
     setState(() {
       _pairing = false;
-      _testResult = selection.connected ? result : null;
-      if (selection.connected) {
-        final version = result?.version;
-        _pairingNotice =
-            'Paired with $host — '
-            '${result?.flavor == ServerFlavor.v2 ? 'OpenCode 2' : 'OpenCode 1'}'
-            '${version == null ? '' : ' · $version'}. '
-            '${tried > 1 ? 'Chosen from $tried addresses in the code. ' : ''}'
-            'Save to finish.';
+      // The existing probe-verdict row already says the flavor, the version,
+      // and "Connected — save to finish", and it is what `_save` reads to
+      // cache the detected flavor. So pairing hands it the result and says
+      // only the thing it cannot: *which* address was chosen, out of how
+      // many. Repeating the verdict here would be two widgets telling the
+      // user the same thing.
+      _testResult = selection.ok ? result : null;
+      if (selection.ok) {
+        _pairingNotice = tried > 1
+            ? 'Paired with $host — chosen from $tried addresses in the code.'
+            : 'Paired with $host.';
         _pairingFailure = null;
-      } else if (selection.ok) {
-        // A server answered, so the address is right; something else is
-        // wrong and the probe already knows what.
-        _pairingNotice = 'Reached a server at $host.';
-        _pairingFailure =
-            result?.message ??
-            'The server answered but the pairing code did not work.';
       } else {
         _pairingNotice = null;
         _pairingFailure =
@@ -1075,6 +1090,11 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                 notice: _pairingNotice,
                 failure: _pairingFailure,
                 onPaste: _pairing ? null : () => unawaited(_pastePairing()),
+                // Rendered only where a camera path exists. Desktop gets no
+                // affordance at all rather than one that opens and fails.
+                onScan: platformCapabilities.supportsQrPairing
+                    ? () => unawaited(_scanPairing())
+                    : null,
               ),
               const SizedBox(height: 20),
               TextField(
@@ -1348,12 +1368,18 @@ class _PairingActions extends StatelessWidget {
     required this.notice,
     required this.failure,
     required this.onPaste,
+    required this.onScan,
   });
 
   final bool busy;
   final String? notice;
   final String? failure;
   final VoidCallback? onPaste;
+
+  /// Null wherever there is no camera path — desktop, and anywhere else
+  /// `supportsQrPairing` says no. The button is then not built at all, so no
+  /// camera code is reachable and nothing offers what it cannot do.
+  final VoidCallback? onScan;
 
   @override
   Widget build(BuildContext context) {
@@ -1379,6 +1405,13 @@ class _PairingActions extends StatelessWidget {
                     : const Icon(Icons.content_paste_rounded, size: 18),
                 label: Text(busy ? 'Pairing…' : 'Paste pairing code'),
               ),
+              if (onScan case final scan?)
+                OutlinedButton.icon(
+                  key: const ValueKey('server-pairing-scan'),
+                  onPressed: busy ? null : scan,
+                  icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
+                  label: const Text('Scan'),
+                ),
             ],
           ),
           if (notice != null) ...[

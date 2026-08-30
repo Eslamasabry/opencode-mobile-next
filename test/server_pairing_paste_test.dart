@@ -340,15 +340,40 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('server-pairing-paste')));
     await tester.pumpAndSettle();
 
-    // The host was right, so the address is filled and the notice says so;
-    // the failure explains the credential, not the connection.
+    // The host was right, so the address is filled and the notice names it.
     expect(fieldText(tester, 'server-url-field'), 'http://127.0.0.1:4097');
     expect(find.byKey(const ValueKey('server-pairing-notice')), findsOneWidget);
+    // The credential problem is the probe's verdict to report, through the
+    // existing row — not a second pairing-specific error saying the same
+    // thing, and not "no address answered", which would be a lie.
     expect(
       find.byKey(const ValueKey('server-pairing-failure')),
-      findsOneWidget,
+      findsNothing,
     );
+    expect(find.byKey(const ValueKey('server-test-failure')), findsOneWidget);
     expect(find.textContaining('Password rejected'), findsWidgets);
+  });
+
+  testWidgets('a successful pair does not repeat the probe verdict', (
+    tester,
+  ) async {
+    serverProbe =
+        ({required baseUrl, username, password}) async =>
+            const ServerProbeResult.success(
+              '0.0.0-beta-18600',
+              flavor: ServerFlavor.v2,
+            );
+    await pumpEditor(tester);
+    setClipboard(tester, pairJson());
+
+    await tester.tap(find.byKey(const ValueKey('server-pairing-paste')));
+    await tester.pumpAndSettle();
+
+    // One statement of the flavor and version, in the row that already
+    // existed for it; the pairing notice adds only the chosen address.
+    expect(find.text('OpenCode 2 · 0.0.0-beta-18600'), findsOneWidget);
+    expect(find.text('Connected — save to finish.'), findsOneWidget);
+    expect(find.text('Paired with 127.0.0.1.'), findsOneWidget);
   });
 
   testWidgets('the pairing action is on the editor for both platforms', (
