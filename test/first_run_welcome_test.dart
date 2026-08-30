@@ -48,6 +48,22 @@ Widget _app(
   ),
 );
 
+/// The editor's own field list.
+///
+/// The rows live in a `ListView`, so a row below the fold is not merely
+/// off-screen — it is not built at all. `ensureVisible` cannot reach it, and
+/// neither can a drag aimed at `find.byType(Scrollable).last`, which is a
+/// text field's *internal* scrollable rather than the list. Both used to look
+/// like they worked only because nothing yet needed scrolling.
+/// `.first` because every text field carries its own internal `Scrollable`
+/// under the same list; the outermost one is the list itself.
+final Finder _editorList = find
+    .descendant(
+      of: find.byKey(const ValueKey('server-profile-fields')),
+      matching: find.byType(Scrollable),
+    )
+    .first;
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -216,7 +232,7 @@ void main() {
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('test-server-connection')),
       200,
-      scrollable: find.byType(Scrollable).last,
+      scrollable: _editorList,
     );
     await tester.tap(find.byKey(const ValueKey('test-server-connection')));
     await tester.pumpAndSettle();
@@ -253,7 +269,7 @@ void main() {
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('test-server-connection')),
       200,
-      scrollable: find.byType(Scrollable).last,
+      scrollable: _editorList,
     );
     await tester.tap(find.byKey(const ValueKey('test-server-connection')));
     await tester.pumpAndSettle();
@@ -307,7 +323,7 @@ void main() {
       await tester.scrollUntilVisible(
         find.byKey(const ValueKey('test-server-connection')),
         200,
-        scrollable: find.byType(Scrollable).last,
+        scrollable: _editorList,
       );
       await tester.tap(find.byKey(const ValueKey('test-server-connection')));
       await tester.pumpAndSettle();
@@ -318,12 +334,7 @@ void main() {
       await tester.scrollUntilVisible(
         find.byKey(const ValueKey('server-test-guide')),
         200,
-        scrollable: find
-            .descendant(
-              of: find.byKey(const ValueKey('server-profile-fields')),
-              matching: find.byType(Scrollable),
-            )
-            .first,
+        scrollable: _editorList,
       );
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('server-test-guide')));
@@ -356,7 +367,7 @@ void main() {
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('test-server-connection')),
       200,
-      scrollable: find.byType(Scrollable).last,
+      scrollable: _editorList,
     );
     await tester.tap(find.byKey(const ValueKey('test-server-connection')));
     await tester.pumpAndSettle();
@@ -392,7 +403,7 @@ void main() {
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('test-server-connection')),
       200,
-      scrollable: find.byType(Scrollable).last,
+      scrollable: _editorList,
     );
     await tester.tap(find.byKey(const ValueKey('test-server-connection')));
     await tester.pumpAndSettle();

@@ -68,10 +68,38 @@ Future<void> _openEditor(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+/// The editor's own field list. `.first` because every text field carries its
+/// own internal `Scrollable` under the same list; the outermost is the list.
+final Finder _editorList = find
+    .descendant(
+      of: find.byKey(const ValueKey('server-profile-fields')),
+      matching: find.byType(Scrollable),
+    )
+    .first;
+
+/// Brings an editor row into view.
+///
+/// The rows live in a `ListView`, so a row below the fold is not merely
+/// off-screen — it is not built at all, and `ensureVisible` on its own cannot
+/// reach it. Scroll first, then settle it into view.
+Future<void> _reveal(WidgetTester tester, Finder target) async {
+  if (target.evaluate().isEmpty) {
+    await tester.scrollUntilVisible(target, 120, scrollable: _editorList);
+  }
+  await tester.ensureVisible(target);
+  await tester.pumpAndSettle();
+}
+
+Future<void> _enter(WidgetTester tester, String key, String text) async {
+  final field = find.byKey(ValueKey(key));
+  await _reveal(tester, field);
+  await tester.enterText(field, text);
+  await tester.pump();
+}
+
 Future<void> _test(WidgetTester tester) async {
   final button = find.byKey(const ValueKey('test-server-connection'));
-  await tester.ensureVisible(button);
-  await tester.pumpAndSettle();
+  await _reveal(tester, button);
   await tester.tap(button);
   await tester.pumpAndSettle();
 }
@@ -98,10 +126,7 @@ void main() {
     await tester.pumpWidget(_app(store, controller));
     await _openEditor(tester);
 
-    await tester.enterText(
-      find.byKey(const ValueKey('server-url-field')),
-      'https://box.example:4097',
-    );
+    await _enter(tester, 'server-url-field', 'https://box.example:4097');
     await _test(tester);
 
     expect(probedPassword, isEmpty);
@@ -133,14 +158,8 @@ void main() {
     await tester.pumpWidget(_app(store, controller));
     await _openEditor(tester);
 
-    await tester.enterText(
-      find.byKey(const ValueKey('server-url-field')),
-      'https://box.example:4097',
-    );
-    await tester.enterText(
-      find.byKey(const ValueKey('server-password-field')),
-      'stale-password',
-    );
+    await _enter(tester, 'server-url-field', 'https://box.example:4097');
+    await _enter(tester, 'server-password-field', 'stale-password');
     await _test(tester);
 
     expect(find.textContaining('Password rejected'), findsOneWidget);
@@ -168,14 +187,8 @@ void main() {
     await tester.pumpWidget(_app(store, controller));
     await _openEditor(tester);
 
-    await tester.enterText(
-      find.byKey(const ValueKey('server-url-field')),
-      'https://box.example:4097',
-    );
-    await tester.enterText(
-      find.byKey(const ValueKey('server-password-field')),
-      'the-serve-password',
-    );
+    await _enter(tester, 'server-url-field', 'https://box.example:4097');
+    await _enter(tester, 'server-password-field', 'the-serve-password');
     await _test(tester);
 
     expect(find.text('OpenCode 2 · 0.0.0-beta-18600'), findsOneWidget);
@@ -199,10 +212,7 @@ void main() {
     await tester.pumpWidget(_app(store, controller));
     await _openEditor(tester);
 
-    await tester.enterText(
-      find.byKey(const ValueKey('server-url-field')),
-      'https://box.example:4096',
-    );
+    await _enter(tester, 'server-url-field', 'https://box.example:4096');
     await _test(tester);
 
     expect(find.text('OpenCode 1 · 0.3.5 — limited feature set'), findsOneWidget);
@@ -243,8 +253,7 @@ void main() {
     await _openEditor(tester);
 
     final paste = find.byKey(const ValueKey('server-password-paste'));
-    await tester.ensureVisible(paste);
-    await tester.pumpAndSettle();
+    await _reveal(tester, paste);
     await tester.tap(paste);
     await tester.pumpAndSettle();
 
@@ -269,8 +278,7 @@ void main() {
     await _openEditor(tester);
 
     final toggle = find.byKey(const ValueKey('server-password-visibility'));
-    await tester.ensureVisible(toggle);
-    await tester.pumpAndSettle();
+    await _reveal(tester, toggle);
     expect(
       tester
           .widget<TextField>(

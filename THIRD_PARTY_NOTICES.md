@@ -73,6 +73,34 @@ referenced above. The same text ships in every `record_*` platform package.
 This package supplies stable indexed scrolling for long, mixed-height message
 timelines.
 
+### mobile_scanner, and the Android libraries it pulls in
+
+- Component: `mobile_scanner` Flutter package
+- Version: 7.4.0
+- Project: https://github.com/juliansteenbakker/mobile_scanner
+- Copyright: 2022 Julian Steenbakker
+- License: BSD 3-Clause; see `LICENSES/BSD-3-Clause.txt`
+
+This package reads the QR code that `opencode2 pair` prints. It is listed
+here as well as in the inventory table because, unlike the other Dart
+packages, it causes Google-authored native libraries to be compiled into the
+Android APK. Its Gradle module declares:
+
+- `com.google.mlkit:barcode-scanning` 17.3.0 — the barcode decoder, **with
+  the detection model bundled into the APK**. This is the package's default;
+  the alternative (`play-services-mlkit-barcode-scanning`, model downloaded
+  on demand via Google Play Services) is not used, so scanning works on a
+  device with no Play Services and with no first-run download. The cost is a
+  larger APK, stated here rather than left to be discovered.
+- `androidx.camera:camera-lifecycle` and `androidx.camera:camera-camera2`
+  1.6.1 — CameraX, which drives the preview.
+- `org.jetbrains.kotlinx:kotlinx-coroutines-android` 1.11.0.
+
+All of the above are Apache License 2.0; see `LICENSES/Apache-2.0.txt`.
+ML Kit is additionally covered by Google's ML Kit terms of service. None of
+these are used anywhere else in the app: the camera is opened only by the
+pairing scanner, only while that screen is on top, and no frame is stored.
+
 ### JetBrains Mono
 
 - Component: JetBrains Mono font files bundled under `assets/fonts/`
@@ -193,6 +221,7 @@ lives in `packages/opencode_sdk/`, and is covered by this project's
 | `material_color_utilities` | 0.13.0 | Apache-2.0 | — | runtime |
 | `meta` | 1.19.0 | BSD-3-Clause | Copyright 2016, the Dart project authors | runtime |
 | `mime` | 2.0.0 | BSD-3-Clause | Copyright 2015, the Dart project authors | runtime |
+| `mobile_scanner` | 7.4.0 | BSD-3-Clause | Copyright (c) 2022, Julian Steenbakker | runtime |
 | `objective_c` | 9.6.0 | BSD-3-Clause | Copyright 2024, the Dart project authors | runtime |
 | `package_config` | 3.0.0 | BSD-3-Clause | Copyright 2019, the Dart project authors | runtime |
 | `package_info_plus` | 10.2.1 | BSD-3-Clause | Copyright 2017 The Chromium Authors. All rights reserved | runtime |
