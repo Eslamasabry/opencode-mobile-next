@@ -8,12 +8,12 @@ body:
         **OpenCode Mobile is an independent community project. It is not
         built, maintained, endorsed by, or affiliated with the official
         OpenCode team.** Bugs in the OpenCode server itself belong upstream,
-        not here — see [SUPPORT.md](https://github.com/Eslamasabry/oc_app/blob/master/SUPPORT.md).
+        not here — see [SUPPORT.md](https://github.com/Eslamasabry/opencode-mobile/blob/master/SUPPORT.md).
 
         ⚠️ **Do not report a security vulnerability here.** This app stores
         server credentials and can authorize shell-capable actions. Report
         privately through a
-        [security advisory](https://github.com/Eslamasabry/oc_app/security/advisories/new).
+        [security advisory](https://github.com/Eslamasabry/opencode-mobile/security/advisories/new).
 
         ⚠️ **Redact before you paste.** No server passwords, no provider API
         keys, no real server hostnames, no unredacted transcripts.

@@ -1,7 +1,7 @@
 # Public-release audit — oc_app
 
 Audit date: 2026-08-29. Scope: working tree + full git history of
-`Eslamasabry/oc_app` (branch `production/android-release-hardening`, 220
+`Eslamasabry/opencode-mobile` (branch `production/android-release-hardening`, 220
 commits across all refs), plus GitHub-side settings, ahead of flipping the
 repo from PRIVATE to PUBLIC. History rewriting was explicitly out of scope;
 history findings are reported with commit hashes only.

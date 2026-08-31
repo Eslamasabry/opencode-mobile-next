@@ -74,8 +74,8 @@ void main() {
 
     test('the release API target matches the repository CI publishes to', () {
       final workflow = _read('.github/workflows/desktop-linux.yml');
-      expect(desktopReleasesApiUrl, contains('Eslamasabry/oc_app'));
-      expect(desktopReleasesPageUrl, contains('Eslamasabry/oc_app'));
+      expect(desktopReleasesApiUrl, contains('Eslamasabry/opencode-mobile'));
+      expect(desktopReleasesPageUrl, contains('Eslamasabry/opencode-mobile'));
       // The release job attaches assets to the tag's existing release rather
       // than creating one, so the tag the checker parses is always the tag
       // scripts/release.sh made.

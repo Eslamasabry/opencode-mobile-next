@@ -27,8 +27,8 @@
   </description>
 
   <launchable type="desktop-id">io.github.eslamasabry.opencode_mobile.desktop</launchable>
-  <url type="homepage">https://github.com/Eslamasabry/oc_app</url>
-  <url type="bugtracker">https://github.com/Eslamasabry/oc_app/issues</url>
+  <url type="homepage">https://github.com/Eslamasabry/opencode-mobile</url>
+  <url type="bugtracker">https://github.com/Eslamasabry/opencode-mobile/issues</url>
   <developer id="io.github.eslamasabry">
     <name>OpenCode</name>
   </developer>

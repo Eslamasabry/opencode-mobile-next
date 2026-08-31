@@ -13,7 +13,7 @@ the app itself. The same codebase builds a working Linux desktop binary.
 ## Status
 
 This is a **preview line, not a stable release**. The current cut is
-[v1.0.29+30-preview.9](https://github.com/Eslamasabry/oc_app/releases/tag/v1.0.29%2B30-preview.9)
+[v1.0.29+30-preview.9](https://github.com/Eslamasabry/opencode-mobile/releases/tag/v1.0.29%2B30-preview.9)
 (`oc_app-1.0.29+30-convergence-preview9.apk`); `v1.0.19+20` is the last
 stable cut. The navigation changed in preview 9, so screenshots and videos
 from earlier previews no longer match the app — see the captions below.
@@ -123,12 +123,25 @@ re-cut from footage recorded against a scratch project.
 ## Install
 
 Grab the APK from the
-[latest release](https://github.com/Eslamasabry/oc_app/releases).
+[latest release](https://github.com/Eslamasabry/opencode-mobile/releases).
+
+**The next build will not upgrade preview 10 — it installs beside it.** The
+Android application ID moved from `ai.opencode.opencode_mobile` to
+`io.github.eslamasabry.opencode_mobile`. The old one sat under `opencode.ai`,
+the OpenCode project's own reverse domain, which this project does not
+control; Android treats the application ID as permanent product identity, so
+it had to move before anything ships stable. To Android the result is a
+*different app*: it installs alongside the preview you already have instead
+of replacing it, and both will show in the launcher under the same name and
+icon. Uninstall the old one by hand first, and expect to sign in and set up
+your servers again — app data does not carry across an application ID
+change. This is a one-time break; the new ID is permanent.
 
 **Honest signing caveat:** these APKs are sideload builds signed with the
 project's own certificate, not a Play Store production key. Android will
 warn about unknown sources — that is expected. The signing lineage is
-stable and pinned, so previews upgrade in place: certificate SHA-256
+stable and pinned, so previews upgrade in place once past the ID change
+above: certificate SHA-256
 `1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c`. Verify
 any downloaded APK with
 `apksigner verify --print-certs app.apk` and compare against that

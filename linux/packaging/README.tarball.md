@@ -75,5 +75,5 @@ libraries are left behind.
 
 ## Reporting problems
 
-https://github.com/Eslamasabry/oc_app/issues — please say which
+https://github.com/Eslamasabry/opencode-mobile/issues — please say which
 distribution, which desktop, and X11 or Wayland.

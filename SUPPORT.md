@@ -30,7 +30,7 @@ not this app.
 
 1. **Update.** Only the current preview is supported. The bug may already be
    gone.
-2. **Search** [existing issues](https://github.com/Eslamasabry/oc_app/issues?q=is%3Aissue).
+2. **Search** [existing issues](https://github.com/Eslamasabry/opencode-mobile/issues?q=is%3Aissue).
 3. **Collect versions** — app version and build from **Settings → About**,
    Android version and device, OpenCode server version, and whether the
    server is v1 or v2.
@@ -44,11 +44,11 @@ not this app.
 
 ## Where to go
 
-- **Bug in the app** — [open a bug report](https://github.com/Eslamasabry/oc_app/issues/new?template=bug_report.yml)
-- **Feature or change** — [open a feature request](https://github.com/Eslamasabry/oc_app/issues/new?template=feature_request.yml)
+- **Bug in the app** — [open a bug report](https://github.com/Eslamasabry/opencode-mobile/issues/new?template=bug_report.yml)
+- **Feature or change** — [open a feature request](https://github.com/Eslamasabry/opencode-mobile/issues/new?template=feature_request.yml)
 - **Question, idea, or "is this supposed to work?"** —
-  [Discussions](https://github.com/Eslamasabry/oc_app/discussions)
-- **Vulnerability** — [private advisory](https://github.com/Eslamasabry/oc_app/security/advisories/new),
+  [Discussions](https://github.com/Eslamasabry/opencode-mobile/discussions)
+- **Vulnerability** — [private advisory](https://github.com/Eslamasabry/opencode-mobile/security/advisories/new),
   never a public issue
 - **Want to fix it yourself** — [CONTRIBUTING.md](CONTRIBUTING.md)
 

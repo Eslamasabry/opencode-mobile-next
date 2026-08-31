@@ -1,6 +1,6 @@
 # OpenCode Mobile (`oc_app`) — dedicated UI/UX audit
 
-**Repository:** `Eslamasabry/oc_app`  
+**Repository:** `Eslamasabry/opencode-mobile`  
 **Audited branch:** `master`  
 **Audited commit:** `9e7d5ce5431f8d20b8da028c20e8c71787d29384`  
 **Audit date:** 29 August 2026  

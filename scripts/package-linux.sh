@@ -257,7 +257,7 @@ Architecture: $arch
 Maintainer: OpenCode <noreply@github.com>
 Installed-Size: $installed_kb
 Depends: $depends
-Homepage: https://github.com/Eslamasabry/oc_app
+Homepage: https://github.com/Eslamasabry/opencode-mobile
 Description: OpenCode desktop client for opencode servers
  OpenCode connects to an opencode server you run and gives you its sessions,
  chat transcript, file browser, diff review and terminal.
