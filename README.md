@@ -113,6 +113,10 @@ Current screenshots have not been recut.
 |---|---|---|---|
 | ![Workspace](video/public/shots/still-workspace.png) | ![Live run with context meter](video/public/shots/still-rec3-end.png) | ![More grid](video/public/shots/still-more-grid.png) | ![Continue-here sheet](video/public/shots/still-steal-sheet.png) |
 
+The project row in the first shot carries a solid redaction bar: the capture
+showed the recording machine's absolute project path, which is not something a
+screenshot needs to prove. Nothing else in these four is retouched.
+
 The 2.5-minute showcase video was cut from on-device recordings of the same
 preview 7 build and carries the same caveat:
 
