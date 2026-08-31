@@ -113,15 +113,12 @@ Current screenshots have not been recut.
 |---|---|---|---|
 | ![Workspace](video/public/shots/still-workspace.png) | ![Live run with context meter](video/public/shots/still-rec3-end.png) | ![More grid](video/public/shots/still-more-grid.png) | ![Continue-here sheet](video/public/shots/still-steal-sheet.png) |
 
-The 2.5-minute showcase video was cut from on-device recordings of the same
-preview 7 build and carries the same caveat:
-
-- [Landscape 1080p](https://github.com/Eslamasabry/oc_app/releases/download/v1.0.27%2B28-preview.7/opencode-mobile-showcase-landscape-1080p.mp4)
-- [Vertical 1080×1920](https://github.com/Eslamasabry/oc_app/releases/download/v1.0.27%2B28-preview.7/opencode-mobile-showcase-vertical-1080x1920.mp4)
-  (for shorts/stories)
-
-The Remotion source lives in [`video/`](video/), with the full storyboard in
-[docs/showcase-video-plan.md](docs/showcase-video-plan.md).
+A 2.5-minute showcase video was cut from the same preview 7 build and has
+been withdrawn: it was recorded from real sessions and showed a local home
+directory path and conversation content on screen. The Remotion source
+lives in [`video/`](video/) with its storyboard in
+[docs/showcase-video-plan.md](docs/showcase-video-plan.md), so it can be
+re-cut from footage recorded against a scratch project.
 
 ## Install
 
