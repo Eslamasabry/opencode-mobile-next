@@ -669,7 +669,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
   }
 
   /// A paste is a jump of several characters at once. When it lands without a
-  /// scheme, expand it in place so `192.168.1.7:4096` just works.
+  /// scheme, expand it in place so `192.0.2.7:4096` just works.
   ///
   /// A pasted *pairing* payload is intercepted before anything else. It is
   /// JSON carrying the serve password, and it must not be left sitting in a
@@ -1108,7 +1108,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                 onChanged: _urlChanged,
                 decoration: InputDecoration(
                   labelText: 'Server URL',
-                  hintText: '192.168.1.20:4096 or https://…',
+                  hintText: '192.0.2.20:4096 or https://…',
                   errorText: _error,
                   errorMaxLines: 3,
                   helperText:

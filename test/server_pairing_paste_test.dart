@@ -224,7 +224,7 @@ void main() {
       fail('A cleartext LAN address must never be dialed: $baseUrl');
     };
     await pumpEditor(tester);
-    setClipboard(tester, pairJson(urls: ['http://192.168.1.20:4097']));
+    setClipboard(tester, pairJson(urls: ['http://192.0.2.20:4097']));
 
     await tester.tap(find.byKey(const ValueKey('server-pairing-paste')));
     await tester.pumpAndSettle();

@@ -33,9 +33,12 @@ the README (a placeholder is there waiting).
 `video/.gitignore` ignores `public/shots/*.png` and `*.mp4`. The four stills
 the rewritten README references (`video/public/shots/still-workspace.png`,
 `still-rec3-end.png`, `still-more-grid.png`, `still-steal-sheet.png`) exist
-on disk and show only app surfaces (verified visually safe by filename and
-provenance: emulator recordings of this app against a local server), but
-they are **not tracked**, so they will 404 the moment the repo is public.
+on disk and show app surfaces only, but they are **not tracked**, so they
+will 404 the moment the repo is public. (This entry originally cleared them
+"by filename and provenance" without opening them. A later pass looked at
+the pixels and found the workspace still rendered the recording machine's
+absolute project path; it now carries a solid redaction bar. Provenance is
+not a substitute for looking.)
 Fix before the flip, either way works:
 
 ```bash
@@ -90,9 +93,8 @@ citations later.
 Re-read in full. It contains: Shorebird release IDs, APK SHA-256s, local
 absolute paths under the maintainer's home directory, machine quirks
 ("background tasks get SIGKILLed on this box"), agent-workflow notes, and
-pinned-toolchain lore. No
-credentials, no personal data beyond the GitHub username already in the repo
-URL. It is genuinely useful engineering history, but it reads as an internal
+pinned-toolchain lore. No credentials, no personal data beyond the GitHub
+username already in the repo URL. It is genuinely useful engineering history, but it reads as an internal
 scratchpad and is the file most likely to raise eyebrows ("agents built
 this?" is a story the owner should choose to tell deliberately). Options:
 keep as-is (honest), retitle/introduce it as an engineering log, or move the
@@ -138,9 +140,12 @@ verification anchor for sideloaders.
   (1d82ff1, 05c3c33, ab2ffc6) — each diff inspected; all introduce the
   benign fixtures/examples/docs listed in N1. No history rewriting needed.
 - **N4. Hosts/IPs/emails — clean.** All IPs are localhost, emulator
-  loopback (`10.0.2.2`), or RFC1918/CGNAT *examples* in tests and hint text
-  (`192.168.1.x`, `100.64.0.10`, `box.tail1234.ts.net`). No real private
-  hostname. No email address appears in any tracked file; PRIVACY.md's
+  loopback (`10.0.2.2`), or *examples* in tests and hint text. The examples
+  were RFC1918/CGNAT literals (`192.168.1.x`, `10.0.0.4`, `100.64.0.10`) and
+  have since been migrated to the documentation-reserved RFC 5737 ranges
+  (`192.0.2.x`, `198.51.100.4`, `203.0.113.10`); the IPv6 example was already
+  RFC 3849 (`2001:db8::1`). `box.tail1234.ts.net` is a synthetic tailnet
+  name. No real private hostname. No email address appears in any tracked file; PRIVACY.md's
   contact is the GitHub issues page. Commit authorship is uniformly
   `Ralph TUI Agent <agent@ralph-tui.local>` — no personal email in history
   at all (if the owner *wants* attribution, that is the opposite problem

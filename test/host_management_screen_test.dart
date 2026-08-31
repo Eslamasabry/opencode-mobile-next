@@ -72,7 +72,7 @@ void main() {
   testWidgets('remote profiles expose the host management destination', (
     tester,
   ) async {
-    final controller = await _controllerFor('http://192.168.1.20:4747');
+    final controller = await _controllerFor('http://192.0.2.20:4747');
     addTearDown(controller.dispose);
 
     await tester.pumpWidget(
@@ -135,7 +135,7 @@ void main() {
         null,
       ),
     );
-    final controller = await _controllerFor('http://192.168.1.20:4747');
+    final controller = await _controllerFor('http://192.0.2.20:4747');
     addTearDown(controller.dispose);
 
     await tester.pumpWidget(
@@ -168,7 +168,7 @@ void main() {
   testWidgets('host management fits a 320dp phone at 2x text', (tester) async {
     await tester.binding.setSurfaceSize(const Size(320, 640));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    final controller = await _controllerFor('http://192.168.1.20:4747');
+    final controller = await _controllerFor('http://192.0.2.20:4747');
     addTearDown(controller.dispose);
 
     await tester.pumpWidget(

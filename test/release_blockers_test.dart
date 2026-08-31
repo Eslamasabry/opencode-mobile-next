@@ -150,21 +150,21 @@ void main() {
   test('release URL policy permits only loopback HTTP', () {
     expect(validateServerProfileUrl('http://localhost:4096'), isNull);
     expect(validateServerProfileUrl('http://127.0.0.1:4096'), isNull);
-    expect(validateServerProfileUrl('https://192.168.1.4:4096'), isNull);
+    expect(validateServerProfileUrl('https://192.0.2.4:4096'), isNull);
     expect(
       validateServerProfileUrl('devbox.local:4096'),
       contains('Include https://'),
     );
     expect(
       validateServerProfileUrl(
-        'http://192.168.1.4:4096',
+        'http://192.0.2.4:4096',
         username: 'opencode',
         password: 'secret',
       ),
       contains('Basic credentials'),
     );
     expect(
-      validateServerProfileUrl('http://192.168.1.4:4096'),
+      validateServerProfileUrl('http://192.0.2.4:4096'),
       contains('HTTP is allowed only'),
     );
     expect(

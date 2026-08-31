@@ -198,7 +198,7 @@ void main() {
   testWidgets('remote profile clearly remains externally managed', (
     tester,
   ) async {
-    final controller = await _controllerFor('http://100.64.0.10:4747');
+    final controller = await _controllerFor('http://203.0.113.10:4747');
     addTearDown(controller.dispose);
 
     await tester.pumpWidget(
@@ -219,7 +219,7 @@ void main() {
   ) async {
     final repository = _EmptyPermissionRepository();
     final controller = await _controllerFor(
-      'http://100.64.0.10:4747',
+      'http://203.0.113.10:4747',
       repository: repository,
     );
     addTearDown(controller.dispose);
@@ -265,7 +265,7 @@ void main() {
     final repository = _EmptyPermissionRepository()
       ..upgradeError = const ProductException('Unknown installation method');
     final controller = await _controllerFor(
-      'http://100.64.0.10:4747',
+      'http://203.0.113.10:4747',
       repository: repository,
     );
     addTearDown(controller.dispose);
@@ -312,7 +312,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     final controller = await _controllerFor(
-      'http://100.64.0.10:4747',
+      'http://203.0.113.10:4747',
       repository: _EmptyPermissionRepository(),
     );
     addTearDown(controller.dispose);
