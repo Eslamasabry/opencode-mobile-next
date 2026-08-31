@@ -94,8 +94,9 @@ Re-read in full. It contains: Shorebird release IDs, APK SHA-256s, local
 absolute paths under the maintainer's home directory, machine quirks
 ("background tasks get SIGKILLed on this box"), agent-workflow notes, and
 pinned-toolchain lore. No credentials, no personal data beyond the GitHub
-username already in the repo URL. It is genuinely useful engineering history, but it reads as an internal
-scratchpad and is the file most likely to raise eyebrows ("agents built
+username already in the repo URL. It is genuinely useful engineering
+history, but it reads as an internal scratchpad and is the file most
+likely to raise eyebrows ("agents built
 this?" is a story the owner should choose to tell deliberately). Options:
 keep as-is (honest), retitle/introduce it as an engineering log, or move the
 release-runbook parts into docs/ and trim. No safety need to change it.
@@ -145,8 +146,8 @@ verification anchor for sideloaders.
   have since been migrated to the documentation-reserved RFC 5737 ranges
   (`192.0.2.x`, `198.51.100.4`, `203.0.113.10`); the IPv6 example was already
   RFC 3849 (`2001:db8::1`). `box.tail1234.ts.net` is a synthetic tailnet
-  name. No real private hostname. No email address appears in any tracked file; PRIVACY.md's
-  contact is the GitHub issues page. Commit authorship is uniformly
+  name. No real private hostname. No email address appears in any tracked
+  file; PRIVACY.md's contact is the GitHub issues page. Commit authorship is uniformly
   `Ralph TUI Agent <agent@ralph-tui.local>` — no personal email in history
   at all (if the owner *wants* attribution, that is the opposite problem
   and out of scope here).
