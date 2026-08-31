@@ -74,8 +74,8 @@ void main() {
 
     test('the release API target matches the repository CI publishes to', () {
       final workflow = _read('.github/workflows/desktop-linux.yml');
-      expect(desktopReleasesApiUrl, contains('Eslamasabry/oc_app'));
-      expect(desktopReleasesPageUrl, contains('Eslamasabry/oc_app'));
+      expect(desktopReleasesApiUrl, contains('Eslamasabry/opencode-mobile'));
+      expect(desktopReleasesPageUrl, contains('Eslamasabry/opencode-mobile'));
       // The release job attaches assets to the tag's existing release rather
       // than creating one, so the tag the checker parses is always the tag
       // scripts/release.sh made.
@@ -121,14 +121,14 @@ void main() {
       for (final size in sizes) {
         final icon = File(
           'linux/packaging/icons/hicolor/${size}x$size/apps/'
-          'ai.opencode.opencode_mobile.png',
+          'io.github.eslamasabry.opencode_mobile.png',
         );
         expect(icon.existsSync(), isTrue, reason: 'missing ${size}px icon');
       }
       expect(
         File(
           'linux/packaging/icons/hicolor/scalable/apps/'
-          'ai.opencode.opencode_mobile.svg',
+          'io.github.eslamasabry.opencode_mobile.svg',
         ).existsSync(),
         isTrue,
       );

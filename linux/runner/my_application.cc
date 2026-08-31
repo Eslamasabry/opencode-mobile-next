@@ -142,13 +142,13 @@ MyApplication* my_application_new() {
   // the application to be recognized beyond its binary name.
   //
   // On Wayland GTK reports this string as the xdg-shell app_id, which the
-  // compositor matches against ai.opencode.opencode_mobile.desktop by name.
+  // compositor matches against io.github.eslamasabry.opencode_mobile.desktop by name.
   g_set_prgname(APPLICATION_ID);
 
   // On X11 the shell matches the desktop file's StartupWMClass against
   // WM_CLASS instead. GDK derives res_name from the program name above and
   // res_class from the program class, which otherwise defaults to the program
-  // name with its first letter capitalised ("Ai.opencode.opencode_mobile").
+  // name with its first letter capitalised ("Io.github.eslamasabry.opencode_mobile").
   // Pinning the class to the same application ID makes both halves of
   // WM_CLASS identical and equal to StartupWMClass, so taskbar grouping and
   // the window icon resolve the same way on X11 as on Wayland regardless of

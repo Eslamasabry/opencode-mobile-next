@@ -75,7 +75,7 @@ void main() {
     final adapter = _RecordingAdapter(
       '[{"draft":true,"tag_name":"v9.9.9+99"},'
       '{"draft":false,"tag_name":"v1.0.25+26-preview.5",'
-      '"html_url":"https://github.com/Eslamasabry/oc_app/releases/tag/v1"}]',
+      '"html_url":"https://github.com/Eslamasabry/opencode-mobile/releases/tag/v1"}]',
     );
     final checker = DesktopReleaseChecker(
       dio: Dio()..httpClientAdapter = adapter,
@@ -84,19 +84,19 @@ void main() {
     final release = await checker.fetchLatest();
 
     expect(adapter.lastRequest?.uri.toString(), startsWith(
-      'https://api.github.com/repos/Eslamasabry/oc_app/releases',
+      'https://api.github.com/repos/Eslamasabry/opencode-mobile/releases',
     ));
     expect(release?.tag, 'v1.0.25+26-preview.5');
     expect(
       release?.htmlUrl,
-      'https://github.com/Eslamasabry/oc_app/releases/tag/v1',
+      'https://github.com/Eslamasabry/opencode-mobile/releases/tag/v1',
     );
   });
 
   test('a release URL that is not GitHub over https falls back', () async {
     for (final hostile in const [
       'javascript:alert(1)',
-      'http://github.com/Eslamasabry/oc_app/releases',
+      'http://github.com/Eslamasabry/opencode-mobile/releases',
       'https://user:pass@github.com/releases',
       'https://github.com.evil.test/releases',
       'https://example.test/rel',

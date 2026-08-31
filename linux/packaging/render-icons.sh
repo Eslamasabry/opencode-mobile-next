@@ -10,7 +10,7 @@
 # so re-running on an unchanged SVG produces a byte-identical tree.
 set -euo pipefail
 
-readonly APP_ID="ai.opencode.opencode_mobile"
+readonly APP_ID="io.github.eslamasabry.opencode_mobile"
 readonly SIZES=(16 24 32 48 64 128 256 512)
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

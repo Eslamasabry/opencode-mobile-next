@@ -95,4 +95,4 @@ that processing.
 ## Contact
 
 For privacy questions or reports, open an issue at
-[github.com/Eslamasabry/oc_app/issues](https://github.com/Eslamasabry/oc_app/issues).
+[github.com/Eslamasabry/opencode-mobile/issues](https://github.com/Eslamasabry/opencode-mobile/issues).

@@ -272,7 +272,7 @@ void main() {
       'backgroundServiceTimeout',
     );
     final kotlin = File(
-      'android/app/src/main/kotlin/ai/opencode/opencode_mobile/'
+      'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/'
       'BackgroundConnectionService.kt',
     ).readAsStringSync();
     expect(

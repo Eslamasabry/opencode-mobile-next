@@ -1,4 +1,4 @@
-package ai.opencode.opencode_mobile
+package io.github.eslamasabry.opencode_mobile
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager

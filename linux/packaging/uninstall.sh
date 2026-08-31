@@ -9,7 +9,7 @@
 # those by hand if you want a clean slate.
 set -euo pipefail
 
-readonly APP_ID="ai.opencode.opencode_mobile"
+readonly APP_ID="io.github.eslamasabry.opencode_mobile"
 
 if [ "$(id -u)" -eq 0 ]; then
   prefix="/usr/local"

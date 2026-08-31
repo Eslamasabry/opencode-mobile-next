@@ -1,4 +1,4 @@
-package ai.opencode.opencode_mobile
+package io.github.eslamasabry.opencode_mobile
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -350,19 +350,19 @@ class BackgroundConnectionService : Service() {
         )
 
         const val EXTRA_CODING_ALERT_KIND =
-            "ai.opencode.opencode_mobile.extra.CODING_ALERT_KIND"
+            "io.github.eslamasabry.opencode_mobile.extra.CODING_ALERT_KIND"
         const val EXTRA_CODING_ALERT_SESSION_ID =
-            "ai.opencode.opencode_mobile.extra.CODING_ALERT_SESSION_ID"
+            "io.github.eslamasabry.opencode_mobile.extra.CODING_ALERT_SESSION_ID"
         const val EXTRA_CODING_ALERT_PROFILE_ID =
-            "ai.opencode.opencode_mobile.extra.CODING_ALERT_PROFILE_ID"
+            "io.github.eslamasabry.opencode_mobile.extra.CODING_ALERT_PROFILE_ID"
         const val EXTRA_CODING_ALERT_KEY =
-            "ai.opencode.opencode_mobile.extra.CODING_ALERT_KEY"
+            "io.github.eslamasabry.opencode_mobile.extra.CODING_ALERT_KEY"
         const val EXTRA_CODING_ALERT_DECISION =
-            "ai.opencode.opencode_mobile.extra.CODING_ALERT_DECISION"
+            "io.github.eslamasabry.opencode_mobile.extra.CODING_ALERT_DECISION"
         const val EXTRA_CODING_ALERT_REQUEST_ID =
-            "ai.opencode.opencode_mobile.CODING_ALERT_REQUEST_ID"
+            "io.github.eslamasabry.opencode_mobile.CODING_ALERT_REQUEST_ID"
         const val ACTION_CODING_ALERT =
-            "ai.opencode.opencode_mobile.action.CODING_ALERT"
+            "io.github.eslamasabry.opencode_mobile.action.CODING_ALERT"
         const val REMOTE_INPUT_REPLY = "oc.codingAlertReply"
     }
 }

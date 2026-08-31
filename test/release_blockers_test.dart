@@ -273,10 +273,10 @@ void main() {
 
   test('Android background coding alerts are private and actionable', () {
     final activity = File(
-      'android/app/src/main/kotlin/ai/opencode/opencode_mobile/MainActivity.kt',
+      'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/MainActivity.kt',
     ).readAsStringSync();
     final service = File(
-      'android/app/src/main/kotlin/ai/opencode/opencode_mobile/'
+      'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/'
       'BackgroundConnectionService.kt',
     ).readAsStringSync();
 

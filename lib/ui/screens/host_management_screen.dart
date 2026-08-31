@@ -18,7 +18,7 @@ class HostManagementScreen extends StatelessWidget {
   final ConnectionController controller;
 
   static const scriptUrl =
-      'https://raw.githubusercontent.com/Eslamasabry/oc_app/'
+      'https://raw.githubusercontent.com/Eslamasabry/opencode-mobile/'
       'master/scripts/host/ubuntu-opencode.sh';
 
   int _serverPort() {
