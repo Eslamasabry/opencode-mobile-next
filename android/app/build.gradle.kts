@@ -14,7 +14,7 @@ if (keystorePropertiesFile.isFile) {
 }
 
 android {
-    namespace = "ai.opencode.opencode_mobile"
+    namespace = "io.github.eslamasabry.opencode_mobile"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -24,7 +24,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "ai.opencode.opencode_mobile"
+        applicationId = "io.github.eslamasabry.opencode_mobile"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

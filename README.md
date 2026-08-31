@@ -192,7 +192,7 @@ and you bring the connection to the phone through a tunnel that ends at
   `opencode serve` detached, health-polls until live, and connects. A "Live
   log in Termux" button streams install/server logs at any time. The native
   side is
-  [`MainActivity.kt`](android/app/src/main/kotlin/ai/opencode/opencode_mobile/MainActivity.kt)
+  [`MainActivity.kt`](android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/MainActivity.kt)
   + [`lib/termux/bridge.dart`](lib/termux/bridge.dart). (Why the chroot:
   plain-Termux npm installs of opencode are broken upstream — npm sees
   `os=android` and no `opencode-android-arm64` package exists. The chroot is
