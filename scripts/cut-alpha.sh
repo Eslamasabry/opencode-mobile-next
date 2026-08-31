@@ -42,6 +42,11 @@ step() { echo "==> $*"; }
 
 cd "$(dirname "$0")/.."
 
+# The pinned Flutter is Shorebird's cache, not the distro one on PATH; and
+# user-local tools (gh) live in ~/.local/bin.
+PINNED_FLUTTER_BIN="$(dirname "$(find "$HOME/.shorebird/bin/cache/flutter" -maxdepth 3 -name flutter -type f -path '*/bin/*' 2>/dev/null | head -1)")"
+export PATH="$HOME/.shorebird/bin:$HOME/.local/bin:$PINNED_FLUTTER_BIN:$PATH"
+
 [[ -f android/key.properties ]] ||
   fail "android/key.properties is missing. Put the legacy GitHub sideload signing identity in place (see android/key.properties.example), then re-run."
 [[ -f "$NOTES" ]] || fail "$NOTES is missing."
