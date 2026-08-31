@@ -45,7 +45,7 @@ cd "$(dirname "$0")/.."
 # The pinned Flutter is Shorebird's cache, not the distro one on PATH; and
 # user-local tools (gh) live in ~/.local/bin.
 PINNED_FLUTTER_BIN="$(ls -d "$HOME"/.shorebird/bin/cache/flutter/*/bin 2>/dev/null | head -1)"
-export PATH="$HOME/.shorebird/bin:$HOME/.local/bin:$PINNED_FLUTTER_BIN:$PATH"
+export PATH="$PINNED_FLUTTER_BIN:$HOME/.shorebird/bin:$HOME/.local/bin:$PATH"
 
 [[ -f android/key.properties ]] ||
   fail "android/key.properties is missing. Put the legacy GitHub sideload signing identity in place (see android/key.properties.example), then re-run."
