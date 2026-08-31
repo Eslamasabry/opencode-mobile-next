@@ -1,14 +1,27 @@
 # OpenCode mobile
 
-> **Not affiliated with OpenCode.** OpenCode Mobile is an independent
-> community project. It is not built, maintained, endorsed by, or affiliated
-> with the official OpenCode team.
+> ⚠️ **Alpha · vibecoded.** OpenCode Mobile is an independent community
+> project. It is not built, maintained, endorsed by, or affiliated with the
+> official OpenCode team. The app is built heavily with AI assistance
+> ("vibecoded") and is in **public alpha**: expect rough edges, breaking
+> changes between previews, and untested corners — **the desktop builds have
+> never been hardware-tested**. If something breaks, that is exactly what
+> the in-app **Report a bug** button (More hub → *Report a bug*, or
+> Settings → About) is for:
+> [open an issue](https://github.com/Eslamasabry/opencode-mobile/issues/new?template=bug_report.yml).
+
+| Platform | State |
+|---|---|
+| **Android** (phone/tablet) | Primary target. Emulator- and device-verified, 1,000+ widget/transport tests, Shorebird-patched previews. |
+| **Linux desktop** (x64) | Alpha. Builds, packages (`.deb` + tarball), CI-gated — but the window has **never been seen on a display** and the `.deb` has never been installed. Contributor testing required. |
+| **Windows desktop** (x64) | Experimental. Runner scaffolded, CI artifact only — **never launched by anyone**. Contributor testing is the current state of the art; please file Windows reports. |
 
 A native Android client for [OpenCode](https://opencode.ai) — the coding
 agent, in your pocket. It connects to an `opencode serve` instance on your
 dev box through a tunnel that ends at the phone's own loopback, or runs
 **fully on-device** with the server inside Termux, driven and installed by
-the app itself. The same codebase builds a working Linux desktop binary.
+the app itself. The same codebase builds desktop binaries for Linux and
+(experimentally) Windows.
 
 ## Status
 
