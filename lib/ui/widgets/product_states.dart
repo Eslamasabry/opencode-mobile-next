@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../api/mcp_oauth.dart' show McpOAuthCallbackException;
 import '../../api/opencode_api.dart';
 import '../../api/product_repository.dart';
+import '../../feedback/bug_report.dart';
 import '../app_theme.dart';
 
 /// Maps any thrown object onto copy that is safe to show users.
@@ -179,6 +182,16 @@ class ProductErrorState extends StatelessWidget {
                   FilledButton.tonal(
                     onPressed: onRetry,
                     child: const Text('Try again'),
+                  ),
+                  // The failure surface is where a bug is actually
+                  // discovered, so the report affordance lives here too —
+                  // one implementation covering every screen that uses this
+                  // state, without adding chrome to any app bar.
+                  TextButton.icon(
+                    key: const ValueKey('product-error-report-bug'),
+                    onPressed: () => unawaited(openBugReport(context)),
+                    icon: const Icon(Icons.bug_report_outlined, size: 18),
+                    label: const Text('Report a bug'),
                   ),
                 ],
               ),

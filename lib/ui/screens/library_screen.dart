@@ -8,6 +8,7 @@ import '../../api/models.dart' show ModelRef;
 import '../../api/mcp_oauth.dart';
 import '../../l10n/app_localizations.dart';
 import '../../api/provider_presentation.dart';
+import '../../feedback/bug_report.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../app_theme.dart';
@@ -112,6 +113,15 @@ class LibraryScreen extends StatelessWidget {
                   icon: Icons.menu_book_outlined,
                   title: 'Setup guide',
                   onTap: () => _open(context, const GuideScreen()),
+                ),
+                // The bug form lives in the failure states themselves; this
+                // card is the deliberate path for everything a user notices
+                // outside a failure surface.
+                _DestinationCard(
+                  key: const ValueKey('library-report-bug'),
+                  icon: Icons.bug_report_outlined,
+                  title: 'Report a bug',
+                  onTap: () => unawaited(openBugReport(context)),
                 ),
                 // The shortcut layer must be discoverable without already
                 // knowing a shortcut.
