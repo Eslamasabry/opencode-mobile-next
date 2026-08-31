@@ -1,0 +1,95 @@
+# Experimental Windows desktop build.
+#
+# The Windows runner is scaffolded but has never been hardware-tested: no
+# maintainer owns a Windows machine in the loop, so this job exists for
+# contributors to pull its artifact, run it, and file the first real Windows
+# reports (the in-app bug button prefills the platform for them).
+#
+# Deliberately NOT attached to releases, unlike desktop-linux.yml: until a
+# contributor proves the artifact launches and connects, a Windows zip in a
+# release would be an untested promise. Promote it to the release job once
+# one artifact has been verified by hand.
+#
+# Billing note: like android-quality.yml, no run of this workflow has been
+# observed — the account's Actions payments have failed. Revisit after
+# billing is restored.
+name: Windows desktop (experimental)
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - production/android-release-hardening
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: 3.47.1
+
+jobs:
+  build:
+    name: Build the Windows bundle
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up pinned Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: custom
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Build the Windows release bundle
+        run: flutter build windows --release
+
+      - name: Verify the bundle
+        shell: pwsh
+        run: |
+          $exe = "build/windows/x64/runner/Release/opencode_mobile.exe"
+          if (-not (Test-Path $exe)) {
+            Write-Error "Expected runner executable missing: $exe"
+          }
+          Get-ChildItem "build/windows/x64/runner/Release" |
+            Select-Object Name, Length
+
+      - name: Record the version
+        id: version
+        shell: pwsh
+        run: |
+          $line = (Get-Content pubspec.yaml) |
+            Where-Object { $_ -match '^version:\s*\S+' } |
+            Select-Object -First 1
+          $version = ($line -replace '^version:\s*', '').Trim()
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Zip the bundle
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          Compress-Archive `
+            -Path "build/windows/x64/runner/Release/*" `
+            -DestinationPath "opencode-windows-x64-$env:VERSION.zip"
+
+      - name: Upload the Windows artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: opencode-windows-x64-${{ steps.version.outputs.version }}
+          path: opencode-windows-x64-*.zip
+          if-no-files-found: error

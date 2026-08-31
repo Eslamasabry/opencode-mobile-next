@@ -304,6 +304,39 @@ packaging script uses `desktop-file-validate` and `dpkg-shlibdeps`.
 
 ---
 
+## Windows (experimental — contributor testing required)
+
+The Windows runner is scaffolded (`windows/`) and CI builds a release zip
+(`desktop-windows.yml`, artifact `opencode-windows-x64-<version>`), but
+**nobody has ever launched a Windows build**. There is no maintainer Windows
+machine in the loop; Windows exists so contributors can prove it, and the
+bug-report flow is set up for that: the in-app **Report a bug** action
+prefills `Platform: Windows desktop (experimental — contributor-tested)` on
+a Windows build, and the issue template treats Windows reports as
+contributor testing.
+
+What is expected to work (unverified, from the dependency audit and the
+platform seam):
+
+- Everything the capability seam marks desktop: server connect (v1 and v2),
+  sessions, chat, files, review, terminal (WebSocket), theming, window
+  persistence, the GitHub-releases update notice, keyboard shortcuts,
+  right-click menus, scrollbars, mouse text selection, drag-and-drop attach.
+- Credential storage via `flutter_secure_storage`'s wincred backend (no
+  libsecret/keyring requirement).
+- File pickers via the Windows file_picker implementation (no zenity).
+
+Deliberately absent: packaging beyond the CI zip (no MSIX, no installer —
+that needs a code-signing decision), release attachment (the workflow
+uploads artifacts only), and Shorebird (Android-only, as everywhere
+desktop).
+
+To test one: pull the artifact from any run of the *Windows desktop
+(experimental)* workflow, unzip, run `opencode_mobile.exe`. File what you
+find through the in-app bug button.
+
+---
+
 ## What works, and what does not
 
 **Works on Linux:** connecting to a server, sessions, chat, the file
@@ -338,8 +371,6 @@ credential storage (via libsecret).
 - No AppImage or Flatpak. The tarball is the portable format for now; the
   `.deb` is distro-narrow by construction.
 - No code signing of any kind.
-- Desktop keyboard shortcuts (Ctrl+Enter to send, Ctrl+K, Esc) are not part
-  of this work.
 - 32-bit and non-x86_64 architectures are not built.
 
 ---
