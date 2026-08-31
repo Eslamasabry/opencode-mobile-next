@@ -269,7 +269,7 @@ export const S15Cta: React.FC<{ layout: Layout }> = ({ layout }) => {
               color: theme.colors.textDim,
             }}
           >
-            github.com/Eslamasabry/oc_app/releases
+            github.com/Eslamasabry/opencode-mobile/releases
           </span>
         </Entrance>
       </AbsoluteFill>

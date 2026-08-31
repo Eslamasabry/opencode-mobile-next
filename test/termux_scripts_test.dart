@@ -102,16 +102,20 @@ message=This belongs to the terminal
     expect(script, contains(r'rm -f "$OC_DIR/server-log.active"'));
   });
 
-  test('default setup tracks the latest stable OpenCode release', () {
+  test('default setup installs the pinned OpenCode release', () {
     final script = TermuxBridge.installAndServeScript(
       port: 4096,
       password: 'test-password',
     );
     final manager = TermuxBridge.managerScriptForTesting();
+    final pinned = TermuxBridge.defaultOpenCodeVersion;
 
-    expect(TermuxBridge.defaultOpenCodeVersion, 'latest');
-    expect(script, contains("setup '4096' 'latest'"));
-    expect(manager, contains(r'local requested_version="${2:-latest}"'));
+    // A published APK must not install a server released after it. The pin
+    // is an exact version, and the shell fallback has to agree with it or a
+    // setup that reaches the default by a different route drifts.
+    expect(pinned, matches(RegExp(r'^\d+\.\d+\.\d+$')));
+    expect(script, contains("setup '4096' '$pinned'"));
+    expect(manager, contains('local requested_version="\${2:-$pinned}"'));
     expect(manager, contains('"opencode-ai@\$OC_REQUESTED_VERSION"'));
     expect(
       manager,
@@ -128,6 +132,21 @@ message=This belongs to the terminal
     );
     expect(manager, contains('opencode models --refresh'));
     expect(manager, contains('refreshing_models'));
+  });
+
+  test('the npm dist-tag is reachable only by asking for it', () {
+    expect(TermuxBridge.latestOpenCodeVersion, 'latest');
+    final optedIn = TermuxBridge.installAndServeScript(
+      port: 4096,
+      password: 'test-password',
+      version: TermuxBridge.latestOpenCodeVersion,
+    );
+    expect(optedIn, contains("setup '4096' 'latest'"));
+    // ...and never by default.
+    expect(
+      TermuxBridge.installAndServeScript(port: 4096, password: 'p'),
+      isNot(contains("'latest'")),
+    );
   });
 
   test('managed server URL detection is narrow', () {

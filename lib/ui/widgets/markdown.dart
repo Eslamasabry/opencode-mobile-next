@@ -3,93 +3,11 @@ import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
 
+import '../app_theme.dart';
+import '../desktop/desktop_interaction.dart';
 import 'code_highlight.dart';
-
-Future<void> openMarkdownExternalLink(
-  BuildContext context,
-  String value, {
-  Future<bool> Function(Uri uri)? launcher,
-}) async {
-  final uri = Uri.tryParse(value);
-  final scheme = uri?.scheme.toLowerCase();
-  if (uri == null ||
-      uri.host.isEmpty ||
-      uri.userInfo.isNotEmpty ||
-      (scheme != 'https' && scheme != 'http')) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Link blocked. Chat links may open only https:// URLs, or confirmed http:// URLs.',
-          ),
-        ),
-      );
-    }
-    return;
-  }
-
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      icon: Icon(
-        scheme == 'http'
-            ? Icons.warning_amber_rounded
-            : Icons.open_in_new_rounded,
-      ),
-      title: Text(
-        scheme == 'http' ? 'Open insecure HTTP link?' : 'Open external link?',
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Host'),
-          const SizedBox(height: 4),
-          SelectableText(
-            uri.host,
-            style: const TextStyle(fontFamily: 'AppMono'),
-          ),
-          if (scheme == 'http') ...[
-            const SizedBox(height: 12),
-            const Text(
-              'HTTP is not encrypted. Other devices on the network may read or change what you send and receive.',
-            ),
-          ],
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: Text(scheme == 'http' ? 'Open HTTP link' : 'Open link'),
-        ),
-      ],
-    ),
-  );
-  if (confirmed != true || !context.mounted) return;
-
-  try {
-    final opened =
-        await (launcher?.call(uri) ??
-            launchUrl(uri, mode: LaunchMode.externalApplication));
-    if (!opened && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No app could open this link.')),
-      );
-    }
-  } catch (error) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not open link: $error')));
-    }
-  }
-}
+import 'external_link.dart';
 
 /// Installed by screens that can resolve server file paths. Inline code
 /// spans that look like paths stay plain until [validate] confirms the file
@@ -565,7 +483,7 @@ class _InlineParser {
         // [label](url)
         final url = m.group(8)!;
         final gesture = TapGestureRecognizer()
-          ..onTap = () => openMarkdownExternalLink(context, url);
+          ..onTap = () => openExternalLink(context, url);
         spans.add(
           TextSpan(
             text: m.group(7),
@@ -708,7 +626,7 @@ class _PathCodeChipState extends State<_PathCodeChip> {
         border: Border.all(
           color: _readable
               ? theme.colorScheme.primary.withValues(alpha: .45)
-              : theme.dividerColor.withValues(alpha: .4),
+              : AppTheme.hairline(theme),
           width: _readable ? .8 : .5,
         ),
       ),
@@ -731,7 +649,7 @@ class _PathCodeChipState extends State<_PathCodeChip> {
           ],
         ),
         style: widget.base.copyWith(
-          fontFamily: 'AppMono',
+          fontFamily: AppTheme.monoFamily,
           fontSize: (widget.base.fontSize ?? 14) - 1.5,
           color: _readable
               ? theme.colorScheme.primary
@@ -740,10 +658,14 @@ class _PathCodeChipState extends State<_PathCodeChip> {
       ),
     );
     if (!_readable) return chip;
-    return GestureDetector(
-      key: Key('path-link-${widget.code}'),
-      onTap: () => widget.links.open(widget.code),
-      child: chip,
+    // A bare GestureDetector leaves the desktop pointer as an arrow, so a
+    // live file link reads as prose. ClickCursor is a no-op on Android.
+    return ClickCursor(
+      child: GestureDetector(
+        key: Key('path-link-${widget.code}'),
+        onTap: () => widget.links.open(widget.code),
+        child: chip,
+      ),
     );
   }
 }
@@ -764,14 +686,14 @@ class _CodeSpan extends WidgetSpan {
              ).colorScheme.surfaceContainerHighest.withValues(alpha: .6),
              borderRadius: BorderRadius.circular(4),
              border: Border.all(
-               color: Theme.of(context).dividerColor.withValues(alpha: .4),
+               color: AppTheme.hairline(Theme.of(context)),
                width: .5,
              ),
            ),
            child: Text(
              code,
              style: base.copyWith(
-               fontFamily: 'AppMono',
+               fontFamily: AppTheme.monoFamily,
                fontSize: (base.fontSize ?? 14) - 1.5,
                color: Theme.of(context).colorScheme.tertiary,
              ),
@@ -843,7 +765,7 @@ class CodeBlock extends StatelessWidget {
             ? Colors.black.withValues(alpha: .45)
             : Colors.black.withValues(alpha: .05),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: .5)),
+        border: Border.all(color: AppTheme.hairline(theme)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -876,7 +798,7 @@ class CodeBlock extends StatelessWidget {
                   tooltip: 'Copy code',
                   visualDensity: VisualDensity.compact,
                   iconSize: 16,
-                  icon: Icon(Icons.copy_rounded, color: muted),
+                  icon: Icon(AppIcons.copy, color: muted),
                   onPressed: () async {
                     await Clipboard.setData(ClipboardData(text: code));
                     if (context.mounted) {
@@ -905,8 +827,8 @@ class CodeBlock extends StatelessWidget {
                       )
                     : TextSpan(text: display),
                 style: theme.textTheme.bodySmall!.copyWith(
-                  fontFamily: 'AppMono',
-                  fontSize: 12.5,
+                  fontFamily: AppTheme.monoFamily,
+                  fontSize: AppTheme.codeFontSize,
                   height: 1.45,
                 ),
               ),

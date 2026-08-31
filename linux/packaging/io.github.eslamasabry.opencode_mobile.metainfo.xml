@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  AppStream metadata. GNOME Software / KDE Discover read this when the .deb
+  is installed; the tarball installer drops it in the same place so a
+  desktop-installed build is described too. The <releases> block is rewritten
+  by scripts/package-linux.sh with the version being packaged.
+-->
+<component type="desktop-application">
+  <id>io.github.eslamasabry.opencode_mobile</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>OpenCode</name>
+  <summary>Connect to a remote opencode server and drive coding sessions</summary>
+
+  <description>
+    <p>
+      OpenCode is a client for an opencode server. Point it at a server you
+      run — on this machine, on a workstation over SSH, or anywhere you can
+      reach over HTTP — and it gives you the sessions, chat transcript, file
+      browser, diff review and terminal for that workspace.
+    </p>
+    <p>
+      The Linux build is experimental. Sessions, chat, files, review and the
+      terminal work; Android-only features (Termux hosting, code-push
+      patching, background-live notifications) are inert on desktop.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">io.github.eslamasabry.opencode_mobile.desktop</launchable>
+  <url type="homepage">https://github.com/Eslamasabry/opencode-mobile</url>
+  <url type="bugtracker">https://github.com/Eslamasabry/opencode-mobile/issues</url>
+  <developer id="io.github.eslamasabry">
+    <name>OpenCode</name>
+  </developer>
+
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+  <recommends>
+    <display_length compare="ge">768</display_length>
+  </recommends>
+
+  <content_rating type="oars-1.1"/>
+
+  <releases>
+    <release version="0.0.0" date="1970-01-01"/>
+  </releases>
+</component>

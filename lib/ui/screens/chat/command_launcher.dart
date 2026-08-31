@@ -270,7 +270,7 @@ class _CommandLauncherSheetState extends State<_CommandLauncherSheet>
                   : const [
                       Tab(
                         key: Key('composer-tools-commands-tab'),
-                        icon: Icon(Icons.electric_bolt_outlined),
+                        icon: Icon(AppIcons.run),
                         text: 'Commands',
                       ),
                       Tab(
@@ -474,7 +474,7 @@ class _AgentPickerList extends StatelessWidget {
             title: Text(
               '@${agent.id}',
               style: theme.textTheme.bodyLarge?.copyWith(
-                fontFamily: 'AppMono',
+                fontFamily: AppTheme.monoFamily,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -513,7 +513,7 @@ class _CommandRow extends StatelessWidget {
           Text(
             '/${command.slash}',
             style: theme.textTheme.bodyMedium?.copyWith(
-              fontFamily: 'AppMono',
+              fontFamily: AppTheme.monoFamily,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -526,7 +526,7 @@ class _CommandRow extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
-                  fontFamily: 'AppMono',
+                  fontFamily: AppTheme.monoFamily,
                 ),
               ),
             ),
@@ -605,7 +605,7 @@ class _InlineCommandSuggestions extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        fontFamily: 'AppMono',
+                        fontFamily: AppTheme.monoFamily,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -632,10 +632,7 @@ class _InlineCommandSuggestions extends StatelessWidget {
               child: const Text('Show all commands'),
             ),
           ),
-        Divider(
-          height: 1,
-          color: theme.colorScheme.outlineVariant.withValues(alpha: .55),
-        ),
+        Divider(height: 1, color: AppTheme.hairline(theme)),
       ],
     );
   }
@@ -707,7 +704,7 @@ class _InlineAgentSuggestions extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        fontFamily: 'AppMono',
+                        fontFamily: AppTheme.monoFamily,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -736,10 +733,7 @@ class _InlineAgentSuggestions extends StatelessWidget {
               child: const Text('Show all subagents'),
             ),
           ),
-        Divider(
-          height: 1,
-          color: theme.colorScheme.outlineVariant.withValues(alpha: .55),
-        ),
+        Divider(height: 1, color: AppTheme.hairline(theme)),
       ],
     );
   }

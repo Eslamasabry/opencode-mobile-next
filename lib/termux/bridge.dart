@@ -1,13 +1,53 @@
 import 'package:flutter/services.dart';
 
+import '../platform/platform_capabilities.dart';
+
+/// Drives Termux over the `oc/termux` method channel.
+///
+/// Termux is an Android app and the channel is implemented only by the
+/// Android runner, so every entry point here is a no-op-with-an-answer on
+/// desktop rather than a throw: `MissingPluginException` is not a
+/// `PlatformException`, so a bridge that caught only the latter let a raw
+/// framework exception escape into UI code that had no idea what it meant.
 class TermuxBridge {
   static const _channel = MethodChannel('oc/termux');
+
+  /// Every failure the bridge can report for "this platform has no Termux".
+  static const unsupportedPlatformCode = 'unsupported_platform';
+
+  /// Whether the Termux bridge can do anything at all here.
+  static bool get supported => platformCapabilities.supportsTermux;
+
+  static TermuxBridgeException get _unsupported => const TermuxBridgeException(
+    'Termux runs on Android. This desktop build connects to an OpenCode '
+    'server you start yourself.',
+    code: unsupportedPlatformCode,
+  );
 
   static const termuxHome = '/data/data/com.termux/files/home';
   static const _managerPath = '$termuxHome/.oc/manager.sh';
   static const managedServerPort = 4096;
   static const managedServerUrl = 'http://127.0.0.1:$managedServerPort';
-  static const defaultOpenCodeVersion = 'latest';
+
+  /// The OpenCode server version a published build installs and updates to.
+  ///
+  /// Pinned, deliberately. `latest` meant an APK sitting on a phone for
+  /// months would one day install a server release published long after this
+  /// client was written and tested against it — a protocol change on the
+  /// server side would then break setup on a device whose owner changed
+  /// nothing. This is the version the app's contracts and fixtures are
+  /// verified against; raising it is a code change with a test run behind it,
+  /// not something that happens on its own.
+  ///
+  /// Keep this in step with the shell fallback in [_managerScript]
+  /// (`requested_version="${2:-…}"`); a test asserts the two agree.
+  static const defaultOpenCodeVersion = '1.18.25';
+
+  /// The npm dist-tag, available only when a caller passes it to
+  /// [installAndServeScript] on purpose. Nothing in the app does today: it
+  /// exists so a deliberate "install whatever is newest" flow has a name
+  /// rather than a magic string.
+  static const latestOpenCodeVersion = 'latest';
 
   static bool managesServerUrl(String? value) {
     final uri = value == null ? null : Uri.tryParse(value);
@@ -17,20 +57,36 @@ class TermuxBridge {
   }
 
   static Future<TermuxCapabilities> capabilities() async {
-    final raw = await _channel.invokeMapMethod<String, dynamic>(
-      'getCapabilities',
-    );
-    return TermuxCapabilities.fromMap(raw ?? const {});
+    if (!supported) return const TermuxCapabilities.unavailable();
+    try {
+      final raw = await _channel.invokeMapMethod<String, dynamic>(
+        'getCapabilities',
+      );
+      return TermuxCapabilities.fromMap(raw ?? const {});
+    } on MissingPluginException {
+      // A runner with no `oc/termux` handler: honestly nothing installed.
+      return const TermuxCapabilities.unavailable();
+    }
   }
 
-  static Future<bool> requestPermission() async =>
-      await _channel.invokeMethod<bool>('requestRunCommandPermission') ?? false;
+  static Future<bool> requestPermission() =>
+      _invokeFlag('requestRunCommandPermission');
 
-  static Future<bool> openTermux() async =>
-      await _channel.invokeMethod<bool>('openTermux') ?? false;
+  static Future<bool> openTermux() => _invokeFlag('openTermux');
 
-  static Future<bool> openAppSettings() async =>
-      await _channel.invokeMethod<bool>('openAppSettings') ?? false;
+  static Future<bool> openAppSettings() => _invokeFlag('openAppSettings');
+
+  /// Every one of these answers "did the platform do the thing?", so a
+  /// missing channel is simply `false` — never an exception a caller that
+  /// wanted a bool has to know about.
+  static Future<bool> _invokeFlag(String method) async {
+    if (!supported) return false;
+    try {
+      return await _channel.invokeMethod<bool>(method) ?? false;
+    } on MissingPluginException {
+      return false;
+    }
+  }
 
   static Future<TermuxCommandResult> run(
     String script, {
@@ -38,6 +94,7 @@ class TermuxBridge {
     String? workdir,
     Duration timeout = const Duration(seconds: 30),
   }) async {
+    if (!supported) throw _unsupported;
     try {
       final raw = await _channel
           .invokeMapMethod<String, dynamic>('runInTermux', {
@@ -54,6 +111,11 @@ class TermuxBridge {
         );
       }
       return command;
+    } on MissingPluginException {
+      // The Android runner registers `oc/termux`; nothing else does. Reaching
+      // here means a platform slipped past [supported] — report it the way a
+      // caller already handles rather than letting a framework exception out.
+      throw _unsupported;
     } on PlatformException catch (error) {
       throw TermuxBridgeException(
         error.message ?? 'Termux command failed.',
@@ -928,7 +990,7 @@ install_ubuntu_base() {
 
 setup() {
   CURRENT_PORT="${1:-4096}"
-  local requested_version="${2:-latest}"
+  local requested_version="${2:-1.18.25}"
   local dispatcher_pid="${3:-}"
   local dispatcher_start="${4:-}"
   SETUP_SUCCEEDED=0
@@ -1135,7 +1197,24 @@ class TermuxCapabilities {
     required this.serviceAvailable,
     required this.protocolSupported,
     required this.permissionGranted,
+    this.platformSupported = true,
   });
+
+  /// What a platform without a Termux bridge reports: nothing is installed,
+  /// nothing is granted, and — unlike an Android phone that simply has not
+  /// installed Termux yet — [platformSupported] says installing it would not
+  /// help. Callers use that to choose between "install Termux" and "this is
+  /// not a thing here".
+  const TermuxCapabilities.unavailable()
+    : installed = false,
+      version = null,
+      serviceAvailable = false,
+      protocolSupported = false,
+      permissionGranted = false,
+      platformSupported = false;
+
+  /// False when the running platform has no Termux bridge at all.
+  final bool platformSupported;
 
   factory TermuxCapabilities.fromMap(Map<String, dynamic> map) =>
       TermuxCapabilities(

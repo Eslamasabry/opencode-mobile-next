@@ -9,7 +9,7 @@ Audit date: 2026-08-29. Branch: `production/android-release-hardening`
 
 Two inputs were combined:
 
-1. **Documentation lanes** — `HANDOFF.md`, `docs/opencode2-port-plan.md`,
+1. **Documentation lanes** — `docs/internal/handoff.md`, `docs/opencode2-port-plan.md`,
    `docs/opencode2-port-matrix.md`, `docs/design-inspiration.md`,
    `docs/traycer-oss-fit.md`, and the git history of the facelift slices.
 2. **Code-level audit** — a read-through of navigation, composer, theming,

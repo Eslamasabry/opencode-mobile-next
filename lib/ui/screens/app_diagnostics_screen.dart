@@ -5,6 +5,7 @@ import '../../api/product_repository.dart';
 import '../../diagnostics/app_diagnostics.dart';
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
+import '../app_theme.dart';
 
 class AppDiagnosticsScreen extends StatefulWidget {
   const AppDiagnosticsScreen({super.key, required this.controller});
@@ -154,7 +155,7 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
                             OutlinedButton.icon(
                               key: const ValueKey('copy-app-diagnostics'),
                               onPressed: entries.isEmpty ? null : _copy,
-                              icon: const Icon(Icons.copy_all_outlined),
+                              icon: const Icon(AppIcons.copy),
                               label: const Text('Copy'),
                             ),
                             TextButton.icon(
@@ -243,8 +244,8 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
                                 if (entry.stack.isNotEmpty) entry.stack,
                               ].join('\n\n'),
                               style: const TextStyle(
-                                fontFamily: 'AppMono',
-                                fontSize: 12,
+                                fontFamily: AppTheme.monoFamily,
+                                fontSize: AppTheme.codeFontSize,
                               ),
                             ),
                           ),

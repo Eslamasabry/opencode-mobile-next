@@ -6,9 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/product_repository.dart' show ProductException;
 import '../../api/server_probe.dart';
+import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
+import '../../state/pairing.dart';
 import '../../state/profiles.dart';
 import '../app_theme.dart';
+import '../widgets/product_states.dart';
+import 'pairing_scanner_screen.dart';
 
 /// Manage opencode server profiles and connect.
 class ServersScreen extends ConsumerStatefulWidget {
@@ -114,7 +118,9 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
         final conn = ref.read(connProvider);
         await conn.connect(savedProfile);
         if (conn.api == null) {
-          throw ProductException(conn.lastError ?? 'The server did not connect.');
+          throw ProductException(
+            conn.lastError ?? 'The server did not connect.',
+          );
         }
         if (isNew && mounted) {
           Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
@@ -138,14 +144,34 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     }
   }
 
+  /// Names what removal actually deletes. Queued prompts and drafts are the
+  /// only unsent work at stake, so they are counted rather than described in
+  /// the abstract; the rest is settings the user cannot inspect anyway.
+  String _deletionDisclosure(ConnectionController connection, String id) {
+    final queued = connection.queuedPromptCountForProfile(id);
+    final drafts = connection.draftCountForProfile(id);
+    final losses = [
+      if (queued > 0) '$queued queued ${queued == 1 ? 'prompt' : 'prompts'}',
+      if (drafts > 0) '$drafts unsent ${drafts == 1 ? 'draft' : 'drafts'}',
+    ];
+    return [
+      'This deletes everything this device stored for the server: its '
+          'password, selected model and agent, workspace choice'
+          '${losses.isEmpty ? '' : ', ${losses.join(' and ')}'}, and any '
+          'sessions shown in the home-screen widget.',
+      'Nothing is deleted on the server itself or at your AI providers.',
+    ].join('\n\n');
+  }
+
   Future<void> _delete(ServerProfile p) async {
+    final connection = ref.read(connProvider);
+    final disclosure = _deletionDisclosure(connection, p.id);
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        scrollable: true,
         title: Text('Remove ${p.name}?'),
-        content: const Text(
-          'The saved server will be removed from this device.',
-        ),
+        content: Text(disclosure),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -167,12 +193,18 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     var removed = false;
     setState(() => _busy = true);
     try {
-      // Remove the durable profile first. A failed delete must not tear down a
-      // still-saved active connection.
-      await store.remove(p.id);
+      // The cascade verifies every store it writes and reports what refused.
+      // A partial deletion is stated, never rounded up to the silent success
+      // the list rebuild would otherwise imply.
+      final result = await connection.deleteProfileAndLocalData(p.id);
+      final partial = result.partialDeletionMessage;
+      if (partial != null) {
+        _showFailure(partial);
+        if (!result.removedProfile) return;
+      }
       removed = true;
       if (wasActive) {
-        await ref.read(connProvider).disconnect(keepActive: true);
+        await connection.disconnect(keepActive: true);
       }
     } catch (error) {
       if (removed) {
@@ -245,14 +277,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
-              Text(
-                'SERVERS',
-                style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                  color: Theme.of(context).hintColor,
-                  letterSpacing: 1,
-                ),
-              ),
-              const SizedBox(height: 6),
+              const SectionLabel.inline('Servers'),
               if (needsPassword) ...[
                 Semantics(
                   container: true,
@@ -321,8 +346,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                               context,
                             ).colorScheme.surfaceContainerHighest,
                       child: Icon(
-                        p.baseUrl.contains('127.0.0.1') ||
-                                p.baseUrl.contains('localhost')
+                        isLoopbackHost(Uri.tryParse(p.baseUrl)?.host ?? '')
                             ? Icons.smartphone_rounded
                             : Icons.dns_rounded,
                         size: 18,
@@ -344,8 +368,8 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontFamily: 'AppMono',
-                            fontSize: 11,
+                            fontFamily: AppTheme.monoFamily,
+                            fontSize: AppTheme.captionFontSize,
                           ),
                         ),
                         if (p.requiresPasswordReentry)
@@ -384,22 +408,26 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
               Text(
                 'QUICK ADD',
                 style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                  color: Theme.of(context).hintColor,
+                  color: AppTheme.mutedOf(Theme.of(context)),
                   letterSpacing: 1,
                 ),
               ),
               const SizedBox(height: 6),
-              Card.filled(
-                margin: const EdgeInsets.symmetric(vertical: 4),
-                child: ListTile(
-                  onTap: () => Navigator.pushNamed(context, '/termux-setup'),
-                  leading: const Icon(Icons.smartphone_rounded),
-                  title: const Text('On-device (Termux)'),
-                  subtitle: const Text(
-                    'Guided setup — the app drives Termux for you',
+              // Termux is Android-only; on desktop the sole quick-add path is
+              // a remote (or local) server the user runs themselves.
+              if (platformCapabilities.supportsTermux)
+                Card.filled(
+                  key: const ValueKey('quick-add-termux-card'),
+                  margin: const EdgeInsets.symmetric(vertical: 4),
+                  child: ListTile(
+                    onTap: () => Navigator.pushNamed(context, '/termux-setup'),
+                    leading: const Icon(Icons.smartphone_rounded),
+                    title: const Text('On-device (Termux)'),
+                    subtitle: const Text(
+                      'Guided setup — the app drives Termux for you',
+                    ),
                   ),
                 ),
-              ),
               Card.filled(
                 margin: const EdgeInsets.symmetric(vertical: 4),
                 child: ListTile(
@@ -463,7 +491,7 @@ class _WelcomeView extends StatelessWidget {
                             fontFamily: AppTheme.monoFamily,
                           ),
                         ),
-                        const SizedBox(width: 9),
+                        const SizedBox(width: 8),
                         Container(
                           width: 13,
                           height: 26,
@@ -502,21 +530,25 @@ class _WelcomeView extends StatelessWidget {
                           'the app fills in the rest',
                       onTap: busy ? null : onConnect,
                     ),
-                    const SizedBox(height: 10),
-                    _WelcomeCard(
-                      cardKey: const ValueKey('welcome-termux-card'),
-                      icon: Icons.smartphone_rounded,
-                      title: 'Run OpenCode on this phone',
-                      subtitle:
-                          'Guided Termux setup — the app drives it for you',
-                      onTap: busy ? null : onTermux,
-                    ),
+                    if (platformCapabilities.supportsTermux) ...[
+                      const SizedBox(height: 10),
+                      _WelcomeCard(
+                        cardKey: const ValueKey('welcome-termux-card'),
+                        icon: Icons.smartphone_rounded,
+                        title: 'Run OpenCode on this phone',
+                        subtitle:
+                            'Guided Termux setup — the app drives it for you',
+                        onTap: busy ? null : onTermux,
+                      ),
+                    ],
                     const SizedBox(height: 10),
                     _WelcomeCard(
                       cardKey: const ValueKey('welcome-guide-card'),
                       icon: Icons.menu_book_outlined,
                       title: 'Learn how OpenCode works',
-                      subtitle: 'A two-minute guide to both paths',
+                      subtitle: platformCapabilities.supportsTermux
+                          ? 'A two-minute guide to both paths'
+                          : 'A two-minute guide to running the server',
                       onTap: onGuide,
                     ),
                   ],
@@ -615,6 +647,19 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
   ServerProbeResult? _testResult;
   int _urlLength = 0;
   int _probeGeneration = 0;
+
+  /// True while a pairing payload's addresses are being probed.
+  bool _pairing = false;
+
+  /// Which address pairing settled on, as a sentence. Never contains the
+  /// password.
+  String? _pairingNotice;
+
+  /// Why pairing could not finish — including the per-address verdicts, which
+  /// are the only thing that tells the user whether to bridge a port or to
+  /// put the server behind TLS.
+  String? _pairingFailure;
+
   bool get _needsPassword => widget.existing?.requiresPasswordReentry ?? false;
 
   @override
@@ -624,8 +669,28 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
   }
 
   /// A paste is a jump of several characters at once. When it lands without a
-  /// scheme, expand it in place so `192.168.1.7:4096` just works.
+  /// scheme, expand it in place so `192.0.2.7:4096` just works.
+  ///
+  /// A pasted *pairing* payload is intercepted before anything else. It is
+  /// JSON carrying the serve password, and it must not be left sitting in a
+  /// text field: the field renders it, a screenshot captures it, and the
+  /// platform may offer it to autofill. So the field is emptied first and the
+  /// payload is routed to [_applyPairing].
   void _urlChanged(String value) {
+    if (looksLikePairingPayload(value)) {
+      final parsed = parsePairingPayload(value);
+      _url.value = TextEditingValue.empty;
+      _urlLength = 0;
+      if (!parsed.ok) {
+        setState(() {
+          _pairingNotice = null;
+          _pairingFailure = parsed.error;
+        });
+        return;
+      }
+      unawaited(_applyPairing(parsed.payload!));
+      return;
+    }
     final pasted = value.length - _urlLength >= 4;
     _urlLength = value.length;
     if (pasted && !value.contains('://')) {
@@ -641,6 +706,8 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
     setState(() {
       _error = null;
       _testResult = null;
+      _pairingNotice = null;
+      _pairingFailure = null;
     });
   }
 
@@ -696,11 +763,157 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
     }
   }
 
+  /// Reads a pairing payload from the clipboard and applies it.
+  ///
+  /// The whole point of `opencode2 pair` is that the address, the username,
+  /// and a 32-byte random password arrive together, so this fills all three
+  /// rather than making the user shuttle between fields.
+  Future<void> _pastePairing() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    final raw = data?.text ?? '';
+    if (!mounted) return;
+    if (raw.trim().isEmpty) {
+      setState(() {
+        _pairingNotice = null;
+        _pairingFailure =
+            'The clipboard is empty. Run `opencode2 pair` on the server and '
+            'copy the code it prints.';
+      });
+      return;
+    }
+    final parsed = parsePairingPayload(raw);
+    if (!parsed.ok) {
+      setState(() {
+        _pairingNotice = null;
+        _pairingFailure = parsed.error;
+      });
+      return;
+    }
+    await _applyPairing(parsed.payload!);
+  }
+
+  /// Opens the camera scanner and applies whatever pairing code it decodes.
+  ///
+  /// The scanner owns every camera failure — permission, hardware, a QR that
+  /// is not a pairing code — and returns null for all of them, so there is
+  /// nothing to explain here beyond a payload that arrived.
+  Future<void> _scanPairing() async {
+    if (!platformCapabilities.supportsQrPairing) return;
+    final payload = await Navigator.of(context).push<PairingPayload>(
+      MaterialPageRoute<PairingPayload>(
+        builder: (_) => const PairingScannerScreen(),
+      ),
+    );
+    if (payload == null || !mounted) {
+      payload?.consume();
+      return;
+    }
+    await _applyPairing(payload);
+  }
+
+  /// Probes a pairing payload's addresses and fills the editor from the one
+  /// that answers.
+  ///
+  /// The payload is consumed on every exit path: it carries the serve
+  /// password, and nothing beyond this method should still be holding it.
+  /// The password reaches the password field and Keystore from there — it is
+  /// never logged, never put in [_pairingNotice] or [_pairingFailure], and
+  /// never in a URL.
+  Future<void> _applyPairing(PairingPayload payload) async {
+    if (_pairing) {
+      payload.consume();
+      return;
+    }
+    final username = payload.username;
+    final password = payload.password;
+    final firstUrl = payload.urls.first;
+    final generation = ++_probeGeneration;
+    setState(() {
+      _pairing = true;
+      _error = null;
+      _testResult = null;
+      _pairingNotice = null;
+      _pairingFailure = null;
+    });
+
+    final PairingSelection selection;
+    try {
+      selection = await selectPairingUrl(payload);
+    } finally {
+      payload.consume();
+    }
+    if (!mounted || generation != _probeGeneration) return;
+
+    // Fill the fields either way. Even when nothing answered, the user now
+    // has the address and credentials in front of them and can fix the tunnel
+    // rather than re-copying everything by hand.
+    final chosen = selection.chosenUrl ?? normalizeServerProfileUrl(firstUrl);
+    _url.value = TextEditingValue(text: chosen);
+    _urlLength = chosen.length;
+    _user.text = username;
+    _pass.text = password;
+
+    final host = Uri.tryParse(chosen)?.host ?? chosen;
+    final tried = selection.outcomes.length;
+    final result = selection.chosenResult;
+    setState(() {
+      _pairing = false;
+      // The existing probe-verdict row already says the flavor, the version,
+      // and "Connected — save to finish", and it is what `_save` reads to
+      // cache the detected flavor. So pairing hands it the result and says
+      // only the thing it cannot: *which* address was chosen, out of how
+      // many. Repeating the verdict here would be two widgets telling the
+      // user the same thing.
+      _testResult = selection.ok ? result : null;
+      if (selection.ok) {
+        _pairingNotice = tried > 1
+            ? 'Paired with $host — chosen from $tried addresses in the code.'
+            : 'Paired with $host.';
+        _pairingFailure = null;
+      } else {
+        _pairingNotice = null;
+        _pairingFailure =
+            'No address in that pairing code answered:\n'
+            '${selection.failureDetail}\n$_pairingHint';
+      }
+    });
+    if (!selection.connected && (result?.needsPassword ?? false)) {
+      _passFocus.requestFocus();
+    }
+  }
+
+  /// What to do about a pairing code whose addresses all failed. A phone and
+  /// a desktop have genuinely different answers, so they get different ones.
+  String get _pairingHint => platformCapabilities.supportsUsbHostBridge
+      ? 'A server bound to its own 127.0.0.1 is not reachable from this '
+            'phone until you bridge it — `adb reverse tcp:PORT tcp:PORT` over '
+            'USB, or an SSH forward. To reach it over the network instead, '
+            'put it behind HTTPS.'
+      : 'Check that the server is running, and that the address it printed '
+            'is one this machine can reach.';
+
   /// Paste-first entry for the per-run serve password: nobody types a random
   /// 32-byte base64url string. Trims whitespace and a copied
   /// `server password ` line prefix.
+  ///
+  /// A clipboard holding a whole pairing payload is routed to [_applyPairing]
+  /// instead — stuffing that JSON into the password field would be both
+  /// wrong and a way to get the credential rendered on screen.
   Future<void> _pastePassword() async {
     final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (looksLikePairingPayload(data?.text ?? '')) {
+      final parsed = parsePairingPayload(data!.text!);
+      if (!mounted) return;
+      if (!parsed.ok) {
+        setState(() {
+          _pairingNotice = null;
+          _pairingFailure = parsed.error;
+        });
+        return;
+      }
+      await _applyPairing(parsed.payload!);
+      return;
+    }
     var text = data?.text?.trim() ?? '';
     const prefix = 'server password';
     if (text.toLowerCase().startsWith(prefix)) {
@@ -871,7 +1084,19 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                   ),
                 ),
               ],
-              const SizedBox(height: 24),
+              const SizedBox(height: 12),
+              _PairingActions(
+                busy: _pairing,
+                notice: _pairingNotice,
+                failure: _pairingFailure,
+                onPaste: _pairing ? null : () => unawaited(_pastePairing()),
+                // Rendered only where a camera path exists. Desktop gets no
+                // affordance at all rather than one that opens and fails.
+                onScan: platformCapabilities.supportsQrPairing
+                    ? () => unawaited(_scanPairing())
+                    : null,
+              ),
+              const SizedBox(height: 20),
               TextField(
                 key: const ValueKey('server-url-field'),
                 controller: _url,
@@ -883,7 +1108,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                 onChanged: _urlChanged,
                 decoration: InputDecoration(
                   labelText: 'Server URL',
-                  hintText: '192.168.1.20:4096 or https://…',
+                  hintText: '192.0.2.20:4096 or https://…',
                   errorText: _error,
                   errorMaxLines: 3,
                   helperText:
@@ -1006,9 +1231,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                   liveRegion: true,
                   child: Container(
                     key: ValueKey(
-                      result.ok
-                          ? 'server-test-success'
-                          : 'server-test-failure',
+                      result.ok ? 'server-test-success' : 'server-test-failure',
                     ),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -1121,6 +1344,137 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The one-step pairing affordance at the top of the server editor.
+///
+/// `opencode2 pair` prints the address, the username, and the per-run
+/// password together, so pairing is strictly less work than copying a
+/// password by hand — which is why it leads the editor rather than hiding
+/// below the fields.
+///
+/// Deliberately a bare button row with no heading and no body copy. The
+/// editor is already a long form on a short screen: a titled card, and even
+/// two extra sentences in the intro paragraph, pushed the URL and password
+/// fields below the fold at 2× text scale — the users least able to afford
+/// it. So the button label carries the affordance, and the explaining is done
+/// where it costs nothing: the empty-clipboard and failure messages name
+/// `opencode2 pair` outright, and the docs lead with it.
+class _PairingActions extends StatelessWidget {
+  const _PairingActions({
+    required this.busy,
+    required this.notice,
+    required this.failure,
+    required this.onPaste,
+    required this.onScan,
+  });
+
+  final bool busy;
+  final String? notice;
+  final String? failure;
+  final VoidCallback? onPaste;
+
+  /// Null wherever there is no camera path — desktop, and anywhere else
+  /// `supportsQrPairing` says no. The button is then not built at all, so no
+  /// camera code is reachable and nothing offers what it cannot do.
+  final VoidCallback? onScan;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final notice = this.notice;
+    final failure = this.failure;
+    return Column(
+      key: const ValueKey('server-pairing-actions'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              FilledButton.tonalIcon(
+                key: const ValueKey('server-pairing-paste'),
+                onPressed: onPaste,
+                icon: busy
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.content_paste_rounded, size: 18),
+                label: Text(busy ? 'Pairing…' : 'Paste pairing code'),
+              ),
+              if (onScan case final scan?)
+                OutlinedButton.icon(
+                  key: const ValueKey('server-pairing-scan'),
+                  onPressed: busy ? null : scan,
+                  icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
+                  label: const Text('Scan'),
+                ),
+            ],
+          ),
+          if (notice != null) ...[
+            const SizedBox(height: 10),
+            Semantics(
+              key: const ValueKey('server-pairing-notice'),
+              container: true,
+              liveRegion: true,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.check_circle_outline_rounded,
+                    size: 18,
+                    color: AppTheme.successOf(theme),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      notice,
+                      style: theme.textTheme.bodySmall?.copyWith(height: 1.35),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (failure != null) ...[
+            const SizedBox(height: 10),
+            Semantics(
+              key: const ValueKey('server-pairing-failure'),
+              container: true,
+              liveRegion: true,
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.errorContainer,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.error_outline_rounded,
+                      size: 18,
+                      color: theme.colorScheme.onErrorContainer,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        failure,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onErrorContainer,
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+      ],
     );
   }
 }

@@ -10,6 +10,7 @@ import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/state/review_handoff.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/screens/app_diagnostics_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
@@ -434,6 +435,7 @@ Future<ConnectionController> _pumpChat(
   _FakeOpenCodeApi api, {
   ProductRepository? repository,
   ConnectionController? controller,
+  ReviewHandoffStore? handoffStore,
 }) async {
   final activeController = controller ?? await _controller(api);
   activeController.repository = repository;
@@ -441,7 +443,14 @@ Future<ConnectionController> _pumpChat(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [connProvider.overrideWithValue(activeController)],
-      child: const MaterialApp(home: ChatScreen(sessionID: 'session-1')),
+      child: MaterialApp(
+        home: ChatScreen(
+          sessionID: 'session-1',
+          // Per-test store so staged review references never leak between
+          // cases through the app-wide singleton.
+          handoffStore: handoffStore ?? ReviewHandoffStore(),
+        ),
+      ),
     ),
   );
   await tester.pump();
@@ -499,6 +508,19 @@ Future<ConnectionController> _pumpProvisionalChat(
 Future<void> _pumpEvent(WidgetTester tester) async {
   await tester.pump();
   await tester.pump();
+}
+
+/// UX-P0-03: Commands, Attach, and Voice are collapsed behind one leading
+/// tools button, so tests reach them through the tools sheet instead of
+/// tapping three separate composer icons.
+Future<void> _useComposerTool(WidgetTester tester, String tool) async {
+  await tester.tap(find.byKey(const Key('composer-tools-button')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(Key('composer-tool-$tool')));
+  // The sheet resolves its choice on dismissal, so the tool it launches
+  // needs a second settle.
+  await tester.pumpAndSettle();
+  await tester.pumpAndSettle();
 }
 
 void main() {
@@ -623,7 +645,7 @@ void main() {
       ],
     );
 
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('command-mobile-new')));
     await tester.pumpAndSettle();
@@ -805,7 +827,7 @@ void main() {
     expect(find.byKey(const Key('review-mode-split')), findsOneWidget);
   });
 
-  testWidgets('adds a selected diff comment back to the chat composer', (
+  testWidgets('stages a selected diff comment as a composer reference', (
     tester,
   ) async {
     final api = _FakeOpenCodeApi()
@@ -838,17 +860,34 @@ void main() {
     await tester.tap(find.byKey(const Key('review-add-to-prompt')));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('review-workspace')), findsNothing);
+    // UX-103: review stays open so a pass can stage several findings, and
+    // says how many are waiting on the prompt.
+    expect(find.byKey(const Key('review-workspace')), findsOneWidget);
+    expect(find.byKey(const Key('review-staged-count')), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    // Let the staging snack bar clear the composer before tapping Send.
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+
+    // The finding is a removable chip, not pre-rendered composer text.
+    expect(find.byKey(const Key('composer-reference-strip')), findsOneWidget);
+    expect(find.textContaining('client.dart'), findsWidgets);
     final composer = tester.widget<TextField>(
       find.byKey(const Key('chat-composer-field')),
     );
-    expect(composer.controller?.text, contains('Review `lib/client.dart`'));
-    expect(composer.controller?.text, contains('new line 8'));
-    expect(
-      composer.controller?.text,
-      contains('Keep the retry behavior explicit.'),
-    );
-    expect(composer.controller?.text, contains('+new request'));
+    expect(composer.controller?.text, isEmpty);
+
+    await tester.tap(find.byKey(const Key('chat-send-button')));
+    await tester.pumpAndSettle();
+
+    final sent = api.prompts.single.text;
+    expect(sent, contains('`lib/client.dart`'));
+    expect(sent, contains('new line 8'));
+    expect(sent, contains('Keep the retry behavior explicit.'));
+    expect(sent, contains('+new request'));
+    expect(find.byKey(const Key('composer-reference-strip')), findsNothing);
   });
 
   testWidgets('foreground data refresh rehydrates messages missed while away', (
@@ -1627,7 +1666,7 @@ void main() {
     expect(find.text(reasoning), findsNothing);
     expect(find.byKey(const Key('message-meta-user-display')), findsNothing);
 
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
@@ -1662,6 +1701,86 @@ void main() {
     expect(find.text(reasoning), findsNothing);
   });
 
+  testWidgets('the transcript-wide reasoning toggle replaces per-part choices '
+      'instead of stamping over them', (tester) async {
+    const first =
+        'A deliberately long first reasoning explanation that spans several lines on a phone and so starts collapsed.';
+    const second =
+        'A deliberately long second reasoning explanation that also spans several lines and starts collapsed too.';
+    final created = DateTime.now().millisecondsSinceEpoch;
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => [
+        _message('assistant-one', 'assistant', [
+          Part(
+            id: 'reasoning-one',
+            messageID: 'assistant-one',
+            type: 'reasoning',
+            text: first,
+          ),
+          Part(
+            id: 'text-one',
+            messageID: 'assistant-one',
+            type: 'text',
+            text: 'First answer.',
+          ),
+        ], created: created),
+        _message('assistant-two', 'assistant', [
+          Part(
+            id: 'reasoning-two',
+            messageID: 'assistant-two',
+            type: 'reasoning',
+            text: second,
+          ),
+          Part(
+            id: 'text-two',
+            messageID: 'assistant-two',
+            type: 'text',
+            text: 'Second answer.',
+          ),
+        ], created: created + 1),
+      ];
+
+    final controller = await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+    expect(find.text(first), findsNothing);
+    expect(find.text(second), findsNothing);
+
+    // One per-part expansion, which the session store remembers. The
+    // transcript renders reversed, so assert on the count rather than on
+    // which of the two blocks the first toggle belongs to.
+    await tester.tap(find.byKey(const Key('reasoning-toggle')).first);
+    await tester.pumpAndSettle();
+    expect(find.text(first).evaluate().length +
+        find.text(second).evaluate().length, 1);
+
+    Future<void> flipGlobal() async {
+      await tester.tap(find.byTooltip('Session views'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('session-view-thinking')));
+      await tester.pumpAndSettle();
+    }
+
+    // The transcript-wide default wins while it is being set...
+    await flipGlobal();
+    expect(controller.transcriptReasoningExpanded, isTrue);
+    expect(find.text(first), findsOneWidget);
+    expect(find.text(second), findsOneWidget);
+
+    // ...and flipping it back collapses everything, including the block the
+    // user had opened, rather than leaving the store stamped with values the
+    // user never chose.
+    await flipGlobal();
+    expect(controller.transcriptReasoningExpanded, isFalse);
+    expect(find.text(first), findsNothing);
+    expect(find.text(second), findsNothing);
+
+    // Per-part control still works after the round trip.
+    await tester.tap(find.byKey(const Key('reasoning-toggle')).last);
+    await tester.pumpAndSettle();
+    expect(find.text(first).evaluate().length +
+        find.text(second).evaluate().length, 1);
+  });
+
   testWidgets('command launcher maps diff to the native session viewer', (
     tester,
   ) async {
@@ -1675,7 +1794,7 @@ void main() {
       ];
 
     await _pumpChat(tester, api);
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
@@ -1713,7 +1832,7 @@ void main() {
 
     await _pumpChat(tester, api);
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
@@ -1729,7 +1848,7 @@ void main() {
 
   testWidgets('debug command opens native app diagnostics', (tester) async {
     await _pumpChat(tester, _FakeOpenCodeApi());
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
@@ -1746,7 +1865,7 @@ void main() {
   testWidgets('health command opens native project health', (tester) async {
     final repository = _DestinationRepository();
     await _pumpChat(tester, _FakeOpenCodeApi(), repository: repository);
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
@@ -1764,7 +1883,7 @@ void main() {
     tester,
   ) async {
     await _pumpChat(tester, _FakeOpenCodeApi());
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
@@ -1782,7 +1901,7 @@ void main() {
     tester,
   ) async {
     final controller = await _pumpChat(tester, _FakeOpenCodeApi());
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
@@ -1882,7 +2001,7 @@ void main() {
     ]);
 
     await _pumpChat(tester, api, repository: repository);
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
 
     await tester.enterText(
@@ -1924,7 +2043,7 @@ void main() {
       );
 
     await _pumpChat(tester, api);
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
@@ -1986,7 +2105,7 @@ void main() {
     await tester.pumpAndSettle();
 
     Future<void> openCommand(String command) async {
-      await tester.tap(find.byKey(const Key('command-launcher-button')));
+      await _useComposerTool(tester, 'commands');
       await tester.pumpAndSettle();
       await tester.enterText(
         find.byKey(const Key('command-launcher-search')),
@@ -2058,7 +2177,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
@@ -2116,7 +2235,7 @@ void main() {
     await tester.pump();
 
     expect(find.byKey(const Key('prompt-editor-button')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
@@ -2348,7 +2467,7 @@ void main() {
 
     await _pumpChat(tester, api, repository: repository);
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('command-launcher-search')),
@@ -2438,7 +2557,7 @@ void main() {
       );
 
       await _pumpChat(tester, api, repository: repository);
-      await tester.tap(find.byKey(const Key('command-launcher-button')));
+      await _useComposerTool(tester, 'commands');
       await tester.pumpAndSettle();
       await tester.enterText(
         find.byKey(const Key('command-launcher-search')),
@@ -2648,7 +2767,7 @@ void main() {
       await tester.tap(find.byTooltip('Close timeline'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('command-launcher-button')));
+      await _useComposerTool(tester, 'commands');
       await tester.pumpAndSettle();
       expect(
         tester.widget<BottomSheet>(find.byType(BottomSheet)).showDragHandle,
@@ -2700,7 +2819,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key('command-launcher-button')));
+    await _useComposerTool(tester, 'commands');
     await tester.pumpAndSettle();
     expect(find.text('Composer tools'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -3282,7 +3401,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Attach file'));
+    await _useComposerTool(tester, 'attach');
     await tester.pumpAndSettle();
 
     expect(find.textContaining('attach up to 5 files'), findsOneWidget);

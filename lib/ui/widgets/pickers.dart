@@ -7,6 +7,7 @@ import '../../api/models.dart';
 import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
+import '../app_theme.dart';
 
 /// How applying a model/agent selection is scoped and labeled.
 ///
@@ -230,7 +231,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
             height: 44,
             decoration: BoxDecoration(
               color: scheme.primaryContainer,
-              borderRadius: BorderRadius.circular(13),
+              borderRadius: BorderRadius.circular(AppTheme.radiusCard),
             ),
             child: Icon(Icons.tune_rounded, color: scheme.onPrimaryContainer),
           ),
@@ -597,7 +598,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
                 Text(
                   'This provider exposes only its default mode.',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.hintColor,
+                    color: AppTheme.mutedOf(theme),
                   ),
                 )
               else
@@ -708,7 +709,7 @@ class _Notice extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(icon, size: 19, color: scheme.onSecondaryContainer),
-              const SizedBox(width: 9),
+              const SizedBox(width: 8),
               Expanded(child: Text(text)),
             ],
           ),

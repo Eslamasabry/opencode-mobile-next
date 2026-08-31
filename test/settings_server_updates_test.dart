@@ -4,7 +4,9 @@ import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
+import 'package:opencode_mobile/background/live_background.dart';
 import 'package:opencode_mobile/state/connection.dart';
+import 'package:opencode_mobile/state/offline_queue.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/app_diagnostics_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
@@ -92,6 +94,7 @@ class _EmptyPermissionRepository implements ProductRepository {
 Future<ConnectionController> _controllerFor(
   String baseUrl, {
   ProductRepository? repository,
+  BackgroundLiveController? backgroundLive,
 }) async {
   SharedPreferences.setMockInitialValues({});
   final profile = ServerProfile(
@@ -104,11 +107,30 @@ Future<ConnectionController> _controllerFor(
     savedProfile: profile,
   );
   await store.setActiveId(profile.id);
-  return ConnectionController(store)
+  return ConnectionController(store, backgroundLive: backgroundLive)
     ..api = _HealthyApi()
     ..repository = repository
     ..version = '1.18.23'
     ..status = StreamStatus.connected;
+}
+
+/// A live-background controller that never touches the platform channel, so
+/// the settings screen can be driven through a simulated native event.
+Future<BackgroundLiveController> _liveController(
+  SharedPreferences preferences, {
+  bool enabled = true,
+}) async {
+  final controller = BackgroundLiveController(
+    preferences: preferences,
+    invoke: (method, [arguments]) async => {
+      'enabled': enabled,
+      'active': enabled,
+      'notificationGranted': true,
+      'batteryOptimizationIgnored': true,
+    },
+  );
+  await controller.restore();
+  return controller;
 }
 
 /// The hub-and-spoke Settings places every section one level deep; open the
@@ -176,7 +198,7 @@ void main() {
   testWidgets('remote profile clearly remains externally managed', (
     tester,
   ) async {
-    final controller = await _controllerFor('http://100.64.0.10:4747');
+    final controller = await _controllerFor('http://203.0.113.10:4747');
     addTearDown(controller.dispose);
 
     await tester.pumpWidget(
@@ -197,7 +219,7 @@ void main() {
   ) async {
     final repository = _EmptyPermissionRepository();
     final controller = await _controllerFor(
-      'http://100.64.0.10:4747',
+      'http://203.0.113.10:4747',
       repository: repository,
     );
     addTearDown(controller.dispose);
@@ -243,7 +265,7 @@ void main() {
     final repository = _EmptyPermissionRepository()
       ..upgradeError = const ProductException('Unknown installation method');
     final controller = await _controllerFor(
-      'http://100.64.0.10:4747',
+      'http://203.0.113.10:4747',
       repository: repository,
     );
     addTearDown(controller.dispose);
@@ -290,7 +312,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     final controller = await _controllerFor(
-      'http://100.64.0.10:4747',
+      'http://203.0.113.10:4747',
       repository: _EmptyPermissionRepository(),
     );
     addTearDown(controller.dispose);
@@ -612,5 +634,168 @@ void main() {
       expect(find.byKey(ValueKey(key)), findsOneWidget);
     }
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('privacy settings size and clear the unsent work on device', (
+    tester,
+  ) async {
+    final controller = await _controllerFor(
+      'http://127.0.0.1:4096',
+      repository: _EmptyPermissionRepository(),
+    );
+    addTearDown(controller.dispose);
+    await controller.queuePrompt(
+      QueuedPrompt(
+        id: 'queued-1',
+        profileID: 'server',
+        sessionID: 'session-1',
+        text: 'unsent prompt',
+        createdAt: DateTime.now().millisecondsSinceEpoch,
+      ),
+    );
+    await controller.saveSessionDraft('session-1', 'half-typed thought');
+
+    await tester.pumpWidget(
+      MaterialApp(home: SettingsScreen(controller: controller)),
+    );
+    await tester.pumpAndSettle();
+    await _openCategory(tester, 'settings-category-privacy');
+
+    // The readout names both stores and the expiry, so "where did my draft
+    // go" has an answer before it happens.
+    final usage = find.byKey(const ValueKey('local-storage-usage'));
+    await tester.scrollUntilVisible(
+      usage,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.textContaining('1 queued prompt'), findsOneWidget);
+    expect(find.textContaining('1 draft'), findsOneWidget);
+    expect(find.textContaining('discarded after 14 days'), findsOneWidget);
+
+    // Clearing confirms first and says what it deletes.
+    await tester.tap(find.byKey(const ValueKey('clear-queued-prompts')));
+    await tester.pumpAndSettle();
+    expect(find.text('Delete queued prompts?'), findsOneWidget);
+    expect(
+      find.textContaining('Nothing on the server is affected'),
+      findsOneWidget,
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.pumpAndSettle();
+
+    expect(controller.totalQueuedPromptCount, 0);
+    expect(find.text('Queued prompts deleted'), findsOneWidget);
+    expect(find.textContaining('Nothing is waiting to send'), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('clear-session-drafts')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.pumpAndSettle();
+
+    expect(controller.totalSessionDraftCount, 0);
+    expect(find.text('Drafts deleted'), findsOneWidget);
+  });
+
+  testWidgets('the clear rows are inert when there is nothing to clear', (
+    tester,
+  ) async {
+    final controller = await _controllerFor(
+      'http://127.0.0.1:4096',
+      repository: _EmptyPermissionRepository(),
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(home: SettingsScreen(controller: controller)),
+    );
+    await tester.pumpAndSettle();
+    await _openCategory(tester, 'settings-category-privacy');
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('clear-queued-prompts')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    expect(
+      tester
+          .widget<ListTile>(find.byKey(const ValueKey('clear-queued-prompts')))
+          .enabled,
+      isFalse,
+    );
+    expect(
+      tester
+          .widget<ListTile>(find.byKey(const ValueKey('clear-session-drafts')))
+          .enabled,
+      isFalse,
+    );
+    expect(find.text('0 B of unsent work — 0 queued prompts (0 B) and 0 '
+        'drafts (0 B). Queued prompts are discarded after 14 days.'),
+        findsOneWidget);
+  });
+
+  testWidgets('an Android service timeout turns the switch off and says why', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      BackgroundLiveController.preferenceKey: true,
+    });
+    final preferences = await SharedPreferences.getInstance();
+    final live = await _liveController(preferences);
+    final controller = await _controllerFor(
+      'http://127.0.0.1:4096',
+      repository: _EmptyPermissionRepository(),
+      backgroundLive: live,
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(home: SettingsScreen(controller: controller)),
+    );
+    await tester.pumpAndSettle();
+    await _openCategory(tester, 'settings-category-background');
+
+    // The limit is stated on the switch itself, before it is ever hit.
+    expect(
+      find.textContaining('six hours of this per 24 hours'),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('background-timeout-notice')),
+      findsNothing,
+    );
+    expect(
+      tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
+      isTrue,
+    );
+
+    // Android stops the service; Dart hears about it immediately.
+    live.handleNativeTimeout(const {'reason': 'systemTimeout'});
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('background-timeout-notice')),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Android stopped the live connection'),
+      findsOneWidget,
+    );
+    expect(
+      tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
+      isFalse,
+      reason: 'the switch must not claim a service the system killed',
+    );
+    expect(controller.keepLiveInBackground, isFalse);
+
+    // Turning it back on is the answer to the notice, so the notice goes.
+    await tester.tap(find.byType(SwitchListTile));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('background-timeout-notice')),
+      findsNothing,
+    );
   });
 }

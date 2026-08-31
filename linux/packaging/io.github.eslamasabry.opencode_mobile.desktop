@@ -1,0 +1,21 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=OpenCode
+GenericName=Coding Agent Client
+Comment=Connect to a remote opencode server and drive coding sessions
+# Rewritten by the installer to the absolute path of the installed binary.
+Exec=opencode
+# Icon and file name both use the GApplication application-id set in
+# linux/CMakeLists.txt. Under Wayland GTK reports that id as the xdg-shell
+# app_id, so the compositor pairs the window with this file by name alone.
+Icon=io.github.eslamasabry.opencode_mobile
+# Under X11 the shell matches WM_CLASS instead. linux/runner/my_application.cc
+# pins both halves of WM_CLASS (res_name via g_set_prgname, res_class via
+# gdk_set_program_class) to this exact string, so taskbar grouping works the
+# same on X11 and Wayland.
+StartupWMClass=io.github.eslamasabry.opencode_mobile
+StartupNotify=true
+Terminal=false
+Categories=Development;IDE;
+Keywords=opencode;agent;llm;coding;terminal;ssh;

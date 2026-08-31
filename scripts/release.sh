@@ -7,7 +7,7 @@ readonly RELEASE_BRANCH="master"
 readonly SHOREBIRD_FLUTTER_VERSION="3.47.1"
 readonly AAB_PATH="build/app/outputs/bundle/release/app-release.aab"
 readonly APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
-readonly ANDROID_APPLICATION_ID="ai.opencode.opencode_mobile"
+readonly ANDROID_APPLICATION_ID="io.github.eslamasabry.opencode_mobile"
 readonly LEGACY_DEBUG_CERT_SHA256="1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C"
 
 UPSTREAM_REMOTE=""

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../platform/platform_capabilities.dart';
+import '../app_theme.dart';
+import '../widgets/product_states.dart';
 
 /// Setup guide for both connection modes:
 /// remote machine and on-device (Termux).
@@ -8,21 +11,31 @@ class GuideScreen extends StatelessWidget {
   const GuideScreen({super.key, this.embedded = false});
 
   Widget _body(BuildContext context) {
+    // The on-device path is Termux, which is Android-only. A desktop reader
+    // is told about the one path that exists for them rather than a second
+    // one they cannot take.
+    final onDevice = platformCapabilities.supportsTermux;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       children: [
         _Section(
           title: 'How this app works',
           children: [
-            const Text(
-              'OpenCode runs as a headless HTTP server (`opencode serve`). '
-              'This app is a client that talks to it — either on your computer '
-              '(remote) or right here on the phone via Termux (on-device).',
+            Text(
+              onDevice
+                  ? 'OpenCode runs as a headless HTTP server '
+                        '(`opencode serve`). This app is a client that talks '
+                        'to it — either on your computer (remote) or right '
+                        'here on the phone via Termux (on-device).'
+                  : 'OpenCode runs as a headless HTTP server '
+                        '(`opencode serve`). This app is a client that talks '
+                        'to it — on this machine or another one you can '
+                        'reach.',
             ),
           ],
         ),
         _Section(
-          title: '1 · Remote machine',
+          title: onDevice ? '1 · Remote machine' : 'Running the server',
           children: [
             const Text('On your dev box, start the server on loopback:'),
             const Cmd(
@@ -40,47 +53,54 @@ class GuideScreen extends StatelessWidget {
             ),
           ],
         ),
-        _Section(
-          title: '2 · On-device via Termux (automated)',
-          children: [
-            const Text(
-              'Use the “On-device (Termux)” card on the Servers screen. '
-              'The app installs Termux, unlocks the bridge, sets up opencode, '
-              'starts the server and connects — all guided.',
-            ),
-            _tip(
-              context,
-              'Only two taps need you personally: downloading the Termux APK and '
-              'pasting one unlock line inside Termux once — both required by '
-              'Android\u2019s security model, not by this app.',
-            ),
-            const Text('Prefer manual? Inside Termux run:'),
-            const Cmd(
-              '# plain-Termux npm installs are broken upstream\n'
-              '# (npm os=android -> no opencode-android-arm64 package),\n'
-              '# so we use an Ubuntu chroot:\n'
-              'pkg install proot-distro\n'
-              'proot-distro install ubuntu\n'
-              'proot-distro login ubuntu\n'
-              '  apt update && apt install -y nodejs npm\n'
-              '  npm i -g opencode-ai\n'
-              '  opencode serve --hostname 127.0.0.1 --port 4096 &\n'
-              'exit',
-            ),
-            const Text(
-              'The chroot shares the network stack, so http://127.0.0.1:4096 '
-              'works from this app. Run `termux-wake-lock` to keep it alive.',
-            ),
-          ],
-        ),
+        if (onDevice)
+          _Section(
+            key: const ValueKey('guide-termux-section'),
+            title: '2 · On-device via Termux (automated)',
+            children: [
+              const Text(
+                'Use the “On-device (Termux)” card on the Servers screen. '
+                'The app installs Termux, unlocks the bridge, sets up opencode, '
+                'starts the server and connects — all guided.',
+              ),
+              _tip(
+                context,
+                'Only two taps need you personally: downloading the Termux APK and '
+                'pasting one unlock line inside Termux once — both required by '
+                'Android\u2019s security model, not by this app.',
+              ),
+              const Text('Prefer manual? Inside Termux run:'),
+              const Cmd(
+                '# plain-Termux npm installs are broken upstream\n'
+                '# (npm os=android -> no opencode-android-arm64 package),\n'
+                '# so we use an Ubuntu chroot:\n'
+                'pkg install proot-distro\n'
+                'proot-distro install ubuntu\n'
+                'proot-distro login ubuntu\n'
+                '  apt update && apt install -y nodejs npm\n'
+                '  npm i -g opencode-ai\n'
+                '  opencode serve --hostname 127.0.0.1 --port 4096 &\n'
+                'exit',
+              ),
+              const Text(
+                'The chroot shares the network stack, so '
+                'http://127.0.0.1:4096 works from this app. Run '
+                '`termux-wake-lock` to keep it alive.',
+              ),
+            ],
+          ),
         _Section(
           title: 'Security notes',
           children: [
             const Bullet(
               'Always set OPENCODE_SERVER_PASSWORD when binding beyond localhost.',
             ),
-            const Bullet(
-              'Passwords are stored in the Android Keystore on this device only.',
+            Bullet(
+              onDevice
+                  ? 'Passwords are stored in the Android Keystore on this '
+                        'device only.'
+                  : 'Passwords are stored in this desktop’s secret '
+                        'service (libsecret) on this machine only.',
             ),
             const Bullet(
               'The server can execute commands on its host — treat access like SSH access.',
@@ -128,7 +148,7 @@ class GuideScreen extends StatelessWidget {
 class _Section extends StatelessWidget {
   final String title;
   final List<Widget> children;
-  const _Section({required this.title, required this.children});
+  const _Section({super.key, required this.title, required this.children});
 
   @override
   Widget build(BuildContext context) {
@@ -136,18 +156,7 @@ class _Section extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title.toUpperCase(),
-            style: Theme.of(context).textTheme.labelMedium!.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w700,
-              letterSpacing: .8,
-            ),
-          ),
-          const SizedBox(height: 8),
-          ...children,
-        ],
+        children: [SectionLabel.inline(title), ...children],
       ),
     );
   }
@@ -169,7 +178,7 @@ class Cmd extends StatelessWidget {
             ? Colors.black.withValues(alpha: .45)
             : Colors.black.withValues(alpha: .05),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: .5)),
+        border: Border.all(color: AppTheme.hairline(theme)),
       ),
       child: Stack(
         children: [
@@ -178,8 +187,8 @@ class Cmd extends StatelessWidget {
             child: SelectableText(
               text,
               style: theme.textTheme.bodySmall!.copyWith(
-                fontFamily: 'AppMono',
-                fontSize: 12.5,
+                fontFamily: AppTheme.monoFamily,
+                fontSize: AppTheme.codeFontSize,
               ),
             ),
           ),
@@ -190,7 +199,7 @@ class Cmd extends StatelessWidget {
               tooltip: 'Copy command',
               visualDensity: VisualDensity.compact,
               iconSize: 15,
-              icon: Icon(Icons.copy_rounded, color: theme.hintColor),
+              icon: Icon(AppIcons.copy, color: AppTheme.mutedOf(theme)),
               onPressed: () async {
                 await Clipboard.setData(ClipboardData(text: text));
                 if (context.mounted) {

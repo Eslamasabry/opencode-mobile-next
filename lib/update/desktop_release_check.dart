@@ -1,19 +1,20 @@
 import 'dart:async';
-import 'dart:io' show Platform;
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import '../platform/platform_capabilities.dart';
+import '../ui/widgets/external_link.dart';
 
 /// Desktop builds cannot receive Shorebird patches, so Linux and Windows
 /// check the project's GitHub releases instead and point at the release
 /// page. Nothing downloads automatically.
 const desktopReleasesApiUrl =
-    'https://api.github.com/repos/Eslamasabry/oc_app/releases';
+    'https://api.github.com/repos/Eslamasabry/opencode-mobile/releases';
 const desktopReleasesPageUrl =
-    'https://github.com/Eslamasabry/oc_app/releases';
+    'https://github.com/Eslamasabry/opencode-mobile/releases';
 
 class DesktopReleaseInfo {
   final String tag;
@@ -59,20 +60,32 @@ class DesktopReleaseChecker {
       if (entry['draft'] == true) continue;
       final tag = entry['tag_name'];
       if (tag is! String || tag.isEmpty) continue;
+      // `html_url` arrives over the network, so it only survives if it is an
+      // https GitHub URL with no embedded credentials; anything else falls
+      // back to the compiled-in releases page rather than being launched.
       final htmlUrl = entry['html_url'];
+      final parsed = htmlUrl is String ? safeExternalLinkUri(htmlUrl) : null;
+      final trusted =
+          parsed != null &&
+          parsed.scheme == 'https' &&
+          (parsed.host == 'github.com' || parsed.host.endsWith('.github.com'));
       return DesktopReleaseInfo(
         tag: tag,
-        htmlUrl: htmlUrl is String && htmlUrl.isNotEmpty
-            ? htmlUrl
-            : desktopReleasesPageUrl,
+        htmlUrl: trusted ? parsed.toString() : desktopReleasesPageUrl,
       );
     }
     return null;
   }
 }
 
-bool get _runningOnDesktop =>
-    !kIsWeb && (Platform.isLinux || Platform.isWindows);
+/// The complement of Shorebird code push: the platforms that ship a release
+/// artifact but cannot receive a patch.
+///
+/// Read through the capability seam rather than `dart:io`'s `Platform`, which
+/// reports the *host* — under `flutter_test` on Linux that made this true for
+/// every widget test that mounted the app, so the suite quietly enabled a
+/// GitHub release check on what it was pretending was a phone.
+bool get _runningOnDesktop => platformCapabilities.supportsDesktopReleaseCheck;
 
 /// Mirrors the Shorebird notice's lifecycle: checks on start and resume,
 /// throttled, showing one snackbar per run with a View action that opens the
@@ -172,7 +185,9 @@ class _DesktopReleaseNoticeState extends State<DesktopReleaseNotice>
         action: SnackBarAction(
           label: 'View',
           onPressed: () {
-            final url = Uri.parse(release.htmlUrl);
+            final url =
+                safeExternalLinkUri(release.htmlUrl) ??
+                Uri.parse(desktopReleasesPageUrl);
             final launch =
                 widget.launcher ??
                 (uri) => launchUrl(uri, mode: LaunchMode.externalApplication);

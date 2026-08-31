@@ -5,14 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../api/sse.dart';
 import '../../state/connection.dart';
 import '../app_theme.dart';
+import '../desktop/desktop_interaction.dart';
+import '../desktop/shortcuts.dart';
 import '../widgets/connection_status_banner.dart';
 import '../widgets/pickers.dart';
+import 'activity_screen.dart';
 import 'files_screen.dart';
 import 'library_screen.dart';
-import 'mission_control_screen.dart';
-import 'requests_screen.dart';
 import 'settings_screen.dart';
-import 'terminal_screen.dart';
 import 'workspace_screen.dart';
 
 /// Main mobile product shell for a connected OpenCode server.
@@ -25,8 +25,14 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with AppShortcutSurface {
   late int _tab;
+
+  /// Bumped by Ctrl+F while the Files destination is showing. Files listens
+  /// and focuses its search field. Desktop-only in practice — nothing
+  /// dispatches shortcuts off desktop.
+  final _findInFiles = ValueNotifier<int>(0);
 
   @override
   void initState() {
@@ -40,6 +46,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
+  /// The shell's own share of the shortcut layer: primary destinations, and
+  /// routing Find to the one destination that has a find field.
+  @override
+  bool onAppShortcut(Intent intent) {
+    switch (intent) {
+      case SelectDestinationIntent(:final index) when index >= 0 && index <= 3:
+        if (_tab != index) setState(() => _tab = index);
+        return true;
+      case FindInSurfaceIntent() when _tab == 1:
+        _findInFiles.value++;
+        return true;
+      default:
+        return false;
+    }
+  }
+
   void _onConnChanged() {
     if (!mounted) return;
     setState(() {});
@@ -50,6 +72,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     try {
       ref.read(connProvider).removeListener(_onConnChanged);
     } catch (_) {}
+    _findInFiles.dispose();
     super.dispose();
   }
 
@@ -58,36 +81,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final conn = ref.watch(connProvider);
     final navigator = Navigator.of(context);
 
+    // Audit §5: Activity replaces Terminal in primary navigation; Terminal is
+    // reachable from Session and the More hub. One destination, one badge.
     final tabs = [
       WorkspaceScreen(controller: conn),
-      FilesScreen(controller: conn),
-      TerminalScreen(controller: conn),
+      FilesScreen(controller: conn, focusSearchSignal: _findInFiles),
+      ActivityScreen(controller: conn, embedded: true),
       LibraryScreen(controller: conn),
     ];
-    const destinations = [
-      NavigationDestination(
+    final pending =
+        conn.permissions.length + conn.questions.length + conn.forms.length;
+    final destinations = [
+      const NavigationDestination(
         icon: Icon(Icons.workspaces_outline),
         selectedIcon: Icon(Icons.workspaces_rounded),
         label: 'Workspace',
       ),
-      NavigationDestination(
+      const NavigationDestination(
         icon: Icon(Icons.folder_outlined),
         selectedIcon: Icon(Icons.folder_rounded),
         label: 'Files',
       ),
       NavigationDestination(
-        icon: Icon(Icons.terminal_outlined),
-        selectedIcon: Icon(Icons.terminal_rounded),
-        label: 'Terminal',
+        icon: _ActivityIcon(
+          pending: pending,
+          icon: Icons.notifications_outlined,
+        ),
+        selectedIcon: _ActivityIcon(
+          pending: pending,
+          icon: Icons.notifications_rounded,
+        ),
+        label: 'Activity',
       ),
-      NavigationDestination(
+      const NavigationDestination(
         icon: Icon(Icons.more_horiz_rounded),
         selectedIcon: Icon(Icons.more_rounded),
         label: 'More',
       ),
     ];
-    final pending =
-        conn.permissions.length + conn.questions.length + conn.forms.length;
 
     return PopScope(
       canPop: false,
@@ -101,37 +132,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             compact: MediaQuery.sizeOf(context).width < 600,
           ),
           actions: [
+            // §5 Root app bar: one contextual action plus overflow. The
+            // pending badge lives on the Activity destination alone.
             IconButton(
               tooltip: 'Model / agent',
               icon: const Icon(Icons.tune_rounded),
               onPressed: () => showModelPicker(context),
-            ),
-            Badge(
-              isLabelVisible: pending > 0,
-              label: Text('$pending'),
-              child: IconButton(
-                key: const ValueKey('mission-control-button'),
-                tooltip: 'Mission Control',
-                icon: const Icon(Icons.space_dashboard_outlined),
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => MissionControlScreen(controller: conn),
-                  ),
-                ),
-              ),
-            ),
-            Badge(
-              isLabelVisible: pending > 0,
-              label: Text('$pending'),
-              child: IconButton(
-                tooltip: 'Pending requests',
-                icon: const Icon(Icons.notifications_outlined),
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => RequestsScreen(controller: conn),
-                  ),
-                ),
-              ),
             ),
             PopupMenuButton<String>(
               onSelected: (v) {
@@ -143,16 +149,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   );
                 }
+                if (v == 'shortcuts') showShortcutsHelp(context);
                 if (v == 'disconnect') {
                   conn.disconnect().then((_) {
                     navigator.pushNamedAndRemoveUntil('/servers', (_) => false);
                   });
                 }
               },
-              itemBuilder: (_) => const [
-                PopupMenuItem(value: 'refresh', child: Text('Refresh')),
-                PopupMenuItem(value: 'settings', child: Text('Settings')),
-                PopupMenuItem(value: 'disconnect', child: Text('Disconnect')),
+              itemBuilder: (_) => [
+                const PopupMenuItem(value: 'refresh', child: Text('Refresh')),
+                const PopupMenuItem(value: 'settings', child: Text('Settings')),
+                // Discoverability: the shortcut layer must not be reachable
+                // only by a shortcut.
+                if (desktopInteractions)
+                  const PopupMenuItem(
+                    value: 'shortcuts',
+                    child: Text('Keyboard shortcuts'),
+                  ),
+                const PopupMenuItem(
+                  value: 'disconnect',
+                  child: Text('Disconnect'),
+                ),
               ],
             ),
           ],
@@ -225,7 +242,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   DateTime? _lastBackAt;
 
-  static const _titles = ['Workspace', 'Files', 'Terminal', 'More'];
+  static const _titles = ['Workspace', 'Files', 'Activity', 'More'];
+}
+
+/// The product's single pending badge (audit UX-P0-01). Semantics carry the
+/// count in words so the number is not colour- or shape-only.
+class _ActivityIcon extends StatelessWidget {
+  final int pending;
+  final IconData icon;
+
+  const _ActivityIcon({required this.pending, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    if (pending <= 0) return Icon(icon);
+    return Semantics(
+      label: '$pending item${pending == 1 ? '' : 's'} need attention',
+      child: Badge(
+        key: const ValueKey('activity-pending-badge'),
+        label: Text('$pending'),
+        child: Icon(icon),
+      ),
+    );
+  }
 }
 
 class _WorkspaceAppBarTitle extends StatelessWidget {
@@ -254,7 +293,7 @@ class _WorkspaceAppBarTitle extends StatelessWidget {
           key: const ValueKey('server-profile-title'),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 17),
+          style: theme.textTheme.titleMedium,
         ),
       ),
     );
@@ -263,7 +302,9 @@ class _WorkspaceAppBarTitle extends StatelessWidget {
       key: const ValueKey('current-tab-title'),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
+      style: theme.textTheme.labelSmall?.copyWith(
+        color: AppTheme.mutedOf(theme),
+      ),
     );
     final server = Row(
       children: [
@@ -302,12 +343,13 @@ class _StatusDot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final (color, pulse) = switch (status) {
-      StreamStatus.connected => (AppTheme.successOf(theme), false),
+    final (tone, pulse) = switch (status) {
+      StreamStatus.connected => (AppStatusTone.ok, false),
       StreamStatus.connecting ||
-      StreamStatus.reconnecting => (theme.colorScheme.tertiary, true),
-      StreamStatus.disconnected => (theme.colorScheme.error, false),
+      StreamStatus.reconnecting => (AppStatusTone.progress, true),
+      StreamStatus.disconnected => (AppStatusTone.failure, false),
     };
+    final color = AppTheme.statusColor(theme, tone);
     final label = switch (status) {
       StreamStatus.connected => 'Connected',
       StreamStatus.connecting => 'Connecting',

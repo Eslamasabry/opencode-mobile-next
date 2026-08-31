@@ -142,11 +142,14 @@ class Api2OperationsGateway extends ProductRepository {
   @override
   Future<void> revertSession(String id, String messageID) => _guard(
     'Could not revert the session',
-    // Stage only — v1's one-shot revert stays undoable via unrevert, which
-    // matches v2's staged model (restoreSession → revert/clear).
+    // `files: true` is what actually restores the working tree. Staging
+    // without it only moves the session boundary, so the caller would be
+    // told the revert succeeded while every file stayed changed. Deliberately
+    // not /revert/commit: commit makes the revert permanent, and v1's
+    // contract keeps it undoable through restoreSession → /revert/clear.
     () => _transport.postJson(
       '/session/$id/revert/stage',
-      body: {'messageID': messageID},
+      body: {'messageID': messageID, 'files': true},
     ),
   );
 

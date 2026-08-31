@@ -102,7 +102,9 @@ class _CatalogScreenState extends State<CatalogScreen> {
                           '${model.providerID}/${model.id}\n${_compactNumber(model.contextLimit)} context - ${_compactNumber(model.outputLimit)} output',
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 12),
+                          style: const TextStyle(
+                            fontSize: AppTheme.codeFontSize,
+                          ),
                         ),
                         isThreeLine: true,
                         trailing: selected
@@ -229,7 +231,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                 const SizedBox(height: 4),
                 SelectableText(
                   '${model.providerID}/${model.id}',
-                  style: const TextStyle(fontFamily: 'AppMono'),
+                  style: const TextStyle(fontFamily: AppTheme.monoFamily),
                 ),
                 const SizedBox(height: 16),
                 Wrap(
@@ -293,4 +295,3 @@ class _CapabilityChip extends StatelessWidget {
   Widget build(BuildContext context) =>
       Chip(label: Text(label), visualDensity: VisualDensity.compact);
 }
-

@@ -5,9 +5,18 @@ import 'package:dio/dio.dart';
 /// Transport layer for the OpenCode 2 server API (`/api/...`).
 ///
 /// Owns base-URL normalization, HTTP Basic auth (username is always
-/// `opencode`), the `?auth_token=` fallback for WebSocket/EventSource
-/// contexts, timeouts, and typed mapping of the `_tag`-discriminated
+/// `opencode`), timeouts, and typed mapping of the `_tag`-discriminated
 /// error envelope.
+///
+/// Credentials travel in the `Authorization` header and nowhere else. The
+/// server also accepts `?auth_token=<basic token>` for contexts where
+/// headers are awkward, and this class used to offer helpers that built such
+/// URLs — but a URL is logged by proxies and servers, lands in crash
+/// reports, and is visible in a screenshot, and base64 of
+/// `opencode:<password>` is trivially reversible. The one context that
+/// needed it, the PTY WebSocket upgrade, uses a single-use 60-second ticket
+/// instead (docs/opencode2-protocol-notes.md §9), so the helpers were dead
+/// weight pointed at the user's password. Do not reintroduce them.
 class Api2Transport {
   /// Server root without a trailing slash or `/api` suffix.
   final String serverRoot;
@@ -56,32 +65,11 @@ class Api2Transport {
     return root;
   }
 
-  /// `base64("opencode:<password>")` — the value of both the Basic header
-  /// and the `?auth_token=` query fallback.
+  /// `base64("opencode:<password>")` — the value carried by the Basic header.
+  /// Header only: see the class comment on why it never enters a URL.
   String get basicToken => base64Encode(utf8.encode('$username:$password'));
 
   String get authorizationHeader => 'Basic $basicToken';
-
-  /// Adds `?auth_token=` for contexts where headers are impossible
-  /// (WebSocket upgrades, EventSource). Preserves existing query params.
-  Uri withAuthToken(Uri uri) {
-    final params = Map<String, dynamic>.from(uri.queryParametersAll);
-    params['auth_token'] = basicToken;
-    return uri.replace(queryParameters: params);
-  }
-
-  /// Absolute URI for an `/api`-relative path, with the auth token attached.
-  Uri authTokenUri(String path, {Map<String, dynamic>? query}) {
-    final base = Uri.parse('$apiBase$path');
-    final params = <String, dynamic>{};
-    query?.forEach((key, value) {
-      if (value == null) return;
-      params[key] = value is Iterable
-          ? value.map((e) => e.toString()).toList()
-          : value.toString();
-    });
-    return withAuthToken(params.isEmpty ? base : base.replace(queryParameters: params));
-  }
 
   void close() {
     if (_closed) return;

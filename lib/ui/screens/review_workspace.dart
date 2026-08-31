@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../api/models.dart';
+import '../../state/review_handoff.dart';
 import '../app_theme.dart';
+import '../desktop/desktop_interaction.dart';
 import '../widgets/product_states.dart';
 
 typedef ReviewDiffLoader = Future<List<FileDiff>> Function();
@@ -19,6 +21,7 @@ class ReviewWorkspace extends StatefulWidget {
     this.loadBranchDiffs,
     this.initialScope = ReviewDiffScope.session,
     this.initialFile,
+    this.handoff,
   }) : assert(
          loadDiffs != null ||
              loadWorkingTreeDiffs != null ||
@@ -31,6 +34,12 @@ class ReviewWorkspace extends StatefulWidget {
   final ReviewDiffLoader? loadBranchDiffs;
   final ReviewDiffScope initialScope;
   final String? initialFile;
+
+  /// When present, review findings stage as structured references on the
+  /// originating session's composer. When absent — Review opened without a
+  /// chat behind it — the workspace keeps its older behaviour of returning
+  /// the formatted comment to the caller, which falls back to the clipboard.
+  final ReviewHandoffSession? handoff;
 
   @override
   State<ReviewWorkspace> createState() => _ReviewWorkspaceState();
@@ -46,6 +55,10 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
   final Set<String> _viewedFiles = {};
   int? _selectionStart;
   int? _selectionEnd;
+
+  /// True when the active selection came from tapping a hunk header, so a
+  /// staged reference can say "hunk" rather than "selected lines".
+  bool _selectionIsHunk = false;
   ReviewDiffMode _mode = ReviewDiffMode.unified;
   late ReviewDiffScope _scope;
   String? _pendingInitialFile;
@@ -139,6 +152,7 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
   void _clearSelection() {
     _selectionStart = null;
     _selectionEnd = null;
+    _selectionIsHunk = false;
   }
 
   void _selectFile(int index) {
@@ -152,8 +166,35 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
     if (_horizontal.hasClients) _horizontal.jumpTo(0);
   }
 
+  /// Tapping a hunk header selects the whole hunk, so "add this hunk to the
+  /// prompt" is one tap plus the selection bar rather than a manual drag
+  /// across every line.
+  void _selectHunk(int index, List<_ReviewDiffLine> lines) {
+    var first = -1;
+    var last = -1;
+    for (var i = index + 1; i < lines.length; i++) {
+      if (lines[i].kind == _ReviewLineKind.hunk) break;
+      if (!lines[i].selectable) continue;
+      if (first < 0) first = i;
+      last = i;
+    }
+    if (first < 0) return;
+    setState(() {
+      if (_selectionIsHunk &&
+          _selectionStart == first &&
+          _selectionEnd == last) {
+        _clearSelection();
+        return;
+      }
+      _selectionStart = first;
+      _selectionEnd = last;
+      _selectionIsHunk = true;
+    });
+  }
+
   void _selectLine(int index) {
     setState(() {
+      _selectionIsHunk = false;
       final start = _selectionStart;
       final end = _selectionEnd;
       if (start == null) {
@@ -184,6 +225,23 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
       appBar: AppBar(
         title: const Text('Review changes'),
         actions: [
+          if (widget.handoff != null)
+            ListenableBuilder(
+              listenable: widget.handoff!.store,
+              builder: (context, _) {
+                final staged = widget.handoff!.references.length;
+                if (staged == 0) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: TextButton.icon(
+                    key: const Key('review-staged-count'),
+                    onPressed: () => Navigator.of(context).maybePop(),
+                    icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                    label: Text('$staged on prompt'),
+                  ),
+                );
+              },
+            ),
           IconButton(
             key: const Key('review-refresh'),
             tooltip: 'Refresh changes',
@@ -315,6 +373,7 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
           }),
           onCopy: () => _copyText(diff.patch ?? diff.after ?? ''),
           onAsk: () => _openCommentComposer(diff, lines, wholeFile: true),
+          onAddFile: widget.handoff == null ? null : () => _stageFile(diff),
           onHunk: _jumpToHunk,
           compact: compactToolbar,
         ),
@@ -335,14 +394,19 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
                     horizontal: _horizontal,
                     isSelected: _isSelected,
                     onSelect: _selectLine,
+                    onSelectHunk: (index) => _selectHunk(index, lines),
                   ),
           ),
         ),
         if (selectedCount > 0)
           _ReviewSelectionBar(
             count: selectedCount,
+            hunk: _selectionIsHunk,
             onClear: () => setState(_clearSelection),
             onCopy: () => _copyText(_selectedSnippet(lines)),
+            onAdd: widget.handoff == null
+                ? null
+                : () => _stageSelection(diff, lines),
             onComment: () => _openCommentComposer(diff, lines),
           )
         else if (!wide && !compactToolbar && hunks.isNotEmpty)
@@ -396,6 +460,29 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
     );
     if (!mounted || comment == null || comment.trim().isEmpty) return;
 
+    final handoff = widget.handoff;
+    if (handoff != null) {
+      // UX-103: the finding goes straight onto the originating session's
+      // composer as a structured reference, and review stays open so a pass
+      // can stage several notes before switching back to the chat.
+      _stage(
+        handoff,
+        ReviewReference(
+          id: handoff.nextID('review-comment'),
+          kind: ReviewReferenceKind.comment,
+          path: diff.file,
+          scope: _referenceScope,
+          lineLabel: wholeFile ? null : _selectionLabel(lines),
+          snippet: wholeFile ? null : _selectedSnippet(lines),
+          comment: comment.trim(),
+          added: diff.counts.added,
+          removed: diff.counts.removed,
+          status: diff.status,
+        ),
+      );
+      return;
+    }
+
     final prompt = _reviewPrompt(
       diff: diff,
       comment: comment.trim(),
@@ -403,6 +490,70 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
       selectionLabel: wholeFile ? null : _selectionLabel(lines),
     );
     Navigator.of(context).pop(prompt);
+  }
+
+  ReviewReferenceScope get _referenceScope => switch (_scope) {
+    ReviewDiffScope.session => ReviewReferenceScope.session,
+    ReviewDiffScope.workingTree => ReviewReferenceScope.workingTree,
+    ReviewDiffScope.branch => ReviewReferenceScope.branch,
+  };
+
+  void _stageFile(FileDiff diff) {
+    final handoff = widget.handoff;
+    if (handoff == null) return;
+    _stage(
+      handoff,
+      ReviewReference(
+        id: handoff.nextID('review-file'),
+        kind: ReviewReferenceKind.changedFile,
+        path: diff.file,
+        scope: _referenceScope,
+        added: diff.counts.added,
+        removed: diff.counts.removed,
+        status: diff.status,
+      ),
+    );
+  }
+
+  void _stageSelection(FileDiff diff, List<_ReviewDiffLine> lines) {
+    final handoff = widget.handoff;
+    if (handoff == null || _selectionStart == null) return;
+    _stage(
+      handoff,
+      ReviewReference(
+        id: handoff.nextID('review-selection'),
+        kind: _selectionIsHunk
+            ? ReviewReferenceKind.hunk
+            : ReviewReferenceKind.selection,
+        path: diff.file,
+        scope: _referenceScope,
+        lineLabel: _selectionLabel(lines),
+        snippet: _selectedSnippet(lines),
+        status: diff.status,
+      ),
+    );
+  }
+
+  /// Non-modal confirmation: a snack bar names what was staged and where it
+  /// went, and says plainly when nothing was added.
+  void _stage(ReviewHandoffSession handoff, ReviewReference reference) {
+    final outcome = handoff.stage(reference);
+    if (!mounted) return;
+    final message = switch (outcome) {
+      ReviewStageOutcome.staged => 'Added ${reference.label} to the prompt',
+      ReviewStageOutcome.duplicate =>
+        '${reference.label} is already on the prompt',
+      ReviewStageOutcome.full =>
+        'The prompt already holds '
+            '${ReviewHandoffStore.maxPerSession} references',
+    };
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        key: const Key('review-staged-notice'),
+        content: Text(message),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   String _selectionLabel(List<_ReviewDiffLine> lines) {
@@ -541,7 +692,7 @@ class _ReviewSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 11, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       child: Row(
         children: [
           Expanded(
@@ -559,7 +710,7 @@ class _ReviewSummary extends StatelessWidget {
                   key: const ValueKey('review-viewed-progress'),
                   '$viewed of $files viewed',
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.hintColor,
+                    color: AppTheme.mutedOf(theme),
                   ),
                 ),
               ],
@@ -584,7 +735,7 @@ class _ChangeCount extends StatelessWidget {
   Widget build(BuildContext context) => Text(
     value,
     style: TextStyle(
-      fontFamily: 'AppMono',
+      fontFamily: AppTheme.monoFamily,
       fontWeight: FontWeight.w600,
       color: added
           ? _additionColor(Theme.of(context))
@@ -659,18 +810,18 @@ class _ReviewFileTab extends StatelessWidget {
           '${counts.added} additions, ${counts.removed} deletions',
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTheme.radiusControl),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
           constraints: const BoxConstraints(minWidth: 150, maxWidth: 220),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             // A filled active tab reads at a glance; unselected tabs keep a
             // faint surface so the strip scans as tabs, not floating text.
             color: selected
                 ? theme.colorScheme.primaryContainer.withValues(alpha: .85)
                 : theme.colorScheme.surfaceContainerHigh.withValues(alpha: .35),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppTheme.radiusControl),
             border: Border(
               bottom: BorderSide(
                 width: 2,
@@ -688,7 +839,7 @@ class _ReviewFileTab extends StatelessWidget {
                 height: 28,
                 color: _statusColor(context, diff),
               ),
-              const SizedBox(width: 9),
+              const SizedBox(width: 8),
               Flexible(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -703,7 +854,7 @@ class _ReviewFileTab extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.labelLarge?.copyWith(
-                              fontFamily: 'AppMono',
+                              fontFamily: AppTheme.monoFamily,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -713,7 +864,7 @@ class _ReviewFileTab extends StatelessWidget {
                           Icon(
                             Icons.check_circle_rounded,
                             size: 13,
-                            color: AppTheme.success(theme.colorScheme),
+                            color: AppTheme.successOf(theme),
                           ),
                         ],
                       ],
@@ -721,7 +872,7 @@ class _ReviewFileTab extends StatelessWidget {
                     Text(
                       '+${counts.added}  -${counts.removed}',
                       style: theme.textTheme.labelSmall?.copyWith(
-                        fontFamily: 'AppMono',
+                        fontFamily: AppTheme.monoFamily,
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
@@ -791,7 +942,7 @@ class _ReviewFileList extends StatelessWidget {
                         ),
                       ),
                     ),
-                    padding: const EdgeInsets.fromLTRB(13, 10, 14, 10),
+                    padding: const EdgeInsets.fromLTRB(12, 10, 14, 10),
                     child: Row(
                       children: [
                         Container(
@@ -809,7 +960,7 @@ class _ReviewFileList extends StatelessWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
-                                  fontFamily: 'AppMono',
+                                  fontFamily: AppTheme.monoFamily,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -829,7 +980,7 @@ class _ReviewFileList extends StatelessWidget {
                           '+${counts.added}\n-${counts.removed}',
                           textAlign: TextAlign.right,
                           style: theme.textTheme.labelSmall?.copyWith(
-                            fontFamily: 'AppMono',
+                            fontFamily: AppTheme.monoFamily,
                             height: 1.35,
                           ),
                         ),
@@ -854,6 +1005,7 @@ class _ReviewDiffToolbar extends StatelessWidget {
     required this.onModeChanged,
     required this.onCopy,
     required this.onAsk,
+    required this.onAddFile,
     required this.onHunk,
     required this.compact,
   });
@@ -864,6 +1016,10 @@ class _ReviewDiffToolbar extends StatelessWidget {
   final ValueChanged<ReviewDiffMode> onModeChanged;
   final VoidCallback onCopy;
   final VoidCallback onAsk;
+
+  /// Stages the whole changed file on the composer. Null when Review has no
+  /// originating session to hand off to.
+  final VoidCallback? onAddFile;
   final void Function(int direction, List<int> hunks) onHunk;
   final bool compact;
 
@@ -881,6 +1037,7 @@ class _ReviewDiffToolbar extends StatelessWidget {
             onModeChanged: onModeChanged,
             onCopy: onCopy,
             onAsk: onAsk,
+            onAddFile: onAddFile,
             onHunk: onHunk,
           );
         }
@@ -929,6 +1086,12 @@ class _ReviewDiffToolbar extends StatelessWidget {
               icon: const Icon(Icons.arrow_forward_rounded, size: 18),
             ),
             TextButton(onPressed: onAsk, child: const Text('Ask')),
+            if (onAddFile != null)
+              TextButton(
+                key: const Key('review-add-file-compact'),
+                onPressed: onAddFile,
+                child: const Text('Add file'),
+              ),
             TextButton(
               onPressed: (diff.patch ?? diff.after ?? '').isEmpty
                   ? null
@@ -955,7 +1118,7 @@ class _ReviewDiffToolbar extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleSmall?.copyWith(
-                        fontFamily: 'AppMono',
+                        fontFamily: AppTheme.monoFamily,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -969,10 +1132,16 @@ class _ReviewDiffToolbar extends StatelessWidget {
                   ],
                 ),
               ),
+              if (onAddFile != null)
+                TextButton(
+                  key: const Key('review-add-file'),
+                  onPressed: onAddFile,
+                  child: const Text('Add file to prompt'),
+                ),
               TextButton(onPressed: onAsk, child: const Text('Ask about file')),
             ],
           ),
-          const SizedBox(height: 7),
+          const SizedBox(height: 8),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -1019,7 +1188,7 @@ class _ReviewDiffToolbar extends StatelessWidget {
   }
 }
 
-enum _ReviewFileAction { ask, copy }
+enum _ReviewFileAction { ask, addFile, copy }
 
 class _ReviewPhoneDiffToolbar extends StatelessWidget {
   const _ReviewPhoneDiffToolbar({
@@ -1029,6 +1198,7 @@ class _ReviewPhoneDiffToolbar extends StatelessWidget {
     required this.onModeChanged,
     required this.onCopy,
     required this.onAsk,
+    required this.onAddFile,
     required this.onHunk,
   });
 
@@ -1038,6 +1208,7 @@ class _ReviewPhoneDiffToolbar extends StatelessWidget {
   final ValueChanged<ReviewDiffMode> onModeChanged;
   final VoidCallback onCopy;
   final VoidCallback onAsk;
+  final VoidCallback? onAddFile;
   final void Function(int direction, List<int> hunks) onHunk;
 
   @override
@@ -1050,7 +1221,7 @@ class _ReviewPhoneDiffToolbar extends StatelessWidget {
       label: 'Reviewing ${diff.file}',
       child: Padding(
         key: const Key('review-phone-toolbar'),
-        padding: const EdgeInsets.fromLTRB(12, 7, 4, 6),
+        padding: const EdgeInsets.fromLTRB(12, 8, 4, 6),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -1061,7 +1232,7 @@ class _ReviewPhoneDiffToolbar extends StatelessWidget {
                   height: 34,
                   color: _statusColor(context, diff),
                 ),
-                const SizedBox(width: 9),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Tooltip(
                     message: diff.file,
@@ -1074,7 +1245,7 @@ class _ReviewPhoneDiffToolbar extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.titleSmall?.copyWith(
-                            fontFamily: 'AppMono',
+                            fontFamily: AppTheme.monoFamily,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -1097,6 +1268,8 @@ class _ReviewPhoneDiffToolbar extends StatelessWidget {
                     switch (action) {
                       case _ReviewFileAction.ask:
                         onAsk();
+                      case _ReviewFileAction.addFile:
+                        onAddFile?.call();
                       case _ReviewFileAction.copy:
                         onCopy();
                     }
@@ -1110,12 +1283,21 @@ class _ReviewPhoneDiffToolbar extends StatelessWidget {
                         title: Text('Ask about file'),
                       ),
                     ),
+                    if (onAddFile != null)
+                      const PopupMenuItem(
+                        value: _ReviewFileAction.addFile,
+                        child: ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(Icons.add_comment_outlined),
+                          title: Text('Add file to prompt'),
+                        ),
+                      ),
                     PopupMenuItem(
                       value: _ReviewFileAction.copy,
                       enabled: canCopy,
                       child: const ListTile(
                         contentPadding: EdgeInsets.zero,
-                        leading: Icon(Icons.content_copy_rounded),
+                        leading: Icon(AppIcons.copy),
                         title: Text('Copy patch'),
                       ),
                     ),
@@ -1218,6 +1400,7 @@ class _ReviewDiffCanvas extends StatelessWidget {
     required this.horizontal,
     required this.isSelected,
     required this.onSelect,
+    required this.onSelectHunk,
   });
 
   static const rowExtent = 30.0;
@@ -1228,6 +1411,9 @@ class _ReviewDiffCanvas extends StatelessWidget {
   final ScrollController horizontal;
   final bool Function(int index) isSelected;
   final ValueChanged<int> onSelect;
+
+  /// Tap on a hunk header row: selects the whole hunk.
+  final ValueChanged<int> onSelectHunk;
 
   @override
   Widget build(BuildContext context) {
@@ -1251,7 +1437,10 @@ class _ReviewDiffCanvas extends StatelessWidget {
               height: constraints.maxHeight,
               child: Scrollbar(
                 controller: vertical,
-                child: ListView.builder(
+                // The diff pane draws its own thumbs; without this the
+                // desktop scroll behaviour would draw a second vertical one.
+                child: OwnScrollbar(
+                  child: ListView.builder(
                   controller: vertical,
                   // Always scrollable so pull-to-refresh works even when the
                   // diff fits the viewport.
@@ -1261,13 +1450,16 @@ class _ReviewDiffCanvas extends StatelessWidget {
                   itemBuilder: (context, index) {
                     if (splitRows != null) {
                       final row = splitRows[index];
+                      final hunkIndex = row.hunkIndex;
                       return _SplitDiffRow(
                         key: Key('review-split-row-$index'),
                         row: row,
                         selected: row.sourceIndices.any(isSelected),
                         onTap: row.selectable
                             ? () => onSelect(row.sourceIndices.first)
-                            : null,
+                            : hunkIndex == null
+                            ? null
+                            : () => onSelectHunk(hunkIndex),
                       );
                     }
                     final line = lines[index];
@@ -1275,9 +1467,14 @@ class _ReviewDiffCanvas extends StatelessWidget {
                       key: Key('review-line-$index'),
                       line: line,
                       selected: isSelected(index),
-                      onTap: line.selectable ? () => onSelect(index) : null,
+                      onTap: line.selectable
+                          ? () => onSelect(index)
+                          : line.kind == _ReviewLineKind.hunk
+                          ? () => onSelectHunk(index)
+                          : null,
                     );
                   },
+                ),
                 ),
               ),
             ),
@@ -1327,8 +1524,8 @@ class _UnifiedDiffRow extends StatelessWidget {
                   overflow: TextOverflow.clip,
                   softWrap: false,
                   style: TextStyle(
-                    fontFamily: 'AppMono',
-                    fontSize: 12.5,
+                    fontFamily: AppTheme.monoFamily,
+                    fontSize: AppTheme.codeFontSize,
                     height: 1.55,
                     color: _lineForeground(theme, line.kind),
                   ),
@@ -1368,7 +1565,7 @@ class _SplitDiffRow extends StatelessWidget {
         child: Row(
           children: [
             Expanded(child: _SplitCell(line: left, old: true)),
-            VerticalDivider(width: 1, color: theme.dividerColor),
+            VerticalDivider(width: 1, color: AppTheme.hairline(theme)),
             Expanded(child: _SplitCell(line: right, old: false)),
           ],
         ),
@@ -1402,8 +1599,8 @@ class _SplitCell extends StatelessWidget {
               softWrap: false,
               overflow: TextOverflow.clip,
               style: TextStyle(
-                fontFamily: 'AppMono',
-                fontSize: 12.5,
+                fontFamily: AppTheme.monoFamily,
+                fontSize: AppTheme.codeFontSize,
                 height: 1.55,
                 color: _lineForeground(theme, value.kind),
               ),
@@ -1429,8 +1626,8 @@ class _LineNumber extends StatelessWidget {
     child: Text(
       value?.toString() ?? '',
       style: TextStyle(
-        fontFamily: 'AppMono',
-        fontSize: 11,
+        fontFamily: AppTheme.monoFamily,
+        fontSize: AppTheme.captionFontSize,
         color: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
     ),
@@ -1440,14 +1637,23 @@ class _LineNumber extends StatelessWidget {
 class _ReviewSelectionBar extends StatelessWidget {
   const _ReviewSelectionBar({
     required this.count,
+    required this.hunk,
     required this.onClear,
     required this.onCopy,
+    required this.onAdd,
     required this.onComment,
   });
 
   final int count;
+
+  /// The selection covers a whole hunk, so the bar says so.
+  final bool hunk;
   final VoidCallback onClear;
   final VoidCallback onCopy;
+
+  /// Stages the selection on the composer. Null when Review was opened
+  /// without a chat session behind it.
+  final VoidCallback? onAdd;
   final VoidCallback onComment;
 
   @override
@@ -1457,19 +1663,42 @@ class _ReviewSelectionBar extends StatelessWidget {
       key: const Key('review-selection-bar'),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHigh,
-        border: Border(top: BorderSide(color: theme.dividerColor)),
+        border: Border(top: BorderSide(color: AppTheme.hairline(theme))),
       ),
       padding: const EdgeInsets.fromLTRB(14, 8, 10, 8),
       child: Row(
         children: [
           Expanded(
             child: Text(
-              '$count ${count == 1 ? 'line' : 'lines'} selected',
+              hunk
+                  ? 'Hunk selected · $count ${count == 1 ? 'line' : 'lines'}'
+                  : '$count ${count == 1 ? 'line' : 'lines'} selected',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: theme.textTheme.labelLarge,
             ),
           ),
-          TextButton(onPressed: onClear, child: const Text('Clear')),
-          TextButton(onPressed: onCopy, child: const Text('Copy')),
+          // Icon actions keep the bar within a 360 dp phone at large text
+          // scales; tooltips and semantics carry the labels.
+          IconButton(
+            key: const Key('review-selection-clear'),
+            tooltip: 'Clear selection',
+            onPressed: onClear,
+            icon: const Icon(Icons.close_rounded, size: 20),
+          ),
+          IconButton(
+            key: const Key('review-selection-copy'),
+            tooltip: 'Copy selection',
+            onPressed: onCopy,
+            icon: const Icon(AppIcons.copy, size: 20),
+          ),
+          if (onAdd != null)
+            IconButton(
+              key: const Key('review-selection-add'),
+              tooltip: hunk ? 'Add hunk to prompt' : 'Add selection to prompt',
+              onPressed: onAdd,
+              icon: const Icon(Icons.add_comment_outlined, size: 20),
+            ),
           const SizedBox(width: 4),
           FilledButton(
             key: const Key('review-comment-action'),
@@ -1498,7 +1727,7 @@ class _ReviewHunkBar extends StatelessWidget {
       key: const Key('review-hunk-bar'),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHigh,
-        border: Border(top: BorderSide(color: theme.dividerColor)),
+        border: Border(top: BorderSide(color: AppTheme.hairline(theme))),
       ),
       padding: const EdgeInsets.fromLTRB(14, 2, 6, 2),
       child: Row(
@@ -1569,13 +1798,7 @@ class _ReviewCommentComposerState extends State<_ReviewCommentComposer> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Comment on change',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-                letterSpacing: -.3,
-              ),
-            ),
+            Text('Comment on change', style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(
               '${widget.file} · ${widget.selectionLabel}',
@@ -1758,6 +1981,12 @@ class _ReviewSplitRow {
 
   bool get selectable =>
       (left?.selectable ?? false) || (right?.selectable ?? false);
+
+  /// Source index of the hunk header this row shows, when it is one.
+  int? get hunkIndex =>
+      left?.kind == _ReviewLineKind.hunk && sourceIndices.isNotEmpty
+      ? sourceIndices.first
+      : null;
 }
 
 List<_ReviewDiffLine> _parseDiff(FileDiff diff) {
@@ -2022,11 +2251,10 @@ Color _statusColor(BuildContext context, FileDiff diff) =>
       _ => Theme.of(context).colorScheme.primary,
     };
 
-Color _additionColor(ThemeData theme) => theme.brightness == Brightness.dark
-    ? const Color(0xff78c59d)
-    : const Color(0xff176b4b);
+Color _additionColor(ThemeData theme) => AppTheme.successOf(theme);
 
-Color _additionBackground(ThemeData theme) =>
-    theme.brightness == Brightness.dark
-    ? const Color(0xff174b35).withValues(alpha: .42)
-    : const Color(0xffd0f2df).withValues(alpha: .7);
+/// The diff-addition wash, derived from the pack's success color so it
+/// tracks theme packs instead of two hardcoded greens.
+Color _additionBackground(ThemeData theme) => AppTheme.successOf(
+  theme,
+).withValues(alpha: theme.brightness == Brightness.dark ? .18 : .22);

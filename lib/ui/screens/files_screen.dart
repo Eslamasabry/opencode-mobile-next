@@ -1,15 +1,20 @@
 import 'dart:async';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
+import '../../state/review_handoff.dart';
+import '../desktop/context_menu.dart';
+import '../desktop/desktop_interaction.dart';
 import '../widgets/file_preview.dart';
 import '../widgets/product_states.dart';
 import 'review_workspace.dart';
+import '../app_theme.dart';
 
 /// Project file browser backed by `/file`, with name search (`/find/file`)
 /// and content viewer.
@@ -24,11 +29,23 @@ class FilesScreen extends StatefulWidget {
   final ProjectFileAttachment? onAttachFile;
   final ProjectReviewPrompt? onReviewPrompt;
 
+  /// UX-103: when Files is opened from a chat, add-to-prompt affordances
+  /// stage structured references on that session's composer. Without it —
+  /// Files opened from the workspace home — those affordances are hidden and
+  /// review comments fall back to the clipboard.
+  final ReviewHandoffSession? handoff;
+
+  /// Bumped by the shell's Ctrl+F while this destination is showing. Desktop
+  /// only in practice: nothing dispatches app shortcuts off desktop.
+  final ValueListenable<int>? focusSearchSignal;
+
   const FilesScreen({
     super.key,
     required this.controller,
     this.onAttachFile,
     this.onReviewPrompt,
+    this.handoff,
+    this.focusSearchSignal,
   });
 
   @override
@@ -48,7 +65,12 @@ class _FilesScreenState extends State<FilesScreen> {
   String? _selectedPath;
   int? _selectedLine;
   String? _searchOriginPath;
+
+  /// Width of the tree pane in the wide two-pane layout. Draggable on
+  /// desktop; the default is the width the split has always shipped with.
+  double _treeWidth = 340;
   final _search = TextEditingController();
+  final _searchFocus = FocusNode(debugLabel: 'files-search');
   Timer? _symbolSearchDebounce;
   ServerOperationsGateway? _repository;
   int _locationRevision = -1;
@@ -62,8 +84,29 @@ class _FilesScreenState extends State<FilesScreen> {
     super.initState();
     widget.controller.addListener(_controllerChanged);
     _search.addListener(_searchChanged);
+    widget.focusSearchSignal?.addListener(_focusSearch);
     _captureLocation();
     _load('');
+  }
+
+  @override
+  void didUpdateWidget(FilesScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.focusSearchSignal != widget.focusSearchSignal) {
+      oldWidget.focusSearchSignal?.removeListener(_focusSearch);
+      widget.focusSearchSignal?.addListener(_focusSearch);
+    }
+  }
+
+  /// Ctrl+F: put the caret in the find field and select what is already there
+  /// so a second search replaces the first, the way every desktop find does.
+  void _focusSearch() {
+    if (!mounted) return;
+    _searchFocus.requestFocus();
+    _search.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: _search.text.length,
+    );
   }
 
   void _searchChanged() {
@@ -406,6 +449,30 @@ class _FilesScreenState extends State<FilesScreen> {
         path: path,
         initialLine: initialLine,
         onAttachFile: widget.onAttachFile,
+        onAddReference: widget.handoff == null
+            ? null
+            : () => _stageProjectFile(path, initialLine),
+      ),
+    );
+  }
+
+  /// A plain project file staged as a reference: the agent is pointed at the
+  /// path (and the line the user was reading), nothing is uploaded.
+  void _stageProjectFile(String path, int? line) {
+    final handoff = widget.handoff;
+    if (handoff == null) return;
+    final change = _fileStatuses[path];
+    _stageReference(
+      ReviewReference(
+        id: handoff.nextID('project-file'),
+        kind: change == null
+            ? ReviewReferenceKind.file
+            : ReviewReferenceKind.changedFile,
+        path: path,
+        lineLabel: line == null ? null : 'line $line',
+        added: change?.additions,
+        removed: change?.deletions,
+        status: change?.status,
       ),
     );
   }
@@ -421,12 +488,76 @@ class _FilesScreenState extends State<FilesScreen> {
     );
   }
 
-  Future<void> _reviewFileChange(FileNode node) async {
+  /// UX-102: the completion path. One tap from Files to the changed set,
+  /// grouped by status, with per-file review and add-to-prompt.
+  Future<void> _openChanges() async {
+    final changes = _fileStatuses.values.toList()
+      ..sort((a, b) => a.path.compareTo(b.path));
+    if (changes.isEmpty) return;
+    final choice = await showModalBottomSheet<_ChangeChoice>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) =>
+          _ChangesSheet(changes: changes, canStage: widget.handoff != null),
+    );
+    if (!mounted || choice == null) return;
+    switch (choice.action) {
+      case _ChangeAction.reviewAll:
+        await _reviewChanges();
+      case _ChangeAction.review:
+        await _reviewFileChange(
+          FileNode(
+            name: choice.path.split('/').last,
+            path: choice.path,
+            isDir: false,
+          ),
+        );
+      case _ChangeAction.stage:
+        final change = _fileStatuses[choice.path];
+        _stageReference(
+          ReviewReference(
+            id: widget.handoff!.nextID('changed-file'),
+            kind: ReviewReferenceKind.changedFile,
+            path: choice.path,
+            scope: ReviewReferenceScope.workingTree,
+            added: change?.additions,
+            removed: change?.deletions,
+            status: change?.status,
+          ),
+        );
+    }
+  }
+
+  /// Non-modal confirmation shared by every Files add-to-prompt affordance.
+  void _stageReference(ReviewReference reference) {
+    final handoff = widget.handoff;
+    if (handoff == null) return;
+    final outcome = handoff.stage(reference);
+    if (!mounted) return;
+    final message = switch (outcome) {
+      ReviewStageOutcome.staged => 'Added ${reference.label} to the prompt',
+      ReviewStageOutcome.duplicate =>
+        '${reference.label} is already on the prompt',
+      ReviewStageOutcome.full =>
+        'The prompt already holds '
+            '${ReviewHandoffStore.maxPerSession} references',
+    };
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        key: const Key('files-staged-notice'),
+        content: Text(message),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> _reviewChanges() async {
     final prompt = await Navigator.of(context).push<String>(
       MaterialPageRoute<String>(
         builder: (_) => ReviewWorkspace(
           initialScope: ReviewDiffScope.workingTree,
-          initialFile: node.path,
+          handoff: widget.handoff,
           loadWorkingTreeDiffs: () async {
             final repository = await widget.controller
                 .prepareActionRepository();
@@ -438,6 +569,34 @@ class _FilesScreenState extends State<FilesScreen> {
         ),
       ),
     );
+    _handleReviewPrompt(prompt);
+  }
+
+  Future<void> _reviewFileChange(FileNode node) async {
+    final prompt = await Navigator.of(context).push<String>(
+      MaterialPageRoute<String>(
+        builder: (_) => ReviewWorkspace(
+          initialScope: ReviewDiffScope.workingTree,
+          initialFile: node.path,
+          handoff: widget.handoff,
+          loadWorkingTreeDiffs: () async {
+            final repository = await widget.controller
+                .prepareActionRepository();
+            if (repository == null) {
+              throw const ProductException('OpenCode is reconnecting.');
+            }
+            return repository.listVcsDiffs(VcsDiffMode.workingTree);
+          },
+        ),
+      ),
+    );
+    _handleReviewPrompt(prompt);
+  }
+
+  /// Legacy return path, used only when there is no handoff session: the
+  /// review workspace pops with formatted text that goes to the host chat if
+  /// one supplied a callback, and to the clipboard otherwise.
+  Future<void> _handleReviewPrompt(String? prompt) async {
     if (!mounted || prompt == null || prompt.trim().isEmpty) return;
     final reviewPrompt = prompt.trim();
     final callback = widget.onReviewPrompt;
@@ -497,7 +656,9 @@ class _FilesScreenState extends State<FilesScreen> {
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
           child: TextField(
+            key: const ValueKey('files-search-field'),
             controller: _search,
+            focusNode: _searchFocus,
             decoration: InputDecoration(
               isDense: true,
               prefixIcon: const Icon(Icons.search_rounded, size: 20),
@@ -556,21 +717,44 @@ class _FilesScreenState extends State<FilesScreen> {
               ],
             ),
           ),
+        // UX-102: after a run the question is "what changed?", so the
+        // changed set gets a standing card above the tree rather than
+        // living only as per-row markers.
+        if (_surface == _FileSurface.files && _fileStatuses.isNotEmpty)
+          _ChangesCard(
+            changes: _fileStatuses.values,
+            onOpen: () => unawaited(_openChanges()),
+          ),
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) {
               final files = _fileList(theme);
               if (constraints.maxWidth < 900) return files;
+              final maxTree = constraints.maxWidth - 320;
+              final treeWidth = _treeWidth.clamp(
+                240.0,
+                maxTree < 240 ? 240.0 : maxTree,
+              );
               return Row(
                 children: [
-                  SizedBox(width: 340, child: files),
-                  const VerticalDivider(width: 1),
+                  SizedBox(width: treeWidth, child: files),
+                  _SplitHandle(
+                    // Accumulate on the stored width, not the one this build
+                    // captured: several drag updates can land before the
+                    // next frame, and each must add to the last.
+                    onDrag: (delta) => setState(
+                      () => _treeWidth = (_treeWidth + delta).clamp(
+                        240.0,
+                        maxTree < 240 ? 240.0 : maxTree,
+                      ),
+                    ),
+                  ),
                   Expanded(
                     child: _selectedPath == null
                         ? Center(
                             child: Text(
                               'Select a file to preview',
-                              style: TextStyle(color: theme.hintColor),
+                              style: TextStyle(color: AppTheme.mutedOf(theme)),
                             ),
                           )
                         : _FileViewer(
@@ -580,6 +764,12 @@ class _FilesScreenState extends State<FilesScreen> {
                             initialLine: _selectedLine,
                             embedded: true,
                             onAttachFile: widget.onAttachFile,
+                            onAddReference: widget.handoff == null
+                                ? null
+                                : () => _stageProjectFile(
+                                    _selectedPath!,
+                                    _selectedLine,
+                                  ),
                           ),
                   ),
                 ],
@@ -632,7 +822,9 @@ class _FilesScreenState extends State<FilesScreen> {
     }
     return RefreshIndicator(
       onRefresh: () => _load(_path),
-      child: ListView.builder(
+      child: DesktopScrollbarArea(
+        builder: (scrollController) => ListView.builder(
+        controller: scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         itemCount: entries.length,
         itemBuilder: (context, i) {
@@ -644,62 +836,162 @@ class _FilesScreenState extends State<FilesScreen> {
                     .length
               : 0;
           final detail = _fileDetail(node, change, descendantChanges);
-          return ListTile(
-            key: ValueKey('project-file-${node.path}'),
-            dense: true,
-            selected: node.path == _selectedPath,
-            leading: Icon(
-              node.isDir
-                  ? Icons.folder_rounded
-                  : change?.status == 'deleted'
-                  ? Icons.remove_circle_outline_rounded
-                  : _fileTypeIcon(node.name),
-              size: 20,
-              color: node.isDir
-                  ? theme.colorScheme.primary
-                  : change?.status == 'deleted'
-                  ? theme.colorScheme.error
-                  : theme.hintColor,
-            ),
-            title: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    node.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+          return ContextMenuRegion(
+            actions: () => _fileRowActions(node, change),
+            child: ListTile(
+              key: ValueKey('project-file-${node.path}'),
+              dense: true,
+              selected: node.path == _selectedPath,
+              leading: Icon(
+                node.isDir
+                    ? Icons.folder_rounded
+                    : change?.status == 'deleted'
+                    ? Icons.remove_circle_outline_rounded
+                    : _fileTypeIcon(node.name),
+                size: 20,
+                color: node.isDir
+                    ? theme.colorScheme.primary
+                    : change?.status == 'deleted'
+                    ? theme.colorScheme.error
+                    : AppTheme.mutedOf(theme),
+              ),
+              title: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      node.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                if (change != null)
-                  _FileReviewAction(
-                    change: change,
-                    onPressed: () => _reviewFileChange(node),
-                  )
-                else if (descendantChanges > 0)
-                  _FolderStatusMark(count: descendantChanges),
-              ],
+                  if (change != null)
+                    _FileReviewAction(
+                      change: change,
+                      onPressed: () => _reviewFileChange(node),
+                    )
+                  else if (descendantChanges > 0)
+                    _FolderStatusMark(count: descendantChanges),
+                ],
+              ),
+              subtitle: detail == null
+                  ? null
+                  : Text(
+                      detail,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: AppTheme.captionFontSize,
+                      ),
+                    ),
+              onTap: change?.status == 'deleted'
+                  ? null
+                  : () {
+                      if (node.isDir) {
+                        _navigateTo(node.path);
+                      } else {
+                        _openFile(node);
+                      }
+                    },
             ),
-            subtitle: detail == null
-                ? null
-                : Text(
-                    detail,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 11),
-                  ),
-            onTap: change?.status == 'deleted'
-                ? null
-                : () {
-                    if (node.isDir) {
-                      _navigateTo(node.path);
-                    } else {
-                      _openFile(node);
-                    }
-                  },
           );
         },
+        ),
       ),
     );
+  }
+
+  /// The desktop right-click menu for a file row. Every entry is something
+  /// the row already offers by tap or by the viewer it opens — the menu just
+  /// removes the round trip.
+  List<ContextMenuAction> _fileRowActions(
+    FileNode node,
+    VersionControlFile? change,
+  ) {
+    final deleted = change?.status == 'deleted';
+    final path = _relativePath(node.path);
+    return [
+      if (node.isDir && !deleted)
+        ContextMenuAction(
+          menuKey: const ValueKey('file-menu-open'),
+          label: 'Open folder',
+          icon: Icons.folder_open_rounded,
+          onSelected: () => _navigateTo(node.path),
+        )
+      else if (!deleted) ...[
+        ContextMenuAction(
+          menuKey: const ValueKey('file-menu-open'),
+          label: 'Open',
+          icon: Icons.open_in_new_rounded,
+          onSelected: () => _openFile(node),
+        ),
+        if (change != null)
+          ContextMenuAction(
+            menuKey: const ValueKey('file-menu-review'),
+            label: 'Review changes',
+            icon: Icons.difference_outlined,
+            onSelected: () => unawaited(_reviewFileChange(node)),
+          ),
+        if (widget.onAttachFile != null)
+          ContextMenuAction(
+            menuKey: const ValueKey('file-menu-attach'),
+            label: 'Attach to prompt',
+            icon: Icons.attach_file_rounded,
+            onSelected: () => unawaited(_attachFile(path)),
+          ),
+        if (widget.handoff != null)
+          ContextMenuAction(
+            menuKey: const ValueKey('file-menu-reference'),
+            label: 'Add as reference',
+            icon: Icons.add_link_rounded,
+            onSelected: () => _stageProjectFile(path, null),
+          ),
+      ],
+      ContextMenuAction(
+        menuKey: const ValueKey('file-menu-copy-path'),
+        label: 'Copy path',
+        icon: AppIcons.copy,
+        onSelected: () => unawaited(_copyPath(path)),
+      ),
+    ];
+  }
+
+  /// Attaches a file straight from the tree. The viewer's Attach button does
+  /// the same thing once it has the content; this fetches the content first
+  /// so the menu does not need the viewer open.
+  Future<void> _attachFile(String path) async {
+    final action = widget.onAttachFile;
+    if (action == null) return;
+    try {
+      final api = await widget.controller.prepareActionTransport();
+      if (api == null) {
+        throw const ProductException('The server is not connected.');
+      }
+      final content = await api.fileContent(path);
+      await action(
+        path,
+        FilePreviewData(
+          name: path.split('/').last,
+          mimeType: content.mimeType,
+          bytes: content.isBinary ? content.bytes() : null,
+          text: content.isBinary ? null : content.content,
+        ),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${path.split('/').last} attached.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      showProductError(context, error);
+    }
+  }
+
+  Future<void> _copyPath(String path) async {
+    await Clipboard.setData(ClipboardData(text: path));
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Copied $path')));
   }
 
   /// Type-aware glyphs so a directory scans by kind, matching the developer
@@ -843,7 +1135,9 @@ class _FilesScreenState extends State<FilesScreen> {
     }
     return RefreshIndicator(
       onRefresh: () => _searchSymbols(_search.text),
-      child: ListView.builder(
+      child: DesktopScrollbarArea(
+        builder: (scrollController) => ListView.builder(
+        controller: scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         itemCount: _symbols?.length ?? 0,
         itemBuilder: (context, index) {
@@ -869,6 +1163,7 @@ class _FilesScreenState extends State<FilesScreen> {
             onTap: () => _openSymbol(symbol),
           );
         },
+        ),
       ),
     );
   }
@@ -908,8 +1203,10 @@ class _FilesScreenState extends State<FilesScreen> {
   void dispose() {
     _symbolSearchDebounce?.cancel();
     widget.controller.removeListener(_controllerChanged);
+    widget.focusSearchSignal?.removeListener(_focusSearch);
     _search.removeListener(_searchChanged);
     _search.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
 }
@@ -920,6 +1217,238 @@ String _fileStatusLabel(String status) => switch (status) {
   'modified' => 'Modified',
   _ => 'Changed',
 };
+
+enum _ChangeAction { reviewAll, review, stage }
+
+/// The divider between the tree and the preview.
+///
+/// On Android it stays the hairline [VerticalDivider] it has always been. On
+/// desktop it becomes a real splitter: a wider grab strip, the resize-column
+/// pointer, and a horizontal drag that resizes the tree pane.
+class _SplitHandle extends StatelessWidget {
+  const _SplitHandle({required this.onDrag});
+
+  final ValueChanged<double> onDrag;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!desktopInteractions) return const VerticalDivider(width: 1);
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeColumn,
+      child: GestureDetector(
+        key: const ValueKey('files-split-handle'),
+        behavior: HitTestBehavior.opaque,
+        onHorizontalDragUpdate: (details) => onDrag(details.delta.dx),
+        child: const SizedBox(
+          width: 7,
+          child: Center(child: VerticalDivider(width: 1)),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChangeChoice {
+  const _ChangeChoice(this.action, [this.path = '']);
+
+  final _ChangeAction action;
+  final String path;
+}
+
+/// UX-102: the changed-file card. Counts and totals are the summary the
+/// audit asks for; the whole card is one tap into the changed set.
+class _ChangesCard extends StatelessWidget {
+  const _ChangesCard({required this.changes, required this.onOpen});
+
+  final Iterable<VersionControlFile> changes;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final files = changes.length;
+    final added = changes.fold<int>(0, (sum, file) => sum + file.additions);
+    final removed = changes.fold<int>(0, (sum, file) => sum + file.deletions);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      child: Material(
+        key: const ValueKey('files-changes-card'),
+        color: theme.colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(14),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onOpen,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.difference_outlined,
+                  size: 20,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$files changed ${files == 1 ? 'file' : 'files'}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        '+$added −$removed · Review the changes',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: AppTheme.mutedOf(theme),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The changed set, grouped by version-control status. Tapping a row opens
+/// Review at that file; the add action stages the file as a prompt
+/// reference instead of opening anything.
+class _ChangesSheet extends StatelessWidget {
+  const _ChangesSheet({required this.changes, required this.canStage});
+
+  final List<VersionControlFile> changes;
+  final bool canStage;
+
+  static const _order = ['modified', 'added', 'deleted'];
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final groups = <String, List<VersionControlFile>>{};
+    for (final change in changes) {
+      groups.putIfAbsent(change.status, () => []).add(change);
+    }
+    final statuses = groups.keys.toList()
+      ..sort((a, b) {
+        final left = _order.indexOf(a);
+        final right = _order.indexOf(b);
+        return (left < 0 ? _order.length : left).compareTo(
+          right < 0 ? _order.length : right,
+        );
+      });
+    final added = changes.fold<int>(0, (sum, file) => sum + file.additions);
+    final removed = changes.fold<int>(0, (sum, file) => sum + file.deletions);
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * .85,
+      ),
+      child: Column(
+        key: const ValueKey('files-changes-sheet'),
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 14, 12, 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Changes', style: theme.textTheme.titleLarge),
+                const SizedBox(height: 2),
+                Text(
+                  '${changes.length} '
+                  '${changes.length == 1 ? 'file' : 'files'} · +$added −$removed',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.tonalIcon(
+                    key: const ValueKey('review-all-changes'),
+                    onPressed: () => Navigator.pop(
+                      context,
+                      const _ChangeChoice(_ChangeAction.reviewAll),
+                    ),
+                    icon: const Icon(Icons.rate_review_outlined, size: 18),
+                    label: const Text('Review all changes'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Flexible(
+            child: ListView(
+              shrinkWrap: true,
+              padding: const EdgeInsets.only(bottom: 12),
+              children: [
+                for (final status in statuses) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 12, 18, 4),
+                    child: Text(
+                      '${_fileStatusLabel(status)} · ${groups[status]!.length}',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  for (final change in groups[status]!)
+                    ListTile(
+                      key: ValueKey('changed-file-${change.path}'),
+                      dense: true,
+                      title: Text(
+                        change.path.split('/').last,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text(
+                        '${change.path} · +${change.additions} −${change.deletions}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: AppTheme.captionFontSize,
+                        ),
+                      ),
+                      trailing: canStage
+                          ? IconButton(
+                              key: ValueKey('stage-change-${change.path}'),
+                              tooltip: 'Add ${change.path} to the prompt',
+                              icon: const Icon(
+                                Icons.add_comment_outlined,
+                                size: 20,
+                              ),
+                              onPressed: () => Navigator.pop(
+                                context,
+                                _ChangeChoice(_ChangeAction.stage, change.path),
+                              ),
+                            )
+                          : null,
+                      onTap: () => Navigator.pop(
+                        context,
+                        _ChangeChoice(_ChangeAction.review, change.path),
+                      ),
+                    ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _FileReviewAction extends StatelessWidget {
   final VersionControlFile change;
@@ -958,7 +1487,7 @@ class _FolderStatusMark extends StatelessWidget {
         key: const ValueKey('folder-change-count'),
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
           color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w700,
         ),
       ),
     ),
@@ -1019,6 +1548,10 @@ class _FileViewer extends StatefulWidget {
   final int? initialLine;
   final bool embedded;
   final ProjectFileAttachment? onAttachFile;
+
+  /// UX-103: stages the file as a prompt reference — a path the agent will
+  /// read itself, not an upload.
+  final VoidCallback? onAddReference;
   const _FileViewer({
     super.key,
     required this.controller,
@@ -1026,6 +1559,7 @@ class _FileViewer extends StatefulWidget {
     this.initialLine,
     this.embedded = false,
     this.onAttachFile,
+    this.onAddReference,
   });
 
   @override
@@ -1169,7 +1703,7 @@ class __FileViewerState extends State<_FileViewer> {
                   ),
                   IconButton(
                     tooltip: 'Copy file contents',
-                    icon: const Icon(Icons.copy_rounded, size: 18),
+                    icon: const Icon(AppIcons.copy, size: 18),
                     onPressed: _content?.isBinary == true
                         ? null
                         : () async {
@@ -1186,10 +1720,19 @@ class __FileViewerState extends State<_FileViewer> {
                             }
                           },
                   ),
+                  if (widget.onAddReference != null)
+                    IconButton(
+                      key: const Key('project-file-add-reference'),
+                      tooltip: 'Add to prompt',
+                      onPressed: widget.onAddReference,
+                      icon: const Icon(Icons.add_comment_outlined, size: 19),
+                    ),
                   if (widget.onAttachFile != null)
                     IconButton(
                       key: const Key('project-file-attach'),
-                      tooltip: 'Attach to prompt',
+                      // Named apart from "Add to prompt": this one uploads
+                      // the file's contents with the message.
+                      tooltip: 'Attach file to prompt',
                       onPressed: _content == null || _attaching
                           ? null
                           : _attach,
@@ -1228,7 +1771,7 @@ class __FileViewerState extends State<_FileViewer> {
                     ? widget.path
                     : '${widget.path} · Line ${widget.initialLine}',
                 style: theme.textTheme.labelSmall!.copyWith(
-                  color: theme.hintColor,
+                  color: AppTheme.mutedOf(theme),
                 ),
               ),
             ),

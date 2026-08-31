@@ -13,12 +13,18 @@ import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../api/server_probe.dart' show ServerFlavor;
 import '../../api/sse.dart';
+import '../../platform/platform_capabilities.dart';
 import '../../state/offline_queue.dart';
 import '../../state/connection.dart';
+import '../../state/review_handoff.dart';
 import '../../voice/controller.dart';
 import '../../voice/voice_ui.dart';
 import '../navigation/chat_route.dart';
 import '../app_theme.dart';
+import '../desktop/context_menu.dart';
+import '../desktop/desktop_interaction.dart';
+import '../desktop/file_drop.dart';
+import '../desktop/shortcuts.dart';
 import '../widgets/appearance_picker.dart';
 import '../widgets/connection_status_banner.dart';
 import '../widgets/entrance.dart';
@@ -139,6 +145,10 @@ class ChatScreen extends StatefulWidget {
   final List<PromptAttachment> initialAttachments;
   final bool discardIfUntouched;
 
+  /// Overrides the app-wide review handoff store; tests inject their own so
+  /// staged references do not leak between cases.
+  final ReviewHandoffStore? handoffStore;
+
   const ChatScreen({
     super.key,
     required this.sessionID,
@@ -146,6 +156,7 @@ class ChatScreen extends StatefulWidget {
     this.initialText = '',
     this.initialAttachments = const [],
     this.discardIfUntouched = false,
+    this.handoffStore,
   });
 
   @override
@@ -229,7 +240,8 @@ List<PromptAgentMention> _promptAgentMentions(
   return mentions;
 }
 
-class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
+class _ChatScreenState extends State<ChatScreen>
+    with WidgetsBindingObserver, AppShortcutSurface {
   late final ConnectionController _conn;
   late final StreamSubscription<EventEnvelope> _sub;
   List<MessageWithParts> _messages = [];
@@ -241,6 +253,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   final _messagePositions = ItemPositionsListener.create();
   bool _awayFromLatest = false;
 
+  /// What Send does while a turn is running, on servers that support the
+  /// inbox. Steer matches the server default; the visible delivery control
+  /// in the composer both shows and sets this, and the Send long-press
+  /// shortcut updates it too so the label never lies (UX-P0-04).
+  PromptDelivery _delivery = PromptDelivery.steer;
+
   /// While the reader is scrolled away from the latest message, the rendered
   /// message count is pinned so a completing turn cannot shift the visible
   /// content by one item (reversed-list index anchoring). Pending messages
@@ -251,6 +269,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   /// reasoning blocks, so list recycling does not collapse them.
   final Map<String, bool> _transcriptExpansion = {};
   final List<PromptAttachment> _attachments = [];
+
+  // UX-103 review handoff (start) — Files, Changes, and Review stage
+  // structured references here; the composer renders them as chips and
+  // `_applyStagedReferences` folds them into the prompt text on send.
+  late final ReviewHandoffSession _handoff = ReviewHandoffSession(
+    store: widget.handoffStore ?? ReviewHandoffStore.instance,
+    sessionID: widget.sessionID,
+  );
+
+  List<ReviewReference> get _stagedReferences => _handoff.references;
+  // UX-103 review handoff (end).
+
   final List<_PendingSend> _pendingSends = [];
   final Map<String, int> _messageVersions = {};
   final Map<String, int> _partVersions = {};
@@ -314,6 +344,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
     _dataRefreshRevision = _conn.dataRefreshRevision;
     _conn.addListener(_onConnectionChanged);
+    _handoff.store.addListener(_onHandoffChanged); // UX-103 review handoff
     _load();
     unawaited(_loadServerCommands());
     _sub = _conn.events.listen(_onEvent);
@@ -915,12 +946,25 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
     if (!mounted) return queued;
     if (queued) {
+      // The queue evicts on age and size. Whatever it dropped to make room
+      // is said here, in the same breath as the confirmation, rather than
+      // leaving the user to notice a missing draft later.
+      final evicted = _conn.takeQueueEvictionNotice();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Queued — will send when reconnected')),
+        SnackBar(
+          key: const Key('queued-draft-notice'),
+          content: Text(
+            evicted == null
+                ? 'Queued — will send when reconnected'
+                : 'Queued — will send when reconnected. $evicted',
+          ),
+          duration: Duration(seconds: evicted == null ? 4 : 6),
+        ),
       );
     } else {
       _showActionError(
-        'This draft exceeds the attachment size limits and cannot be queued.',
+        'This draft is too large to queue, or the queue is full of newer '
+        'drafts. Remove an attachment, or clear queued prompts in Settings.',
       );
     }
     return queued;
@@ -1017,12 +1061,32 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
-  /// [delivery] rides only on OpenCode 2 sends made while a turn runs:
-  /// null lets the server default (steer) apply; the long-press menu passes
-  /// an explicit steer or queue.
+  /// The delivery mode that rides on an OpenCode 2 send made while a turn
+  /// runs. Off a running turn — and on v1, which has no inbox — nothing is
+  /// sent, so the server default applies. While a turn runs the composer's
+  /// visible delivery control decides, and Steer stays the default, matching
+  /// the server.
+  PromptDelivery? get _activeDelivery =>
+      _conn.supportsInbox && _conn.busySessions.contains(widget.sessionID)
+      ? _delivery
+      : null;
+
+  /// [delivery] rides only on OpenCode 2 sends made while a turn runs. When
+  /// it is omitted the composer's current delivery choice applies; the
+  /// long-press shortcut passes an explicit steer or queue.
   Future<void> _send({PromptDelivery? delivery}) async {
+    delivery ??= _activeDelivery;
     await _voice?.cancel();
-    if (_sending || (_composer.text.trim().isEmpty && _attachments.isEmpty)) {
+    // UX-103 review handoff: the command grammar is matched against the text
+    // the *user* typed, before any staged reference is folded in. Folding
+    // first appended a multi-line reference block that `_typedChatCommand`
+    // could never match, so a composer holding `/new` plus a staged reference
+    // silently sent the command as a chat message.
+    final hasStagedReferences = _handoff.references.isNotEmpty;
+    if (_sending ||
+        (_composer.text.trim().isEmpty &&
+            _attachments.isEmpty &&
+            !hasStagedReferences)) {
       return;
     }
     unawaited(HapticFeedback.lightImpact());
@@ -1034,9 +1098,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
     final typedCommand = _typedChatCommand(_composer.text.trim());
     if (_attachments.isEmpty && typedCommand != null) {
+      // A command is not a prompt: a server command's arguments feed its own
+      // template and a mobile command takes none, so references cannot ride
+      // along. They stay staged for the next prompt rather than being
+      // rewritten into arguments the command never asked for — and the user
+      // is told, so nothing looks lost.
+      if (hasStagedReferences) _noteReferencesKeptForNextPrompt();
       await _submitTypedCommand(typedCommand);
       return;
     }
+    _applyStagedReferences(); // UX-103 review handoff
+    if (_composer.text.trim().isEmpty && _attachments.isEmpty) return;
     if (_conn.status != StreamStatus.connected) {
       // Offline compose: the draft queues instead of failing, and flushes
       // through the same send path when the connection returns.
@@ -1244,6 +1316,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _openVoice() async {
+    // The tools sheet hides the entry point off Android; this keeps a
+    // programmatic call (a shortcut, a restored intent) from starting a model
+    // download for a recognizer that can never be fed.
+    if (!platformCapabilities.supportsVoice) return;
     if (_voiceOpening || _sending) return;
     setState(() => _voiceOpening = true);
     try {
@@ -1537,6 +1613,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Future<void> _toggleReasoningDisplay() async {
     final expanded = !_conn.transcriptReasoningExpanded;
+    // The transcript-wide choice is the new default for every reasoning
+    // block, so per-part overrides are dropped instead of being silently
+    // rewritten with the toggle's value. Rewriting them meant one flip
+    // erased the session's per-part choices, and an off-screen block kept
+    // resisting the toggle because its stale override outlived it.
+    setState(
+      () => _transcriptExpansion.removeWhere(
+        (key, _) => key.startsWith('reasoning:'),
+      ),
+    );
     await _conn.setTranscriptReasoningExpanded(expanded);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -1676,12 +1762,50 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
   }
 
+  static String _messageText(MessageWithParts message) => message.parts
+      .where((part) => part.type == 'text' && !part.synthetic)
+      .map((part) => part.text)
+      .where((value) => value.trim().isNotEmpty)
+      .join('\n\n');
+
+  Future<void> _copyMessageText(MessageWithParts message) async {
+    await Clipboard.setData(ClipboardData(text: _messageText(message)));
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Message text copied')));
+  }
+
+  /// The desktop right-click menu for a transcript message. Same three
+  /// actions, same gates, same handlers as the long-press sheet below —
+  /// mouse users simply reach them with the button they already use.
+  List<ContextMenuAction> _messageContextActions(MessageWithParts message) => [
+    if (_messageText(message).isNotEmpty)
+      ContextMenuAction(
+        menuKey: const ValueKey('message-menu-copy'),
+        label: 'Copy message text',
+        icon: AppIcons.copy,
+        onSelected: () => unawaited(_copyMessageText(message)),
+      ),
+    if (message.info.role == 'user')
+      ContextMenuAction(
+        menuKey: const ValueKey('message-menu-fork'),
+        label: 'Fork from this prompt',
+        icon: Icons.fork_right_rounded,
+        onSelected: () => unawaited(_forkFromMessage(message)),
+      ),
+    if (_conn.capabilities.messageDelete)
+      ContextMenuAction(
+        menuKey: const ValueKey('message-menu-delete'),
+        label: 'Delete message',
+        icon: Icons.delete_outline_rounded,
+        destructive: true,
+        onSelected: () => unawaited(_deleteMessage(message)),
+      ),
+  ];
+
   Future<void> _showMessageActions(MessageWithParts message) async {
-    final text = message.parts
-        .where((part) => part.type == 'text' && !part.synthetic)
-        .map((part) => part.text)
-        .where((value) => value.trim().isNotEmpty)
-        .join('\n\n');
+    final text = _messageText(message);
     final canFork = message.info.role == 'user';
     final theme = Theme.of(context);
     final action = await showModalBottomSheet<String>(
@@ -1693,7 +1817,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             if (text.isNotEmpty)
               ListTile(
                 key: const ValueKey('message-action-copy'),
-                leading: const Icon(Icons.copy_rounded),
+                leading: const Icon(AppIcons.copy),
                 title: const Text('Copy message text'),
                 onTap: () => Navigator.pop(context, 'copy'),
               ),
@@ -1730,13 +1854,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       ),
     );
     if (!mounted || action == null) return;
-    if (action == 'copy') {
-      await Clipboard.setData(ClipboardData(text: text));
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Message text copied')));
-    }
+    if (action == 'copy') await _copyMessageText(message);
     if (action == 'fork') await _forkFromMessage(message);
     if (action == 'delete') await _deleteMessage(message);
   }
@@ -2498,6 +2616,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     return [...builtins, ...dynamic];
   }
 
+  /// Ctrl+K in a session opens the session's own command launcher rather than
+  /// the shell one: slash commands and subagents are the commands that matter
+  /// here. Everything else falls through to the shell.
+  @override
+  bool onAppShortcut(Intent intent) {
+    if (intent is! OpenCommandPaletteIntent) return false;
+    unawaited(_openCommandLauncher());
+    return true;
+  }
+
   Future<void> _openCommandLauncher({
     _ComposerToolTab initialTab = _ComposerToolTab.commands,
   }) async {
@@ -2607,6 +2735,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   controller: _conn,
                   onAttachFile: _attachProjectFile,
                   onReviewPrompt: _addReviewPrompt,
+                  handoff: _handoff, // UX-103 review handoff
                 ),
               ),
             ),
@@ -3055,6 +3184,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final prompt = await Navigator.of(context).push<String>(
       MaterialPageRoute<String>(
         builder: (_) => ReviewWorkspace(
+          handoff: _handoff, // UX-103 review handoff
           loadDiffs: () async {
             final api = await _conn.prepareActionTransport();
             if (api == null) {
@@ -3082,6 +3212,53 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     if (!mounted || prompt == null || prompt.trim().isEmpty) return;
     _addReviewPrompt(prompt);
   }
+
+  // UX-103 review handoff (start).
+  void _onHandoffChanged() {
+    if (mounted) setState(() {});
+  }
+
+  /// Folds every staged reference into the prompt text just before it is
+  /// sent. References are pointers, not attachments: they leave the composer
+  /// as structured markdown the agent can read, and the chips clear with
+  /// them.
+  void _applyStagedReferences() {
+    final references = _handoff.references;
+    if (references.isEmpty) return;
+    final block = ReviewReference.format(references);
+    if (block.isEmpty) return;
+    final current = _composer.text.trim();
+    final text = current.isEmpty ? block : '$current\n\n$block';
+    _composer.value = TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+    _handoff.store.clear(widget.sessionID);
+  }
+
+  /// Says why the chips are still there after a slash command ran, so the
+  /// user does not read a surviving reference as a send that failed.
+  void _noteReferencesKeptForNextPrompt() {
+    if (!mounted) return;
+    final count = _handoff.references.length;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        key: const Key('references-kept-notice'),
+        content: Text(
+          count == 1
+              ? 'Slash commands do not carry references. It stays on the '
+                    'composer for your next prompt.'
+              : 'Slash commands do not carry references. They stay on the '
+                    'composer for your next prompt.',
+        ),
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
+  void _removeStagedReference(ReviewReference reference) =>
+      _handoff.store.remove(widget.sessionID, reference.id);
+  // UX-103 review handoff (end).
 
   void _addReviewPrompt(String prompt) {
     if (!mounted || prompt.trim().isEmpty) return;
@@ -3233,6 +3410,41 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         mimeType: data.mimeType,
         data: data,
       );
+
+  /// Files dropped onto the composer from the desktop file manager.
+  ///
+  /// Goes through the same `_addPreviewAttachment` pipeline the picker and
+  /// the file viewer use, so the count, per-file and aggregate caps apply
+  /// identically. The size is checked from the drop's own metadata first, so
+  /// an oversized file is refused without ever being read into memory.
+  Future<void> _handleDroppedFiles(List<DroppedFile> files) async {
+    for (final file in files) {
+      try {
+        if (await file.length() > _maxAttachmentBytes) {
+          throw const ProductException(
+            'Each attachment must be 10 MB or smaller.',
+          );
+        }
+        final bytes = await file.readBytes();
+        if (!mounted) return;
+        await _addPreviewAttachment(
+          filename: file.name,
+          mimeType: file.mimeType,
+          data: FilePreviewData(
+            name: file.name,
+            mimeType: file.mimeType,
+            bytes: bytes,
+          ),
+        );
+      } catch (error) {
+        if (!mounted) return;
+        showProductError(context, error);
+        return;
+      }
+    }
+    if (!mounted) return;
+    _focus.requestFocus();
+  }
 
   Future<void> _addPreviewAttachment({
     required String filename,
@@ -3416,7 +3628,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               IconButton(
                 tooltip: 'Stop',
                 icon: Icon(
-                  Icons.stop_circle_outlined,
+                  AppIcons.stop,
                   color: theme.colorScheme.error,
                 ),
                 onPressed: _aborting ? null : _abort,
@@ -3483,7 +3695,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                   ? _EmptyTranscript(
                                       onSuggestion: _insertSuggestion,
                                     )
-                                  : MarkdownFileLinks(
+                                  : DesktopSelectionArea(
+                                      child: MarkdownFileLinks(
                                       validate: _validatePathLink,
                                       open: _openPathLink,
                                       child: NotificationListener<ScrollNotification>(
@@ -3562,6 +3775,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                                             m,
                                                           ),
                                                         ),
+                                                    contextActions: () =>
+                                                        _messageContextActions(
+                                                          m,
+                                                        ),
                                                     filePreviewLoader:
                                                         _loadToolOutputFile,
                                                     onAttachFile:
@@ -3618,6 +3835,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                         ),
                                       ),
                                     ),
+                                    ),
                             ),
                             // §7 rule 5: v2-only surfaces stay silent on v1.
                             // The map is already empty there, but the gate is
@@ -3658,7 +3876,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                 constraints: const BoxConstraints(
                                   maxWidth: 860,
                                 ),
-                                child: _ChatComposer(
+                                child: DesktopFileDropTarget(
+                                  onDrop: _handleDroppedFiles,
+                                  child: _ChatComposer(
                                   compact: compactComposer,
                                   allowInlineCommands:
                                       bodyConstraints.maxHeight >= 300,
@@ -3677,6 +3897,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                   busy: busy,
                                   sending: _sending,
                                   canSendWhileBusy: _conn.supportsInbox,
+                                  delivery: _delivery,
+                                  onDeliveryChanged: (delivery) =>
+                                      setState(() => _delivery = delivery),
                                   voiceOpening: _voiceOpening,
                                   selectedAgent: _conn.selectedAgent,
                                   selectedModel: _conn.selectedModel,
@@ -3698,6 +3921,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                   onRemoveAttachment: (attachment) => setState(
                                     () => _attachments.remove(attachment),
                                   ),
+                                  // UX-103 review handoff (start).
+                                  references: _stagedReferences,
+                                  onRemoveReference: _removeStagedReference,
+                                  // UX-103 review handoff (end).
+                                ),
                                 ),
                               ),
                             ),
@@ -3717,6 +3945,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _persistDraft();
     WidgetsBinding.instance.removeObserver(this);
     _conn.removeListener(_onConnectionChanged);
+    _handoff.store.removeListener(_onHandoffChanged); // UX-103 review handoff
     _sub.cancel();
     _streamFlushTimer?.cancel();
     _highlightTimer?.cancel();

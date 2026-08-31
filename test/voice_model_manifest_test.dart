@@ -10,7 +10,7 @@ void main() {
       'android/app/src/main/AndroidManifest.xml',
     ).readAsStringSync();
     final activity = File(
-      'android/app/src/main/kotlin/ai/opencode/opencode_mobile/MainActivity.kt',
+      'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/MainActivity.kt',
     ).readAsStringSync();
     final audio = File('lib/voice/audio.dart').readAsStringSync();
 

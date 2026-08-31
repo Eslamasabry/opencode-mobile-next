@@ -9,7 +9,7 @@
 
 Planning date: 2026-08-28. Sources: `.claude/skills/motion-design/` and
 `.claude/skills/remotion-motion-graphics/` (rules cited per scene),
-HANDOFF.md Operation Facelift records, docs/design-inspiration.md.
+docs/internal/handoff.md Operation Facelift records, docs/design-inspiration.md.
 
 ## 1. Concept and narrative arc
 
@@ -72,7 +72,7 @@ remotion rule 5) and every entrance animates 2–3 properties with stagger
 | 12 | Themes | 3420–3780 | REC-12: Appearance page cycling packs — Catppuccin, Gruvbox, Solarized, Material You | Each switch = whole-frame grade shifts with the recording; swatch row staggers in 4f; breathe on idle | "Your terminal, your colors." / "Catppuccin. Gruvbox. Solarized. Or Android's own." | remotion 3,7; one hero color per FRAME still holds (mint caption only) |
 | 13 | Desktop | 3780–3900 | GEN: Linux desktop screenshot (STILL-1) with Ken Burns 1→1.08 + pan | KB mandatory on stills; single caption | "Oh — it runs on Linux too. Same codebase." | remotion 6 |
 | 14 | Numbers | 3900–4200 | GEN: three counters stagger in on mesh | Counters (soft tick SFX), 6f stagger, biggest scale-in of the video (payoff rule) | "506 tests green." / "188 server operations mapped." / "5 preview releases in one day." | design-rules payoff; remotion 9,16 |
-| 15 | CTA | 4200–4500 | GEN: `❯` + caret return; wordmark "OpenCode mobile"; one line | Mark in 0–24f, wordmark type-on, 20f breathe hold, caret keeps blinking to the last frame; everything else exits at f4440, caret stays | "Get the preview APK on GitHub." / small mono: "github.com/Eslamasabry/oc_app/releases" | design-rules logo sting; motion: signature entrance closes the loop |
+| 15 | CTA | 4200–4500 | GEN: `❯` + caret return; wordmark "OpenCode mobile"; one line | Mark in 0–24f, wordmark type-on, 20f breathe hold, caret keeps blinking to the last frame; everything else exits at f4440, caret stays | "Get the preview APK on GitHub." / small mono: "github.com/Eslamasabry/opencode-mobile/releases" | design-rules logo sting; motion: signature entrance closes the loop |
 
 ## 3. Shot list (parent records via adb screenrecord)
 

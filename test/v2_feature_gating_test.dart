@@ -25,7 +25,7 @@ import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/app_diagnostics_screen.dart';
 import 'package:opencode_mobile/ui/screens/capabilities_screen.dart';
 import 'package:opencode_mobile/ui/screens/project_health_screen.dart';
-import 'package:opencode_mobile/ui/screens/requests_screen.dart';
+import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/screens/tools_screen.dart';
 import 'package:opencode_mobile/ui/screens/workspace_screen.dart';
@@ -261,6 +261,13 @@ void main() {
     // sliver so presence/absence is what the assertions actually measure.
     setUp(() => _useTallSurface());
 
+    // Audit UX-101 moved every management destination behind one labelled
+    // "Manage project" route; the gating rule now applies inside it.
+    Future<void> openManageProject(WidgetTester tester) async {
+      await tester.tap(find.byKey(const ValueKey('manage-project-entry')));
+      await tester.pumpAndSettle();
+    }
+
     testWidgets('v1 offers Managed workspaces', (tester) async {
       final controller = await _controller(v2: false);
       addTearDown(controller.dispose);
@@ -269,6 +276,7 @@ void main() {
         _app(Scaffold(body: WorkspaceScreen(controller: controller))),
       );
       await tester.pumpAndSettle();
+      await openManageProject(tester);
 
       expect(
         find.byKey(const ValueKey('managed-workspaces-entry')),
@@ -287,18 +295,23 @@ void main() {
         _app(Scaffold(body: WorkspaceScreen(controller: controller))),
       );
       await tester.pumpAndSettle();
+      // The route itself survives: switching projects and project health
+      // have a backend on every generation, so it is never a dead end.
+      expect(find.byKey(const ValueKey('manage-project-entry')), findsOneWidget);
+      await openManageProject(tester);
 
       expect(
         find.byKey(const ValueKey('managed-workspaces-entry')),
         findsNothing,
       );
-      // No explainer for a hidden tile: the grid simply reflows.
+      // No explainer for a hidden tile: the list simply reflows.
       expect(find.textContaining('OpenCode 2'), findsNothing);
       expect(find.byKey(const ValueKey('worktrees-entry')), findsOneWidget);
       expect(
         find.byKey(const ValueKey('project-health-entry')),
         findsOneWidget,
       );
+      expect(find.byKey(const ValueKey('switch-project-entry')), findsOneWidget);
     });
   });
 
@@ -527,7 +540,7 @@ void main() {
       addTearDown(controller.dispose);
       controller.handleEventForTesting(_formCreated());
 
-      await tester.pumpWidget(_app(RequestsScreen(controller: controller)));
+      await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
       await tester.pumpAndSettle();
 
       expect(find.text('Connect to Sentry'), findsOneWidget);
@@ -541,7 +554,7 @@ void main() {
       addTearDown(controller.dispose);
       controller.handleEventForTesting(_formCreated());
 
-      await tester.pumpWidget(_app(RequestsScreen(controller: controller)));
+      await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
       await tester.pumpAndSettle();
 
       expect(find.text('Connect to Sentry'), findsNothing);

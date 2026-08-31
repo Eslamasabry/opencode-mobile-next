@@ -8,8 +8,12 @@ import '../../api/models.dart' show ModelRef;
 import '../../api/mcp_oauth.dart';
 import '../../l10n/app_localizations.dart';
 import '../../api/provider_presentation.dart';
+import '../../feedback/bug_report.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
+import '../app_theme.dart';
+import '../desktop/desktop_interaction.dart';
+import '../desktop/shortcuts.dart';
 import '../widgets/entrance.dart';
 import '../widgets/file_preview.dart';
 import '../widgets/confirm_sheet.dart';
@@ -18,9 +22,8 @@ import '../widgets/pickers.dart';
 import 'capabilities_screen.dart';
 import 'guide_screen.dart';
 import 'mcp_setup_screen.dart';
-import 'mission_control_screen.dart';
-import 'requests_screen.dart';
 import 'settings_screen.dart';
+import 'terminal_screen.dart';
 
 part 'library/catalog_screen.dart';
 part 'library/integrations_screen.dart';
@@ -39,27 +42,17 @@ class LibraryScreen extends StatelessWidget {
       listenable: controller,
       builder: (context, _) {
         final l10n = AppLocalizations.of(context);
-        final pending =
-            controller.permissions.length +
-            controller.questions.length +
-            controller.forms.length;
-        return ListView(
+        // Audit UX-P0-01: no Mission Control or Requests card here. Pending
+        // work has exactly one home — the Activity destination and its badge.
+        return DesktopScrollbarArea(
+          builder: (scrollController) => ListView(
+          controller: scrollController,
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
           children: [
             _ActiveSetupCard(controller: controller),
             SectionLabel(l10n.libraryBrowseSection),
             _DestinationGrid(
               cards: [
-                _DestinationCard(
-                  key: const ValueKey('library-mission-control'),
-                  icon: Icons.space_dashboard_outlined,
-                  title: l10n.libraryMissionControlTitle,
-                  badge: pending == 0 ? null : '$pending',
-                  onTap: () => _open(
-                    context,
-                    MissionControlScreen(controller: controller),
-                  ),
-                ),
                 _DestinationCard(
                   icon: Icons.model_training_outlined,
                   title: l10n.libraryModelsAgentsTitle,
@@ -96,18 +89,20 @@ class LibraryScreen extends StatelessWidget {
                     CapabilitiesScreen(controller: controller),
                   ),
                 ),
+                // §5: Terminal gives up its navigation slot to Activity and
+                // is reached from here (and from a session) instead.
+                _DestinationCard(
+                  key: const ValueKey('library-terminal'),
+                  icon: Icons.terminal_outlined,
+                  title: l10n.libraryTerminalTitle,
+                  onTap: () =>
+                      _open(context, _TerminalPage(controller: controller)),
+                ),
               ],
             ),
             SectionLabel(l10n.libraryManageSection),
             _DestinationGrid(
               cards: [
-                _DestinationCard(
-                  icon: Icons.notifications_active_outlined,
-                  title: l10n.libraryRequestsTitle,
-                  badge: pending == 0 ? null : '$pending',
-                  onTap: () =>
-                      _open(context, RequestsScreen(controller: controller)),
-                ),
                 _DestinationCard(
                   icon: Icons.settings_outlined,
                   title: l10n.librarySettingsTitle,
@@ -119,9 +114,28 @@ class LibraryScreen extends StatelessWidget {
                   title: 'Setup guide',
                   onTap: () => _open(context, const GuideScreen()),
                 ),
+                // The bug form lives in the failure states themselves; this
+                // card is the deliberate path for everything a user notices
+                // outside a failure surface.
+                _DestinationCard(
+                  key: const ValueKey('library-report-bug'),
+                  icon: Icons.bug_report_outlined,
+                  title: 'Report a bug',
+                  onTap: () => unawaited(openBugReport(context)),
+                ),
+                // The shortcut layer must be discoverable without already
+                // knowing a shortcut.
+                if (desktopInteractions)
+                  _DestinationCard(
+                    key: const ValueKey('library-keyboard-shortcuts'),
+                    icon: Icons.keyboard_outlined,
+                    title: 'Keyboard shortcuts',
+                    onTap: () => unawaited(showShortcutsHelp(context)),
+                  ),
               ],
             ),
           ],
+          ),
         );
       },
     );
@@ -130,6 +144,20 @@ class LibraryScreen extends StatelessWidget {
   static void _open(BuildContext context, Widget screen) {
     Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen));
   }
+}
+
+/// Terminal is a body-only tab widget; pushed from More it needs its own
+/// Scaffold and an identity in the app bar.
+class _TerminalPage extends StatelessWidget {
+  final ConnectionController controller;
+
+  const _TerminalPage({required this.controller});
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Terminal')),
+    body: TerminalScreen(controller: controller),
+  );
 }
 
 /// The live model/agent/variant selection, promoted to the top of More so the
@@ -183,7 +211,11 @@ class _DestinationGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 2.0);
+    // Tile height tracks the text scale all the way to the app's ceiling;
+    // stopping at 2.0 would clip the labels of users above it.
+    final scale = MediaQuery.textScalerOf(
+      context,
+    ).scale(1).clamp(1.0, AppTheme.maxTextScale);
     return LayoutBuilder(
       builder: (context, constraints) {
         final columns = constraints.maxWidth >= 280 ? 2 : 1;
@@ -210,7 +242,6 @@ class _DestinationGrid extends StatelessWidget {
 class _DestinationCard extends StatelessWidget {
   final IconData icon;
   final String title;
-  final String? badge;
   final VoidCallback onTap;
 
   const _DestinationCard({
@@ -218,7 +249,6 @@ class _DestinationCard extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.onTap,
-    this.badge,
   });
 
   @override
@@ -234,13 +264,7 @@ class _DestinationCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  _TileIcon(icon: icon),
-                  const Spacer(),
-                  if (badge != null) Badge(label: Text(badge!)),
-                ],
-              ),
+              _TileIcon(icon: icon),
               const Spacer(),
               Text(
                 title,
@@ -271,7 +295,7 @@ class _TileIcon extends StatelessWidget {
       height: 36,
       decoration: BoxDecoration(
         color: tint.withValues(alpha: .12),
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(AppTheme.radiusControl),
       ),
       child: Icon(icon, size: 20, color: tint),
     );

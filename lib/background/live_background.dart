@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../platform/platform_capabilities.dart';
 
 typedef BackgroundMethodInvoker =
     Future<Map<String, dynamic>> Function(
@@ -115,6 +119,14 @@ class BackgroundLiveController extends ChangeNotifier {
   bool busy = false;
   String? lastError;
 
+  /// Set when Android's foreground-service time limit stopped the service,
+  /// and cleared the next time the user turns live mode back on.
+  ///
+  /// Distinct from [lastError]: nothing failed and nothing can be retried
+  /// right now — the daily budget is spent. The screens read it so the user
+  /// learns live mode ended from the app rather than from missing events.
+  bool stoppedByAndroidTimeout = false;
+
   BackgroundLiveController({
     required this.preferences,
     BackgroundMethodInvoker? invoke,
@@ -142,6 +154,9 @@ class BackgroundLiveController extends ChangeNotifier {
     }
     final previous = enabled;
     enabled = value;
+    // Turning it back on is the user answering the timeout notice; the
+    // banner has served its purpose.
+    if (value) stoppedByAndroidTimeout = false;
     notifyListeners();
     final succeeded = await _run(value ? 'enable' : 'disable');
     if (!succeeded) {
@@ -177,6 +192,7 @@ class BackgroundLiveController extends ChangeNotifier {
     bool quickReply = false,
     String requestID = '',
   }) async {
+    if (!platformCapabilities.supportsNotifications) return false;
     if (!enabled || !notificationGranted) return false;
     try {
       final result = await _invoke('showCodingAlert', {
@@ -205,9 +221,32 @@ class BackgroundLiveController extends ChangeNotifier {
   void bindActionHandler(Future<bool> Function(CodingAlertAction) handler) {
     _actionHandler = handler;
     _channel.setMethodCallHandler((call) async {
+      if (call.method == timeoutMethod) {
+        handleNativeTimeout(call.arguments);
+        return null;
+      }
       if (call.method != 'codingAlertAction') return null;
       return handleNativeAction(call.arguments);
     });
+  }
+
+  /// The push BackgroundConnectionService.onTimeout sends. Must match
+  /// `METHOD_TIMEOUT` in BackgroundConnectionService.kt.
+  static const timeoutMethod = 'backgroundServiceTimeout';
+
+  /// Applies the native "Android stopped the service" event.
+  ///
+  /// The persisted preference used to stay true over a dead service, so the
+  /// switch read "on" while nothing was connected. Status is corrected the
+  /// moment the event lands rather than at the next foreground poll — which
+  /// is exactly when the user would have noticed anyway.
+  @visibleForTesting
+  void handleNativeTimeout([Object? arguments]) {
+    stoppedByAndroidTimeout = true;
+    enabled = false;
+    active = false;
+    unawaited(preferences.setBool(preferenceKey, false));
+    notifyListeners();
   }
 
   /// Resolves one native action delivery; also the test entry point.
@@ -225,6 +264,7 @@ class BackgroundLiveController extends ChangeNotifier {
 
   /// Cancels a coding notification even if live mode has since been disabled.
   Future<bool> dismissCodingAlert(String key) async {
+    if (!platformCapabilities.supportsNotifications) return false;
     try {
       final result = await _invoke('dismissCodingAlert', {'key': key});
       return result['dismissed'] == true;
@@ -239,6 +279,7 @@ class BackgroundLiveController extends ChangeNotifier {
 
   /// Consumes one Android notification destination after a cold or warm open.
   Future<CodingAlertOpen?> consumeCodingAlertOpen() async {
+    if (!platformCapabilities.supportsNotifications) return null;
     try {
       final result = await _invoke('consumeCodingAlertOpen');
       return CodingAlertOpen.fromPlatform(result);
@@ -252,6 +293,11 @@ class BackgroundLiveController extends ChangeNotifier {
   }
 
   Future<bool> _run(String method, {bool persist = true}) async {
+    // The foreground service lives in the Android runner alone. Asking for it
+    // elsewhere only produced a MissingPluginException and an error string
+    // parked on a controller whose UI is already hidden; saying no up front
+    // keeps `lastError` meaning "something went wrong", not "wrong OS".
+    if (!platformCapabilities.supportsBackgroundService) return false;
     if (busy) return false;
     busy = true;
     lastError = null;

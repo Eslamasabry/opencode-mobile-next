@@ -60,14 +60,7 @@ class _TodosSheetState extends State<_TodosSheet> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'TODO LIST',
-                    style: theme.textTheme.labelSmall!.copyWith(
-                      color: theme.hintColor,
-                      letterSpacing: 1,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
+                  const SectionLabel.inline('Todo list'),
                   Flexible(
                     child: ListView(
                       shrinkWrap: true,
@@ -83,7 +76,7 @@ class _TodosSheetState extends State<_TodosSheet> {
                                 decoration: t.done
                                     ? TextDecoration.lineThrough
                                     : null,
-                                color: t.done ? theme.hintColor : null,
+                                color: t.done ? AppTheme.mutedOf(theme) : null,
                               ),
                             ),
                             subtitle:
@@ -97,7 +90,7 @@ class _TodosSheetState extends State<_TodosSheet> {
                                         '${t.priority} priority',
                                     ].join(' · '),
                                     style: theme.textTheme.labelSmall?.copyWith(
-                                      color: theme.hintColor,
+                                      color: AppTheme.mutedOf(theme),
                                     ),
                                   ),
                             onChanged: null,
@@ -171,14 +164,7 @@ class _DiffSheetState extends State<_DiffSheet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      'CHANGES',
-                      style: theme.textTheme.labelSmall!.copyWith(
-                        color: theme.hintColor,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
+                    const SectionLabel.inline('Changes'),
                     Expanded(
                       child: ListView.builder(
                         itemCount: _diffs!.length,
@@ -202,7 +188,9 @@ class _DiffSheetState extends State<_DiffSheet> {
                                 d.file,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 11),
+                                style: const TextStyle(
+                                  fontSize: AppTheme.captionFontSize,
+                                ),
                               ),
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -210,8 +198,10 @@ class _DiffSheetState extends State<_DiffSheet> {
                                   Text(
                                     '+${c.added}',
                                     style: TextStyle(
-                                      color: AppTheme.successOf(Theme.of(context)),
-                                      fontFamily: 'AppMono',
+                                      color: AppTheme.successOf(
+                                        Theme.of(context),
+                                      ),
+                                      fontFamily: AppTheme.monoFamily,
                                     ),
                                   ),
                                   const SizedBox(width: 6),
@@ -219,7 +209,7 @@ class _DiffSheetState extends State<_DiffSheet> {
                                     '-${c.removed}',
                                     style: TextStyle(
                                       color: theme.colorScheme.error,
-                                      fontFamily: 'AppMono',
+                                      fontFamily: AppTheme.monoFamily,
                                     ),
                                   ),
                                   const SizedBox(width: 6),
@@ -305,14 +295,14 @@ class _FileDiffView extends StatelessWidget {
                       diff.file,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontFamily: 'AppMono',
-                        fontSize: 13,
+                        fontFamily: AppTheme.monoFamily,
+                        fontSize: AppTheme.codeFontSize,
                       ),
                     ),
                   ),
                   IconButton(
                     tooltip: 'Copy updated file',
-                    icon: const Icon(Icons.copy_rounded, size: 18),
+                    icon: const Icon(AppIcons.copy, size: 18),
                     onPressed: () => Clipboard.setData(
                       ClipboardData(text: diff.after ?? ''),
                     ),
@@ -320,7 +310,7 @@ class _FileDiffView extends StatelessWidget {
                 ],
               ),
             ),
-            Divider(height: 1, color: theme.dividerColor),
+            Divider(height: 1, color: AppTheme.hairline(theme)),
             Expanded(
               child: SingleChildScrollView(
                 child: SingleChildScrollView(
@@ -383,8 +373,8 @@ class _FileDiffView extends StatelessWidget {
                           diff.file,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontFamily: 'AppMono',
-                            fontSize: 13,
+                            fontFamily: AppTheme.monoFamily,
+                            fontSize: AppTheme.codeFontSize,
                           ),
                         ),
                         if (diff.status != null)
@@ -399,7 +389,7 @@ class _FileDiffView extends StatelessWidget {
                   ),
                   IconButton(
                     tooltip: copyLabel,
-                    icon: const Icon(Icons.copy_rounded, size: 18),
+                    icon: const Icon(AppIcons.copy, size: 18),
                     onPressed: copyText.isEmpty
                         ? null
                         : () =>
@@ -408,7 +398,7 @@ class _FileDiffView extends StatelessWidget {
                 ],
               ),
             ),
-            Divider(height: 1, color: theme.dividerColor),
+            Divider(height: 1, color: AppTheme.hairline(theme)),
             Expanded(
               child: SingleChildScrollView(
                 child: SingleChildScrollView(
@@ -436,7 +426,7 @@ class _FileDiffView extends StatelessWidget {
 
   Widget _patchRow(String line, _DiffLineKind kind, ThemeData theme) {
     final bg = switch (kind) {
-      _DiffLineKind.added => Colors.green.withValues(alpha: .15),
+      _DiffLineKind.added => AppTheme.successOf(theme).withValues(alpha: .15),
       _DiffLineKind.removed => theme.colorScheme.error.withValues(alpha: .15),
       _DiffLineKind.header => theme.colorScheme.primary.withValues(alpha: .12),
       _DiffLineKind.context => null,
@@ -453,8 +443,8 @@ class _FileDiffView extends StatelessWidget {
       child: Text(
         line,
         style: TextStyle(
-          fontFamily: 'AppMono',
-          fontSize: 12,
+          fontFamily: AppTheme.monoFamily,
+          fontSize: AppTheme.codeFontSize,
           height: 1.4,
           color: foreground,
         ),
@@ -468,7 +458,7 @@ class _FileDiffView extends StatelessWidget {
     ThemeData theme,
   ) {
     final bg = addedRemoved == true
-        ? Colors.green.withValues(alpha: .15)
+        ? AppTheme.successOf(theme).withValues(alpha: .15)
         : addedRemoved == false
         ? theme.colorScheme.error.withValues(alpha: .15)
         : null;
@@ -479,8 +469,8 @@ class _FileDiffView extends StatelessWidget {
       child: Text(
         line,
         style: TextStyle(
-          fontFamily: 'AppMono',
-          fontSize: 12,
+          fontFamily: AppTheme.monoFamily,
+          fontSize: AppTheme.codeFontSize,
           height: 1.4,
           color: addedRemoved == false ? theme.colorScheme.error : null,
         ),

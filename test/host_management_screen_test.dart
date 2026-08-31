@@ -72,7 +72,7 @@ void main() {
   testWidgets('remote profiles expose the host management destination', (
     tester,
   ) async {
-    final controller = await _controllerFor('http://192.168.1.20:4747');
+    final controller = await _controllerFor('http://192.0.2.20:4747');
     addTearDown(controller.dispose);
 
     await tester.pumpWidget(
@@ -135,7 +135,7 @@ void main() {
         null,
       ),
     );
-    final controller = await _controllerFor('http://192.168.1.20:4747');
+    final controller = await _controllerFor('http://192.0.2.20:4747');
     addTearDown(controller.dispose);
 
     await tester.pumpWidget(
@@ -143,14 +143,19 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    final restartCopy = find.byKey(
+      const ValueKey('copy-host-command-Restart the server'),
+    );
     await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('copy-host-command-Restart the server')),
+      restartCopy,
       240,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.tap(
-      find.byKey(const ValueKey('copy-host-command-Restart the server')),
-    );
+    // The list grew, so the row can settle under the viewport edge where a
+    // raw tap misses it.
+    await tester.ensureVisible(restartCopy);
+    await tester.pumpAndSettle();
+    await tester.tap(restartCopy);
     await tester.pumpAndSettle();
 
     expect(copiedText, 'bash ubuntu-opencode.sh restart');
@@ -163,7 +168,7 @@ void main() {
   testWidgets('host management fits a 320dp phone at 2x text', (tester) async {
     await tester.binding.setSurfaceSize(const Size(320, 640));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    final controller = await _controllerFor('http://192.168.1.20:4747');
+    final controller = await _controllerFor('http://192.0.2.20:4747');
     addTearDown(controller.dispose);
 
     await tester.pumpWidget(

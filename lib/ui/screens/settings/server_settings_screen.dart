@@ -148,7 +148,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
     // Termux management only exists on Android; desktop loopback servers
     // follow the ordinary remote-update path.
     final managedLocally =
-        defaultTargetPlatform == TargetPlatform.android &&
+        platformCapabilities.supportsTermux &&
         TermuxBridge.managesServerUrl(profile?.baseUrl);
     final availableVersion = managedLocally
         ? null
@@ -185,7 +185,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
       serverUpdateTitle = 'Server updates are managed externally';
       serverUpdateSubtitle =
           'Copy the official upgrade and model-refresh commands to run on the server host.';
-      serverUpdateIcon = Icons.copy_rounded;
+      serverUpdateIcon = AppIcons.copy;
       serverUpdateAction = _copyRemoteUpdateCommands;
     }
     return Scaffold(
@@ -198,7 +198,10 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
             title: Text(profile?.name ?? 'OpenCode server'),
             subtitle: SelectableText(
               profile?.baseUrl ?? 'Not connected',
-              style: const TextStyle(fontFamily: 'AppMono', fontSize: 12),
+              style: const TextStyle(
+                fontFamily: AppTheme.monoFamily,
+                fontSize: AppTheme.codeFontSize,
+              ),
             ),
             trailing: IconButton(
               tooltip: 'Check server health',
@@ -221,7 +224,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                   : Theme.of(context).colorScheme.error,
             ),
             title: Text(
-              _health?.healthy == true ? 'Server healthy' : 'Health unavailable',
+              _health?.healthy == true
+                  ? 'Server healthy'
+                  : 'Health unavailable',
             ),
             subtitle: Text(
               _healthError ??

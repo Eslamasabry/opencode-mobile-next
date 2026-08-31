@@ -1,7 +1,7 @@
 name: opencode_mobile
 description: "OpenCode client for Android - connect to a remote opencode server or one running on-device via Termux."
 publish_to: "none"
-version: 1.0.28+29
+version: 1.0.31+32
 
 environment:
   sdk: ^3.10.0
@@ -13,6 +13,20 @@ dependencies:
     sdk: flutter
   intl: any
   cupertino_icons: ^1.0.8
+  # Dropping files onto the composer. Flutter exposes no native file-drop
+  # channel of its own on desktop, so this is the one dependency the desktop
+  # interaction work needs. Pinned exactly, because it registers a platform
+  # plugin.
+  #
+  # Known cost, stated rather than hidden: the package also declares an
+  # Android plugin class, so the Android build now compiles one more Gradle
+  # subproject and prints "Your app uses the following plugins that apply
+  # Kotlin Gradle Plugin (KGP): desktop_drop". Android runtime behaviour is
+  # unchanged — DesktopFileDropTarget never builds a DropTarget off desktop,
+  # so nothing ever talks to that channel — but the warning is real and a
+  # future Flutter will turn it into an error. Revisit when upstream ships a
+  # Built-in Kotlin release (0.8.2 still applies KGP under AGP < 9).
+  desktop_drop: 0.8.2
   dio: ^5.7.0
   file_picker: 12.1.1
   flutter_riverpod: ^2.6.1
@@ -21,6 +35,30 @@ dependencies:
   # existing profile credentials must pass through this migration release.
   flutter_secure_storage: 10.0.0
   crypto: 3.0.7
+  # Scanning the QR that `opencode2 pair` prints. Pinned exactly, because it
+  # registers a platform plugin and ships native camera code.
+  #
+  # Why this package: it is the maintained Flutter barcode scanner (160/160
+  # pub points, ~1.3M downloads a month, publisher steenbakker.dev), it is
+  # BSD-3-Clause, and on Android it wraps CameraX + ML Kit rather than a
+  # bundled decoder of its own. The alternatives are unmaintained forks of
+  # long-dead qr_code_scanner.
+  #
+  # Known costs, stated rather than hidden:
+  #  * Like desktop_drop, it applies the Kotlin Gradle Plugin, so the Android
+  #    release build now warns "Your app uses the following plugins that
+  #    apply Kotlin Gradle Plugin (KGP): desktop_drop, mobile_scanner". Real,
+  #    and a future Flutter will turn it into an error.
+  #  * It defaults to the *bundled* ML Kit barcode model
+  #    (com.google.mlkit:barcode-scanning), not the Play-Services download.
+  #    That grows the APK, and buys scanning that works with no Play Services
+  #    and no first-run download. See THIRD_PARTY_NOTICES.md.
+  #  * It declares iOS, macOS and web implementations we never build, and no
+  #    Linux one at all. Harmless because the scanner is gated behind
+  #    `platformCapabilities.supportsQrPairing` (Android only) and desktop
+  #    never constructs a controller — but the Linux bundle does resolve a
+  #    package it cannot use, exactly as record and file_picker already do.
+  mobile_scanner: 7.4.0
   opencode_sdk:
     path: packages/opencode_sdk
   path_provider: 2.1.6
@@ -35,12 +73,20 @@ dependencies:
   dynamic_color: ^1.7.0
   package_info_plus: ^10.2.1
   window_manager: ^0.5.2
+  # Already present transitively via window_manager. Declared explicitly
+  # because lib/desktop/window_state.dart imports it directly to clamp the
+  # restored window to a display that is actually attached.
+  screen_retriever: ^0.2.0
 
 dev_dependencies:
   cross_file: 0.3.5+5
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  # Lets tests substitute a preferences store that refuses writes, so the
+  # fail-closed paths (profile deletion, queue eviction) can be proven rather
+  # than assumed. Already present transitively via shared_preferences.
+  shared_preferences_platform_interface: ^2.4.1
 
 flutter:
   generate: true
@@ -49,6 +95,11 @@ flutter:
     - PRIVACY.md
     - THIRD_PARTY_NOTICES.md
     - LICENSES/
+    # The Linux window/taskbar icon, set at startup via window_manager, which
+    # resolves it against the bundle's flutter_assets. Only the 256 px variant
+    # is listed: the 1024 px master beside it is the source artifact for the
+    # platform launcher-icon pipelines and must not be bundled.
+    - assets/branding/app-icon-256.png
   fonts:
     - family: AppMono
       fonts:

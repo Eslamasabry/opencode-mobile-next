@@ -8,6 +8,7 @@ import '../../api/product_repository.dart';
 import '../../api/provider_presentation.dart';
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
+import '../app_theme.dart';
 
 enum SessionContextBreakdownKind { user, assistant, tool, other }
 
@@ -258,7 +259,10 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
   Widget _buildBody(SessionContextMetrics metrics) {
     if (_loading && _messages.isEmpty) return const LoadingList(rows: 7);
     if (_error != null && _messages.isEmpty) {
-      return ProductErrorState(message: productErrorText(_error!), onRetry: _load);
+      return ProductErrorState(
+        message: productErrorText(_error!),
+        onRetry: _load,
+      );
     }
     if (metrics.currentMessage == null) {
       return ProductEmptyState(
@@ -295,7 +299,7 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
               'Usage comes from the latest completed assistant message. '
               'The makeup is an estimate from visible prompt, response, and tool text; Other includes system instructions, tool definitions, and provider overhead.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).hintColor,
+                color: AppTheme.mutedOf(Theme.of(context)),
                 height: 1.45,
               ),
             ),
@@ -367,7 +371,9 @@ class _ContextHero extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             wireLabel,
-            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppTheme.mutedOf(theme),
+            ),
           ),
         ],
         const SizedBox(height: 8),
@@ -383,7 +389,9 @@ class _ContextHero extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           'Latest assistant request, including cache activity',
-          style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: AppTheme.mutedOf(theme),
+          ),
         ),
       ],
     );
@@ -391,9 +399,7 @@ class _ContextHero extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 20),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: theme.dividerColor.withValues(alpha: .55)),
-        ),
+        border: Border(bottom: BorderSide(color: AppTheme.hairline(theme))),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -481,9 +487,7 @@ class _MetricRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: theme.dividerColor.withValues(alpha: .35)),
-        ),
+        border: Border(bottom: BorderSide(color: AppTheme.hairline(theme))),
       ),
       child: Row(
         children: [
@@ -491,7 +495,7 @@ class _MetricRow extends StatelessWidget {
             child: Text(
               label,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.hintColor,
+                color: AppTheme.mutedOf(theme),
               ),
             ),
           ),
@@ -564,7 +568,7 @@ class _ContextBreakdown extends StatelessWidget {
                   Text(
                     '${segments[index].percent.toStringAsFixed(1)}% · ${_formatNumber(segments[index].tokens)}',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.hintColor,
+                      color: AppTheme.mutedOf(theme),
                       fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),

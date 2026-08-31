@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
+import '../app_theme.dart';
 
 /// Host-side management for a remote OpenCode server.
 ///
@@ -16,7 +18,7 @@ class HostManagementScreen extends StatelessWidget {
   final ConnectionController controller;
 
   static const scriptUrl =
-      'https://raw.githubusercontent.com/Eslamasabry/oc_app/'
+      'https://raw.githubusercontent.com/Eslamasabry/opencode-mobile/'
       'master/scripts/host/ubuntu-opencode.sh';
 
   int _serverPort() {
@@ -43,14 +45,15 @@ class HostManagementScreen extends StatelessWidget {
               title: Text(profile?.name ?? 'OpenCode server'),
               subtitle: SelectableText(
                 profile?.baseUrl ?? 'Not connected',
-                style: const TextStyle(fontFamily: 'AppMono', fontSize: 12),
+                style: const TextStyle(
+                  fontFamily: AppTheme.monoFamily,
+                  fontSize: AppTheme.codeFontSize,
+                ),
               ),
             ),
             ListTile(
               leading: const Icon(Icons.info_outline_rounded),
-              title: Text(
-                'Server version ${controller.version ?? 'unknown'}',
-              ),
+              title: Text('Server version ${controller.version ?? 'unknown'}'),
               subtitle: const Text(
                 'These commands run on the computer that hosts this server — '
                 'the app cannot run them for you. Copy each one into a '
@@ -72,9 +75,18 @@ class HostManagementScreen extends StatelessWidget {
               command: 'loginctl enable-linger "\$USER"',
             ),
             _HostCommandTile(
-              label: 'Allow the port through the firewall (if ufw is active)',
-              command: 'sudo ufw allow $port/tcp',
+              label: 'Read the server password for this app',
+              command: 'bash ubuntu-opencode.sh password',
             ),
+            // `adb reverse` forwards a port to an attached *Android* device.
+            // On desktop the app and the server share a machine, so the tile
+            // described a cable that is not there.
+            if (platformCapabilities.supportsUsbHostBridge)
+              _HostCommandTile(
+                key: const Key('host-command-adb-reverse'),
+                label: 'Reach it from this phone over USB',
+                command: 'adb reverse tcp:$port tcp:$port',
+              ),
             const SectionLabel('Day-to-day — run on your computer'),
             _HostCommandTile(
               label: 'Service status',
@@ -100,7 +112,7 @@ class HostManagementScreen extends StatelessWidget {
               child: Text(
                 'Full walkthrough: docs/ubuntu-host.md in the app repository.',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.hintColor,
+                  color: AppTheme.mutedOf(theme),
                 ),
               ),
             ),
@@ -113,6 +125,7 @@ class HostManagementScreen extends StatelessWidget {
 
 class _HostCommandTile extends StatelessWidget {
   const _HostCommandTile({
+    super.key,
     required this.label,
     required this.command,
     this.detail,
@@ -133,9 +146,7 @@ class _HostCommandTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: theme.colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: .6),
-          ),
+          border: Border.all(color: AppTheme.hairline(theme)),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -156,7 +167,7 @@ class _HostCommandTile extends StatelessWidget {
                       child: Text(
                         detail!,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.hintColor,
+                          color: AppTheme.mutedOf(theme),
                         ),
                       ),
                     ),
@@ -164,8 +175,8 @@ class _HostCommandTile extends StatelessWidget {
                   SelectableText(
                     command,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      fontFamily: 'AppMono',
-                      fontSize: 12,
+                      fontFamily: AppTheme.monoFamily,
+                      fontSize: AppTheme.codeFontSize,
                     ),
                   ),
                 ],
@@ -190,7 +201,7 @@ class _HostCommandTile extends StatelessWidget {
                     );
                   }
                 },
-                icon: const Icon(Icons.copy_rounded, size: 19),
+                icon: const Icon(AppIcons.copy, size: 19),
               ),
             ),
           ],

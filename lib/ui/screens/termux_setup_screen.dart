@@ -7,10 +7,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
 import '../../state/profiles.dart';
 import '../../termux/bridge.dart';
 import '../app_theme.dart';
+import '../desktop/desktop_interaction.dart';
 
 class TermuxSetupScreen extends ConsumerStatefulWidget {
   const TermuxSetupScreen({super.key});
@@ -69,6 +71,9 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
   }
 
   Future<void> _refresh() async {
+    // Off Android the build below is the unsupported card; there is no state
+    // worth polling for and no channel to poll.
+    if (!platformCapabilities.supportsTermux) return;
     if (_refreshing) return;
     _refreshing = true;
     try {
@@ -315,7 +320,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
           [
             if (currentVersion?.isNotEmpty == true)
               'Installed version: $currentVersion.',
-            'The app will install the latest stable OpenCode release, refresh its model catalog, restart only the managed local server, and reconnect this profile.',
+            'The app will install OpenCode ${TermuxBridge.defaultOpenCodeVersion} — the release this app version is tested against — refresh its model catalog, restart only the managed local server, and reconnect this profile.',
             'The server will be briefly unavailable. Active generation should be stopped first.',
           ].join('\n\n'),
         ),
@@ -606,6 +611,49 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Nothing routes here off Android, but a deep link, a restored route, or
+    // a future entry point could. The screen says so plainly instead of
+    // presenting six steps that can never complete.
+    if (!platformCapabilities.supportsTermux) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('On-device setup')),
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Padding(
+              key: const Key('termux-setup-unsupported'),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.phonelink_off_rounded,
+                    size: 40,
+                    color: AppTheme.mutedOf(theme),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'On-device setup is Android only',
+                    style: theme.textTheme.titleMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'It drives Termux, which has no desktop equivalent. On '
+                    'this machine, run `opencode serve` yourself and add it '
+                    'as a server.',
+                    style: theme.textTheme.bodySmall!.copyWith(
+                      color: AppTheme.mutedOf(theme),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     return Scaffold(
       appBar: AppBar(title: const Text('On-device setup')),
       body: Center(
@@ -633,7 +681,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                 'The app installs OpenCode in a private Ubuntu environment, starts '
                 'an authenticated local server, and reconnects automatically.',
                 style: theme.textTheme.bodySmall!.copyWith(
-                  color: theme.hintColor,
+                  color: AppTheme.mutedOf(theme),
                 ),
               ),
               const SizedBox(height: 20),
@@ -774,7 +822,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                         'takes 10–15 minutes. You can leave this screen and '
                         'return — setup keeps running.',
                         style: theme.textTheme.bodySmall!.copyWith(
-                          color: theme.hintColor,
+                          color: AppTheme.mutedOf(theme),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -794,7 +842,10 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                           Icon(
                             Icons.check_circle_rounded,
                             size: 18,
-                            color: Colors.green.shade400,
+                            color: AppTheme.statusColor(
+                              Theme.of(context),
+                              AppStatusTone.ok,
+                            ),
                           ),
                           const SizedBox(width: 8),
                           const Expanded(
@@ -808,7 +859,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                             ? 'Version ${_status!.version} · $localUrl'
                             : localUrl,
                         style: theme.textTheme.bodySmall!.copyWith(
-                          color: theme.hintColor,
+                          color: AppTheme.mutedOf(theme),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -829,7 +880,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                           ),
                           OutlinedButton.icon(
                             onPressed: _busy ? null : _stopServer,
-                            icon: const Icon(Icons.stop_circle_outlined),
+                            icon: const Icon(AppIcons.stop),
                             label: Text(
                               _busy ? 'Stopping...' : 'Stop local server',
                             ),
@@ -866,7 +917,9 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                             ),
                             OutlinedButton(
                               onPressed: _busy ? null : _retry,
-                              child: const Text('Retry — resumes where setup left off'),
+                              child: const Text(
+                                'Retry — resumes where setup left off',
+                              ),
                             ),
                           ],
                         )
@@ -874,7 +927,9 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                         FilledButton.icon(
                           onPressed: _busy ? null : _retry,
                           icon: const Icon(Icons.refresh_rounded),
-                          label: const Text('Retry — resumes where setup left off'),
+                          label: const Text(
+                            'Retry — resumes where setup left off',
+                          ),
                         ),
                     ],
                   ),
@@ -905,7 +960,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
             alpha: .3,
           ),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: theme.dividerColor.withValues(alpha: .4)),
+          border: Border.all(color: AppTheme.hairline(theme)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -938,7 +993,10 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                             )
                           : Text(
                               '$n',
-                              style: TextStyle(fontSize: 12, color: foreground),
+                              style: TextStyle(
+                                fontSize: AppTheme.codeFontSize,
+                                color: foreground,
+                              ),
                             ),
                     );
                   },
@@ -1012,7 +1070,7 @@ class _LiveSetupTerminal extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: terminalBackground,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTheme.radiusControl),
         border: Border.all(color: overlay.withValues(alpha: .1)),
       ),
       child: Column(
@@ -1038,7 +1096,7 @@ class _LiveSetupTerminal extends StatelessWidget {
                   running ? 'LIVE OUTPUT' : 'LAST OUTPUT',
                   style: TextStyle(
                     color: overlay.withValues(alpha: .6),
-                    fontFamily: 'AppMono',
+                    fontFamily: AppTheme.monoFamily,
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.1,
@@ -1048,7 +1106,7 @@ class _LiveSetupTerminal extends StatelessWidget {
                 IconButton(
                   onPressed: onCopy,
                   tooltip: copyTooltip,
-                  icon: const Icon(Icons.copy_rounded, size: 16),
+                  icon: const Icon(AppIcons.copy, size: 16),
                   color: overlay.withValues(alpha: .7),
                   disabledColor: overlay.withValues(alpha: .24),
                   visualDensity: VisualDensity.compact,
@@ -1060,7 +1118,10 @@ class _LiveSetupTerminal extends StatelessWidget {
             child: Scrollbar(
               controller: controller,
               thumbVisibility: true,
-              child: SingleChildScrollView(
+              // This log pane draws its own thumb on every platform; without
+              // this the desktop scroll behaviour would draw a second one.
+              child: OwnScrollbar(
+                child: SingleChildScrollView(
                 controller: controller,
                 padding: const EdgeInsets.all(12),
                 child: SizedBox(
@@ -1069,12 +1130,13 @@ class _LiveSetupTerminal extends StatelessWidget {
                     visibleOutput,
                     style: TextStyle(
                       color: terminalText,
-                      fontFamily: 'AppMono',
-                      fontSize: 11,
+                      fontFamily: AppTheme.monoFamily,
+                      fontSize: AppTheme.captionFontSize,
                       height: 1.45,
                     ),
                   ),
                 ),
+              ),
               ),
             ),
           ),
@@ -1102,8 +1164,8 @@ class CmdPreview extends StatelessWidget {
       child: SelectableText(
         TermuxBridge.unlockCommand,
         style: theme.textTheme.bodySmall!.copyWith(
-          fontFamily: 'AppMono',
-          fontSize: 11,
+          fontFamily: AppTheme.monoFamily,
+          fontSize: AppTheme.captionFontSize,
         ),
       ),
     );

@@ -1,10 +1,10 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/models.dart';
+import '../platform/platform_capabilities.dart';
 
 /// Persists a compact recent-sessions snapshot for the Android home-screen
 /// widget and asks native to redraw it.
@@ -21,9 +21,7 @@ class WidgetSessionSnapshot {
     Future<void> Function()? refreshNative,
     bool? isAndroid,
   }) : _refreshNative = refreshNative ?? _refreshViaChannel,
-       _isAndroid =
-           isAndroid ??
-           (!kIsWeb && defaultTargetPlatform == TargetPlatform.android);
+       _isAndroid = isAndroid ?? platformCapabilities.supportsHomeWidget;
 
   /// Read by the native widget as `flutter.oc.widgetSessions`.
   static const prefsKey = 'oc.widgetSessions';
@@ -84,4 +82,54 @@ class WidgetSessionSnapshot {
     await prefs.setString(prefsKey, payload);
     await _refreshNative();
   }
+
+  /// Drops the snapshot when it belongs to [profileID], so removing a server
+  /// also removes the session titles its widget was still showing on the home
+  /// screen. A snapshot written before rows carried a profile has no
+  /// identifiable owner and is dropped too.
+  ///
+  /// The three outcomes are kept apart deliberately: "there was nothing of
+  /// yours to clear" and "the write refused" look identical to a caller that
+  /// only gets a bool, and a deletion flow has to tell the user the
+  /// difference.
+  ///
+  /// Runs on every platform: the stored payload is the privacy-relevant
+  /// artifact, and only the native redraw is Android-specific.
+  Future<WidgetSnapshotClear> clearForProfile(String profileID) async {
+    final raw = prefs.getString(prefsKey);
+    if (raw == null) return WidgetSnapshotClear.nothingToClear;
+    String? owner;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map) owner = decoded['profileID']?.toString() ?? '';
+    } catch (_) {
+      // Unreadable payload: it cannot be shown to be another profile's, so
+      // treat it as removable rather than leaving it behind.
+      owner = '';
+    }
+    if (owner == null || (owner.isNotEmpty && owner != profileID)) {
+      return WidgetSnapshotClear.nothingToClear;
+    }
+    try {
+      if (!await prefs.remove(prefsKey)) return WidgetSnapshotClear.failed;
+    } catch (_) {
+      return WidgetSnapshotClear.failed;
+    }
+    _lastWritten = null;
+    if (_isAndroid) await _refreshNative();
+    return WidgetSnapshotClear.cleared;
+  }
+}
+
+/// What [WidgetSessionSnapshot.clearForProfile] actually did.
+enum WidgetSnapshotClear {
+  /// No snapshot, or one belonging to another profile: nothing was at risk.
+  nothingToClear,
+
+  /// The profile's snapshot is gone from disk.
+  cleared,
+
+  /// A snapshot belonging to the profile is still on disk — the store
+  /// refused the write. The caller must not report the data as deleted.
+  failed,
 }

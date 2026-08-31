@@ -28,7 +28,7 @@ void main() {
       SharedPreferences.setMockInitialValues({
         'oc.profiles':
             '[{"id":"server-1","name":"Workstation",'
-            '"baseUrl":"https://server.example:4096","username":"eslam"}]',
+            '"baseUrl":"https://server.example:4096","username":"dev"}]',
         'oc.activeProfile': 'server-1',
       });
       final prefs = await SharedPreferences.getInstance();
@@ -43,7 +43,7 @@ void main() {
       expect(profiles.single.id, 'server-1');
       expect(profiles.single.name, 'Workstation');
       expect(profiles.single.baseUrl, 'https://server.example:4096');
-      expect(profiles.single.username, 'eslam');
+      expect(profiles.single.username, 'dev');
       expect(profiles.single.password, isEmpty);
       expect(profiles.single.requiresPasswordReentry, isTrue);
       expect(store.active, same(profiles.single));

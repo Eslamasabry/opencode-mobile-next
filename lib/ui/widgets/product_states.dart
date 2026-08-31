@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../api/mcp_oauth.dart' show McpOAuthCallbackException;
 import '../../api/opencode_api.dart';
 import '../../api/product_repository.dart';
+import '../../feedback/bug_report.dart';
+import '../app_theme.dart';
 
 /// Maps any thrown object onto copy that is safe to show users.
 ///
@@ -113,7 +117,7 @@ class ProductEmptyState extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(icon, size: 38, color: theme.hintColor),
+                    Icon(icon, size: 38, color: AppTheme.mutedOf(theme)),
                     const SizedBox(height: 14),
                     Text(title, style: theme.textTheme.titleMedium),
                     const SizedBox(height: 6),
@@ -121,7 +125,7 @@ class ProductEmptyState extends StatelessWidget {
                       message,
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.hintColor,
+                        color: AppTheme.mutedOf(theme),
                       ),
                     ),
                     if (actionLabel != null && onAction != null) ...[
@@ -179,6 +183,16 @@ class ProductErrorState extends StatelessWidget {
                     onPressed: onRetry,
                     child: const Text('Try again'),
                   ),
+                  // The failure surface is where a bug is actually
+                  // discovered, so the report affordance lives here too —
+                  // one implementation covering every screen that uses this
+                  // state, without adding chrome to any app bar.
+                  TextButton.icon(
+                    key: const ValueKey('product-error-report-bug'),
+                    onPressed: () => unawaited(openBugReport(context)),
+                    icon: const Icon(Icons.bug_report_outlined, size: 18),
+                    label: const Text('Report a bug'),
+                  ),
                 ],
               ),
             ),
@@ -219,14 +233,12 @@ class ProductInlineEmpty extends StatelessWidget {
         decoration: BoxDecoration(
           color: theme.colorScheme.surfaceContainerLow.withValues(alpha: .6),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: .5),
-          ),
+          border: Border.all(color: AppTheme.hairline(theme)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 22, color: theme.hintColor),
+            Icon(icon, size: 22, color: AppTheme.mutedOf(theme)),
             const SizedBox(height: 8),
             Text(
               title,
@@ -240,7 +252,7 @@ class ProductInlineEmpty extends StatelessWidget {
               message,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.hintColor,
+                color: AppTheme.mutedOf(theme),
               ),
             ),
             if (actionLabel != null && onAction != null) ...[
@@ -359,20 +371,29 @@ class SectionLabel extends StatelessWidget {
   final String text;
   final Widget? trailing;
 
-  const SectionLabel(this.text, {super.key, this.trailing});
+  /// Overrides the list-level inset for surfaces that already pad their own
+  /// content — sheets and cards — so those can reuse this label instead of
+  /// hand-rolling the same uppercase caption.
+  final EdgeInsetsGeometry? padding;
+
+  const SectionLabel(this.text, {super.key, this.trailing, this.padding});
+
+  /// The same label with no inset of its own, for already-padded contexts.
+  const SectionLabel.inline(this.text, {super.key, this.trailing})
+    : padding = const EdgeInsets.only(bottom: 8);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 18, 12, 6),
+      padding: padding ?? const EdgeInsets.fromLTRB(16, 18, 12, 6),
       child: Row(
         children: [
           Expanded(
             child: Text(
               text.toUpperCase(),
               style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.hintColor,
+                color: AppTheme.mutedOf(theme),
                 letterSpacing: 1.1,
               ),
             ),

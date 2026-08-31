@@ -1,5 +1,15 @@
 # Re-verification report — v2 migration claim + "all findings fixed" claim
 
+> **2026-08-30 re-check (HEAD `17a42bf`, 69 commits later):** analyzer clean,
+> **1021/1021 tests pass**. Lens 4 visual sweep landed (12/15 fixed), the
+> fix-regression cluster mostly landed (7/13), desktop Phase 1 + window
+> state + packaging + a Linux CI gate shipped, queue bounds + labelled
+> steer/queue shipped. **The High v2 `_selectLocation` flavor bug is back /
+> was lost in a merge** (`connection.dart:3320` still uses the v1 factory;
+> no flavor=v2 + saved-location test) — top action below. CI billing block
+> still stands (both workflows' own headers admit they have never run).
+> Details in the addendum at the bottom of this file.
+
 Report date: 2026-08-29. Branch `production/android-release-hardening` @
 `ff9f74e` (1.0.28+29). Re-verifies every finding from
 [`ui-feature-audit.md`](ui-feature-audit.md),
@@ -268,3 +278,88 @@ New issues:
    termux screen + route + servers entry, hide the desktop voice mic.
 7. Phase-4 v2-native features (export/import, staged revert, instructions,
    websearch, Termux `opencode2` flip) per the port plan.
+
+---
+
+## Addendum — 2026-08-30 re-check (HEAD `17a42bf`, 69 commits after this report)
+
+Gates: analyzer **clean**; **1021/1021 tests pass** (was 811).
+
+### What landed (verified)
+
+- **Lens 4 visual sweep (`6bba267`) — 12/15 FIXED**: new
+  `AppStatusTone`/`AppTheme.statusColor` (zero raw `Colors.green/orange`
+  left in `lib/`), `mutedOf` semantic role (`hintColor` 61→**0**),
+  `AppTheme.hairline`, `AppIcons` alias block (zero glyph synonyms), font
+  and radius stragglers swept, spacing stragglers gone, review hex greens
+  → `successOf`. Partial: V10 (two title re-derivations), V12 (two
+  hand-rolled labels), V13 (one `'AppMono'` literal). Open: V15
+  floating-surface recipes.
+- **Fix-regression cluster (`7287ab6`) — 7/13 FIXED**: R1 reasoning toggle
+  no longer persistently overwrites per-part choices, R3 text scale now
+  one-sided up to **2.5×**, R6, R8 (voice notices → shared states), R9
+  (44dp message-actions), R11 (all six raw-error snackbars), R12
+  (worktrees/settings through the funnel). R5 partial (attachment loss now
+  disclosed at selection time). Still open: R2 (short-transcript pill +
+  "N new below"), R4 (streaming message still re-parses per flush), R7
+  (flush still active-profile-only, chat-scoped announce), R10 (hunk bar
+  vs selection bar — now documented as deliberate), R13 (sheet
+  initialChildSize under keyboard).
+- **v2**: credential-in-URL helpers deleted (`transport.dart` — B6 fixed);
+  session-diff scope honestly labelled in review-handoff references
+  (B3 partial — the Review "Session" tab still shows the working-tree diff
+  on v2); fork anchor loss compensated in the composer (B5 partial).
+- **Desktop — Phase 1 effectively complete (`631fb16` merge)**: platform
+  capability seam (`lib/platform/platform_capabilities.dart`) with every
+  Termux surface + the `/termux-setup` route gated, pinned by tests; bridge
+  catches `MissingPluginException`; voice reports unavailable off-Android
+  and the chat mic is capability-gated (no more fake microphone).
+- **Desktop Phase 2/3 partially landed**: window size/position/maximized
+  persistence (versioned key, display-clamped, tested); packaging shipped
+  (`linux/packaging/` `.desktop` + hicolor icons + AppStream metainfo,
+  `scripts/package-linux.sh` → tarball + `.deb` + SHA256SUMS, contract
+  tests); **new `desktop-linux.yml` CI gate** (analyze, chunked serial
+  tests, release build + `ldd`, packaging, tag release job);
+  `docs/desktop.md` (honest experimental status, including "the window has
+  never been seen on a display").
+- **Queue + composer**: bounded offline queue (50 entries / 3×20 MiB /
+  14 days, eviction notice — `e91f20e`); labelled **Steer/Queue** delivery
+  control replacing the hidden long-press (`c80652b`).
+- Also since yesterday: session-first Workspace, unified Activity surface
+  (Mission Control + Requests), simplified composer, review-to-prompt
+  handoff, an automated accessibility gate (`f24643e`), public-launch
+  governance (fail-closed profile deletion, server local-data deletion,
+  non-affiliation disclaimer, regenerated notices), IPv6 loopback
+  normalization.
+
+### Still open after the 08-30 wave
+
+1. ~~**HIGH — the v2 `_selectLocation` flavor bug survived**~~ →
+   **RESOLVED 2026-08-31 (`0ce258c "Restore the v2 rescope fix and guard it
+   at the source"`).** Timeline: fix authored `ceb3fe2` → its test
+   deliberately dropped `41dcddb` (unsound fake that hung the suite; the
+   product fix stood) → the fix itself lost in merge `e44ccda` (caught by
+   this report's 08-30 re-check) → re-landed with
+   `test/connection_transport_factory_guard_test.dart` and an in-code note
+   that the fix "has already been lost to a merge once". `_apiFactory` now
+   has no callers outside the flavor-aware builder; the guard test passes.
+   Not ignored: only the test drop was deliberate, and it was documented.
+   (Validated 2026-08-31 after the question "was it ignored on purpose" —
+   see the git forensics in that session.)
+2. **CI billing block still stands** — both `android-quality.yml` and
+   `desktop-linux.yml` headers state they have never run (account payments
+   failed). The new Linux gate is unproven in CI.
+3. B2 `switchModel`/`switchAgent` re-issued on every send (clobbers other
+   clients' selections; 2 extra round-trips).
+4. B4 two concurrent `/api/event` subscriptions (the code comment now says
+   "v2 has a single stream" while opening two).
+5. B7 password field still unconditional in the editor (copy softened).
+6. drift/SQLite, share intent, TTS, TileService/shortcuts.xml, desktop
+   Ctrl+K/context menus/scrollbars: all still absent (unchanged priorities).
+7. V15 floating surfaces; R2/R4/R7/R13 residuals; two fresh small leaks —
+   review full-page error renders `error.toString()`
+   (`review_workspace.dart:1918–1929`) and `form_renderer._messageOf`
+   hand-strips only `"Exception: "`.
+8. docs/desktop.md drift: voice gate is now
+   `platformCapabilities.supportsVoice` (not `Platform.isAndroid`), and
+   Ctrl+Enter exists (doc says it doesn't).

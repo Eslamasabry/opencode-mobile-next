@@ -211,7 +211,7 @@ class _EmptyTranscript extends StatelessWidget {
                             '❯',
                             style: theme.textTheme.headlineSmall!.copyWith(
                               color: theme.colorScheme.primary,
-                              fontFamily: 'AppMono',
+                              fontFamily: AppTheme.monoFamily,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -419,9 +419,7 @@ class TranscriptMarker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final hairline = Expanded(
-      child: Divider(color: theme.dividerColor.withValues(alpha: .35)),
-    );
+    final hairline = Expanded(child: Divider(color: AppTheme.hairline(theme)));
     final pill = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: ShapeDecoration(
@@ -457,9 +455,7 @@ class TranscriptMarker extends StatelessWidget {
           const SizedBox(width: 8),
           detail == null ? pill : Tooltip(message: detail!, child: pill),
           const SizedBox(width: 8),
-          Expanded(
-            child: Divider(color: theme.dividerColor.withValues(alpha: .35)),
-          ),
+          Expanded(child: Divider(color: AppTheme.hairline(theme))),
         ],
       ),
     );
@@ -544,7 +540,9 @@ class _TranscriptNoticeState extends State<TranscriptNotice> {
                             if (widget.headerMono case final mono?)
                               TextSpan(
                                 text: ' $mono',
-                                style: const TextStyle(fontFamily: 'AppMono'),
+                                style: const TextStyle(
+                                  fontFamily: AppTheme.monoFamily,
+                                ),
                               ),
                           ],
                         ),
@@ -672,11 +670,7 @@ class V2TranscriptRow extends StatelessWidget {
             part.filename ?? 'System update',
             null,
           ),
-          'skill' => (
-            Icons.electric_bolt_outlined,
-            'Skill ·',
-            part.filename ?? part.text,
-          ),
+          'skill' => (AppIcons.run, 'Skill ·', part.filename ?? part.text),
           _ => (Icons.dns_outlined, part.filename ?? 'Server message', null),
         };
         return TranscriptNotice(
@@ -975,7 +969,7 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: .28),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: .35)),
+        border: Border.all(color: AppTheme.hairline(theme)),
       ),
       child: Column(
         children: [
@@ -990,7 +984,7 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(minHeight: 48),
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 7, 8, 7),
+                  padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
                   child: Row(
                     children: [
                       Icon(
@@ -1005,7 +999,7 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(width: 7),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           summary,
@@ -1058,16 +1052,13 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
           if (_expanded)
             Column(
               children: [
-                Divider(
-                  height: 1,
-                  color: theme.dividerColor.withValues(alpha: .35),
-                ),
+                Divider(height: 1, color: AppTheme.hairline(theme)),
                 for (var index = 0; index < widget.parts.length; index++) ...[
                   if (index > 0)
                     Divider(
                       height: 1,
                       indent: 34,
-                      color: theme.dividerColor.withValues(alpha: .28),
+                      color: AppTheme.hairline(theme),
                     ),
                   ToolCard(
                     key: ValueKey(
@@ -1178,6 +1169,11 @@ class _MessageView extends StatelessWidget {
   final bool showTimestamp;
   final bool highlighted;
   final VoidCallback? onLongPress;
+
+  /// Desktop right-click menu for this message. Built on click so it reflects
+  /// current capabilities, and it carries the same actions as the long-press
+  /// sheet [onLongPress] opens.
+  final List<ContextMenuAction> Function()? contextActions;
   final ToolOutputFileLoader filePreviewLoader;
   final ToolOutputFileAction onAttachFile;
   final ToolOutputFileAction onDownloadFile;
@@ -1191,6 +1187,7 @@ class _MessageView extends StatelessWidget {
     required this.showTimestamp,
     this.highlighted = false,
     this.onLongPress,
+    this.contextActions,
     required this.filePreviewLoader,
     required this.onAttachFile,
     required this.onDownloadFile,
@@ -1215,7 +1212,7 @@ class _MessageView extends StatelessWidget {
 
     final bubbleWidthCap = MediaQuery.of(context).size.width * .88;
 
-    return GestureDetector(
+    final body = GestureDetector(
       onLongPress: onLongPress,
       behavior: HitTestBehavior.translucent,
       // The long-press menu is a pointer shortcut for actions that remain
@@ -1316,10 +1313,13 @@ class _MessageView extends StatelessWidget {
                             key: ValueKey('message-actions-${m.info.id}'),
                             customBorder: const StadiumBorder(),
                             onTap: onLongPress,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 6,
+                            // The glyph stays quiet in the meta row, but the
+                            // target itself meets the 44dp floor the rest of
+                            // the product enforces.
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                minWidth: 44,
+                                minHeight: 44,
                               ),
                               child: Icon(
                                 Icons.more_horiz_rounded,
@@ -1348,6 +1348,9 @@ class _MessageView extends StatelessWidget {
         ),
       ),
     );
+    final menu = contextActions;
+    if (menu == null) return body;
+    return ContextMenuRegion(actions: menu, child: body);
   }
 
   static String _fmtTokens(int n) {
@@ -1483,17 +1486,15 @@ class _AttachmentPart extends StatelessWidget {
             ? 'Project reference @$_filename'
             : 'Preview attachment',
         child: InkWell(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppTheme.radiusControl),
           onTap: reference ? null : openPreview,
           child: Container(
             margin: const EdgeInsets.only(bottom: 4),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
               color: theme.colorScheme.surface.withValues(alpha: .5),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: theme.colorScheme.outlineVariant.withValues(alpha: .7),
-              ),
+              borderRadius: BorderRadius.circular(AppTheme.radiusControl),
+              border: Border.all(color: AppTheme.hairline(theme)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -1504,7 +1505,7 @@ class _AttachmentPart extends StatelessWidget {
                       : Icons.attach_file_rounded,
                   size: 17,
                 ),
-                const SizedBox(width: 7),
+                const SizedBox(width: 8),
                 Flexible(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -1591,9 +1592,14 @@ class _ReasoningState extends State<_Reasoning> {
   void didUpdateWidget(covariant _Reasoning oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.expanded != widget.expanded) {
-      // The transcript-wide toggle overrides any per-part choice.
+      // The transcript-wide toggle sets a new default. Per-part overrides are
+      // dropped rather than overwritten with the toggle's value: stamping the
+      // store meant one flip permanently erased every per-part choice in the
+      // session, and flipping back could not restore them.
+      if (widget.expansionKey case final key?) {
+        widget.expansionStore?.remove(key);
+      }
       _open = widget.expanded;
-      _persist(_open);
     }
   }
 
@@ -1817,8 +1823,8 @@ class _SharedSessionBanner extends StatelessWidget {
                       url,
                       maxLines: 1,
                       style: const TextStyle(
-                        fontFamily: 'AppMono',
-                        fontSize: 11,
+                        fontFamily: AppTheme.monoFamily,
+                        fontSize: AppTheme.captionFontSize,
                       ),
                     ),
                   ),
@@ -1828,7 +1834,7 @@ class _SharedSessionBanner extends StatelessWidget {
             IconButton(
               tooltip: 'Copy share link',
               onPressed: () => Clipboard.setData(ClipboardData(text: url)),
-              icon: const Icon(Icons.copy_rounded),
+              icon: const Icon(AppIcons.copy),
             ),
             TextButton(onPressed: onStop, child: const Text('Stop sharing')),
           ],
@@ -2094,8 +2100,8 @@ class _InboxSendBubble extends StatelessWidget {
       icon: !_isUser
           ? Icons.auto_awesome_outlined
           : _steering
-          ? Icons.bolt_rounded
-          : Icons.hourglass_bottom_rounded,
+          ? AppIcons.run
+          : AppIcons.queue,
       label: label,
       semanticsLabel: 'Pending send. $label',
       onTap: _isUser ? () => _showActions(context) : null,
@@ -2115,7 +2121,7 @@ class _InboxSendBubble extends StatelessWidget {
             if (_steering)
               ListTile(
                 key: const ValueKey('inbox-action-queue'),
-                leading: const Icon(Icons.hourglass_bottom_rounded),
+                leading: const Icon(AppIcons.queue),
                 title: const Text('Wait for this run'),
                 subtitle: const Text('Deliver after the current run ends'),
                 onTap: () {
@@ -2126,7 +2132,7 @@ class _InboxSendBubble extends StatelessWidget {
             else
               ListTile(
                 key: const ValueKey('inbox-action-steer'),
-                leading: const Icon(Icons.bolt_rounded),
+                leading: const Icon(AppIcons.run),
                 title: const Text('Send now'),
                 subtitle: const Text('Steers the current run'),
                 onTap: () {

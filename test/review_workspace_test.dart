@@ -500,4 +500,70 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('2 of 3 viewed'), findsOneWidget);
   });
+
+  testWidgets('renders a real multi-hunk git patch with true line numbers', (
+    tester,
+  ) async {
+    // Verbatim `git diff` output, headers and all — the shape a server
+    // actually returns, not a hand-trimmed hunk. Regenerate with:
+    //   git diff --unified=1 -- <file>
+    const realPatch =
+        'diff --git a/lib/sample.dart b/lib/sample.dart\n'
+        'index 1bbdd67..2409783 100644\n'
+        '--- a/lib/sample.dart\n'
+        '+++ b/lib/sample.dart\n'
+        '@@ -12,3 +12,4 @@ class Sample {\n'
+        '   final int id;\n'
+        '-  final String name;\n'
+        '+  final String label;\n'
+        '+  final bool active;\n'
+        '   Sample(this.id);\n'
+        '@@ -340,2 +341,3 @@ void main() {\n'
+        '   runApp(const App());\n'
+        '+  debugPrint(\'started\');\n';
+
+    await _pumpReview(
+      tester,
+      () async => [
+        FileDiff.fromJson({
+          'file': 'lib/sample.dart',
+          'patch': realPatch,
+          'additions': 3,
+          'deletions': 1,
+          'status': 'modified',
+        }),
+      ],
+    );
+
+    // Both hunk headers survive, so navigation has real anchors.
+    expect(find.textContaining('@@ -12,3 +12,4 @@'), findsOneWidget);
+    expect(find.textContaining('@@ -340,2 +341,3 @@'), findsOneWidget);
+
+    // Real changed lines render as themselves.
+    expect(find.text('-  final String name;'), findsOneWidget);
+    expect(find.text('+  final String label;'), findsOneWidget);
+    expect(find.text('+  final bool active;'), findsOneWidget);
+
+    // Git's own headers start with - and + but are not edits. They render
+    // as metadata rows: shown for context, never numbered, never selectable,
+    // and never counted as changes.
+    expect(find.text('--- a/lib/sample.dart'), findsOneWidget);
+    expect(find.text('+++ b/lib/sample.dart'), findsOneWidget);
+    expect(find.text('diff --git a/lib/sample.dart b/lib/sample.dart'),
+        findsOneWidget);
+    // The header count would be +2/-1 wrong if those markers were read as
+    // edits; the strip reports the server's own totals for one file.
+    expect(find.text('1 changed file'), findsOneWidget);
+
+    // Content from the second hunk is really there — it just starts below
+    // the fold, so scroll to it. That the list virtualizes at all is the
+    // point: a long patch does not build every row up front.
+    final secondHunkLine = find.textContaining('debugPrint');
+    await tester.scrollUntilVisible(
+      secondHunkLine,
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(secondHunkLine, findsOneWidget);
+  });
 }

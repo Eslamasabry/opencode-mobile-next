@@ -208,13 +208,15 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             if (_error != null && projects == null)
               ProductErrorState(message: _error!, onRetry: _load)
             else if (projects?.isEmpty == true)
+              // Coherent with the Workspace empty state: a fresh server can
+              // still host a first session in its own default directory.
               const ProductEmptyState(
                 icon: Icons.folder_off_outlined,
                 title: 'No projects opened',
                 message:
                     'Open a project on this OpenCode server, then refresh '
-                    'here. You can still start a session from Workspace — '
-                    'it runs in the server’s default directory.',
+                    'here — or ask from Workspace to start a session in the '
+                    'server’s default directory.',
               )
             else if (visible.isEmpty)
               const ProductEmptyState(

@@ -398,16 +398,30 @@ void main() {
       find.byKey(const ValueKey('location-recovery-notice')),
       findsOneWidget,
     );
-    expect(find.byKey(const ValueKey('project-health-entry')), findsOneWidget);
+    // Sessions come first now (audit UX-101): search is reachable before the
+    // single management route at the foot of the list.
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('search-all-sessions')),
       160,
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.byKey(const ValueKey('search-all-sessions')), findsOneWidget);
-    await tester.ensureVisible(
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -2000));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('manage-project-entry')));
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(
       find.byKey(const ValueKey('project-health-entry')),
+      160,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('manage-project-list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
     );
+    expect(find.byKey(const ValueKey('project-health-entry')), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('project-health-entry')));
     await tester.pumpAndSettle();
 

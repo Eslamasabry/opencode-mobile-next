@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/background/live_background.dart';
@@ -194,5 +196,92 @@ void main() {
     expect(target?.kind, CodingAlertKind.complete);
     expect(target?.sessionID, 'session-1');
     expect(target?.profileID, 'server-1');
+  });
+
+  test('an Android foreground-service timeout turns live mode off', () async {
+    SharedPreferences.setMockInitialValues({
+      BackgroundLiveController.preferenceKey: true,
+    });
+    final preferences = await SharedPreferences.getInstance();
+    final controller = BackgroundLiveController(
+      preferences: preferences,
+      invoke: (method, [arguments]) async => {
+        'enabled': true,
+        'active': true,
+        'notificationGranted': true,
+        'batteryOptimizationIgnored': false,
+      },
+    );
+    addTearDown(controller.dispose);
+    await controller.restore();
+    expect(controller.enabled, isTrue);
+    expect(controller.active, isTrue);
+
+    var notifications = 0;
+    controller.addListener(() => notifications++);
+
+    // Android 15 stopped the service. Before this event existed the
+    // preference stayed true over a dead service, so the switch read "on"
+    // while nothing was connected.
+    controller.handleNativeTimeout(const {
+      'enabled': false,
+      'active': false,
+      'reason': 'systemTimeout',
+    });
+
+    expect(controller.enabled, isFalse);
+    expect(controller.active, isFalse);
+    expect(controller.stoppedByAndroidTimeout, isTrue);
+    expect(notifications, 1, reason: 'the UI has to hear about it at once');
+    // Nothing failed, so this is not an error the user can retry away.
+    expect(controller.lastError, isNull);
+    await Future<void>.delayed(Duration.zero);
+    expect(
+      preferences.getBool(BackgroundLiveController.preferenceKey),
+      isFalse,
+      reason: 'the persisted preference must not outlive the service',
+    );
+  });
+
+  test('turning live mode back on clears the timeout notice', () async {
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+    final controller = BackgroundLiveController(
+      preferences: preferences,
+      invoke: (method, [arguments]) async => {
+        'enabled': method == 'enable',
+        'active': method == 'enable',
+        'notificationGranted': true,
+        'batteryOptimizationIgnored': false,
+      },
+    );
+    addTearDown(controller.dispose);
+
+    controller.handleNativeTimeout(const {'reason': 'systemTimeout'});
+    expect(controller.stoppedByAndroidTimeout, isTrue);
+
+    expect(await controller.setEnabled(true), isTrue);
+    expect(controller.stoppedByAndroidTimeout, isFalse);
+  });
+
+  test('the timeout method name matches the native contract', () {
+    // BackgroundConnectionService.onTimeout pushes this exact name; a
+    // rename on either side silently stops the event from arriving.
+    expect(
+      BackgroundLiveController.timeoutMethod,
+      'backgroundServiceTimeout',
+    );
+    final kotlin = File(
+      'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/'
+      'BackgroundConnectionService.kt',
+    ).readAsStringSync();
+    expect(
+      kotlin,
+      contains(
+        'const val METHOD_TIMEOUT = '
+        '"${BackgroundLiveController.timeoutMethod}"',
+      ),
+    );
+    expect(kotlin, contains('notifyDartOfTimeout()'));
   });
 }

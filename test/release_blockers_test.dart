@@ -13,9 +13,9 @@ import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/about_screen.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
-import 'package:opencode_mobile/ui/screens/requests_screen.dart';
+import 'package:opencode_mobile/ui/screens/activity_screen.dart';
 import 'package:opencode_mobile/ui/screens/session_destination_sheet.dart';
-import 'package:opencode_mobile/ui/widgets/markdown.dart';
+import 'package:opencode_mobile/ui/widgets/external_link.dart';
 import 'package:opencode_mobile/ui/widgets/tool_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -150,21 +150,21 @@ void main() {
   test('release URL policy permits only loopback HTTP', () {
     expect(validateServerProfileUrl('http://localhost:4096'), isNull);
     expect(validateServerProfileUrl('http://127.0.0.1:4096'), isNull);
-    expect(validateServerProfileUrl('https://192.168.1.4:4096'), isNull);
+    expect(validateServerProfileUrl('https://192.0.2.4:4096'), isNull);
     expect(
       validateServerProfileUrl('devbox.local:4096'),
       contains('Include https://'),
     );
     expect(
       validateServerProfileUrl(
-        'http://192.168.1.4:4096',
+        'http://192.0.2.4:4096',
         username: 'opencode',
         password: 'secret',
       ),
       contains('Basic credentials'),
     );
     expect(
-      validateServerProfileUrl('http://192.168.1.4:4096'),
+      validateServerProfileUrl('http://192.0.2.4:4096'),
       contains('HTTP is allowed only'),
     );
     expect(
@@ -172,6 +172,45 @@ void main() {
       contains('Remove the path'),
     );
     expect(validateServerProfileUrl('https://server.example:4096/'), isNull);
+  });
+
+  test('IPv6 loopback is loopback everywhere', () {
+    // `[::1]` is this device as much as `127.0.0.1` is, and the three
+    // loopback checks used to disagree about it. HTTP to it is allowed...
+    expect(validateServerProfileUrl('http://[::1]:4096'), isNull);
+    expect(validateServerProfileUrl('http://[::1]'), isNull);
+    // ...and every other IPv6 address is still remote.
+    expect(
+      validateServerProfileUrl('http://[2001:db8::1]:4096'),
+      contains('HTTP is allowed only'),
+    );
+    expect(validateServerProfileUrl('https://[2001:db8::1]:4096'), isNull);
+    // The message names the form the user has to type.
+    expect(
+      validateServerProfileUrl('http://[2001:db8::1]:4096'),
+      contains('[::1]'),
+    );
+    expect(isLoopbackHost('::1'), isTrue);
+    expect(isLoopbackHost('::2'), isFalse);
+  });
+
+  test('bare IPv6 addresses normalize into usable URLs', () {
+    // Splitting on ':' read the host of `[::1]:4096` as '[', so IPv6
+    // loopback was silently sent to HTTPS, which the local server does not
+    // serve.
+    expect(normalizeServerProfileUrl('[::1]:4096'), 'http://[::1]:4096');
+    expect(normalizeServerProfileUrl('[::1]'), 'http://[::1]');
+    // An unbracketed literal gains brackets: `http://::1` does not parse.
+    expect(normalizeServerProfileUrl('::1'), 'http://[::1]');
+    expect(Uri.parse(normalizeServerProfileUrl('::1')).host, '::1');
+    expect(
+      normalizeServerProfileUrl('[2001:db8::1]:4096'),
+      'https://[2001:db8::1]:4096',
+    );
+    expect(normalizeServerProfileUrl('fe80::1'), 'https://[fe80::1]');
+    // And the IPv4 and hostname behavior is unchanged.
+    expect(normalizeServerProfileUrl('127.0.0.1:4096'), 'http://127.0.0.1:4096');
+    expect(normalizeServerProfileUrl(':4096'), ':4096');
   });
 
   test('Android cleartext and launch resources are release-safe', () {
@@ -189,6 +228,9 @@ void main() {
     expect(network, contains('<base-config cleartextTrafficPermitted="false"'));
     expect(network, contains('>localhost</domain>'));
     expect(network, contains('>127.0.0.1</domain>'));
+    // Every host the Dart layer will speak HTTP to has to be here too, or
+    // Android blocks the connect after the app has already allowed it.
+    expect(network, contains('>::1</domain>'));
     expect(network, isNot(contains('192.168.')));
     expect(launch, contains('@color/launch_background'));
     expect(launch, isNot(contains('@android:color/white')));
@@ -231,10 +273,10 @@ void main() {
 
   test('Android background coding alerts are private and actionable', () {
     final activity = File(
-      'android/app/src/main/kotlin/ai/opencode/opencode_mobile/MainActivity.kt',
+      'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/MainActivity.kt',
     ).readAsStringSync();
     final service = File(
-      'android/app/src/main/kotlin/ai/opencode/opencode_mobile/'
+      'android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/'
       'BackgroundConnectionService.kt',
     ).readAsStringSync();
 
@@ -335,11 +377,11 @@ void main() {
               children: [
                 TextButton(
                   onPressed: () =>
-                      openMarkdownExternalLink(context, 'intent://steal'),
+                      openExternalLink(context, 'intent://steal'),
                   child: const Text('Blocked'),
                 ),
                 TextButton(
-                  onPressed: () => openMarkdownExternalLink(
+                  onPressed: () => openExternalLink(
                     context,
                     'http://docs.example/path',
                     launcher: (uri) async {
@@ -431,7 +473,7 @@ void main() {
       );
       addTearDown(controller.dispose);
       await tester.pumpWidget(
-        _scaledApp(RequestsScreen(controller: controller), bottomInset: 96),
+        _scaledApp(ActivityScreen(controller: controller), bottomInset: 96),
       );
       await tester.pumpAndSettle();
       await tester.tap(find.text('Deployment'));
@@ -458,10 +500,18 @@ void main() {
     await tester.pumpAndSettle();
     final send = find.byTooltip('Send');
     expect(send, findsOneWidget);
-    expect(find.byTooltip('Attach file'), findsOneWidget);
-    expect(find.byKey(const Key('voice-input-button')), findsOneWidget);
     expect(find.byKey(const Key('chat-composer-surface')), findsOneWidget);
-    expect(find.byKey(const Key('command-launcher-button')), findsOneWidget);
+    // UX-P0-03: Commands, Attach, and Voice collapsed into one leading
+    // tools button; all three stay reachable from its sheet.
+    final tools = find.byKey(const Key('composer-tools-button'));
+    expect(tools, findsOneWidget);
+    await tester.tap(tools);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('composer-tool-commands')), findsOneWidget);
+    expect(find.byKey(const Key('composer-tool-attach')), findsOneWidget);
+    expect(find.byKey(const Key('composer-tool-voice')), findsOneWidget);
+    await tester.tapAt(const Offset(4, 4));
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('chat-workbench')), findsNothing);
     final sendButton = find.byKey(const Key('chat-send-button'));
     expect(tester.widget<IconButton>(sendButton).onPressed, isNull);
@@ -647,10 +697,29 @@ void main() {
     expect(find.text('About and open source notices'), findsOneWidget);
     expect(find.text('Privacy Policy'), findsOneWidget);
     expect(find.text('Where your data goes'), findsOneWidget);
+
+    // Upstream asks third-party projects that use the OpenCode name to say
+    // plainly that they are not the official project. It has to be on the tab
+    // the reader lands on, not only behind a tap.
+    expect(find.byKey(const Key('about-non-affiliation')), findsOneWidget);
+    expect(find.text(nonAffiliationDisclaimer), findsOneWidget);
+    expect(
+      nonAffiliationDisclaimer,
+      contains('not built, maintained, endorsed by, or affiliated with'),
+    );
+
     await tester.tap(find.text('Open source'));
     await tester.pumpAndSettle();
     expect(find.text('Third-Party Notices'), findsOneWidget);
     expect(find.text('sherpa-onnx'), findsWidgets);
+    expect(find.byKey(const Key('about-non-affiliation')), findsOneWidget);
+
+    // The same sentence is the public README's opening claim, so the two
+    // cannot drift apart.
+    final readme = File('README.md')
+        .readAsStringSync()
+        .replaceAll(RegExp(r'[>\s]+'), ' ');
+    expect(readme, contains(nonAffiliationDisclaimer));
   });
 
   testWidgets('offline banner states that displayed data may be stale', (

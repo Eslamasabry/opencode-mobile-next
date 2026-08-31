@@ -4,45 +4,52 @@ import 'dart:io' show Platform;
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:window_manager/window_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'background/live_background.dart';
+import 'desktop/window_icon.dart';
+import 'desktop/window_state.dart';
 import 'diagnostics/app_diagnostics.dart';
 import 'l10n/app_localizations.dart';
+import 'platform/platform_capabilities.dart';
 import 'state/connection.dart';
 import 'state/profiles.dart';
 import 'update/desktop_release_check.dart';
 import 'update/shorebird_update_notice.dart';
 import 'ui/app_theme.dart';
+import 'ui/desktop/desktop_interaction.dart';
+import 'ui/desktop/shortcuts.dart';
 import 'ui/theme_packs.dart';
 import 'ui/navigation/chat_route.dart';
+import 'ui/screens/settings_screen.dart';
+import 'ui/widgets/product_states.dart' show productErrorText;
 import 'ui/screens/guide_screen.dart';
 import 'ui/screens/about_screen.dart';
 import 'ui/screens/home_screen.dart';
 import 'ui/screens/servers_screen.dart';
 import 'ui/screens/chat_screen.dart';
-import 'ui/screens/requests_screen.dart';
+import 'ui/screens/activity_screen.dart';
 import 'ui/screens/termux_setup_screen.dart';
 import 'ui/screens/app_diagnostics_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (!kIsWeb && (Platform.isLinux || Platform.isWindows || Platform.isMacOS)) {
-    // Desktop windows get a sane default and floor; Android never reaches
-    // these calls.
-    await windowManager.ensureInitialized();
-    const options = WindowOptions(
-      size: Size(900, 700),
-      minimumSize: Size(480, 600),
-      title: 'OpenCode',
-    );
-    unawaited(
-      windowManager.waitUntilReadyToShow(options, () async {
-        await windowManager.show();
-        await windowManager.focus();
-      }),
-    );
+    // Restores the remembered size, position and maximized state, clamped to
+    // a display that still exists, and saves it again on close. Android never
+    // reaches this call. See lib/desktop/window_state.dart.
+    //
+    // The one platform branch that deliberately stays on dart:io rather than
+    // PlatformCapabilities: this is about the process that is actually
+    // running — whether a native window exists to size — not about a feature
+    // a test needs to pump both ways. `main` is never entered by the suite,
+    // so routing it through an overridable seam would only add a way for a
+    // stray override to leave a real desktop window unshown.
+    //
+    // The icon is applied after, not inside: setUpDesktopWindow completes
+    // only once waitUntilReadyToShow has shown and focused the window, and
+    // GTK needs a realised window to hang an icon on.
+    unawaited(setUpDesktopWindow().then((_) => applyDesktopWindowIcon()));
   }
   final diagnostics = AppDiagnosticsController();
   installAppErrorCapture(diagnostics);
@@ -206,6 +213,9 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
   late final AppUpdateService _updateService;
   final _navigatorKey = GlobalKey<NavigatorState>();
   final _messengerKey = GlobalKey<ScaffoldMessengerState>();
+  // Desktop only: the shell shortcut registry. Surfaces claim intents through
+  // it, and the Ctrl+K launcher dispatches the same intents the keyboard does.
+  final _shortcutSignals = AppShortcutSignals();
   bool _codingAlertRouteScheduled = false;
 
   @override
@@ -214,7 +224,13 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
     unawaited(_harvestDynamicColors());
     _controller = ref.read(connProvider);
     _controller.addListener(_controllerChanged);
-    _updateService = widget.updateService ?? ShorebirdAppUpdateService();
+    // Only the Android build is Shorebird-released; desktop gets its update
+    // news from the GitHub release check in DesktopReleaseNotice below.
+    _updateService =
+        widget.updateService ??
+        (platformCapabilities.supportsCodePush
+            ? ShorebirdAppUpdateService()
+            : const UnavailableAppUpdateService());
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_controller.restoreBackgroundLiveMode());
@@ -270,7 +286,7 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
       if (target.kind == CodingAlertKind.question) {
         navigator.push(
           MaterialPageRoute<void>(
-            builder: (_) => RequestsScreen(
+            builder: (_) => ActivityScreen(
               controller: _controller,
               initialQuestionSessionID: target.sessionID,
             ),
@@ -284,6 +300,100 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
         ),
       );
     });
+  }
+
+  // ------------------------------------------------------------------
+  // Desktop shortcut layer (no-op on Android: AppShortcuts passes through).
+  // ------------------------------------------------------------------
+
+  Future<void> _startNewSession() async {
+    final navigator = _navigatorKey.currentState;
+    if (navigator == null) return;
+    try {
+      final session = await _controller.createSession();
+      await navigator.pushNamed(
+        '/chat/${session.id}',
+        arguments: const ChatRouteArguments.newlyCreated(),
+      );
+    } catch (error) {
+      _messengerKey.currentState
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(productErrorText(error))));
+    }
+  }
+
+  void _openSettings() {
+    _navigatorKey.currentState?.push(
+      MaterialPageRoute<void>(
+        builder: (_) => SettingsScreen(controller: _controller),
+      ),
+    );
+  }
+
+  List<DesktopCommand> _shellCommands(BuildContext context) {
+    final mod = shortcutModifierLabel;
+    void go(int index) =>
+        _shortcutSignals.dispatch(SelectDestinationIntent(index));
+    return [
+      DesktopCommand(
+        label: 'New session',
+        icon: Icons.add_rounded,
+        hint: 'Start a chat in the active project',
+        keys: '$mod + N',
+        onInvoke: () => unawaited(_startNewSession()),
+      ),
+      DesktopCommand(
+        label: 'Workspace',
+        icon: Icons.workspaces_outline,
+        hint: 'Recent sessions and the active project',
+        keys: '$mod + 1',
+        onInvoke: () => go(0),
+      ),
+      DesktopCommand(
+        label: 'Files',
+        icon: Icons.folder_outlined,
+        hint: 'Browse the project tree',
+        keys: '$mod + 2',
+        onInvoke: () => go(1),
+      ),
+      DesktopCommand(
+        label: 'Activity',
+        icon: Icons.notifications_outlined,
+        hint: 'Permissions, questions, and forms',
+        keys: '$mod + 3',
+        onInvoke: () => go(2),
+      ),
+      DesktopCommand(
+        label: 'More',
+        icon: Icons.more_horiz_rounded,
+        hint: 'Models, providers, terminal, settings',
+        keys: '$mod + 4',
+        onInvoke: () => go(3),
+      ),
+      DesktopCommand(
+        label: 'Settings',
+        icon: Icons.settings_outlined,
+        keys: '$mod + ,',
+        onInvoke: _openSettings,
+      ),
+      DesktopCommand(
+        label: 'Keyboard shortcuts',
+        icon: Icons.keyboard_outlined,
+        keys: '$mod + /',
+        onInvoke: () => unawaited(showShortcutsHelp(context)),
+      ),
+      DesktopCommand(
+        label: 'Refresh sessions',
+        icon: Icons.refresh_rounded,
+        onInvoke: () => unawaited(_controller.refreshSessions()),
+      ),
+      DesktopCommand(
+        label: 'Diagnostics',
+        icon: Icons.bug_report_outlined,
+        hint: 'Recent errors and connection detail',
+        onInvoke: () => _navigatorKey.currentState?.pushNamed('/debug'),
+      ),
+    ];
   }
 
   @override
@@ -301,24 +411,41 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
             navigatorKey: _navigatorKey,
             scaffoldMessengerKey: _messengerKey,
             builder: (context, child) {
-              // Global text-scale safety net: honor the system setting up to
-              // 2.0x so unguarded screens cannot overflow at extreme scales.
-              // Screens with their own tighter clamps still apply them on top.
+              // Global text-scale safety net: the system setting passes
+              // through untouched below the ceiling — including scales under
+              // 1.0, which users pick deliberately — and only the extreme top
+              // end is capped so a runaway scale cannot break the shell.
               final scale = MediaQuery.textScalerOf(context).scale(1);
               return MediaQuery(
                 data: MediaQuery.of(context).copyWith(
-                  textScaler: TextScaler.linear(scale.clamp(1.0, 2.0)),
+                  textScaler: TextScaler.linear(
+                    scale > AppTheme.maxTextScale
+                        ? AppTheme.maxTextScale
+                        : scale,
+                  ),
                 ),
                 child: ShorebirdUpdateNotice(
                   service: _updateService,
                   messengerKey: _messengerKey,
                   child: DesktopReleaseNotice(
                     messengerKey: _messengerKey,
-                    child: child ?? const SizedBox.shrink(),
+                    // Desktop only. On Android this returns its child
+                    // untouched, so the touch product gains no key handling.
+                    child: AppShortcuts(
+                      navigatorKey: _navigatorKey,
+                      signals: _shortcutSignals,
+                      handlers: AppShortcutHandlers(
+                        onNewSession: () => unawaited(_startNewSession()),
+                        onOpenSettings: _openSettings,
+                        paletteCommands: _shellCommands,
+                      ),
+                      child: child ?? const SizedBox.shrink(),
+                    ),
                   ),
                 ),
               );
             },
+            scrollBehavior: const AppScrollBehavior(),
             title: 'OpenCode',
             onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -336,9 +463,18 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
               '/': (_) => _Root(),
               '/servers': (_) => const ServersScreen(),
               '/home': (_) => const HomeScreen(),
+              // Activity absorbed Mission Control and Pending requests; the
+              // old deep link still resolves so notifications and shortcuts
+              // built against it keep working.
+              '/activity': (_) => ActivityScreen(controller: _controller),
+              '/requests': (_) => ActivityScreen(controller: _controller),
               '/guide': (_) => GuideScreen(embedded: false),
               '/about': (_) => const AboutScreen(),
-              '/termux-setup': (_) => const TermuxSetupScreen(),
+              // Termux is an Android app. Registering the route everywhere
+              // meant a desktop deep link, or any leftover push, landed on a
+              // setup flow with no bridge behind it.
+              if (platformCapabilities.supportsTermux)
+                '/termux-setup': (_) => const TermuxSetupScreen(),
               '/debug': (_) => AppDiagnosticsScreen(controller: _controller),
             },
             onGenerateRoute: (settings) {
@@ -546,7 +682,9 @@ class _SavedServerConnectionView extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: scheme.surfaceContainer,
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(
+                          AppTheme.radiusControl,
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -555,7 +693,7 @@ class _SavedServerConnectionView extends StatelessWidget {
                             size: 18,
                             color: scheme.onSurfaceVariant,
                           ),
-                          const SizedBox(width: 9),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               baseUrl,
@@ -563,7 +701,7 @@ class _SavedServerConnectionView extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: scheme.onSurfaceVariant,
-                                fontFamily: 'AppMono',
+                                fontFamily: AppTheme.monoFamily,
                               ),
                             ),
                           ),

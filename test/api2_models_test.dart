@@ -25,7 +25,7 @@ void main() {
     expect(first.tokens.input, 59422);
     expect(first.tokens.cacheRead, 78336);
     expect(first.time.created, isNotNull);
-    expect(first.directory, '/home/eslam/Storage/Code/oc_app');
+    expect(first.directory, '/home/dev/projects/oc_app');
     expect(first.archived, isFalse);
 
     final child = page.data[1];
@@ -148,7 +148,7 @@ void main() {
 
   test('parses captured location and fs listings', () {
     final location = Api2Location.fromJson(fixture('location.json'))!;
-    expect(location.directory, '/home/eslam/Storage/Code/oc_app');
+    expect(location.directory, '/home/dev/projects/oc_app');
     expect(location.project?.id, isNotEmpty);
     expect(location.project?.canonical, location.directory);
 

@@ -25,7 +25,7 @@
       },
       "title": "Repo test strategy overview",
       "location": {
-        "directory": "/home/eslam/Storage/Code/oc_app"
+        "directory": "/home/dev/projects/oc_app"
       }
     },
     {
@@ -52,9 +52,9 @@
         "created": 1787948130864,
         "updated": 1787948780798
       },
-      "title": "Review crypto_prime providers and evaluators (@explore subagent)",
+      "title": "Review sample_app providers and evaluators (@explore subagent)",
       "location": {
-        "directory": "/home/eslam/Storage/Code/TradeNet"
+        "directory": "/home/dev/projects/other_app"
       }
     },
     {
@@ -80,9 +80,9 @@
         "created": 1787947545136,
         "updated": 1787948408870
       },
-      "title": "Crypto Prime P1 review: SHIP or HOLD verdict",
+      "title": "Sample app P1 review: SHIP or HOLD verdict",
       "location": {
-        "directory": "/home/eslam/Storage/Code/TradeNet"
+        "directory": "/home/dev/projects/other_app"
       }
     }
   ],

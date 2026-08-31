@@ -47,6 +47,9 @@ class _WorktreeRepository implements ProductRepository {
   final removeCalls = <String>[];
   String? createName;
 
+  /// Thrown by [createWorktree] when set, to exercise the error path.
+  Object? createError;
+
   @override
   void setLocation({String? directory, String? workspace}) {}
 
@@ -61,6 +64,7 @@ class _WorktreeRepository implements ProductRepository {
     required String projectDirectory,
     String? name,
   }) async {
+    if (createError case final error?) throw error;
     createName = name;
     final created = WorktreeInfo(
       name: name?.isNotEmpty == true ? name! : 'fresh-tree',
@@ -208,6 +212,30 @@ void main() {
 
     expect(find.text('opencode/wake-fix'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a failing worktree action reports product copy, not the raw '
+      'exception', (tester) async {
+    // The five _showError call sites passed error.toString(), which put
+    // "Bad state: ..." back in front of users at exactly the wrong moment.
+    final repository = _WorktreeRepository()..createError = StateError('boom');
+    final controller = await _controller(repository);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('create-worktree')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('worktree-name-field')),
+      'wake-fix',
+    );
+    await tester.tap(find.byKey(const ValueKey('confirm-create-worktree')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.textContaining('Bad state'), findsNothing);
+    expect(find.text('OpenCode is unreachable. Try again.'), findsOneWidget);
   });
 
   testWidgets('reset explains and confirms every destructive file class', (
