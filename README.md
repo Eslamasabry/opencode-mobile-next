@@ -113,11 +113,15 @@ Current screenshots have not been recut.
 |---|---|---|---|
 | ![Workspace](video/public/shots/still-workspace.png) | ![Live run with context meter](video/public/shots/still-rec3-end.png) | ![More grid](video/public/shots/still-more-grid.png) | ![Continue-here sheet](video/public/shots/still-steal-sheet.png) |
 
+The project row in the first shot carries a solid redaction bar: the capture
+showed the recording machine's absolute project path, which is not something a
+screenshot needs to prove. Nothing else in these four is retouched.
+
 A 2.5-minute showcase video was cut from the same preview 7 build and has
-been withdrawn: it was recorded from real sessions and showed a local home
-directory path and conversation content on screen. The Remotion source
-lives in [`video/`](video/) with its storyboard in
-[docs/showcase-video-plan.md](docs/showcase-video-plan.md), so it can be
+been withdrawn for the same reason, at greater length: it was recorded from
+real sessions and showed a local home directory path and conversation content
+on screen. The Remotion source lives in [`video/`](video/) with its storyboard
+in [docs/showcase-video-plan.md](docs/showcase-video-plan.md), so it can be
 re-cut from footage recorded against a scratch project.
 
 ## Install

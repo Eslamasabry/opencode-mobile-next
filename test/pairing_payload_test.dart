@@ -7,7 +7,10 @@ import 'package:opencode_mobile/state/pairing.dart';
 
 /// A stand-in for the real serve password. Never the value of a live server:
 /// a test fixture that is also a working credential is a credential in git.
-const _password = 'Ig9K30-es1a7CqKcImcWUQcsghzCPYPKXHCB2c8Qtco';
+/// It keeps the 43-character base64url shape `opencode serve` generates —
+/// nothing here depends on the entropy — while reading as obviously fake, so
+/// neither a human nor a secret scanner has to guess whether it was live.
+const _password = 'fixture-not-a-live-serve-password-000000000';
 
 /// The exact wire shape `opencode2 pair` encodes into its QR, confirmed both
 /// by reading the CLI's own `cli.pair` handler and by decoding a live QR from
@@ -68,12 +71,12 @@ void main() {
     test('keeps several addresses in the order the server reported them', () {
       final result = parsePairingPayload(
         pairJson(
-          urls: ['http://127.0.0.1:4097', 'http://192.168.1.20:4097'],
+          urls: ['http://127.0.0.1:4097', 'http://192.0.2.20:4097'],
         ),
       );
       expect(result.payload!.urls, [
         'http://127.0.0.1:4097',
-        'http://192.168.1.20:4097',
+        'http://192.0.2.20:4097',
       ]);
     });
 
@@ -309,7 +312,7 @@ void main() {
     test('ignores what people actually type into these fields', () {
       expect(looksLikePairingPayload(''), isFalse);
       expect(looksLikePairingPayload('http://127.0.0.1:4097'), isFalse);
-      expect(looksLikePairingPayload('192.168.1.20:4096'), isFalse);
+      expect(looksLikePairingPayload('192.0.2.20:4096'), isFalse);
       expect(looksLikePairingPayload(_password), isFalse);
       expect(looksLikePairingPayload('server password $_password'), isFalse);
       expect(looksLikePairingPayload('{"foo":"bar"}'), isFalse);
@@ -414,7 +417,7 @@ void main() {
       // these. Dialing it would send HTTP Basic across the network in clear.
       final payload = parsePairingPayload(
         pairJson(
-          urls: ['http://192.168.1.20:4097', 'http://127.0.0.1:4097'],
+          urls: ['http://192.0.2.20:4097', 'http://127.0.0.1:4097'],
         ),
       ).payload!;
       final selection = await selectPairingUrl(
@@ -425,7 +428,7 @@ void main() {
       );
       expect(selection.chosenUrl, 'http://127.0.0.1:4097');
       final lan = selection.outcomes.firstWhere(
-        (o) => o.url == 'http://192.168.1.20:4097',
+        (o) => o.url == 'http://192.0.2.20:4097',
       );
       expect(lan.probed, isFalse);
       expect(lan.reason, contains('HTTPS is required'));
@@ -545,7 +548,7 @@ void main() {
     test('every address rejected up front still yields per-address reasons',
         () async {
       final payload = parsePairingPayload(
-        pairJson(urls: ['http://192.168.1.20:4097', 'http://10.0.0.4:4097']),
+        pairJson(urls: ['http://192.0.2.20:4097', 'http://198.51.100.4:4097']),
       ).payload!;
       final selection = await selectPairingUrl(
         payload,
@@ -557,8 +560,8 @@ void main() {
       expect(selection.ok, isFalse);
       expect(selection.outcomes, hasLength(2));
       expect(selection.outcomes.every((o) => !o.probed), isTrue);
-      expect(selection.failureDetail, contains('192.168.1.20'));
-      expect(selection.failureDetail, contains('10.0.0.4'));
+      expect(selection.failureDetail, contains('192.0.2.20'));
+      expect(selection.failureDetail, contains('198.51.100.4'));
     });
   });
 

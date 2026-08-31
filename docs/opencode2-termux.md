@@ -7,7 +7,7 @@ name, and two env-var/endpoint details.
 
 **Method note — verified vs inferred.** This machine is x86_64 Pop!_OS with no
 Android device attached. "Verified" below means: read from the installed
-packages under `/home/eslam/node_modules/`, from tarballs downloaded with
+packages under `~/node_modules/`, from tarballs downloaded with
 `npm pack` into the session scratchpad and inspected with `file`/`readelf`/
 `strings`, from `npm view` against the live registry, or from this repo's own
 shipping code (`lib/termux/bridge.dart`, `README.md`). "Inferred" means: prior
@@ -79,7 +79,7 @@ this desk pass cannot verify** — see §6.
 ## 2. How did v1 actually run in Termux? (correcting the premise)
 
 **v1 was never a JS-under-Termux-Node story either.** Verified from
-`/home/eslam/node_modules/opencode-ai@1.18.25`:
+`~/node_modules/opencode-ai@1.18.25`:
 
 - Identical launcher architecture: `bin/opencode.exe` placeholder,
   `postinstall.mjs`, per-platform `optionalDependencies`

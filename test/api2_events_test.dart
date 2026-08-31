@@ -35,7 +35,7 @@ void main() {
     expect(createdEvent.version, '0.0.0-beta-18600');
     expect(created.durable?.seq, 0);
     expect(created.durable?.aggregateID, createdEvent.sessionID);
-    expect(created.location?.directory, '/home/eslam/Storage/Code/oc_app');
+    expect(created.location?.directory, '/home/dev/projects/oc_app');
     expect(created.isDurable, isTrue);
 
     final enqueued = envelopes

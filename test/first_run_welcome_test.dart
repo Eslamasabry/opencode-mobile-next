@@ -69,8 +69,8 @@ void main() {
 
   test('bare pasted addresses gain the right scheme', () {
     expect(
-      normalizeServerProfileUrl('192.168.1.7:4096'),
-      'https://192.168.1.7:4096',
+      normalizeServerProfileUrl('192.0.2.7:4096'),
+      'https://192.0.2.7:4096',
     );
     expect(
       normalizeServerProfileUrl('localhost:4096'),
@@ -194,7 +194,7 @@ void main() {
 
     await tester.enterText(
       find.byKey(const ValueKey('server-url-field')),
-      '192.168.1.7:4096',
+      '192.0.2.7:4096',
     );
     await tester.pump();
 
@@ -203,7 +203,7 @@ void main() {
           .widget<TextField>(find.byKey(const ValueKey('server-url-field')))
           .controller
           ?.text,
-      'https://192.168.1.7:4096',
+      'https://192.0.2.7:4096',
     );
   });
 
