@@ -6,7 +6,7 @@
   by scripts/package-linux.sh with the version being packaged.
 -->
 <component type="desktop-application">
-  <id>ai.opencode.opencode_mobile</id>
+  <id>io.github.eslamasabry.opencode_mobile</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
   <name>OpenCode</name>
@@ -26,10 +26,10 @@
     </p>
   </description>
 
-  <launchable type="desktop-id">ai.opencode.opencode_mobile.desktop</launchable>
+  <launchable type="desktop-id">io.github.eslamasabry.opencode_mobile.desktop</launchable>
   <url type="homepage">https://github.com/Eslamasabry/oc_app</url>
   <url type="bugtracker">https://github.com/Eslamasabry/oc_app/issues</url>
-  <developer id="ai.opencode">
+  <developer id="io.github.eslamasabry">
     <name>OpenCode</name>
   </developer>
 

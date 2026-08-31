@@ -121,14 +121,14 @@ void main() {
       for (final size in sizes) {
         final icon = File(
           'linux/packaging/icons/hicolor/${size}x$size/apps/'
-          'ai.opencode.opencode_mobile.png',
+          'io.github.eslamasabry.opencode_mobile.png',
         );
         expect(icon.existsSync(), isTrue, reason: 'missing ${size}px icon');
       }
       expect(
         File(
           'linux/packaging/icons/hicolor/scalable/apps/'
-          'ai.opencode.opencode_mobile.svg',
+          'io.github.eslamasabry.opencode_mobile.svg',
         ).existsSync(),
         isTrue,
       );

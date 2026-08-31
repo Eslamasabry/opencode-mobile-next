@@ -27,7 +27,7 @@
 #   -h, --help      this text
 set -euo pipefail
 
-readonly APP_ID="ai.opencode.opencode_mobile"
+readonly APP_ID="io.github.eslamasabry.opencode_mobile"
 readonly BINARY_NAME="opencode_mobile"
 readonly DEB_PACKAGE="opencode"
 readonly ICON_SIZES=(16 24 32 48 64 128 256 512)

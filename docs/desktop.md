@@ -155,21 +155,43 @@ regenerated afterwards.
 
 ## Desktop integration
 
-- `linux/packaging/ai.opencode.opencode_mobile.desktop` — named after the
-  GApplication application id set in `linux/CMakeLists.txt`.
+- `linux/packaging/io.github.eslamasabry.opencode_mobile.desktop` — named
+  after the GApplication application id set in `linux/CMakeLists.txt`.
 - `linux/packaging/icons/` — the icon as an SVG plus committed hicolor PNGs
   at 16/24/32/48/64/128/256/512. They are committed so packaging and CI
   never need an SVG rasteriser; `linux/packaging/render-icons.sh`
   regenerates them (needs ImageMagick) when the SVG changes.
-- `linux/packaging/ai.opencode.opencode_mobile.metainfo.xml` — AppStream, so
-  GNOME Software and Discover describe the app instead of showing a bare
-  package name. The packaging script stamps the version into its
-  `<releases>` block.
+- `linux/packaging/io.github.eslamasabry.opencode_mobile.metainfo.xml` —
+  AppStream, so GNOME Software and Discover describe the app instead of
+  showing a bare package name. The packaging script stamps the version into
+  its `<releases>` block.
+
+### The application id changed
+
+Through preview 10 the application id was `ai.opencode.opencode_mobile`,
+which sits under `opencode.ai` — the OpenCode project's reverse domain, not
+one this project controls. It is now
+`io.github.eslamasabry.opencode_mobile`. The display name is unchanged.
+
+If you installed a preview before this change, its desktop entry, AppStream
+file and icons are named after the *old* id, and the new installer writes
+different filenames rather than replacing them. `linux/packaging/uninstall.sh`
+only knows the new id, so remove the old files by hand — under your install
+prefix (`~/.local` by default, or `/usr` for the .deb):
+
+```sh
+rm -f "$prefix"/share/applications/ai.opencode.opencode_mobile.desktop \
+      "$prefix"/share/metainfo/ai.opencode.opencode_mobile.metainfo.xml
+find "$prefix/share/icons" -name 'ai.opencode.opencode_mobile.*' -delete
+```
+
+The binary is still `opencode`, and your settings still live in
+`~/.config` and `~/.local/share/opencode_mobile`, so nothing is lost.
 
 ### Why the window groups with its icon
 
 Two different mechanisms have to agree, and both are pinned to the single
-string `ai.opencode.opencode_mobile`:
+string `io.github.eslamasabry.opencode_mobile`:
 
 - **Wayland.** GTK reports `g_get_prgname()` as the xdg-shell `app_id`, and
   the compositor pairs that with the desktop file *of the same name*. The
@@ -177,7 +199,7 @@ string `ai.opencode.opencode_mobile`:
 - **X11.** The shell matches `StartupWMClass` against `WM_CLASS` instead.
   GDK derives `WM_CLASS`'s `res_name` from the program name and its
   `res_class` from the program *class*, which by default is the program name
-  with its first letter capitalised — `Ai.opencode.opencode_mobile`.
+  with its first letter capitalised — `Io.github.eslamasabry.opencode_mobile`.
   Different desktop environments compare different halves. So
   `my_application_new()` also calls `gdk_set_program_class(APPLICATION_ID)`,
   making both halves identical and equal to `StartupWMClass`.
