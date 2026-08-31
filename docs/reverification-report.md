@@ -334,13 +334,18 @@ Gates: analyzer **clean**; **1021/1021 tests pass** (was 811).
 
 ### Still open after the 08-30 wave
 
-1. **HIGH — the v2 `_selectLocation` flavor bug survived**: HEAD still
-   builds the transport via the v1-only `_apiFactory(profile)`
-   (`connection.dart:3320–3323`). Commit `ceb3fe2` claimed the fix and
-   `41dcddb` "kept" it while dropping its test, yet the code at HEAD is the
-   pre-fix shape — almost certainly clobbered by merge `e44ccda`. Live on
-   every v2 connect with a saved location, the location picker, and
-   move/warp. No flavor=v2 + saved-location test exists. Re-land + test.
+1. ~~**HIGH — the v2 `_selectLocation` flavor bug survived**~~ →
+   **RESOLVED 2026-08-31 (`0ce258c "Restore the v2 rescope fix and guard it
+   at the source"`).** Timeline: fix authored `ceb3fe2` → its test
+   deliberately dropped `41dcddb` (unsound fake that hung the suite; the
+   product fix stood) → the fix itself lost in merge `e44ccda` (caught by
+   this report's 08-30 re-check) → re-landed with
+   `test/connection_transport_factory_guard_test.dart` and an in-code note
+   that the fix "has already been lost to a merge once". `_apiFactory` now
+   has no callers outside the flavor-aware builder; the guard test passes.
+   Not ignored: only the test drop was deliberate, and it was documented.
+   (Validated 2026-08-31 after the question "was it ignored on purpose" —
+   see the git forensics in that session.)
 2. **CI billing block still stands** — both `android-quality.yml` and
    `desktop-linux.yml` headers state they have never run (account payments
    failed). The new Linux gate is unproven in CI.
