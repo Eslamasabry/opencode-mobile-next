@@ -44,7 +44,7 @@ cd "$(dirname "$0")/.."
 
 # The pinned Flutter is Shorebird's cache, not the distro one on PATH; and
 # user-local tools (gh) live in ~/.local/bin.
-PINNED_FLUTTER_BIN="$(dirname "$(find "$HOME/.shorebird/bin/cache/flutter" -maxdepth 3 -name flutter -type f -path '*/bin/*' 2>/dev/null | head -1)")"
+PINNED_FLUTTER_BIN="$(ls -d "$HOME"/.shorebird/bin/cache/flutter/*/bin 2>/dev/null | head -1)"
 export PATH="$HOME/.shorebird/bin:$HOME/.local/bin:$PINNED_FLUTTER_BIN:$PATH"
 
 [[ -f android/key.properties ]] ||
