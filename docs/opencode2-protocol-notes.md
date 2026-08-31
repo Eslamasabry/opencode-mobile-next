@@ -8,7 +8,7 @@ Reference for porting the Flutter client from the v1 server API to the OpenCode 
 - Typed client `@opencode-ai/client@0.0.0-beta-18600` and its dependencies `@opencode-ai/schema` + `@opencode-ai/protocol` (Effect Schema definitions — the ground truth for every payload the OpenAPI spec hides behind `V2EventEncoded`).
 - Captured spec `contracts/opencode2-openapi-beta-18600.json` (114 paths, 222 schemas).
 
-> NOTE: `/home/eslam/node_modules/@opencode-ai/sdk` (1.1.63) and the 1.4.x SDKs are the **v1** SDK line; their `dist/v2` module describes an older intermediate API (`/global/*`, message "parts", "questions") that does **not** exist on this server. Ignore them.
+> NOTE: `~/node_modules/@opencode-ai/sdk` (1.1.63) and the 1.4.x SDKs are the **v1** SDK line; their `dist/v2` module describes an older intermediate API (`/global/*`, message "parts", "questions") that does **not** exist on this server. Ignore them.
 
 ---
 
@@ -37,10 +37,10 @@ Reference for porting the Flutter client from the v1 server API to the OpenCode 
   `?location[directory]=/abs/path` and optionally `&location[workspace]=<workspaceID>` (URL-encoded: `location%5Bdirectory%5D=...`). Omitting it uses the server's default location. A client pinned to one project directory should send `location[directory]` on every location-scoped call (agents, models, fs, vcs, pty, shell, skills, commands, forms/permission pending lists, mcp, providers, config, plugin, reference, websearch) and pass `location: {directory}` in the body of `POST /api/session`. `GET /api/location?location[directory]=...` resolves it:
 
 ```json
-{"directory":"/home/eslam/Storage/Code/oc_app",
+{"directory":"/home/dev/projects/oc_app",
  "project":{"id":"5e625357c202857bf3cd6f591d76b2bec8b5093d",
-            "directory":"/home/eslam/Storage/Code/oc_app",
-            "canonical":"/home/eslam/Storage/Code/oc_app"}}
+            "directory":"/home/dev/projects/oc_app",
+            "canonical":"/home/dev/projects/oc_app"}}
 ```
 
 - **Errors** are tagged JSON objects, one per error class, discriminated by `_tag`, with class-specific extra fields and a fixed HTTP status (§12). Live example (404):
@@ -64,7 +64,7 @@ SSE (`text/event-stream`). Each frame is a bare `data: <json>` line (no `event:`
   "id": "evt_04ac0f582001ALjED5PyXUip9c",
   "created": 1787960554882,
   "type": "session.text.delta",
-  "location": {"directory": "/home/eslam/Storage/Code/oc_app"},
+  "location": {"directory": "/home/dev/projects/oc_app"},
   "metadata": { "...": "optional, freeform" },
   "data": { "...": "type-specific payload" },
   "durable": {"aggregateID": "ses_...", "seq": 7, "version": 1}
@@ -153,7 +153,7 @@ data: {"type":"log.synced","aggregateID":"ses_fb53f2ae6ffe2lNSphGKicmVR2","seq":
 
 ```
 data: {"id":"evt_...","type":"server.connected","data":{}}
-data: {"type":"session.created", "data":{"sessionID":"ses_fb53...","slug":"stellar-garden","version":"0.0.0-beta-18600","projectID":"5e62...","location":{"directory":"/home/eslam/Storage/Code/oc_app"},"subpath":"","title":"protocol probe"},"durable":{"aggregateID":"ses_fb53...","seq":0,"version":1}}
+data: {"type":"session.created", "data":{"sessionID":"ses_fb53...","slug":"stellar-garden","version":"0.0.0-beta-18600","projectID":"5e62...","location":{"directory":"/home/dev/projects/oc_app"},"subpath":"","title":"protocol probe"},"durable":{"aggregateID":"ses_fb53...","seq":0,"version":1}}
 data: {"type":"session.inbox.enqueued","data":{"inboxID":"msg_04ac0eafe001...","sessionID":"ses_fb53...","item":{"type":"user","payload":{"text":"Reply with exactly the word: pong"},"delivery":"steer"}},"durable":{"seq":1,...}}
 data: {"type":"session.execution.started","data":{"sessionID":"ses_fb53..."},"durable":{"seq":2,...}}
 data: {"type":"session.instructions.updated","data":{"sessionID":"ses_fb53...","delta":{"core/environment":"1adeb...","core/date":"6c8d..."}},"durable":{"seq":3,...}}
@@ -185,7 +185,7 @@ data: {"type":"session.execution.succeeded","data":{"sessionID":"ses_fb53..."},"
   "outcome": "succeeded|failed|interrupted",
   "time": {"created": 1787960546605, "updated": 1787960546605, "idle": 0, "viewed": 0, "archived": 0},
   "title": "protocol probe",
-  "location": {"directory": "/home/eslam/Storage/Code/oc_app", "workspaceID": "..."},
+  "location": {"directory": "/home/dev/projects/oc_app", "workspaceID": "..."},
   "subpath": "",
   "revert": {"messageID": "msg_...", "snapshot": "...", "files": [FileDiff...]},
   "metadata": {"any": "json (host-supplied, inherited by children/forks)"}

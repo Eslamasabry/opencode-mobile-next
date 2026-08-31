@@ -88,8 +88,9 @@ citations later.
 ### S4. HANDOFF.md — informal, not sensitive; decide its public face
 
 Re-read in full. It contains: Shorebird release IDs, APK SHA-256s, local
-absolute paths (`/home/eslam/...`), machine quirks ("background tasks get
-SIGKILLed on this box"), agent-workflow notes, and pinned-toolchain lore. No
+absolute paths under the maintainer's home directory, machine quirks
+("background tasks get SIGKILLed on this box"), agent-workflow notes, and
+pinned-toolchain lore. No
 credentials, no personal data beyond the GitHub username already in the repo
 URL. It is genuinely useful engineering history, but it reads as an internal
 scratchpad and is the file most likely to raise eyebrows ("agents built
@@ -144,10 +145,11 @@ verification anchor for sideloaders.
   `Ralph TUI Agent <agent@ralph-tui.local>` — no personal email in history
   at all (if the owner *wants* attribution, that is the opposite problem
   and out of scope here).
-- **N5. Local paths.** `/home/eslam/...` appears in HANDOFF.md,
+- **N5. Local paths — resolved.** Absolute paths under the maintainer's home
+  directory used to appear in HANDOFF.md,
   `docs/opencode2-protocol-notes.md`, and `test/fixtures/api2/*.json`
-  (captured server payloads). Cosmetic only; reveals a username already in
-  the repo URL.
+  (captured server payloads). Cosmetic only, but every tracked occurrence has
+  since been rewritten to the neutral placeholder `/home/dev/projects/oc_app`.
 - **N6. `shorebird.yaml` app_id and certificate fingerprints** are public by
   design (Shorebird documents the app_id as shareable; the APK SHA-256 and
   signer fingerprint in README/releases are verification anchors).

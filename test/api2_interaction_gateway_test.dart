@@ -48,7 +48,7 @@ Future<void> withServer(
 Api2Gateway gatewayFor(HttpServer server) => Api2Gateway.connect(
   baseUrl: 'http://${server.address.host}:${server.port}',
   password: 'pw',
-  directory: '/home/eslam/Storage/Code/oc_app',
+  directory: '/home/dev/projects/oc_app',
 );
 
 Future<void> writeJson(

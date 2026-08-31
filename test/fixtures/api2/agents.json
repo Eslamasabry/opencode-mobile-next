@@ -1,10 +1,10 @@
 {
   "location": {
-    "directory": "/home/eslam/Storage/Code/oc_app",
+    "directory": "/home/dev/projects/oc_app",
     "project": {
       "id": "5e625357c202857bf3cd6f591d76b2bec8b5093d",
-      "directory": "/home/eslam/Storage/Code/oc_app",
-      "canonical": "/home/eslam/Storage/Code/oc_app"
+      "directory": "/home/dev/projects/oc_app",
+      "canonical": "/home/dev/projects/oc_app"
     }
   },
   "data": [
@@ -47,22 +47,22 @@
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.local/share/opencode/shell/*/*",
+          "resource": "/home/dev/.local/share/opencode/shell/*/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.local/share/opencode/tool-output/*",
+          "resource": "/home/dev/.local/share/opencode/tool-output/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/Storage/tmp/claude-tmp/opencode/*",
+          "resource": "/home/dev/tmp/claude-tmp/opencode/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.config/opencode/*",
+          "resource": "/home/dev/.config/opencode/*",
           "effect": "allow"
         },
         {
@@ -111,22 +111,22 @@
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.local/share/opencode/shell/*/*",
+          "resource": "/home/dev/.local/share/opencode/shell/*/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.local/share/opencode/tool-output/*",
+          "resource": "/home/dev/.local/share/opencode/tool-output/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/Storage/tmp/claude-tmp/opencode/*",
+          "resource": "/home/dev/tmp/claude-tmp/opencode/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.config/opencode/*",
+          "resource": "/home/dev/.config/opencode/*",
           "effect": "allow"
         },
         {
@@ -181,22 +181,22 @@
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.local/share/opencode/shell/*/*",
+          "resource": "/home/dev/.local/share/opencode/shell/*/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.local/share/opencode/tool-output/*",
+          "resource": "/home/dev/.local/share/opencode/tool-output/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/Storage/tmp/claude-tmp/opencode/*",
+          "resource": "/home/dev/tmp/claude-tmp/opencode/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.config/opencode/*",
+          "resource": "/home/dev/.config/opencode/*",
           "effect": "allow"
         },
         {
@@ -256,22 +256,22 @@
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.local/share/opencode/shell/*/*",
+          "resource": "/home/dev/.local/share/opencode/shell/*/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.local/share/opencode/tool-output/*",
+          "resource": "/home/dev/.local/share/opencode/tool-output/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/Storage/tmp/claude-tmp/opencode/*",
+          "resource": "/home/dev/tmp/claude-tmp/opencode/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.config/opencode/*",
+          "resource": "/home/dev/.config/opencode/*",
           "effect": "allow"
         }
       ]
@@ -315,22 +315,22 @@
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.local/share/opencode/shell/*/*",
+          "resource": "/home/dev/.local/share/opencode/shell/*/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.local/share/opencode/tool-output/*",
+          "resource": "/home/dev/.local/share/opencode/tool-output/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/Storage/tmp/claude-tmp/opencode/*",
+          "resource": "/home/dev/tmp/claude-tmp/opencode/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.config/opencode/*",
+          "resource": "/home/dev/.config/opencode/*",
           "effect": "allow"
         },
         {
@@ -379,22 +379,22 @@
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.local/share/opencode/shell/*/*",
+          "resource": "/home/dev/.local/share/opencode/shell/*/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.local/share/opencode/tool-output/*",
+          "resource": "/home/dev/.local/share/opencode/tool-output/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/Storage/tmp/claude-tmp/opencode/*",
+          "resource": "/home/dev/tmp/claude-tmp/opencode/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.config/opencode/*",
+          "resource": "/home/dev/.config/opencode/*",
           "effect": "allow"
         },
         {
@@ -443,22 +443,22 @@
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.local/share/opencode/shell/*/*",
+          "resource": "/home/dev/.local/share/opencode/shell/*/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.local/share/opencode/tool-output/*",
+          "resource": "/home/dev/.local/share/opencode/tool-output/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/Storage/tmp/claude-tmp/opencode/*",
+          "resource": "/home/dev/tmp/claude-tmp/opencode/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.config/opencode/*",
+          "resource": "/home/dev/.config/opencode/*",
           "effect": "allow"
         },
         {
@@ -507,22 +507,22 @@
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.local/share/opencode/shell/*/*",
+          "resource": "/home/dev/.local/share/opencode/shell/*/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.local/share/opencode/tool-output/*",
+          "resource": "/home/dev/.local/share/opencode/tool-output/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/Storage/tmp/claude-tmp/opencode/*",
+          "resource": "/home/dev/tmp/claude-tmp/opencode/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.config/opencode/*",
+          "resource": "/home/dev/.config/opencode/*",
           "effect": "allow"
         },
         {
@@ -537,12 +537,12 @@
         },
         {
           "action": "edit",
-          "resource": "/home/eslam/.opencode/plan/*",
+          "resource": "/home/dev/.opencode/plan/*",
           "effect": "allow"
         },
         {
           "action": "external_directory",
-          "resource": "/home/eslam/.opencode/plan/*",
+          "resource": "/home/dev/.opencode/plan/*",
           "effect": "allow"
         }
       ]

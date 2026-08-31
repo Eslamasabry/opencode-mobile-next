@@ -38,7 +38,7 @@ Map<String, Object> _seed() => {
       'id': 'doomed',
       'name': 'Old workstation',
       'baseUrl': 'https://old.example:4096',
-      'username': 'eslam',
+      'username': 'dev',
       'flavor': 'v2',
       'serverVersion': '0.14.2',
     },
@@ -57,10 +57,10 @@ Map<String, Object> _seed() => {
   'oc.agent.doomed': 'build',
   'oc.variant.doomed': 'high',
   'oc.location.doomed': jsonEncode({
-    'directory': '/home/eslam/code',
+    'directory': '/home/dev/code',
     'workspace': 'main',
   }),
-  'oc.providerRuntimeRefresh.v1.doomed.%2Fhome%2Feslam%2Fcode%0Amain': true,
+  'oc.providerRuntimeRefresh.v1.doomed.%2Fhome%2Fdev%2Fcode%0Amain': true,
   'oc.model.keeper': 'openai|gpt',
   'oc.modelExplicit.keeper': true,
   'oc.agent.keeper': 'plan',
@@ -203,7 +203,7 @@ void main() {
         'oc.agent.doomed',
         'oc.variant.doomed',
         'oc.location.doomed',
-        'oc.providerRuntimeRefresh.v1.doomed.%2Fhome%2Feslam%2Fcode%0Amain',
+        'oc.providerRuntimeRefresh.v1.doomed.%2Fhome%2Fdev%2Fcode%0Amain',
       });
       // Never the app-wide keys, and never another profile's.
       expect(
@@ -242,7 +242,7 @@ void main() {
       'oc.agent.doomed',
       'oc.variant.doomed',
       'oc.location.doomed',
-      'oc.providerRuntimeRefresh.v1.doomed.%2Fhome%2Feslam%2Fcode%0Amain',
+      'oc.providerRuntimeRefresh.v1.doomed.%2Fhome%2Fdev%2Fcode%0Amain',
     ]) {
       expect(prefs.get(key), isNull, reason: key);
     }
@@ -253,7 +253,7 @@ void main() {
     expect(
       controller.store.providerRuntimeWasRefreshed(
         'doomed',
-        directory: '/home/eslam/code',
+        directory: '/home/dev/code',
         workspace: 'main',
       ),
       isFalse,

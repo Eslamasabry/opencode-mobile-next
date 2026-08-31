@@ -56,7 +56,7 @@ void main() {
       final session = mapApi2Session(page.data.first);
       expect(session.id, startsWith('ses_'));
       expect(session.title, 'Repo test strategy overview');
-      expect(session.directory, '/home/eslam/Storage/Code/oc_app');
+      expect(session.directory, '/home/dev/projects/oc_app');
       expect(session.projectID, isNotEmpty);
       expect(session.archived, isFalse);
       expect(session.shareUrl, isNull);
