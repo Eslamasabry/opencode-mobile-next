@@ -57,7 +57,7 @@
         },
         {
           "action": "external_directory",
-          "resource": "/home/dev/tmp/claude-tmp/opencode/*",
+          "resource": "/home/dev/tmp/opencode/*",
           "effect": "allow"
         },
         {
@@ -121,7 +121,7 @@
         },
         {
           "action": "external_directory",
-          "resource": "/home/dev/tmp/claude-tmp/opencode/*",
+          "resource": "/home/dev/tmp/opencode/*",
           "effect": "allow"
         },
         {
@@ -191,7 +191,7 @@
         },
         {
           "action": "external_directory",
-          "resource": "/home/dev/tmp/claude-tmp/opencode/*",
+          "resource": "/home/dev/tmp/opencode/*",
           "effect": "allow"
         },
         {
@@ -266,7 +266,7 @@
         },
         {
           "action": "external_directory",
-          "resource": "/home/dev/tmp/claude-tmp/opencode/*",
+          "resource": "/home/dev/tmp/opencode/*",
           "effect": "allow"
         },
         {
@@ -325,7 +325,7 @@
         },
         {
           "action": "external_directory",
-          "resource": "/home/dev/tmp/claude-tmp/opencode/*",
+          "resource": "/home/dev/tmp/opencode/*",
           "effect": "allow"
         },
         {
@@ -389,7 +389,7 @@
         },
         {
           "action": "external_directory",
-          "resource": "/home/dev/tmp/claude-tmp/opencode/*",
+          "resource": "/home/dev/tmp/opencode/*",
           "effect": "allow"
         },
         {
@@ -453,7 +453,7 @@
         },
         {
           "action": "external_directory",
-          "resource": "/home/dev/tmp/claude-tmp/opencode/*",
+          "resource": "/home/dev/tmp/opencode/*",
           "effect": "allow"
         },
         {
@@ -517,7 +517,7 @@
         },
         {
           "action": "external_directory",
-          "resource": "/home/dev/tmp/claude-tmp/opencode/*",
+          "resource": "/home/dev/tmp/opencode/*",
           "effect": "allow"
         },
         {

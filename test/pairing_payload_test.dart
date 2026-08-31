@@ -7,7 +7,10 @@ import 'package:opencode_mobile/state/pairing.dart';
 
 /// A stand-in for the real serve password. Never the value of a live server:
 /// a test fixture that is also a working credential is a credential in git.
-const _password = 'Ig9K30-es1a7CqKcImcWUQcsghzCPYPKXHCB2c8Qtco';
+/// It keeps the 43-character base64url shape `opencode serve` generates —
+/// nothing here depends on the entropy — while reading as obviously fake, so
+/// neither a human nor a secret scanner has to guess whether it was live.
+const _password = 'fixture-not-a-live-serve-password-000000000';
 
 /// The exact wire shape `opencode2 pair` encodes into its QR, confirmed both
 /// by reading the CLI's own `cli.pair` handler and by decoding a live QR from

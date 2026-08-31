@@ -12,7 +12,7 @@ import 'package:opencode_mobile/ui/screens/servers_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Stands in for a real serve password. Never a live one.
-const _password = 'Ig9K30-es1a7CqKcImcWUQcsghzCPYPKXHCB2c8Qtco';
+const _password = 'fixture-not-a-live-serve-password-000000000';
 
 String pairJson({
   List<String> urls = const ['http://127.0.0.1:4097'],
