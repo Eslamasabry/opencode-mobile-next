@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/ui/screens/about_screen.dart' show AboutScreen, alphaNoticeBody;
-import 'package:flutter_test/flutter_test.dart';
 
 /// The alpha/vibecoded notice and the bug-report affordances on About. Runs
 /// in its own file because the document `ListView` builds lazily against a
