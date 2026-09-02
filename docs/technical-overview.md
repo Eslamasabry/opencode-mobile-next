@@ -119,6 +119,24 @@ port filled in. Leave your firewall closed: opening a port does nothing for
 you and everything for anyone else on the network.
 
 
+### Provider sign-ins on OpenCode 1
+
+OpenCode 1 builds its provider runtime once per server instance and caches
+it. A sign-in that lands after startup (an OAuth flow finished in the TUI, or
+one this app ran) is written to the auth store but not loaded: `/provider`
+then lists the provider as connected with the entire models.dev catalog,
+while `/config/providers`, the runtime view, still omits it, and every
+prompt to one of its models fails with `Model not found: openai/gpt-5.6`
+(the "Did you mean" list even names the model you picked). The app compares
+the two lists on every catalog load; when a connected provider is missing
+from the runtime it asks the server to dispose the instance
+(`POST /instance/dispose`, the same call OpenCode's own clients make) and
+re-reads, once per connection. The picker then shows only the models the
+loaded provider can serve; for a ChatGPT Plus/Pro sign-in that is the Codex
+set, and plain `gpt-5.6` is deliberately not in it. If the reload does not
+bring the provider up, the picker says so and offers **Reload providers**,
+and a "Model not found" error in chat re-reads the catalog on arrival.
+
 ## OpenCode 2
 
 The app speaks **both protocols**. The existing v1 client keeps serving

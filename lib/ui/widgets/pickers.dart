@@ -392,12 +392,31 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
       models.sort((a, b) => b.contextLimit.compareTo(a.contextLimit));
     }
 
+    final unloaded = widget.controller.unloadedProviderIDs;
     final leadItems = <Widget>[
       if (!widget.controller.catalogDetailed)
         const _Notice(
           icon: Icons.info_outline_rounded,
           text:
               'This server returned a basic catalog. Capability and context details are unavailable.',
+        ),
+      if (unloaded.isNotEmpty)
+        _Notice(
+          key: const ValueKey('picker-unloaded-providers'),
+          icon: Icons.sync_problem_rounded,
+          text: unloadedProvidersNotice(
+            unloaded
+                .map((id) => presentedProviderName(id, catalog.providers))
+                .toList(),
+          ),
+          action: TextButton.icon(
+            key: const ValueKey('picker-reload-providers'),
+            onPressed: widget.controller.catalogLoading
+                ? null
+                : widget.controller.reloadProviderRuntime,
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            label: const Text('Reload providers'),
+          ),
         ),
       _agentPicker(catalog),
       const SizedBox(height: 12),
@@ -794,10 +813,33 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
   }
 }
 
+/// Copy for the picker notice about providers the server has signed in to
+/// but not loaded; [names] are already presented for display.
+String unloadedProvidersNotice(List<String> names) {
+  final sorted = [...names]..sort();
+  final list = switch (sorted.length) {
+    0 => 'a provider',
+    1 => sorted.single,
+    2 => '${sorted[0]} and ${sorted[1]}',
+    _ =>
+      '${sorted.sublist(0, sorted.length - 1).join(', ')}, and ${sorted.last}',
+  };
+  final plural = sorted.length > 1;
+  return 'OpenCode is signed in to $list but has not loaded '
+      '${plural ? 'them' : 'it'} yet, so ${plural ? 'their' : 'its'} models '
+      'fail with “Model not found”. Reload to pick up the sign-in.';
+}
+
 class _Notice extends StatelessWidget {
-  const _Notice({required this.icon, required this.text});
+  const _Notice({
+    super.key,
+    required this.icon,
+    required this.text,
+    this.action,
+  });
   final IconData icon;
   final String text;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -816,7 +858,22 @@ class _Notice extends StatelessWidget {
             children: [
               Icon(icon, size: 19, color: scheme.onSecondaryContainer),
               const SizedBox(width: 8),
-              Expanded(child: Text(text)),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(text),
+                    if (action case final action?)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: action,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),

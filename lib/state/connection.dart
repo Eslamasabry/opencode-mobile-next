@@ -243,6 +243,17 @@ class ConnectionController extends ChangeNotifier {
   CatalogSnapshot? catalog;
   bool catalogDetailed = false;
 
+  /// Providers the server reports as connected (a credential exists) but has
+  /// not loaded into its model runtime. OpenCode 1 caches provider state per
+  /// instance, so a sign-in that lands after startup leaves the provider in
+  /// this limbo: `/provider` lists it with the full models.dev catalog while
+  /// every prompt fails with "Model not found". [_loadCatalog] heals this
+  /// once per connection by disposing the instance; anything still listed
+  /// here after that needs a manual [reloadProviderRuntime].
+  Set<String> unloadedProviderIDs = const {};
+  String? _runtimeHealKey;
+  int _runtimeHealGeneration = -1;
+
   ModelRef? selectedModel;
   String selectedAgent = '';
   String selectedVariant = '';
@@ -1162,12 +1173,18 @@ class ConnectionController extends ChangeNotifier {
         }
       }
 
+      // v1 servers cache their provider runtime per instance; fetch the
+      // runtime view alongside the connected list so the two can be compared.
+      final comparesRuntime = currentApi.capabilities.providerRuntimeRefresh;
       final results = await Future.wait<Object?>([
         currentApi.providers(),
         currentApi.agents(),
         loadDetailedCatalog(),
         loadIntegrations(),
         loadChatDefaults(),
+        comparesRuntime
+            ? loadConfiguredProviders()
+            : Future<ProvidersResponse?>.value(null),
       ]);
       if (!_isCurrentCatalogRefresh(
         generation,
@@ -1181,12 +1198,48 @@ class ConnectionController extends ChangeNotifier {
       final detailedCatalog = results[2] as CatalogSnapshot?;
       final integrations = results[3] as List<IntegrationInfo>;
       final chatDefaults = results[4] as ChatDefaults?;
+      var configuredProviders = results[5] as ProvidersResponse?;
+      var unloaded = comparesRuntime
+          ? unloadedProviders(nextProviders, configuredProviders)
+          : const <String>{};
+      if (unloaded.isNotEmpty && currentRepository != null) {
+        // A credential the runtime has not picked up yet (OAuth finished in
+        // the TUI, or after this app's own sign-in raced the server). Dispose
+        // the instance so OpenCode rebuilds its provider state, then re-read.
+        // Heal once per distinct set of providers per connection so a server
+        // that cannot load a provider does not loop.
+        final healKey = (unloaded.toList()..sort()).join(',');
+        if (_runtimeHealGeneration != generation ||
+            _runtimeHealKey != healKey) {
+          _runtimeHealGeneration = generation;
+          _runtimeHealKey = healKey;
+          try {
+            await currentRepository.refreshProviderRuntime();
+            final healed = await Future.wait<Object?>([
+              currentApi.providers(),
+              loadConfiguredProviders(),
+            ]);
+            if (!_isCurrentCatalogRefresh(
+              generation,
+              currentApi,
+              refreshGeneration,
+            )) {
+              return;
+            }
+            nextProviders = healed[0] as ProvidersResponse;
+            configuredProviders = healed[1] as ProvidersResponse?;
+            unloaded = unloadedProviders(nextProviders, configuredProviders);
+          } catch (_) {
+            // Leave the providers flagged; the picker offers a manual reload.
+          }
+        }
+      }
       final hasConnectedIntegration = integrations.any(
         (integration) => integration.connectionCount > 0,
       );
-      final configuredProviders = hasConnectedIntegration
-          ? await loadConfiguredProviders()
-          : null;
+      if (configuredProviders == null && hasConnectedIntegration) {
+        configuredProviders = await loadConfiguredProviders();
+      }
       if (!_isCurrentCatalogRefresh(
         generation,
         currentApi,
@@ -1371,6 +1424,7 @@ class ConnectionController extends ChangeNotifier {
       providers = nextProviders;
       agents = nextAgents;
       catalog = nextCatalog;
+      unloadedProviderIDs = unloaded;
       catalogDetailed =
           detailedCatalog?.models.isNotEmpty == true ||
           nextProviders.providers.any(
@@ -3830,6 +3884,42 @@ class ConnectionController extends ChangeNotifier {
 
   Future<void> refreshCatalog() => _loadCatalog();
 
+  /// Ask the server to rebuild its provider runtime, then reload the catalog.
+  ///
+  /// The manual counterpart of the one-shot heal in [_loadCatalog], for the
+  /// picker's "Reload providers" action when a provider stays unloaded.
+  Future<void> reloadProviderRuntime() async {
+    final currentApi = api;
+    final currentRepository = repository;
+    if (currentApi != null &&
+        currentRepository != null &&
+        currentApi.capabilities.providerRuntimeRefresh) {
+      try {
+        await currentRepository.refreshProviderRuntime();
+      } catch (_) {
+        // The reload below still reports whether the provider came up.
+      }
+    }
+    await _loadCatalog();
+  }
+
+  /// Providers `/provider` lists as connected that `/config/providers` (the
+  /// server's live runtime) does not know. Empty when the runtime view is
+  /// unavailable, which also covers servers predating `provider.list` where
+  /// both calls answer from the same list.
+  @visibleForTesting
+  static Set<String> unloadedProviders(
+    ProvidersResponse connected,
+    ProvidersResponse? runtime,
+  ) {
+    if (runtime == null) return const {};
+    final loaded = {for (final provider in runtime.providers) provider.id};
+    return {
+      for (final provider in connected.providers)
+        if (!loaded.contains(provider.id)) provider.id,
+    };
+  }
+
   Future<void> _refreshPreexistingProviderRuntime({
     required int generation,
     required ServerGateway currentApi,
@@ -3988,6 +4078,7 @@ class ConnectionController extends ChangeNotifier {
     providers = null;
     agents = [];
     catalog = null;
+    unloadedProviderIDs = const {};
     catalogDetailed = false;
     sessionsLoading = false;
     sessionsError = null;

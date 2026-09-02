@@ -15,10 +15,16 @@ class _RefreshCountingController extends ConnectionController {
   _RefreshCountingController(super.store);
 
   int refreshCalls = 0;
+  int reloadCalls = 0;
 
   @override
   Future<void> refreshCatalog() async {
     refreshCalls++;
+  }
+
+  @override
+  Future<void> reloadProviderRuntime() async {
+    reloadCalls++;
   }
 }
 
@@ -298,6 +304,43 @@ void main() {
     expect(controller.selectedModel?.modelID, 'nemotron-3-ultra-free');
     expect(find.text('Model, mode & agent'), findsNothing);
   });
+
+  testWidgets('a signed-in provider the server has not loaded is called out', (
+    tester,
+  ) async {
+    final controller = await _controller()
+      ..unloadedProviderIDs = const {'local'};
+    await tester.pumpWidget(_app(controller));
+
+    await tester.tap(find.text('Choose model'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('picker-unloaded-providers')), findsOneWidget);
+    expect(
+      find.textContaining('signed in to Local models but has not loaded it'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const Key('picker-reload-providers')));
+    await tester.pump();
+    expect(controller.reloadCalls, 1);
+  });
+
+  test(
+    'unloaded-provider notice reads naturally for one or many providers',
+    () {
+      expect(
+        unloadedProvidersNotice(['OpenAI']),
+        contains(
+          'signed in to OpenAI but has not loaded it yet, so its models',
+        ),
+      );
+      expect(
+        unloadedProvidersNotice(['OpenAI', 'Anthropic']),
+        contains('Anthropic and OpenAI but has not loaded them yet, so their'),
+      );
+    },
+  );
 
   testWidgets('current model and provider family lead the unfiltered catalog', (
     tester,

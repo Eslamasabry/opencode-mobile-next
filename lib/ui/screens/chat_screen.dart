@@ -508,6 +508,7 @@ class _ChatScreenState extends State<ChatScreen>
           setState(() {
             if (msg.role == 'assistant' && msg.errorText != null) {
               _promptError = msg.errorText;
+              _recoverFromPromptError(msg.errorText);
             }
             _messageVersions[msg.id] = ++_eventVersion;
             if (!_reconcilePendingMessage(msg)) {
@@ -531,6 +532,7 @@ class _ChatScreenState extends State<ChatScreen>
         setState(() {
           _promptError = _eventErrorMessage(env.properties['error']);
         });
+        _recoverFromPromptError(_promptError);
         break;
       case 'session.updated':
         final info = env.properties['info'];
@@ -577,6 +579,19 @@ class _ChatScreenState extends State<ChatScreen>
       _streamFlushTimer = null;
       if (_streamDirty && mounted) _flushStreamDeltas();
     });
+  }
+
+  /// A "Model not found" error means the server's model list moved under
+  /// the selection (typically a provider it only just loaded). Re-read the
+  /// catalog so the picker and the selected model reflect what it can serve.
+  void _recoverFromPromptError(String? text) {
+    if (text == null) return;
+    final kind = MessageErrorKind.refineFromText(
+      MessageErrorKind.unknown,
+      text,
+    );
+    if (kind != MessageErrorKind.modelNotFound) return;
+    unawaited(_readConn().refreshCatalog());
   }
 
   String _eventErrorMessage(Object? raw) {
