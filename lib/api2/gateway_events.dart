@@ -97,6 +97,36 @@ class Api2EventAdapter {
           }),
         ];
 
+      case Api2SessionUsageUpdatedEvent():
+        // No v1 analogue: v1 folds usage into `session.updated`, but that
+        // would reset every other field of the stored session. The
+        // controller merges this into the matching session in place.
+        return [
+          _env('session.usage.updated', {
+            'sessionID': event.sessionID,
+            'cost': event.cost,
+            'tokens': _tokensJson(event.tokens),
+          }),
+        ];
+
+      case Api2SessionRetryScheduledEvent():
+        // Same shape the v1 status endpoint/event uses for retry backoff,
+        // so the controller's `session.status` retry handling applies.
+        return [
+          _env('session.status', {
+            'sessionID': event.sessionID,
+            'status': {
+              'type': 'retry',
+              'attempt': event.attempt ?? 0,
+              if (event.error?.message != null)
+                'message': event.error!.message
+              else if (event.error?.type != null)
+                'message': event.error!.type,
+              if (event.at != null) 'next': event.at,
+            },
+          }),
+        ];
+
       case Api2SessionExecutionEvent():
         switch (event.phase) {
           case Api2Phase.started:
@@ -191,6 +221,7 @@ class Api2EventAdapter {
                       event.error?.message ??
                       event.error?.type ??
                       'The model step failed',
+                  errorName: event.error?.type,
                 ),
               }),
             ];
@@ -303,6 +334,7 @@ class Api2EventAdapter {
                   (text.isNotEmpty ? text : 'Tool failed'),
             'attachments': attachments,
             if (event.metadata != null) 'metadata': event.metadata,
+            if (event.executed != null) 'executed': event.executed,
           }, toolName: call?.name),
         ];
 
@@ -464,6 +496,7 @@ class Api2EventAdapter {
     required int created,
     int? completed,
     String? errorMessage,
+    String? errorName,
   }) => {
     'id': event.assistantMessageID,
     'sessionID': event.sessionID,
@@ -472,21 +505,24 @@ class Api2EventAdapter {
     if (event.model != null) 'providerID': event.model!.providerID,
     if (event.model != null) 'modelID': event.model!.id,
     if (event.cost != null) 'cost': event.cost,
-    if (event.tokens != null)
-      'tokens': {
-        'input': event.tokens!.input,
-        'output': event.tokens!.output,
-        'reasoning': event.tokens!.reasoning,
-        'cache': {
-          'read': event.tokens!.cacheRead,
-          'write': event.tokens!.cacheWrite,
-        },
-      },
+    if (event.tokens != null) 'tokens': _tokensJson(event.tokens!),
+    if (event.finish != null) 'finish': event.finish,
     'time': {
       'created': _stepCreated[event.assistantMessageID] ?? created,
       'completed': ?completed,
     },
-    if (errorMessage != null) 'error': {'message': errorMessage},
+    if (errorMessage != null)
+      'error': {
+        'message': errorMessage,
+        'name': ?errorName,
+      },
+  };
+
+  Map<String, dynamic> _tokensJson(Api2Tokens tokens) => {
+    'input': tokens.input,
+    'output': tokens.output,
+    'reasoning': tokens.reasoning,
+    'cache': {'read': tokens.cacheRead, 'write': tokens.cacheWrite},
   };
 
   List<EventEnvelope> _ordinalPart(

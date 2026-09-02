@@ -161,7 +161,13 @@ void main() {
 
     // Events with no v1 analogue emit nothing.
     expect(types, isNot(contains('session.instructions.updated')));
-    expect(types, isNot(contains('session.usage.updated')));
+    // Live usage passes through under its v2 type so the controller can
+    // merge cost/tokens into the stored session.
+    final usage = out.where((e) => e.type == 'session.usage.updated');
+    expect(usage, hasLength(2));
+    expect(usage.first.properties['sessionID'], startsWith('ses_'));
+    expect(usage.first.properties['cost'], isA<num>());
+    expect((usage.first.properties['tokens'] as Map)['input'], isA<int>());
     // Inbox bookkeeping passes through under its v2 type for the
     // pending-sends state.
     expect(types, contains('session.inbox.delivered'));

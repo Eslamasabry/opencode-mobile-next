@@ -79,6 +79,14 @@ Session mapApi2Session(Api2Session session) => Session(
     updated: session.time.updated,
     archived: (session.time.archived ?? 0) > 0 ? session.time.archived : null,
   ),
+  cost: session.cost,
+  tokens: mapApi2Tokens(session.tokens),
+  summary: null, // v2 sessions carry no aggregate diff summary.
+  agent: session.agent,
+  model: session.model == null
+      ? null
+      : '${session.model!.providerID}/${session.model!.id}',
+  compactingSince: null, // v2 signals compaction via events, not session time.
 );
 
 // ---------------- Messages ----------------
@@ -160,6 +168,11 @@ MessageWithParts mapApi2Message(String sessionID, Api2Message message) {
           tokens: message.tokens,
           completed: message.time.completed,
           errorText: message.error?.message ?? message.error?.type,
+          errorKind: message.error == null
+              ? null
+              : MessageErrorKind.fromName(message.error!.type) ??
+                    MessageErrorKind.unknown,
+          finish: message.finish ?? message.rawFinish,
         ),
         parts: partsFromAssistantContent(message.id, message.content),
       );
@@ -315,6 +328,8 @@ MessageInfo _info(
   Api2Tokens? tokens,
   int? completed,
   String? errorText,
+  MessageErrorKind? errorKind,
+  String? finish,
 }) => MessageInfo(
   id: message.id,
   sessionID: sessionID,
@@ -326,6 +341,8 @@ MessageInfo _info(
   tokens: tokens == null ? null : mapApi2Tokens(tokens),
   time: MsgTime(created: message.time.created, completed: completed),
   errorText: errorText,
+  errorKind: errorKind,
+  finish: finish,
 );
 
 /// Builds a message whose single part carries a `v2:`-prefixed type the v1
@@ -418,7 +435,12 @@ List<Part> partsFromAssistantContent(
             type: 'tool',
             messageID: messageID,
             toolName: item.name,
-            toolState: mapApi2ToolState(item.state, toolName: item.name),
+            toolState: mapApi2ToolState(
+              item.state,
+              toolName: item.name,
+              time: item.time,
+              executed: item.executed,
+            ),
           ),
         );
       case Api2UnknownContent():
@@ -439,38 +461,76 @@ List<Part> partsFromAssistantContent(
 /// Builds the v1 `state` JSON shape for a tool part from a v2 tool state,
 /// then parses it through the v1 [ToolState] parser so output-file scanning
 /// and pretty-printing behave exactly as they do for v1 payloads.
-ToolState mapApi2ToolState(Api2ToolState state, {String? toolName}) =>
-    ToolState.fromJson(v1ToolStateJson(state), toolName: toolName);
+///
+/// [time] and [executed] come from the enclosing tool content item
+/// (`time{created,ran,completed,pruned}`, `executed`) and land as the v1
+/// `time{start,end,compacted}` / `executed` keys [ToolState] already parses.
+ToolState mapApi2ToolState(
+  Api2ToolState state, {
+  String? toolName,
+  Api2ContentTime? time,
+  bool? executed,
+}) => ToolState.fromJson(
+  v1ToolStateJson(state, time: time, executed: executed),
+  toolName: toolName,
+);
 
-Map<String, dynamic> v1ToolStateJson(Api2ToolState state) => switch (state) {
-  Api2ToolStreaming() => {'status': 'pending', 'raw': state.rawInput},
-  Api2ToolRunning() => {
-    'status': 'running',
-    'input': state.input,
-    if (state.metadata != null) 'metadata': state.metadata,
-  },
-  Api2ToolCompleted() => {
-    'status': 'completed',
-    'input': state.input,
-    'output': _joinedToolText(state.content),
-    'attachments': _toolAttachments(state.content),
-    'contentSegments': _contentSegments(state.content),
-    if (state.metadata != null) 'metadata': state.metadata,
-  },
-  Api2ToolError() => {
-    'status': 'error',
-    'input': state.input,
-    'error':
-        state.error?.message ??
-        (_joinedToolText(state.content).isNotEmpty
-            ? _joinedToolText(state.content)
-            : 'Tool failed'),
-    'attachments': _toolAttachments(state.content),
-    'contentSegments': _contentSegments(state.content),
-    if (state.metadata != null) 'metadata': state.metadata,
-  },
-  Api2ToolStateUnknown() => {'status': 'pending'},
-};
+Map<String, dynamic> v1ToolStateJson(
+  Api2ToolState state, {
+  Api2ContentTime? time,
+  bool? executed,
+}) {
+  final base = switch (state) {
+    Api2ToolStreaming() => {'status': 'pending', 'raw': state.rawInput},
+    Api2ToolRunning() => {
+      'status': 'running',
+      'input': state.input,
+      if (state.metadata != null) 'metadata': state.metadata,
+    },
+    Api2ToolCompleted() => {
+      'status': 'completed',
+      'input': state.input,
+      'output': _joinedToolText(state.content),
+      'attachments': _toolAttachments(state.content),
+      'contentSegments': _contentSegments(state.content),
+      if (state.metadata != null) 'metadata': state.metadata,
+    },
+    Api2ToolError() => {
+      'status': 'error',
+      'input': state.input,
+      'error':
+          state.error?.message ??
+          (_joinedToolText(state.content).isNotEmpty
+              ? _joinedToolText(state.content)
+              : 'Tool failed'),
+      'attachments': _toolAttachments(state.content),
+      'contentSegments': _contentSegments(state.content),
+      if (state.metadata != null) 'metadata': state.metadata,
+    },
+    Api2ToolStateUnknown() => {'status': 'pending'},
+  };
+  final v1Time = v1ToolTimeJson(time);
+  return {
+    ...base,
+    'time': ?v1Time,
+    'executed': ?executed,
+  };
+}
+
+/// v2 `time{created,ran,completed,pruned}` → v1 `time{start,end,compacted}`.
+/// `start` prefers `ran` (execution start) over `created` (call emitted).
+Map<String, dynamic>? v1ToolTimeJson(Api2ContentTime? time) {
+  if (time == null) return null;
+  final start = time.ran ?? time.created;
+  if (start == null && time.completed == null && time.pruned == null) {
+    return null;
+  }
+  return {
+    'start': ?start,
+    'end': ?time.completed,
+    'compacted': ?time.pruned,
+  };
+}
 
 /// Preserves the v2 content array's text/file interleaving as the ordered
 /// `contentSegments` list [ToolState.segments] parses.
@@ -620,8 +680,15 @@ Map<String, dynamic> _modelData(Api2ModelInfo model) {
   return data;
 }
 
-AgentInfo mapApi2Agent(Api2AgentInfo agent) =>
-    AgentInfo(name: agent.id, mode: agent.mode);
+AgentInfo mapApi2Agent(Api2AgentInfo agent) => AgentInfo(
+  name: agent.id,
+  mode: agent.mode,
+  color: agent.color,
+  model: _modelRefString(agent.model),
+);
+
+String? _modelRefString(Api2ModelRef? ref) =>
+    ref == null ? null : '${ref.providerID}/${ref.id}';
 
 // ---------------- Catalog ----------------
 
@@ -639,6 +706,10 @@ CatalogModel mapApi2CatalogModel(Api2ModelInfo model) {
     reasoning: false,
     attachments: model.capabilities.input.any((input) => input != 'text'),
     tools: model.capabilities.tools,
+    cost: mapApi2ModelCost(model.baseCost),
+    released: model.released == null || model.released! <= 0
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch(model.released!),
     variants: [
       if (rawVariants is List)
         for (final variant in rawVariants)
@@ -661,12 +732,24 @@ CatalogProvider mapApi2CatalogProvider(Api2ProviderInfo provider) =>
       integrationID: provider.integrationID,
     );
 
+/// v2 prices are already USD per million tokens, so this is a field rename.
+ModelCost? mapApi2ModelCost(Api2ModelCost? cost) => cost == null
+    ? null
+    : ModelCost(
+        inputPerMillion: cost.input,
+        outputPerMillion: cost.output,
+        cacheReadPerMillion: cost.cacheRead,
+        cacheWritePerMillion: cost.cacheWrite,
+      );
+
 CatalogAgent mapApi2CatalogAgent(Api2AgentInfo agent) => CatalogAgent(
   id: agent.id,
   mode: agent.mode ?? 'primary',
   description: agent.description,
   hidden: agent.hidden,
   maxSteps: null,
+  color: agent.color,
+  model: _modelRefString(agent.model),
 );
 
 // ---------------- Files / VCS ----------------

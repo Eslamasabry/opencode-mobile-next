@@ -66,7 +66,21 @@ CatalogModel _catalogModelFromProvider(ProviderInfo provider, String modelID) {
     attachments: attachments,
     tools: capabilities['toolcall'] == true || capabilities['tools'] == true,
     variants: _catalogVariants(raw['variants']),
+    // v1 `Model.cost` is models.dev's USD-per-million-tokens price list.
+    cost: ModelCost.fromJson(raw['cost']),
+    released: _catalogReleaseDate(raw['release_date']),
   );
+}
+
+/// v1 `release_date` is a `YYYY-MM-DD` string; tolerate epoch millis too.
+DateTime? _catalogReleaseDate(dynamic raw) {
+  if (raw is num && raw > 0) {
+    return DateTime.fromMillisecondsSinceEpoch(raw.toInt());
+  }
+  if (raw is String && raw.trim().isNotEmpty) {
+    return DateTime.tryParse(raw.trim());
+  }
+  return null;
 }
 
 CatalogModel _mergeCatalogModel(CatalogModel detailed, CatalogModel base) {
@@ -83,6 +97,8 @@ CatalogModel _mergeCatalogModel(CatalogModel detailed, CatalogModel base) {
     attachments: detailed.attachments || base.attachments,
     tools: detailed.tools || base.tools,
     variants: detailed.variants.isEmpty ? base.variants : detailed.variants,
+    cost: detailed.cost ?? base.cost,
+    released: detailed.released ?? base.released,
   );
 }
 
@@ -235,6 +251,13 @@ class ConnectionController extends ChangeNotifier {
 
   Map<String, Session> sessionsById = {};
   Set<String> busySessions = {};
+
+  /// Sessions currently in provider-retry backoff, keyed by session ID.
+  /// Populated from `session.status` `{type: 'retry'}` (v1 and v2), the v2
+  /// `session.retry.scheduled` event, and the v1 status endpoint on refresh;
+  /// an entry is removed as soon as the session reports busy or idle. Retry
+  /// sessions remain in [busySessions] as before.
+  Map<String, SessionRetryState> retryStates = {};
 
   /// Outstanding permission asks keyed by request ID.
   Map<String, PermissionRequest> permissions = {};
@@ -1054,6 +1077,8 @@ class ConnectionController extends ChangeNotifier {
               mode: agent.mode ?? 'unknown',
               description: null,
               hidden: false,
+              color: agent.color,
+              model: agent.model,
             ),
         ],
       );
@@ -1437,6 +1462,7 @@ class ConnectionController extends ChangeNotifier {
             _markSessionChanged(id);
             sessionsById.remove(id);
             busySessions.remove(id);
+            retryStates.remove(id);
             _dismissSessionCodingAlerts(id);
             permissions.removeWhere((_, value) => value.sessionID == id);
             final removedQuestionIDs = questions.entries
@@ -1464,6 +1490,26 @@ class ConnectionController extends ChangeNotifier {
             }
             if (_inboxBySession.remove(id) != null) inboxRevision += 1;
             _syncInputAlerts();
+            notifyListeners();
+          }
+        }
+        break;
+
+      case 'session.usage.updated':
+        // v2 live usage: merge into the stored session instead of replacing
+        // it, since the event carries only cost + tokens.
+        final sid = props['sessionID']?.toString();
+        if (sid != null && sid.isNotEmpty) {
+          final existing = sessionsById[sid];
+          if (existing != null) {
+            final cost = props['cost'];
+            _markSessionChanged(sid);
+            sessionsById[sid] = existing.copyWith(
+              cost: cost is num ? cost.toDouble() : null,
+              tokens: props['tokens'] is Map
+                  ? Tokens.fromJson(props['tokens'])
+                  : null,
+            );
             notifyListeners();
           }
         }
@@ -1601,12 +1647,19 @@ class ConnectionController extends ChangeNotifier {
           switch (sessionStatus) {
             case 'idle':
               busySessions.remove(sid);
+              retryStates.remove(sid);
               _settleSessionAttention(sid, CodingAlertKind.complete);
               unawaited(_refreshOneSession(sid));
               break;
             case 'busy':
+              busySessions.add(sid);
+              retryStates.remove(sid);
+              _markSessionAttentionActive(sid);
+              break;
             case 'retry':
               busySessions.add(sid);
+              final retry = SessionRetryState.fromStatusJson(rawStatus);
+              if (retry != null) retryStates[sid] = retry;
               _markSessionAttentionActive(sid);
               break;
             default:
@@ -1621,6 +1674,7 @@ class ConnectionController extends ChangeNotifier {
         if (sid != null) {
           _markSessionChanged(sid);
           busySessions.remove(sid);
+          retryStates.remove(sid);
           _settleSessionAttention(sid, CodingAlertKind.error);
         }
         final err = props['error'];
@@ -1639,6 +1693,7 @@ class ConnectionController extends ChangeNotifier {
         if (sid != null) {
           _markSessionChanged(sid);
           busySessions.remove(sid);
+          retryStates.remove(sid);
           _settleSessionAttention(sid, CodingAlertKind.complete);
           unawaited(_refreshOneSession(sid));
           notifyListeners();
@@ -2527,6 +2582,20 @@ class ConnectionController extends ChangeNotifier {
       } catch (error) {
         statusError = error;
       }
+      // Retry details ride on the same v1 status payload; fetch them only
+      // when a session is actually retrying so the common path stays one
+      // request.
+      Map<String, SessionRetryState>? retries;
+      if (statuses != null &&
+          statuses.values.contains('retry') &&
+          currentApi is SessionRetryGateway) {
+        try {
+          retries = await (currentApi as SessionRetryGateway)
+              .sessionRetryStates();
+        } catch (_) {
+          retries = null;
+        }
+      }
       if (!_isCurrentSessionsRefresh(
         generation,
         currentApi,
@@ -2560,6 +2629,16 @@ class ConnectionController extends ChangeNotifier {
           } else {
             busySessions.remove(id);
             _settleSessionAttention(id, CodingAlertKind.complete);
+          }
+          if (statuses[id] == 'retry') {
+            final retry = retries?[id];
+            if (retry != null) {
+              retryStates[id] = retry;
+            } else if (retries != null) {
+              retryStates.remove(id);
+            }
+          } else {
+            retryStates.remove(id);
           }
         }
       }
@@ -2650,6 +2729,7 @@ class ConnectionController extends ChangeNotifier {
       final remoteStatus = statuses[entry.key] ?? 'idle';
       if (remoteStatus == 'idle') {
         final removed = busySessions.remove(entry.key);
+        changed = retryStates.remove(entry.key) != null || changed;
         changed = removed || changed;
         if (removed) {
           _settleSessionAttention(entry.key, CodingAlertKind.complete);
@@ -3627,6 +3707,7 @@ class ConnectionController extends ChangeNotifier {
     _sessionRevisions.clear();
     sessionsById = {};
     busySessions = {};
+    retryStates = {};
     permissions = {};
     questions = {};
     forms = {};

@@ -1382,18 +1382,26 @@ class SdkProductRepository
                 ),
                 tools: model.capabilities.tools,
                 variants: variants,
+                cost: _catalogModelCost(model.cost),
+                released: _catalogReleased(model.time.released),
               );
             })
             .where((model) => model.id.isNotEmpty)
             .toList();
         final agents = (agentResponse.data?.data ?? const [])
             .map((agent) {
+              final color = agent.color?.value;
+              final model = agent.model;
               return CatalogAgent(
                 id: agent.id,
                 mode: agent.mode.value.toString(),
                 description: agent.description,
                 hidden: agent.hidden,
                 maxSteps: agent.steps,
+                color: color is String && color.isNotEmpty ? color : null,
+                model: model == null
+                    ? null
+                    : '${model.providerID}/${model.id}',
               );
             })
             .where((agent) => agent.id.isNotEmpty)
@@ -1404,6 +1412,26 @@ class SdkProductRepository
           agents: agents,
         );
       });
+
+  /// v2 model prices are already USD per million tokens; take the base
+  /// (untiered) entry, or the first one when every entry is a context tier.
+  static ModelCost? _catalogModelCost(List<sdk.ModelCost> costs) {
+    if (costs.isEmpty) return null;
+    final base = costs.firstWhere(
+      (cost) => cost.tiers == null || cost.tiers!.isEmpty,
+      orElse: () => costs.first,
+    );
+    return ModelCost(
+      inputPerMillion: base.input.toDouble(),
+      outputPerMillion: base.output.toDouble(),
+      cacheReadPerMillion: base.cache.read.toDouble(),
+      cacheWritePerMillion: base.cache.write.toDouble(),
+    );
+  }
+
+  static DateTime? _catalogReleased(num released) => released <= 0
+      ? null
+      : DateTime.fromMillisecondsSinceEpoch(released.toInt());
 
   @override
   Future<ExperimentalServerCapabilities> loadExperimentalCapabilities() =>
