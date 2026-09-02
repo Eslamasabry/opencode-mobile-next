@@ -747,8 +747,13 @@ void main() {
       find.byKey(const ValueKey('connection-status-banner')),
       findsOneWidget,
     );
-    expect(find.textContaining('Endpoint is unavailable'), findsOneWidget);
+    expect(find.text('Connection lost'), findsOneWidget);
     expect(find.text('Try again'), findsOneWidget);
+    // The raw error and the secondary action live behind Details.
+    await tester.tap(find.byKey(const ValueKey('connection-banner-details')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.textContaining('Endpoint is unavailable'), findsOneWidget);
     expect(find.text('Change server'), findsOneWidget);
   });
 
@@ -813,7 +818,7 @@ void main() {
       ];
     await _pumpChat(tester, api);
 
-    await tester.tap(find.byTooltip('Session views'));
+    await tester.tap(find.byTooltip('Session menu'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Changes'));
     await tester.pumpAndSettle();
@@ -842,7 +847,7 @@ void main() {
       ];
     await _pumpChat(tester, api);
 
-    await tester.tap(find.byTooltip('Session views'));
+    await tester.tap(find.byTooltip('Session menu'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Changes'));
     await tester.pumpAndSettle();
@@ -1454,7 +1459,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('tool-call-group')), findsOneWidget);
-    expect(find.text('2 calls · edit · shell'), findsOneWidget);
+    expect(find.text('Edited 1 file, ran 1 command'), findsOneWidget);
     expect(find.text('Edit'), findsNothing);
     expect(find.text('Shell'), findsNothing);
 
@@ -1516,11 +1521,15 @@ void main() {
         ),
       ];
 
-    await _pumpChat(tester, api);
+    final controller = await _pumpChat(tester, api);
     await tester.pumpAndSettle();
 
+    // Model switches always show; usage rides on the timestamps preference.
     expect(find.textContaining('provider/model-a'), findsOneWidget);
     expect(find.textContaining('provider/model-b'), findsOneWidget);
+    expect(find.textContaining('350 tok'), findsNothing);
+    await controller.setTranscriptTimestampsVisible(true);
+    await tester.pumpAndSettle();
     expect(find.textContaining('350 tok'), findsOneWidget);
     expect(find.textContaining('75 tok'), findsOneWidget);
     Finder usageSegment(String value) => find.byWidgetPredicate((widget) {
@@ -1679,22 +1688,36 @@ void main() {
     expect(controller.transcriptReasoningExpanded, isTrue);
     expect(find.text(reasoning), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Session views'));
+    await tester.tap(find.byTooltip('Session menu'));
     await tester.pumpAndSettle();
-    expect(find.text('Collapse reasoning'), findsOneWidget);
+    expect(
+      tester
+          .widget<SwitchListTile>(
+            find.byKey(const Key('session-view-thinking')),
+          )
+          .value,
+      isTrue,
+    );
+    expect(find.text('Timestamps & usage'), findsOneWidget);
     await tester.tap(find.byKey(const Key('session-view-timestamps')));
     await tester.pumpAndSettle();
 
+    // The toggle applies in place and the sheet stays open.
     expect(controller.transcriptTimestampsVisible, isTrue);
+    expect(find.text('Timestamps & usage'), findsOneWidget);
     expect(find.byKey(const Key('message-meta-user-display')), findsOneWidget);
     expect(
       find.byKey(const Key('message-meta-assistant-display')),
       findsOneWidget,
     );
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Session views'));
+    await tester.tap(find.byTooltip('Session menu'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('session-view-thinking')));
+    await tester.pumpAndSettle();
+    await tester.tapAt(const Offset(10, 10));
     await tester.pumpAndSettle();
 
     expect(controller.transcriptReasoningExpanded, isFalse);
@@ -1750,13 +1773,18 @@ void main() {
     // which of the two blocks the first toggle belongs to.
     await tester.tap(find.byKey(const Key('reasoning-toggle')).first);
     await tester.pumpAndSettle();
-    expect(find.text(first).evaluate().length +
-        find.text(second).evaluate().length, 1);
+    expect(
+      find.text(first).evaluate().length + find.text(second).evaluate().length,
+      1,
+    );
 
     Future<void> flipGlobal() async {
-      await tester.tap(find.byTooltip('Session views'));
+      await tester.tap(find.byTooltip('Session menu'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('session-view-thinking')));
+      await tester.pumpAndSettle();
+      // The switch leaves the sheet open; dismiss it like a reader would.
+      await tester.tapAt(const Offset(10, 10));
       await tester.pumpAndSettle();
     }
 
@@ -1777,8 +1805,10 @@ void main() {
     // Per-part control still works after the round trip.
     await tester.tap(find.byKey(const Key('reasoning-toggle')).last);
     await tester.pumpAndSettle();
-    expect(find.text(first).evaluate().length +
-        find.text(second).evaluate().length, 1);
+    expect(
+      find.text(first).evaluate().length + find.text(second).evaluate().length,
+      1,
+    );
   });
 
   testWidgets('command launcher maps diff to the native session viewer', (
@@ -1932,7 +1962,7 @@ void main() {
       ];
 
     await _pumpChat(tester, api);
-    await tester.tap(find.byTooltip('Session views'));
+    await tester.tap(find.byTooltip('Session menu'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Todos'));
     await tester.pumpAndSettle();
@@ -1950,7 +1980,7 @@ void main() {
       );
 
     await _pumpChat(tester, api);
-    await tester.tap(find.byTooltip('Session views'));
+    await tester.tap(find.byTooltip('Session menu'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Todos'));
     await tester.pumpAndSettle();
@@ -1975,7 +2005,7 @@ void main() {
     final api = _FakeOpenCodeApi();
 
     await _pumpChat(tester, api);
-    await tester.tap(find.byTooltip('Session views'));
+    await tester.tap(find.byTooltip('Session menu'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Todos'));
     await tester.pumpAndSettle();
@@ -2328,7 +2358,7 @@ void main() {
 
     await _pumpChat(tester, api);
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Session views'));
+    await tester.tap(find.byTooltip('Session menu'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Timeline'));
     await tester.pumpAndSettle();
@@ -2378,7 +2408,7 @@ void main() {
 
     await _pumpChat(tester, api, repository: repository);
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Session views'));
+    await tester.tap(find.byTooltip('Session menu'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Timeline'));
     await tester.pumpAndSettle();
@@ -2423,7 +2453,7 @@ void main() {
       controller: controller,
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Session views'));
+    await tester.tap(find.byTooltip('Session menu'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Timeline'));
     await tester.pumpAndSettle();
@@ -2521,7 +2551,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Session views'));
+    await tester.tap(find.byTooltip('Session menu'));
     await tester.pumpAndSettle();
     final timestamps = find.byKey(const Key('session-view-timestamps'));
     await tester.ensureVisible(timestamps);
@@ -2530,8 +2560,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(controller.transcriptTimestampsVisible, isTrue);
     expect(tester.takeException(), isNull);
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Session views'));
+    await tester.tap(find.byTooltip('Session menu'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Timeline'));
     await tester.pumpAndSettle();
@@ -2641,7 +2673,10 @@ void main() {
 
     await _pumpChat(tester, api, repository: repository);
     await tester.pumpAndSettle();
-    await tester.enterText(find.byKey(const Key('chat-composer-field')), '/rev');
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      '/rev',
+    );
     await tester.pump();
 
     final row = find.byKey(const Key('inline-command-review'));
@@ -2717,7 +2752,7 @@ void main() {
       await tester.pump();
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Session views'));
+      await tester.tap(find.byTooltip('Session menu'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Timeline'));
       await tester.pumpAndSettle();
@@ -3098,10 +3133,7 @@ void main() {
         tester.widget<TextField>(find.byType(TextField)).controller?.text,
         'try once',
       );
-      expect(
-        find.text('OpenCode is unreachable. Try again.'),
-        findsOneWidget,
-      );
+      expect(find.text('OpenCode is unreachable. Try again.'), findsOneWidget);
     },
   );
 
@@ -3217,7 +3249,7 @@ void main() {
     final controller = await _pumpChat(tester, api);
     controller.selectedVariant = 'fast';
 
-    await tester.tap(find.byTooltip('Session actions'));
+    await tester.tap(find.byTooltip('Session menu'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Retry last prompt'));
     await tester.pumpAndSettle();
@@ -3238,7 +3270,7 @@ void main() {
       }),
     );
     await _pumpEvent(tester);
-    await tester.tap(find.byTooltip('Session actions'));
+    await tester.tap(find.byTooltip('Session menu'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Retry last prompt'));
     await tester.pumpAndSettle();
@@ -3347,7 +3379,9 @@ void main() {
       ),
     };
     await tester.pumpWidget(
-      MaterialApp(home: Scaffold(body: SessionsTab(controller: controller))),
+      MaterialApp(
+        home: Scaffold(body: SessionsTab(controller: controller)),
+      ),
     );
 
     final row = find.byKey(const ValueKey('session-dismiss-session-1'));
@@ -3502,9 +3536,7 @@ void main() {
     await _pumpChat(tester, api, controller: controller);
 
     expect(
-      find.byKey(
-        const ValueKey('empty-suggestion-Explain the oc_app project'),
-      ),
+      find.byKey(const ValueKey('empty-suggestion-Explain the oc_app project')),
       findsOneWidget,
     );
     expect(
@@ -3718,7 +3750,7 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    await tester.tap(find.byTooltip('Session views'));
+    await tester.tap(find.byTooltip('Session menu'));
     await tester.pumpAndSettle();
     expect(find.text('Timeline'), findsOneWidget);
     expect(
@@ -3729,7 +3761,7 @@ void main() {
     await tester.tapAt(const Offset(10, 10));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Session actions'));
+    await tester.tap(find.byTooltip('Session menu'));
     await tester.pumpAndSettle();
     expect(find.text('Retry last prompt'), findsOneWidget);
     await tester.drag(find.text('Retry last prompt'), const Offset(0, -400));

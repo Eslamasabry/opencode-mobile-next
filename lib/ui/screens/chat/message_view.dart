@@ -254,7 +254,7 @@ class _EmptyTranscript extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Tip: type / for commands · long-press a message '
+                        'Tip: type / for commands · tap ⋯ under a message '
                         'for actions',
                         key: const ValueKey('empty-transcript-tip'),
                         textAlign: TextAlign.center,
@@ -812,52 +812,54 @@ List<_AssistantPartRun> _groupAssistantParts(List<Part> parts) {
   return runs;
 }
 
-String _contextToolSummary(List<Part> parts) {
-  final counts = <String, int>{};
+/// One human sentence for a tool group's header, e.g. "Read 3 files, edited
+/// 1, ran 2 commands". Segments follow the way a turn unfolds — look, change,
+/// run — and the file noun is elided after a read segment already names it.
+String _toolRunSentence(List<Part> parts) {
+  var reads = 0;
+  var searches = 0;
+  var lists = 0;
+  var edits = 0;
+  var commands = 0;
+  var web = 0;
+  var agents = 0;
+  var other = 0;
   for (final part in parts) {
-    final name = part.toolName!.trim().toLowerCase();
-    counts[name] = (counts[name] ?? 0) + 1;
+    switch (part.toolName?.trim().toLowerCase() ?? '') {
+      case 'read':
+        reads++;
+      case 'glob' || 'grep':
+        searches++;
+      case 'list':
+        lists++;
+      case 'edit' || 'write' || 'patch' || 'apply_patch' || 'multiedit':
+        edits++;
+      case 'bash' || 'shell':
+        commands++;
+      case 'webfetch' || 'websearch':
+        web++;
+      case 'task':
+        agents++;
+      default:
+        other++;
+    }
   }
-  String countLabel(String name, String singular, String plural) {
-    final count = counts[name] ?? 0;
-    return count == 0 ? '' : '$count ${count == 1 ? singular : plural}';
-  }
-
-  final searchCount = (counts['glob'] ?? 0) + (counts['grep'] ?? 0);
-  return [
-    countLabel('read', 'read', 'reads'),
-    if (searchCount > 0)
-      '$searchCount ${searchCount == 1 ? 'search' : 'searches'}',
-    countLabel('list', 'list', 'lists'),
-  ].where((label) => label.isNotEmpty).join(' · ');
-}
-
-String _toolRunSummary(List<Part> parts) {
-  final allContext = parts.every(
-    (part) => _contextToolNames.contains(part.toolName?.trim().toLowerCase()),
-  );
-  if (allContext) return _contextToolSummary(parts);
-
-  final labels = <String>[];
-  for (final part in parts) {
-    final name = part.toolName?.trim().toLowerCase() ?? 'tool';
-    final label = switch (name) {
-      'bash' || 'shell' => 'shell',
-      'read' => 'read',
-      'list' => 'list',
-      'glob' || 'grep' => 'search',
-      'edit' => 'edit',
-      'write' => 'write',
-      'patch' || 'apply_patch' => 'patch',
-      'task' => 'agent',
-      'todowrite' || 'todo' => 'tasks',
-      'webfetch' || 'websearch' => 'web',
-      _ => name,
-    };
-    if (!labels.contains(label)) labels.add(label);
-  }
-  final kinds = labels.take(3).join(' · ');
-  return '${parts.length} calls${kinds.isEmpty ? '' : ' · $kinds'}';
+  String plural(int count, String one, String many) =>
+      '$count ${count == 1 ? one : many}';
+  final segments = <String>[
+    if (reads > 0) 'read ${plural(reads, 'file', 'files')}',
+    if (searches > 0) searches == 1 ? 'searched once' : 'searched $searches times',
+    if (lists > 0) 'listed ${plural(lists, 'folder', 'folders')}',
+    if (edits > 0)
+      reads > 0 ? 'edited $edits' : 'edited ${plural(edits, 'file', 'files')}',
+    if (commands > 0) 'ran ${plural(commands, 'command', 'commands')}',
+    if (web > 0) 'fetched ${plural(web, 'page', 'pages')}',
+    if (agents > 0) 'delegated ${plural(agents, 'task', 'tasks')}',
+    if (other > 0) 'made ${plural(other, 'other call', 'other calls')}',
+  ];
+  if (segments.isEmpty) return '';
+  final sentence = segments.join(', ');
+  return sentence[0].toUpperCase() + sentence.substring(1);
 }
 
 class _ToolCallGroup extends StatefulWidget {
@@ -956,7 +958,7 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
             runningPart.toolName ?? 'tool',
             runningPart.toolState,
           )
-        : _toolRunSummary(widget.parts);
+        : _toolRunSentence(widget.parts);
     final allContext = widget.parts.every(
       (part) => _contextToolNames.contains(part.toolName?.trim().toLowerCase()),
     );
@@ -1095,10 +1097,15 @@ class _AssistantMessagePart extends StatelessWidget {
     required this.filePreviewLoader,
     required this.onAttachFile,
     required this.onDownloadFile,
+    this.streaming = false,
   });
 
   final Part part;
   final bool reasoningExpanded;
+
+  /// True while this is the text block the assistant is still writing; it
+  /// gets a soft primary tint so the eye lands where the transcript grows.
+  final bool streaming;
   final Map<String, bool> expansionStore;
   final ToolOutputFileLoader filePreviewLoader;
   final ToolOutputFileAction onAttachFile;
@@ -1107,14 +1114,33 @@ class _AssistantMessagePart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (part.type == 'text') {
+      final theme = Theme.of(context);
+      final reduceMotion = MediaQuery.disableAnimationsOf(context);
       return Padding(
         key: const Key('assistant-text-block'),
         padding: const EdgeInsets.only(bottom: 4),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: _proseWidthCap),
-          // Non-selectable so a long-press reaches the message actions menu
-          // (the rule the user bubble already follows).
-          child: MarkdownText(part.text, selectable: false),
+        child: AnimatedContainer(
+          key: const Key('assistant-text-surface'),
+          duration: reduceMotion
+              ? Duration.zero
+              : const Duration(milliseconds: 220),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(
+            color: streaming ? AppTheme.liveTint(theme) : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: _proseWidthCap),
+            // Selectable on touch platforms: message actions live behind the
+            // ⋯ button in the meta row, so prose no longer has to give up
+            // selection for the long-press. Desktop keeps the transcript-wide
+            // SelectionArea instead of nesting a second selection surface.
+            child: MarkdownText(
+              part.text,
+              selectable: !desktopInteractions,
+              onChoice: (option) => _insertChoice(context, option),
+            ),
+          ),
         ),
       );
     }
@@ -1157,6 +1183,22 @@ class _AssistantMessagePart extends StatelessWidget {
       );
     }
     return const SizedBox.shrink();
+  }
+
+  /// Routes a tapped ```choices option into the composer through the same
+  /// path the empty-transcript suggestion chips use. Hosts without the chat
+  /// screen (isolated previews) fall back to the clipboard.
+  static Future<void> _insertChoice(BuildContext context, String option) async {
+    final chat = context.findAncestorStateOfType<_ChatScreenState>();
+    if (chat != null) {
+      chat._insertSuggestion(option);
+      return;
+    }
+    await Clipboard.setData(ClipboardData(text: option));
+    if (!context.mounted) return;
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      const SnackBar(content: Text('Copied. Paste it into the composer')),
+    );
   }
 }
 
@@ -1203,12 +1245,18 @@ class _MessageView extends StatelessWidget {
         : _groupAssistantParts(visibleParts);
     final createdAt = m.info.time?.created;
 
+    // Usage rides on the same preference as timestamps: both are detail a
+    // reader opts into, and the model label alone marks a switch.
     final metaParts = <String>[
       if (showTimestamp && createdAt != null) _fmtSessionTime(createdAt),
       ?meta.modelLabel,
-      if (meta.turnTokens case final tokens?) '${_fmtTokens(tokens)} tok',
-      if (meta.turnCost case final cost?) '\$${cost.toStringAsFixed(4)}',
+      if (showTimestamp) ...[
+        if (meta.turnTokens case final tokens?) '${_fmtTokens(tokens)} tok',
+        if (meta.turnCost case final cost?) _fmtCost(cost),
+      ],
     ];
+    final streaming =
+        !isUser && m.info.errorText == null && m.info.time?.isDone == false;
 
     final bubbleWidthCap = MediaQuery.of(context).size.width * .88;
 
@@ -1283,6 +1331,9 @@ class _MessageView extends StatelessWidget {
                               filePreviewLoader: filePreviewLoader,
                               onAttachFile: onAttachFile,
                               onDownloadFile: onDownloadFile,
+                              streaming:
+                                  streaming &&
+                                  identical(run, assistantRuns.last),
                             ),
                       ],
                     ),
@@ -1358,6 +1409,11 @@ class _MessageView extends StatelessWidget {
     if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}k';
     return '$n';
   }
+
+  /// Three decimals is the finest a reader can act on; anything smaller is
+  /// "essentially free" rather than a string of zeros.
+  static String _fmtCost(double cost) =>
+      cost < .001 ? '< \$0.001' : '\$${cost.toStringAsFixed(3)}';
 }
 
 class _MessageMeta {
@@ -1576,16 +1632,36 @@ class _ReasoningState extends State<_Reasoning> {
       ? null
       : widget.expansionStore?[widget.expansionKey!];
 
+  /// The transcript-wide default that was in force when the user last
+  /// toggled this block by hand. A per-part choice only outlives the default
+  /// it was made under: once the global toggle flips, a stale override from
+  /// an off-screen block must not resist the new default.
+  String? get _defaultKey =>
+      widget.expansionKey == null ? null : '${widget.expansionKey}@default';
+
   void _persist(bool open) {
     if (widget.expansionKey case final key?) {
       widget.expansionStore?[key] = open;
+      widget.expansionStore?[_defaultKey!] = widget.expanded;
     }
   }
 
   @override
   void initState() {
     super.initState();
-    _open = _stored ?? widget.expanded;
+    final stored = _stored;
+    final storedDefault = _defaultKey == null
+        ? null
+        : widget.expansionStore?[_defaultKey!];
+    if (stored != null &&
+        storedDefault != null &&
+        storedDefault != widget.expanded) {
+      widget.expansionStore?.remove(widget.expansionKey);
+      widget.expansionStore?.remove(_defaultKey);
+      _open = widget.expanded;
+    } else {
+      _open = stored ?? widget.expanded;
+    }
   }
 
   @override
@@ -1598,6 +1674,7 @@ class _ReasoningState extends State<_Reasoning> {
       // session, and flipping back could not restore them.
       if (widget.expansionKey case final key?) {
         widget.expansionStore?.remove(key);
+        widget.expansionStore?.remove(_defaultKey);
       }
       _open = widget.expanded;
     }
@@ -1701,16 +1778,30 @@ class _ReasoningState extends State<_Reasoning> {
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
                                 const SizedBox(width: 5),
-                                Flexible(
-                                  child: Text(
-                                    _open
-                                        ? 'reasoning'
-                                        : 'reasoning (tap to expand)',
-                                    style: theme.textTheme.labelSmall!.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
+                                InfoLabel.glossary(
+                                  Glossary.reasoning,
+                                  key: const Key('reasoning-glossary'),
+                                  iconSize: 13,
+                                  style: theme.textTheme.labelSmall!.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
                                   ),
                                 ),
+                                if (!_open) ...[
+                                  const SizedBox(width: 4),
+                                  Flexible(
+                                    child: Text(
+                                      '(tap to expand)',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.labelSmall!
+                                          .copyWith(
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                           ),

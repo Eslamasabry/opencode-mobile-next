@@ -11,8 +11,14 @@ import '../../state/connection.dart';
 import '../../state/pairing.dart';
 import '../../state/profiles.dart';
 import '../app_theme.dart';
+import '../widgets/confirm_sheet.dart';
 import '../widgets/product_states.dart';
 import 'pairing_scanner_screen.dart';
+
+/// What the servers list learns back from the editor's save: whether the
+/// profile reached the store, and the product-facing failure to show inline
+/// when connecting (or saving) did not work out.
+typedef _SubmitOutcome = ({bool saved, String? failure});
 
 /// Manage opencode server profiles and connect.
 class ServersScreen extends ConsumerStatefulWidget {
@@ -25,6 +31,11 @@ class ServersScreen extends ConsumerStatefulWidget {
 class _ServersScreenState extends ConsumerState<ServersScreen> {
   bool _busy = false;
   bool _handledRouteArgument = false;
+
+  /// A connect attempt from the list that failed, rendered inline above the
+  /// rows in the same verdict style the editor uses — never a red snackbar
+  /// carrying a raw exception.
+  String? _listFailure;
 
   @override
   void didChangeDependencies() {
@@ -81,10 +92,14 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     if (conn.api != null && failure == null) {
       Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
     } else {
-      _showFailure(
-        '${conn.lastError ?? failure?.toString() ?? 'Connection failed'} '
-        'Check the server address and credentials, then try again.',
+      final detail = productErrorText(
+        conn.lastError ?? failure ?? 'Connection failed.',
       );
+      setState(() {
+        _listFailure =
+            'Could not connect to ${p.name}. $detail '
+            'Check the server address and credentials, then try again.';
+      });
     }
   }
 
@@ -92,22 +107,39 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     ServerProfile? existing,
     bool focusPassword = false,
   }) async {
+    final isNew = existing == null;
+    // The editor stays open until the save (and, for new or active profiles,
+    // the connect) has succeeded, so any failure is shown where the fields
+    // that fix it are — not as a snackbar over a list the user just left.
     final result = await Navigator.of(context).push<ServerProfile>(
       MaterialPageRoute<ServerProfile>(
         builder: (_) => _ProfileEditorScreen(
           existing: existing,
           focusPassword: focusPassword,
+          onSubmit: (profile) => _saveAndConnect(profile, isNew: isNew),
         ),
       ),
     );
     if (result == null || !mounted) return;
+    if (isNew) {
+      Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
+    }
+  }
+
+  /// Saves [result] and, for a brand-new or the active profile, connects it.
+  /// A brand-new profile promises "Save to finish", so saving it also
+  /// connects it; edits of existing non-active profiles keep saving only.
+  Future<_SubmitOutcome> _saveAndConnect(
+    ServerProfile result, {
+    required bool isNew,
+  }) async {
     final store = ref.read(bootstrapProvider).store;
     final wasActive = store.activeId == result.id;
-    // A brand-new profile promises "Save to finish", so saving it also
-    // connects it. Edits of existing non-active profiles keep saving only.
-    final isNew = existing == null;
     var saved = false;
-    setState(() => _busy = true);
+    setState(() {
+      _busy = true;
+      _listFailure = null;
+    });
     try {
       await store.upsert(result);
       saved = true;
@@ -122,23 +154,19 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
             conn.lastError ?? 'The server did not connect.',
           );
         }
-        if (isNew && mounted) {
-          Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
-        }
       }
+      return (saved: true, failure: null);
     } catch (error) {
-      if (saved) {
-        _showFailure(
-          '${result.name} was saved, but it could not '
-          '${isNew ? 'connect' : 'reconnect'}. Check the '
-          'server address and credentials, then try again. ($error)',
-        );
-      } else {
-        _showFailure(
-          'Could not save ${result.name}. The existing profile was left '
-          'unchanged. Check device storage and try again. ($error)',
-        );
-      }
+      final detail = productErrorText(error);
+      return (
+        saved: saved,
+        failure: saved
+            ? '${result.name} was saved, but it could not '
+                  '${isNew ? 'connect' : 'reconnect'}. Check the '
+                  'server address and credentials, then try again. ($detail)'
+            : 'Could not save ${result.name}. The existing profile was left '
+                  'unchanged. Check device storage and try again. ($detail)',
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -166,28 +194,17 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
   Future<void> _delete(ServerProfile p) async {
     final connection = ref.read(connProvider);
     final disclosure = _deletionDisclosure(connection, p.id);
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        scrollable: true,
-        title: Text('Remove ${p.name}?'),
-        content: Text(disclosure),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-            ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
+    final ok = await showConfirmSheet(
+      context,
+      title: 'Remove ${p.name}?',
+      message: disclosure,
+      confirmLabel: 'Remove',
+      icon: Icons.delete_outline_rounded,
+      destructive: true,
+      sheetKey: ValueKey('remove-server-sheet-${p.id}'),
+      confirmKey: ValueKey('confirm-remove-server-${p.id}'),
     );
-    if (ok != true || !mounted) return;
+    if (!ok || !mounted) return;
     final store = ref.read(bootstrapProvider).store;
     final wasActive = store.activeId == p.id;
     var removed = false;
@@ -210,12 +227,14 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
       if (removed) {
         _showFailure(
           '${p.name} was removed, but its connection could not be closed '
-          'cleanly. Restart the app before connecting elsewhere. ($error)',
+          'cleanly. Restart the app before connecting elsewhere. '
+          '(${productErrorText(error)})',
         );
       } else {
         _showFailure(
           'Could not remove ${p.name}. The saved profile and current '
-          'connection were kept. Check device storage and try again. ($error)',
+          'connection were kept. Check device storage and try again. '
+          '(${productErrorText(error)})',
         );
       }
     } finally {
@@ -316,6 +335,14 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                   ),
                 ),
               ],
+              if (_listFailure case final failure?) ...[
+                _InlineFailureCard(
+                  key: const ValueKey('server-connect-failure'),
+                  message: failure,
+                  onDismiss: () => setState(() => _listFailure = null),
+                ),
+                const SizedBox(height: 10),
+              ],
               if (_busy)
                 Semantics(
                   label: 'Server operation in progress',
@@ -337,7 +364,6 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                   child: ListTile(
                     enabled: !_busy,
                     onTap: _busy ? null : () => _connect(p),
-                    onLongPress: _busy ? null : () => _delete(p),
                     isThreeLine: p.requiresPasswordReentry,
                     leading: CircleAvatar(
                       backgroundColor: p.id == activeId
@@ -433,8 +459,8 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                 child: ListTile(
                   onTap: _busy ? null : () => _edit(),
                   leading: const Icon(Icons.dns_rounded),
-                  title: const Text('Remote machine (LAN)'),
-                  subtitle: const Text('HTTPS URL or secure loopback tunnel'),
+                  title: const Text('Another computer'),
+                  subtitle: const Text('Pairing code or HTTPS address'),
                 ),
               ),
             ],
@@ -480,29 +506,33 @@ class _WelcomeView extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '❯',
-                          style: theme.textTheme.headlineMedium!.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontFamily: AppTheme.monoFamily,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          width: 13,
-                          height: 26,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withValues(
-                              alpha: .45,
+                    // Decorative prompt glyph and cursor block: nothing for
+                    // a screen reader to announce.
+                    ExcludeSemantics(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '❯',
+                            style: theme.textTheme.headlineMedium!.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontFamily: AppTheme.monoFamily,
                             ),
-                            borderRadius: BorderRadius.circular(2),
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 8),
+                          Container(
+                            width: 13,
+                            height: 26,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: .45,
+                              ),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 18),
                     Text(
@@ -526,8 +556,8 @@ class _WelcomeView extends StatelessWidget {
                       accent: true,
                       title: 'Connect to your computer',
                       subtitle:
-                          'Paste the address of an OpenCode server you run — '
-                          'the app fills in the rest',
+                          'Run one command on your computer, then scan or '
+                          'paste.',
                       onTap: busy ? null : onConnect,
                     ),
                     if (platformCapabilities.supportsTermux) ...[
@@ -615,7 +645,16 @@ class _ProfileEditorScreen extends StatefulWidget {
   /// Focus the password field on open — the path taken from the connection
   /// banner after a mid-session 401 (the serve password rotated).
   final bool focusPassword;
-  const _ProfileEditorScreen({this.existing, this.focusPassword = false});
+
+  /// Saves (and where promised, connects) the profile. The editor pops with
+  /// the profile only when this reports no failure; otherwise the failure is
+  /// rendered inline and the fields stay editable.
+  final Future<_SubmitOutcome> Function(ServerProfile profile) onSubmit;
+  const _ProfileEditorScreen({
+    this.existing,
+    this.focusPassword = false,
+    required this.onSubmit,
+  });
 
   @override
   State<_ProfileEditorScreen> createState() => _ProfileEditorScreenState();
@@ -644,6 +683,16 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
   bool _obscurePassword = true;
   bool _closing = false;
   bool _testing = false;
+
+  /// True while [_ProfileEditorScreen.onSubmit] runs.
+  bool _submitting = false;
+
+  /// Why the last save or connect did not finish, in product copy.
+  String? _submitFailure;
+
+  /// The profile as last written to the store from this editor, so a save
+  /// that stored but could not connect no longer counts as unsaved edits.
+  ServerProfile? _savedProfile;
   ServerProbeResult? _testResult;
   int _urlLength = 0;
   int _probeGeneration = 0;
@@ -928,11 +977,13 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
     _passFocus.requestFocus();
   }
 
-  bool get _dirty =>
-      _name.text != (widget.existing?.name ?? '') ||
-      _url.text != (widget.existing?.baseUrl ?? '') ||
-      _user.text != (widget.existing?.username ?? '') ||
-      _pass.text != (widget.existing?.password ?? '');
+  bool get _dirty {
+    final baseline = _savedProfile ?? widget.existing;
+    return _name.text != (baseline?.name ?? '') ||
+        _url.text != (baseline?.baseUrl ?? '') ||
+        _user.text != (baseline?.username ?? '') ||
+        _pass.text != (baseline?.password ?? '');
+  }
 
   @override
   void dispose() {
@@ -954,28 +1005,20 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
       return;
     }
     _closing = true;
-    final discard = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Discard server changes?'),
-        content: const Text('The server profile has not been saved.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Keep editing'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Discard'),
-          ),
-        ],
-      ),
+    final discard = await showConfirmSheet(
+      context,
+      title: 'Discard server changes?',
+      message: 'The server profile has not been saved.',
+      confirmLabel: 'Discard',
+      cancelLabel: 'Keep editing',
+      icon: Icons.edit_off_rounded,
     );
     _closing = false;
-    if (discard == true && mounted) Navigator.pop(context);
+    if (discard && mounted) Navigator.pop(context);
   }
 
-  void _save() {
+  Future<void> _save() async {
+    if (_submitting) return;
     var url = normalizeServerProfileUrl(_url.text);
     final error = validateServerProfileUrl(
       url,
@@ -996,20 +1039,33 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
     final detected = probed != null && probed.flavor != ServerFlavor.unknown
         ? probed.flavor
         : widget.existing?.flavor ?? ServerFlavor.v1;
-    Navigator.pop(
-      context,
-      ServerProfile(
-        id:
-            widget.existing?.id ??
-            DateTime.now().microsecondsSinceEpoch.toString(),
-        name: _name.text.trim().isEmpty ? uri.host : _name.text.trim(),
-        baseUrl: url.endsWith('/') ? url.substring(0, url.length - 1) : url,
-        username: _user.text.trim(),
-        password: _pass.text,
-        flavor: detected,
-        serverVersion: probed?.version ?? widget.existing?.serverVersion,
-      ),
+    final profile = ServerProfile(
+      id:
+          _savedProfile?.id ??
+          widget.existing?.id ??
+          DateTime.now().microsecondsSinceEpoch.toString(),
+      name: _name.text.trim().isEmpty ? uri.host : _name.text.trim(),
+      baseUrl: url.endsWith('/') ? url.substring(0, url.length - 1) : url,
+      username: _user.text.trim(),
+      password: _pass.text,
+      flavor: detected,
+      serverVersion: probed?.version ?? widget.existing?.serverVersion,
     );
+    setState(() {
+      _submitting = true;
+      _submitFailure = null;
+    });
+    final outcome = await widget.onSubmit(profile);
+    if (!mounted) return;
+    if (outcome.saved) _savedProfile = profile;
+    if (outcome.failure == null) {
+      Navigator.pop(context, profile);
+      return;
+    }
+    setState(() {
+      _submitting = false;
+      _submitFailure = outcome.failure;
+    });
   }
 
   @override
@@ -1040,9 +1096,13 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
           actions: [
             TextButton(
               key: const ValueKey('save-server-profile'),
-              onPressed: _save,
+              onPressed: _submitting ? null : _save,
               child: Text(
-                widget.existing == null && !compact ? 'Save server' : 'Save',
+                _submitting
+                    ? 'Saving…'
+                    : widget.existing == null && !compact
+                    ? 'Save server'
+                    : 'Save',
               ),
             ),
             const SizedBox(width: 4),
@@ -1223,6 +1283,13 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                     : const Icon(Icons.network_check_rounded),
                 label: Text(_testing ? 'Testing…' : 'Test connection'),
               ),
+              if (_submitFailure case final failure?) ...[
+                const SizedBox(height: 12),
+                _InlineFailureCard(
+                  key: const ValueKey('server-save-failure'),
+                  message: failure,
+                ),
+              ],
               if (_testResult case final result?) ...[
                 const SizedBox(height: 12),
                 Semantics(
@@ -1355,13 +1422,13 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
 /// password by hand — which is why it leads the editor rather than hiding
 /// below the fields.
 ///
-/// Deliberately a bare button row with no heading and no body copy. The
-/// editor is already a long form on a short screen: a titled card, and even
-/// two extra sentences in the intro paragraph, pushed the URL and password
-/// fields below the fold at 2× text scale — the users least able to afford
-/// it. So the button label carries the affordance, and the explaining is done
-/// where it costs nothing: the empty-clipboard and failure messages name
-/// `opencode2 pair` outright, and the docs lead with it.
+/// Deliberately lean: one helper line naming the command, then the buttons.
+/// The editor is already a long form on a short screen: a titled card and a
+/// paragraph of intro pushed the URL and password fields below the fold at
+/// 2× text scale — the users least able to afford it. The rest of the
+/// explaining is done where it costs nothing: the empty-clipboard and
+/// failure messages name `opencode2 pair` outright, and the guide leads
+/// with it.
 class _PairingActions extends StatelessWidget {
   const _PairingActions({
     required this.busy,
@@ -1390,91 +1457,157 @@ class _PairingActions extends StatelessWidget {
       key: const ValueKey('server-pairing-actions'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              FilledButton.tonalIcon(
-                key: const ValueKey('server-pairing-paste'),
-                onPressed: onPaste,
-                icon: busy
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.content_paste_rounded, size: 18),
-                label: Text(busy ? 'Pairing…' : 'Paste pairing code'),
-              ),
-              if (onScan case final scan?)
-                OutlinedButton.icon(
-                  key: const ValueKey('server-pairing-scan'),
-                  onPressed: busy ? null : scan,
-                  icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
-                  label: const Text('Scan'),
-                ),
-            ],
+        Text(
+          'On your computer run `opencode2 pair`, then paste or scan the '
+          'code it prints.',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            height: 1.35,
           ),
-          if (notice != null) ...[
-            const SizedBox(height: 10),
-            Semantics(
-              key: const ValueKey('server-pairing-notice'),
-              container: true,
-              liveRegion: true,
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            FilledButton.tonalIcon(
+              key: const ValueKey('server-pairing-paste'),
+              onPressed: onPaste,
+              icon: busy
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.content_paste_rounded, size: 18),
+              label: Text(busy ? 'Pairing…' : 'Paste pairing code'),
+            ),
+            if (onScan case final scan?)
+              OutlinedButton.icon(
+                key: const ValueKey('server-pairing-scan'),
+                onPressed: busy ? null : scan,
+                icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
+                label: const Text('Scan'),
+              ),
+          ],
+        ),
+        if (notice != null) ...[
+          const SizedBox(height: 10),
+          Semantics(
+            key: const ValueKey('server-pairing-notice'),
+            container: true,
+            liveRegion: true,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.check_circle_outline_rounded,
+                  size: 18,
+                  color: AppTheme.successOf(theme),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    notice,
+                    style: theme.textTheme.bodySmall?.copyWith(height: 1.35),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        if (failure != null) ...[
+          const SizedBox(height: 10),
+          Semantics(
+            key: const ValueKey('server-pairing-failure'),
+            container: true,
+            liveRegion: true,
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.errorContainer,
+                borderRadius: BorderRadius.circular(10),
+              ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(
-                    Icons.check_circle_outline_rounded,
+                    Icons.error_outline_rounded,
                     size: 18,
-                    color: AppTheme.successOf(theme),
+                    color: theme.colorScheme.onErrorContainer,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      notice,
-                      style: theme.textTheme.bodySmall?.copyWith(height: 1.35),
+                      failure,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onErrorContainer,
+                        height: 1.35,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-          ],
-          if (failure != null) ...[
-            const SizedBox(height: 10),
-            Semantics(
-              key: const ValueKey('server-pairing-failure'),
-              container: true,
-              liveRegion: true,
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.errorContainer,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.error_outline_rounded,
-                      size: 18,
-                      color: theme.colorScheme.onErrorContainer,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        failure,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onErrorContainer,
-                          height: 1.35,
-                        ),
-                      ),
-                    ),
-                  ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// The verdict-card treatment for a save or connect that failed, shared by
+/// the editor and the servers list so a failure looks the same wherever it
+/// lands: error container, leading glyph, live region — and product copy
+/// only, never a raw exception.
+class _InlineFailureCard extends StatelessWidget {
+  const _InlineFailureCard({super.key, required this.message, this.onDismiss});
+
+  final String message;
+  final VoidCallback? onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.errorContainer,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.error_outline_rounded,
+              size: 20,
+              color: theme.colorScheme.onErrorContainer,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 1),
+                child: Text(
+                  message,
+                  style: TextStyle(
+                    color: theme.colorScheme.onErrorContainer,
+                    height: 1.35,
+                  ),
                 ),
               ),
             ),
+            if (onDismiss != null)
+              IconButton(
+                tooltip: 'Dismiss',
+                onPressed: onDismiss,
+                color: theme.colorScheme.onErrorContainer,
+                icon: const Icon(Icons.close_rounded, size: 20),
+              ),
           ],
-      ],
+        ),
+      ),
     );
   }
 }

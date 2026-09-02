@@ -143,7 +143,10 @@ void main() {
       expect(find.textContaining('Termux'), findsNothing);
       expect(find.textContaining('phone'), findsNothing);
       // The remaining paths are intact — this is a gate, not a deletion.
-      expect(find.byKey(const ValueKey('welcome-connect-card')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('welcome-connect-card')),
+        findsOneWidget,
+      );
       expect(find.byKey(const ValueKey('welcome-guide-card')), findsOneWidget);
     });
   });
@@ -169,7 +172,7 @@ void main() {
 
       expect(find.byKey(const ValueKey('quick-add-termux-card')), findsNothing);
       expect(find.text('On-device (Termux)'), findsNothing);
-      expect(find.text('Remote machine (LAN)'), findsOneWidget);
+      expect(find.text('Another computer'), findsOneWidget);
     });
   });
 
@@ -180,17 +183,25 @@ void main() {
       await tester.binding.setSurfaceSize(const Size(800, 3000));
       addTearDown(() => tester.binding.setSurfaceSize(null));
       await tester.pumpWidget(const MaterialApp(home: GuideScreen()));
+      // The three-step story is always visible; every other path lives
+      // behind the Advanced disclosure, so open it before asserting.
+      await tester.tap(find.byKey(const ValueKey('guide-advanced')));
+      await tester.pumpAndSettle();
     }
 
     testWidgets('documents both paths on Android', (tester) async {
       await pumpGuide(tester);
 
+      expect(find.byKey(const ValueKey('guide-pair-command')), findsOneWidget);
       expect(
         find.byKey(const ValueKey('guide-termux-section')),
         findsOneWidget,
       );
       expect(find.textContaining('Android Keystore'), findsOneWidget);
-      expect(find.text('1 · REMOTE MACHINE'), findsOneWidget);
+      expect(
+        find.text('Scan the QR or paste the code in this app'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('drops the Termux path on desktop', (tester) async {
@@ -202,7 +213,8 @@ void main() {
       expect(find.textContaining('Android Keystore'), findsNothing);
       // The remote-server instructions, the only path a desktop user has,
       // are still there and no longer numbered as one of two.
-      expect(find.text('RUNNING THE SERVER'), findsOneWidget);
+      expect(find.text('Paste the code in this app'), findsOneWidget);
+      expect(find.text('OLDER SERVERS WITHOUT PAIRING'), findsOneWidget);
       expect(find.textContaining('libsecret'), findsOneWidget);
     });
   });
@@ -230,10 +242,7 @@ void main() {
       );
       await tester.pump();
 
-      expect(
-        find.byKey(const Key('termux-setup-unsupported')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const Key('termux-setup-unsupported')), findsOneWidget);
       expect(find.text('On-device setup is Android only'), findsOneWidget);
       // No step list, so nothing invites a tap that cannot work.
       expect(find.text('Get Termux'), findsNothing);
@@ -265,7 +274,7 @@ void main() {
     testWidgets('offer voice input on Android', (tester) async {
       await pumpChat(tester);
       expect(
-        find.byTooltip('Prompt tools: commands, attach, voice'),
+        find.byTooltip('Add. Hold to attach a file'),
         findsOneWidget,
       );
       await openTools(tester);
@@ -276,7 +285,7 @@ void main() {
       onDesktop();
       await pumpChat(tester);
       // The collapsed button no longer advertises a tool that is not there.
-      expect(find.byTooltip('Prompt tools: commands, attach'), findsOneWidget);
+      expect(find.byTooltip('Add. Hold to attach a file'), findsOneWidget);
       await openTools(tester);
       expect(find.byKey(const Key('composer-tool-voice')), findsNothing);
       expect(find.text('Voice input'), findsNothing);
@@ -310,23 +319,22 @@ void main() {
       );
     });
 
-    testWidgets(
-      'hides the foreground-service category on desktop',
-      (tester) async {
-        onDesktop();
-        await pumpSettings(tester);
-        expect(
-          find.byKey(const ValueKey('settings-category-background')),
-          findsNothing,
-        );
-        expect(find.text('Notifications & background'), findsNothing);
-        // The rest of the hub is untouched.
-        expect(
-          find.byKey(const ValueKey('settings-category-privacy')),
-          findsOneWidget,
-        );
-      },
-    );
+    testWidgets('hides the foreground-service category on desktop', (
+      tester,
+    ) async {
+      onDesktop();
+      await pumpSettings(tester);
+      expect(
+        find.byKey(const ValueKey('settings-category-background')),
+        findsNothing,
+      );
+      expect(find.text('Notifications & background'), findsNothing);
+      // The rest of the hub is untouched.
+      expect(
+        find.byKey(const ValueKey('settings-category-privacy')),
+        findsOneWidget,
+      );
+    });
   });
 
   group('Ubuntu host management', () {
@@ -343,10 +351,7 @@ void main() {
 
     testWidgets('offers the USB port forward on Android', (tester) async {
       await pumpHost(tester);
-      expect(
-        find.byKey(const Key('host-command-adb-reverse')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const Key('host-command-adb-reverse')), findsOneWidget);
     });
 
     testWidgets('drops the adb command on desktop', (tester) async {

@@ -16,6 +16,7 @@ import '../desktop/desktop_interaction.dart';
 import '../theme_packs.dart';
 import '../../voice/notices.dart';
 import '../widgets/appearance_picker.dart';
+import '../widgets/confirm_sheet.dart';
 import '../widgets/product_states.dart';
 import '../widgets/pickers.dart';
 import 'about_screen.dart';
@@ -64,7 +65,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
     try {
       final api = await widget.controller.prepareActionTransport();
-      if (api == null) throw const ProductException('OpenCode is reconnecting.');
+      if (api == null) {
+        throw const ProductException('OpenCode is reconnecting.');
+      }
       final health = await api.health();
       if (mounted) setState(() => _health = health);
     } catch (error) {
@@ -76,6 +79,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _open(Widget screen) {
     Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen));
+  }
+
+  /// What disconnecting actually costs, counted rather than described in the
+  /// abstract: queued prompts and unsent drafts for this server stop moving
+  /// until it is connected again.
+  String _disconnectDisclosure() {
+    final controller = widget.controller;
+    final id = controller.profile?.id;
+    final queued = id == null ? 0 : controller.queuedPromptCountForProfile(id);
+    final drafts = id == null ? 0 : controller.draftCountForProfile(id);
+    final pending = [
+      if (queued > 0) '$queued queued ${queued == 1 ? 'prompt' : 'prompts'}',
+      if (drafts > 0) '$drafts unsent ${drafts == 1 ? 'draft' : 'drafts'}',
+    ];
+    return [
+      'Live updates stop and you return to the server list. The server keeps '
+          'running; nothing on it is changed.',
+      pending.isEmpty
+          ? 'Nothing is waiting to send.'
+          : '${pending.join(' and ')} will not be sent until you connect to '
+                'this server again.',
+    ].join('\n\n');
+  }
+
+  Future<void> _disconnect() async {
+    final confirmed = await showConfirmSheet(
+      context,
+      title:
+          'Disconnect from ${widget.controller.profile?.name ?? 'this server'}?',
+      message: _disconnectDisclosure(),
+      confirmLabel: 'Disconnect',
+      icon: Icons.link_off_rounded,
+      destructive: true,
+      sheetKey: const ValueKey('disconnect-confirm-sheet'),
+      confirmKey: const ValueKey('confirm-disconnect'),
+    );
+    if (!confirmed || !mounted) return;
+    await widget.controller.disconnect();
+    if (!mounted) return;
+    Navigator.of(context).pushNamedAndRemoveUntil('/servers', (_) => false);
   }
 
   @override
@@ -95,118 +138,112 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(title: const Text('Settings and server')),
       body: DesktopScrollbarArea(
         builder: (scrollController) => ListView(
-        controller: scrollController,
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
-        children: [
-          Card(
-            key: const ValueKey('settings-connection-summary'),
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            clipBehavior: Clip.antiAlias,
-            child: ListTile(
-              minTileHeight: 72,
-              leading: _CategoryIcon(
-                icon: Icons.dns_outlined,
-                color: healthy
-                    ? AppTheme.successOf(theme)
-                    : _healthError != null
-                    ? theme.colorScheme.error
-                    : null,
-              ),
-              title: Text(
-                profile?.name ?? 'OpenCode server',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              subtitle: Text(
-                '${profile?.baseUrl ?? 'Not connected'}\n$healthLine',
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontFamily: AppTheme.monoFamily,
-                  fontSize: AppTheme.captionFontSize,
+          controller: scrollController,
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+          children: [
+            Card(
+              key: const ValueKey('settings-connection-summary'),
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              clipBehavior: Clip.antiAlias,
+              child: ListTile(
+                minTileHeight: 72,
+                leading: _CategoryIcon(
+                  icon: Icons.dns_outlined,
+                  color: healthy
+                      ? AppTheme.successOf(theme)
+                      : _healthError != null
+                      ? theme.colorScheme.error
+                      : null,
+                ),
+                title: Text(
+                  profile?.name ?? 'OpenCode server',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(
+                  '${profile?.baseUrl ?? 'Not connected'}\n$healthLine',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: AppTheme.monoFamily,
+                    fontSize: AppTheme.captionFontSize,
+                  ),
+                ),
+                trailing: IconButton(
+                  tooltip: 'Check again',
+                  onPressed: _checking ? null : _checkHealth,
+                  icon: _checking
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.refresh_rounded),
                 ),
               ),
-              trailing: IconButton(
-                tooltip: 'Check again',
-                onPressed: _checking ? null : _checkHealth,
-                icon: _checking
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.refresh_rounded),
-              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          _CategoryRow(
-            rowKey: 'settings-category-server',
-            icon: Icons.dns_outlined,
-            title: 'Server',
-            onTap: () => _open(ServerSettingsScreen(controller: controller)),
-          ),
-          _CategoryRow(
-            rowKey: 'settings-category-coding',
-            icon: Icons.terminal_rounded,
-            title: 'Coding defaults',
-            onTap: () => _open(CodingSettingsScreen(controller: controller)),
-          ),
-          // The live background service and its notifications are Android
-          // platform features; the category hides elsewhere.
-          if (platformCapabilities.supportsBackgroundService)
+            const SizedBox(height: 8),
             _CategoryRow(
-              rowKey: 'settings-category-background',
-              icon: Icons.notifications_active_outlined,
-              title: 'Notifications & background',
-              onTap: () =>
-                  _open(BackgroundSettingsScreen(controller: controller)),
+              rowKey: 'settings-category-server',
+              icon: Icons.dns_outlined,
+              title: 'Server',
+              onTap: () => _open(ServerSettingsScreen(controller: controller)),
             ),
-          _CategoryRow(
-            rowKey: 'settings-category-appearance',
-            icon: Icons.palette_outlined,
-            title: 'Appearance',
-            onTap: () =>
-                _open(AppearanceSettingsScreen(controller: controller)),
-          ),
-          _CategoryRow(
-            rowKey: 'settings-category-privacy',
-            icon: Icons.admin_panel_settings_outlined,
-            title: 'Privacy & permissions',
-            onTap: () => _open(PrivacySettingsScreen(controller: controller)),
-          ),
-          _CategoryRow(
-            rowKey: 'settings-category-diagnostics',
-            icon: Icons.health_and_safety_outlined,
-            title: 'Diagnostics',
-            onTap: () =>
-                _open(DiagnosticsSettingsScreen(controller: controller)),
-          ),
-          _CategoryRow(
-            rowKey: 'settings-category-about',
-            icon: Icons.info_outline_rounded,
-            title: 'About',
-            onTap: () => _open(AboutSettingsScreen(controller: controller)),
-          ),
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: theme.colorScheme.error,
+            _CategoryRow(
+              rowKey: 'settings-category-coding',
+              icon: Icons.terminal_rounded,
+              title: 'Coding defaults',
+              onTap: () => _open(CodingSettingsScreen(controller: controller)),
+            ),
+            // The live background service and its notifications are Android
+            // platform features; the category hides elsewhere.
+            if (platformCapabilities.supportsBackgroundService)
+              _CategoryRow(
+                rowKey: 'settings-category-background',
+                icon: Icons.notifications_active_outlined,
+                title: 'Notifications & background',
+                onTap: () =>
+                    _open(BackgroundSettingsScreen(controller: controller)),
               ),
-              onPressed: () async {
-                await controller.disconnect();
-                if (context.mounted) {
-                  Navigator.of(
-                    context,
-                  ).pushNamedAndRemoveUntil('/servers', (_) => false);
-                }
-              },
-              icon: const Icon(Icons.link_off_rounded),
-              label: const Text('Disconnect'),
+            _CategoryRow(
+              rowKey: 'settings-category-appearance',
+              icon: Icons.palette_outlined,
+              title: 'Appearance',
+              onTap: () =>
+                  _open(AppearanceSettingsScreen(controller: controller)),
             ),
-          ),
-        ],
+            _CategoryRow(
+              rowKey: 'settings-category-privacy',
+              icon: Icons.admin_panel_settings_outlined,
+              title: 'Privacy & permissions',
+              onTap: () => _open(PrivacySettingsScreen(controller: controller)),
+            ),
+            _CategoryRow(
+              rowKey: 'settings-category-diagnostics',
+              icon: Icons.health_and_safety_outlined,
+              title: 'Diagnostics',
+              onTap: () =>
+                  _open(DiagnosticsSettingsScreen(controller: controller)),
+            ),
+            _CategoryRow(
+              rowKey: 'settings-category-about',
+              icon: Icons.info_outline_rounded,
+              title: 'About',
+              onTap: () => _open(AboutSettingsScreen(controller: controller)),
+            ),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: theme.colorScheme.error,
+                ),
+                key: const ValueKey('settings-disconnect'),
+                onPressed: _disconnect,
+                icon: const Icon(Icons.link_off_rounded),
+                label: const Text('Disconnect'),
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -12,6 +12,7 @@ import '../../state/connection.dart';
 import '../../state/profiles.dart';
 import '../../termux/bridge.dart';
 import '../app_theme.dart';
+import '../widgets/confirm_sheet.dart';
 import '../desktop/desktop_interaction.dart';
 
 class TermuxSetupScreen extends ConsumerStatefulWidget {
@@ -48,6 +49,13 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
   String? _error;
   String? _lastLaunchOutput;
   String _setupOutput = '';
+
+  /// Set once "Copy & open Termux" hands off to Termux; flipped to
+  /// [_returnedFromTermux] when the app resumes, so the unlock step can
+  /// promote "Verify & continue" to the primary action the moment the user
+  /// is back and has (probably) pasted the line.
+  bool _openedTermux = false;
+  bool _returnedFromTermux = false;
   final ScrollController _outputScrollController = ScrollController();
 
   @override
@@ -59,7 +67,12 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) unawaited(_refresh());
+    if (state == AppLifecycleState.resumed) {
+      if (_openedTermux && !_returnedFromTermux) {
+        setState(() => _returnedFromTermux = true);
+      }
+      unawaited(_refresh());
+    }
   }
 
   @override
@@ -144,6 +157,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
     );
     final opened = await TermuxBridge.openTermux();
     if (!mounted) return;
+    if (opened) setState(() => _openedTermux = true);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -312,31 +326,19 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       return;
     }
     final currentVersion = _status?.version.trim();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Update managed OpenCode?'),
-        content: Text(
-          [
-            if (currentVersion?.isNotEmpty == true)
-              'Installed version: $currentVersion.',
-            'The app will install OpenCode ${TermuxBridge.defaultOpenCodeVersion} — the release this app version is tested against — refresh its model catalog, restart only the managed local server, and reconnect this profile.',
-            'The server will be briefly unavailable. Active generation should be stopped first.',
-          ].join('\n\n'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Update'),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmSheet(
+      context,
+      title: 'Update managed OpenCode?',
+      message: [
+        if (currentVersion?.isNotEmpty == true)
+          'Installed version: $currentVersion.',
+        'The app will install OpenCode ${TermuxBridge.defaultOpenCodeVersion} — the release this app version is tested against — refresh its model catalog, restart only the managed local server, and reconnect this profile.',
+        'The server will be briefly unavailable. Active generation should be stopped first.',
+      ].join('\n\n'),
+      confirmLabel: 'Update',
+      icon: Icons.system_update_alt_rounded,
     );
-    if (confirmed == true && mounted) await _installAndStart();
+    if (confirmed && mounted) await _installAndStart();
   }
 
   Future<bool> _recoverPersistedSetupAfterTimeout() async {
@@ -506,6 +508,29 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Setup output copied.')));
+  }
+
+  /// The text a person reads on screen. [_error] keeps the exact bridge and
+  /// protocol wording for the copied failure report, where it is useful;
+  /// on screen the same fact is said in plain words.
+  static String friendlyError(String raw) {
+    if (raw.contains('command-result protocol')) {
+      return 'This version of Termux is too old for the app to control it. '
+          'Install the current F-Droid or GitHub build of Termux, then check '
+          'again.';
+    }
+    if (raw.contains('setup manager disappeared') ||
+        raw.contains('without starting the setup manager')) {
+      return 'Termux opened but the setup did not start. Retry once; if it '
+          'happens again, copy the failure report.';
+    }
+    if (raw.contains('Could not read setup manager status')) {
+      return raw.replaceFirst(
+        'Could not read setup manager status',
+        'Lost track of the setup running in Termux',
+      );
+    }
+    return raw;
   }
 
   Future<void> _copyFailureReport() async {
@@ -722,7 +747,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
               const SizedBox(height: 8),
               _stepTile(
                 n: 2,
-                title: 'Authorize the bridge',
+                title: 'Let the app control Termux',
                 state: _phase == _Phase.needUnlock
                     ? _StepState.idle
                     : _phase == _Phase.checking || _phase == _Phase.needTermux
@@ -742,26 +767,58 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                           if (_error != null) ...[
                             const SizedBox(height: 10),
                             Text(
-                              _error!,
+                              friendlyError(_error!),
                               style: TextStyle(color: theme.colorScheme.error),
                             ),
                           ],
                           const SizedBox(height: 10),
+                          // Before the round trip, opening Termux is the
+                          // next thing to do. After it, verifying is.
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
                             children: [
-                              FilledButton.icon(
-                                onPressed: _busy ? null : _openTermuxAndCopy,
-                                icon: const Icon(Icons.open_in_new_rounded),
-                                label: const Text('Copy & open Termux'),
-                              ),
-                              OutlinedButton(
-                                onPressed: _busy ? null : _verifyUnlock,
-                                child: Text(
-                                  _busy ? 'Verifying...' : 'Verify & continue',
+                              if (_returnedFromTermux) ...[
+                                FilledButton.icon(
+                                  key: const Key('termux-verify-unlock'),
+                                  onPressed: _busy ? null : _verifyUnlock,
+                                  icon: _busy
+                                      ? const SizedBox.square(
+                                          dimension: 18,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : const Icon(Icons.check_rounded),
+                                  label: Text(
+                                    _busy
+                                        ? 'Verifying...'
+                                        : 'Verify & continue',
+                                  ),
                                 ),
-                              ),
+                                OutlinedButton.icon(
+                                  key: const Key('termux-copy-open'),
+                                  onPressed: _busy ? null : _openTermuxAndCopy,
+                                  icon: const Icon(Icons.open_in_new_rounded),
+                                  label: const Text('Copy & open Termux'),
+                                ),
+                              ] else ...[
+                                FilledButton.icon(
+                                  key: const Key('termux-copy-open'),
+                                  onPressed: _busy ? null : _openTermuxAndCopy,
+                                  icon: const Icon(Icons.open_in_new_rounded),
+                                  label: const Text('Copy & open Termux'),
+                                ),
+                                OutlinedButton(
+                                  key: const Key('termux-verify-unlock'),
+                                  onPressed: _busy ? null : _verifyUnlock,
+                                  child: Text(
+                                    _busy
+                                        ? 'Verifying...'
+                                        : 'Verify & continue',
+                                  ),
+                                ),
+                              ],
                               TextButton(
                                 onPressed: _busy
                                     ? null
@@ -797,9 +854,10 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _error ??
-                            'Setup runs once in the background and records every stage. '
-                                'Leaving this screen will not start another installer.',
+                        _error == null
+                            ? 'Setup runs once in the background and records every stage. '
+                                  'Leaving this screen will not start another installer.'
+                            : friendlyError(_error!),
                       ),
                       const SizedBox(height: 10),
                       FilledButton.icon(
@@ -893,7 +951,9 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _error ?? 'Setup failed.',
+                        _error == null
+                            ? 'Setup failed.'
+                            : friendlyError(_error!),
                         style: TextStyle(color: theme.colorScheme.error),
                       ),
                       const SizedBox(height: 10),
@@ -951,68 +1011,97 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
     bool enabled = true,
   }) {
     final theme = Theme.of(context);
-    return Opacity(
-      opacity: enabled ? 1 : .45,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(
-            alpha: .3,
-          ),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.hairline(theme)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Builder(
-                  builder: (context) {
-                    final background = switch (state) {
-                      _StepState.done => AppTheme.successOf(theme),
-                      _StepState.running => theme.colorScheme.primary,
-                      _StepState.error => theme.colorScheme.error,
-                      _StepState.idle =>
-                        theme.colorScheme.surfaceContainerHighest,
-                    };
-                    final foreground = state == _StepState.idle
-                        ? theme.colorScheme.onSurfaceVariant
-                        : ThemeData.estimateBrightnessForColor(background) ==
-                              Brightness.dark
-                        ? Colors.white
-                        : Colors.black87;
-                    return CircleAvatar(
-                      radius: 11,
-                      backgroundColor: background,
-                      child: state == _StepState.done
-                          ? Icon(
-                              Icons.check_rounded,
-                              size: 14,
-                              color: foreground,
-                            )
-                          : Text(
-                              '$n',
-                              style: TextStyle(
-                                fontSize: AppTheme.codeFontSize,
-                                color: foreground,
-                              ),
-                            ),
-                    );
-                  },
-                ),
-                const SizedBox(width: 10),
-                Expanded(child: Text(title, style: theme.textTheme.titleSmall)),
-                if (state == _StepState.running)
-                  const SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-              ],
+    final stateLabel = !enabled
+        ? 'not yet available'
+        : switch (state) {
+            _StepState.done => 'done',
+            _StepState.running => 'in progress',
+            _StepState.error => 'failed',
+            _StepState.idle => 'to do',
+          };
+    // The header row is spoken as one phrase ("Step 2 of 3, done. Let the
+    // app control Termux") rather than a badge, a title and a spinner read
+    // separately; the body keeps its own semantics. Dimming alone is not the
+    // signal for "not yet": a locked step also says so in text.
+    return Semantics(
+      container: true,
+      label: 'Step $n of 3, $stateLabel. $title',
+      child: Opacity(
+        opacity: enabled ? 1 : .6,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: .3,
             ),
-            if (body != null) ...[const SizedBox(height: 10), body],
-          ],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppTheme.hairline(theme)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ExcludeSemantics(
+                child: Row(
+                  children: [
+                    Builder(
+                      builder: (context) {
+                        final background = switch (state) {
+                          _StepState.done => AppTheme.successOf(theme),
+                          _StepState.running => theme.colorScheme.primary,
+                          _StepState.error => theme.colorScheme.error,
+                          _StepState.idle =>
+                            theme.colorScheme.surfaceContainerHighest,
+                        };
+                        final foreground = state == _StepState.idle
+                            ? theme.colorScheme.onSurfaceVariant
+                            : ThemeData.estimateBrightnessForColor(
+                                    background,
+                                  ) ==
+                                  Brightness.dark
+                            ? Colors.white
+                            : Colors.black87;
+                        return CircleAvatar(
+                          radius: 11,
+                          backgroundColor: background,
+                          child: state == _StepState.done
+                              ? Icon(
+                                  Icons.check_rounded,
+                                  size: 14,
+                                  color: foreground,
+                                )
+                              : Text(
+                                  '$n',
+                                  style: TextStyle(
+                                    fontSize: AppTheme.codeFontSize,
+                                    color: foreground,
+                                  ),
+                                ),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(title, style: theme.textTheme.titleSmall),
+                    ),
+                    if (state == _StepState.running)
+                      const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    if (!enabled)
+                      Text(
+                        'Not yet',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: AppTheme.mutedOf(theme),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (body != null) ...[const SizedBox(height: 10), body],
+            ],
+          ),
         ),
       ),
     );
@@ -1106,10 +1195,9 @@ class _LiveSetupTerminal extends StatelessWidget {
                 IconButton(
                   onPressed: onCopy,
                   tooltip: copyTooltip,
-                  icon: const Icon(AppIcons.copy, size: 16),
+                  icon: const Icon(AppIcons.copy, size: 18),
                   color: overlay.withValues(alpha: .7),
                   disabledColor: overlay.withValues(alpha: .24),
-                  visualDensity: VisualDensity.compact,
                 ),
               ],
             ),
@@ -1122,21 +1210,21 @@ class _LiveSetupTerminal extends StatelessWidget {
               // this the desktop scroll behaviour would draw a second one.
               child: OwnScrollbar(
                 child: SingleChildScrollView(
-                controller: controller,
-                padding: const EdgeInsets.all(12),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: SelectableText(
-                    visibleOutput,
-                    style: TextStyle(
-                      color: terminalText,
-                      fontFamily: AppTheme.monoFamily,
-                      fontSize: AppTheme.captionFontSize,
-                      height: 1.45,
+                  controller: controller,
+                  padding: const EdgeInsets.all(12),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: SelectableText(
+                      visibleOutput,
+                      style: TextStyle(
+                        color: terminalText,
+                        fontFamily: AppTheme.monoFamily,
+                        fontSize: AppTheme.captionFontSize,
+                        height: 1.45,
+                      ),
                     ),
                   ),
                 ),
-              ),
               ),
             ),
           ),

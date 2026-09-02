@@ -5,14 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../api/sse.dart';
 import '../../state/connection.dart';
 import '../app_theme.dart';
-import '../desktop/desktop_interaction.dart';
 import '../desktop/shortcuts.dart';
 import '../widgets/connection_status_banner.dart';
 import '../widgets/pickers.dart';
 import 'activity_screen.dart';
 import 'files_screen.dart';
 import 'library_screen.dart';
-import 'settings_screen.dart';
+import 'terminal_screen.dart';
 import 'workspace_screen.dart';
 
 /// Main mobile product shell for a connected OpenCode server.
@@ -56,6 +55,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         return true;
       case FindInSurfaceIntent() when _tab == 1:
         _findInFiles.value++;
+        return true;
+      case OpenTerminalIntent():
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => TerminalPage(controller: ref.read(connProvider)),
+          ),
+        );
         return true;
       default:
         return false;
@@ -134,6 +140,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           actions: [
             // §5 Root app bar: one contextual action plus overflow. The
             // pending badge lives on the Activity destination alone.
+            // Settings and the shortcuts list have one entry point each, on
+            // the More tab; this overflow holds only connection-level acts.
             IconButton(
               tooltip: 'Model / agent',
               icon: const Icon(Icons.tune_rounded),
@@ -142,14 +150,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             PopupMenuButton<String>(
               onSelected: (v) {
                 if (v == 'refresh') conn.refreshSessions();
-                if (v == 'settings') {
-                  navigator.push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => SettingsScreen(controller: conn),
-                    ),
-                  );
-                }
-                if (v == 'shortcuts') showShortcutsHelp(context);
                 if (v == 'disconnect') {
                   conn.disconnect().then((_) {
                     navigator.pushNamedAndRemoveUntil('/servers', (_) => false);
@@ -158,14 +158,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               },
               itemBuilder: (_) => [
                 const PopupMenuItem(value: 'refresh', child: Text('Refresh')),
-                const PopupMenuItem(value: 'settings', child: Text('Settings')),
-                // Discoverability: the shortcut layer must not be reachable
-                // only by a shortcut.
-                if (desktopInteractions)
-                  const PopupMenuItem(
-                    value: 'shortcuts',
-                    child: Text('Keyboard shortcuts'),
-                  ),
                 const PopupMenuItem(
                   value: 'disconnect',
                   child: Text('Disconnect'),

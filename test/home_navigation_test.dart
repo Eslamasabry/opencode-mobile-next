@@ -196,7 +196,7 @@ void main() {
       find.byKey(const ValueKey('connection-status-banner')),
       findsOneWidget,
     );
-    expect(find.textContaining('Endpoint is unavailable'), findsOneWidget);
+    expect(find.text('Connection lost'), findsOneWidget);
     expect(
       find.descendant(
         of: find.byKey(const ValueKey('connection-status-banner')),
@@ -204,6 +204,11 @@ void main() {
       ),
       findsOneWidget,
     );
+    // The raw error and the secondary action live behind Details.
+    await tester.tap(find.byKey(const ValueKey('connection-banner-details')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.textContaining('Endpoint is unavailable'), findsOneWidget);
     expect(find.text('Change server'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
@@ -250,7 +255,10 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.text('Change server'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('connection-banner-details')),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
     controller.dispose();
@@ -279,6 +287,9 @@ void main() {
       find.widgetWithText(TextButton, 'Try again'),
     );
     expect(retry.onPressed, isNotNull);
+    await tester.tap(find.byKey(const ValueKey('connection-banner-details')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('Change server'), findsOneWidget);
   });
 

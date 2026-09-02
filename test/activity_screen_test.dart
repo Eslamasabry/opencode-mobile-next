@@ -118,7 +118,7 @@ Widget _app(Widget home, {Map<String, WidgetBuilder> routes = const {}}) =>
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('the three sections render attention, running, and recent', (
+  testWidgets('the inbox renders attention and running, never history', (
     tester,
   ) async {
     final controller = await _controller();
@@ -128,7 +128,8 @@ void main() {
 
     expect(find.text('Needs attention'.toUpperCase()), findsOneWidget);
     expect(find.text('Running'.toUpperCase()), findsOneWidget);
-    expect(find.text('Recently completed'.toUpperCase()), findsOneWidget);
+    // Activity is a pure inbox: idle sessions belong to Workspace.
+    expect(find.text('Recently completed'.toUpperCase()), findsNothing);
     // Permissions and questions are resolvable rows, not links.
     expect(find.text('Edit a file'), findsOneWidget);
     expect(find.text('Direction'), findsOneWidget);
@@ -138,7 +139,7 @@ void main() {
     );
     expect(
       find.byKey(const ValueKey('activity-recent-ses_idle')),
-      findsOneWidget,
+      findsNothing,
     );
     // The running root shows its cached subagent count.
     expect(
@@ -153,7 +154,8 @@ void main() {
       find.byKey(const ValueKey('activity-recent-ses_child')),
       findsNothing,
     );
-    expect(find.byKey(const ValueKey('activity-all-sessions')), findsOneWidget);
+    // No duplicate finder link: Workspace already owns "Search all sessions".
+    expect(find.byKey(const ValueKey('activity-all-sessions')), findsNothing);
   });
 
   testWidgets('a permission row resolves that permission in place', (
@@ -212,14 +214,6 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.text('run chat'), findsOneWidget);
-
-    await tester.pageBack();
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 600));
-    await tester.tap(find.byKey(const ValueKey('activity-recent-ses_idle')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 600));
-    expect(find.text('idle chat'), findsOneWidget);
   });
 
   testWidgets('refresh reconciles the wake transport before querying', (
@@ -247,14 +241,16 @@ void main() {
     expect(controller.preparedRepositories.single, same(replacement));
   });
 
-  testWidgets('an empty fleet invites action', (tester) async {
+  testWidgets('an empty inbox reads as success', (tester) async {
     final controller = await _controller(seed: false);
     addTearDown(controller.dispose);
     await tester.pumpWidget(_app(ActivityScreen(controller: controller)));
     await tester.pumpAndSettle();
 
-    expect(find.text('Nothing needs attention'), findsOneWidget);
-    expect(find.text('All sessions'), findsOneWidget);
+    expect(find.byKey(const ValueKey('activity-all-clear')), findsOneWidget);
+    expect(find.text('All clear'), findsOneWidget);
+    expect(find.textContaining('Nothing needs you right now'), findsOneWidget);
+    expect(find.text('All sessions'), findsNothing);
   });
 
   testWidgets('running sessions with no pending work still say so', (

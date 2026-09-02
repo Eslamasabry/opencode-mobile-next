@@ -15,6 +15,7 @@ import '../widgets/product_states.dart';
 import 'global_sessions_screen.dart';
 import 'manage_project_screen.dart';
 import 'projects_screen.dart';
+import 'terminal_screen.dart';
 import '../app_theme.dart';
 
 class WorkspaceScreen extends StatefulWidget {
@@ -36,6 +37,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   bool _creating = false;
   int _loadGeneration = 0;
   int _dataRefreshRevision = 0;
+  final Set<String> _pendingArchive = {};
 
   @override
   void initState() {
@@ -265,7 +267,12 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       );
     }
 
-    final sessions = widget.controller.sortedSessions();
+    // Rows swiped to Archive vanish immediately and come back on Undo; the
+    // server call only happens once the snackbar has gone.
+    final sessions = widget.controller
+        .sortedSessions()
+        .where((session) => !_pendingArchive.contains(session.id))
+        .toList();
     final active = sessions
         .where((session) => widget.controller.busySessions.contains(session.id))
         .toList();
@@ -373,6 +380,14 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                         onPressed: widget.controller.refreshSessions,
                         icon: const Icon(Icons.refresh_rounded, size: 19),
                       ),
+                      // Terminal gave its navigation slot to Activity; this
+                      // keeps it one tap from the workspace it runs in.
+                      IconButton(
+                        key: const ValueKey('workspace-terminal'),
+                        tooltip: 'Terminal',
+                        onPressed: _openTerminal,
+                        icon: const Icon(Icons.terminal_outlined, size: 20),
+                      ),
                     ],
                   ),
                 ),
@@ -459,6 +474,12 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     Navigator.of(context).pushNamed('/chat/${session.id}');
   }
 
+  Future<void> _openTerminal() => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => TerminalPage(controller: widget.controller),
+    ),
+  );
+
   Future<void> _openAllSessions() => Navigator.of(context).push(
     MaterialPageRoute<void>(
       builder: (_) => GlobalSessionsScreen(controller: widget.controller),
@@ -519,7 +540,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 ListTile(
                   key: const ValueKey('workspace-option-local'),
                   leading: const Icon(Icons.computer_rounded),
-                  title: const Text('Local'),
+                  title: const Text('This computer'),
                   trailing: _selectedWorkspaceID == null
                       ? const Icon(Icons.check_rounded)
                       : null,
@@ -603,6 +624,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           final archiveRepository = await _requireActionRepository();
           await archiveRepository.archiveSession(session.id);
           break;
+        case 'swipe-archive':
+          await _archiveWithUndo(session);
+          return;
         case 'delete':
           if (!await _confirmDelete(session)) return;
           await widget.controller.deleteSession(session.id);
@@ -611,6 +635,47 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       await widget.controller.refreshSessions();
     } catch (error) {
       if (mounted) _showError(error);
+    }
+  }
+
+  /// Swipe-to-archive: hide the row at once, offer Undo for the snackbar's
+  /// lifetime, and only then tell the server. Archiving has no server-side
+  /// reverse, so the undo window *is* the safety net.
+  Future<void> _archiveWithUndo(Session session) async {
+    if (_pendingArchive.contains(session.id)) return;
+    setState(() => _pendingArchive.add(session.id));
+    final title = session.title?.isNotEmpty == true
+        ? session.title!
+        : 'Untitled session';
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    final snackBar = messenger.showSnackBar(
+      SnackBar(
+        key: ValueKey('archive-undo-${session.id}'),
+        content: Text('Archived “$title”'),
+        duration: const Duration(seconds: 5),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () => messenger.hideCurrentSnackBar(
+            reason: SnackBarClosedReason.action,
+          ),
+        ),
+      ),
+    );
+    final reason = await snackBar.closed;
+    if (!mounted) return;
+    if (reason == SnackBarClosedReason.action) {
+      setState(() => _pendingArchive.remove(session.id));
+      return;
+    }
+    try {
+      final archiveRepository = await _requireActionRepository();
+      await archiveRepository.archiveSession(session.id);
+      await widget.controller.refreshSessions();
+    } catch (error) {
+      if (mounted) _showError(error);
+    } finally {
+      if (mounted) setState(() => _pendingArchive.remove(session.id));
     }
   }
 
@@ -680,27 +745,83 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     destructive: true,
   );
 
+  /// The archived list. The server gateway only exposes `archiveSession`
+  /// (it stamps `time.archived`; the SDK drops a null timestamp), so there is
+  /// no unarchive to offer. Rows still lead somewhere: open, or delete for
+  /// good, through the same confirm flow as the recent list.
   void _showArchived(List<Session> sessions) {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
-      builder: (context) => SafeArea(
-        child: ListView.builder(
-          shrinkWrap: true,
-          itemCount: sessions.length,
-          itemBuilder: (context, index) {
-            final session = sessions[index];
-            return ListTile(
-              title: Text(session.title ?? 'Untitled session'),
-              subtitle: Text(session.directory ?? ''),
-              onTap: () {
-                Navigator.pop(context);
-                _openSession(session);
-              },
-            );
-          },
-        ),
-      ),
+      builder: (sheetContext) {
+        final theme = Theme.of(sheetContext);
+        return SafeArea(
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: sessions.length,
+            itemBuilder: (context, index) {
+              final session = sessions[index];
+              final title = session.title?.isNotEmpty == true
+                  ? session.title!
+                  : 'Untitled session';
+              void run(String action) {
+                Navigator.pop(sheetContext);
+                unawaited(_sessionAction(action, session));
+              }
+              return ContextMenuRegion(
+                actions: () => [
+                  ContextMenuAction(
+                    label: 'Open',
+                    icon: Icons.open_in_new_rounded,
+                    onSelected: () {
+                      Navigator.pop(sheetContext);
+                      _openSession(session);
+                    },
+                  ),
+                  ContextMenuAction(
+                    label: 'Delete',
+                    icon: Icons.delete_outline_rounded,
+                    destructive: true,
+                    onSelected: () => run('delete'),
+                  ),
+                ],
+                child: ListTile(
+                  key: ValueKey('archived-session-${session.id}'),
+                  leading: const Icon(Icons.inventory_2_outlined, size: 21),
+                  title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  subtitle: Text(
+                    session.directory ?? '',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing: PopupMenuButton<String>(
+                    key: ValueKey('archived-session-actions-${session.id}'),
+                    tooltip: 'Archived session actions',
+                    onSelected: run,
+                    itemBuilder: (_) => [
+                      const PopupMenuItem(
+                        value: 'rename',
+                        child: Text('Rename'),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Text(
+                          'Delete',
+                          style: TextStyle(color: theme.colorScheme.error),
+                        ),
+                      ),
+                    ],
+                  ),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _openSession(session);
+                  },
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
@@ -758,24 +879,20 @@ class _SessionRow extends StatelessWidget {
     final row = Dismissible(
       key: ValueKey('session-dismiss-${session.id}'),
       direction: DismissDirection.endToStart,
-      // Runs the existing confirm-and-delete flow, then resolves false: the
-      // refreshed session list removes the row, so a cancelled or failed
-      // delete simply snaps back.
+      // Swipe archives (with Undo) wherever the server can archive; delete
+      // stays behind the menu's confirm. Either way this resolves false: the
+      // parent removes or refreshes the row, so a cancel simply snaps back.
       confirmDismiss: (_) async {
-        await onAction('delete', session);
+        await onAction(archiveAvailable ? 'swipe-archive' : 'delete', session);
         return false;
       },
-      background: const SwipeDeleteBackground(),
+      background: archiveAvailable
+          ? const _SwipeArchiveBackground()
+          : const SwipeDeleteBackground(),
       child: ListTile(
         minTileHeight: 64,
         leading: busy
-            ? SizedBox.square(
-                dimension: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: theme.colorScheme.primary,
-                ),
-              )
+            ? const _BreathingDot()
             : const Icon(Icons.chat_bubble_outline_rounded, size: 21),
         title: Text(
           session.title?.isNotEmpty == true
@@ -880,6 +997,89 @@ class _SessionRow extends StatelessWidget {
     if (difference.inDays < 7) return '${difference.inDays}d ago';
     final date = DateTime.fromMillisecondsSinceEpoch(milliseconds);
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+}
+
+/// End-swipe reveal for the archive gesture: a calm container, not the
+/// destructive field the delete swipe uses elsewhere.
+class _SwipeArchiveBackground extends StatelessWidget {
+  const _SwipeArchiveBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      color: scheme.secondaryContainer,
+      alignment: AlignmentDirectional.centerEnd,
+      padding: const EdgeInsetsDirectional.only(end: 24),
+      child: Icon(Icons.archive_outlined, color: scheme.onSecondaryContainer),
+    );
+  }
+}
+
+/// The busy marker on a session row: a primary dot that breathes slowly
+/// instead of a spinner, because "working" is a state, not a wait. Holds
+/// still when the platform asks for reduced motion.
+class _BreathingDot extends StatefulWidget {
+  const _BreathingDot();
+
+  static const period = Duration(milliseconds: 1600);
+
+  @override
+  State<_BreathingDot> createState() => _BreathingDotState();
+}
+
+class _BreathingDotState extends State<_BreathingDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: _BreathingDot.period,
+  );
+  late final Animation<double> _opacity = Tween<double>(
+    begin: .4,
+    end: 1,
+  ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _controller
+        ..stop()
+        ..value = 1;
+    } else if (!_controller.isAnimating) {
+      _controller.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.primary;
+    return Semantics(
+      label: 'Working',
+      child: SizedBox.square(
+        dimension: 22,
+        child: Center(
+          child: RepaintBoundary(
+            child: FadeTransition(
+              opacity: _opacity,
+              child: Container(
+                key: const ValueKey('session-busy-dot'),
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

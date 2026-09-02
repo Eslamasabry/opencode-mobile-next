@@ -177,7 +177,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('open-managed-workspaces')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Managed workspaces'), findsOneWidget);
+    expect(find.text('Cloud environments'), findsOneWidget);
     expect(
       find.byKey(const ValueKey('managed-workspace-wrk_remote')),
       findsOneWidget,

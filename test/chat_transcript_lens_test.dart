@@ -266,9 +266,8 @@ void main() {
     expect(find.byKey(const Key('embedded-tool-row')), findsNothing);
   });
 
-  testWidgets('assistant prose long-press opens the message actions menu', (
-    tester,
-  ) async {
+  testWidgets('assistant prose is selectable; the ⋯ button opens the actions '
+      'menu', (tester) async {
     final api = _TranscriptApi()
       ..messagesBuilder = () => [
         _message('assistant-1', 'assistant', [
@@ -283,9 +282,16 @@ void main() {
     await _pumpChat(tester, api);
     await tester.pumpAndSettle();
 
-    await tester.longPress(
-      find.text('The answer paragraph.', findRichText: true),
+    // Prose gives up the long-press so a reader can select and copy a phrase
+    // on a phone; the actions moved to the always-visible ⋯ affordance.
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('assistant-text-block')),
+        matching: find.byType(SelectableText),
+      ),
+      findsOneWidget,
     );
+    await tester.tap(find.byKey(const ValueKey('message-actions-assistant-1')));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('message-action-copy')), findsOneWidget);

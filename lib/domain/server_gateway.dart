@@ -268,12 +268,56 @@ class CatalogVariant {
   }
 }
 
+/// Model pricing. Every figure is **USD per one million tokens**, which is
+/// the unit both servers use natively (v1 `Model.cost` mirrors models.dev's
+/// per-million prices; v2 `Model.Cost` is typed `Money.USDPerMillionTokens`),
+/// so no conversion happens on the way in.
+class ModelCost {
+  final double inputPerMillion;
+  final double outputPerMillion;
+  final double cacheReadPerMillion;
+  final double cacheWritePerMillion;
+
+  const ModelCost({
+    required this.inputPerMillion,
+    required this.outputPerMillion,
+    this.cacheReadPerMillion = 0,
+    this.cacheWritePerMillion = 0,
+  });
+
+  /// Parses the `{input, output, cache: {read, write}}` object both servers
+  /// send; null for anything that is not a map.
+  static ModelCost? fromJson(dynamic v) {
+    if (v is! Map) return null;
+    final cache = v['cache'] is Map ? v['cache'] as Map : const {};
+    return ModelCost(
+      inputPerMillion: _toDouble(v['input']),
+      outputPerMillion: _toDouble(v['output']),
+      cacheReadPerMillion: _toDouble(cache['read']),
+      cacheWritePerMillion: _toDouble(cache['write']),
+    );
+  }
+
+  /// True when every rate is zero (free / self-hosted models).
+  bool get isFree =>
+      inputPerMillion == 0 &&
+      outputPerMillion == 0 &&
+      cacheReadPerMillion == 0 &&
+      cacheWritePerMillion == 0;
+
+  static double _toDouble(dynamic v) =>
+      v is num ? v.toDouble() : (v is String ? double.tryParse(v) ?? 0 : 0);
+}
+
 class CatalogModel {
   final String id;
   final String providerID;
   final String name;
   final String? family;
   final bool enabled;
+
+  /// Lifecycle status as the server reports it: `active`, `beta`, `alpha`,
+  /// `deprecated`, or `unknown` when the server sent none.
   final String status;
   final int contextLimit;
   final int outputLimit;
@@ -281,6 +325,13 @@ class CatalogModel {
   final bool attachments;
   final bool tools;
   final List<CatalogVariant> variants;
+
+  /// Base pricing (USD per million tokens); null when the server sent none.
+  final ModelCost? cost;
+
+  /// Model release date (v1 `release_date` `YYYY-MM-DD`, v2 `time.released`
+  /// epoch millis); null when unknown.
+  final DateTime? released;
 
   const CatalogModel({
     required this.id,
@@ -295,7 +346,18 @@ class CatalogModel {
     required this.attachments,
     required this.tools,
     required this.variants,
+    this.cost,
+    this.released,
   });
+
+  /// True for `deprecated` models.
+  bool get deprecated => status.toLowerCase() == 'deprecated';
+
+  /// True for `alpha`/`beta` models.
+  bool get preview {
+    final s = status.toLowerCase();
+    return s == 'alpha' || s == 'beta';
+  }
 }
 
 class CatalogProvider {
@@ -319,12 +381,22 @@ class CatalogAgent {
   final bool hidden;
   final int? maxSteps;
 
+  /// Raw colour string as the server gives it: `#rrggbb` or a theme token
+  /// (`primary`, `accent`, ...). Null when the agent has no colour.
+  final String? color;
+
+  /// Configured model as `providerID/modelID`; null when the agent inherits
+  /// the session's model.
+  final String? model;
+
   const CatalogAgent({
     required this.id,
     required this.mode,
     this.description,
     required this.hidden,
     this.maxSteps,
+    this.color,
+    this.model,
   });
 }
 
@@ -763,6 +835,15 @@ class ServerCapabilities {
 /// Server health checks.
 abstract class HealthGateway {
   Future<Health> health();
+}
+
+/// Optional richer status read: gateways whose status endpoint carries retry
+/// details (v1 `session.status` `{type: 'retry', attempt, message, next}`)
+/// implement this so the controller can hydrate [SessionRetryState]s on a
+/// refresh. v2's `/session/active` only reports running sessions, so the v2
+/// gateway does not implement it and relies on live events instead.
+abstract class SessionRetryGateway {
+  Future<Map<String, SessionRetryState>> sessionRetryStates();
 }
 
 /// Session inventory and live conversation reads for the selected location.

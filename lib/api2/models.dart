@@ -477,7 +477,11 @@ class Api2ContentTime {
   final int? created;
   final int? ran;
   final int? completed;
-  Api2ContentTime({this.created, this.ran, this.completed});
+
+  /// When the server pruned this item's output from the context (newer v2
+  /// builds only; absent from the beta-18600 contract).
+  final int? pruned;
+  Api2ContentTime({this.created, this.ran, this.completed, this.pruned});
 
   factory Api2ContentTime.fromJson(dynamic v) {
     final j = _asMap(v);
@@ -485,6 +489,7 @@ class Api2ContentTime {
       created: _asInt(j?['created']),
       ran: _asInt(j?['ran']),
       completed: _asInt(j?['completed']),
+      pruned: _asInt(j?['pruned']),
     );
   }
 }
@@ -1270,6 +1275,37 @@ class Api2ModelCapabilities {
   }
 }
 
+/// One `Model.Cost` entry: USD per million tokens (`Money.USDPerMillionTokens`)
+/// for input/output and cache read/write. [tierSize] is set on context-tier
+/// overrides (`tier: {type: 'context', size}`); the base price has none.
+class Api2ModelCost {
+  final double input;
+  final double output;
+  final double cacheRead;
+  final double cacheWrite;
+  final int? tierSize;
+  const Api2ModelCost({
+    this.input = 0,
+    this.output = 0,
+    this.cacheRead = 0,
+    this.cacheWrite = 0,
+    this.tierSize,
+  });
+
+  static Api2ModelCost? fromJson(dynamic v) {
+    final j = _asMap(v);
+    if (j == null) return null;
+    final cache = _asMap(j['cache']);
+    return Api2ModelCost(
+      input: _asDouble(j['input']) ?? 0,
+      output: _asDouble(j['output']) ?? 0,
+      cacheRead: _asDouble(cache?['read']) ?? 0,
+      cacheWrite: _asDouble(cache?['write']) ?? 0,
+      tierSize: _asInt(_asMap(j['tier'])?['size']),
+    );
+  }
+}
+
 class Api2ModelInfo {
   final String id;
   final String? modelID;
@@ -1282,6 +1318,10 @@ class Api2ModelInfo {
   final List<String> variants;
   final Api2ModelLimit limit;
   final int? released;
+
+  /// Price list as the server sends it (base entry first, then context
+  /// tiers). Empty when the server omitted `cost`.
+  final List<Api2ModelCost> cost;
 
   /// The full wire object, preserved for consumers (like the domain gateway
   /// mappers) that need fields this projection does not model — e.g. variant
@@ -1300,9 +1340,15 @@ class Api2ModelInfo {
     this.variants = const [],
     Api2ModelLimit? limit,
     this.released,
+    this.cost = const [],
     this.raw = const {},
   }) : capabilities = capabilities ?? Api2ModelCapabilities(),
        limit = limit ?? Api2ModelLimit();
+
+  /// Base (non-tiered) price, or the first entry when every entry is tiered.
+  Api2ModelCost? get baseCost => cost.isEmpty
+      ? null
+      : cost.firstWhere((c) => c.tierSize == null, orElse: () => cost.first);
 
   static Api2ModelInfo? fromJson(Map<String, dynamic> j) {
     final id = _asString(j['id']);
@@ -1322,6 +1368,9 @@ class Api2ModelInfo {
       ),
       limit: Api2ModelLimit.fromJson(j['limit']),
       released: _asInt(_asMap(j['time'])?['released']),
+      cost: j['cost'] is List
+          ? _mapList(j['cost'], Api2ModelCost.fromJson)
+          : [?Api2ModelCost.fromJson(j['cost'])],
       raw: j,
     );
   }

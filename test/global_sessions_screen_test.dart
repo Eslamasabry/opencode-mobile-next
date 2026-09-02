@@ -328,9 +328,24 @@ void main() {
     await tester.pumpWidget(_app(controller));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('steal-session-ses_1')), findsNothing);
-    expect(find.byKey(const ValueKey('steal-session-ses_2')), findsNothing);
-    expect(find.byKey(const ValueKey('steal-session-ses_3')), findsOneWidget);
+    // Continue here lives in each row's overflow menu, never as a row icon.
+    expect(find.byIcon(Icons.move_to_inbox_rounded), findsNothing);
+    for (final (id, offered) in const [
+      ('ses_1', false),
+      ('ses_2', false),
+      ('ses_3', true),
+    ]) {
+      await tester.tap(find.byKey(ValueKey('global-session-actions-$id')));
+      await tester.pumpAndSettle();
+      expect(find.text('Open'), findsOneWidget, reason: id);
+      expect(
+        find.byKey(ValueKey('steal-session-$id')),
+        offered ? findsOneWidget : findsNothing,
+        reason: id,
+      );
+      await tester.tapAt(Offset.zero);
+      await tester.pumpAndSettle();
+    }
   });
 
   testWidgets('stealing confirms, calls the repository, and opens the chat', (
@@ -354,8 +369,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('steal-session-ses_2')));
-    await tester.pumpAndSettle();
+    await _continueHere(tester, 'ses_2');
     expect(find.text('Continue this session here?'), findsOneWidget);
     expect(repository.stealCalls, isEmpty);
 
@@ -381,15 +395,14 @@ void main() {
     await tester.pumpWidget(_app(controller));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('steal-session-ses_2')));
-    await tester.pumpAndSettle();
+    await _continueHere(tester, 'ses_2');
     await tester.tap(find.widgetWithText(FilledButton, 'Continue here'));
     await tester.pumpAndSettle();
 
     expect(find.text('Sync is unavailable'), findsOneWidget);
     expect(find.byKey(const ValueKey('global-session-ses_2')), findsOneWidget);
     expect(
-      find.byKey(const ValueKey('steal-session-ses_2')),
+      find.byKey(const ValueKey('global-session-actions-ses_2')),
       findsOneWidget,
     );
   });
@@ -407,9 +420,16 @@ void main() {
     await tester.pumpWidget(_app(controller, textScale: 2));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('steal-session-ses_2')));
-    await tester.pumpAndSettle();
+    await _continueHere(tester, 'ses_2');
     expect(find.text('Continue this session here?'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+}
+
+/// Opens the row's overflow menu and picks Continue here.
+Future<void> _continueHere(WidgetTester tester, String id) async {
+  await tester.tap(find.byKey(ValueKey('global-session-actions-$id')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(ValueKey('steal-session-$id')));
+  await tester.pumpAndSettle();
 }

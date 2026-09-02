@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../api/product_repository.dart';
 import '../../diagnostics/app_diagnostics.dart';
 import '../../state/connection.dart';
+import '../widgets/confirm_sheet.dart';
 import '../widgets/product_states.dart';
 import '../app_theme.dart';
 
@@ -62,26 +63,15 @@ class _AppDiagnosticsScreenState extends State<AppDiagnosticsScreen> {
   }
 
   Future<void> _clear() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Clear diagnostics?'),
-        content: const Text(
-          'This removes every captured error from process memory.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Clear'),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmSheet(
+      context,
+      title: 'Clear diagnostics?',
+      message: 'This removes every captured error from process memory.',
+      confirmLabel: 'Clear',
+      icon: Icons.delete_outline_rounded,
+      destructive: true,
     );
-    if (confirmed == true) _diagnostics.clear();
+    if (confirmed) _diagnostics.clear();
   }
 
   String _time(DateTime value) {

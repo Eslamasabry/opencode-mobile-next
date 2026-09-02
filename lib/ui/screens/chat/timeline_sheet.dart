@@ -8,8 +8,10 @@ class _TimelineSelection {
 }
 
 /// Bottom sheet listing the session's view destinations plus the two
-/// transcript display toggles. Every row pops with its action value; the
-/// caller runs the handler, matching the popup menu this replaces.
+/// transcript display toggles. Destination rows pop with their action value
+/// for the caller to run; the toggles ([_TranscriptDisplayToggles]) apply in
+/// place and leave the sheet open, so a reader can flip both without
+/// reopening it.
 class _SessionViewsSheet extends StatelessWidget {
   const _SessionViewsSheet({
     required this.reasoningExpanded,
@@ -59,27 +61,100 @@ class _SessionViewsSheet extends StatelessWidget {
               value: 'subagents',
             ),
             const SectionLabel('Transcript'),
-            SwitchListTile(
-              key: const ValueKey('session-view-thinking'),
-              secondary: const Icon(Icons.psychology_alt_outlined),
-              title: Text(
-                reasoningExpanded ? 'Collapse reasoning' : 'Expand reasoning',
-              ),
-              value: reasoningExpanded,
-              onChanged: (_) => Navigator.pop(context, 'thinking'),
-            ),
-            SwitchListTile(
-              key: const ValueKey('session-view-timestamps'),
-              secondary: const Icon(Icons.schedule_rounded),
-              title: Text(
-                timestampsVisible ? 'Hide timestamps' : 'Show timestamps',
-              ),
-              value: timestampsVisible,
-              onChanged: (_) => Navigator.pop(context, 'timestamps'),
+            _TranscriptDisplayToggles(
+              reasoningExpanded: reasoningExpanded,
+              timestampsVisible: timestampsVisible,
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// The two transcript display switches — "Reasoning" and "Timestamps &
+/// usage" — as nouns that describe the setting, not verbs that describe the
+/// next click. Each flip writes the preference straight to the connection and
+/// updates in place, so the sheet that hosts them stays open. Drop this into
+/// any session menu sheet under its Transcript label.
+class _TranscriptDisplayToggles extends StatefulWidget {
+  const _TranscriptDisplayToggles({
+    required this.reasoningExpanded,
+    required this.timestampsVisible,
+  });
+
+  final bool reasoningExpanded;
+  final bool timestampsVisible;
+
+  @override
+  State<_TranscriptDisplayToggles> createState() =>
+      _TranscriptDisplayTogglesState();
+}
+
+class _TranscriptDisplayTogglesState extends State<_TranscriptDisplayToggles> {
+  late bool _reasoning = widget.reasoningExpanded;
+  late bool _timestamps = widget.timestampsVisible;
+
+  /// The connection the transcript preferences live on; null only in hosts
+  /// without a provider scope (isolated widget tests), where the switch still
+  /// flips locally.
+  ConnectionController? _connection() {
+    try {
+      return ProviderScope.containerOf(
+        context,
+        listen: false,
+      ).read(connProvider);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _setReasoning(bool value) async {
+    setState(() => _reasoning = value);
+    await _connection()?.setTranscriptReasoningExpanded(value);
+  }
+
+  Future<void> _setTimestamps(bool value) async {
+    setState(() => _timestamps = value);
+    await _connection()?.setTranscriptTimestampsVisible(value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final hint = theme.textTheme.bodySmall?.copyWith(
+      color: AppTheme.mutedOf(theme),
+    );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SwitchListTile(
+          key: const ValueKey('session-view-thinking'),
+          secondary: const Icon(Icons.psychology_alt_outlined),
+          title: const Text('Reasoning'),
+          subtitle: Text(
+            _reasoning
+                ? 'Expanded under each answer'
+                : 'Collapsed until you tap it',
+            style: hint,
+          ),
+          value: _reasoning,
+          onChanged: (value) => unawaited(_setReasoning(value)),
+        ),
+        SwitchListTile(
+          key: const ValueKey('session-view-timestamps'),
+          secondary: const Icon(Icons.schedule_rounded),
+          title: const Text('Timestamps & usage'),
+          subtitle: Text(
+            _timestamps
+                ? 'Time, tokens and cost under each message'
+                : 'Hidden to keep the transcript quiet',
+            style: hint,
+          ),
+          value: _timestamps,
+          onChanged: (value) => unawaited(_setTimestamps(value)),
+        ),
+      ],
     );
   }
 }

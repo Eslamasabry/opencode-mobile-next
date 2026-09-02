@@ -434,21 +434,35 @@ class _VoiceModelCard extends StatelessWidget {
 }
 
 class _AdaptiveVoiceActions extends StatelessWidget {
-  const _AdaptiveVoiceActions({required this.secondary, required this.primary});
+  const _AdaptiveVoiceActions({
+    required this.secondary,
+    required this.primary,
+    this.tertiary,
+  });
 
   final Widget secondary;
   final Widget primary;
 
+  /// An optional third action shown after [primary]; three labels need more
+  /// width before they fit on one row.
+  final Widget? tertiary;
+
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
+      final tertiary = this.tertiary;
       final stack =
-          constraints.maxWidth < 360 ||
+          constraints.maxWidth < (tertiary == null ? 360 : 540) ||
           MediaQuery.textScalerOf(context).scale(1) > 1.3;
       if (stack) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [secondary, const SizedBox(height: 8), primary],
+          children: [
+            secondary,
+            const SizedBox(height: 8),
+            primary,
+            if (tertiary != null) ...[const SizedBox(height: 8), tertiary],
+          ],
         );
       }
       return Row(
@@ -456,11 +470,29 @@ class _AdaptiveVoiceActions extends StatelessWidget {
           Expanded(child: secondary),
           const SizedBox(width: 10),
           Expanded(child: primary),
+          if (tertiary != null) ...[
+            const SizedBox(width: 10),
+            Expanded(child: tertiary),
+          ],
         ],
       );
     },
   );
 }
+
+/// What the voice sheet hands back: the reviewed transcript and whether the
+/// user asked for it to be sent right away ("Insert & send") rather than
+/// only inserted into the composer.
+class VoiceComposerResult {
+  const VoiceComposerResult({required this.text, this.send = false});
+
+  final String text;
+  final bool send;
+}
+
+/// The recording cap the controller enforces; stated up front so the user
+/// knows how long they have before pressing the microphone.
+const voiceRecordingCap = Duration(seconds: 30);
 
 ButtonStyle _voiceButtonStyle() =>
     const ButtonStyle(minimumSize: WidgetStatePropertyAll(Size(48, 48)));
@@ -468,13 +500,20 @@ ButtonStyle _voiceButtonStyle() =>
 Future<String?> showVoiceComposerSheet(
   BuildContext context,
   VoiceComposerController controller,
-) => showModalBottomSheet<String>(
+) async => (await showVoiceComposerResultSheet(context, controller))?.text;
+
+/// The voice sheet with its full result. Dragging it down or tapping outside
+/// dismisses it; either path cancels any recording in flight first.
+Future<VoiceComposerResult?> showVoiceComposerResultSheet(
+  BuildContext context,
+  VoiceComposerController controller,
+) => showModalBottomSheet<VoiceComposerResult>(
   context: context,
   isScrollControlled: true,
   useSafeArea: true,
   showDragHandle: true,
-  isDismissible: false,
-  enableDrag: false,
+  isDismissible: true,
+  enableDrag: true,
   builder: (context) => _VoiceComposerSheet(controller: controller),
 );
 
@@ -504,12 +543,24 @@ class _VoiceComposerSheetState extends State<_VoiceComposerSheet> {
     if (mounted) Navigator.pop(context);
   }
 
+  Future<void> _insert({required bool send}) async {
+    final text = _draft.text.trim();
+    if (text.isEmpty) return;
+    await widget.controller.cancel();
+    if (mounted) {
+      Navigator.pop(context, VoiceComposerResult(text: text, send: send));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false,
+      canPop: true,
+      // A drag-down, tap-outside or back gesture pops first; the recorder is
+      // stopped right behind it so no capture outlives the sheet. Cancel is
+      // idempotent, so the explicit Cancel/Insert paths are unaffected.
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) unawaited(_close());
+        if (didPop) unawaited(widget.controller.cancel());
       },
       child: AnimatedBuilder(
         animation: widget.controller,
@@ -548,7 +599,8 @@ class _VoiceComposerSheetState extends State<_VoiceComposerSheet> {
                       decoration: const InputDecoration(
                         labelText: 'Review transcript',
                         helperText:
-                            'Edit before inserting. Voice input never sends automatically.',
+                            'Edit before inserting. Nothing is sent unless '
+                            'you choose Insert & send.',
                         alignLabelWithHint: true,
                         border: OutlineInputBorder(),
                       ),
@@ -599,14 +651,16 @@ class _VoiceComposerSheetState extends State<_VoiceComposerSheet> {
                       primary: FilledButton.icon(
                         key: const Key('insert-voice-draft'),
                         style: _voiceButtonStyle(),
-                        onPressed: () async {
-                          final text = _draft.text.trim();
-                          if (text.isEmpty) return;
-                          await controller.cancel();
-                          if (context.mounted) Navigator.pop(context, text);
-                        },
+                        onPressed: () => unawaited(_insert(send: false)),
                         icon: const Icon(Icons.add_rounded),
                         label: const Text('Insert'),
+                      ),
+                      tertiary: FilledButton.tonalIcon(
+                        key: const Key('insert-voice-draft-send'),
+                        style: _voiceButtonStyle(),
+                        onPressed: () => unawaited(_insert(send: true)),
+                        icon: const Icon(Icons.arrow_upward_rounded),
+                        label: const Text('Insert & send'),
                       ),
                     )
                   else
@@ -665,9 +719,17 @@ class _VoiceStatus extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final listening = controller.state == VoiceComposerState.listening;
+    final capSeconds = voiceRecordingCap.inSeconds;
+    // While listening the status line already says "of 0:30"; before that
+    // the cap gets its own line so it is known before the mic starts.
+    final showCap =
+        controller.state == VoiceComposerState.idle ||
+        controller.state == VoiceComposerState.initializing ||
+        controller.state == VoiceComposerState.loading;
     final status = switch (controller.state) {
       VoiceComposerState.listening =>
-        'Listening ${_formatElapsed(controller.elapsed)} of 0:30',
+        'Listening ${_formatElapsed(controller.elapsed)} of '
+            '${_formatElapsed(voiceRecordingCap)}',
       VoiceComposerState.initializing => 'Starting microphone…',
       VoiceComposerState.loading => 'Loading local model…',
       VoiceComposerState.transcribing => 'Transcribing on this device…',
@@ -720,6 +782,18 @@ class _VoiceStatus extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         const Text('Audio stays on this device', textAlign: TextAlign.center),
+        if (showCap)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              'Up to $capSeconds s per recording',
+              key: const Key('voice-recording-cap'),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: AppTheme.mutedOf(theme),
+              ),
+            ),
+          ),
         if (listening) ...[
           const SizedBox(height: 14),
           _LevelMeter(level: controller.level),
@@ -781,6 +855,6 @@ class _LevelMeter extends StatelessWidget {
 }
 
 String _formatElapsed(Duration duration) {
-  final seconds = duration.inSeconds.clamp(0, 30);
+  final seconds = duration.inSeconds.clamp(0, voiceRecordingCap.inSeconds);
   return '0:${seconds.toString().padLeft(2, '0')}';
 }

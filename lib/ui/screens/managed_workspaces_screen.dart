@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
+import '../desktop/context_menu.dart';
 import '../widgets/product_states.dart';
 import '../app_theme.dart';
 
@@ -192,11 +193,11 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
     final busy = _syncing || _creating || _busyWorkspaceID != null;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Managed workspaces'),
+        title: const Text('Cloud environments'),
         actions: [
           IconButton(
             key: const ValueKey('sync-managed-workspaces'),
-            tooltip: 'Discover existing workspaces',
+            tooltip: 'Discover existing environments',
             onPressed: busy ? null : _sync,
             icon: _syncing
                 ? const SizedBox.square(
@@ -206,7 +207,7 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
                 : const Icon(Icons.sync_rounded),
           ),
           IconButton(
-            tooltip: 'Refresh managed workspaces',
+            tooltip: 'Refresh cloud environments',
             onPressed: busy || _loading ? null : _load,
             icon: const Icon(Icons.refresh_rounded),
           ),
@@ -222,7 +223,7 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.add_rounded),
-              label: const Text('New workspace'),
+              label: const Text('New environment'),
             )
           : null,
       body: RefreshIndicator(
@@ -232,30 +233,24 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 104),
           children: [
-            ListTile(
-              leading: const Icon(Icons.cloud_outlined),
-              title: Text(widget.project.name),
-              subtitle: Text(
-                'Adapter-backed environments for ${widget.project.directory}',
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
             if (_loading && workspaces == null)
               const LinearProgressIndicator(minHeight: 2),
             if (_workspaceError != null && workspaces == null)
               ProductErrorState(message: _workspaceError!, onRetry: _load)
             else ...[
               SectionLabel(
-                'Workspaces',
+                'Environments',
                 trailing: Text('${workspaces?.length ?? 0}'),
               ),
               if (workspaces?.isEmpty == true)
-                const ProductEmptyState(
+                ProductEmptyState(
                   icon: Icons.cloud_queue_rounded,
-                  title: 'No managed workspaces',
+                  title: 'No cloud environments',
                   message:
-                      'Create one from a server adapter, or use Discover to register environments the adapter already knows.',
+                      'Adapter-backed environments for ${widget.project.name} '
+                      'appear here. Create one from a server adapter, or use '
+                      'Discover to register environments the adapter already '
+                      'knows.',
                 )
               else
                 for (final workspace in workspaces ?? const <WorkspaceInfo>[])
@@ -269,10 +264,10 @@ class _ManagedWorkspacesScreenState extends State<ManagedWorkspacesScreen> {
               if (_workspaceError != null && workspaces != null)
                 ListTile(
                   leading: const Icon(Icons.error_outline_rounded),
-                  title: const Text('Workspace refresh failed'),
+                  title: const Text('Environment refresh failed'),
                   subtitle: Text(_workspaceError!),
                   trailing: IconButton(
-                    tooltip: 'Retry managed workspaces',
+                    tooltip: 'Retry cloud environments',
                     onPressed: _load,
                     icon: const Icon(Icons.refresh_rounded),
                   ),
@@ -373,7 +368,7 @@ class _WorkspaceTile extends StatelessWidget {
       label,
       if (workspace.directory?.isNotEmpty == true) workspace.directory!,
     ].join(' · ');
-    return ListTile(
+    final tile = ListTile(
       key: ValueKey('managed-workspace-${workspace.id}'),
       enabled: !busy,
       leading: busy
@@ -385,7 +380,7 @@ class _WorkspaceTile extends StatelessWidget {
       title: Text(workspace.name),
       subtitle: Text(detail, maxLines: 3, overflow: TextOverflow.ellipsis),
       trailing: PopupMenuButton<String>(
-        tooltip: 'Workspace actions',
+        tooltip: 'Environment actions',
         enabled: !busy,
         onSelected: (value) {
           if (value == 'open') onOpen();
@@ -401,6 +396,28 @@ class _WorkspaceTile extends StatelessWidget {
       ),
       selected: active,
       onTap: onOpen,
+    );
+    // The overflow menu's entries, on a right click. A pass-through off
+    // desktop.
+    return ContextMenuRegion(
+      actions: () => busy
+          ? const []
+          : [
+              ContextMenuAction(
+                menuKey: const ValueKey('environment-menu-open'),
+                label: active ? 'Open again' : 'Open',
+                icon: Icons.open_in_new_rounded,
+                onSelected: onOpen,
+              ),
+              ContextMenuAction(
+                menuKey: const ValueKey('environment-menu-remove'),
+                label: 'Remove',
+                icon: Icons.delete_outline_rounded,
+                destructive: true,
+                onSelected: onRemove,
+              ),
+            ],
+      child: tile,
     );
   }
 }

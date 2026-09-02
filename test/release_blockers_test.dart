@@ -425,7 +425,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Session actions'));
+    await tester.tap(find.byTooltip('Session menu'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Share session'));
     await tester.pumpAndSettle();

@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 
+import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
 import '../../state/profiles.dart';
 import 'product_states.dart';
 
 String appearanceLabel(AppAppearance appearance) => switch (appearance) {
-  AppAppearance.system => 'Follow Android',
+  AppAppearance.system =>
+    platformCapabilities.isAndroid ? 'Follow Android' : 'Follow system',
   AppAppearance.light => 'Light',
   AppAppearance.dark => 'Dark',
 };
 
 String _appearanceDescription(AppAppearance appearance) => switch (appearance) {
-  AppAppearance.system => 'Match this phone’s current light or dark setting',
+  AppAppearance.system =>
+    platformCapabilities.isAndroid
+        ? 'Match this phone’s current light or dark setting'
+        : 'Match this device’s current light or dark setting',
   AppAppearance.light => 'Use the bright editorial workspace',
   AppAppearance.dark => 'Use the focused low-light workspace',
 };

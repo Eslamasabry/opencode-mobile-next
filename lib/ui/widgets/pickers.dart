@@ -102,16 +102,29 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
   ModelRef? _draftModel;
   String _draftVariant = '';
 
+  /// True once the catalog has scrolled: the header drops its tagline and
+  /// icon tile to a single line so the list keeps the room.
+  bool _collapsed = false;
+  ScrollController? _ownedScroll;
+
+  ScrollController get _listScroll =>
+      widget.scrollController ?? (_ownedScroll ??= ScrollController());
+
   @override
   void initState() {
     super.initState();
     _syncDraft();
+    _listScroll.addListener(_scrolled);
   }
 
   @override
   void didUpdateWidget(covariant ModelCatalogView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.controller != widget.controller) _syncDraft();
+    if (oldWidget.scrollController != widget.scrollController) {
+      (oldWidget.scrollController ?? _ownedScroll)?.removeListener(_scrolled);
+      _listScroll.addListener(_scrolled);
+    }
   }
 
   void _syncDraft() {
@@ -119,8 +132,15 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
     _draftVariant = widget.controller.selectedVariant;
   }
 
+  void _scrolled() {
+    final collapsed = _listScroll.hasClients && _listScroll.offset > 12;
+    if (collapsed != _collapsed) setState(() => _collapsed = collapsed);
+  }
+
   @override
   void dispose() {
+    _listScroll.removeListener(_scrolled);
+    _ownedScroll?.dispose();
     _search.dispose();
     super.dispose();
   }
@@ -133,13 +153,14 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
       final drafted = catalog == null ? null : _draftedModel(catalog);
       // Both pinned regions cap at a share of the available height and
       // scroll internally, so extreme accessibility text scales degrade
-      // gracefully instead of overflowing while the list keeps real space.
+      // gracefully instead of overflowing. Together they never take more
+      // than half: the list keeps at least 50% even on a small phone at 2x.
       return LayoutBuilder(
         builder: (context, constraints) => Column(
           children: [
             ConstrainedBox(
               constraints: BoxConstraints(
-                maxHeight: constraints.maxHeight * .45,
+                maxHeight: constraints.maxHeight * (_collapsed ? .18 : .26),
               ),
               child: SingleChildScrollView(
                 child: Column(
@@ -160,7 +181,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
             if (drafted != null)
               ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxHeight: constraints.maxHeight * .38,
+                  maxHeight: constraints.maxHeight * .24,
                 ),
                 child: SingleChildScrollView(
                   child: _applyBar(context, catalog!, drafted),
@@ -212,9 +233,53 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
     );
   }
 
+  List<Widget> _headerActions() => [
+    if (widget.onClose != null)
+      IconButton(
+        key: const Key('model-picker-refresh'),
+        tooltip: 'Refresh models',
+        onPressed: widget.controller.catalogLoading
+            ? null
+            : widget.controller.refreshCatalog,
+        icon: widget.controller.catalogLoading
+            ? const SizedBox.square(
+                dimension: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.refresh_rounded),
+      ),
+    if (widget.onClose != null)
+      IconButton(
+        tooltip: 'Close model selector',
+        onPressed: widget.onClose,
+        icon: const Icon(Icons.close_rounded),
+      ),
+  ];
+
   Widget _header(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    if (_collapsed) {
+      return Padding(
+        key: const Key('model-picker-header-compact'),
+        padding: const EdgeInsets.fromLTRB(20, 4, 12, 2),
+        child: Row(
+          children: [
+            Icon(Icons.tune_rounded, size: 20, color: scheme.primary),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Model, mode & agent',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleMedium,
+              ),
+            ),
+            ..._headerActions(),
+          ],
+        ),
+      );
+    }
     final selected = widget.controller.selectedModel;
     final selectedProviderName = selected == null
         ? null
@@ -259,26 +324,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
               ],
             ),
           ),
-          if (widget.onClose != null)
-            IconButton(
-              key: const Key('model-picker-refresh'),
-              tooltip: 'Refresh models',
-              onPressed: widget.controller.catalogLoading
-                  ? null
-                  : widget.controller.refreshCatalog,
-              icon: widget.controller.catalogLoading
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.refresh_rounded),
-            ),
-          if (widget.onClose != null)
-            IconButton(
-              tooltip: 'Close model selector',
-              onPressed: widget.onClose,
-              icon: const Icon(Icons.close_rounded),
-            ),
+          ..._headerActions(),
         ],
       ),
     );
@@ -387,7 +433,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
 
     // The catalog can hold hundreds of models; rows must build lazily.
     return ListView.builder(
-      controller: widget.scrollController,
+      controller: _listScroll,
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 16),
       itemCount: leadItems.length + models.length,
@@ -564,6 +610,9 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
       if (model.tools) 'Tools',
       if (model.attachments) 'Attachments',
     ];
+    // Past the stacked-actions text scale the bar keeps only what the tap
+    // needs — name, mode, button — so the button stays inside its cap.
+    final compact = AppTheme.stackedActions(context);
     return Material(
       key: const Key('model-picker-apply-bar'),
       color: theme.colorScheme.surfaceContainerHigh,
@@ -571,7 +620,9 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+          padding: compact
+              ? const EdgeInsets.fromLTRB(16, 6, 16, 6)
+              : const EdgeInsets.fromLTRB(16, 10, 16, 10),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -582,18 +633,19 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.titleSmall,
               ),
-              Text(
-                [
-                  '$providerName · ${model.id}',
-                  if (capabilities.isNotEmpty) capabilities.join(' · '),
-                ].join('  —  '),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+              if (!compact)
+                Text(
+                  [
+                    '$providerName · ${model.id}',
+                    if (capabilities.isNotEmpty) capabilities.join(' · '),
+                  ].join('  —  '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
+              SizedBox(height: compact ? 4 : 8),
               if (variants.isEmpty)
                 Text(
                   'This provider exposes only its default mode.',

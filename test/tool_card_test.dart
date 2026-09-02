@@ -103,4 +103,36 @@ void main() {
     expect(find.text('Inspect contract'), findsOneWidget);
     expect(find.text('Run simulator'), findsOneWidget);
   });
+
+  testWidgets('a running tool card carries a primary left accent', (
+    tester,
+  ) async {
+    await _pumpTool(
+      tester,
+      name: 'bash',
+      state: ToolState.fromJson(const {
+        'status': 'running',
+        'input': {'command': 'flutter test'},
+      }, toolName: 'bash'),
+    );
+    final theme = Theme.of(tester.element(find.byType(ToolCard)));
+    BoxDecoration accent() => tester
+        .widget<AnimatedContainer>(find.byKey(const Key('tool-card-accent')))
+        .decoration! as BoxDecoration;
+    expect(accent().border!.top.width, 0);
+    expect((accent().border! as Border).left.width, 2);
+    expect((accent().border! as Border).left.color, theme.colorScheme.primary);
+
+    await _pumpTool(
+      tester,
+      name: 'bash',
+      state: ToolState.fromJson(const {
+        'status': 'completed',
+        'input': {'command': 'flutter test'},
+        'output': 'ok',
+      }, toolName: 'bash'),
+    );
+    await tester.pumpAndSettle();
+    expect((accent().border! as Border).left.color, Colors.transparent);
+  });
 }

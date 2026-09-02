@@ -466,7 +466,10 @@ class _ToolCardState extends State<ToolCard> {
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: AppTheme.hairline(theme)),
             ),
-      child: Column(
+      child: _runningAccent(
+        theme,
+        reduceMotion,
+        Column(
         children: [
           Semantics(
             button: hasBody,
@@ -533,7 +536,6 @@ class _ToolCardState extends State<ToolCard> {
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
-                              fontSize: 10,
                             ),
                           ),
                         ),
@@ -635,8 +637,34 @@ class _ToolCardState extends State<ToolCard> {
               ),
             ),
         ],
+        ),
       ),
     );
+  }
+
+  /// A 2px primary rule down the card's left edge while the tool runs, so a
+  /// glance down the transcript finds the live call without reading status
+  /// glyphs. The rule keeps its width when idle (transparent) so content
+  /// never shifts; it fades unless the platform asks for reduced motion.
+  Widget _runningAccent(ThemeData theme, bool reduceMotion, Widget child) {
+    final accent = AnimatedContainer(
+      key: const Key('tool-card-accent'),
+      duration: reduceMotion
+          ? Duration.zero
+          : const Duration(milliseconds: 180),
+      decoration: BoxDecoration(
+        border: Border(
+          left: BorderSide(
+            color: _running ? theme.colorScheme.primary : Colors.transparent,
+            width: 2,
+          ),
+        ),
+      ),
+      child: child,
+    );
+    if (widget.embedded) return accent;
+    // Straight rule inside a rounded card: clip so the corners stay round.
+    return ClipRRect(borderRadius: BorderRadius.circular(8), child: accent);
   }
 }
 

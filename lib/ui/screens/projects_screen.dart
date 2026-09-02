@@ -173,13 +173,6 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 32),
           children: [
-            const ListTile(
-              leading: Icon(Icons.folder_copy_outlined),
-              title: Text('Projects opened by this server'),
-              subtitle: Text(
-                'Choose a project for sessions, files, terminals, and coding tools.',
-              ),
-            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               child: TextField(
@@ -214,9 +207,11 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                 icon: Icons.folder_off_outlined,
                 title: 'No projects opened',
                 message:
-                    'Open a project on this OpenCode server, then refresh '
-                    'here — or ask from Workspace to start a session in the '
-                    'server’s default directory.',
+                    'Projects opened by this server appear here; choose one '
+                    'for sessions, files, terminals, and coding tools. Open a '
+                    'project on this OpenCode server, then refresh — or ask '
+                    'from Workspace to start a session in the server’s '
+                    'default directory.',
               )
             else if (visible.isEmpty)
               const ProductEmptyState(

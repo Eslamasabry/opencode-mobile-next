@@ -11,7 +11,8 @@ import 'sse.dart';
 export 'models.dart' show ApiException;
 
 /// HTTP client for a single opencode server (`opencode serve`).
-class OpenCodeApi implements ServerGateway, EventStreamTransport {
+class OpenCodeApi
+    implements ServerGateway, SessionRetryGateway, EventStreamTransport {
   final String baseUrl;
   final String? username;
   final String? password;
@@ -374,6 +375,46 @@ class OpenCodeApi implements ServerGateway, EventStreamTransport {
         out[k.toString()] = v is Map
             ? ((v['type'] ?? 'idle')).toString()
             : 'idle';
+      });
+    }
+    return out;
+  }
+
+  /// Sessions currently in provider-retry backoff, with the attempt counter,
+  /// message and next-attempt time the v1 status endpoint carries.
+  @override
+  Future<Map<String, SessionRetryState>> sessionRetryStates() async {
+    Object? raw;
+    try {
+      final response = await sdkClient.getSessionApi().sessionStatus(
+        directory: _directory,
+        workspace: _workspace,
+      );
+      raw = {
+        for (final entry in (response.data ?? const {}).entries)
+          entry.key: entry.value.toJson(),
+      };
+    } on sdk.OpenCodeApiException catch (e) {
+      _failGenerated(e, 'Get session status');
+    } on DioException catch (e) {
+      if (_wasSuccessfulResponse(e) && e.response?.data is Map) {
+        raw = e.response?.data;
+      } else {
+        _fail(e, 'Get session status');
+      }
+    }
+    return sessionRetryStatesFromJson(raw);
+  }
+
+  /// Pure parser behind [sessionRetryStates]: keeps only `retry` entries.
+  static Map<String, SessionRetryState> sessionRetryStatesFromJson(
+    Object? data,
+  ) {
+    final out = <String, SessionRetryState>{};
+    if (data is Map) {
+      data.forEach((k, v) {
+        final retry = SessionRetryState.fromStatusJson(v);
+        if (retry != null) out[k.toString()] = retry;
       });
     }
     return out;

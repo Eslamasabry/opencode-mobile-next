@@ -538,10 +538,7 @@ void main() {
       );
       expect(tester.takeException(), isNull);
 
-      await tester.tap(
-        find.byKey(const ValueKey('review-file-change-README.md')),
-      );
-      await tester.pumpAndSettle();
+      await _openInReview(tester, 'README.md');
 
       expect(find.byKey(const Key('review-workspace')), findsOneWidget);
       expect(find.byKey(const Key('review-scope-picker')), findsNothing);
@@ -607,10 +604,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(
-      find.byKey(const ValueKey('review-file-change-README.md')),
-    );
-    await tester.pumpAndSettle();
+    await _openInReview(tester, 'README.md');
     await tester.tap(find.text('Ask about file'));
     await tester.pumpAndSettle();
     await tester.enterText(
@@ -680,10 +674,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(
-      find.byKey(const ValueKey('review-file-change-README.md')),
-    );
-    await tester.pumpAndSettle();
+    await _openInReview(tester, 'README.md');
     await tester.tap(find.text('Ask about file'));
     await tester.pumpAndSettle();
     await tester.enterText(
@@ -1563,4 +1554,13 @@ void main() {
     expect(store.profiles, isEmpty);
     expect(find.text('Start the server'), findsNothing);
   });
+}
+
+/// Review is reached from the file row's long-press sheet (the touch twin of
+/// the desktop right-click menu); the change badge itself is not a button.
+Future<void> _openInReview(WidgetTester tester, String path) async {
+  await tester.longPress(find.byKey(ValueKey('project-file-$path')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(const ValueKey('file-menu-review')));
+  await tester.pumpAndSettle();
 }

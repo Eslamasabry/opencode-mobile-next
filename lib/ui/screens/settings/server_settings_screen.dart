@@ -36,7 +36,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
     });
     try {
       final api = await widget.controller.prepareActionTransport();
-      if (api == null) throw const ProductException('OpenCode is reconnecting.');
+      if (api == null) {
+        throw const ProductException('OpenCode is reconnecting.');
+      }
       final health = await api.health();
       if (mounted) setState(() => _health = health);
     } catch (error) {
@@ -82,32 +84,20 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
     if (_upgradingServer || !isExactServerVersion(target)) return;
     final profile = widget.controller.profile;
     if (profile == null) return;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        scrollable: true,
-        title: const Text('Update remote OpenCode?'),
-        content: Text(
+    final confirmed = await showConfirmSheet(
+      context,
+      title: 'Update remote OpenCode?',
+      message:
           'Install OpenCode $target on ${profile.name} using the server\'s '
           'detected installation method. The current process is running '
           '${widget.controller.version ?? 'an unknown version'}.\n\n'
           'The install keeps server data in place, but the OpenCode process '
           'must be restarted on its host before the new version takes effect.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            key: const Key('confirm-server-upgrade'),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('Install $target'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Install $target',
+      icon: Icons.download_rounded,
+      confirmKey: const Key('confirm-server-upgrade'),
     );
-    if (confirmed != true || !mounted) return;
+    if (!confirmed || !mounted) return;
 
     setState(() {
       _upgradingServer = true;
@@ -135,7 +125,9 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
         ),
       );
     } catch (error) {
-      if (mounted) setState(() => _serverUpgradeError = productErrorText(error));
+      if (mounted) {
+        setState(() => _serverUpgradeError = productErrorText(error));
+      }
     } finally {
       if (mounted) setState(() => _upgradingServer = false);
     }
@@ -214,25 +206,43 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
                   : const Icon(Icons.refresh_rounded),
             ),
           ),
-          ListTile(
-            leading: Icon(
-              _health?.healthy == true
-                  ? Icons.check_circle_outline_rounded
-                  : Icons.error_outline_rounded,
-              color: _health?.healthy == true
-                  ? AppTheme.successOf(Theme.of(context))
-                  : Theme.of(context).colorScheme.error,
+          // Neutral until the first probe answers: a red "unavailable" row
+          // that flashes for the half-second before the result lands reads
+          // as a real outage.
+          if (_health == null && _healthError == null)
+            const ListTile(
+              key: Key('server-health-checking'),
+              leading: SizedBox.square(
+                dimension: 20,
+                child: Padding(
+                  padding: EdgeInsets.all(1),
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+              title: Text('Checking server health…'),
+              subtitle: Text('Asking the server how it is doing'),
+            )
+          else
+            ListTile(
+              key: const Key('server-health-result'),
+              leading: Icon(
+                _health?.healthy == true
+                    ? Icons.check_circle_outline_rounded
+                    : Icons.error_outline_rounded,
+                color: _health?.healthy == true
+                    ? AppTheme.successOf(Theme.of(context))
+                    : Theme.of(context).colorScheme.error,
+              ),
+              title: Text(
+                _health?.healthy == true
+                    ? 'Server healthy'
+                    : 'Health unavailable',
+              ),
+              subtitle: Text(
+                _healthError ??
+                    'Version ${_health?.version ?? controller.version ?? 'unknown'}',
+              ),
             ),
-            title: Text(
-              _health?.healthy == true
-                  ? 'Server healthy'
-                  : 'Health unavailable',
-            ),
-            subtitle: Text(
-              _healthError ??
-                  'Version ${_health?.version ?? controller.version ?? 'unknown'}',
-            ),
-          ),
           ListTile(
             leading: const Icon(Icons.person_outline_rounded),
             title: const Text('Authentication'),
@@ -253,10 +263,11 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
             ListTile(
               key: const Key('host-management-entry'),
               leading: const Icon(Icons.terminal_outlined),
-              title: const Text('Ubuntu host management'),
+              title: const Text('Run as a Linux service'),
               subtitle: const Text(
-                'Run OpenCode as a service on the host; copy setup, status, '
-                'restart, log, and update commands',
+                'Keep OpenCode running on your computer after you close the '
+                'terminal; copy setup, status, restart, log, and update '
+                'commands',
               ),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () => Navigator.of(context).push(

@@ -58,9 +58,13 @@ class _ProjectsRepository implements ProductRepository {
   String? renamedID;
   String? renamedDirectory;
   String? renamedName;
+  final archiveCalls = <String>[];
 
   @override
   void setLocation({String? directory, String? workspace}) {}
+
+  @override
+  Future<void> archiveSession(String id) async => archiveCalls.add(id);
 
   @override
   Future<List<WorkspaceProject>> listProjects() async => List.of(projects);
@@ -391,7 +395,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('recent session end-swipe runs the delete confirm flow', (
+  testWidgets('recent session end-swipe archives with an undo window', (
     tester,
   ) async {
     final repository = _ProjectsRepository();
@@ -419,14 +423,63 @@ void main() {
     // The trailing popup menu remains alongside the swipe affordance.
     expect(find.byType(PopupMenuButton<String>), findsWidgets);
 
+    // Swipe hides the row at once and offers Undo; nothing reaches the
+    // server yet.
     await tester.drag(row, const Offset(-400, 0));
+    await tester.pumpAndSettle();
+    expect(find.text('Swipe target'), findsNothing);
+    expect(find.text('Archived “Swipe target”'), findsOneWidget);
+    expect(repository.archiveCalls, isEmpty);
+    expect(api.deleteCalls, isEmpty);
+
+    // Undo brings the row back untouched.
+    await tester.tap(find.widgetWithText(SnackBarAction, 'Undo'));
+    await tester.pumpAndSettle();
+    expect(find.text('Swipe target'), findsOneWidget);
+    expect(repository.archiveCalls, isEmpty);
+
+    // Letting the snackbar expire commits the archive.
+    await tester.drag(row, const Offset(-400, 0));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pumpAndSettle();
+    expect(repository.archiveCalls, ['session-1']);
+    expect(api.deleteCalls, isEmpty);
+  });
+
+  testWidgets('delete stays in the session menu behind a confirm', (
+    tester,
+  ) async {
+    final repository = _ProjectsRepository();
+    final api = _WorkspaceSessionsApi();
+    final controller = await _controller(repository)
+      ..api = api
+      ..status = StreamStatus.connected;
+    addTearDown(controller.dispose);
+    controller.sessionsById = {
+      'session-1': Session(
+        id: 'session-1',
+        title: 'Menu target',
+        time: SessionTime(created: 1, updated: 1),
+      ),
+    };
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: WorkspaceScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Session actions'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete'));
     await tester.pumpAndSettle();
     expect(find.text('Delete session?'), findsOneWidget);
     await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
     await tester.pumpAndSettle();
 
     expect(api.deleteCalls, ['session-1']);
-    expect(find.text('Swipe target'), findsNothing);
+    expect(find.text('Menu target'), findsNothing);
   });
 
   testWidgets('a fresh server with zero projects keeps the quick-ask pill', (

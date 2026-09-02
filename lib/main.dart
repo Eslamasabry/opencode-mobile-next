@@ -565,7 +565,9 @@ class _RootState extends ConsumerState<_Root> {
         child: _SavedServerConnectionView(
           profileName: conn.profile!.name,
           baseUrl: conn.profile!.baseUrl,
-          error: conn.lastError,
+          error: conn.lastError == null
+              ? null
+              : productErrorText(conn.lastError!),
           onChangeServer: () => Navigator.of(
             context,
           ).pushNamedAndRemoveUntil('/servers', (_) => false),
@@ -668,7 +670,9 @@ class _SavedServerConnectionView extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      failed ? error! : 'Opening your saved workspace.',
+                      failed
+                          ? productErrorText(error!)
+                          : 'Opening your saved workspace.',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: scheme.onSurfaceVariant,
                         height: 1.45,

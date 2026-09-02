@@ -169,28 +169,15 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
     required String cleared,
     required String failed,
   }) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        scrollable: true,
-        title: Text(title),
-        content: Text(body),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-            ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+    final ok = await showConfirmSheet(
+      context,
+      title: title,
+      message: body,
+      confirmLabel: 'Delete',
+      icon: Icons.delete_outline_rounded,
+      destructive: true,
     );
-    if (ok != true || !mounted) return;
+    if (!ok || !mounted) return;
     setState(() => _busy = true);
     final succeeded = await clear();
     if (!mounted) return;
@@ -199,9 +186,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
     messenger.showSnackBar(
       SnackBar(
         content: Text(succeeded ? cleared : failed),
-        backgroundColor: succeeded
-            ? null
-            : Theme.of(context).colorScheme.error,
+        backgroundColor: succeeded ? null : Theme.of(context).colorScheme.error,
       ),
     );
   }
@@ -223,8 +208,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
-                builder: (_) =>
-                    SavedPermissionsScreen(controller: _controller),
+                builder: (_) => SavedPermissionsScreen(controller: _controller),
               ),
             ),
           ),

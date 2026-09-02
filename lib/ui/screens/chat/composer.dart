@@ -25,8 +25,12 @@ class _ChatComposer extends StatelessWidget {
     this.onDeliveryChanged,
     required this.voiceOpening,
     required this.selectedAgent,
+    this.defaultAgent = '',
     required this.selectedModel,
+    this.modelLabel,
     required this.selectedVariant,
+    this.showAttachmentNote = true,
+    this.pulse = 0,
     required this.onAttach,
     required this.onContentInserted,
     required this.onVoice,
@@ -72,8 +76,24 @@ class _ChatComposer extends StatelessWidget {
   final ValueChanged<PromptDelivery>? onDeliveryChanged;
   final bool voiceOpening;
   final String selectedAgent;
+
+  /// The agent the server would pick unprompted. The chip names the agent
+  /// only when the selection differs from it.
+  final String defaultAgent;
   final ModelRef? selectedModel;
+
+  /// Presented model name (catalog name or provider · model); the chip shows
+  /// it instead of the raw ID. The tooltip keeps the raw string.
+  final String? modelLabel;
   final String selectedVariant;
+
+  /// The "not saved with your draft" note shows once per session, so the
+  /// screen decides when it applies.
+  final bool showAttachmentNote;
+
+  /// Incremented by the screen when a run finishes; each change plays a
+  /// 300 ms primary pulse on the border.
+  final int pulse;
   final VoidCallback onAttach;
 
   /// Receives images committed by the IME (keyboard image insertions and
@@ -121,29 +141,47 @@ class _ChatComposer extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
         child: ListenableBuilder(
           listenable: Listenable.merge([focusNode, controller]),
-          builder: (context, _) => AnimatedContainer(
-            key: const Key('chat-composer-surface'),
-            duration: disableAnimations
+          // The run-finished pulse: a fresh key per finished run restarts a
+          // 300 ms fade of a primary border and halo. Reduced motion (and
+          // the initial build) get no animation at all.
+          builder: (context, _) => TweenAnimationBuilder<double>(
+            key: ValueKey('composer-pulse-$pulse'),
+            tween: Tween(begin: pulse == 0 ? 0.0 : 1.0, end: 0.0),
+            duration: disableAnimations || pulse == 0
                 ? Duration.zero
-                : const Duration(milliseconds: 180),
-            curve: Curves.easeOutCubic,
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(compact ? 20 : 24),
-              border: Border.all(
-                color: focusNode.hasFocus
-                    ? scheme.primary.withValues(alpha: .8)
-                    : scheme.outlineVariant.withValues(alpha: .85),
-                width: focusNode.hasFocus ? 1.4 : 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: scheme.surfaceContainerLowest.withValues(alpha: .5),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+                : const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+            builder: (context, glow, child) {
+              final focused = focusNode.hasFocus;
+              final restingBorder = focused
+                  ? scheme.primary.withValues(alpha: .8)
+                  : scheme.outlineVariant.withValues(alpha: .85);
+              return AnimatedContainer(
+                key: const Key('chat-composer-surface'),
+                duration: disableAnimations
+                    ? Duration.zero
+                    : const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(compact ? 20 : 24),
+                  border: Border.all(
+                    color: Color.lerp(restingBorder, scheme.primary, glow)!,
+                    width: focused || glow > 0 ? 1.4 : 1,
+                  ),
+                  // One raised recipe; focus adds a faint halo so the field
+                  // reads as lifted only while it is being typed into.
+                  boxShadow: [
+                    ...AppTheme.raised(theme),
+                    if (focused && glow == 0)
+                      ...AppTheme.glow(scheme.primary, strength: .12),
+                    if (glow > 0)
+                      ...AppTheme.glow(scheme.primary, strength: .35 * glow),
+                  ],
                 ),
-              ],
-            ),
+                child: child,
+              );
+            },
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,6 +215,8 @@ class _ChatComposer extends StatelessWidget {
                       alignment: AlignmentDirectional.centerStart,
                       child: _ModelContextChip(
                         label: _contextLabel,
+                        tooltip: _rawContextLabel,
+                        trailing: _contextPercent(context),
                         onPressed: onChooseModel,
                       ),
                     ),
@@ -256,18 +296,19 @@ class _ChatComposer extends StatelessWidget {
                     ),
                   ),
                   // §7.4: draft text is persisted per session, attachment
-                  // bytes are not. Say so at selection time rather than
-                  // letting navigation lose them silently.
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 6, 14, 0),
-                    child: Text(
-                      key: const Key('composer-attachment-draft-note'),
-                      'Attachments are not saved with your draft.',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: AppTheme.mutedOf(theme),
+                  // bytes are not. Say so the first time one is staged in
+                  // this session rather than on every attachment.
+                  if (showAttachmentNote)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 6, 14, 0),
+                      child: Text(
+                        key: const Key('composer-attachment-draft-note'),
+                        'Attachments are not saved with your draft.',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: AppTheme.mutedOf(theme),
+                        ),
                       ),
                     ),
-                  ),
                 ],
                 if (compact)
                   _compactComposer(context)
@@ -302,6 +343,7 @@ class _ChatComposer extends StatelessWidget {
               _PromptToolsButton(
                 voiceOpening: voiceOpening,
                 onSelected: _openTool,
+                onAttach: _attachBlocked ? null : onAttach,
               ),
               const SizedBox(width: 6),
               // The model/agent reads as context, not as a fifth equal
@@ -312,6 +354,8 @@ class _ChatComposer extends StatelessWidget {
                   alignment: AlignmentDirectional.centerStart,
                   child: _ModelContextChip(
                     label: _contextLabel,
+                    tooltip: _rawContextLabel,
+                    trailing: _contextPercent(context),
                     onPressed: onChooseModel,
                   ),
                 ),
@@ -341,7 +385,11 @@ class _ChatComposer extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          _PromptToolsButton(voiceOpening: voiceOpening, onSelected: _openTool),
+          _PromptToolsButton(
+            voiceOpening: voiceOpening,
+            onSelected: _openTool,
+            onAttach: _attachBlocked ? null : onAttach,
+          ),
           const SizedBox(width: 4),
           Expanded(
             child: _ComposerField(
@@ -387,7 +435,8 @@ class _ChatComposer extends StatelessWidget {
       isScrollControlled: true,
       constraints: const BoxConstraints(maxWidth: 720),
       builder: (_) => _PromptToolsSheet(
-        blocked: busy || sending,
+        attachBlocked: _attachBlocked,
+        voiceBlocked: busy || sending,
         attachmentCount: attachments.length,
       ),
     );
@@ -403,13 +452,54 @@ class _ChatComposer extends StatelessWidget {
     }
   }
 
+  /// Attaching only has to wait for a run on servers where Send itself must
+  /// wait; with an inbox the file simply rides on the next send.
+  bool get _attachBlocked => sending || (busy && !canSendWhileBusy);
+
+  /// The chip's visible text: the presented model name, the agent only when
+  /// it is not the server's default, the variant only when it is a real
+  /// choice. The raw IDs stay in the tooltip.
   String get _contextLabel {
     final parts = <String>[];
+    if (selectedAgent.isNotEmpty && selectedAgent != defaultAgent) {
+      parts.add(selectedAgent);
+    }
+    final model = selectedModel;
+    if (model != null && model.modelID.isNotEmpty) {
+      final presented = modelLabel?.trim();
+      parts.add(
+        presented == null || presented.isEmpty
+            ? presentedModelLabel(model.providerID, model.modelID)
+            : presented,
+      );
+    }
+    final variant = selectedVariant.trim();
+    if (variant.isNotEmpty && !_isDefaultVariant(variant)) parts.add(variant);
+    return parts.isEmpty ? 'Choose model' : parts.join(' · ');
+  }
+
+  /// Full raw selection for the tooltip.
+  String get _rawContextLabel {
+    final parts = <String>[];
     if (selectedAgent.isNotEmpty) parts.add(selectedAgent);
-    final model = selectedModel?.modelID;
-    if (model != null && model.isNotEmpty) parts.add(model);
+    final model = selectedModel;
+    if (model != null && model.modelID.isNotEmpty) parts.add(model.wireName);
     if (selectedVariant.isNotEmpty) parts.add(selectedVariant);
     return parts.isEmpty ? 'Choose model' : parts.join(' · ');
+  }
+
+  static bool _isDefaultVariant(String variant) => switch (variant
+      .toLowerCase()) {
+    'default' || 'medium' || 'normal' || 'standard' || 'auto' => true,
+    _ => false,
+  };
+
+  /// Below 70 % the hairline meter is signal enough; from there the chip
+  /// carries the number, escalating in colour as the window fills.
+  Widget? _contextPercent(BuildContext context) {
+    final usage = contextUsage;
+    if (usage == null || usage < .7) return null;
+    return _ContextPercentBadge(usage: usage.clamp(0.0, 1.0));
   }
 
   String? get _slashQuery {
@@ -493,6 +583,7 @@ class _PromptToolsButton extends StatelessWidget {
   const _PromptToolsButton({
     required this.voiceOpening,
     required this.onSelected,
+    this.onAttach,
   });
 
   /// Voice opening is the one tool with a visible pending state, so the
@@ -500,20 +591,38 @@ class _PromptToolsButton extends StatelessWidget {
   final bool voiceOpening;
   final Future<void> Function(BuildContext context) onSelected;
 
+  /// Long press skips the sheet and opens the file picker directly; null
+  /// while attaching is unavailable.
+  final VoidCallback? onAttach;
+
+  static const tooltipText = 'Add. Hold to attach a file';
+
   @override
   Widget build(BuildContext context) {
-    return _ComposerAction(
-      key: const Key('composer-tools-button'),
-      tooltip: platformCapabilities.supportsVoice
-          ? 'Prompt tools: commands, attach, voice'
-          : 'Prompt tools: commands, attach',
-      onPressed: () => unawaited(onSelected(context)),
-      icon: voiceOpening
-          ? const SizedBox.square(
-              dimension: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : const Icon(Icons.add_rounded),
+    final scheme = Theme.of(context).colorScheme;
+    // The tooltip is manual so its own long-press recognizer cannot swallow
+    // the attach gesture; hover still shows it on desktop, and the message
+    // stays in semantics.
+    return Tooltip(
+      message: tooltipText,
+      triggerMode: TooltipTriggerMode.manual,
+      child: GestureDetector(
+        onLongPress: onAttach,
+        child: IconButton(
+          key: const Key('composer-tools-button'),
+          onPressed: () => unawaited(onSelected(context)),
+          style: IconButton.styleFrom(
+            backgroundColor: scheme.surfaceContainerHigh,
+            foregroundColor: scheme.onSurfaceVariant,
+          ),
+          icon: voiceOpening
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.add_rounded),
+        ),
+      ),
     );
   }
 }
@@ -523,13 +632,15 @@ class _PromptToolsButton extends StatelessWidget {
 /// 48 dp minimum at any text scale.
 class _PromptToolsSheet extends StatelessWidget {
   const _PromptToolsSheet({
-    required this.blocked,
+    required this.attachBlocked,
+    required this.voiceBlocked,
     required this.attachmentCount,
   });
 
-  /// Attach and Voice stay unavailable while a turn is in flight, exactly as
-  /// they were when they had their own buttons.
-  final bool blocked;
+  /// Voice stays unavailable while a turn is in flight; Attach only where
+  /// Send itself has to wait (no inbox).
+  final bool attachBlocked;
+  final bool voiceBlocked;
   final int attachmentCount;
 
   @override
@@ -556,17 +667,17 @@ class _PromptToolsSheet extends StatelessWidget {
             ),
             ListTile(
               key: const Key('composer-tool-attach'),
-              enabled: !blocked,
+              enabled: !attachBlocked,
               leading: const Icon(Icons.attach_file_rounded),
               title: const Text('Attach file'),
               subtitle: Text(
-                blocked
+                attachBlocked
                     ? 'Available when the current run finishes'
                     : attachmentCount == 0
                     ? 'Add an image or file to the prompt'
                     : '$attachmentCount attached',
               ),
-              onTap: blocked
+              onTap: attachBlocked
                   ? null
                   : () => Navigator.pop(context, _PromptTool.attach),
             ),
@@ -577,15 +688,15 @@ class _PromptToolsSheet extends StatelessWidget {
             if (platformCapabilities.supportsVoice)
               ListTile(
                 key: const Key('composer-tool-voice'),
-                enabled: !blocked,
+                enabled: !voiceBlocked,
                 leading: const Icon(Icons.mic_none_rounded),
                 title: const Text('Voice input'),
                 subtitle: Text(
-                  blocked
+                  voiceBlocked
                       ? 'Available when the current run finishes'
                       : 'Records and transcribes on this device',
                 ),
-                onTap: blocked
+                onTap: voiceBlocked
                     ? null
                     : () => Navigator.pop(context, _PromptTool.voice),
               ),
@@ -601,9 +712,20 @@ class _PromptToolsSheet extends StatelessWidget {
 /// states the current selection and opens the picker — rather than another
 /// icon button with the same weight as Send.
 class _ModelContextChip extends StatelessWidget {
-  const _ModelContextChip({required this.label, required this.onPressed});
+  const _ModelContextChip({
+    required this.label,
+    required this.tooltip,
+    this.trailing,
+    required this.onPressed,
+  });
 
   final String label;
+
+  /// The raw agent · provider/model · variant string.
+  final String tooltip;
+
+  /// Trailing slot for the context-window percentage once it matters.
+  final Widget? trailing;
   final VoidCallback onPressed;
 
   @override
@@ -611,7 +733,7 @@ class _ModelContextChip extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return Tooltip(
-      message: 'Model and agent: $label. Tap to change.',
+      message: 'Model and agent: $tooltip. Tap to change.',
       child: ActionChip(
         key: const Key('composer-model-context'),
         avatar: Icon(
@@ -619,7 +741,18 @@ class _ModelContextChip extends StatelessWidget {
           size: 16,
           color: scheme.onSurfaceVariant,
         ),
-        label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+        label: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
+            if (trailing case final trailing?) ...[
+              const SizedBox(width: 8),
+              trailing,
+            ],
+          ],
+        ),
         labelStyle: theme.textTheme.labelLarge?.copyWith(
           color: scheme.onSurfaceVariant,
         ),
@@ -630,36 +763,6 @@ class _ModelContextChip extends StatelessWidget {
         materialTapTargetSize: MaterialTapTargetSize.padded,
         onPressed: onPressed,
       ),
-    );
-  }
-}
-
-class _ComposerAction extends StatelessWidget {
-  const _ComposerAction({
-    super.key,
-    required this.tooltip,
-    required this.onPressed,
-    required this.icon,
-  });
-
-  final String tooltip;
-  final VoidCallback? onPressed;
-  final Widget icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return IconButton(
-      tooltip: tooltip,
-      onPressed: onPressed,
-      style: IconButton.styleFrom(
-        backgroundColor: scheme.surfaceContainerHigh,
-        foregroundColor: scheme.onSurfaceVariant,
-        disabledBackgroundColor: scheme.surfaceContainerHigh.withValues(
-          alpha: .45,
-        ),
-      ),
-      icon: icon,
     );
   }
 }
@@ -720,11 +823,20 @@ class _ComposerSubmit extends StatelessWidget {
           )
         : const Icon(Icons.arrow_upward_rounded);
     if (!busy) {
-      return IconButton.filled(
-        key: const Key('chat-send-button'),
-        tooltip: 'Send',
-        onPressed: sending || !enabled ? null : onSend,
-        icon: icon,
+      return _SendFill(
+        enabled: enabled,
+        child: IconButton(
+          key: const Key('chat-send-button'),
+          tooltip: 'Send',
+          onPressed: sending || !enabled ? null : onSend,
+          style: IconButton.styleFrom(
+            foregroundColor: scheme.onPrimary,
+            disabledForegroundColor: scheme.onSurfaceVariant.withValues(
+              alpha: .7,
+            ),
+          ),
+          icon: icon,
+        ),
       );
     }
     // While busy the button carries no tooltip: Tooltip installs its own
@@ -736,10 +848,19 @@ class _ComposerSubmit extends StatelessWidget {
           ? 'Send — queues after the current run. Long press to choose '
                 'delivery.'
           : 'Send — steers the current run. Long press to choose delivery.',
-      child: IconButton.filled(
-        key: const Key('chat-send-button'),
-        onPressed: sending || !enabled ? null : onSend,
-        icon: icon,
+      child: _SendFill(
+        enabled: enabled,
+        child: IconButton(
+          key: const Key('chat-send-button'),
+          onPressed: sending || !enabled ? null : onSend,
+          style: IconButton.styleFrom(
+            foregroundColor: scheme.onPrimary,
+            disabledForegroundColor: scheme.onSurfaceVariant.withValues(
+              alpha: .7,
+            ),
+          ),
+          icon: icon,
+        ),
       ),
     );
     // OpenCode 2 while busy: Stop keeps its own adjacent button; tap Send
@@ -804,6 +925,66 @@ class _ComposerSubmit extends StatelessWidget {
               onTap: () => choose(sheetContext, PromptDelivery.queue),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Send fills with the primary colour the moment there is something to
+/// send and drops to a tonal disc when there is not: the button itself says
+/// whether a tap will do anything. The colour change animates in 150 ms.
+class _SendFill extends StatelessWidget {
+  const _SendFill({required this.enabled, required this.child});
+
+  final bool enabled;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    return AnimatedContainer(
+      key: const Key('chat-send-fill'),
+      duration: reduceMotion
+          ? Duration.zero
+          : const Duration(milliseconds: 150),
+      curve: Curves.easeOut,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: enabled ? scheme.primary : scheme.surfaceContainerHigh,
+      ),
+      child: child,
+    );
+  }
+}
+
+/// The context-window percentage the model chip carries from 70 % on. The
+/// hairline meter stays; this is the number for when the number matters.
+class _ContextPercentBadge extends StatelessWidget {
+  const _ContextPercentBadge({required this.usage});
+
+  final double usage;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final percent = (usage * 100).round();
+    final color = usage >= .95
+        ? theme.colorScheme.error
+        : usage >= .85
+        ? AppTheme.statusColor(theme, AppStatusTone.attention)
+        : AppTheme.mutedOf(theme);
+    return Semantics(
+      label: 'Context $percent% full',
+      excludeSemantics: true,
+      child: Text(
+        '$percent%',
+        key: const Key('composer-context-percent'),
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w600,
+          fontFeatures: const [FontFeature.tabularFigures()],
         ),
       ),
     );

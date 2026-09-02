@@ -46,6 +46,11 @@ class ShowShortcutsHelpIntent extends Intent {
   const ShowShortcutsHelpIntent();
 }
 
+/// Ctrl/Cmd+` — open the terminal for the active workspace.
+class OpenTerminalIntent extends Intent {
+  const OpenTerminalIntent();
+}
+
 /// Ctrl/Cmd+1..4 — switch primary destination.
 class SelectDestinationIntent extends Intent {
   const SelectDestinationIntent(this.index);
@@ -81,6 +86,7 @@ Map<ShortcutActivator, Intent> get appShortcutBindings => {
   ..._accelerator(LogicalKeyboardKey.comma, const OpenSettingsIntent()),
   ..._accelerator(LogicalKeyboardKey.keyW, const CloseRouteIntent()),
   ..._accelerator(LogicalKeyboardKey.slash, const ShowShortcutsHelpIntent()),
+  ..._accelerator(LogicalKeyboardKey.backquote, const OpenTerminalIntent()),
   ..._accelerator(LogicalKeyboardKey.digit1, const SelectDestinationIntent(0)),
   ..._accelerator(LogicalKeyboardKey.digit2, const SelectDestinationIntent(1)),
   ..._accelerator(LogicalKeyboardKey.digit3, const SelectDestinationIntent(2)),
@@ -104,6 +110,7 @@ List<ShortcutHelpEntry> shortcutHelp() {
     ShortcutHelpEntry('$mod + F', 'Find in this surface'),
     ShortcutHelpEntry('$mod + 1 … 4', 'Workspace, Files, Activity, More'),
     ShortcutHelpEntry('$mod + ,', 'Settings'),
+    ShortcutHelpEntry('$mod + `', 'Terminal'),
     ShortcutHelpEntry('$mod + W', 'Close this screen'),
     ShortcutHelpEntry('$mod + Enter', 'Send the prompt'),
     ShortcutHelpEntry('$mod + C', 'Copy the selected transcript text'),
@@ -301,6 +308,9 @@ class _AppShortcutsState extends State<AppShortcuts> {
               onInvoke: (intent) => _dispatch(intent, (_) {}),
             ),
             SelectDestinationIntent: CallbackAction<SelectDestinationIntent>(
+              onInvoke: (intent) => _dispatch(intent, (_) {}),
+            ),
+            OpenTerminalIntent: CallbackAction<OpenTerminalIntent>(
               onInvoke: (intent) => _dispatch(intent, (_) {}),
             ),
           },

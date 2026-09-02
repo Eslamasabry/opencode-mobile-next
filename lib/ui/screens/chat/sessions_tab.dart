@@ -66,6 +66,9 @@ class SessionsTab extends StatelessWidget {
                 child: DesktopScrollbarArea(
                   builder: (scrollController) => ListView.builder(
                   controller: scrollController,
+                  // The extended FAB floats over the list's tail; this keeps
+                  // the last row tappable above it.
+                  padding: const EdgeInsets.only(bottom: 88),
                   itemCount: sessions.length,
                   itemBuilder: (context, i) {
                     final s = sessions[i];

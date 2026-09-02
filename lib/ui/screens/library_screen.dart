@@ -96,7 +96,7 @@ class LibraryScreen extends StatelessWidget {
                   icon: Icons.terminal_outlined,
                   title: l10n.libraryTerminalTitle,
                   onTap: () =>
-                      _open(context, _TerminalPage(controller: controller)),
+                      _open(context, TerminalPage(controller: controller)),
                 ),
               ],
             ),
@@ -148,17 +148,6 @@ class LibraryScreen extends StatelessWidget {
 
 /// Terminal is a body-only tab widget; pushed from More it needs its own
 /// Scaffold and an identity in the app bar.
-class _TerminalPage extends StatelessWidget {
-  final ConnectionController controller;
-
-  const _TerminalPage({required this.controller});
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Terminal')),
-    body: TerminalScreen(controller: controller),
-  );
-}
 
 /// The live model/agent/variant selection, promoted to the top of More so the
 /// hub reports state instead of only linking away.

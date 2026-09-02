@@ -21,7 +21,11 @@ class SessionTime {
   final int? created;
   final int? updated;
   final int? archived;
-  SessionTime({this.created, this.updated, this.archived});
+
+  /// Epoch millis at which the server started compacting the session's
+  /// context (v1 `time.compacting`); null when no compaction is running.
+  final int? compacting;
+  SessionTime({this.created, this.updated, this.archived, this.compacting});
 
   factory SessionTime.fromJson(dynamic v) {
     if (v is Map<String, dynamic>) {
@@ -29,9 +33,37 @@ class SessionTime {
         created: _asInt(v['created']),
         updated: _asInt(v['updated']),
         archived: _asInt(v['archived']),
+        compacting: _asInt(v['compacting']),
       );
     }
     return SessionTime();
+  }
+}
+
+/// Session-level token usage. Same shape as the per-message [Tokens]
+/// (input/output/reasoning plus cache read/write), aggregated by the server
+/// across the whole session.
+typedef SessionTokens = Tokens;
+
+/// Aggregate diff summary a v1 server attaches to a session
+/// (`summary{additions,deletions,files}`).
+class SessionDiffSummary {
+  final int additions;
+  final int deletions;
+  final int files;
+  const SessionDiffSummary({
+    this.additions = 0,
+    this.deletions = 0,
+    this.files = 0,
+  });
+
+  static SessionDiffSummary? fromJson(dynamic v) {
+    if (v is! Map) return null;
+    return SessionDiffSummary(
+      additions: _asInt(v['additions']) ?? 0,
+      deletions: _asInt(v['deletions']) ?? 0,
+      files: _asInt(v['files']) ?? 0,
+    );
   }
 }
 
@@ -46,6 +78,27 @@ class Session {
   final bool reverted;
   final String? shareUrl;
   final SessionTime? time;
+
+  /// Accumulated USD spend for the session; null when the server sent none.
+  final double? cost;
+
+  /// Accumulated token usage for the session; null when the server sent none.
+  final SessionTokens? tokens;
+
+  /// Aggregate file diff counts (v1 only; v2 sessions never carry one).
+  final SessionDiffSummary? summary;
+
+  /// Agent the session currently runs with, as the server names it.
+  final String? agent;
+
+  /// Selected model as `providerID/modelID` (the server's `model` ref
+  /// flattened); null when the session has no explicit model.
+  final String? model;
+
+  /// When the server started compacting this session's context; null when
+  /// no compaction is in progress.
+  final DateTime? compactingSince;
+
   Session({
     required this.id,
     this.title,
@@ -57,22 +110,82 @@ class Session {
     this.reverted = false,
     this.shareUrl,
     this.time,
+    this.cost,
+    this.tokens,
+    this.summary,
+    this.agent,
+    this.model,
+    this.compactingSince,
   });
 
-  factory Session.fromJson(Map<String, dynamic> j) => Session(
-    id: j['id'] as String,
-    title: j['title'] as String?,
-    projectID: j['projectID'] as String?,
-    workspaceID: j['workspaceID'] as String?,
-    parentID: j['parentID'] as String?,
-    directory: j['directory'] as String?,
-    path: j['path'] as String?,
-    reverted: j['revert'] != null,
-    shareUrl: j['share'] is Map ? (j['share'] as Map)['url']?.toString() : null,
-    time: SessionTime.fromJson(j['time']),
-  );
+  factory Session.fromJson(Map<String, dynamic> j) {
+    final time = SessionTime.fromJson(j['time']);
+    return Session(
+      id: j['id'] as String,
+      title: j['title'] as String?,
+      projectID: j['projectID'] as String?,
+      workspaceID: j['workspaceID'] as String?,
+      parentID: j['parentID'] as String?,
+      directory: j['directory'] as String?,
+      path: j['path'] as String?,
+      reverted: j['revert'] != null,
+      shareUrl: j['share'] is Map
+          ? (j['share'] as Map)['url']?.toString()
+          : null,
+      time: time,
+      cost: j['cost'] is num ? (j['cost'] as num).toDouble() : null,
+      tokens: j['tokens'] is Map ? Tokens.fromJson(j['tokens']) : null,
+      summary: SessionDiffSummary.fromJson(j['summary']),
+      agent: j['agent']?.toString(),
+      model: modelRefString(j['model']),
+      compactingSince: time.compacting == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(time.compacting!),
+    );
+  }
 
   bool get archived => time?.archived != null;
+
+  /// Copy with updated live usage (used by `session.usage.updated`) or any
+  /// other field; omitted arguments keep their current value.
+  Session copyWith({
+    String? title,
+    double? cost,
+    SessionTokens? tokens,
+    SessionDiffSummary? summary,
+    String? agent,
+    String? model,
+    SessionTime? time,
+  }) => Session(
+    id: id,
+    title: title ?? this.title,
+    projectID: projectID,
+    workspaceID: workspaceID,
+    parentID: parentID,
+    directory: directory,
+    path: path,
+    reverted: reverted,
+    shareUrl: shareUrl,
+    time: time ?? this.time,
+    cost: cost ?? this.cost,
+    tokens: tokens ?? this.tokens,
+    summary: summary ?? this.summary,
+    agent: agent ?? this.agent,
+    model: model ?? this.model,
+    compactingSince: compactingSince,
+  );
+}
+
+/// Flattens a server model reference to `providerID/modelID`. Accepts the
+/// `{providerID, id}` (v2 / v1 session) and `{providerID, modelID}` (v1
+/// agent) object shapes as well as an already-flat string.
+String? modelRefString(dynamic v) {
+  if (v is String) return v.isEmpty ? null : v;
+  if (v is! Map) return null;
+  final id = (v['id'] ?? v['modelID'])?.toString();
+  if (id == null || id.isEmpty) return null;
+  final provider = v['providerID']?.toString();
+  return provider == null || provider.isEmpty ? id : '$provider/$id';
 }
 
 // ---------------- Messages & parts ----------------
@@ -127,6 +240,39 @@ class Tokens {
   int get total => input + output + reasoning + cache;
 }
 
+/// Typed classification of an assistant message error, derived from the
+/// server's error `name` (v1 `{name: 'ContextOverflowError', data}`) or
+/// `type` (v2 structured errors). [unknown] covers every unrecognised name.
+enum MessageErrorKind {
+  contextOverflow,
+  outputLength,
+  providerAuth,
+  contentFilter,
+  aborted,
+  unknown;
+
+  /// Maps a v1 error `name` or v2 error `type` string to a kind; null when
+  /// [name] is null or empty (no error).
+  static MessageErrorKind? fromName(String? name) {
+    final trimmed = name?.trim();
+    if (trimmed == null || trimmed.isEmpty) return null;
+    final key = trimmed.toLowerCase().replaceAll(RegExp(r'[^a-z]'), '');
+    if (key.contains('contextoverflow') || key.contains('contextlength')) {
+      return contextOverflow;
+    }
+    if (key.contains('outputlength') || key == 'length') return outputLength;
+    if (key.contains('providerauth') ||
+        key.contains('needsauth') ||
+        key.contains('unauthorized') ||
+        key.contains('authentication')) {
+      return providerAuth;
+    }
+    if (key.contains('contentfilter')) return contentFilter;
+    if (key.contains('abort')) return aborted;
+    return unknown;
+  }
+}
+
 class MessageInfo {
   final String id;
   final String sessionID;
@@ -139,6 +285,13 @@ class MessageInfo {
   final MsgTime? time;
   final String? errorText;
 
+  /// Provider finish reason as the server reports it (v1/v2 `finish`, e.g.
+  /// `stop`, `length`, `tool-calls`, `content-filter`, `error`).
+  final String? finish;
+
+  /// Typed classification of [errorText]; null when the message has no error.
+  final MessageErrorKind? errorKind;
+
   MessageInfo({
     required this.id,
     required this.sessionID,
@@ -150,17 +303,28 @@ class MessageInfo {
     Tokens? tokens,
     this.time,
     this.errorText,
-  }) : tokens = tokens ?? Tokens();
+    this.finish,
+    MessageErrorKind? errorKind,
+  }) : tokens = tokens ?? Tokens(),
+       errorKind =
+           errorKind ?? (errorText == null ? null : MessageErrorKind.unknown);
 
   factory MessageInfo.fromJson(Map<String, dynamic> j) {
     final err = j['error'];
     String? errText;
+    MessageErrorKind? errKind;
     if (err is Map<String, dynamic>) {
       final data = err['data'];
       final nestedMessage = data is Map ? data['message'] : null;
       errText = (err['message'] ?? nestedMessage ?? err['name'])?.toString();
+      errKind =
+          MessageErrorKind.fromName(
+            (err['name'] ?? err['type'])?.toString(),
+          ) ??
+          (errText == null ? null : MessageErrorKind.unknown);
     } else if (err is String) {
       errText = err;
+      errKind = MessageErrorKind.fromName(err) ?? MessageErrorKind.unknown;
     }
     return MessageInfo(
       id: j['id'] as String,
@@ -173,6 +337,8 @@ class MessageInfo {
       tokens: Tokens.fromJson(j['tokens']),
       time: MsgTime.fromJson(j['time']),
       errorText: errText,
+      finish: j['finish']?.toString(),
+      errorKind: errKind,
     );
   }
 }
@@ -362,6 +528,21 @@ class ToolState {
   /// Empty when the server gave a single output string (all v1 payloads).
   final List<ToolResultSegment> segments;
 
+  /// When the tool started running (v1 `time.start`, v2 `time.ran` falling
+  /// back to `time.created`); null while pending or when the server omitted it.
+  final DateTime? startedAt;
+
+  /// When the tool finished (v1 `time.end`, v2 `time.completed`).
+  final DateTime? completedAt;
+
+  /// True when the server pruned/compacted this tool's output out of the
+  /// context (v1 `time.compacted`, v2 `time.pruned`).
+  final bool pruned;
+
+  /// False when the model requested the call but the server never ran it
+  /// (v2 `executed: false`); v1 payloads are always executed.
+  final bool executed;
+
   ToolState({
     required this.status,
     this.title,
@@ -372,7 +553,20 @@ class ToolState {
     this.metadata,
     this.outputFiles = const [],
     this.segments = const [],
+    this.startedAt,
+    this.completedAt,
+    this.pruned = false,
+    this.executed = true,
   });
+
+  /// Wall-clock run time; null until both timestamps are known.
+  Duration? get duration {
+    final start = startedAt;
+    final end = completedAt;
+    if (start == null || end == null) return null;
+    final elapsed = end.difference(start);
+    return elapsed.isNegative ? Duration.zero : elapsed;
+  }
 
   static String _pretty(dynamic v) {
     if (v == null) return '';
@@ -415,6 +609,7 @@ class ToolState {
       'completed' || 'error' => _pretty(structuredOutput),
       _ => '',
     };
+    final time = v['time'] is Map ? v['time'] as Map : const {};
     return ToolState(
       status: status,
       title: v['title']?.toString(),
@@ -431,6 +626,10 @@ class ToolState {
         toolName: toolName,
       ),
       segments: _segmentsFromJson(v['contentSegments']),
+      startedAt: _asDateTime(time['start']),
+      completedAt: _asDateTime(time['end']),
+      pruned: _asInt(time['compacted']) != null || v['pruned'] == true,
+      executed: v['executed'] != false,
     );
   }
 
@@ -720,11 +919,20 @@ class ProvidersResponse {
 class AgentInfo {
   final String name;
   final String? mode;
-  AgentInfo({required this.name, this.mode});
+
+  /// Raw agent colour as the server gives it (`#rrggbb` or a theme token
+  /// such as `primary`); null when unset.
+  final String? color;
+
+  /// Agent's configured model as `providerID/modelID`; null when it inherits.
+  final String? model;
+  AgentInfo({required this.name, this.mode, this.color, this.model});
 
   factory AgentInfo.fromJson(Map<String, dynamic> j) => AgentInfo(
     name: (j['name'] ?? '').toString(),
     mode: j['mode']?.toString(),
+    color: j['color']?.toString(),
+    model: modelRefString(j['model']),
   );
 }
 
@@ -965,6 +1173,106 @@ class PermissionRequest {
             : null,
         message: json['message']?.toString(),
       );
+
+  static const _commandPermissions = {'bash', 'shell'};
+  static const _fileMetadataKeys = ['filePath', 'filepath', 'file_path', 'path', 'file'];
+  static const _filePermissions = {
+    'edit',
+    'write',
+    'read',
+    'multiedit',
+    'patch',
+    'external_directory',
+  };
+
+  /// Shell command awaiting approval, taken from `metadata.command`
+  /// (the v1 bash tool's shape) when present; falls back to the first
+  /// pattern for `bash`/`shell` asks, since those patterns are the command.
+  String? get commandPreview {
+    final command = _firstString(['command', 'cmd']);
+    if (command != null) return command;
+    if (_commandPermissions.contains(permission.toLowerCase())) {
+      return _firstPattern();
+    }
+    return null;
+  }
+
+  /// File the ask concerns, from `metadata.filePath` (or the common
+  /// spellings) when present, else the first pattern of a file-scoped
+  /// permission (`edit`, `write`, `read`, `external_directory`, ...).
+  String? get filePath {
+    final path = _firstString(_fileMetadataKeys);
+    if (path != null) return path;
+    if (_filePermissions.contains(permission.toLowerCase())) {
+      return _firstPattern();
+    }
+    return null;
+  }
+
+  String? _firstString(List<String> keys) {
+    for (final key in keys) {
+      final value = metadata[key];
+      if (value is String && value.trim().isNotEmpty) return value;
+    }
+    return null;
+  }
+
+  String? _firstPattern() {
+    for (final pattern in patterns) {
+      if (pattern.trim().isNotEmpty && pattern != '*') return pattern;
+    }
+    return null;
+  }
+}
+
+// ---------------- Session retry state ----------------
+
+/// A session's provider-retry backoff, from `session.status`
+/// `{type: 'retry', attempt, message, next}` (v1 and v2) or the v2
+/// `session.retry.scheduled` event. Cleared once the session goes busy/idle.
+class SessionRetryState {
+  final int attempt;
+  final String? message;
+
+  /// When the next attempt is scheduled; null when the server gave no time.
+  final DateTime? next;
+
+  const SessionRetryState({required this.attempt, this.message, this.next});
+
+  /// Parses a status object; null unless `type` is `retry`.
+  static SessionRetryState? fromStatusJson(dynamic v) {
+    if (v is! Map || v['type']?.toString() != 'retry') return null;
+    final next = _asInt(v['next']);
+    return SessionRetryState(
+      attempt: _asInt(v['attempt']) ?? 0,
+      message: v['message']?.toString(),
+      next: next == null || next <= 0
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(next),
+    );
+  }
+
+  /// Time remaining until [next]; null when unknown, never negative.
+  Duration? get remaining {
+    final at = next;
+    if (at == null) return null;
+    final delta = at.difference(DateTime.now());
+    return delta.isNegative ? Duration.zero : delta;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is SessionRetryState &&
+      other.attempt == attempt &&
+      other.message == message &&
+      other.next == next;
+
+  @override
+  int get hashCode => Object.hash(attempt, message, next);
+
+  @override
+  String toString() =>
+      'SessionRetryState(attempt: $attempt, message: $message, next: $next)';
 }
 
 // ---------------- Helpers ----------------
@@ -980,6 +1288,12 @@ double _asDouble(dynamic v) {
   if (v is num) return v.toDouble();
   if (v is String) return double.tryParse(v) ?? 0;
   return 0;
+}
+
+DateTime? _asDateTime(dynamic v) {
+  final millis = _asInt(v);
+  if (millis == null || millis <= 0) return null;
+  return DateTime.fromMillisecondsSinceEpoch(millis);
 }
 
 /// Naive line-level change counter used when the server does not include counts.

@@ -1415,11 +1415,78 @@ class _ReviewDiffCanvas extends StatelessWidget {
   /// Tap on a hunk header row: selects the whole hunk.
   final ValueChanged<int> onSelectHunk;
 
+  /// Below this width a unified diff wraps its lines instead of forcing a
+  /// fixed canvas the phone has to pan sideways.
+  static const wrapBelowWidth = 600.0;
+
+  /// Minimum row height once lines wrap on a touch platform: a fingertip
+  /// target, not a mouse one.
+  static const touchRowExtent = 40.0;
+
+  static bool _touchPlatform(BuildContext context) =>
+      !desktopInteractions ||
+      switch (Theme.of(context).platform) {
+        TargetPlatform.android || TargetPlatform.iOS => true,
+        _ => false,
+      };
+
   @override
   Widget build(BuildContext context) {
     final splitRows = mode == ReviewDiffMode.split ? _splitRows(lines) : null;
     return LayoutBuilder(
       builder: (context, constraints) {
+        // Phones read a unified diff with soft-wrapped lines; wide layouts
+        // and split mode keep the fixed, horizontally panning canvas.
+        final wrap =
+            mode == ReviewDiffMode.unified &&
+            constraints.maxWidth < wrapBelowWidth;
+        final minRowHeight = wrap && _touchPlatform(context)
+            ? touchRowExtent
+            : rowExtent;
+        final list = ListView.builder(
+          controller: vertical,
+          // Always scrollable so pull-to-refresh works even when the
+          // diff fits the viewport.
+          physics: const AlwaysScrollableScrollPhysics(),
+          itemExtent: wrap ? null : rowExtent,
+          itemCount: splitRows?.length ?? lines.length,
+          itemBuilder: (context, index) {
+            if (splitRows != null) {
+              final row = splitRows[index];
+              final hunkIndex = row.hunkIndex;
+              return _SplitDiffRow(
+                key: Key('review-split-row-$index'),
+                row: row,
+                selected: row.sourceIndices.any(isSelected),
+                onTap: row.selectable
+                    ? () => onSelect(row.sourceIndices.first)
+                    : hunkIndex == null
+                    ? null
+                    : () => onSelectHunk(hunkIndex),
+              );
+            }
+            final line = lines[index];
+            return _UnifiedDiffRow(
+              key: Key('review-line-$index'),
+              line: line,
+              selected: isSelected(index),
+              wrap: wrap,
+              minHeight: minRowHeight,
+              onTap: line.selectable
+                  ? () => onSelect(index)
+                  : line.kind == _ReviewLineKind.hunk
+                  ? () => onSelectHunk(index)
+                  : null,
+            );
+          },
+        );
+        // The diff pane draws its own thumbs; without OwnScrollbar the
+        // desktop scroll behaviour would draw a second vertical one.
+        final verticalPane = Scrollbar(
+          controller: vertical,
+          child: OwnScrollbar(child: list),
+        );
+        if (wrap) return verticalPane;
         final minimumWidth = mode == ReviewDiffMode.split ? 1040.0 : 760.0;
         final width = constraints.maxWidth > minimumWidth
             ? constraints.maxWidth
@@ -1435,48 +1502,7 @@ class _ReviewDiffCanvas extends StatelessWidget {
             child: SizedBox(
               width: width,
               height: constraints.maxHeight,
-              child: Scrollbar(
-                controller: vertical,
-                // The diff pane draws its own thumbs; without this the
-                // desktop scroll behaviour would draw a second vertical one.
-                child: OwnScrollbar(
-                  child: ListView.builder(
-                  controller: vertical,
-                  // Always scrollable so pull-to-refresh works even when the
-                  // diff fits the viewport.
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  itemExtent: rowExtent,
-                  itemCount: splitRows?.length ?? lines.length,
-                  itemBuilder: (context, index) {
-                    if (splitRows != null) {
-                      final row = splitRows[index];
-                      final hunkIndex = row.hunkIndex;
-                      return _SplitDiffRow(
-                        key: Key('review-split-row-$index'),
-                        row: row,
-                        selected: row.sourceIndices.any(isSelected),
-                        onTap: row.selectable
-                            ? () => onSelect(row.sourceIndices.first)
-                            : hunkIndex == null
-                            ? null
-                            : () => onSelectHunk(hunkIndex),
-                      );
-                    }
-                    final line = lines[index];
-                    return _UnifiedDiffRow(
-                      key: Key('review-line-$index'),
-                      line: line,
-                      selected: isSelected(index),
-                      onTap: line.selectable
-                          ? () => onSelect(index)
-                          : line.kind == _ReviewLineKind.hunk
-                          ? () => onSelectHunk(index)
-                          : null,
-                    );
-                  },
-                ),
-                ),
-              ),
+              child: verticalPane,
             ),
           ),
         );
@@ -1491,11 +1517,18 @@ class _UnifiedDiffRow extends StatelessWidget {
     required this.line,
     required this.selected,
     required this.onTap,
+    this.wrap = false,
+    this.minHeight = _ReviewDiffCanvas.rowExtent,
   });
 
   final _ReviewDiffLine line;
   final bool selected;
   final VoidCallback? onTap;
+
+  /// Soft-wrap the code instead of clipping it at the canvas edge. Rows then
+  /// size to their text, with [minHeight] as the floor.
+  final bool wrap;
+  final double minHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -1503,6 +1536,36 @@ class _UnifiedDiffRow extends StatelessWidget {
     final background = selected
         ? theme.colorScheme.primaryContainer.withValues(alpha: .62)
         : _lineBackground(theme, line.kind);
+    final row = Row(
+      crossAxisAlignment: wrap
+          ? CrossAxisAlignment.stretch
+          : CrossAxisAlignment.center,
+      children: [
+        _LineNumber(value: line.oldLine),
+        _LineNumber(value: line.newLine),
+        Container(width: 2, color: _lineAccent(theme, line.kind)),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Padding(
+            padding: wrap
+                ? const EdgeInsets.symmetric(vertical: 4)
+                : EdgeInsets.zero,
+            child: Text(
+              line.text.isEmpty ? ' ' : line.text,
+              maxLines: wrap ? null : 1,
+              overflow: TextOverflow.clip,
+              softWrap: wrap,
+              style: TextStyle(
+                fontFamily: AppTheme.monoFamily,
+                fontSize: AppTheme.codeFontSize,
+                height: 1.55,
+                color: _lineForeground(theme, line.kind),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
     return Semantics(
       button: onTap != null,
       selected: selected,
@@ -1511,28 +1574,14 @@ class _UnifiedDiffRow extends StatelessWidget {
         onTap: onTap,
         child: Container(
           color: background,
-          child: Row(
-            children: [
-              _LineNumber(value: line.oldLine),
-              _LineNumber(value: line.newLine),
-              Container(width: 2, color: _lineAccent(theme, line.kind)),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  line.text.isEmpty ? ' ' : line.text,
-                  maxLines: 1,
-                  overflow: TextOverflow.clip,
-                  softWrap: false,
-                  style: TextStyle(
-                    fontFamily: AppTheme.monoFamily,
-                    fontSize: AppTheme.codeFontSize,
-                    height: 1.55,
-                    color: _lineForeground(theme, line.kind),
-                  ),
-                ),
-              ),
-            ],
-          ),
+          // IntrinsicHeight lets the gutter columns paint the full height of
+          // a wrapped line while the row still sizes to its text.
+          child: wrap
+              ? ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: minHeight),
+                  child: IntrinsicHeight(child: row),
+                )
+              : row,
         ),
       ),
     );

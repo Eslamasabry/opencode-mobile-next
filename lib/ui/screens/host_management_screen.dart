@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
@@ -21,6 +22,11 @@ class HostManagementScreen extends StatelessWidget {
       'https://raw.githubusercontent.com/Eslamasabry/opencode-mobile/'
       'master/scripts/host/ubuntu-opencode.sh';
 
+  /// The full walkthrough the commands below are excerpted from.
+  static const docsUrl =
+      'https://github.com/Eslamasabry/opencode-mobile/blob/master/docs/'
+      'ubuntu-host.md';
+
   int _serverPort() {
     final uri = Uri.tryParse(controller.profile?.baseUrl ?? '');
     if (uri == null || uri.host.isEmpty) return 4096;
@@ -29,11 +35,10 @@ class HostManagementScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final profile = controller.profile;
     final port = _serverPort();
     return Scaffold(
-      appBar: AppBar(title: const Text('Ubuntu host management')),
+      appBar: AppBar(title: const Text('Run as a Linux service')),
       body: ListenableBuilder(
         listenable: controller,
         builder: (context, _) => ListView(
@@ -108,11 +113,17 @@ class HostManagementScreen extends StatelessWidget {
               command: 'bash ubuntu-opencode.sh update',
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-              child: Text(
-                'Full walkthrough: docs/ubuntu-host.md in the app repository.',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppTheme.mutedOf(theme),
+              padding: const EdgeInsets.fromLTRB(8, 10, 16, 0),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: TextButton.icon(
+                  key: const ValueKey('host-docs-link'),
+                  onPressed: () => launchUrl(
+                    Uri.parse(docsUrl),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                  icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                  label: const Text('Full walkthrough (opens in browser)'),
                 ),
               ),
             ),

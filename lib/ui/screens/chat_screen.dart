@@ -35,6 +35,7 @@ import '../widgets/pickers.dart';
 import '../widgets/product_states.dart';
 import '../widgets/tool_card.dart';
 import '../../api2/models.dart' show Api2Delivery, Api2FormInfo, Api2InboxItem;
+import '../permission_presentation.dart';
 import 'app_diagnostics_screen.dart';
 import 'chat/form_flow.dart';
 import 'chat/permission_sheet.dart';
@@ -58,6 +59,7 @@ part 'chat/prompt_editor.dart';
 part 'chat/composer.dart';
 part 'chat/message_view.dart';
 part 'chat/session_sheets.dart';
+part 'chat/attention_card.dart';
 
 const _maxAttachmentCount = 5;
 const _maxAttachmentBytes = 10 * 1024 * 1024;
@@ -292,16 +294,28 @@ class _ChatScreenState extends State<ChatScreen>
   int _offlineFlushRevision = 0;
   bool _sending = false;
   bool _aborting = false;
-  bool _permissionDialogScheduled = false;
   bool _permissionDismissScheduled = false;
   String? _activePermissionID;
   Route<void>? _activePermissionRoute;
-  bool _formPresenterScheduled = false;
+  bool _permissionReplying = false;
   String? _activeFormID;
 
-  /// Forms already auto-presented once; dismissing the sheet leaves the
-  /// inline card as the reopen affordance instead of nagging.
-  final Set<String> _autoPresentedFormIDs = {};
+  /// Whether the last connection snapshot had this session running; the
+  /// busy→idle edge is the "run finished" moment.
+  bool _wasBusy = false;
+
+  /// Bumped once per finished run; the composer pulses its border when it
+  /// changes.
+  int _composerPulse = 0;
+  String? _composerNote;
+  Key? _composerNoteKey;
+  Timer? _composerNoteTimer;
+
+  /// The "attachments are not saved" note shows once per session, not on
+  /// every attachment. [_attachmentNoteActive] keeps it up while the first
+  /// batch is staged; the static set remembers sessions that have seen it.
+  bool _attachmentNoteActive = false;
+  static final Set<String> _attachmentNoteShownSessions = {};
   Future<VoiceComposerController>? _voiceFuture;
   VoiceComposerController? _voice;
   bool _voiceOpening = false;
@@ -348,7 +362,7 @@ class _ChatScreenState extends State<ChatScreen>
     _load();
     unawaited(_loadServerCommands());
     _sub = _conn.events.listen(_onEvent);
-    _schedulePermissionDialog();
+    _wasBusy = _conn.busySessions.contains(widget.sessionID);
     final injectedVoice = widget.voiceController;
     if (injectedVoice != null) {
       _voice = injectedVoice;
@@ -950,16 +964,11 @@ class _ChatScreenState extends State<ChatScreen>
       // is said here, in the same breath as the confirmation, rather than
       // leaving the user to notice a missing draft later.
       final evicted = _conn.takeQueueEvictionNotice();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          key: const Key('queued-draft-notice'),
-          content: Text(
-            evicted == null
-                ? 'Queued — will send when reconnected'
-                : 'Queued — will send when reconnected. $evicted',
-          ),
-          duration: Duration(seconds: evicted == null ? 4 : 6),
-        ),
+      _showComposerNote(
+        evicted == null
+            ? 'Queued — will send when reconnected'
+            : 'Queued — will send when reconnected. $evicted',
+        key: const Key('queued-draft-notice'),
       );
     } else {
       _showActionError(
@@ -1329,15 +1338,18 @@ class _ChatScreenState extends State<ChatScreen>
         final ready = await showVoiceModelSetupSheet(context, voice.models);
         if (!ready || !mounted) return;
       }
-      final transcript = await showVoiceComposerSheet(context, voice);
-      if (!mounted || transcript == null || transcript.trim().isEmpty) return;
+      final result = await showVoiceComposerResultSheet(context, voice);
+      if (!mounted || result == null || result.text.trim().isEmpty) return;
       final selection = _composer.selection;
-      _composer.text = mergeVoiceDraft(_composer.text, selection, transcript);
+      _composer.text = mergeVoiceDraft(_composer.text, selection, result.text);
       _composer.selection = TextSelection.collapsed(
         offset: _composer.text.length,
       );
       _focus.requestFocus();
       setState(() {});
+      // "Insert & send" goes through the one send path, so delivery mode,
+      // commands and attachments behave exactly as a typed prompt would.
+      if (result.send) await _send();
     } catch (error) {
       if (mounted) _showActionError('Voice input failed: $error');
     } finally {
@@ -2075,49 +2087,70 @@ class _ChatScreenState extends State<ChatScreen>
         _dataRefreshRevision != _conn.dataRefreshRevision && _conn.api != null;
     _dataRefreshRevision = _conn.dataRefreshRevision;
     _dismissResolvedPermissionDialog();
+    _noteRunFinished();
     setState(() {});
     if (shouldRehydrate) unawaited(_load());
-    _schedulePermissionDialog();
-    _scheduleFormPresenter();
   }
 
-  /// Auto-opens the form renderer for a form arriving in the active chat —
-  /// only while no permission sheet or form presenter is already up, and at
-  /// most once per form (the inline card reopens it manually).
-  void _scheduleFormPresenter() {
-    // Forms are v2-only (§7 rule 5); the auto-presenter and the inline card
-    // are one surface, so they share one gate.
-    if (!_conn.capabilities.forms) return;
-    if (!mounted ||
-        _formPresenterScheduled ||
-        _activeFormID != null ||
-        _activePermissionID != null) {
-      return;
-    }
-    final form = _conn.formForSession(widget.sessionID);
-    if (form == null || _autoPresentedFormIDs.contains(form.id)) return;
-    _formPresenterScheduled = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _formPresenterScheduled = false;
-      if (!mounted || _activeFormID != null || _activePermissionID != null) {
-        return;
-      }
-      final current = _conn.forms[form.id];
-      if (current == null || current.sessionID != widget.sessionID) return;
-      unawaited(_openForm(current));
+  /// The run-finished moment: one light haptic and a 300 ms primary pulse on
+  /// the composer border when this session goes from busy to idle. Both are
+  /// skipped under reduced motion.
+  void _noteRunFinished() {
+    final busy = _conn.busySessions.contains(widget.sessionID);
+    final finished = _wasBusy && !busy;
+    _wasBusy = busy;
+    if (!finished) return;
+    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) return;
+    unawaited(HapticFeedback.lightImpact());
+    _composerPulse++;
+  }
+
+  /// Shows a composer-local note above the field for three seconds. Used
+  /// for outcomes about the draft itself (queued, staged, already present)
+  /// so they never cover the field as a snackbar would.
+  void _showComposerNote(String text, {Key? key}) {
+    if (!mounted) return;
+    _composerNoteTimer?.cancel();
+    setState(() {
+      _composerNote = text;
+      _composerNoteKey = key;
+    });
+    _composerNoteTimer = Timer(const Duration(seconds: 3), () {
+      if (!mounted) return;
+      setState(() {
+        _composerNote = null;
+        _composerNoteKey = null;
+      });
     });
   }
 
+  /// Once per session: true while the first staged attachments of this
+  /// session are showing, false afterwards.
+  bool _attachmentNoteVisible() {
+    if (_attachments.isEmpty) {
+      if (_attachmentNoteActive) {
+        _attachmentNoteActive = false;
+        _attachmentNoteShownSessions.add(widget.sessionID);
+      }
+      return false;
+    }
+    if (_attachmentNoteActive) return true;
+    if (_attachmentNoteShownSessions.contains(widget.sessionID)) return false;
+    _attachmentNoteActive = true;
+    return true;
+  }
+
+  /// Opens the form renderer from the inline card. Forms no longer
+  /// auto-present: the card above the composer is the entry point, so an
+  /// arriving form never steals the keyboard.
   Future<void> _openForm(Api2FormInfo form) async {
     if (_activeFormID != null) return;
     _activeFormID = form.id;
-    _autoPresentedFormIDs.add(form.id);
     try {
       await presentConnectionForm(context, _conn, form);
     } finally {
       _activeFormID = null;
     }
-    if (mounted) _scheduleFormPresenter();
   }
 
   /// Confirms a reconnect flush that delivered queued drafts, closing the
@@ -2170,34 +2203,17 @@ class _ChatScreenState extends State<ChatScreen>
     });
   }
 
-  void _schedulePermissionDialog() {
-    if (!mounted || _permissionDialogScheduled || _activePermissionID != null) {
-      return;
-    }
-    final pending = _conn.permissionsForSession(widget.sessionID);
-    if (pending.isEmpty) return;
-    final permission = pending.first;
-    _permissionDialogScheduled = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _permissionDialogScheduled = false;
-      if (!mounted) return;
-      final current = _conn.permissions[permission.id];
-      if (current == null || current.sessionID != widget.sessionID) {
-        _schedulePermissionDialog();
-        return;
-      }
-      unawaited(_showPermissionDialog(current));
-    });
-  }
-
+  /// The Review path from the attention card: the full permission sheet,
+  /// now dismissible — closing it leaves the card in place.
   Future<void> _showPermissionDialog(PermissionRequest permission) async {
+    if (_activePermissionID != null) return;
     _activePermissionID = permission.id;
     final tool = permission.tool;
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      isDismissible: false,
-      enableDrag: false,
+      isDismissible: true,
+      enableDrag: true,
       useSafeArea: true,
       clipBehavior: Clip.antiAlias,
       constraints: const BoxConstraints(maxWidth: 720),
@@ -2229,7 +2245,19 @@ class _ChatScreenState extends State<ChatScreen>
     if (!mounted) return;
     _activePermissionID = null;
     _activePermissionRoute = null;
-    _schedulePermissionDialog();
+  }
+
+  /// The card's fast path: the same reply the sheet's Allow once sends.
+  Future<void> _allowPermissionOnce(PermissionRequest permission) async {
+    if (_permissionReplying) return;
+    setState(() => _permissionReplying = true);
+    try {
+      await _conn.answerPermission(permission.id, 'once');
+    } catch (error) {
+      if (mounted) _showActionError(error);
+    } finally {
+      if (mounted) setState(() => _permissionReplying = false);
+    }
   }
 
   Future<void> _runShellDialog() async {
@@ -2929,9 +2957,7 @@ class _ChatScreenState extends State<ChatScreen>
       (candidate) =>
           candidate.isDirectoryReference && candidate.url == attachment.url,
     )) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('@${reference.name} is already in the prompt')),
-      );
+      _showComposerNote('@${reference.name} is already in the prompt');
       _focus.requestFocus();
       return;
     }
@@ -3041,17 +3067,25 @@ class _ChatScreenState extends State<ChatScreen>
 
   /// One bottom sheet for every session view destination and the two
   /// transcript display toggles, replacing the old app-bar popup menu.
-  Future<void> _openSessionViews() async {
+  /// One bottom sheet behind the app bar's single overflow: the session's
+  /// views and transcript toggles, then its mutation and utility actions.
+  Future<void> _openSessionMenu({
+    required bool reverted,
+    required bool shared,
+  }) async {
     final action = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
       builder: (context) => LayoutBuilder(
         builder: (context, constraints) => ConstrainedBox(
           constraints: BoxConstraints(maxHeight: constraints.maxHeight * .85),
-          child: _SessionViewsSheet(
+          child: _SessionMenuSheet(
             reasoningExpanded: _conn.transcriptReasoningExpanded,
             timestampsVisible: _conn.transcriptTimestampsVisible,
             todosAvailable: _conn.capabilities.sessionTodos,
+            reverted: reverted,
+            shared: shared,
+            sharingAvailable: _conn.capabilities.sessionShare,
           ),
         ),
       ),
@@ -3072,31 +3106,6 @@ class _ChatScreenState extends State<ChatScreen>
         await _runMobileCommand(_ChatCommandAction.thinking);
       case 'timestamps':
         await _runMobileCommand(_ChatCommandAction.timestamps);
-    }
-  }
-
-  /// One bottom sheet for the session's mutation and utility actions,
-  /// replacing the old unlabeled app-bar overflow menu.
-  Future<void> _openSessionActions({
-    required bool reverted,
-    required bool shared,
-  }) async {
-    final action = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => LayoutBuilder(
-        builder: (context, constraints) => ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: constraints.maxHeight * .85),
-          child: _SessionActionsSheet(
-            reverted: reverted,
-            shared: shared,
-            sharingAvailable: _conn.capabilities.sessionShare,
-          ),
-        ),
-      ),
-    );
-    if (!mounted || action == null) return;
-    switch (action) {
       case 'retry':
         await _retryLast();
       case 'revert':
@@ -3241,18 +3250,12 @@ class _ChatScreenState extends State<ChatScreen>
   void _noteReferencesKeptForNextPrompt() {
     if (!mounted) return;
     final count = _handoff.references.length;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        key: const Key('references-kept-notice'),
-        content: Text(
-          count == 1
-              ? 'Slash commands do not carry references. It stays on the '
-                    'composer for your next prompt.'
-              : 'Slash commands do not carry references. They stay on the '
-                    'composer for your next prompt.',
-        ),
-        duration: const Duration(seconds: 4),
-      ),
+    _showComposerNote(
+      count == 1
+          ? 'Reference kept for your next prompt — commands do not carry it.'
+          : 'References kept for your next prompt — commands do not carry '
+                'them.',
+      key: const Key('references-kept-notice'),
     );
   }
 
@@ -3272,12 +3275,7 @@ class _ChatScreenState extends State<ChatScreen>
       );
     });
     _focus.requestFocus();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Review comment added to the prompt'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+    _showComposerNote('Review comment added to the prompt');
   }
 
   /// One listing validates every path in the same directory, and both maps
@@ -3396,12 +3394,7 @@ class _ChatScreenState extends State<ChatScreen>
     );
     if (!mounted) return;
     _focus.requestFocus();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${file.displayName} attached. Add your comment.'),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    _showComposerNote('${file.displayName} attached. Add your comment.');
   }
 
   Future<void> _attachProjectFile(String path, FilePreviewData data) =>
@@ -3585,11 +3578,38 @@ class _ChatScreenState extends State<ChatScreen>
       ? ModelPickerApplyScope.session
       : ModelPickerApplyScope.classic;
 
+  /// The model as the catalog names it, falling back to the presented
+  /// provider/model pair; never a raw wire ID.
+  String? get _presentedModelLabel {
+    final model = _conn.selectedModel;
+    if (model == null) return null;
+    for (final candidate in _conn.catalog?.models ?? const <CatalogModel>[]) {
+      if (candidate.id == model.modelID &&
+          candidate.providerID == model.providerID &&
+          candidate.name.trim().isNotEmpty) {
+        return candidate.name.trim();
+      }
+    }
+    return presentedModelLabel(model.providerID, model.modelID);
+  }
+
+  /// The agent the server would use unprompted — the first primary agent —
+  /// so the composer chip only names an agent when it is a real choice.
+  String get _defaultAgentName {
+    for (final agent in _conn.agents) {
+      if (agent.mode != 'subagent') return agent.name;
+    }
+    return '';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final busy = _conn.busySessions.contains(widget.sessionID);
     final displayParts = _timelineDisplayParts(_messages);
+    final showAttachmentNote = _attachmentNoteVisible();
+    final pendingPermissions = _conn.permissionsForSession(widget.sessionID);
 
     final session = _conn.sessionsById[widget.sessionID];
     final title = session?.title;
@@ -3619,11 +3639,6 @@ class _ChatScreenState extends State<ChatScreen>
             overflow: TextOverflow.ellipsis,
           ),
           actions: [
-            IconButton(
-              tooltip: 'Session views',
-              icon: const Icon(Icons.view_agenda_outlined),
-              onPressed: () => unawaited(_openSessionViews()),
-            ),
             if (busy)
               IconButton(
                 tooltip: 'Stop',
@@ -3635,10 +3650,10 @@ class _ChatScreenState extends State<ChatScreen>
               ),
             IconButton(
               key: const ValueKey('session-actions-button'),
-              tooltip: 'Session actions',
+              tooltip: 'Session menu',
               icon: const Icon(Icons.more_vert_rounded),
               onPressed: () => unawaited(
-                _openSessionActions(
+                _openSessionMenu(
                   reverted: session?.reverted == true,
                   shared: shareUrl != null,
                 ),
@@ -3837,6 +3852,44 @@ class _ChatScreenState extends State<ChatScreen>
                                     ),
                                     ),
                             ),
+                            // A permission request lands as an inline card
+                            // above the composer — oldest first, one at a
+                            // time — instead of a modal sheet that steals
+                            // the keyboard mid-sentence.
+                            AnimatedSize(
+                              duration: reduceMotion
+                                  ? Duration.zero
+                                  : const Duration(milliseconds: 220),
+                              curve: Curves.easeOutCubic,
+                              alignment: Alignment.bottomCenter,
+                              child: AnimatedSwitcher(
+                                duration: reduceMotion
+                                    ? Duration.zero
+                                    : const Duration(milliseconds: 180),
+                                child: pendingPermissions.isEmpty
+                                    ? const SizedBox.shrink(
+                                        key: ValueKey('permission-card-none'),
+                                      )
+                                    : _PermissionAttentionCard(
+                                        key: ValueKey(
+                                          'permission-card-'
+                                          '${pendingPermissions.first.id}',
+                                        ),
+                                        permission: pendingPermissions.first,
+                                        replying: _permissionReplying,
+                                        onReview: () => unawaited(
+                                          _showPermissionDialog(
+                                            pendingPermissions.first,
+                                          ),
+                                        ),
+                                        onAllowOnce: () => unawaited(
+                                          _allowPermissionOnce(
+                                            pendingPermissions.first,
+                                          ),
+                                        ),
+                                      ),
+                              ),
+                            ),
                             // §7 rule 5: v2-only surfaces stay silent on v1.
                             // The map is already empty there, but the gate is
                             // explicit so a stale entry cannot leak a form
@@ -3871,6 +3924,18 @@ class _ChatScreenState extends State<ChatScreen>
                                 onCancelInbox: _cancelInboxSend,
                                 onFlipDelivery: _flipInboxDelivery,
                               ),
+                            AnimatedSize(
+                              duration: reduceMotion
+                                  ? Duration.zero
+                                  : const Duration(milliseconds: 160),
+                              curve: Curves.easeOutCubic,
+                              child: _composerNote == null
+                                  ? const SizedBox.shrink()
+                                  : _ComposerNote(
+                                      key: _composerNoteKey,
+                                      text: _composerNote!,
+                                    ),
+                            ),
                             Center(
                               child: ConstrainedBox(
                                 constraints: const BoxConstraints(
@@ -3902,8 +3967,12 @@ class _ChatScreenState extends State<ChatScreen>
                                       setState(() => _delivery = delivery),
                                   voiceOpening: _voiceOpening,
                                   selectedAgent: _conn.selectedAgent,
+                                  defaultAgent: _defaultAgentName,
                                   selectedModel: _conn.selectedModel,
+                                  modelLabel: _presentedModelLabel,
                                   selectedVariant: _conn.selectedVariant,
+                                  showAttachmentNote: showAttachmentNote,
+                                  pulse: _composerPulse,
                                   onAttach: _pickAttachment,
                                   onContentInserted: (content) => unawaited(
                                     _handleInsertedContent(content),
@@ -3949,6 +4018,7 @@ class _ChatScreenState extends State<ChatScreen>
     _sub.cancel();
     _streamFlushTimer?.cancel();
     _highlightTimer?.cancel();
+    _composerNoteTimer?.cancel();
     unawaited(_voice?.cancel());
     if (widget.voiceController == null) _voice?.dispose();
     _composer.dispose();

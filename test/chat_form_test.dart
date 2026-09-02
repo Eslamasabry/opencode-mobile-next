@@ -100,8 +100,8 @@ Future<ConnectionController> _pumpChat(
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('a form for the open session auto-presents the renderer and '
-      'shows the inline card', (tester) async {
+  testWidgets('a form for the open session shows the inline card without '
+      'auto-presenting the renderer', (tester) async {
     final api = _FormChatApi();
     final controller = await _pumpChat(tester, api);
     addTearDown(controller.dispose);
@@ -109,14 +109,8 @@ void main() {
     controller.handleEventForTesting(_formCreated());
     await tester.pumpAndSettle();
 
-    // The renderer auto-opened as a sheet.
-    expect(find.byKey(const Key('form-sheet')), findsOneWidget);
-    expect(find.byKey(const Key('form-title')), findsOneWidget);
-
-    // Dismissing it leaves the inline attention card as the reopen path —
-    // the same form does not nag by auto-presenting again.
-    await tester.tapAt(const Offset(10, 10));
-    await tester.pumpAndSettle();
+    // No sheet steals the keyboard; the inline attention card is the entry
+    // point and Answer opens the renderer on demand.
     expect(find.byKey(const Key('form-sheet')), findsNothing);
     expect(
       find.byKey(const ValueKey('form-request-card-frm_1')),
@@ -136,6 +130,9 @@ void main() {
     addTearDown(controller.dispose);
 
     controller.handleEventForTesting(_formCreated());
+    await tester.pumpAndSettle();
+    // The renderer no longer auto-presents; the inline card opens it.
+    await tester.tap(find.byKey(const ValueKey('form-request-answer-frm_1')));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Production'));
@@ -168,6 +165,9 @@ void main() {
 
     controller.handleEventForTesting(_formCreated());
     await tester.pumpAndSettle();
+    // The renderer no longer auto-presents; the inline card opens it.
+    await tester.tap(find.byKey(const ValueKey('form-request-answer-frm_1')));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Production'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('form-submit')));
@@ -191,6 +191,9 @@ void main() {
 
     controller.handleEventForTesting(_formCreated());
     await tester.pumpAndSettle();
+    // The renderer no longer auto-presents; the inline card opens it.
+    await tester.tap(find.byKey(const ValueKey('form-request-answer-frm_1')));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Production'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('form-submit')));
@@ -209,6 +212,9 @@ void main() {
     addTearDown(controller.dispose);
 
     controller.handleEventForTesting(_formCreated());
+    await tester.pumpAndSettle();
+    // The renderer no longer auto-presents; the inline card opens it.
+    await tester.tap(find.byKey(const ValueKey('form-request-answer-frm_1')));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const Key('form-cancel')));

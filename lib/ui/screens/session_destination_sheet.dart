@@ -86,7 +86,8 @@ class _SessionDestinationSheetState extends State<_SessionDestinationSheet> {
   String _query = '';
 
   bool get _moving => widget.mode == SessionDestinationMode.move;
-  String get _verb => _moving ? 'Move' : 'Warp';
+  /// Both modes read as "Move" to the user; only the transport differs.
+  String get _verb => 'Move';
 
   @override
   void initState() {
@@ -256,9 +257,7 @@ class _SessionDestinationSheetState extends State<_SessionDestinationSheet> {
       messenger.showSnackBar(
         SnackBar(
           content: Text(
-            _moving
-                ? 'Session moved to ${destination.title}'
-                : 'Session warped to ${destination.title}',
+            'Moved to ${destination.title}',
           ),
         ),
       );
@@ -302,7 +301,7 @@ class _SessionDestinationSheetState extends State<_SessionDestinationSheet> {
               hasChanges
                   ? _moving
                         ? 'Move with changes'
-                        : 'Copy changes and warp'
+                        : 'Copy changes and move'
                   : _verb,
             ),
           ),
@@ -330,7 +329,7 @@ class _SessionDestinationSheetState extends State<_SessionDestinationSheet> {
         key: Key(_moving ? 'move-session-sheet' : 'warp-session-sheet'),
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          title: Text(_moving ? 'Move session' : 'Warp session'),
+          title: const Text('Move session'),
           actions: [
             IconButton(
               tooltip: 'Close',

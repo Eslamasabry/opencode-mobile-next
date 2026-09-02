@@ -128,9 +128,17 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    // The request lands as an inline card above the composer, not as a
+    // modal sheet: nothing steals the keyboard until the user asks.
+    expect(find.byKey(const Key('permission-sheet')), findsNothing);
+    expect(find.byKey(const Key('permission-card-review')), findsOneWidget);
+    expect(find.text('git status'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('permission-card-review')));
+    await tester.pumpAndSettle();
+
     expect(find.byKey(const Key('permission-sheet')), findsOneWidget);
     expect(find.byKey(const Key('permission-resources')), findsOneWidget);
-    expect(find.text('git status'), findsOneWidget);
+    expect(find.text('git status'), findsWidgets);
     expect(find.text('Always allow would also cover'), findsOneWidget);
     expect(find.text('git *\ngh *'), findsOneWidget);
     expect(find.text('Always allow'), findsOneWidget);
@@ -161,7 +169,9 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Allow once'));
+    await tester.tap(find.byKey(const Key('permission-card-review')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('permission-allow-once')));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Reply failed:'), findsOneWidget);
@@ -309,5 +319,48 @@ void main() {
     expect(controller.permissions, isEmpty);
     expect(find.text('Run a shell command'), findsNothing);
     expect(find.byType(AlertDialog), findsNothing);
+  });
+
+  testWidgets('the attention card keeps the composer focus and Review opens '
+      'a dismissible sheet', (tester) async {
+    final api = _FakeOpenCodeApi();
+    final controller = await _controller(api);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: const MaterialApp(home: ChatScreen(sessionID: 'session-1')),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('chat-composer-field')));
+    await tester.pumpAndSettle();
+    final field = tester.widget<TextField>(
+      find.byKey(const Key('chat-composer-field')),
+    );
+    expect(field.focusNode?.hasFocus, isTrue);
+
+    controller.handleEventForTesting(
+      _permission('request-1', 'bash', 'git status'),
+    );
+    await tester.pumpAndSettle();
+
+    // Inline card, focus untouched, no modal route.
+    expect(find.byKey(const Key('permission-card-request-1')), findsOneWidget);
+    expect(field.focusNode?.hasFocus, isTrue);
+    expect(find.byKey(const Key('permission-sheet')), findsNothing);
+    expect(
+      find.bySemanticsLabel('Permission needed: Run a shell command'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const Key('permission-card-review')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('permission-sheet')), findsOneWidget);
+    // Tapping outside dismisses the sheet and leaves the card in place.
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('permission-sheet')), findsNothing);
+    expect(find.byKey(const Key('permission-card-request-1')), findsOneWidget);
+    expect(api.replies, isEmpty);
   });
 }

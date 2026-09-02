@@ -865,10 +865,7 @@ class _FilesScreenState extends State<FilesScreen> {
                     ),
                   ),
                   if (change != null)
-                    _FileReviewAction(
-                      change: change,
-                      onPressed: () => _reviewFileChange(node),
-                    )
+                    _FileChangeBadge(change: change)
                   else if (descendantChanges > 0)
                     _FolderStatusMark(count: descendantChanges),
                 ],
@@ -892,11 +889,79 @@ class _FilesScreenState extends State<FilesScreen> {
                         _openFile(node);
                       }
                     },
+              // Touch counterpart of the right-click menu: every row action,
+              // Review included, without a second control crammed into a
+              // 40px row.
+              onLongPress: () => unawaited(_showFileRowActions(node, change)),
             ),
           );
         },
         ),
       ),
+    );
+  }
+
+  /// The row's actions as a bottom sheet — the same list the desktop context
+  /// menu shows, so a long press and a right click never disagree.
+  Future<void> _showFileRowActions(
+    FileNode node,
+    VersionControlFile? change,
+  ) async {
+    final actions = _fileRowActions(node, change);
+    if (actions.isEmpty) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        final theme = Theme.of(sheetContext);
+        return SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  key: const ValueKey('file-row-actions-sheet'),
+                  dense: true,
+                  leading: Icon(
+                    node.isDir ? Icons.folder_rounded : _fileTypeIcon(node.name),
+                  ),
+                  title: Text(
+                    node.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: Text(
+                    _relativePath(node.path),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const Divider(height: 1),
+                for (final action in actions)
+                  ListTile(
+                    key: action.menuKey,
+                    leading: Icon(
+                      action.icon,
+                      color: action.destructive
+                          ? theme.colorScheme.error
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                    title: Text(
+                      action.label,
+                      style: action.destructive
+                          ? TextStyle(color: theme.colorScheme.error)
+                          : null,
+                    ),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      action.onSelected();
+                    },
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -927,7 +992,7 @@ class _FilesScreenState extends State<FilesScreen> {
         if (change != null)
           ContextMenuAction(
             menuKey: const ValueKey('file-menu-review'),
-            label: 'Review changes',
+            label: 'Open in Review',
             icon: Icons.difference_outlined,
             onSelected: () => unawaited(_reviewFileChange(node)),
           ),
@@ -1450,11 +1515,13 @@ class _ChangesSheet extends StatelessWidget {
   }
 }
 
-class _FileReviewAction extends StatelessWidget {
+/// A compact, non-interactive change mark in the file row: one letter in the
+/// status colour. Review itself lives in the row's long-press and right-click
+/// menus, so no 48dp button has to fit a 40px row.
+class _FileChangeBadge extends StatelessWidget {
   final VersionControlFile change;
-  final VoidCallback onPressed;
 
-  const _FileReviewAction({required this.change, required this.onPressed});
+  const _FileChangeBadge({required this.change});
 
   @override
   Widget build(BuildContext context) {
@@ -1464,11 +1531,27 @@ class _FileReviewAction extends StatelessWidget {
       'modified' => theme.colorScheme.tertiary,
       _ => theme.colorScheme.primary,
     };
-    return IconButton(
-      key: ValueKey('review-file-change-${change.path}'),
-      tooltip: 'Review ${change.path} changes',
-      onPressed: onPressed,
-      icon: Icon(Icons.difference_outlined, size: 20, color: color),
+    final label = _fileStatusLabel(change.status);
+    return Semantics(
+      label: label,
+      child: ExcludeSemantics(
+        child: Container(
+          key: ValueKey('review-file-change-${change.path}'),
+          margin: const EdgeInsets.only(left: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: .14),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            label.isEmpty ? '?' : label.substring(0, 1).toUpperCase(),
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

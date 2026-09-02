@@ -453,31 +453,30 @@ class _GlobalSessionRow extends StatelessWidget {
           ),
           title: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis),
           subtitle: Text(details, maxLines: 3, overflow: TextOverflow.ellipsis),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (stealing)
-                const SizedBox.square(
+          // One overflow menu instead of a per-row icon: Open is the tap,
+          // Continue here rides in the menu (and, on desktop, right click).
+          trailing: opening || stealing
+              ? const SizedBox.square(
                   dimension: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              else if (onSteal != null)
-                IconButton(
-                  key: ValueKey('steal-session-${session.id}'),
-                  tooltip: 'Continue here',
-                  visualDensity: VisualDensity.compact,
-                  onPressed: opening ? null : onSteal,
-                  icon: const Icon(Icons.move_to_inbox_rounded, size: 21),
+              : PopupMenuButton<String>(
+                  key: ValueKey('global-session-actions-${session.id}'),
+                  tooltip: 'Session actions',
+                  onSelected: (value) {
+                    if (value == 'open') onTap();
+                    if (value == 'steal') onSteal?.call();
+                  },
+                  itemBuilder: (_) => [
+                    const PopupMenuItem(value: 'open', child: Text('Open')),
+                    if (onSteal != null)
+                      PopupMenuItem(
+                        key: ValueKey('steal-session-${session.id}'),
+                        value: 'steal',
+                        child: const Text('Continue here'),
+                      ),
+                  ],
                 ),
-              if (opening)
-                const SizedBox.square(
-                  dimension: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              else
-                const Icon(Icons.chevron_right_rounded),
-            ],
-          ),
           enabled: !opening && !stealing,
           onTap: opening || stealing ? null : onTap,
         ),

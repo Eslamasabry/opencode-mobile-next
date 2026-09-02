@@ -399,7 +399,13 @@ class _FocusedSourcePreview extends StatefulWidget {
 
 class _FocusedSourcePreviewState extends State<_FocusedSourcePreview> {
   static const _lineHeight = 24.0;
-  late final List<String> _lines = widget.text.split('\n');
+
+  /// Gutter (line numbers), gap, and a little breathing room after the
+  /// longest line.
+  static const _gutterWidth = 54.0 + 12.0;
+  static const _trailingPadding = 24.0;
+
+  late List<String> _lines = widget.text.split('\n');
   late final int _targetLine = widget.initialLine.clamp(1, _lines.length);
   late final ScrollController _vertical = ScrollController(
     initialScrollOffset: ((_targetLine - 1) * _lineHeight - _lineHeight * 2)
@@ -407,20 +413,62 @@ class _FocusedSourcePreviewState extends State<_FocusedSourcePreview> {
   );
   final ScrollController _horizontal = ScrollController();
 
+  /// The measured width of the widest line, cached until the content, the
+  /// text style, or the text scale changes — never guessed per character.
+  double? _widestLineWidth;
+  TextStyle? _measuredStyle;
+  TextScaler? _measuredScaler;
+
+  @override
+  void didUpdateWidget(covariant _FocusedSourcePreview oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.text != widget.text) {
+      _lines = widget.text.split('\n');
+      _widestLineWidth = null;
+    }
+  }
+
+  double _widestLine(TextStyle style, TextScaler scaler) {
+    final cached = _widestLineWidth;
+    if (cached != null &&
+        _measuredStyle == style &&
+        _measuredScaler == scaler) {
+      return cached;
+    }
+    // Monospace: the longest line is the widest, so one layout pass measures
+    // the whole file.
+    var longest = '';
+    for (final line in _lines) {
+      if (line.length > longest.length) longest = line;
+    }
+    final painter = TextPainter(
+      text: TextSpan(text: longest, style: style),
+      textDirection: TextDirection.ltr,
+      textScaler: scaler,
+      maxLines: 1,
+    )..layout();
+    final width = painter.width;
+    painter.dispose();
+    _widestLineWidth = width;
+    _measuredStyle = style;
+    _measuredScaler = scaler;
+    return width;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final longestLine = _lines.fold<int>(
-      0,
-      (length, line) => line.length > length ? line.length : length,
+    final codeStyle = theme.textTheme.bodySmall?.copyWith(
+      fontFamily: AppTheme.monoFamily,
+      height: 1.35,
     );
+    final scaler = MediaQuery.textScalerOf(context);
+    final widest = codeStyle == null ? 0.0 : _widestLine(codeStyle, scaler);
     return LayoutBuilder(
       builder: (context, constraints) {
-        final textScale = MediaQuery.textScalerOf(context).scale(1);
-        final widthScale = textScale < 2 ? 2.0 : textScale;
-        final contentWidth = (longestLine * 7.8 * widthScale + 72).clamp(
+        final contentWidth = (widest + _gutterWidth + _trailingPadding).clamp(
           constraints.maxWidth,
-          4000.0,
+          double.infinity,
         );
         return Scrollbar(
           controller: _horizontal,
@@ -430,50 +478,59 @@ class _FocusedSourcePreviewState extends State<_FocusedSourcePreview> {
             child: SizedBox(
               width: contentWidth,
               height: constraints.maxHeight,
-              child: ListView.builder(
-                key: const Key('file-preview-focused-source'),
-                controller: _vertical,
-                itemExtent: _lineHeight,
-                itemCount: _lines.length,
-                itemBuilder: (context, index) {
-                  final selected = index + 1 == _targetLine;
-                  return ColoredBox(
-                    key: selected
-                        ? const Key('file-preview-target-line')
-                        : null,
-                    color: selected
-                        ? theme.colorScheme.primaryContainer.withValues(
-                            alpha: .45,
-                          )
-                        : Colors.transparent,
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 54,
-                          child: Text(
-                            '${index + 1}',
-                            textAlign: TextAlign.right,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              fontFamily: AppTheme.monoFamily,
-                              color: selected
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.onSurfaceVariant,
+              // One selection area over the whole list so a drag can take
+              // several lines at once; each line is plain text inside it.
+              child: SelectionArea(
+                child: ListView.builder(
+                  key: const Key('file-preview-focused-source'),
+                  controller: _vertical,
+                  itemExtent: _lineHeight,
+                  itemCount: _lines.length,
+                  itemBuilder: (context, index) {
+                    final selected = index + 1 == _targetLine;
+                    return ColoredBox(
+                      key: selected
+                          ? const Key('file-preview-target-line')
+                          : null,
+                      color: selected
+                          ? theme.colorScheme.primaryContainer.withValues(
+                              alpha: .45,
+                            )
+                          : Colors.transparent,
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 54,
+                            child: SelectionContainer.disabled(
+                              child: Text(
+                                '${index + 1}',
+                                textAlign: TextAlign.right,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  fontFamily: AppTheme.monoFamily,
+                                  color: selected
+                                      ? theme.colorScheme.primary
+                                      : theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        SelectableText(
-                          _lines[index].isEmpty ? ' ' : _lines[index],
-                          maxLines: 1,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontFamily: AppTheme.monoFamily,
-                            height: 1.35,
+                          const SizedBox(width: 12),
+                          Text.rich(
+                            TextSpan(
+                              text: _lines[index].isEmpty
+                                  ? ' '
+                                  : _lines[index],
+                            ),
+                            maxLines: 1,
+                            softWrap: false,
+                            overflow: TextOverflow.clip,
+                            style: codeStyle,
                           ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ),

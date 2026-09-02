@@ -10,23 +10,22 @@ import '../permission_presentation.dart';
 import '../widgets/product_states.dart';
 import 'chat/form_flow.dart';
 import 'chat/permission_sheet.dart';
-import 'global_sessions_screen.dart';
+
 
 /// Activity: the single cross-session control centre (audit §3, §8).
 ///
 /// It replaces the former Mission Control and Pending requests screens, which
 /// showed the same pending count behind two mental models. One destination,
-/// one badge, three sections:
+/// one badge, two sections — a pure inbox:
 ///
 /// 1. **Needs attention** — permissions, questions, and v2 forms, each row
 ///    opening the *exact* resolver (the same permission sheet and form flow
 ///    chat uses), never merely a link to the related chat.
 /// 2. **Running** — sessions busy right now, with their subagent counts.
-/// 3. **Recently completed** — where recent work stopped.
 ///
 /// Every row is server truth the controller already holds; nothing here is
-/// estimated. Cross-project discovery stays with the all-sessions finder,
-/// reachable from the footer.
+/// estimated. Session history and cross-project discovery live in Workspace
+/// and the all-sessions finder, not here: an empty inbox reads as success.
 class ActivityScreen extends StatefulWidget {
   final ConnectionController controller;
 
@@ -168,25 +167,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
     Navigator.of(context).pushNamed('/chat/$sessionID');
   }
 
-  void _openFinder() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => GlobalSessionsScreen(controller: widget.controller),
-      ),
-    );
-  }
-
-  static String _relative(int? ms) {
-    if (ms == null || ms <= 0) return '';
-    final delta = DateTime.now().difference(
-      DateTime.fromMillisecondsSinceEpoch(ms),
-    );
-    if (delta.inMinutes < 1) return 'now';
-    if (delta.inHours < 1) return '${delta.inMinutes}m ago';
-    if (delta.inDays < 1) return '${delta.inHours}h ago';
-    return '${delta.inDays}d ago';
-  }
-
   static String _place(Session session) {
     final directory = session.directory?.trim() ?? '';
     if (directory.isEmpty) return '';
@@ -229,10 +209,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
     final running = roots
         .where((session) => controller.busySessions.contains(session.id))
         .toList();
-    final recent = roots
-        .where((session) => !controller.busySessions.contains(session.id))
-        .take(8)
-        .toList();
 
     final loading =
         _loading ||
@@ -249,7 +225,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         questions.length +
         sessionForms.length +
         globalForms.length;
-    final empty = attentionCount == 0 && roots.isEmpty;
+    final empty = attentionCount == 0 && running.isEmpty;
 
     final body = RefreshIndicator(
       onRefresh: _refresh,
@@ -262,15 +238,14 @@ class _ActivityScreenState extends State<ActivityScreen> {
               physics: const AlwaysScrollableScrollPhysics(),
               children: [
                 const SizedBox(height: 80),
-                ProductEmptyState(
+                const ProductEmptyState(
+                  key: ValueKey('activity-all-clear'),
                   icon: Icons.task_alt_rounded,
-                  title: 'Nothing needs attention',
+                  title: 'All clear',
                   message:
-                      'Permission requests, questions, and running sessions '
-                      'appear here. Start one from Workspace, or find a '
-                      'session anywhere on this server.',
-                  actionLabel: 'All sessions',
-                  onAction: _openFinder,
+                      'Nothing needs you right now. Permission requests, '
+                      'questions, and running sessions appear here the '
+                      'moment a session asks.',
                 ),
               ],
             )
@@ -335,31 +310,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
                       detail: _place(session),
                       onTap: () => _openChat(session.id),
                     ),
-                if (recent.isNotEmpty) ...[
-                  const SectionLabel('Recently completed'),
-                  for (final session in recent)
-                    _SessionRow(
-                      key: ValueKey('activity-recent-${session.id}'),
-                      session: session,
-                      running: false,
-                      subagents: _subagentCount(session.id),
-                      detail: [
-                        _relative(
-                          session.time?.updated ?? session.time?.created,
-                        ),
-                        _place(session),
-                      ].where((part) => part.isNotEmpty).join(' · '),
-                      onTap: () => _openChat(session.id),
-                    ),
-                ],
-                const Divider(height: 24),
-                ListTile(
-                  key: const ValueKey('activity-all-sessions'),
-                  leading: const Icon(Icons.travel_explore_rounded),
-                  title: const Text('All sessions, every project'),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: _openFinder,
-                ),
               ],
               ),
             ),

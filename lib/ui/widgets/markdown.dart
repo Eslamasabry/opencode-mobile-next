@@ -6,8 +6,13 @@ import 'package:flutter/services.dart';
 
 import '../app_theme.dart';
 import '../desktop/desktop_interaction.dart';
+import 'agent_blocks.dart';
 import 'code_highlight.dart';
 import 'external_link.dart';
+
+// The chat transcript (a `part` of chat_screen.dart) reaches the glossary
+// through this library, which it already imports.
+export 'info_label.dart' show InfoLabel, Glossary;
 
 /// Installed by screens that can resolve server file paths. Inline code
 /// spans that look like paths stay plain until [validate] confirms the file
@@ -69,12 +74,17 @@ class MarkdownText extends StatefulWidget {
   /// prose so the gesture reaches the menu instead of text selection.
   final bool selectable;
 
+  /// Receives the text of a tapped option from a ```choices block. Without a
+  /// handler the option is copied to the clipboard instead.
+  final ValueChanged<String>? onChoice;
+
   const MarkdownText(
     this.data, {
     super.key,
     this.baseStyle,
     this.codeBlockLanguage,
     this.selectable = true,
+    this.onChoice,
   });
 
   /// Counts full block re-parses. Tests use it to assert that streaming
@@ -119,9 +129,11 @@ class _MarkdownTextState extends State<MarkdownText> {
         ],
       ],
     );
-    return widget.baseStyle == null
+    final styled = widget.baseStyle == null
         ? content
         : DefaultTextStyle.merge(style: widget.baseStyle, child: content);
+    // The scope carries the live handler so parsed blocks stay cacheable.
+    return AgentChoiceScope(onChoice: widget.onChoice, child: styled);
   }
 
   List<Widget> _splitBlocks(String src) {
@@ -181,12 +193,13 @@ class _MarkdownTextState extends State<MarkdownText> {
         // code still appears streamed, as plain monospace.
         final closed = i < lines.length;
         i++; // skip closing fence
+        final body = code.join('\n');
+        if (AgentBlockKinds.matches(lang)) {
+          widgets.add(_agentBlock(lang!.trim().toLowerCase(), body));
+          continue;
+        }
         widgets.add(
-          CodeBlock(
-            code: code.join('\n'),
-            language: lang,
-            highlightEnabled: closed,
-          ),
+          CodeBlock(code: body, language: lang, highlightEnabled: closed),
         );
         continue;
       }
@@ -264,6 +277,18 @@ class _MarkdownTextState extends State<MarkdownText> {
     flushParagraph();
     return widgets;
   }
+
+  /// Fences with a reserved info string render as rich agent blocks; see
+  /// [AgentBlockKinds].
+  Widget _agentBlock(String kind, String body) => switch (kind) {
+    AgentBlockKinds.choices => AgentChoicesBlock(
+      options: AgentChoicesBlock.parse(body),
+    ),
+    AgentBlockKinds.checklist => AgentChecklistBlock(
+      items: AgentChecklistBlock.parse(body),
+    ),
+    _ => AgentCommandBlock(commands: AgentCommandBlock.parse(body)),
+  };
 }
 
 List<String> _tableCells(String line) {
@@ -319,8 +344,12 @@ class _MarkdownTable extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
             dataTextStyle: theme.textTheme.bodySmall,
+            // Chat density: DataTable's defaults are sized for data screens.
+            dataRowMinHeight: 32,
+            dataRowMaxHeight: 40,
+            headingRowHeight: 36,
             horizontalMargin: 12,
-            columnSpacing: 22,
+            columnSpacing: 16,
             dividerThickness: .7,
             columns: [
               for (var column = 0; column < headers.length; column++)
@@ -359,11 +388,23 @@ class _Heading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final sizes = [20.0, 18.0, 16.5, 15.5, 14.5, 14.0];
+    final textTheme = theme.textTheme;
+    // Sizes step down from the theme's title styles so a text-scale or theme
+    // change moves every heading level with the surrounding prose.
+    final style = switch (level.clamp(1, 6)) {
+      1 => textTheme.titleLarge,
+      2 => textTheme.titleMedium?.copyWith(
+        fontSize: (textTheme.titleMedium?.fontSize ?? 16) * 1.125,
+      ),
+      3 => textTheme.titleMedium,
+      4 => textTheme.titleSmall?.copyWith(
+        fontSize: (textTheme.titleSmall?.fontSize ?? 14) * 1.07,
+      ),
+      _ => textTheme.titleSmall,
+    };
     return Text(
       text,
-      style: theme.textTheme.titleMedium!.copyWith(
-        fontSize: sizes[level.clamp(1, 6) - 1],
+      style: (style ?? textTheme.titleMedium!).copyWith(
         fontWeight: FontWeight.w700,
       ),
     );
@@ -788,7 +829,6 @@ class CodeBlock extends StatelessWidget {
                     child: Text(
                       language!,
                       style: theme.textTheme.labelSmall!.copyWith(
-                        fontSize: 10,
                         color: muted,
                       ),
                     ),

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
+import '../widgets/info_label.dart';
 
 class McpSetupScreen extends StatefulWidget {
   final ConnectionController controller;
@@ -110,7 +111,16 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Add MCP server')),
+      appBar: AppBar(
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Add '),
+            InfoLabel.glossary(Glossary.mcp, iconSize: 18),
+            const Text(' server'),
+          ],
+        ),
+      ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(16, 8, 16, 12),
         child: Column(

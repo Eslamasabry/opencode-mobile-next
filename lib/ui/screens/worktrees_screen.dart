@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
+import '../desktop/context_menu.dart';
+import '../widgets/info_label.dart';
 import '../widgets/product_states.dart';
 
 class WorktreesScreen extends StatefulWidget {
@@ -378,13 +380,6 @@ class _WorktreesScreenState extends State<WorktreesScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 104),
           children: [
-            ListTile(
-              leading: const Icon(Icons.call_split_rounded),
-              title: Text(widget.project.name),
-              subtitle: const Text(
-                'Use isolated branches for parallel coding without mixing changes.',
-              ),
-            ),
             const SectionLabel('Primary'),
             _LocationTile(
               key: const ValueKey('primary-worktree'),
@@ -395,10 +390,7 @@ class _WorktreesScreenState extends State<WorktreesScreen> {
               busy: _busyDirectory == widget.project.directory,
               onOpen: () => _open(widget.project.directory),
             ),
-            SectionLabel(
-              'Worktrees',
-              trailing: worktrees == null ? null : Text('${worktrees.length}'),
-            ),
+            _WorktreesSectionLabel(count: worktrees?.length),
             if (worktrees == null && _loadError == null)
               const SizedBox(height: 216, child: LoadingList(rows: 3))
             else if (_loadError != null)
@@ -409,7 +401,9 @@ class _WorktreesScreenState extends State<WorktreesScreen> {
                 icon: Icons.account_tree_outlined,
                 title: 'No isolated worktrees yet',
                 message:
-                    'Create one when you want OpenCode to work on a separate branch.',
+                    'Use isolated branches for parallel coding without mixing '
+                    'changes. Create one when you want OpenCode to work on a '
+                    'separate branch.',
               )
             else
               for (var index = 0; index < worktrees.length; index++) ...[
@@ -501,6 +495,46 @@ class _LocationTile extends StatelessWidget {
   );
 }
 
+/// [SectionLabel]'s shape with the term itself explained in place: the
+/// glossary sheet opens from the caption, so the word never has to be known
+/// before the screen makes sense.
+class _WorktreesSectionLabel extends StatelessWidget {
+  const _WorktreesSectionLabel({required this.count});
+
+  final int? count;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final style = theme.textTheme.labelSmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+      letterSpacing: 1.1,
+      fontWeight: FontWeight.w600,
+    );
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 16, 12, 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: InfoLabel(
+                '${Glossary.worktree.term.toUpperCase()}S',
+                key: const ValueKey('worktrees-section-label'),
+                explanation: Glossary.worktree.explanation,
+                style: style,
+                iconSize: 14,
+              ),
+            ),
+          ),
+          if (count != null)
+            DefaultTextStyle.merge(style: style, child: Text('$count')),
+        ],
+      ),
+    );
+  }
+}
+
 class _WorktreeTile extends StatelessWidget {
   final WorktreeInfo worktree;
   final bool current;
@@ -536,7 +570,7 @@ class _WorktreeTile extends StatelessWidget {
         : worktree.branch?.isNotEmpty == true
         ? worktree.branch!
         : worktree.directory;
-    return ListTile(
+    final tile = ListTile(
       key: ValueKey('worktree-${worktree.directory}'),
       selected: current,
       leading: preparing || busy
@@ -581,6 +615,36 @@ class _WorktreeTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+    // The same gates as the overflow menu, on a right click. A pass-through
+    // off desktop.
+    return ContextMenuRegion(
+      actions: () => busy
+          ? const []
+          : [
+              if (!current && !preparing && failure == null)
+                ContextMenuAction(
+                  menuKey: const ValueKey('worktree-menu-open'),
+                  label: 'Open',
+                  icon: Icons.open_in_new_rounded,
+                  onSelected: onOpen,
+                ),
+              if (resetAvailable && !preparing && failure == null)
+                ContextMenuAction(
+                  menuKey: const ValueKey('worktree-menu-reset'),
+                  label: 'Reset',
+                  icon: Icons.restart_alt_rounded,
+                  onSelected: onReset,
+                ),
+              ContextMenuAction(
+                menuKey: const ValueKey('worktree-menu-remove'),
+                label: 'Remove',
+                icon: Icons.delete_outline_rounded,
+                destructive: true,
+                onSelected: onRemove,
+              ),
+            ],
+      child: tile,
     );
   }
 }

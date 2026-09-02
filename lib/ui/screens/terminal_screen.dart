@@ -8,7 +8,24 @@ import 'package:xterm/xterm.dart' as xterm;
 
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
+import '../desktop/context_menu.dart';
 import '../widgets/product_states.dart';
+
+/// [TerminalScreen] as its own pushed route. Every entry point that leaves
+/// the shell for the terminal — the More hub, the Workspace header, the
+/// desktop shortcut — pushes this one page so they all land identically.
+class TerminalPage extends StatelessWidget {
+  final ConnectionController controller;
+
+  const TerminalPage({super.key, required this.controller});
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    key: const ValueKey('terminal-page'),
+    appBar: AppBar(title: const Text('Terminal')),
+    body: TerminalScreen(controller: controller),
+  );
+}
 
 class TerminalScreen extends StatefulWidget {
   final ConnectionController controller;
@@ -274,7 +291,7 @@ class _TerminalScreenState extends State<TerminalScreen> {
               separatorBuilder: (_, _) => const Divider(height: 1, indent: 68),
               itemBuilder: (context, index) {
                 final process = _processes![index];
-                return ListTile(
+                final tile = ListTile(
                   minTileHeight: 68,
                   leading: _ProcessIndicator(running: process.running),
                   title: Row(
@@ -319,6 +336,34 @@ class _TerminalScreenState extends State<TerminalScreen> {
                     ],
                   ),
                   onTap: () => _open(process),
+                );
+                // The overflow menu's entries, on a right click. A
+                // pass-through off desktop.
+                return ContextMenuRegion(
+                  actions: () => [
+                    ContextMenuAction(
+                      menuKey: const ValueKey('terminal-menu-open'),
+                      label: 'Open',
+                      icon: Icons.terminal_outlined,
+                      onSelected: () => unawaited(_open(process)),
+                    ),
+                    ContextMenuAction(
+                      menuKey: const ValueKey('terminal-menu-rename'),
+                      label: 'Rename',
+                      icon: Icons.edit_outlined,
+                      onSelected: () => unawaited(_rename(process)),
+                    ),
+                    ContextMenuAction(
+                      menuKey: const ValueKey('terminal-menu-remove'),
+                      label: process.running ? 'Stop' : 'Remove',
+                      icon: process.running
+                          ? Icons.stop_circle_outlined
+                          : Icons.delete_outline_rounded,
+                      destructive: true,
+                      onSelected: () => unawaited(_remove(process)),
+                    ),
+                  ],
+                  child: tile,
                 );
               },
             ),
