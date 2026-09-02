@@ -8,7 +8,7 @@
 > never been hardware-tested**. If something breaks, that is exactly what
 > the in-app **Report a bug** button (More hub → *Report a bug*, or
 > Settings → About) is for:
-> [open an issue](https://github.com/Eslamasabry/opencode-mobile/issues/new?template=bug_report.yml).
+> [open an issue](https://github.com/Eslamasabry/opencode-mobile-next/issues/new?template=bug_report.yml).
 
 | Platform | State |
 |---|---|
@@ -26,13 +26,15 @@ the app itself. The same codebase builds desktop binaries for Linux and
 ## Status
 
 This is a **preview line, not a stable release**. The current cut is
-[v1.0.29+30-preview.9](https://github.com/Eslamasabry/opencode-mobile/releases/tag/v1.0.29%2B30-preview.9)
+[v1.0.29+30-preview.9](https://github.com/Eslamasabry/opencode-mobile-next/releases/tag/v1.0.29%2B30-preview.9)
 (`oc_app-1.0.29+30-convergence-preview9.apk`); `v1.0.19+20` is the last
 stable cut. The navigation changed in preview 9, so screenshots and videos
 from earlier previews no longer match the app — see the captions below.
 
-The app ships **English only**. Strings are routed through the localization
-layer but only `en` is supplied; there is no second locale to switch to.
+The app ships **English only**. The localization layer is wired (`l10n.yaml`,
+`lib/l10n/app_en.arb`) but most user-facing strings are still hardcoded in
+the widgets, so a second locale cannot be added by translation alone. The
+plan to finish that is tracked in [docs/localization-todo.md](docs/localization-todo.md).
 
 Two independent audits of this repository — a public-launch readiness audit
 and a UI/UX audit — are published under [docs/audits/](docs/audits/), along
@@ -140,7 +142,7 @@ re-cut from footage recorded against a scratch project.
 ## Install
 
 Grab the APK from the
-[latest release](https://github.com/Eslamasabry/opencode-mobile/releases).
+[latest release](https://github.com/Eslamasabry/opencode-mobile-next/releases).
 
 **The next build will not upgrade preview 10 — it installs beside it.** The
 Android application ID moved from `ai.opencode.opencode_mobile` to
@@ -276,7 +278,7 @@ OpenAPI dumps under [contracts/](contracts/).
 
 | Tool | Version |
 |---|---|
-| Flutter | **3.47.1** — the exact version pinned for Shorebird releases |
+| Flutter | **3.47.2** — the exact version pinned for Shorebird releases |
 | Android SDK | API 36 |
 | Shorebird CLI | 1.6.x (only needed for release/patch work) |
 
@@ -288,7 +290,7 @@ flutter build linux          # desktop build, same codebase
 ```
 
 The Flutter pin matters: release artifacts and the 912-test suite are
-validated against Shorebird's pinned 3.47.1
+validated against Shorebird's pinned 3.47.2
 (`~/.shorebird/bin/cache/flutter/<rev>/bin/flutter` after installing
 Shorebird). Older local Flutters may fail to resolve packages. Run tests
 serially — `flutter test --concurrency=1`.

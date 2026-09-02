@@ -16,7 +16,7 @@ import '../platform/platform_capabilities.dart';
 /// names, model names, or transcripts are attached — the issue template
 /// itself tells the filer to redact everything else before submitting.
 const String bugReportRepoUrl =
-    'https://github.com/Eslamasabry/opencode-mobile';
+    'https://github.com/Eslamasabry/opencode-mobile-next';
 
 /// Coarse, user-facing label for the platform a report is coming from. The
 /// desktop rows carry the alpha/contributor framing so a Windows report

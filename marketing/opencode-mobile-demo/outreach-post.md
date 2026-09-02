@@ -15,7 +15,7 @@ I'd love feedback from the OpenCode maintainers on the API boundaries and
 artifact contract—and whether this direction could be useful to the wider
 community.
 
-Demo + source: https://github.com/Eslamasabry/opencode-mobile
+Demo + source: https://github.com/Eslamasabry/opencode-mobile-next
 
 ## Short version
 
@@ -27,4 +27,4 @@ and a genuine terminal.
 
 I'd love the maintainers' feedback on the direction and API boundaries.
 
-https://github.com/Eslamasabry/opencode-mobile
+https://github.com/Eslamasabry/opencode-mobile-next

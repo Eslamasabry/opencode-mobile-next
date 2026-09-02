@@ -25,7 +25,7 @@
 # WireGuard address. A password is generated on install and required on every
 # request; it lives in a 0600 environment file, never on the command line.
 #
-# Full walkthrough: docs/ubuntu-host.md in https://github.com/Eslamasabry/opencode-mobile
+# Full walkthrough: docs/ubuntu-host.md in https://github.com/Eslamasabry/opencode-mobile-next
 set -euo pipefail
 
 readonly SERVICE_NAME="opencode-serve"

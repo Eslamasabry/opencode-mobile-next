@@ -12,12 +12,12 @@ body:
         Windows desktop in particular builds but has not been hardware-tested
         — Windows reports are contributor testing, and they are welcome. Bugs
         in the OpenCode server itself belong upstream, not here — see
-        [SUPPORT.md](https://github.com/Eslamasabry/opencode-mobile/blob/master/SUPPORT.md).
+        [SUPPORT.md](https://github.com/Eslamasabry/opencode-mobile-next/blob/master/SUPPORT.md).
 
         ⚠️ **Do not report a security vulnerability here.** This app stores
         server credentials and can authorize shell-capable actions. Report
         privately through a
-        [security advisory](https://github.com/Eslamasabry/opencode-mobile/security/advisories/new).
+        [security advisory](https://github.com/Eslamasabry/opencode-mobile-next/security/advisories/new).
 
         ⚠️ **Redact before you paste.** No server passwords, no provider API
         keys, no real server hostnames, no unredacted transcripts.

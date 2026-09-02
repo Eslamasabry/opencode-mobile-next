@@ -26,7 +26,7 @@ void main() {
       );
 
       expect(url.host, 'github.com');
-      expect(url.path, '/Eslamasabry/opencode-mobile/issues/new');
+      expect(url.path, '/Eslamasabry/opencode-mobile-next/issues/new');
       expect(url.queryParameters['template'], 'bug_report.yml');
       expect(url.queryParameters['app-version'], '1.0.31+32');
       final body = url.queryParameters['what-happened']!;

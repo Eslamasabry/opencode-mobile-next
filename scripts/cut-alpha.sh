@@ -56,7 +56,7 @@ command -v gh >/dev/null 2>&1 ||
 
 step "Preflight: toolchains and auth"
 command -v flutter >/dev/null 2>&1 ||
-  fail "flutter is not on PATH (use the Shorebird-pinned 3.47.1 binary)."
+  fail "flutter is not on PATH (use the Shorebird-pinned 3.47.2 binary)."
 gh auth status >/dev/null 2>&1 || fail "gh is not authenticated: run 'gh auth login'."
 shorebird doctor >/dev/null 2>&1 ||
   fail "shorebird doctor failed — fix Shorebird auth/setup first."

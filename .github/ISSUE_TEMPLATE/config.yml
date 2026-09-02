@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: Report a security vulnerability (never in a public issue)
-    url: https://github.com/Eslamasabry/opencode-mobile/security/advisories/new
+    url: https://github.com/Eslamasabry/opencode-mobile-next/security/advisories/new
     about: >-
       This app stores server credentials and can authorize shell-capable
       actions, so a defect here can reach somebody's development machine.
@@ -9,26 +9,26 @@ contact_links:
       issue, discussion, or pull request that demonstrates it.
 
   - name: Read the security policy first
-    url: https://github.com/Eslamasabry/opencode-mobile/blob/master/SECURITY.md
+    url: https://github.com/Eslamasabry/opencode-mobile-next/blob/master/SECURITY.md
     about: >-
       What is in scope, what is already known, which versions are supported
       (the current preview only), and what to expect after you report.
 
   - name: Not sure this is the right project?
-    url: https://github.com/Eslamasabry/opencode-mobile/blob/master/SUPPORT.md
+    url: https://github.com/Eslamasabry/opencode-mobile-next/blob/master/SUPPORT.md
     about: >-
       Bugs in the OpenCode server, your model provider, Termux, or Shorebird
       belong to those projects. SUPPORT.md has the one test that sorts most
       reports in under a minute.
 
   - name: Questions and ideas
-    url: https://github.com/Eslamasabry/opencode-mobile/discussions
+    url: https://github.com/Eslamasabry/opencode-mobile-next/discussions
     about: >-
       "Is this supposed to work?", setup help, and open-ended ideas. Faster
       than an issue, and it will not sit in a triage queue.
 
   - name: Known open problems
-    url: https://github.com/Eslamasabry/opencode-mobile/blob/master/docs/audits/post-remediation-status-2026-08-29.md
+    url: https://github.com/Eslamasabry/opencode-mobile-next/blob/master/docs/audits/post-remediation-status-2026-08-29.md
     about: >-
       Two independent audits of this repository are published, with a
       per-finding status. Several findings are still open and listed there.

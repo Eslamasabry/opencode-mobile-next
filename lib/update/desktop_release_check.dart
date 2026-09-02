@@ -12,9 +12,9 @@ import '../ui/widgets/external_link.dart';
 /// check the project's GitHub releases instead and point at the release
 /// page. Nothing downloads automatically.
 const desktopReleasesApiUrl =
-    'https://api.github.com/repos/Eslamasabry/opencode-mobile/releases';
+    'https://api.github.com/repos/Eslamasabry/opencode-mobile-next/releases';
 const desktopReleasesPageUrl =
-    'https://github.com/Eslamasabry/opencode-mobile/releases';
+    'https://github.com/Eslamasabry/opencode-mobile-next/releases';
 
 class DesktopReleaseInfo {
   final String tag;

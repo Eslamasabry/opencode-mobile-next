@@ -27,7 +27,7 @@ void main() {
     expect(contributing.existsSync(), isTrue);
     final text = contributing.readAsStringSync();
     // The facts a contributor cannot guess and cannot work without.
-    expect(text, contains('3.47.1'));
+    expect(text, contains('3.47.2'));
     expect(text, contains('flutter analyze'));
     expect(text, contains('--concurrency=1'));
     expect(text, contains('flutter_secure_storage'));

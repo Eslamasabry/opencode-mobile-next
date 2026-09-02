@@ -29,7 +29,7 @@ preview line; there are no maintained release branches and no backports.
 
 | Version | Supported |
 |---|---|
-| Current preview (see [releases](https://github.com/Eslamasabry/opencode-mobile/releases)) | Yes |
+| Current preview (see [releases](https://github.com/Eslamasabry/opencode-mobile-next/releases)) | Yes |
 | Any earlier preview | No |
 | `v1.0.19+20` and earlier stable cuts | No |
 
@@ -41,7 +41,7 @@ the first step of any fix is to update.
 
 Use **GitHub private vulnerability reporting** on this repository:
 
-<https://github.com/Eslamasabry/opencode-mobile/security/advisories/new>
+<https://github.com/Eslamasabry/opencode-mobile-next/security/advisories/new>
 
 That opens a private advisory visible only to you and the maintainer. It is
 the only channel that should be used for a suspected vulnerability.

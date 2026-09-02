@@ -213,8 +213,8 @@ lives in `packages/opencode_sdk/`, and is covered by this project's
 | `fixnum` | 1.1.1 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |
 | `flutter_lints` | 6.0.0 | BSD-3-Clause | Copyright 2013 The Flutter Authors. All rights reserved | test-only |
 | `flutter_riverpod` | 3.4.2 | MIT | Copyright (c) 2020 Remi Rousselet | runtime |
-| `flutter_secure_storage` | 10.0.0 | BSD-3-Clause | Copyright 2017 German Saprykin | runtime |
-| `flutter_secure_storage_darwin` | 0.2.0 | BSD-3-Clause | Copyright 2025 Julian Steenbakker | runtime |
+| `flutter_secure_storage` | 11.0.0 | BSD-3-Clause | Copyright 2017 German Saprykin | runtime |
+| `flutter_secure_storage_darwin` | 0.4.0 | BSD-3-Clause | Copyright 2025 Julian Steenbakker | runtime |
 | `flutter_secure_storage_linux` | 3.0.2 | BSD-3-Clause | Copyright 2017 German Saprykin | runtime |
 | `flutter_secure_storage_platform_interface` | 2.0.3 | BSD-3-Clause | Copyright 2017 German Saprykin | runtime |
 | `flutter_secure_storage_web` | 2.1.1 | BSD-3-Clause | Copyright 2017 German Saprykin | runtime |
