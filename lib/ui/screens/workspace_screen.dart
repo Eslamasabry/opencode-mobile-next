@@ -190,9 +190,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     }
     final directory = _selectedProject?.directory ?? _selectedDirectory;
     parts.add(
-      directory?.isNotEmpty == true
-          ? directory!
-          : 'Server’s default directory',
+      directory?.isNotEmpty == true ? directory! : 'Server’s default directory',
     );
     return parts.join(' · ');
   }
@@ -289,130 +287,73 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           onRefresh: _load,
           child: DesktopScrollbarArea(
             builder: (scrollController) => CustomScrollView(
-            controller: scrollController,
-            key: const PageStorageKey('workspace-scroll'),
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
-              // 1. Current project/workspace context — one compact header.
-              SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (widget.controller.locationNotice != null)
+              controller: scrollController,
+              key: const PageStorageKey('workspace-scroll'),
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                // 1. Current project/workspace context — one compact header.
+                SliverToBoxAdapter(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (widget.controller.locationNotice != null)
+                        ListTile(
+                          key: const ValueKey('location-recovery-notice'),
+                          leading: const Icon(Icons.info_outline_rounded),
+                          title: Text(widget.controller.locationNotice!),
+                        ),
                       ListTile(
-                        key: const ValueKey('location-recovery-notice'),
-                        leading: const Icon(Icons.info_outline_rounded),
-                        title: Text(widget.controller.locationNotice!),
-                      ),
-                    ListTile(
-                      key: const ValueKey('current-project-entry'),
-                      leading: const Icon(Icons.folder_rounded),
-                      title: Text(_selectedProject?.name ?? 'Choose a project'),
-                      subtitle: Text(
-                        _contextSubtitle,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      trailing: const Icon(Icons.unfold_more_rounded),
-                      onTap: _openContextSheet,
-                    ),
-                    // Still context, not management: the session is running
-                    // somewhere other than the project root.
-                    if (_hasExternalSessionDirectory)
-                      ListTile(
-                        key: const ValueKey('active-session-directory'),
-                        leading: const Icon(Icons.subdirectory_arrow_right),
-                        title: Text(_basename(_selectedDirectory!)),
+                        key: const ValueKey('current-project-entry'),
+                        leading: const Icon(Icons.folder_rounded),
+                        title: Text(
+                          _selectedProject?.name ?? 'Choose a project',
+                        ),
                         subtitle: Text(
-                          'Active session directory · $_selectedDirectory',
+                          _contextSubtitle,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
+                        trailing: const Icon(Icons.unfold_more_rounded),
+                        onTap: _openContextSheet,
                       ),
-                    if (_workspaceError != null)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                        child: Text(
-                          _workspaceError!,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
+                      // Still context, not management: the session is running
+                      // somewhere other than the project root.
+                      if (_hasExternalSessionDirectory)
+                        ListTile(
+                          key: const ValueKey('active-session-directory'),
+                          leading: const Icon(Icons.subdirectory_arrow_right),
+                          title: Text(_basename(_selectedDirectory!)),
+                          subtitle: Text(
+                            'Active session directory · $_selectedDirectory',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                      ),
-                    // 2. Continue active sessions, with their live state.
-                    if (active.isNotEmpty)
-                      SectionLabel(
-                        'Active sessions',
-                        trailing: Text('${active.length}'),
-                      ),
-                  ],
-                ),
-              ),
-              if (active.isNotEmpty)
-                SliverList.builder(
-                  itemCount: active.length,
-                  itemBuilder: (context, index) => _SessionRow(
-                    session: active[index],
-                    busy: true,
-                    onOpen: _openSession,
-                    onAction: _sessionAction,
-                    sharingAvailable:
-                        widget.controller.capabilities.sessionShare,
-                    archiveAvailable:
-                        widget.controller.capabilities.sessionArchive,
-                  ),
-                ),
-              // 3. Recent sessions.
-              SliverToBoxAdapter(
-                child: SectionLabel(
-                  'Recent sessions',
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        key: const ValueKey('search-all-sessions'),
-                        tooltip: 'Search all sessions',
-                        onPressed: _openAllSessions,
-                        icon: const Icon(Icons.manage_search_rounded, size: 21),
-                      ),
-                      IconButton(
-                        tooltip: 'Refresh sessions',
-                        onPressed: widget.controller.refreshSessions,
-                        icon: const Icon(Icons.refresh_rounded, size: 19),
-                      ),
-                      // Terminal gave its navigation slot to Activity; this
-                      // keeps it one tap from the workspace it runs in.
-                      IconButton(
-                        key: const ValueKey('workspace-terminal'),
-                        tooltip: 'Terminal',
-                        onPressed: _openTerminal,
-                        icon: const Icon(Icons.terminal_outlined, size: 20),
-                      ),
+                      if (_workspaceError != null)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                          child: Text(
+                            _workspaceError!,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        ),
+                      // 2. Continue active sessions, with their live state.
+                      if (active.isNotEmpty)
+                        SectionLabel(
+                          'Active sessions',
+                          trailing: Text('${active.length}'),
+                        ),
                     ],
                   ),
                 ),
-              ),
-              if (recent.isEmpty)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 26),
-                    child: ProductEmptyState(
-                      icon: Icons.chat_bubble_outline_rounded,
-                      title: 'No recent sessions',
-                      message: 'Start a session in the selected workspace.',
-                      actionLabel: 'New session',
-                      onAction: _createSession,
-                    ),
-                  ),
-                )
-              else
-                SliverList.builder(
-                  itemCount: recent.length,
-                  itemBuilder: (context, index) => EntranceReveal(
-                    index: index,
-                    child: _SessionRow(
-                      session: recent[index],
-                      busy: false,
+                if (active.isNotEmpty)
+                  SliverList.builder(
+                    itemCount: active.length,
+                    itemBuilder: (context, index) => _SessionRow(
+                      session: active[index],
+                      busy: true,
                       onOpen: _openSession,
                       onAction: _sessionAction,
                       sharingAvailable:
@@ -421,37 +362,99 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           widget.controller.capabilities.sessionArchive,
                     ),
                   ),
-                ),
-              if (archived.isNotEmpty)
+                // 3. Recent sessions.
                 SliverToBoxAdapter(
-                  child: ListTile(
-                    leading: const Icon(Icons.archive_outlined),
-                    title: const Text('Archived sessions'),
-                    subtitle: Text('${archived.length} hidden from recents'),
-                    trailing: const Icon(Icons.chevron_right_rounded),
-                    onTap: () => _showArchived(archived),
-                  ),
-                ),
-              // 5. Everything management sits below the sessions, behind one
-              // labelled route: worktrees, managed workspaces, project
-              // health, and project switching.
-              if (ManageProjectScreen.isAvailable(
-                widget.controller.capabilities,
-              ))
-                SliverToBoxAdapter(
-                  child: ListTile(
-                    key: const ValueKey('manage-project-entry'),
-                    leading: const Icon(Icons.tune_rounded),
-                    title: const Text('Manage project'),
-                    subtitle: const Text(
-                      'Switch project, worktrees, and project health',
+                  child: SectionLabel(
+                    'Recent sessions',
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          key: const ValueKey('search-all-sessions'),
+                          tooltip: 'Search all sessions',
+                          onPressed: _openAllSessions,
+                          icon: const Icon(
+                            Icons.manage_search_rounded,
+                            size: 21,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Refresh sessions',
+                          onPressed: widget.controller.refreshSessions,
+                          icon: const Icon(Icons.refresh_rounded, size: 19),
+                        ),
+                        // Terminal gave its navigation slot to Activity; this
+                        // keeps it one tap from the workspace it runs in.
+                        IconButton(
+                          key: const ValueKey('workspace-terminal'),
+                          tooltip: 'Terminal',
+                          onPressed: _openTerminal,
+                          icon: const Icon(Icons.terminal_outlined, size: 20),
+                        ),
+                      ],
                     ),
-                    trailing: const Icon(Icons.chevron_right_rounded),
-                    onTap: _openManageProject,
                   ),
                 ),
-              const SliverToBoxAdapter(child: SizedBox(height: 96)),
-            ],
+                if (recent.isEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 26),
+                      child: ProductEmptyState(
+                        icon: Icons.chat_bubble_outline_rounded,
+                        title: 'No recent sessions',
+                        message: 'Start a session in the selected workspace.',
+                        actionLabel: 'New session',
+                        onAction: _createSession,
+                      ),
+                    ),
+                  )
+                else
+                  SliverList.builder(
+                    itemCount: recent.length,
+                    itemBuilder: (context, index) => EntranceReveal(
+                      index: index,
+                      child: _SessionRow(
+                        session: recent[index],
+                        busy: false,
+                        onOpen: _openSession,
+                        onAction: _sessionAction,
+                        sharingAvailable:
+                            widget.controller.capabilities.sessionShare,
+                        archiveAvailable:
+                            widget.controller.capabilities.sessionArchive,
+                      ),
+                    ),
+                  ),
+                if (archived.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: ListTile(
+                      leading: const Icon(Icons.archive_outlined),
+                      title: const Text('Archived sessions'),
+                      subtitle: Text('${archived.length} hidden from recents'),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () => _showArchived(archived),
+                    ),
+                  ),
+                // 5. Everything management sits below the sessions, behind one
+                // labelled route: worktrees, managed workspaces, project
+                // health, and project switching.
+                if (ManageProjectScreen.isAvailable(
+                  widget.controller.capabilities,
+                ))
+                  SliverToBoxAdapter(
+                    child: ListTile(
+                      key: const ValueKey('manage-project-entry'),
+                      leading: const Icon(Icons.tune_rounded),
+                      title: const Text('Manage project'),
+                      subtitle: const Text(
+                        'Switch project, worktrees, and project health',
+                      ),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: _openManageProject,
+                    ),
+                  ),
+                const SliverToBoxAdapter(child: SizedBox(height: 96)),
+              ],
             ),
           ),
         ),
@@ -527,9 +530,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 key: const ValueKey('context-switch-project'),
                 leading: const Icon(Icons.swap_horiz_rounded),
                 title: const Text('Switch project'),
-                subtitle: Text(
-                  '${_projects?.length ?? 0} open on this server',
-                ),
+                subtitle: Text('${_projects?.length ?? 0} open on this server'),
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: () => Navigator.of(
                   sheetContext,
@@ -771,6 +772,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 Navigator.pop(sheetContext);
                 unawaited(_sessionAction(action, session));
               }
+
               return ContextMenuRegion(
                 actions: () => [
                   ContextMenuAction(
@@ -791,7 +793,11 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 child: ListTile(
                   key: ValueKey('archived-session-${session.id}'),
                   leading: const Icon(Icons.inventory_2_outlined, size: 21),
-                  title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  title: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   subtitle: Text(
                     session.directory ?? '',
                     maxLines: 1,
@@ -847,9 +853,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 /// What the context sheet was dismissed with: switch project, or move to a
 /// workspace (`null` meaning the project's own local checkout).
 class _ContextChoice {
-  const _ContextChoice.switchProject()
-    : workspace = null,
-      switchProject = true;
+  const _ContextChoice.switchProject() : workspace = null, switchProject = true;
   const _ContextChoice.workspace(this.workspace) : switchProject = false;
 
   final WorkspaceInfo? workspace;
@@ -907,10 +911,17 @@ class _SessionRow extends StatelessWidget {
         subtitle: Text(
           [
             if (session.shareUrl != null) 'Shared: ${session.shareUrl}',
-            if (busy) 'Working',
+            if (session.compactingSince != null)
+              'Compacting…'
+            else if (busy)
+              'Working',
             if (updated != null) _relativeTime(updated),
             if (session.directory?.isNotEmpty == true)
               _basename(session.directory!),
+            // Server-reported usage, when the server sends it: what the run
+            // cost and how much it touched, so a row answers "was that
+            // worth it?" without opening the session.
+            ...sessionUsageLabels(session),
           ].join(' · '),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -1164,4 +1175,20 @@ class _QuickAskPill extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Compact usage labels for a session row: cost to the cent, and the diff
+/// summary as "+120 −34 · 6 files". Empty when the server sent neither.
+List<String> sessionUsageLabels(Session session) {
+  final labels = <String>[];
+  final cost = session.cost;
+  if (cost != null && cost >= 0.005) labels.add('\$${cost.toStringAsFixed(2)}');
+  final summary = session.summary;
+  if (summary != null && (summary.additions > 0 || summary.deletions > 0)) {
+    labels.add('+${summary.additions} −${summary.deletions}');
+    if (summary.files > 0) {
+      labels.add('${summary.files} ${summary.files == 1 ? 'file' : 'files'}');
+    }
+  }
+  return labels;
 }

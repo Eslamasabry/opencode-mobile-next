@@ -562,6 +562,13 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
               if (model.contextLimit > 0)
                 '${_number(model.contextLimit)} context',
               if (model.outputLimit > 0) '${_number(model.outputLimit)} output',
+              // Price per million tokens, straight from the catalog, so the
+              // trade-off between models is visible where the choice is made.
+              ?modelCostLabel(model),
+              if (model.deprecated)
+                'Deprecated'
+              else if (model.preview)
+                'Preview',
             ].join(' · '),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -836,4 +843,18 @@ class _PickerState extends StatelessWidget {
       ),
     );
   }
+}
+
+/// "\$3.00 in · \$15.00 out /1M" for a model with published pricing; null when
+/// the catalog carries no cost.
+String? modelCostLabel(CatalogModel model) {
+  final cost = model.cost;
+  if (cost == null) return null;
+  final input = cost.inputPerMillion;
+  final output = cost.outputPerMillion;
+  if (input <= 0 && output <= 0) return null;
+  String money(double value) => value >= 1
+      ? '\$${value.toStringAsFixed(2)}'
+      : '\$${value.toStringAsFixed(3)}';
+  return '${money(input)} in · ${money(output)} out /1M';
 }
