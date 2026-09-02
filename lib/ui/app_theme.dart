@@ -65,6 +65,10 @@ abstract final class AppTheme {
   /// Bundled JetBrains Mono; code is this product's primary material.
   static const monoFamily = 'AppMono';
 
+  /// Bundled Space Grotesk; headlines and titles only. Body text stays on the
+  /// platform face, so the display face reads as identity, not as noise.
+  static const displayFamily = 'AppDisplay';
+
   /// Ceiling for the global text scaler. The system setting passes through
   /// untouched below this — smaller-than-default choices included — and only
   /// runaway scales are capped. Critical flows are tested at this value.
@@ -116,12 +120,47 @@ abstract final class AppTheme {
   static Color hairline(ThemeData theme) =>
       theme.colorScheme.outlineVariant.withValues(alpha: .7);
 
+  /// A faint wash of the primary colour for surfaces that are "live": the
+  /// assistant block still streaming, the tool card still running. Strong
+  /// enough to register, weak enough to sit under text.
+  static Color liveTint(ThemeData theme, {double alpha = .06}) =>
+      theme.colorScheme.primary.withValues(alpha: alpha);
+
+  /// The one raised-surface shadow recipe. Reserved for the few surfaces that
+  /// float over content — the composer, the attention card, the model chip —
+  /// so depth stays meaningful. Everything else stays flat.
+  static List<BoxShadow> raised(ThemeData theme) {
+    final dark = theme.brightness == Brightness.dark;
+    final ink = dark ? theme.colorScheme.surfaceContainerLowest : Colors.black;
+    return [
+      BoxShadow(
+        color: ink.withValues(alpha: dark ? .55 : .10),
+        blurRadius: 22,
+        offset: const Offset(0, 10),
+      ),
+      BoxShadow(
+        color: ink.withValues(alpha: dark ? .35 : .05),
+        blurRadius: 4,
+        offset: const Offset(0, 1),
+      ),
+    ];
+  }
+
+  /// A soft coloured halo, for a control that has just changed state or is
+  /// asking for attention. Pair with [raised] rather than replacing it.
+  static List<BoxShadow> glow(Color color, {double strength = .35}) => [
+    BoxShadow(
+      color: color.withValues(alpha: strength),
+      blurRadius: 18,
+      spreadRadius: 1,
+    ),
+  ];
+
   /// True once the text scale makes side-by-side action buttons too narrow
   /// to hold their labels; action bars stack vertically past this point
   /// instead of wrapping every label into a four-line block.
   static bool stackedActions(BuildContext context) =>
-      MediaQuery.textScalerOf(context).scale(bodyFontSize) >
-      bodyFontSize * 1.6;
+      MediaQuery.textScalerOf(context).scale(bodyFontSize) > bodyFontSize * 1.6;
 
   static const background = Color(0xFF101310);
   static const surface = Color(0xFF151A17);
@@ -187,11 +226,38 @@ abstract final class AppTheme {
     return base.copyWith(
       extensions: [AppSemanticColors(success: successColor)],
       textTheme: base.textTheme.copyWith(
+        displayLarge: base.textTheme.displayLarge?.copyWith(
+          fontFamily: displayFamily,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -1,
+        ),
+        displayMedium: base.textTheme.displayMedium?.copyWith(
+          fontFamily: displayFamily,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.8,
+        ),
+        displaySmall: base.textTheme.displaySmall?.copyWith(
+          fontFamily: displayFamily,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.6,
+        ),
+        headlineLarge: base.textTheme.headlineLarge?.copyWith(
+          fontFamily: displayFamily,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.6,
+        ),
+        headlineMedium: base.textTheme.headlineMedium?.copyWith(
+          fontFamily: displayFamily,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.5,
+        ),
         headlineSmall: base.textTheme.headlineSmall?.copyWith(
+          fontFamily: displayFamily,
           fontWeight: FontWeight.w700,
           letterSpacing: -0.45,
         ),
         titleLarge: base.textTheme.titleLarge?.copyWith(
+          fontFamily: displayFamily,
           fontWeight: FontWeight.w700,
           letterSpacing: -0.25,
         ),

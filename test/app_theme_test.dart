@@ -50,4 +50,17 @@ void main() {
     expect(minimumButtonSize?.width, greaterThanOrEqualTo(48));
     expect(minimumButtonSize?.height, greaterThanOrEqualTo(48));
   });
+
+  test('headlines carry the display face, body stays on the platform face', () {
+    for (final theme in [AppTheme.dark(), AppTheme.light()]) {
+      expect(theme.textTheme.headlineSmall?.fontFamily, AppTheme.displayFamily);
+      expect(theme.textTheme.titleLarge?.fontFamily, AppTheme.displayFamily);
+      expect(
+        theme.textTheme.bodyMedium?.fontFamily,
+        isNot(AppTheme.displayFamily),
+      );
+      expect(AppTheme.raised(theme), hasLength(2));
+      expect(AppTheme.liveTint(theme).a, closeTo(.06, .001));
+    }
+  });
 }

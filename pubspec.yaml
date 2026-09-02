@@ -26,10 +26,10 @@ dependencies:
   # so nothing ever talks to that channel — but the warning is real and a
   # future Flutter will turn it into an error. Revisit when upstream ships a
   # Built-in Kotlin release (0.8.2 still applies KGP under AGP < 9).
-  desktop_drop: 0.8.2
+  desktop_drop: 0.8.4
   dio: ^5.7.0
-  file_picker: 12.1.1
-  flutter_riverpod: ^2.6.1
+  file_picker: 12.1.3
+  flutter_riverpod: ^3.4.2
   highlight: ^0.7.0
   # v10 migrates legacy Android ciphers. Do not jump from v9 directly to v11:
   # existing profile credentials must pass through this migration release.
@@ -64,13 +64,16 @@ dependencies:
   path_provider: 2.1.6
   record: 7.1.1
   scrollable_positioned_list: 0.3.8
-  sherpa_onnx: 1.13.6
+  sherpa_onnx: 1.13.7
   shared_preferences: ^2.3.3
   shorebird_code_push: 2.0.7
   url_launcher: ^6.3.1
   uuid: ^4.5.1
   xterm: ^4.0.0
-  dynamic_color: ^1.7.0
+  # Held at 1.x on purpose: 2.x returns package:material_ui ColorSchemes, which
+  # are a different type from Flutter's and cannot feed ThemeData until the
+  # whole app moves to material_ui. 1.9 carries the surface-role fix.
+  dynamic_color: ^1.9.0
   package_info_plus: ^10.2.1
   window_manager: ^0.5.2
   # Already present transitively via window_manager. Declared explicitly
@@ -101,6 +104,18 @@ flutter:
     # platform launcher-icon pipelines and must not be bundled.
     - assets/branding/app-icon-256.png
   fonts:
+    # Bundled Space Grotesk for headlines and titles: the one display face that
+    # gives the product an identity beyond the platform default. Body text
+    # stays on the platform face for legibility.
+    - family: AppDisplay
+      fonts:
+        - asset: assets/fonts/SpaceGrotesk-Regular.ttf
+        - asset: assets/fonts/SpaceGrotesk-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/SpaceGrotesk-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/SpaceGrotesk-Bold.ttf
+          weight: 700
     - family: AppMono
       fonts:
         - asset: assets/fonts/JetBrainsMono-Regular.ttf

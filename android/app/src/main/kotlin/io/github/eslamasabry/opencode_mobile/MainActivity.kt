@@ -28,10 +28,26 @@ class MainActivity : FlutterActivity() {
     private var backgroundPermissionResult: MethodChannel.Result? = null
     private var cameraPermissionResult: MethodChannel.Result? = null
     private var pendingCodingAlertOpen: Map<String, String>? = null
+    private var pendingSharedText: String? = null
+    private var shareChannel: MethodChannel? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         captureCodingAlertOpen(intent)
+        captureSharedText(intent)
+        shareChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SHARE_CHANNEL_NAME)
+            .also { channel ->
+                channel.setMethodCallHandler { call, result ->
+                    when (call.method) {
+                        "consumeSharedText" -> {
+                            val text = pendingSharedText
+                            pendingSharedText = null
+                            result.success(text)
+                        }
+                        else -> result.notImplemented()
+                    }
+                }
+            }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL_NAME)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
@@ -158,6 +174,39 @@ class MainActivity : FlutterActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         captureCodingAlertOpen(intent)
+        if (captureSharedText(intent)) {
+            // Delivered live when Dart is already listening; otherwise it
+            // waits in pendingSharedText for the consume call.
+            val channel = shareChannel
+            val text = pendingSharedText
+            if (channel != null && text != null) {
+                pendingSharedText = null
+                channel.invokeMethod("shared", text)
+            }
+        }
+    }
+
+    /// Text shared from another app through the system share sheet. Only
+    /// plain text is accepted; the subject, when present, becomes a first
+    /// line so a shared link keeps its title.
+    private fun captureSharedText(intent: Intent?): Boolean {
+        if (intent == null || intent.action != Intent.ACTION_SEND) return false
+        val type = intent.type ?: return false
+        if (!type.startsWith("text/")) return false
+        val body = intent.getStringExtra(Intent.EXTRA_TEXT)?.trim().orEmpty()
+        val subject = intent.getStringExtra(Intent.EXTRA_SUBJECT)?.trim().orEmpty()
+        if (body.isEmpty() && subject.isEmpty()) return false
+        pendingSharedText = when {
+            subject.isEmpty() -> body
+            body.isEmpty() -> subject
+            body.startsWith(subject) -> body
+            else -> "$subject\n$body"
+        }
+        // Consume the share so a configuration change does not replay it.
+        intent.action = Intent.ACTION_MAIN
+        intent.removeExtra(Intent.EXTRA_TEXT)
+        intent.removeExtra(Intent.EXTRA_SUBJECT)
+        return true
     }
 
     private fun captureCodingAlertOpen(intent: Intent?) {
@@ -524,6 +573,7 @@ class MainActivity : FlutterActivity() {
         private const val VOICE_CHANNEL_NAME = "oc/voice"
         private const val CAMERA_CHANNEL_NAME = "oc/camera"
         private const val BACKGROUND_CHANNEL_NAME = "oc/background"
+        private const val SHARE_CHANNEL_NAME = "oc/share"
         private const val TERMUX_PACKAGE = "com.termux"
         private const val TERMUX_HOME = "/data/data/com.termux/files/home"
         private const val TERMUX_BASH = "/data/data/com.termux/files/usr/bin/bash"

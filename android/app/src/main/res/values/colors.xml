@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="launch_background">#0F1115</color>
-    <color name="launcher_background">#0F1115</color>
+    <color name="launch_background">#101310</color>
+    <color name="launcher_background">#101310</color>
     <!-- Home-screen widget palette; night variants in values-night. -->
     <color name="widgetBackground">#F6F9F6</color>
     <color name="widgetText">#172019</color>

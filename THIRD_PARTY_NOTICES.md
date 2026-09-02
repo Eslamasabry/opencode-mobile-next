@@ -113,6 +113,18 @@ pairing scanner, only while that screen is on top, and no frame is stored.
 These font files render code, terminal output, paths, and other monospace
 content throughout the application.
 
+### Space Grotesk
+
+- Component: Space Grotesk font files bundled under `assets/fonts/`
+- Version: static TTF instances as served by Google Fonts
+- Project: https://github.com/floriankarsten/space-grotesk
+- Copyright: 2020 The Space Grotesk Project Authors
+- License: SIL Open Font License 1.1; see
+  `LICENSES/OFL-1.1-Space-Grotesk.txt`
+
+These font files render headlines and titles: the one display face the
+product uses beyond the platform default.
+
 ### Flutter SDK
 
 - Component: the Flutter framework and engine, and the SDK-sourced packages

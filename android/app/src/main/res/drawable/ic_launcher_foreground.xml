@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- The prompt glyph the app itself uses as its mark: a chevron and a cursor
+     block in the OpenCode pack green. Geometry sits inside the 66dp adaptive
+     safe zone so every launcher mask keeps the whole glyph. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
-        android:fillColor="#58BCEA"
-        android:pathData="M11.25,36 L63,2.25 L96.75,2.25 L28.13,70.31 Z" />
+        android:pathData="M36,32 L58,54 L36,76"
+        android:strokeColor="#83CDAA"
+        android:strokeWidth="10"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
     <path
-        android:fillColor="#58BCEA"
-        android:pathData="M52.31,61.31 L63.56,49.5 L96.75,49.5 L68.63,78.19 Z" />
-    <path
-        android:fillColor="#139FE0"
-        android:pathData="M36,78.19 L52.31,61.31 L68.63,78.19 L52.31,94.5 Z" />
-    <path
-        android:fillColor="#0864A9"
-        android:pathData="M68.63,78.19 L96.19,105.75 L63.56,105.75 L52.31,94.5 Z" />
+        android:fillColor="#83CDAA"
+        android:fillAlpha="0.45"
+        android:pathData="M65.2,45 L70.8,45 A1.2,1.2 0 0 1 72,46.2 L72,61.8 A1.2,1.2 0 0 1 70.8,63 L65.2,63 A1.2,1.2 0 0 1 64,61.8 L64,46.2 A1.2,1.2 0 0 1 65.2,45 Z" />
 </vector>
