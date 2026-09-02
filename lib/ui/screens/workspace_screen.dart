@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../../api/models.dart';
 import '../../api/product_repository.dart';
+import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
 import '../desktop/context_menu.dart';
 import '../desktop/desktop_interaction.dart';
@@ -15,6 +16,7 @@ import '../widgets/product_states.dart';
 import 'global_sessions_screen.dart';
 import 'manage_project_screen.dart';
 import 'projects_screen.dart';
+import 'settings_screen.dart';
 import 'terminal_screen.dart';
 import '../app_theme.dart';
 
@@ -391,6 +393,25 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           onPressed: _openTerminal,
                           icon: const Icon(Icons.terminal_outlined, size: 20),
                         ),
+                        // Whether runs keep updating after the app closes
+                        // was only discoverable two levels into Settings;
+                        // say it where the runs are.
+                        if (platformCapabilities.supportsBackgroundService)
+                          IconButton(
+                            key: const ValueKey('workspace-background-toggle'),
+                            tooltip: widget.controller.keepLiveInBackground
+                                ? 'Stays connected in the background'
+                                : 'Background updates off',
+                            onPressed: _openBackgroundSettings,
+                            isSelected:
+                                widget.controller.keepLiveInBackground,
+                            icon: Icon(
+                              widget.controller.keepLiveInBackground
+                                  ? Icons.cloud_sync_outlined
+                                  : Icons.cloud_off_outlined,
+                              size: 20,
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -475,6 +496,14 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
   void _openSession(Session session) {
     Navigator.of(context).pushNamed('/chat/${session.id}');
+  }
+
+  void _openBackgroundSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => BackgroundSettingsScreen(controller: widget.controller),
+      ),
+    );
   }
 
   Future<void> _openTerminal() => Navigator.of(context).push(

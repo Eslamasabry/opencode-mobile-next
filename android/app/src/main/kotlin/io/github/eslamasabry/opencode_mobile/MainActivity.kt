@@ -160,6 +160,19 @@ class MainActivity : FlutterActivity() {
                         SessionsWidgetProvider.refreshAll(this)
                         result.success(mapOf("refreshed" to true))
                     }
+                    "updateLiveStatus" -> {
+                        result.success(
+                            mapOf(
+                                "updated" to BackgroundConnectionService.updateLiveStatus(
+                                    this,
+                                    runningCount = call.argument<Number>("runningCount")?.toInt() ?: 0,
+                                    pendingCount = call.argument<Number>("pendingCount")?.toInt() ?: 0,
+                                    title = call.argument<String>("title"),
+                                    detail = call.argument<String>("detail")
+                                )
+                            )
+                        )
+                    }
                     else -> result.notImplemented()
                 }
             }

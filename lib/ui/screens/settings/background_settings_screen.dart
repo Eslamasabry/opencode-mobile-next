@@ -31,6 +31,20 @@ class _BackgroundSettingsScreenState extends State<BackgroundSettingsScreen>
     if (mounted) setState(() {});
   }
 
+  Future<void> _toggle(bool value) async {
+    final controller = widget.controller;
+    final enabled = await controller.setKeepLiveInBackground(value);
+    if (!mounted) return;
+    final error = controller.backgroundLive.lastError;
+    if (error != null || enabled != value) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error ?? 'Android did not enable background mode.'),
+        ),
+      );
+    }
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
@@ -68,34 +82,24 @@ class _BackgroundSettingsScreenState extends State<BackgroundSettingsScreen>
               ),
             ),
           SwitchListTile(
+            key: const ValueKey('background-live-switch'),
             secondary: const Icon(Icons.sync_lock_rounded),
-            title: const Text('Keep coding session live'),
+            title: const Text('Stay connected in the background'),
             subtitle: const Text(
-              'Keeps server events and terminals connected while this app is in the background. '
-              'Uses more battery and shows a persistent Android notification. '
-              'Android 15+ allows six hours of this per 24 hours and then '
-              'stops it; the app turns the switch off and says so when that '
-              'happens.',
+              'Keeps runs updating when the app is closed and notifies you '
+              'when one needs you. Uses more battery and shows a persistent '
+              'notification.',
             ),
             value: controller.keepLiveInBackground,
             onChanged: controller.backgroundLive.busy
                 ? null
-                : (value) async {
-                    final enabled = await controller.setKeepLiveInBackground(
-                      value,
-                    );
-                    if (!context.mounted) return;
-                    final error = controller.backgroundLive.lastError;
-                    if (error != null || enabled != value) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            error ?? 'Android did not enable background mode.',
-                          ),
-                        ),
-                      );
-                    }
-                  },
+                : (value) => _toggle(value),
+          ),
+          _BackgroundStatusRow(
+            live: controller.backgroundLive,
+            onRestart: controller.backgroundLive.busy
+                ? null
+                : () => _toggle(true),
           ),
           if (controller.keepLiveInBackground)
             ListTile(
@@ -136,5 +140,54 @@ class _BackgroundSettingsScreenState extends State<BackgroundSettingsScreen>
     widget.controller.removeListener(_changed);
     widget.controller.backgroundLive.removeListener(_changed);
     super.dispose();
+  }
+}
+
+/// One line of truth under the switch: is the service actually running?
+/// The preference and the service can disagree — Android 15+ stops the
+/// service on its own after six hours per day — and this row is where the
+/// disagreement shows, with the restart one tap away.
+class _BackgroundStatusRow extends StatelessWidget {
+  final BackgroundLiveController live;
+  final VoidCallback? onRestart;
+
+  const _BackgroundStatusRow({required this.live, required this.onRestart});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final stopped = live.stoppedByAndroidTimeout;
+    final running = live.enabled && live.active;
+    final starting = live.enabled && !live.active;
+    final title = stopped
+        ? 'Stopped by Android — tap to restart'
+        : running
+        ? 'Running now'
+        : starting
+        ? 'Starting…'
+        : 'Off';
+    final icon = stopped
+        ? Icons.timer_off_outlined
+        : running
+        ? Icons.cloud_sync_outlined
+        : starting
+        ? Icons.cloud_queue_rounded
+        : Icons.cloud_off_outlined;
+    final color = stopped
+        ? theme.colorScheme.error
+        : running
+        ? AppTheme.successOf(theme)
+        : AppTheme.mutedOf(theme);
+    return ListTile(
+      key: const ValueKey('background-status-row'),
+      leading: Icon(icon, color: color),
+      title: Text(title, style: TextStyle(color: color)),
+      subtitle: const Text(
+        'Android 15+ allows six hours of this per 24 hours and then stops '
+        'it; the app turns the switch off and says so when that happens.',
+      ),
+      trailing: stopped ? const Icon(Icons.refresh_rounded) : null,
+      onTap: stopped ? onRestart : null,
+    );
   }
 }

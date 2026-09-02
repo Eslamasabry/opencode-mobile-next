@@ -291,6 +291,11 @@ class ConnectionController extends ChangeNotifier {
   final Map<String, ({CodingAlertKind kind, String requestID})>
   _alertedInputKinds = {};
   final Set<String> _alertedStatusSessions = {};
+
+  /// Generic sentence for the tool each busy session is running right now,
+  /// gleaned from `message.part.updated` on the way past. Feeds the ongoing
+  /// Android notification only; pruned lazily against [busySessions].
+  final Map<String, String> _runningToolDetail = {};
   CodingAlertOpen? _pendingCodingAlertOpen;
   int _permissionRevision = 0;
   Timer? _permissionHydrationRetry;
@@ -1715,6 +1720,29 @@ class ConnectionController extends ChangeNotifier {
         lastPtyEvent = env;
         ptyRevision += 1;
         notifyListeners();
+        break;
+
+      case 'message.part.updated':
+        // Parsed only as far as the ongoing notification needs; the chat
+        // screen builds the full part from the event bus below. Deliberately
+        // no notifyListeners: every streamed delta lands here.
+        final part = props['part'];
+        if (part is Map && part['type'] == 'tool') {
+          final sid = part['sessionID']?.toString() ?? '';
+          final state = part['state'];
+          final toolStatus = state is Map ? state['status']?.toString() : null;
+          if (sid.isNotEmpty && toolStatus != null) {
+            final before = _runningToolDetail[sid];
+            if (toolStatus == 'running') {
+              _runningToolDetail[sid] = toolSentence(
+                part['tool']?.toString() ?? '',
+              );
+            } else if (toolStatus == 'completed' || toolStatus == 'error') {
+              _runningToolDetail.remove(sid);
+            }
+            if (_runningToolDetail[sid] != before) _publishLiveStatus();
+          }
+        }
         break;
 
       default:
@@ -3336,6 +3364,73 @@ class ConnectionController extends ChangeNotifier {
       );
       _pendingWidgetSnapshotWrite = write;
       unawaited(write);
+      _publishLiveStatus();
+    }
+  }
+
+  /// The ongoing "OpenCode is connected" notification's content, derived
+  /// from the same truth the Activity tab shows: how many sessions run, how
+  /// many requests wait, the most recently active busy session's title, and
+  /// a generic sentence for the tool it is running.
+  @visibleForTesting
+  LiveStatus liveStatus() {
+    Session? current;
+    for (final id in busySessions) {
+      final session = sessionsById[id];
+      if (session == null) continue;
+      if (current == null ||
+          (session.time?.updated ?? 0) > (current.time?.updated ?? 0)) {
+        current = session;
+      }
+    }
+    final title = current?.title?.trim();
+    final detail = current == null ? null : _runningToolDetail[current.id];
+    return LiveStatus(
+      runningCount: busySessions.length,
+      pendingCount: permissions.length + questions.length + forms.length,
+      title: title == null || title.isEmpty ? null : title,
+      detail: detail,
+    );
+  }
+
+  void _publishLiveStatus() {
+    if (_disposed || !keepLiveInBackground || !backgroundLive.active) return;
+    _runningToolDetail.removeWhere((id, _) => !busySessions.contains(id));
+    unawaited(backgroundLive.publishLiveStatus(liveStatus()));
+  }
+
+  /// Names what a tool is doing without repeating its input: no command,
+  /// path, query, or URL reaches the notification shade.
+  static String toolSentence(String tool) {
+    switch (tool.toLowerCase()) {
+      case 'bash':
+      case 'shell':
+        return 'Running a command…';
+      case 'edit':
+      case 'write':
+      case 'patch':
+      case 'multiedit':
+      case 'apply_patch':
+        return 'Editing files…';
+      case 'read':
+        return 'Reading files…';
+      case 'grep':
+      case 'glob':
+      case 'list':
+      case 'ls':
+        return 'Searching files…';
+      case 'webfetch':
+      case 'websearch':
+        return 'Browsing the web…';
+      case 'task':
+        return 'Running a subagent…';
+      case 'todowrite':
+      case 'todoread':
+        return 'Planning…';
+      case '':
+        return 'Working…';
+      default:
+        return 'Running $tool…';
     }
   }
 

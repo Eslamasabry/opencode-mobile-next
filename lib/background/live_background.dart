@@ -99,6 +99,62 @@ class CodingAlertAction {
   }
 }
 
+/// What the ongoing "OpenCode is connected" notification should say right
+/// now. Built by the connection controller from session truth and pushed to
+/// Android through [BackgroundLiveController.publishLiveStatus].
+///
+/// Only counts and short, privacy-conscious sentences travel: the session
+/// title the user chose to show and a generic tool sentence ("Editing
+/// files…"), never prompts, commands, paths, or outputs.
+@immutable
+class LiveStatus {
+  const LiveStatus({
+    this.runningCount = 0,
+    this.pendingCount = 0,
+    this.title,
+    this.detail,
+  });
+
+  /// Sessions currently busy (running or retrying).
+  final int runningCount;
+
+  /// Requests waiting on the user: permissions, questions, and forms.
+  final int pendingCount;
+
+  /// Title of the most recently active busy session, or null when idle or
+  /// untitled.
+  final String? title;
+
+  /// Short sentence for the tool running right now ("Running a command…"),
+  /// or null when nothing is known.
+  final String? detail;
+
+  static const idle = LiveStatus();
+
+  Map<String, dynamic> toPayload() => {
+    'runningCount': runningCount,
+    'pendingCount': pendingCount,
+    'title': title,
+    'detail': detail,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      other is LiveStatus &&
+      other.runningCount == runningCount &&
+      other.pendingCount == pendingCount &&
+      other.title == title &&
+      other.detail == detail;
+
+  @override
+  int get hashCode => Object.hash(runningCount, pendingCount, title, detail);
+
+  @override
+  String toString() =>
+      'LiveStatus(running: $runningCount, pending: $pendingCount, '
+      'title: $title, detail: $detail)';
+}
+
 /// Owns the explicit, user-controlled Android foreground-service preference.
 ///
 /// The service keeps the Flutter process important enough for a live OpenCode
@@ -127,9 +183,15 @@ class BackgroundLiveController extends ChangeNotifier {
   /// learns live mode ended from the app rather than from missing events.
   bool stoppedByAndroidTimeout = false;
 
+  /// Minimum spacing between two `updateLiveStatus` pushes. Session events
+  /// arrive in bursts (every streamed part), while the notification only
+  /// needs to be roughly current; Android also rate-limits notify() calls.
+  final Duration liveStatusDebounce;
+
   BackgroundLiveController({
     required this.preferences,
     BackgroundMethodInvoker? invoke,
+    this.liveStatusDebounce = const Duration(milliseconds: 800),
   }) : enabled = preferences.getBool(preferenceKey) ?? false,
        _invoke = invoke ?? _invokePlatform;
 
@@ -234,6 +296,11 @@ class BackgroundLiveController extends ChangeNotifier {
   /// `METHOD_TIMEOUT` in BackgroundConnectionService.kt.
   static const timeoutMethod = 'backgroundServiceTimeout';
 
+  /// `reason` value the "Pause background" notification action sends on
+  /// [timeoutMethod]. Must match `REASON_USER_PAUSE` in
+  /// BackgroundConnectionService.kt.
+  static const pauseReason = 'userPause';
+
   /// Applies the native "Android stopped the service" event.
   ///
   /// The persisted preference used to stay true over a dead service, so the
@@ -242,9 +309,13 @@ class BackgroundLiveController extends ChangeNotifier {
   /// is exactly when the user would have noticed anyway.
   @visibleForTesting
   void handleNativeTimeout([Object? arguments]) {
-    stoppedByAndroidTimeout = true;
+    // The same push carries the "Pause background" notification action
+    // (reason `userPause`): the user asked, so nothing is owed a warning.
+    final reason = arguments is Map ? arguments['reason']?.toString() : null;
+    stoppedByAndroidTimeout = reason != pauseReason;
     enabled = false;
     active = false;
+    _cancelPendingLiveStatus();
     unawaited(preferences.setBool(preferenceKey, false));
     notifyListeners();
   }
@@ -260,6 +331,67 @@ class BackgroundLiveController extends ChangeNotifier {
     } catch (_) {
       return const {'handled': false};
     }
+  }
+
+  LiveStatus? _lastPublishedLiveStatus;
+  LiveStatus? _pendingLiveStatus;
+  Timer? _liveStatusTimer;
+  DateTime? _lastLivePublishAt;
+
+  /// The status Android last received, for tests and diagnostics.
+  LiveStatus? get lastPublishedLiveStatus => _lastPublishedLiveStatus;
+
+  /// Refreshes the ongoing notification's content.
+  ///
+  /// A no-op unless live mode is on and the service is running; skipped when
+  /// [status] equals what Android already shows; and spaced so at most one
+  /// push leaves per [liveStatusDebounce] — the first goes at once, later
+  /// ones coalesce into a single trailing push carrying the newest status.
+  /// Never throws: a missing platform channel (tests, desktop) is silent.
+  Future<void> publishLiveStatus(LiveStatus status) async {
+    if (!platformCapabilities.supportsBackgroundService) return;
+    if (!enabled || !active) return;
+    if (_pendingLiveStatus == null && status == _lastPublishedLiveStatus) {
+      return;
+    }
+    _pendingLiveStatus = status;
+    if (_liveStatusTimer != null) return;
+    final lastAt = _lastLivePublishAt;
+    final elapsed = lastAt == null
+        ? liveStatusDebounce
+        : DateTime.now().difference(lastAt);
+    if (elapsed >= liveStatusDebounce) {
+      await _flushLiveStatus();
+      return;
+    }
+    _liveStatusTimer = Timer(liveStatusDebounce - elapsed, () {
+      _liveStatusTimer = null;
+      unawaited(_flushLiveStatus());
+    });
+  }
+
+  Future<void> _flushLiveStatus() async {
+    final status = _pendingLiveStatus;
+    _pendingLiveStatus = null;
+    if (status == null || status == _lastPublishedLiveStatus) return;
+    if (!enabled || !active) return;
+    _lastLivePublishAt = DateTime.now();
+    _lastPublishedLiveStatus = status;
+    try {
+      await _invoke('updateLiveStatus', status.toPayload());
+    } on PlatformException {
+      // The notification keeps its previous text; the next change retries.
+    } on MissingPluginException {
+      // No Android runner (tests, desktop): nothing to update.
+    } catch (_) {
+      // Never let a cosmetic push break session handling.
+    }
+  }
+
+  void _cancelPendingLiveStatus() {
+    _liveStatusTimer?.cancel();
+    _liveStatusTimer = null;
+    _pendingLiveStatus = null;
   }
 
   /// Cancels a coding notification even if live mode has since been disabled.
@@ -290,6 +422,12 @@ class BackgroundLiveController extends ChangeNotifier {
     } catch (_) {
       return null;
     }
+  }
+
+  @override
+  void dispose() {
+    _cancelPendingLiveStatus();
+    super.dispose();
   }
 
   Future<bool> _run(String method, {bool persist = true}) async {
@@ -323,7 +461,16 @@ class BackgroundLiveController extends ChangeNotifier {
   }
 
   void _applyStatus(Map<String, dynamic> status) {
+    final wasActive = active;
     active = status['active'] == true;
+    if (active != wasActive) {
+      // A freshly started service shows the default copy until told
+      // otherwise, so the next status must go through even if it equals the
+      // last one the previous service instance received.
+      _cancelPendingLiveStatus();
+      _lastPublishedLiveStatus = null;
+      _lastLivePublishAt = null;
+    }
     notificationGranted = status['notificationGranted'] == true;
     batteryOptimizationIgnored = status['batteryOptimizationIgnored'] == true;
     if (status.containsKey('enabled')) enabled = status['enabled'] == true;

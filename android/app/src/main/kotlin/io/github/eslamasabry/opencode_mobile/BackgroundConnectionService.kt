@@ -23,7 +23,7 @@ class BackgroundConnectionService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val notification = buildNotification()
+        val notification = buildLiveNotification(this, liveStatus)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(
                 NOTIFICATION_ID,
@@ -60,21 +60,7 @@ class BackgroundConnectionService : Service() {
         stopSelf(startId)
     }
 
-    private fun notifyDartOfTimeout() {
-        val channel = MainActivity.backgroundChannel ?: return
-        // invokeMethod is main-thread only; onTimeout is not guaranteed to
-        // arrive there.
-        Handler(Looper.getMainLooper()).post {
-            channel.invokeMethod(
-                METHOD_TIMEOUT,
-                mapOf(
-                    "enabled" to false,
-                    "active" to false,
-                    "reason" to "systemTimeout"
-                )
-            )
-        }
-    }
+    private fun notifyDartOfTimeout() = notifyDartStopped(REASON_SYSTEM_TIMEOUT)
 
     private fun createLiveNotificationChannel() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
@@ -90,32 +76,6 @@ class BackgroundConnectionService : Service() {
         manager.createNotificationChannel(channel)
     }
 
-    private fun buildNotification(): Notification {
-        val openApp = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-        }
-        val pendingIntent = PendingIntent.getActivity(
-            this,
-            0,
-            openApp,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Notification.Builder(this, CHANNEL_ID)
-        } else {
-            @Suppress("DEPRECATION")
-            Notification.Builder(this)
-        }
-        return builder
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("OpenCode session is live")
-            .setContentText("Keeping server events and terminals connected")
-            .setContentIntent(pendingIntent)
-            .setOngoing(true)
-            .setCategory(Notification.CATEGORY_SERVICE)
-            .build()
-    }
-
     companion object {
         private const val CHANNEL_ID = "opencode_live_connection"
         private const val NOTIFICATION_ID = 4747
@@ -125,12 +85,150 @@ class BackgroundConnectionService : Service() {
         private const val CODING_ALERT_GROUP = "opencode_coding_alerts"
 
         /// Pushed to Dart when Android's foreground-service time limit stops
-        /// this service. Handled in lib/background/live_background.dart.
+        /// this service, and when the user taps "Pause background" on the
+        /// ongoing notification. Handled in lib/background/live_background.dart.
         const val METHOD_TIMEOUT = "backgroundServiceTimeout"
+        const val REASON_SYSTEM_TIMEOUT = "systemTimeout"
+
+        /// Must match `BackgroundLiveController.pauseReason`.
+        const val REASON_USER_PAUSE = "userPause"
+
+        const val ACTION_PAUSE_LIVE =
+            "io.github.eslamasabry.opencode_mobile.action.PAUSE_LIVE"
 
         @Volatile
         var active: Boolean = false
             private set
+
+        /** What the ongoing notification currently says; survives restarts
+         *  of the service so a re-enabled connection shows the last truth
+         *  until Dart pushes a fresh one. */
+        @Volatile
+        var liveStatus: LiveStatus = LiveStatus()
+            private set
+
+        data class LiveStatus(
+            val runningCount: Int = 0,
+            val pendingCount: Int = 0,
+            val title: String? = null,
+            val detail: String? = null
+        )
+
+        /**
+         * Rebuilds the ongoing notification from Dart's session truth. Returns
+         * whether a notification was actually refreshed; when the service is
+         * not running the status is only remembered for its next start.
+         */
+        fun updateLiveStatus(
+            context: Context,
+            runningCount: Int,
+            pendingCount: Int,
+            title: String?,
+            detail: String?
+        ): Boolean {
+            val status = LiveStatus(
+                runningCount = runningCount.coerceAtLeast(0),
+                pendingCount = pendingCount.coerceAtLeast(0),
+                title = title?.trim()?.takeIf { it.isNotEmpty() },
+                detail = detail?.trim()?.takeIf { it.isNotEmpty() }
+            )
+            if (status == liveStatus && active) return true
+            liveStatus = status
+            if (!active) return false
+            val manager = context.getSystemService(NotificationManager::class.java)
+            manager.notify(NOTIFICATION_ID, buildLiveNotification(context, status))
+            return true
+        }
+
+        /** Tells Dart the service stopped so the persisted preference and the
+         *  settings switch follow the service rather than outliving it. */
+        fun notifyDartStopped(reason: String) {
+            val channel = MainActivity.backgroundChannel ?: return
+            // invokeMethod is main-thread only; onTimeout and broadcasts are
+            // not guaranteed to arrive there.
+            Handler(Looper.getMainLooper()).post {
+                channel.invokeMethod(
+                    METHOD_TIMEOUT,
+                    mapOf(
+                        "enabled" to false,
+                        "active" to false,
+                        "reason" to reason
+                    )
+                )
+            }
+        }
+
+        private fun buildLiveNotification(context: Context, status: LiveStatus): Notification {
+            val openApp = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
+            val pendingIntent = PendingIntent.getActivity(
+                context,
+                0,
+                openApp,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            val pauseIntent = PendingIntent.getBroadcast(
+                context,
+                1,
+                Intent(context, LivePauseReceiver::class.java).apply {
+                    action = ACTION_PAUSE_LIVE
+                },
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            val running = status.runningCount
+            val pending = status.pendingCount
+            val title = status.title?.let { "OpenCode · $it" } ?: "OpenCode is connected"
+            val text = status.detail ?: when {
+                running > 0 && pending > 0 ->
+                    "${plural(running, "session")} running · ${plural(pending, "need")} you"
+                running > 0 -> "${plural(running, "session")} running"
+                pending > 0 -> "${plural(pending, "request")} ${if (pending == 1) "needs" else "need"} you"
+                else -> "Connected, nothing running"
+            }
+            val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                Notification.Builder(context, CHANNEL_ID)
+            } else {
+                @Suppress("DEPRECATION")
+                Notification.Builder(context)
+            }
+            builder
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle(title)
+                .setContentText(text)
+                .setContentIntent(pendingIntent)
+                .setOngoing(true)
+                .setOnlyAlertOnce(true)
+                .setShowWhen(false)
+                .setCategory(Notification.CATEGORY_SERVICE)
+                // Session titles are the user's own words; keep them off the
+                // lock screen like every other coding alert.
+                .setVisibility(Notification.VISIBILITY_PRIVATE)
+                .addAction(
+                    Notification.Action.Builder(
+                        Icon.createWithResource(context, R.mipmap.ic_launcher),
+                        "Pause background",
+                        pauseIntent
+                    ).build()
+                )
+            if (running > 0) builder.setProgress(0, 0, true)
+            if (Build.VERSION.SDK_INT >= 36) {
+                // Android 16 live updates: promoted to the status bar chip and
+                // pinned atop the shade while something is actually running.
+                builder.setRequestPromotedOngoing(true)
+                val chip = when {
+                    running > 0 -> "$running running"
+                    pending > 0 -> "$pending need you"
+                    else -> null
+                }
+                builder.setShortCriticalText(chip)
+            }
+            return builder.build()
+        }
+
+        private fun plural(count: Int, noun: String): String =
+            if (noun == "need") count.toString()
+            else "$count $noun${if (count == 1) "" else "s"}"
 
         fun start(context: Context) {
             val intent = Intent(context, BackgroundConnectionService::class.java)

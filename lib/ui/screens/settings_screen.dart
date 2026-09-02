@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../api/provider_presentation.dart';
+import '../../background/live_background.dart';
 import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
 import '../../state/offline_queue.dart';
@@ -75,6 +76,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } finally {
       if (mounted) setState(() => _checking = false);
     }
+  }
+
+  /// The background category's state at a glance, so the hub says whether
+  /// runs keep updating after the app closes without opening the page.
+  static String _backgroundSummary(ConnectionController controller) {
+    final live = controller.backgroundLive;
+    if (live.stoppedByAndroidTimeout) return 'Stopped by Android';
+    if (!controller.keepLiveInBackground) return 'Off';
+    return live.active ? 'On · running now' : 'On · starting';
   }
 
   void _open(Widget screen) {
@@ -201,6 +211,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 rowKey: 'settings-category-background',
                 icon: Icons.notifications_active_outlined,
                 title: 'Notifications & background',
+                subtitle: _backgroundSummary(controller),
                 onTap: () =>
                     _open(BackgroundSettingsScreen(controller: controller)),
               ),
@@ -260,6 +271,7 @@ class _CategoryRow extends StatelessWidget {
   final String rowKey;
   final IconData icon;
   final String title;
+  final String? subtitle;
   final VoidCallback onTap;
 
   const _CategoryRow({
@@ -267,6 +279,7 @@ class _CategoryRow extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.onTap,
+    this.subtitle,
   });
 
   @override
@@ -276,6 +289,9 @@ class _CategoryRow extends StatelessWidget {
       minTileHeight: 56,
       leading: _CategoryIcon(icon: icon),
       title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: subtitle == null
+          ? null
+          : Text(subtitle!, maxLines: 1, overflow: TextOverflow.ellipsis),
       trailing: const Icon(Icons.chevron_right_rounded),
       onTap: onTap,
     );

@@ -76,6 +76,9 @@
             android:name=".CodingActionReceiver"
             android:exported="false" />
         <receiver
+            android:name=".LivePauseReceiver"
+            android:exported="false" />
+        <receiver
             android:name=".SessionsWidgetProvider"
             android:exported="true"
             android:label="@string/widget_description">

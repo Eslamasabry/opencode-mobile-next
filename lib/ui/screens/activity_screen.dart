@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../api2/models.dart' show Api2FormInfo;
+import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
 import '../app_theme.dart';
 import '../desktop/desktop_interaction.dart';
@@ -10,6 +11,7 @@ import '../permission_presentation.dart';
 import '../widgets/product_states.dart';
 import 'chat/form_flow.dart';
 import 'chat/permission_sheet.dart';
+import 'settings_screen.dart';
 
 
 /// Activity: the single cross-session control centre (audit §3, §8).
@@ -82,6 +84,14 @@ class _ActivityScreenState extends State<ActivityScreen> {
     if (!mounted) return;
     setState(() {});
     _scheduleInitialQuestion();
+  }
+
+  void _openBackgroundSettings(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => BackgroundSettingsScreen(controller: widget.controller),
+      ),
+    );
   }
 
   void _scheduleInitialQuestion() {
@@ -247,6 +257,13 @@ class _ActivityScreenState extends State<ActivityScreen> {
                       'questions, and running sessions appear here the '
                       'moment a session asks.',
                 ),
+                // An empty inbox is only reassuring if it would fill while
+                // the app is closed; when it would not, say what to turn on.
+                if (platformCapabilities.supportsBackgroundService &&
+                    !controller.keepLiveInBackground)
+                  _BackgroundUpdatesHint(
+                    onOpen: () => _openBackgroundSettings(context),
+                  ),
               ],
             )
           : DesktopScrollbarArea(
@@ -812,4 +829,38 @@ class _QuestionSheetState extends State<_QuestionSheet> {
 String _sessionTitle(ConnectionController controller, String id) {
   final session = controller.sessionsById[id];
   return session?.title?.isNotEmpty == true ? session!.title! : 'Session $id';
+}
+
+class _BackgroundUpdatesHint extends StatelessWidget {
+  final VoidCallback onOpen;
+
+  const _BackgroundUpdatesHint({required this.onOpen});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(32, 0, 32, 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Turn on background updates to get notified when a run needs you',
+            key: const ValueKey('activity-background-hint'),
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppTheme.mutedOf(theme),
+            ),
+          ),
+          const SizedBox(height: 12),
+          FilledButton.tonalIcon(
+            key: const ValueKey('activity-background-settings'),
+            onPressed: onOpen,
+            icon: const Icon(Icons.cloud_sync_outlined, size: 18),
+            label: const Text('Turn on background updates'),
+          ),
+        ],
+      ),
+    );
+  }
 }
