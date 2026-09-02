@@ -53,6 +53,16 @@ never leaves the device.
 Solarized, or your phone's own Material You colours), light and dark, and a
 home-screen widget that shows your sessions.
 
+## Screenshots
+
+| Welcome | Streaming answer | Permission card | Diff |
+| --- | --- | --- | --- |
+| ![Welcome](video/public/shots/01-welcome.png) | ![Chat, answer streaming](video/public/shots/03-chat-streaming.png) | ![Permission card above the composer](video/public/shots/04-permission-card.png) | ![Diff view](video/public/shots/05-diff.png) |
+
+![Demo](video/public/demo.gif)
+
+The same demo as a video: [video/public/demo.webm](video/public/demo.webm).
+
 ## Getting started
 
 1. **Install the app.** Grab the APK from the
@@ -91,9 +101,6 @@ This is an alpha. Here is what that means, plainly:
 - **The automated checks run on the maintainer's machine**, not on GitHub's
   servers, because the GitHub account's billing is blocked. The workflow files
   say so. You should know that before trusting a badge.
-
-The screenshots in [`video/public/shots/`](video/public/shots/) are from an
-older preview and no longer match the navigation. New ones are coming.
 
 ## Your data
 
