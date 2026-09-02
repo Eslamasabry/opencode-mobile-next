@@ -15,7 +15,10 @@ if (keystorePropertiesFile.isFile) {
 
 android {
     namespace = "io.github.eslamasabry.opencode_mobile"
-    compileSdk = flutter.compileSdkVersion
+    // flutter_secure_storage 11 ships AAR metadata that requires API 37;
+    // Flutter 3.47 still defaults to 36. Pin explicitly until Flutter's
+    // default catches up, then drop this back to flutter.compileSdkVersion.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
