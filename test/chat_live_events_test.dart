@@ -3181,6 +3181,44 @@ void main() {
     );
   });
 
+  testWidgets('a model-not-found session error shows one line and Choose model', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi();
+    final controller = await _pumpChat(tester, api);
+    controller.handleEventForTesting(
+      _event('session.error', {
+        'sessionID': 'session-1',
+        'error': {
+          'name': 'ProviderModelNotFoundError',
+          'data': {
+            'message':
+                'ProviderModelNotFoundError: Model not found: openai/gpt-5.6. '
+                'Did you mean: gpt-5.6, gpt-5.6-pro?\n'
+                '    at <anonymous> (/\$bunfs/root/chunk.js:439:1)\n'
+                '    at SessionPrompt.getModel (/\$bunfs/root/chunk.js:1096:2)',
+          },
+        },
+      }),
+    );
+    await _pumpEvent(tester);
+    expect(find.byKey(const ValueKey('prompt-error-banner')), findsOneWidget);
+    expect(
+      find.text(
+        'Model not found: openai/gpt-5.6. Did you mean: gpt-5.6, gpt-5.6-pro?',
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('at <anonymous>'), findsNothing);
+    expect(
+      find.byKey(const ValueKey('prompt-error-choose-model')),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const ValueKey('prompt-error-details')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('at <anonymous>'), findsOneWidget);
+  });
+
   testWidgets('renders attachment-only and mixed user prompts accessibly', (
     tester,
   ) async {

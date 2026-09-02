@@ -8,49 +8,116 @@ class _TypingIndicator extends StatefulWidget {
 class _PromptErrorBanner extends StatelessWidget {
   final String message;
   final VoidCallback onDismiss;
+  final VoidCallback? onChooseModel;
 
-  const _PromptErrorBanner({required this.message, required this.onDismiss});
+  const _PromptErrorBanner({
+    required this.message,
+    required this.onDismiss,
+    this.onChooseModel,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    // Servers may attach a stack trace; the user reads one line and can open
+    // the rest. A "model not found" answer gets the button that fixes it.
+    final headline = errorHeadline(message);
+    final hasDetails = errorHasDetails(message);
+    final kind = MessageErrorKind.refineFromText(
+      MessageErrorKind.unknown,
+      message,
+    );
     return Semantics(
       container: true,
       liveRegion: true,
       child: Container(
         key: const ValueKey('prompt-error-banner'),
         margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-        padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
+        padding: const EdgeInsets.fromLTRB(12, 10, 4, 6),
         decoration: BoxDecoration(
           color: scheme.errorContainer,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: scheme.error.withValues(alpha: .35)),
         ),
-        child: Row(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.error_outline_rounded,
-              size: 20,
-              color: scheme.onErrorContainer,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.error_outline_rounded,
+                  size: 20,
+                  color: scheme.onErrorContainer,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    headline,
+                    key: const ValueKey('prompt-error-headline'),
+                    style: TextStyle(
+                      color: scheme.onErrorContainer,
+                      height: 1.35,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Dismiss prompt error',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: onDismiss,
+                  icon: Icon(
+                    Icons.close_rounded,
+                    size: 19,
+                    color: scheme.onErrorContainer,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                message,
-                style: TextStyle(color: scheme.onErrorContainer, height: 1.35),
+            if (hasDetails ||
+                (kind == MessageErrorKind.modelNotFound &&
+                    onChooseModel != null))
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (hasDetails)
+                    TextButton(
+                      key: const ValueKey('prompt-error-details'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: scheme.onErrorContainer,
+                      ),
+                      onPressed: () => showDialog<void>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Error details'),
+                          content: SingleChildScrollView(
+                            child: SelectableText(
+                              message,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontFamily: AppTheme.monoFamily,
+                              ),
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('Close'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      child: const Text('Details'),
+                    ),
+                  if (kind == MessageErrorKind.modelNotFound &&
+                      onChooseModel != null)
+                    FilledButton.tonal(
+                      key: const ValueKey('prompt-error-choose-model'),
+                      onPressed: onChooseModel,
+                      child: const Text('Choose model'),
+                    ),
+                ],
               ),
-            ),
-            IconButton(
-              tooltip: 'Dismiss prompt error',
-              visualDensity: VisualDensity.compact,
-              onPressed: onDismiss,
-              icon: Icon(
-                Icons.close_rounded,
-                size: 19,
-                color: scheme.onErrorContainer,
-              ),
-            ),
           ],
         ),
       ),

@@ -3841,6 +3841,8 @@ class _ChatScreenState extends State<ChatScreen>
               _PromptErrorBanner(
                 message: promptError,
                 onDismiss: () => setState(() => _promptError = null),
+                onChooseModel: () =>
+                    showModelPicker(context, applyScope: _modelApplyScope),
               )
             else if (parentID != null)
               _SubagentContextBanner(
