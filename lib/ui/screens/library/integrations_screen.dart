@@ -713,9 +713,11 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   }
 
   Future<void> _connectIntegration(IntegrationInfo integration) async {
-    final methods = integration.methods
-        .where((method) => method.type == 'key' || method.type == 'oauth')
-        .toList();
+    final methods = orderConnectMethods(
+      integration.methods
+          .where((method) => method.type == 'key' || method.type == 'oauth')
+          .toList(),
+    );
     if (methods.isEmpty) return;
     final method = methods.length == 1
         ? methods.single
@@ -735,9 +737,8 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
                             : Icons.open_in_browser_rounded,
                       ),
                       title: Text(method.label),
-                      subtitle: Text(
-                        method.type == 'key' ? 'API key' : 'OAuth',
-                      ),
+                      subtitle: Text(connectMethodHint(method)),
+                      isThreeLine: connectMethodHint(method).length > 40,
                       onTap: () => Navigator.pop(context, method),
                     ),
                 ],

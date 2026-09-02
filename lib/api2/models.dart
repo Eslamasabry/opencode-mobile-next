@@ -119,15 +119,22 @@ class Api2ModelRef {
   final String id;
   final String providerID;
   final String? variant;
-  const Api2ModelRef({required this.id, required this.providerID, this.variant});
+  const Api2ModelRef({
+    required this.id,
+    required this.providerID,
+    this.variant,
+  });
 
   static Api2ModelRef? fromJson(dynamic v) {
     final j = _asMap(v);
     final id = _asString(j?['id']);
     final providerID = _asString(j?['providerID']);
     if (j == null || id == null || providerID == null) return null;
+    final prefix = '$providerID/';
     return Api2ModelRef(
-      id: id,
+      id: id.startsWith(prefix) && id.length > prefix.length
+          ? id.substring(prefix.length)
+          : id,
       providerID: providerID,
       variant: _asString(j['variant']),
     );
@@ -140,8 +147,7 @@ class Api2ModelRef {
   };
 
   @override
-  String toString() =>
-      '$providerID/$id${variant != null ? '#$variant' : ''}';
+  String toString() => '$providerID/$id${variant != null ? '#$variant' : ''}';
 }
 
 class Api2StructuredError {
@@ -149,7 +155,12 @@ class Api2StructuredError {
   final String? message;
   final int? status;
   final Map<String, dynamic> raw;
-  Api2StructuredError({this.type, this.message, this.status, this.raw = const {}});
+  Api2StructuredError({
+    this.type,
+    this.message,
+    this.status,
+    this.raw = const {},
+  });
 
   static Api2StructuredError? fromJson(dynamic v) {
     final j = _asMap(v);
@@ -198,7 +209,13 @@ class Api2SessionTime {
   final int? idle;
   final int? viewed;
   final int? archived;
-  Api2SessionTime({this.created, this.updated, this.idle, this.viewed, this.archived});
+  Api2SessionTime({
+    this.created,
+    this.updated,
+    this.idle,
+    this.viewed,
+    this.archived,
+  });
 
   factory Api2SessionTime.fromJson(dynamic v) {
     final j = _asMap(v);
@@ -419,10 +436,8 @@ sealed class Api2ToolState {
     };
   }
 
-  String get textOutput => content
-      .whereType<Api2ToolResultText>()
-      .map((c) => c.text)
-      .join('\n');
+  String get textOutput =>
+      content.whereType<Api2ToolResultText>().map((c) => c.text).join('\n');
 }
 
 class Api2ToolStreaming extends Api2ToolState {
@@ -698,7 +713,12 @@ sealed class Api2Message {
           error: Api2StructuredError.fromJson(j['error']),
         );
       default:
-        return Api2UnknownMessage(id: id, time: time, metadata: metadata, raw: j);
+        return Api2UnknownMessage(
+          id: id,
+          time: time,
+          metadata: metadata,
+          raw: j,
+        );
     }
   }
 }
@@ -1027,7 +1047,12 @@ class Api2SavedPermission {
   final String? projectID;
   final String? action;
   final String? resource;
-  Api2SavedPermission({required this.id, this.projectID, this.action, this.resource});
+  Api2SavedPermission({
+    required this.id,
+    this.projectID,
+    this.action,
+    this.resource,
+  });
 
   static Api2SavedPermission? fromJson(Map<String, dynamic> j) {
     final id = _asString(j['id']);
@@ -1353,19 +1378,25 @@ class Api2ModelInfo {
   static Api2ModelInfo? fromJson(Map<String, dynamic> j) {
     final id = _asString(j['id']);
     if (id == null) return null;
+    final providerID = _asString(j['providerID']);
+    var modelID = _asString(j['modelID']);
+    // Older betas list models under a composite "provider/model" id without
+    // a separate modelID; peel the provider prefix so prompts get the bare id.
+    if (modelID == null &&
+        providerID != null &&
+        id.startsWith('$providerID/')) {
+      modelID = id.substring(providerID.length + 1);
+    }
     return Api2ModelInfo(
       id: id,
-      modelID: _asString(j['modelID']),
-      providerID: _asString(j['providerID']),
+      modelID: modelID,
+      providerID: providerID,
       family: _asString(j['family']),
       name: _asString(j['name']),
       status: _asString(j['status']),
       enabled: _asBool(j['enabled']) ?? true,
       capabilities: Api2ModelCapabilities.fromJson(j['capabilities']),
-      variants: _mapList(
-        j['variants'],
-        (v) => _asString(v['id']),
-      ),
+      variants: _mapList(j['variants'], (v) => _asString(v['id'])),
       limit: Api2ModelLimit.fromJson(j['limit']),
       released: _asInt(_asMap(j['time'])?['released']),
       cost: j['cost'] is List
@@ -1529,7 +1560,11 @@ class Api2Mention {
   final int start;
   final int end;
   final String text;
-  const Api2Mention({required this.start, required this.end, required this.text});
+  const Api2Mention({
+    required this.start,
+    required this.end,
+    required this.text,
+  });
 
   Map<String, dynamic> toJson() => {'start': start, 'end': end, 'text': text};
 }

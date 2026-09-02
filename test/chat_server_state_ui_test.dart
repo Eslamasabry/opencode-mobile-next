@@ -9,7 +9,8 @@ import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/state/review_handoff.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
-import 'package:opencode_mobile/ui/screens/library_screen.dart' show IntegrationsScreen;
+import 'package:opencode_mobile/ui/screens/library_screen.dart'
+    show IntegrationsScreen;
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Covers the chat UI built on the widened server data: the retry banner,
@@ -28,8 +29,7 @@ class _Api extends OpenCodeApi {
   Future<Map<String, String>> sessionStatuses() async => const {};
 
   @override
-  Future<Map<String, SessionRetryState>> sessionRetryStates() async =>
-      const {};
+  Future<Map<String, SessionRetryState>> sessionRetryStates() async => const {};
 
   @override
   Future<List<MessageWithParts>> messages(String id) async =>
@@ -225,9 +225,7 @@ void main() {
         title: 'Retrying chat',
         time: SessionTime(created: 1, updated: 2),
       );
-      controller.retryStates['session-1'] = const SessionRetryState(
-        attempt: 3,
-      );
+      controller.retryStates['session-1'] = const SessionRetryState(attempt: 3);
       controller.busySessions.add('session-1');
       await tester.pumpWidget(
         ProviderScope(
@@ -420,38 +418,77 @@ void main() {
       expect(find.byType(TextButton), findsNothing);
     });
 
-    testWidgets('unknown errors keep the plain red row; length finish adds a footer', (
+    testWidgets('model not found shows one line, Details, and Choose model', (
       tester,
     ) async {
+      const raw =
+          'ProviderModelNotFoundError: Model not found: openai/gpt-5.6-sol. '
+          'Did you mean: gpt-5.6-sol, gpt-5.6-sol-pro?\n'
+          '    at <anonymous> (/\$bunfs/root/chunk-gt0nh583.js:439:95275)\n'
+          '    at SessionPrompt.getModel (/\$bunfs/root/chunk.js:1096:11500)';
       final api = _Api()
         ..messagesResult = [
           _user('u1'),
-          _assistant(
-            'a1',
-            errorText: 'Something odd',
-            errorKind: MessageErrorKind.unknown,
-          ),
-          _assistant(
-            'a2',
-            finish: 'length',
-            parts: [
-              Part(
-                id: 'a2-text',
-                messageID: 'a2',
-                type: 'text',
-                text: 'Partial answer',
-              ),
-            ],
-          ),
+          _assistant('a1', errorText: raw, errorKind: MessageErrorKind.unknown),
         ];
       await _pumpChat(tester, api);
       await tester.pumpAndSettle();
-      expect(find.text('Something odd'), findsOneWidget);
-      expect(find.byKey(const Key('message-length-footer')), findsOneWidget);
       expect(
-        find.text('Answer was cut off by the length limit'),
+        find.byKey(const Key('error-card-model-not-found')),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          'Model not found: openai/gpt-5.6-sol. Did you mean: gpt-5.6-sol, '
+          'gpt-5.6-sol-pro?',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('at <anonymous>'), findsNothing);
+      await tester.tap(find.byKey(const Key('error-action-details')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('at <anonymous>'), findsOneWidget);
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('error-action-choose-model')),
         findsOneWidget,
       );
     });
+
+    testWidgets(
+      'unknown errors keep the plain red row; length finish adds a footer',
+      (tester) async {
+        final api = _Api()
+          ..messagesResult = [
+            _user('u1'),
+            _assistant(
+              'a1',
+              errorText: 'Something odd',
+              errorKind: MessageErrorKind.unknown,
+            ),
+            _assistant(
+              'a2',
+              finish: 'length',
+              parts: [
+                Part(
+                  id: 'a2-text',
+                  messageID: 'a2',
+                  type: 'text',
+                  text: 'Partial answer',
+                ),
+              ],
+            ),
+          ];
+        await _pumpChat(tester, api);
+        await tester.pumpAndSettle();
+        expect(find.text('Something odd'), findsOneWidget);
+        expect(find.byKey(const Key('message-length-footer')), findsOneWidget);
+        expect(
+          find.text('Answer was cut off by the length limit'),
+          findsOneWidget,
+        );
+      },
+    );
   });
 }

@@ -1079,7 +1079,7 @@ class ConnectionController extends ChangeNotifier {
     // Restore per-profile selections.
     final saved = store.modelFor(profile.id);
     selectedModel = (saved.$1 != null && saved.$2 != null)
-        ? ModelRef(providerID: saved.$1!, modelID: saved.$2!)
+        ? ModelRef(providerID: saved.$1!, modelID: saved.$2!).normalized
         : null;
     selectedAgent = store.agentFor(profile.id);
     selectedVariant = store.variantFor(profile.id);

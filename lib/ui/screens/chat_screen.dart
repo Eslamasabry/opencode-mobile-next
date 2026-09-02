@@ -3992,6 +3992,12 @@ class _ChatScreenState extends State<ChatScreen>
                                                           _openProviders,
                                                       onContinue:
                                                           _continueTruncated,
+                                                      onChooseModel: () =>
+                                                          showModelPicker(
+                                                            context,
+                                                            applyScope:
+                                                                _modelApplyScope,
+                                                          ),
                                                     );
                                                   },
                                                 ),

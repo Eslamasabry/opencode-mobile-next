@@ -1246,6 +1246,7 @@ class _MessageView extends StatelessWidget {
   final VoidCallback? onCompact;
   final VoidCallback? onOpenProviders;
   final VoidCallback? onContinue;
+  final VoidCallback? onChooseModel;
   const _MessageView({
     super.key,
     required this.m,
@@ -1263,6 +1264,7 @@ class _MessageView extends StatelessWidget {
     this.onCompact,
     this.onOpenProviders,
     this.onContinue,
+    this.onChooseModel,
   });
 
   @override
@@ -1434,6 +1436,7 @@ class _MessageView extends StatelessWidget {
                   onCompact: onCompact,
                   onOpenProviders: onOpenProviders,
                   onContinue: onContinue,
+                  onChooseModel: onChooseModel,
                 ),
               ),
             if (m.info.finish == 'length' &&
@@ -1478,23 +1481,42 @@ class _AssistantErrorRow extends StatelessWidget {
     this.onCompact,
     this.onOpenProviders,
     this.onContinue,
+    this.onChooseModel,
   });
 
   final MessageInfo info;
   final VoidCallback? onCompact;
   final VoidCallback? onOpenProviders;
   final VoidCallback? onContinue;
+  final VoidCallback? onChooseModel;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final text = info.errorText ?? '';
-    switch (info.errorKind ?? MessageErrorKind.unknown) {
+    final raw = info.errorText ?? '';
+    final text = errorHeadline(raw);
+    final details = errorHasDetails(raw) ? raw : null;
+    final kind = MessageErrorKind.refineFromText(
+      info.errorKind ?? MessageErrorKind.unknown,
+      raw,
+    );
+    switch (kind) {
+      case MessageErrorKind.modelNotFound:
+        return _ErrorActionCard(
+          key: const Key('error-card-model-not-found'),
+          icon: Icons.model_training_outlined,
+          text: text,
+          details: details,
+          actionKey: const Key('error-action-choose-model'),
+          actionLabel: 'Choose model',
+          onAction: onChooseModel,
+        );
       case MessageErrorKind.contextOverflow:
         return _ErrorActionCard(
           key: const Key('error-card-context-overflow'),
           icon: Icons.compress_rounded,
           text: text,
+          details: details,
           actionKey: const Key('error-action-compact'),
           actionLabel: 'Compact session',
           onAction: onCompact,
@@ -1513,6 +1535,7 @@ class _AssistantErrorRow extends StatelessWidget {
           key: const Key('error-card-output-length'),
           icon: Icons.short_text_rounded,
           text: text,
+          details: details,
           actionKey: const Key('error-action-continue'),
           actionLabel: 'Continue',
           onAction: onContinue,
@@ -1534,11 +1557,14 @@ class _AssistantErrorRow extends StatelessWidget {
         );
       case MessageErrorKind.contentFilter:
       case MessageErrorKind.unknown:
-        return Text(
-          text,
-          style: theme.textTheme.bodySmall!.copyWith(
-            color: theme.colorScheme.error,
-          ),
+        return _ErrorActionCard(
+          key: const Key('error-card-generic'),
+          icon: Icons.error_outline_rounded,
+          text: text,
+          details: details,
+          actionKey: const Key('error-action-none'),
+          actionLabel: '',
+          onAction: null,
         );
     }
   }
@@ -1552,6 +1578,7 @@ class _ErrorActionCard extends StatelessWidget {
     required this.actionKey,
     required this.actionLabel,
     required this.onAction,
+    this.details,
   });
 
   final IconData icon;
@@ -1559,6 +1586,31 @@ class _ErrorActionCard extends StatelessWidget {
   final Key actionKey;
   final String actionLabel;
   final VoidCallback? onAction;
+
+  /// The full server text (stack trace included) behind a Details button;
+  /// null when the headline is the whole message.
+  final String? details;
+
+  Future<void> _showDetails(BuildContext context) => showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Error details'),
+      content: SingleChildScrollView(
+        child: SelectableText(
+          details ?? text,
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(fontFamily: AppTheme.monoFamily),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Close'),
+        ),
+      ],
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -1593,14 +1645,23 @@ class _ErrorActionCard extends StatelessWidget {
               ),
             ],
           ),
-          if (onAction != null)
-            Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: TextButton(
-                key: actionKey,
-                onPressed: onAction,
-                child: Text(actionLabel),
-              ),
+          if (onAction != null || details != null)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (details != null)
+                  TextButton(
+                    key: const Key('error-action-details'),
+                    onPressed: () => _showDetails(context),
+                    child: const Text('Details'),
+                  ),
+                if (onAction != null)
+                  TextButton(
+                    key: actionKey,
+                    onPressed: onAction,
+                    child: Text(actionLabel),
+                  ),
+              ],
             ),
         ],
       ),

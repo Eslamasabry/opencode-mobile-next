@@ -84,7 +84,8 @@ class Api2Gateway implements ServerGateway {
   // ---------------- Health ----------------
 
   @override
-  Future<Health> health() => _run(() async => mapApi2Health(await client.health()));
+  Future<Health> health() =>
+      _run(() async => mapApi2Health(await client.health()));
 
   // ---------------- Sessions ----------------
 
@@ -173,7 +174,12 @@ class Api2Gateway implements ServerGateway {
     List<PromptAgentMention> agentMentions = const [],
     PromptDelivery? delivery,
   }) => _run(() async {
-    await _applySelection(sessionID, model: model, agent: agent, variant: variant);
+    await _applySelection(
+      sessionID,
+      model: model,
+      agent: agent,
+      variant: variant,
+    );
     await client.prompt(
       sessionID,
       text: text,
@@ -212,7 +218,12 @@ class Api2Gateway implements ServerGateway {
     String? variant,
   }) => _run(() async {
     // v2 shell takes only the command; agent/model ride as session state.
-    await _applySelection(sessionID, model: model, agent: agent, variant: variant);
+    await _applySelection(
+      sessionID,
+      model: model,
+      agent: agent,
+      variant: variant,
+    );
     await transport.postJson(
       '/session/$sessionID/shell',
       body: {'command': command},
@@ -249,7 +260,7 @@ class Api2Gateway implements ServerGateway {
       await client.switchModel(
         sessionID,
         Api2ModelRef(
-          id: model.modelID,
+          id: model.normalized.modelID,
           providerID: model.providerID,
           variant: variant,
         ),

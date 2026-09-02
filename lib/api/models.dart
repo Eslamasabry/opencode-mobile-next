@@ -249,6 +249,7 @@ enum MessageErrorKind {
   providerAuth,
   contentFilter,
   aborted,
+  modelNotFound,
   unknown;
 
   /// Maps a v1 error `name` or v2 error `type` string to a kind; null when
@@ -269,9 +270,42 @@ enum MessageErrorKind {
     }
     if (key.contains('contentfilter')) return contentFilter;
     if (key.contains('abort')) return aborted;
+    if (key.contains('modelnotfound')) return modelNotFound;
     return unknown;
   }
+
+  /// Some servers put the error class in the message text rather than the
+  /// name ("ProviderModelNotFoundError: Model not found: …"). Recover the
+  /// kind from the text when the name gave nothing better.
+  static MessageErrorKind refineFromText(MessageErrorKind kind, String? text) {
+    if (kind != unknown || text == null) return kind;
+    final head = text.trimLeft().split(RegExp(r'[:\s]')).first;
+    return fromName(head) ?? unknown;
+  }
 }
+
+/// The first meaningful line of an error, without the stack trace a server
+/// may append. What the user reads; the full text stays behind Details.
+String errorHeadline(String text) {
+  final lines = text.trim().split('\n');
+  final first = lines
+      .firstWhere(
+        (line) => line.trim().isNotEmpty && !line.trimLeft().startsWith('at '),
+        orElse: () => lines.first,
+      )
+      .trim();
+  // "SomethingError: message" reads better as just the message.
+  final colon = first.indexOf(': ');
+  if (colon > 0 &&
+      RegExp(r'^[A-Za-z]+Error$').hasMatch(first.substring(0, colon))) {
+    return first.substring(colon + 2);
+  }
+  return first;
+}
+
+/// True when [text] carries more than its headline (a stack trace or a
+/// second paragraph) and deserves a Details affordance.
+bool errorHasDetails(String text) => text.trim().contains('\n');
 
 class MessageInfo {
   final String id;
@@ -318,9 +352,7 @@ class MessageInfo {
       final nestedMessage = data is Map ? data['message'] : null;
       errText = (err['message'] ?? nestedMessage ?? err['name'])?.toString();
       errKind =
-          MessageErrorKind.fromName(
-            (err['name'] ?? err['type'])?.toString(),
-          ) ??
+          MessageErrorKind.fromName((err['name'] ?? err['type'])?.toString()) ??
           (errText == null ? null : MessageErrorKind.unknown);
     } else if (err is String) {
       errText = err;
@@ -732,12 +764,35 @@ class ModelRef {
   final String modelID;
   ModelRef({required this.providerID, required this.modelID});
 
+  /// A ref whose model id is guaranteed bare. Some catalog shapes carry the
+  /// model under a composite key ("openai/gpt-5") while the prompt endpoints
+  /// want the provider and the bare id separately; sending the composite as
+  /// the id produces "Model not found: openai/gpt-5. Did you mean: gpt-5?".
+  ModelRef get normalized {
+    final bare = bareModelID(providerID, modelID);
+    return bare == modelID
+        ? this
+        : ModelRef(providerID: providerID, modelID: bare);
+  }
+
   Map<String, dynamic> toJson() => {
     'providerID': providerID,
     'modelID': modelID,
   };
 
   String get wireName => '$providerID/$modelID';
+}
+
+/// Strips a leading `providerID/` from a model id that arrived as a
+/// composite key. Leaves ids that merely contain a slash (dated snapshots
+/// like `provider-x/model`) alone unless the prefix is this provider.
+String bareModelID(String providerID, String modelID) {
+  final prefix = '$providerID/';
+  if (providerID.isNotEmpty && modelID.startsWith(prefix)) {
+    final rest = modelID.substring(prefix.length);
+    if (rest.isNotEmpty) return rest;
+  }
+  return modelID;
 }
 
 class PromptAttachment {
@@ -1175,7 +1230,13 @@ class PermissionRequest {
       );
 
   static const _commandPermissions = {'bash', 'shell'};
-  static const _fileMetadataKeys = ['filePath', 'filepath', 'file_path', 'path', 'file'];
+  static const _fileMetadataKeys = [
+    'filePath',
+    'filepath',
+    'file_path',
+    'path',
+    'file',
+  ];
   static const _filePermissions = {
     'edit',
     'write',

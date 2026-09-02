@@ -16,6 +16,7 @@ import '../desktop/desktop_interaction.dart';
 import '../desktop/shortcuts.dart';
 import '../widgets/entrance.dart';
 import '../widgets/file_preview.dart';
+import '../widgets/connect_methods.dart';
 import '../widgets/info_label.dart';
 import '../widgets/provider_logo.dart';
 import '../widgets/confirm_sheet.dart';
