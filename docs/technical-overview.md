@@ -9,7 +9,7 @@ the two server protocols, building, releasing, and the code layout.
 | Platform | State |
 |---|---|
 | **Android** (phone/tablet) | Primary target. Emulator- and device-verified, 1,200+ widget/transport tests, Shorebird-patched previews. |
-| **Linux desktop** (x64) | Alpha. Builds, packages (`.deb` + tarball), CI-gated — but the window has **never been seen on a display** and the `.deb` has never been installed. Contributor testing required. |
+| **Linux desktop** (x64) | Alpha. Builds, packages (`.deb` + tarball), CI-gated — the window has now been seen on a display (Xvfb, 1440x900, connected to a live server), but the `.deb` has still not been installed on a real machine. Contributor testing required. |
 | **Windows desktop** (x64) | Experimental. Runner scaffolded, CI artifact only — **never launched by anyone**. Please file Windows reports. |
 
 The app ships **English only**. The localization layer is wired (`l10n.yaml`,

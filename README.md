@@ -59,6 +59,12 @@ home-screen widget that shows your sessions.
 | --- | --- | --- | --- |
 | ![Welcome](video/public/shots/01-welcome.png) | ![Chat, answer streaming](video/public/shots/03-chat-streaming.png) | ![Permission card above the composer](video/public/shots/04-permission-card.png) | ![Diff view](video/public/shots/05-diff.png) |
 
+<a id="linux-desktop-screenshots"></a>
+
+| Linux desktop: Workspace | Linux desktop: Permission card | Linux desktop: Review |
+| --- | --- | --- |
+| ![Linux desktop workspace with the session list](video/public/shots/desktop-01-workspace.png) | ![Linux desktop chat with the permission card above the composer](video/public/shots/desktop-02-chat-permission.png) | ![Linux desktop review workspace, split diff](video/public/shots/desktop-05-review.png) |
+
 ![Demo](video/public/demo.gif)
 
 The same demo as a video: [video/public/demo.webm](video/public/demo.webm).
@@ -91,8 +97,11 @@ This is an alpha. Here is what that means, plainly:
 
 - **Android is the real target.** It is tested on devices and emulators, with
   more than 1,200 automated tests behind it.
-- **Linux and Windows builds exist but nobody has run them.** If you try one,
-  you are the first. Please tell us what happened.
+- **The Linux build has now been run, on a virtual display.** It was launched
+  on Xvfb at 1440x900 against a live OpenCode server and captured; see the
+  [Linux desktop screenshots](#linux-desktop-screenshots) above. Nobody has
+  run the Windows build yet. If you try it, you are the first. Please tell us
+  what happened.
 - **English only** for now. The plan to change that is written down in
   [docs/localization-todo.md](docs/localization-todo.md).
 - **Signed with the project's own key**, not a store key. Upgrading between
