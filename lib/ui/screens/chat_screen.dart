@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
@@ -38,6 +39,7 @@ import '../widgets/pickers.dart';
 import '../widgets/product_states.dart';
 import '../widgets/question_options.dart';
 import '../widgets/session_title.dart';
+import '../widgets/running_agents_strip.dart';
 import '../widgets/tool_card.dart';
 import '../widgets/transcript_display_toggles.dart';
 import '../../api2/models.dart' show Api2Delivery, Api2FormInfo, Api2InboxItem;
@@ -1755,9 +1757,7 @@ class _ChatScreenState extends State<ChatScreen>
       if (position.index > oldestVisible) oldestVisible = position.index;
     }
     if (oldestVisible < 0) return 0;
-    // Item 0 is the working indicator while the session is busy.
-    final offset = _conn.busySessions.contains(widget.sessionID) ? 1 : 0;
-    final earlier = _renderedMessageCount - 1 - (oldestVisible - offset);
+    final earlier = _renderedMessageCount - 1 - oldestVisible;
     return earlier > 0 ? earlier : 0;
   }
 
@@ -3280,6 +3280,22 @@ class _ChatScreenState extends State<ChatScreen>
     await _openRelatedSession(target);
   }
 
+  /// Opens the child session a Task tool card points at (its metadata
+  /// carries the subagent's session id), fetching it when the list has not
+  /// caught up with a freshly spawned subagent yet.
+  Future<void> _openSubagentSession(String sessionID) async {
+    if (sessionID == widget.sessionID) return;
+    try {
+      final target =
+          _conn.sessionsById[sessionID] ??
+          await (await _requireActionRepository()).getSessionDetails(sessionID);
+      if (!mounted) return;
+      await _openRelatedSession(target);
+    } catch (error) {
+      if (mounted) _showActionError(error);
+    }
+  }
+
   Future<void> _openParentSession() async {
     final parentID = _conn.sessionsById[widget.sessionID]?.parentID;
     if (parentID == null) return;
@@ -3812,6 +3828,11 @@ class _ChatScreenState extends State<ChatScreen>
     final siblingIndex = siblings.indexWhere(
       (candidate) => candidate.id == widget.sessionID,
     );
+    final runningAgents = runningAgentEntries(
+      sessionID: widget.sessionID,
+      sessions: _conn.sessionsById,
+      busy: _conn.busySessions,
+    );
 
     return PopScope(
       canPop: _allowRoutePop,
@@ -3931,24 +3952,21 @@ class _ChatScreenState extends State<ChatScreen>
                                                       _messagePositions,
                                                   padding:
                                                       const EdgeInsets.symmetric(
-                                                        horizontal: 12,
+                                                        horizontal: 6,
                                                         vertical: 10,
                                                       ),
                                                   itemCount:
-                                                      _renderedMessageCount +
-                                                      (busy ? 1 : 0),
+                                                      _renderedMessageCount,
                                                   itemBuilder: (context, i) {
                                                     // Reversed list: item 0 is
-                                                    // the bottom, so the
-                                                    // working indicator sits
-                                                    // under the newest turn.
-                                                    if (busy && i == 0) {
-                                                      return _TypingIndicator();
-                                                    }
+                                                    // the newest turn. The
+                                                    // composer, not a
+                                                    // transcript row, says
+                                                    // when a run is active.
                                                     final index =
                                                         _renderedMessageCount -
                                                         1 -
-                                                        (i - (busy ? 1 : 0));
+                                                        i;
                                                     final m = _messages[index];
                                                     if (v2VariantPart(m)
                                                         case final tagged?) {
@@ -4015,6 +4033,8 @@ class _ChatScreenState extends State<ChatScreen>
                                                             applyScope:
                                                                 _modelApplyScope,
                                                           ),
+                                                      onOpenSession:
+                                                          _openSubagentSession,
                                                     );
                                                   },
                                                 ),
@@ -4110,6 +4130,19 @@ class _ChatScreenState extends State<ChatScreen>
                                       text: _composerNote!,
                                     ),
                             ),
+                            if (runningAgents.isNotEmpty)
+                              Center(
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 860,
+                                  ),
+                                  child: RunningAgentsStrip(
+                                    entries: runningAgents,
+                                    onOpen: (target) =>
+                                        unawaited(_openRelatedSession(target)),
+                                  ),
+                                ),
+                              ),
                             Center(
                               child: ConstrainedBox(
                                 constraints: const BoxConstraints(

@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 
 import '../../api/models.dart';
 import '../app_theme.dart';
+import 'agent_color.dart';
 import 'file_preview.dart';
+import 'markdown.dart';
 
 // The chat transcript (a `part` of chat_screen.dart) opens file diffs through
 // this library, which it already imports; tool cards render diffs too.
@@ -48,6 +50,38 @@ String _fileName(String value) {
   final normalized = value.replaceAll('\\', '/');
   final parts = normalized.split('/').where((part) => part.isNotEmpty);
   return parts.isEmpty ? value : parts.last;
+}
+
+/// The child session the OpenCode `task` tool spawned for its subagent, read
+/// from the tool metadata. The server writes `sessionId` (alongside
+/// `parentSessionId`, `model` and, for background jobs, `jobId`); the other
+/// spellings cover older builds and hand-written fixtures.
+String? taskChildSessionId(ToolState state) {
+  final metadata = state.metadata;
+  if (metadata == null) return null;
+  for (final key in const ['sessionId', 'sessionID', 'session_id']) {
+    if (_valueString(metadata[key]) case final id?) return id;
+  }
+  return null;
+}
+
+/// `state="…"` of the `<task …>` wrapper the server puts around a subagent
+/// result (running / completed / error); null when the output lacks one.
+String? _taskOutputState(String? output) {
+  if (output == null) return null;
+  final match = RegExp(r'<task\b[^>]*\bstate="([a-z_]+)"').firstMatch(output);
+  return match?.group(1);
+}
+
+/// Text inside `<task_result>` / `<task_error>`, or the whole output when the
+/// server did not wrap it.
+String _taskResultText(String? output) {
+  final raw = output ?? '';
+  final match = RegExp(
+    r'<task_(?:result|error)>\n?(.*?)\n?</task_(?:result|error)>',
+    dotAll: true,
+  ).firstMatch(raw);
+  return (match?.group(1) ?? raw).trim();
 }
 
 /// Compact "Title · subtitle" line for the tool currently executing, used by
@@ -198,6 +232,12 @@ class _ToolContract {
         if (metadata['background'] == true || input['background'] == true) {
           details.add('background');
         }
+        // The child session's own state, as the server stamps it on the
+        // <task> wrapper; a background job reads "running" after the call
+        // itself has completed.
+        if (_taskOutputState(state.output) case final childState?) {
+          details.add(childState);
+        }
         break;
       case 'todowrite':
       case 'todo':
@@ -285,6 +325,10 @@ class ToolCard extends StatefulWidget {
   final ToolOutputFileLoader? filePreviewLoader;
   final ToolOutputFileAction? onAttachFile;
   final ToolOutputFileAction? onDownloadFile;
+
+  /// Opens the child session a `task` tool call delegated to, given its id.
+  /// Null hides the "Open subagent session" action.
+  final ValueChanged<String>? onOpenSession;
   const ToolCard({
     super.key,
     required this.toolName,
@@ -295,6 +339,7 @@ class ToolCard extends StatefulWidget {
     this.filePreviewLoader,
     this.onAttachFile,
     this.onDownloadFile,
+    this.onOpenSession,
   });
 
   @override
@@ -696,6 +741,7 @@ class _ToolCardState extends State<ToolCard> {
                   contract: contract,
                   state: widget.state,
                   embedded: widget.embedded,
+                  onOpenSession: widget.onOpenSession,
                   // Output already rendered in order above; the expanded body
                   // keeps input/metadata only.
                   suppressOutput: _interleavedSegments != null,
@@ -739,11 +785,13 @@ class _ToolContractBody extends StatelessWidget {
     required this.state,
     required this.embedded,
     this.suppressOutput = false,
+    this.onOpenSession,
   });
 
   final _ToolContract contract;
   final ToolState state;
   final bool embedded;
+  final ValueChanged<String>? onOpenSession;
 
   /// True when the ordered segment rendering already shows the output; the
   /// expanded body then only adds the input JSON.
@@ -754,6 +802,11 @@ class _ToolContractBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // A failed delegation still shows who was asked to do what; the error
+    // lands in the Result section instead of replacing the whole body.
+    if (contract.kind == _ToolKind.task && !suppressOutput) {
+      return _taskBody(context);
+    }
     if (state.status == 'error') {
       return _ErrorOutput(
         message: state.output ?? 'Tool failed.',
@@ -769,9 +822,8 @@ class _ToolContractBody extends StatelessWidget {
       _ToolKind.patch => _patchBody(),
       _ToolKind.todo => _todoBody(),
       _ToolKind.question => _questionBody(),
-      _ToolKind.webFetch ||
-      _ToolKind.webSearch ||
-      _ToolKind.task => _richOutputBody(),
+      _ToolKind.webFetch || _ToolKind.webSearch => _richOutputBody(),
+      _ToolKind.task => _taskBody(context),
       _ToolKind.list || _ToolKind.glob || _ToolKind.grep => _searchBody(),
       _ToolKind.lsp => _lspBody(),
       _ToolKind.skill => _skillBody(),
@@ -934,14 +986,7 @@ class _ToolContractBody extends StatelessWidget {
   }
 
   Widget _richOutputBody() {
-    var output = state.output ?? '';
-    if (contract.kind == _ToolKind.task) {
-      final match = RegExp(
-        r'<task_(?:result|error)>\n?(.*?)\n?</task_(?:result|error)>',
-        dotAll: true,
-      ).firstMatch(output);
-      if (match != null) output = match.group(1)!;
-    }
+    final output = state.output ?? '';
     if (output.trim().isEmpty) return _genericInput();
     final name = switch (contract.kind) {
       _ToolKind.webFetch =>
@@ -953,6 +998,93 @@ class _ToolContractBody extends StatelessWidget {
     };
     return SmartTextPreview(
       data: FilePreviewData(name: name, text: output),
+    );
+  }
+
+  /// `task`: the parent agent delegating to a subagent. Who was asked
+  /// (agent chip + description), what they were told (the prompt, collapsed),
+  /// and what came back (the `<task_result>`), plus a jump to the child
+  /// session when the host can open one.
+  Widget _taskBody(BuildContext context) {
+    final agent = _valueString(state.input['subagent_type']) ?? 'agent';
+    final description =
+        _valueString(state.input['description']) ?? _valueString(state.title);
+    final background =
+        _metadata['background'] == true || state.input['background'] == true;
+    final prompt = _rawString(state.input['prompt']);
+    final model = _metadata['model'];
+    final modelLabel = model is Map
+        ? _valueString(model['modelID'])
+        : _valueString(model);
+    final sessionId = taskChildSessionId(state);
+    final resultText = _taskResultText(state.output);
+    final childState = _taskOutputState(state.output);
+    final working =
+        state.executed &&
+        state.status != 'error' &&
+        (state.status == 'running' ||
+            state.status == 'pending' ||
+            childState == 'running');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _TaskHeader(
+          agent: agent,
+          description: description,
+          background: background,
+        ),
+        if (modelLabel != null) ...[
+          const SizedBox(height: 4),
+          _PathCaption(label: 'Model', value: modelLabel),
+        ],
+        if (prompt?.trim().isNotEmpty == true) ...[
+          const SizedBox(height: 10),
+          _TaskPrompt(prompt: prompt!),
+        ],
+        const SizedBox(height: 10),
+        const _SectionCaption(label: 'Result'),
+        const SizedBox(height: 4),
+        if (state.status == 'error')
+          _ErrorOutput(
+            message: resultText.isEmpty ? 'Subagent failed.' : resultText,
+            embedded: embedded,
+          )
+        else if (resultText.isNotEmpty)
+          SmartTextPreview(
+            key: const Key('task-result'),
+            data: FilePreviewData(name: 'agent-result.md', text: resultText),
+          ),
+        if (working) ...[
+          if (resultText.isNotEmpty) const SizedBox(height: 6),
+          const _TaskWorking(),
+        ] else if (resultText.isEmpty && state.status != 'error')
+          Text(
+            '(no result)',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: AppTheme.mutedOf(Theme.of(context)),
+            ),
+          ),
+        if (sessionId != null && onOpenSession != null) ...[
+          const SizedBox(height: 4),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              key: const ValueKey('task-open-session'),
+              onPressed: () => onOpenSession!(sessionId),
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+              ),
+              icon: const Icon(Icons.open_in_new_rounded, size: 14),
+              label: Text(
+                'Open subagent session',
+                style: Theme.of(context).textTheme.labelSmall,
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -1056,6 +1188,289 @@ class _ToolContractBody extends StatelessWidget {
     name: 'diagnostics.json',
     maxLines: 100,
   );
+}
+
+/// Agent chip, description and badges for a delegated task.
+class _TaskHeader extends StatelessWidget {
+  const _TaskHeader({
+    required this.agent,
+    required this.description,
+    required this.background,
+  });
+
+  final String agent;
+  final String? description;
+  final bool background;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        _AgentChip(name: agent),
+        if (description?.isNotEmpty == true) ...[
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              description!,
+              key: const Key('task-description'),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ] else
+          const Spacer(),
+        if (background) ...[
+          const SizedBox(width: 8),
+          const _TaskBadge(
+            key: Key('task-background-badge'),
+            label: 'background',
+            icon: Icons.schedule_rounded,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Small pill naming the subagent, tinted with its agent colour.
+class _AgentChip extends StatelessWidget {
+  const _AgentChip({required this.name});
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = agentColorFor(context, name);
+    return Container(
+      key: const Key('task-agent-chip'),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .14),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: .45)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.smart_toy_rounded, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            name,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+              letterSpacing: .2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Muted outline pill for task flags ("background").
+class _TaskBadge extends StatelessWidget {
+  const _TaskBadge({super.key, required this.label, required this.icon});
+
+  final String label;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = AppTheme.mutedOf(theme);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppTheme.hairline(theme)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: muted),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(color: muted),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Mono section caption for tool bodies, in the style of [_PathCaption].
+class _SectionCaption extends StatelessWidget {
+  const _SectionCaption({required this.label, this.detail});
+
+  final String label;
+  final String? detail;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final style = theme.textTheme.labelSmall?.copyWith(
+      fontFamily: AppTheme.monoFamily,
+      color: AppTheme.mutedOf(theme),
+    );
+    return Row(
+      children: [
+        Text(label, style: style),
+        if (detail?.isNotEmpty == true) ...[
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              detail!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: style,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// The instructions the parent agent handed the subagent, rendered as
+/// markdown. Prompts run long, so only the first [_previewLines] lines show
+/// until "Show full prompt" opens the rest inline.
+class _TaskPrompt extends StatefulWidget {
+  const _TaskPrompt({required this.prompt});
+
+  final String prompt;
+
+  static const _previewLines = 8;
+
+  @override
+  State<_TaskPrompt> createState() => _TaskPromptState();
+}
+
+class _TaskPromptState extends State<_TaskPrompt> {
+  bool _showFull = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final text = widget.prompt.trimRight();
+    final lines = text.split('\n');
+    final truncatable = lines.length > _TaskPrompt._previewLines;
+    final visible = truncatable && !_showFull
+        ? lines.take(_TaskPrompt._previewLines).join('\n')
+        : text;
+    return Column(
+      key: const Key('task-prompt'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionCaption(
+          label: 'Prompt from parent agent',
+          detail: '${lines.length} ${lines.length == 1 ? 'line' : 'lines'}',
+        ),
+        const SizedBox(height: 4),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(6),
+            border: Border(
+              left: BorderSide(
+                width: 2,
+                color: theme.colorScheme.primary.withValues(alpha: .45),
+              ),
+            ),
+          ),
+          child: ClipRect(
+            child: ShaderMask(
+              // Fade the last preview line so the cut reads as "continues".
+              shaderCallback: (bounds) => LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: const [0, .8, 1],
+                colors: [
+                  Colors.white,
+                  Colors.white,
+                  truncatable && !_showFull
+                      ? Colors.white.withValues(alpha: .25)
+                      : Colors.white,
+                ],
+              ).createShader(bounds),
+              blendMode: BlendMode.dstIn,
+              child: MarkdownText(
+                visible,
+                baseStyle: theme.textTheme.bodySmall,
+              ),
+            ),
+          ),
+        ),
+        if (truncatable)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              key: const Key('task-prompt-toggle'),
+              onPressed: () => setState(() => _showFull = !_showFull),
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+              ),
+              icon: Icon(
+                _showFull
+                    ? Icons.unfold_less_rounded
+                    : Icons.unfold_more_rounded,
+                size: 14,
+              ),
+              label: Text(
+                _showFull ? 'Show less' : 'Show full prompt',
+                style: theme.textTheme.labelSmall,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// "Subagent working…" placeholder while the child session has not reported
+/// back yet.
+class _TaskWorking extends StatelessWidget {
+  const _TaskWorking();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = AppTheme.mutedOf(theme);
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    return Row(
+      key: const Key('task-working'),
+      children: [
+        if (reduceMotion)
+          Icon(Icons.hourglass_top_rounded, size: 12, color: muted)
+        else
+          SizedBox.square(
+            dimension: 11,
+            child: CircularProgressIndicator(
+              strokeWidth: 1.4,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+        const SizedBox(width: 7),
+        Text(
+          'Subagent working…',
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: muted,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _ErrorOutput extends StatelessWidget {

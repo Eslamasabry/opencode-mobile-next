@@ -38,6 +38,8 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   int _serverLoadGeneration = 0;
   int _resourceLoadGeneration = 0;
   int _integrationLoadGeneration = 0;
+  final TextEditingController _providerSearch = TextEditingController();
+  String _providerQuery = '';
 
   @override
   void initState() {
@@ -384,6 +386,20 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     final integrations = loaded == null
         ? null
         : _withConfiguredProviders(loaded);
+    final models = widget.controller.catalog?.models ?? const <CatalogModel>[];
+    final matching = integrations == null
+        ? const <PresentedIntegration>[]
+        : _sortedIntegrations(integrations)
+              .where(
+                (presented) => _providerMatchesSearch(
+                  presented,
+                  _providerQuery,
+                  models: models.where(
+                    (model) => model.providerID == presented.integration.id,
+                  ),
+                ),
+              )
+              .toList();
     return [
       const _SectionHeader(
         text: 'Providers',
@@ -415,23 +431,66 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
           onAction: _retryIntegrations,
         )
       else ...[
+        _providerSearchField(),
         _ProviderSummaryRow(
           connected: integrations
               .where((integration) => integration.connectionCount > 0)
               .length,
           total: integrations.length,
         ),
-        for (final presented in _sortedIntegrations(integrations))
-          _ProviderIntegrationTile(
-            presented: presented,
-            subtitle: _integrationSubtitle(presented.integration),
-            modelCount: _modelCount(presented.integration.id),
-            busy: _busy.contains(presented.integration.id),
-            onConnect: () => _connectIntegration(presented.integration),
-            onDisconnect: () => _disconnectIntegration(presented),
-          ),
+        if (matching.isEmpty)
+          ProductInlineEmpty(
+            key: const ValueKey('providers-search-empty'),
+            icon: Icons.search_off_rounded,
+            title: 'No providers match \u201c${_providerQuery.trim()}\u201d',
+            message: 'Try a provider name, its id, or one of its models.',
+            actionLabel: 'Clear search',
+            onAction: _clearProviderSearch,
+          )
+        else
+          for (final presented in matching)
+            _ProviderIntegrationTile(
+              presented: presented,
+              subtitle: _integrationSubtitle(presented.integration),
+              modelCount: _modelCount(presented.integration.id),
+              busy: _busy.contains(presented.integration.id),
+              onConnect: () => _connectIntegration(presented.integration),
+              onDisconnect: () => _disconnectIntegration(presented),
+            ),
       ],
     ];
+  }
+
+  /// Mirrors the model picker's search field: a dense filled field with a
+  /// leading search glyph and a clear button once there is text to clear.
+  Widget _providerSearchField() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
+      child: TextField(
+        key: const ValueKey('providers-search'),
+        controller: _providerSearch,
+        textInputAction: TextInputAction.search,
+        onChanged: (value) => setState(() => _providerQuery = value),
+        decoration: InputDecoration(
+          hintText: 'Search providers or models',
+          prefixIcon: const Icon(Icons.search_rounded),
+          isDense: true,
+          suffixIcon: _providerQuery.isEmpty
+              ? null
+              : IconButton(
+                  key: const ValueKey('providers-search-clear'),
+                  tooltip: 'Clear provider search',
+                  onPressed: _clearProviderSearch,
+                  icon: const Icon(Icons.close_rounded),
+                ),
+        ),
+      ),
+    );
+  }
+
+  void _clearProviderSearch() {
+    _providerSearch.clear();
+    setState(() => _providerQuery = '');
   }
 
   List<Widget> _mcpSection() {
@@ -952,6 +1011,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     _serverLoadGeneration++;
     _resourceLoadGeneration++;
     _integrationLoadGeneration++;
+    _providerSearch.dispose();
     if (_pendingMcpOAuth case final pending?) {
       unawaited(_disposePendingMcpAuthentication(pending));
     }
@@ -989,3 +1049,50 @@ IntegrationInfo configuredProviderIntegration(CatalogProvider provider) =>
       ],
       connectionCount: 1,
     );
+
+/// Case-insensitive match of a provider row against a search query: the
+/// presented name, the wire id and its consolidated aliases (so "zhipu" finds
+/// the Z.AI routes), the logo domain minus its TLD (so "aws" finds Bedrock),
+/// and the ids and names of the catalog [models] the provider serves. An
+/// empty query matches everything.
+bool _providerMatchesSearch(
+  PresentedIntegration presented,
+  String query, {
+  Iterable<CatalogModel> models = const [],
+}) {
+  final normalized = query.trim().toLowerCase();
+  if (normalized.isEmpty) return true;
+  final integration = presented.integration;
+  final terms = <String>{
+    presented.name,
+    integration.id,
+    integration.name,
+    ..._providerSearchAliases(integration.id),
+    for (final model in models) ...[model.id, model.name],
+  };
+  return terms.any((term) => term.toLowerCase().contains(normalized));
+}
+
+/// Wire ids OpenCode consolidates into one product family; every id in the
+/// same presentation group is a search alias for the others.
+const _consolidatedProviderIDs = [
+  'zai',
+  'zhipuai',
+  'zai-coding-plan',
+  'zhipuai-coding-plan',
+];
+
+Set<String> _providerSearchAliases(String providerID) {
+  final presentation = presentProvider(providerID);
+  final domainLabels = providerLogoDomain(providerID).split('.');
+  return {
+    presentation.groupID,
+    presentation.name,
+    ?presentation.route,
+    for (final alias in _consolidatedProviderIDs)
+      if (presentProvider(alias).groupID == presentation.groupID) alias,
+    // Drop the TLD so the "<id>.com" fallback never matches "com" for all.
+    if (domainLabels.length > 1)
+      domainLabels.sublist(0, domainLabels.length - 1).join('.'),
+  };
+}

@@ -64,7 +64,8 @@ Future<ConnectionController> _pump(
       child: const MaterialApp(home: ChatScreen(sessionID: 'session-1')),
     ),
   );
-  // The working indicator blinks forever, so a busy chat never settles.
+  // The composer's activity ring animates forever, so a busy chat never
+  // settles.
   if (busy) {
     for (var i = 0; i < 6; i++) {
       await tester.pump(const Duration(milliseconds: 100));
@@ -78,8 +79,9 @@ Future<ConnectionController> _pump(
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('the working indicator sits below the newest turn, not above '
-      'the oldest', (tester) async {
+  testWidgets('a busy session shows working on the composer, not as a '
+      'transcript row', (tester) async {
+    final semantics = tester.ensureSemantics();
     await _pump(tester, [
       _message('u1', 'user', [_text('u1-t', 'First question')], created: 1),
       _message('a1', 'assistant', [_text('a1-t', 'First answer')], created: 2),
@@ -87,25 +89,33 @@ void main() {
       _message('a2', 'assistant', [_text('a2-t', 'Second answer')], created: 4),
     ], busy: true);
 
-    final indicator = find.byKey(const ValueKey('typing-indicator'));
-    expect(indicator, findsOneWidget);
-    final indicatorTop = tester.getTopLeft(indicator).dy;
+    // The transcript is only the messages: the newest turn is the last row
+    // and nothing sits under it.
+    expect(find.byKey(const ValueKey('typing-indicator')), findsNothing);
+    expect(find.byKey(const ValueKey('message-a2')), findsOneWidget);
+    final activity = find.byKey(const ValueKey('composer-activity'));
+    expect(activity, findsOneWidget);
     final lastBubbleBottom = tester
         .getBottomLeft(find.byKey(const ValueKey('message-a2')))
         .dy;
-    final firstBubbleTop = tester
-        .getTopLeft(find.byKey(const ValueKey('message-u1')))
-        .dy;
-    expect(indicatorTop, greaterThanOrEqualTo(lastBubbleBottom));
-    expect(indicatorTop, greaterThan(firstBubbleTop));
+    expect(
+      tester.getTopLeft(activity).dy,
+      greaterThanOrEqualTo(lastBubbleBottom),
+    );
+    expect(find.bySemanticsLabel('Assistant is working'), findsOneWidget);
+    semantics.dispose();
   });
 
   testWidgets('an idle session shows no working indicator', (tester) async {
+    final semantics = tester.ensureSemantics();
     await _pump(tester, [
       _message('u1', 'user', [_text('u1-t', 'Question')], created: 1),
       _message('a1', 'assistant', [_text('a1-t', 'Answer')], created: 2),
     ]);
     expect(find.byKey(const ValueKey('typing-indicator')), findsNothing);
+    expect(find.byKey(const ValueKey('composer-activity')), findsNothing);
+    expect(find.bySemanticsLabel('Assistant is working'), findsNothing);
+    semantics.dispose();
   });
 
   testWidgets('step-finish, patch and snapshot parts leave no stray row', (

@@ -1,10 +1,5 @@
 part of '../chat_screen.dart';
 
-class _TypingIndicator extends StatefulWidget {
-  @override
-  State<_TypingIndicator> createState() => __TypingIndicatorState();
-}
-
 class _PromptErrorBanner extends StatelessWidget {
   final String message;
   final VoidCallback onDismiss;
@@ -122,77 +117,6 @@ class _PromptErrorBanner extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-/// A terminal-style block caret that blinks while the assistant works.
-class __TypingIndicatorState extends State<_TypingIndicator>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1100),
-  );
-  bool _animating = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final animate = !MediaQuery.disableAnimationsOf(context);
-    if (animate == _animating) return;
-    _animating = animate;
-    if (animate) {
-      _c.repeat();
-    } else {
-      _c.stop();
-      _c.value = 0;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Semantics(
-      label: 'Assistant is working',
-      liveRegion: true,
-      child: Padding(
-        key: const ValueKey('typing-indicator'),
-        padding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
-        child: Row(
-          children: [
-            AnimatedBuilder(
-              animation: _c,
-              builder: (context, child) => Opacity(
-                // A hard on/off blink like a terminal caret, not a pulse.
-                opacity: _c.value < .55 ? 1 : .18,
-                child: child,
-              ),
-              child: Container(
-                width: 9,
-                height: 17,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              'working',
-              style: theme.textTheme.labelMedium!.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                letterSpacing: .4,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
   }
 }
 
@@ -957,6 +881,7 @@ class _ToolCallGroup extends StatefulWidget {
     required this.filePreviewLoader,
     required this.onAttachFile,
     required this.onDownloadFile,
+    this.onOpenSession,
   });
 
   final List<Part> parts;
@@ -964,6 +889,9 @@ class _ToolCallGroup extends StatefulWidget {
   final ToolOutputFileLoader filePreviewLoader;
   final ToolOutputFileAction onAttachFile;
   final ToolOutputFileAction onDownloadFile;
+
+  /// Opens a subagent's child session from a `task` card; null hides it.
+  final ValueChanged<String>? onOpenSession;
 
   @override
   State<_ToolCallGroup> createState() => _ToolCallGroupState();
@@ -1162,6 +1090,7 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
                     filePreviewLoader: widget.filePreviewLoader,
                     onAttachFile: widget.onAttachFile,
                     onDownloadFile: widget.onDownloadFile,
+                    onOpenSession: widget.onOpenSession,
                   ),
                 ],
               ],
@@ -1185,10 +1114,14 @@ class _AssistantMessagePart extends StatelessWidget {
     required this.onAttachFile,
     required this.onDownloadFile,
     this.streaming = false,
+    this.onOpenSession,
   });
 
   final Part part;
   final bool reasoningExpanded;
+
+  /// Opens a subagent's child session from a `task` card; null hides it.
+  final ValueChanged<String>? onOpenSession;
 
   /// True while this is the text block the assistant is still writing; it
   /// gets a soft primary tint so the eye lands where the transcript grows.
@@ -1211,7 +1144,7 @@ class _AssistantMessagePart extends StatelessWidget {
           duration: reduceMotion
               ? Duration.zero
               : const Duration(milliseconds: 220),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
           decoration: BoxDecoration(
             color: streaming ? AppTheme.liveTint(theme) : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
@@ -1258,6 +1191,7 @@ class _AssistantMessagePart extends StatelessWidget {
         filePreviewLoader: filePreviewLoader,
         onAttachFile: onAttachFile,
         onDownloadFile: onDownloadFile,
+        onOpenSession: onOpenSession,
       );
     }
     if (part.type == 'file') {
@@ -1314,6 +1248,10 @@ class _MessageView extends StatelessWidget {
   final VoidCallback? onOpenProviders;
   final VoidCallback? onContinue;
   final VoidCallback? onChooseModel;
+
+  /// Opens the child session a `task` tool call delegated to (its id is the
+  /// argument); null hides the action on task cards.
+  final ValueChanged<String>? onOpenSession;
   const _MessageView({
     super.key,
     required this.m,
@@ -1332,6 +1270,7 @@ class _MessageView extends StatelessWidget {
     this.onOpenProviders,
     this.onContinue,
     this.onChooseModel,
+    this.onOpenSession,
   });
 
   @override
@@ -1401,7 +1340,7 @@ class _MessageView extends StatelessWidget {
                 maxWidth: isUser && bubbleWidthCap > 640 ? 640 : bubbleWidthCap,
               ),
               padding: isUser
-                  ? const EdgeInsets.symmetric(horizontal: 14, vertical: 10)
+                  ? const EdgeInsets.symmetric(horizontal: 10, vertical: 10)
                   : const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
               decoration: isUser
                   ? BoxDecoration(
@@ -1432,6 +1371,7 @@ class _MessageView extends StatelessWidget {
                               filePreviewLoader: filePreviewLoader,
                               onAttachFile: onAttachFile,
                               onDownloadFile: onDownloadFile,
+                              onOpenSession: onOpenSession,
                             )
                           else
                             _AssistantMessagePart(
@@ -1441,6 +1381,7 @@ class _MessageView extends StatelessWidget {
                               filePreviewLoader: filePreviewLoader,
                               onAttachFile: onAttachFile,
                               onDownloadFile: onDownloadFile,
+                              onOpenSession: onOpenSession,
                               streaming:
                                   streaming &&
                                   identical(run, assistantRuns.last),

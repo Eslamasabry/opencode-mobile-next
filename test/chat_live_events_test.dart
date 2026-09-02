@@ -672,6 +672,61 @@ void main() {
     expect(find.textContaining('notes.txt'), findsWidgets);
   });
 
+  testWidgets('a running sibling agent appears in the switch strip', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(360, 720));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final api = _FakeOpenCodeApi();
+    final parent = Session(
+      id: 'parent',
+      title: 'Parent work',
+      directory: '/work/acme',
+      time: SessionTime(created: 1),
+    );
+    final child = Session(
+      id: 'session-1',
+      title: 'Explore mobile flow',
+      parentID: parent.id,
+      directory: '/work/acme',
+      time: SessionTime(created: 2),
+    );
+    final sibling = Session(
+      id: 'session-2',
+      title: 'Review mobile flow',
+      parentID: parent.id,
+      directory: '/work/acme',
+      time: SessionTime(created: 3),
+    );
+    final controller = await _controller(api)
+      ..directory = '/work/acme'
+      ..repository = _RelationsProductRepository(parent, [child, sibling])
+      ..sessionsById = {parent.id: parent, child.id: child, sibling.id: sibling}
+      ..busySessions = {'session-2'};
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: const MaterialApp(home: ChatScreen(sessionID: 'session-1')),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byKey(const ValueKey('running-agents-strip')), findsOneWidget);
+    // The running sibling leads, the current session follows, the parent
+    // (idle) trails.
+    expect(
+      find.byKey(const ValueKey('running-agent-session-2')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('running-agent-session-1')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('child chat exposes parent and sibling navigation', (
     tester,
   ) async {
@@ -1039,7 +1094,11 @@ void main() {
     expect(replacementApi.abortCalls, 0);
 
     readyApi.complete(replacementApi);
-    await tester.pumpAndSettle();
+    // The session stays busy, so the composer's activity ring animates
+    // forever: pump explicit frames instead of settling.
+    for (var i = 0; i < 4; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
 
     expect(retainedApi.abortCalls, 0);
     expect(replacementApi.abortCalls, 1);
@@ -1056,7 +1115,10 @@ void main() {
     await tester.pump();
 
     await tester.tap(find.byKey(const Key('chat-send-button')));
-    await tester.pumpAndSettle();
+    // Still busy after the failed stop, so the composer keeps animating.
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
 
     expect(api.abortCalls, 1);
     expect(find.text('server refused to stop'), findsOneWidget);
@@ -3160,7 +3222,7 @@ void main() {
       }),
     );
     await _pumpEvent(tester);
-    expect(find.byKey(const ValueKey('typing-indicator')), findsOneWidget);
+    expect(find.byKey(const ValueKey('composer-activity')), findsOneWidget);
 
     controller.handleEventForTesting(
       _event('session.error', {
@@ -3173,7 +3235,7 @@ void main() {
     );
     await _pumpEvent(tester);
 
-    expect(find.byKey(const ValueKey('typing-indicator')), findsNothing);
+    expect(find.byKey(const ValueKey('composer-activity')), findsNothing);
     expect(find.byKey(const ValueKey('prompt-error-banner')), findsOneWidget);
     expect(
       find.text('Sign in to the selected model provider.'),

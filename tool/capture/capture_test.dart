@@ -173,7 +173,7 @@ void main() {
     }
     await _shot(tester, key, name);
     if (!awaitingPermission) {
-      expect(find.byKey(const ValueKey('typing-indicator')), findsOneWidget);
+      expect(find.byKey(const ValueKey('composer-activity')), findsOneWidget);
       expect(
         find.text('Read 3 files, edited 1, ran 1 command'),
         findsOneWidget,

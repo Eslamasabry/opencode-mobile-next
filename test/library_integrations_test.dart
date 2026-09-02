@@ -258,6 +258,11 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('GitHub'), findsOneWidget);
+      await tester.dragUntilVisible(
+        find.text('Resources unavailable'),
+        find.byType(ListView),
+        const Offset(0, -200),
+      );
       expect(find.text('Resources unavailable'), findsOneWidget);
       expect(find.text('Could not load this section'), findsOneWidget);
     },
@@ -551,7 +556,13 @@ void main() {
       final disconnect = find.byKey(
         const ValueKey('disconnect-provider-cloud'),
       );
-      await tester.scrollUntilVisible(disconnect, 160);
+      // The list is not the only scrollable: the provider search field
+      // brings its own, so drag the ListView itself.
+      await tester.dragUntilVisible(
+        disconnect,
+        find.byType(ListView),
+        const Offset(0, -160),
+      );
       await Scrollable.ensureVisible(
         tester.element(disconnect),
         alignment: 0.5,
@@ -1107,5 +1118,126 @@ void main() {
     expect(repository.providerRefreshCalls, 1);
     expect(find.byKey(const ValueKey('pending-provider-oauth')), findsNothing);
     expect(find.text('Cloud Provider is connected'), findsOneWidget);
+  });
+
+  testWidgets('provider search filters by name, id, model, and alias', (
+    tester,
+  ) async {
+    const key = [IntegrationMethodInfo(type: 'key', label: 'API key')];
+    final repository = _IntegrationsRepository()
+      ..integrations = const [
+        IntegrationInfo(
+          id: 'anthropic',
+          name: 'Anthropic',
+          methods: key,
+          connectionCount: 0,
+        ),
+        IntegrationInfo(
+          id: 'openai',
+          name: 'OpenAI',
+          methods: key,
+          connectionCount: 1,
+        ),
+        IntegrationInfo(
+          id: 'zai',
+          name: 'Zhipu AI',
+          methods: key,
+          connectionCount: 0,
+        ),
+      ];
+    final controller = await _controller(repository);
+    addTearDown(controller.dispose);
+    CatalogModel model(String id, String providerID) => CatalogModel(
+      id: id,
+      providerID: providerID,
+      name: id,
+      enabled: true,
+      status: 'active',
+      contextLimit: 128000,
+      outputLimit: 8192,
+      reasoning: false,
+      attachments: false,
+      tools: true,
+      variants: const [],
+    );
+    controller.catalog = CatalogSnapshot(
+      providers: const [
+        CatalogProvider(id: 'anthropic', name: 'Anthropic', enabled: true),
+        CatalogProvider(id: 'openai', name: 'OpenAI', enabled: true),
+        CatalogProvider(id: 'zai', name: 'Zhipu AI', enabled: true),
+      ],
+      models: [model('claude-sonnet-4', 'anthropic'), model('gpt-5', 'openai')],
+      agents: const [],
+    );
+
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+
+    final search = find.byKey(const ValueKey('providers-search'));
+    expect(search, findsOneWidget);
+    expect(find.text('Anthropic'), findsOneWidget);
+    expect(find.text('OpenAI'), findsOneWidget);
+    expect(find.text('Z.AI · Global'), findsOneWidget);
+    expect(find.byKey(const ValueKey('providers-search-clear')), findsNothing);
+
+    // Case-insensitive on the presented name.
+    await tester.enterText(search, 'ANTH');
+    await tester.pump();
+    expect(find.text('Anthropic'), findsOneWidget);
+    expect(find.text('OpenAI'), findsNothing);
+    expect(find.text('Z.AI · Global'), findsNothing);
+    expect(
+      find.byKey(const ValueKey('providers-search-clear')),
+      findsOneWidget,
+    );
+
+    // A model id the provider serves.
+    await tester.enterText(search, 'gpt');
+    await tester.pump();
+    expect(find.text('OpenAI'), findsOneWidget);
+    expect(find.text('Anthropic'), findsNothing);
+
+    // A consolidated alias: the China route id finds the Z.AI family.
+    await tester.enterText(search, 'zhipuai');
+    await tester.pump();
+    expect(find.text('Z.AI · Global'), findsOneWidget);
+    expect(find.text('OpenAI'), findsNothing);
+    expect(find.text('Anthropic'), findsNothing);
+
+    // The section header and summary survive filtering.
+    expect(find.text('PROVIDERS'), findsOneWidget);
+    expect(find.text('1 connected · 2 available'), findsOneWidget);
+
+    // Nothing matches: a small empty state with a Clear search action.
+    await tester.enterText(search, 'no-such-provider');
+    await tester.pump();
+    expect(
+      find.byKey(const ValueKey('providers-search-empty')),
+      findsOneWidget,
+    );
+    expect(
+      find.text('No providers match \u201cno-such-provider\u201d'),
+      findsOneWidget,
+    );
+    expect(find.text('Anthropic'), findsNothing);
+    expect(find.text('OpenAI'), findsNothing);
+
+    await tester.tap(find.text('Clear search'));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('providers-search-empty')), findsNothing);
+    expect(tester.widget<TextField>(search).controller!.text, isEmpty);
+    expect(find.text('Anthropic'), findsOneWidget);
+    expect(find.text('OpenAI'), findsOneWidget);
+    expect(find.text('Z.AI · Global'), findsOneWidget);
+
+    // The field's own clear button restores the list too.
+    await tester.enterText(search, 'open');
+    await tester.pump();
+    expect(find.text('Anthropic'), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('providers-search-clear')));
+    await tester.pump();
+    expect(find.text('Anthropic'), findsOneWidget);
+    expect(find.text('OpenAI'), findsOneWidget);
+    expect(find.text('Z.AI · Global'), findsOneWidget);
   });
 }

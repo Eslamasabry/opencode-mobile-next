@@ -241,9 +241,14 @@ class _MarkdownTextState extends State<MarkdownText> {
       // Unordered list
       if (RegExp(r'^\s*[-*+]\s+').hasMatch(line)) {
         flushParagraph();
-        final items = <String>[];
-        while (i < lines.length && RegExp(r'^\s*[-*+]\s+').hasMatch(lines[i])) {
-          items.add(lines[i].replaceFirst(RegExp(r'^\s*[-*+]\s+'), ''));
+        final items = <_ListItem>[];
+        final marker = RegExp(r'^(\s*)[-*+]\s+');
+        while (i < lines.length && marker.hasMatch(lines[i])) {
+          final m = marker.firstMatch(lines[i])!;
+          items.add((
+            indent: m.group(1)!.length,
+            text: lines[i].substring(m.end),
+          ));
           i++;
         }
         widgets.add(_List(items: items, ordered: false));
@@ -253,10 +258,14 @@ class _MarkdownTextState extends State<MarkdownText> {
       // Ordered list
       if (RegExp(r'^\s*\d+[.)]\s+').hasMatch(line)) {
         flushParagraph();
-        final items = <String>[];
-        while (i < lines.length &&
-            RegExp(r'^\s*\d+[.)]\s+').hasMatch(lines[i])) {
-          items.add(lines[i].replaceFirst(RegExp(r'^\s*\d+[.)]\s+'), ''));
+        final items = <_ListItem>[];
+        final marker = RegExp(r'^(\s*)\d+[.)]\s+');
+        while (i < lines.length && marker.hasMatch(lines[i])) {
+          final m = marker.firstMatch(lines[i])!;
+          items.add((
+            indent: m.group(1)!.length,
+            text: lines[i].substring(m.end),
+          ));
           i++;
         }
         widgets.add(_List(items: items, ordered: true));
@@ -433,34 +442,82 @@ class _Quote extends StatelessWidget {
   }
 }
 
+/// One list line: [indent] is the raw leading-whitespace width of the
+/// source line, so nesting survives the parse.
+typedef _ListItem = ({int indent, String text});
+
+/// Marker gutter: the bullet sits 3 px from the block's left edge and the
+/// item text starts at 18 px. Nested levels step in by [_listNestIndent].
+const _listMarkerInset = 3.0;
+const _listMarkerWidth = 15.0;
+const _listNestIndent = 14.0;
+
 class _List extends StatelessWidget {
-  final List<String> items;
+  final List<_ListItem> items;
   final bool ordered;
   const _List({required this.items, required this.ordered});
 
+  /// Nesting depth per item, normalised by the smallest indent step used in
+  /// this list so both 2- and 4-space nesting land one level deeper.
+  List<int> _levels() {
+    final indents = items.map((e) => e.indent).toList();
+    final base = indents.reduce((a, b) => a < b ? a : b);
+    var unit = 0;
+    for (final d in indents) {
+      final step = d - base;
+      if (step > 0 && (unit == 0 || step < unit)) unit = step;
+    }
+    return [
+      for (final d in indents) unit == 0 ? 0 : ((d - base) ~/ unit).clamp(0, 4),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
+    final levels = _levels();
+    // Ordered numbering restarts each time a nested run begins.
+    final counters = <int>[];
+    final numbers = <int>[];
+    for (final level in levels) {
+      while (counters.length > level + 1) {
+        counters.removeLast();
+      }
+      while (counters.length < level + 1) {
+        counters.add(0);
+      }
+      counters[level]++;
+      numbers.add(counters[level]);
+    }
+    final markerStyle = Theme.of(context).textTheme.bodyMedium!.copyWith(
+      color: Theme.of(context).colorScheme.primary,
+      fontWeight: FontWeight.w600,
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (var i = 0; i < items.length; i++)
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 1.5),
+            padding: EdgeInsets.fromLTRB(
+              _listNestIndent * levels[i],
+              1.5,
+              0,
+              1.5,
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  width: 22,
-                  child: Text(
-                    ordered ? '${i + 1}.' : '\u2022',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w600,
+                Padding(
+                  padding: const EdgeInsets.only(left: _listMarkerInset),
+                  child: SizedBox(
+                    width: _listMarkerWidth,
+                    child: Text(
+                      ordered ? '${numbers[i]}.' : '\u2022',
+                      style: markerStyle,
                     ),
                   ),
                 ),
                 Expanded(
-                  child: Text.rich(_InlineParser(items[i]).parse(context)),
+                  child: Text.rich(_InlineParser(items[i].text).parse(context)),
                 ),
               ],
             ),
@@ -658,8 +715,8 @@ class _PathCodeChipState extends State<_PathCodeChip> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final chip = Container(
-      margin: const EdgeInsets.symmetric(horizontal: 2),
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+      margin: const EdgeInsets.symmetric(horizontal: 1),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: .6),
         borderRadius: BorderRadius.circular(4),
@@ -718,8 +775,8 @@ class _CodeSpan extends WidgetSpan {
   }) : super(
          alignment: PlaceholderAlignment.middle,
          child: Container(
-           margin: const EdgeInsets.symmetric(horizontal: 2),
-           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+           margin: const EdgeInsets.symmetric(horizontal: 1),
+           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
            decoration: BoxDecoration(
              color: Theme.of(
                context,
@@ -811,7 +868,7 @@ class CodeBlock extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 2, 2, 0),
+            padding: const EdgeInsets.fromLTRB(10, 2, 2, 0),
             child: Row(
               children: [
                 if (language != null && language!.isNotEmpty)
@@ -852,7 +909,7 @@ class CodeBlock extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+            padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: SelectableText.rich(

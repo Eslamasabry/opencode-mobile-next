@@ -192,7 +192,7 @@ void main() {
     );
     controller.busySessions.add('session-1');
     controller.notifyListeners();
-    // The busy chat animates a typing indicator forever, so this pumps
+    // The busy composer animates its activity ring forever, so this pumps
     // explicit frames instead of settling.
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
@@ -219,5 +219,77 @@ void main() {
           .enabled,
       isTrue,
     );
+  });
+
+  testWidgets('a busy run lights the composer surface instead of a transcript '
+      'row', (tester) async {
+    final semantics = tester.ensureSemantics();
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    await _pumpChat(
+      tester,
+      controller,
+      size: const Size(360, 760),
+      textScale: 1,
+    );
+    expect(find.byKey(const ValueKey('composer-activity')), findsNothing);
+    expect(find.bySemanticsLabel('Assistant is working'), findsNothing);
+
+    controller.busySessions.add('session-1');
+    controller.notifyListeners();
+    // The activity ring animates forever, so pump explicit frames.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byKey(const ValueKey('composer-activity')), findsOneWidget);
+    expect(find.byKey(const ValueKey('typing-indicator')), findsNothing);
+    expect(find.bySemanticsLabel('Assistant is working'), findsOneWidget);
+    // The ring is an overlay on the surface, not a new surface: the prompt
+    // field keeps its place and the surface still bounds the ring.
+    final surface = tester.getRect(
+      find.byKey(const Key('chat-composer-surface')),
+    );
+    final ring = tester.getRect(
+      find.byKey(const ValueKey('composer-activity')),
+    );
+    expect(ring, surface);
+    expect(find.byKey(const Key('chat-composer-field')), findsOneWidget);
+
+    controller.busySessions.remove('session-1');
+    controller.notifyListeners();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('composer-activity')), findsNothing);
+    expect(find.bySemanticsLabel('Assistant is working'), findsNothing);
+    semantics.dispose();
+  });
+
+  testWidgets('reduced motion keeps a still activity ring while busy', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    controller.busySessions.add('session-1');
+    await tester.binding.setSurfaceSize(const Size(360, 760));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [connProvider.overrideWithValue(controller)],
+        child: MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(size: const Size(360, 760), disableAnimations: true),
+            child: child!,
+          ),
+          home: const ChatScreen(sessionID: 'session-1'),
+        ),
+      ),
+    );
+    // With animations disabled the ring is static, so the tree settles.
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('composer-activity')), findsOneWidget);
+    expect(find.bySemanticsLabel('Assistant is working'), findsOneWidget);
+    semantics.dispose();
   });
 }
