@@ -80,6 +80,17 @@ Update requests necessarily expose network information such as your IP address
 and app/update identifiers to Shorebird. Shorebird's own privacy terms govern
 that processing.
 
+## Provider logos
+
+The Providers, model catalog and model picker screens show a logo next to each
+AI provider. Those images are fetched on demand from Google's public favicon
+service (`t1.gstatic.com/faviconV2`) using the provider's website domain, for
+example `anthropic.com`. Nothing about you, your server, or your sessions is
+sent: the request carries only the domain name and your IP address, the same
+as loading any website. Images are cached in memory for the app's lifetime and
+never written to disk. If the request fails or you are offline, the app shows
+a two-letter monogram instead.
+
 ## Permissions
 
 - **Internet:** connect to your server, download local voice models, open links,
