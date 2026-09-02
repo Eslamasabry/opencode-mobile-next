@@ -29,11 +29,14 @@ import '../widgets/appearance_picker.dart';
 import '../widgets/connection_status_banner.dart';
 import '../widgets/entrance.dart';
 import '../widgets/confirm_sheet.dart';
+import '../widgets/diff_view.dart';
 import '../widgets/file_preview.dart';
+import '../widgets/info_label.dart';
 import '../widgets/markdown.dart';
 import '../widgets/pickers.dart';
 import '../widgets/product_states.dart';
 import '../widgets/tool_card.dart';
+import '../widgets/transcript_display_toggles.dart';
 import '../../api2/models.dart' show Api2Delivery, Api2FormInfo, Api2InboxItem;
 import '../permission_presentation.dart';
 import 'app_diagnostics_screen.dart';
@@ -783,7 +786,9 @@ class _ChatScreenState extends State<ChatScreen>
     unawaited(_conn.refreshInbox(widget.sessionID));
     try {
       final api = _conn.api;
-      if (api == null) throw const ProductException('OpenCode is reconnecting.');
+      if (api == null) {
+        throw const ProductException('OpenCode is reconnecting.');
+      }
       final msgs = await api.messages(widget.sessionID);
       msgs.sort(
         (a, b) =>
@@ -1029,9 +1034,9 @@ class _ChatScreenState extends State<ChatScreen>
     } on ApiException catch (error) {
       if (!mounted) return;
       if (error.statusCode == 409) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Already delivered')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Already delivered')));
         return;
       }
       _showActionError(error);
@@ -1059,9 +1064,9 @@ class _ChatScreenState extends State<ChatScreen>
     } on ApiException catch (error) {
       if (!mounted) return;
       if (error.statusCode == 409) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Already delivered')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Already delivered')));
         return;
       }
       _showActionError(error);
@@ -1405,14 +1410,18 @@ class _ChatScreenState extends State<ChatScreen>
     List<PromptAttachment> current,
   ) async {
     if (current.length >= _maxAttachmentCount) {
-      throw ProductException('You can attach up to $_maxAttachmentCount files.');
+      throw ProductException(
+        'You can attach up to $_maxAttachmentCount files.',
+      );
     }
     final currentBytes = current.fold<int>(
       0,
       (total, attachment) => total + _attachmentByteLength(attachment),
     );
     if (currentBytes >= _maxAggregateAttachmentBytes) {
-      throw const ProductException('Attachments must total no more than 20 MB.');
+      throw const ProductException(
+        'Attachments must total no more than 20 MB.',
+      );
     }
     final file = await FilePicker.pickFile(dialogTitle: 'Attach to prompt');
     if (file == null) return null;
@@ -1421,7 +1430,9 @@ class _ChatScreenState extends State<ChatScreen>
       throw const ProductException('Each attachment must be 10 MB or smaller.');
     }
     if (size > 0 && currentBytes + size > _maxAggregateAttachmentBytes) {
-      throw const ProductException('Attachments must total no more than 20 MB.');
+      throw const ProductException(
+        'Attachments must total no more than 20 MB.',
+      );
     }
     final remainingAggregateBytes = _maxAggregateAttachmentBytes - currentBytes;
     final readLimit = remainingAggregateBytes < _maxAttachmentBytes
@@ -1432,7 +1443,9 @@ class _ChatScreenState extends State<ChatScreen>
       maxBytes: readLimit,
     );
     if (bytes == null && readLimit < _maxAttachmentBytes) {
-      throw const ProductException('Attachments must total no more than 20 MB.');
+      throw const ProductException(
+        'Attachments must total no more than 20 MB.',
+      );
     }
     if (bytes == null) {
       throw const ProductException('Each attachment must be 10 MB or smaller.');
@@ -1542,7 +1555,9 @@ class _ChatScreenState extends State<ChatScreen>
     try {
       final repository = await _requireActionRepository();
       final url = await repository.shareSession(widget.sessionID);
-      if (url == null) throw const ProductException('No share link was returned');
+      if (url == null) {
+        throw const ProductException('No share link was returned');
+      }
       if (mounted) {
         setState(() => _localShareUrl = url);
         await _conn.refreshSessions();
@@ -2060,7 +2075,9 @@ class _ChatScreenState extends State<ChatScreen>
     }
     try {
       final api = await _conn.prepareActionTransport();
-      if (api == null) throw const ProductException('OpenCode is reconnecting.');
+      if (api == null) {
+        throw const ProductException('OpenCode is reconnecting.');
+      }
       await api.promptAsync(
         widget.sessionID,
         text: text,
@@ -2289,7 +2306,9 @@ class _ChatScreenState extends State<ChatScreen>
     if (cmd == null || cmd.isEmpty) return;
     try {
       final api = await _conn.prepareActionTransport();
-      if (api == null) throw const ProductException('OpenCode is reconnecting.');
+      if (api == null) {
+        throw const ProductException('OpenCode is reconnecting.');
+      }
       await api.shell(
         widget.sessionID,
         command: cmd,
@@ -2323,7 +2342,9 @@ class _ChatScreenState extends State<ChatScreen>
     try {
       final repository = await _conn.prepareActionRepository();
       if (repository == null) {
-        throw const ProductException('OpenCode commands are unavailable offline.');
+        throw const ProductException(
+          'OpenCode commands are unavailable offline.',
+        );
       }
       final commands = [...await repository.listCommands()];
       if (!mounted) return;
@@ -3446,10 +3467,14 @@ class _ChatScreenState extends State<ChatScreen>
   }) async {
     final bytes = data.exportBytes;
     if (data.error != null || bytes == null) {
-      throw ProductException(data.error ?? 'The file has no content to attach.');
+      throw ProductException(
+        data.error ?? 'The file has no content to attach.',
+      );
     }
     if (_attachments.length >= _maxAttachmentCount) {
-      throw ProductException('You can attach up to $_maxAttachmentCount files.');
+      throw ProductException(
+        'You can attach up to $_maxAttachmentCount files.',
+      );
     }
     if (bytes.length > _maxAttachmentBytes) {
       throw const ProductException('Each attachment must be 10 MB or smaller.');
@@ -3459,7 +3484,9 @@ class _ChatScreenState extends State<ChatScreen>
       (total, attachment) => total + _attachmentByteLength(attachment),
     );
     if (currentBytes + bytes.length > _maxAggregateAttachmentBytes) {
-      throw const ProductException('Attachments must total no more than 20 MB.');
+      throw const ProductException(
+        'Attachments must total no more than 20 MB.',
+      );
     }
     final mime = mimeType ?? 'application/octet-stream';
     final attachment = PromptAttachment(
@@ -3501,7 +3528,9 @@ class _ChatScreenState extends State<ChatScreen>
     }
     try {
       final api = await _conn.prepareActionTransport();
-      if (api == null) throw const ProductException('OpenCode is reconnecting.');
+      if (api == null) {
+        throw const ProductException('OpenCode is reconnecting.');
+      }
       final currentMessages = await api.messages(widget.sessionID);
       if (currentMessages.isNotEmpty) return null;
       await api.deleteSession(widget.sessionID);
@@ -3602,6 +3631,37 @@ class _ChatScreenState extends State<ChatScreen>
     return '';
   }
 
+  /// A permission request lands as an inline card above the composer —
+  /// oldest first, one at a time — instead of a modal sheet that steals the
+  /// keyboard mid-sentence. Animates in and out unless motion is reduced.
+  Widget _attentionRegion(
+    bool reduceMotion,
+    List<PermissionRequest> pendingPermissions,
+  ) {
+    final permission = pendingPermissions.firstOrNull;
+    return AnimatedSize(
+      duration: reduceMotion
+          ? Duration.zero
+          : const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.bottomCenter,
+      child: AnimatedSwitcher(
+        duration: reduceMotion
+            ? Duration.zero
+            : const Duration(milliseconds: 180),
+        child: permission == null
+            ? const SizedBox.shrink(key: ValueKey('permission-card-none'))
+            : _PermissionAttentionCard(
+                key: ValueKey('permission-card-${permission.id}'),
+                permission: permission,
+                replying: _permissionReplying,
+                onReview: () => unawaited(_showPermissionDialog(permission)),
+                onAllowOnce: () => unawaited(_allowPermissionOnce(permission)),
+              ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -3642,10 +3702,7 @@ class _ChatScreenState extends State<ChatScreen>
             if (busy)
               IconButton(
                 tooltip: 'Stop',
-                icon: Icon(
-                  AppIcons.stop,
-                  color: theme.colorScheme.error,
-                ),
+                icon: Icon(AppIcons.stop, color: theme.colorScheme.error),
                 onPressed: _aborting ? null : _abort,
               ),
             IconButton(
@@ -3686,12 +3743,26 @@ class _ChatScreenState extends State<ChatScreen>
             Expanded(
               // Rehydrates and refreshes must not flash a skeleton or a
               // full-screen error over an already-visible transcript.
+              // A permission card must not wait for the transcript: it is
+              // pinned to the bottom of the skeleton and error states too.
               child: _loading && _messages.isEmpty
-                  ? const LoadingList(rows: 6)
+                  ? Column(
+                      children: [
+                        const Expanded(child: LoadingList(rows: 6)),
+                        _attentionRegion(reduceMotion, pendingPermissions),
+                      ],
+                    )
                   : _error != null && _messages.isEmpty
-                  ? ProductErrorState(
-                      message: productErrorText(_error!),
-                      onRetry: _load,
+                  ? Column(
+                      children: [
+                        Expanded(
+                          child: ProductErrorState(
+                            message: productErrorText(_error!),
+                            onRetry: _load,
+                          ),
+                        ),
+                        _attentionRegion(reduceMotion, pendingPermissions),
+                      ],
                     )
                   : LayoutBuilder(
                       builder: (context, bodyConstraints) {
@@ -3712,184 +3783,142 @@ class _ChatScreenState extends State<ChatScreen>
                                     )
                                   : DesktopSelectionArea(
                                       child: MarkdownFileLinks(
-                                      validate: _validatePathLink,
-                                      open: _openPathLink,
-                                      child: NotificationListener<ScrollNotification>(
-                                        onNotification: _onTranscriptScroll,
-                                        child: Stack(
-                                          alignment: Alignment.topCenter,
-                                          children: [
-                                            ConstrainedBox(
-                                              constraints: const BoxConstraints(
-                                                maxWidth: 860,
-                                              ),
-                                              child: ScrollablePositionedList.builder(
-                                                reverse: true,
-                                                itemScrollController:
-                                                    _messageScroll,
-                                                itemPositionsListener:
-                                                    _messagePositions,
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 12,
-                                                      vertical: 10,
+                                        validate: _validatePathLink,
+                                        open: _openPathLink,
+                                        child: NotificationListener<ScrollNotification>(
+                                          onNotification: _onTranscriptScroll,
+                                          child: Stack(
+                                            alignment: Alignment.topCenter,
+                                            children: [
+                                              ConstrainedBox(
+                                                constraints:
+                                                    const BoxConstraints(
+                                                      maxWidth: 860,
                                                     ),
-                                                itemCount:
-                                                    _renderedMessageCount +
-                                                    (busy ? 1 : 0),
-                                                itemBuilder: (context, i) {
-                                                  final index =
-                                                      _renderedMessageCount -
-                                                      1 -
-                                                      i;
-                                                  if (index < 0) {
-                                                    return _TypingIndicator();
-                                                  }
-                                                  final m = _messages[index];
-                                                  if (v2VariantPart(m)
-                                                      case final tagged?) {
-                                                    return V2TranscriptRow(
+                                                child: ScrollablePositionedList.builder(
+                                                  reverse: true,
+                                                  itemScrollController:
+                                                      _messageScroll,
+                                                  itemPositionsListener:
+                                                      _messagePositions,
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 12,
+                                                        vertical: 10,
+                                                      ),
+                                                  itemCount:
+                                                      _renderedMessageCount +
+                                                      (busy ? 1 : 0),
+                                                  itemBuilder: (context, i) {
+                                                    final index =
+                                                        _renderedMessageCount -
+                                                        1 -
+                                                        i;
+                                                    if (index < 0) {
+                                                      return _TypingIndicator();
+                                                    }
+                                                    final m = _messages[index];
+                                                    if (v2VariantPart(m)
+                                                        case final tagged?) {
+                                                      return V2TranscriptRow(
+                                                        key: ValueKey(
+                                                          'message-${m.info.id}',
+                                                        ),
+                                                        part: tagged,
+                                                        messageId: m.info.id,
+                                                      );
+                                                    }
+                                                    final meta = _messageMeta(
+                                                      _messages,
+                                                      index,
+                                                    );
+                                                    final parts =
+                                                        displayParts[index];
+                                                    if (parts.isEmpty &&
+                                                        meta.isEmpty &&
+                                                        m.info.errorText ==
+                                                            null) {
+                                                      return const SizedBox.shrink();
+                                                    }
+                                                    return _MessageView(
                                                       key: ValueKey(
                                                         'message-${m.info.id}',
                                                       ),
-                                                      part: tagged,
-                                                      messageId: m.info.id,
-                                                    );
-                                                  }
-                                                  final meta = _messageMeta(
-                                                    _messages,
-                                                    index,
-                                                  );
-                                                  final parts =
-                                                      displayParts[index];
-                                                  if (parts.isEmpty &&
-                                                      meta.isEmpty &&
-                                                      m.info.errorText ==
-                                                          null) {
-                                                    return const SizedBox.shrink();
-                                                  }
-                                                  return _MessageView(
-                                                    key: ValueKey(
-                                                      'message-${m.info.id}',
-                                                    ),
-                                                    m: m,
-                                                    meta: meta,
-                                                    parts: parts,
-                                                    reasoningExpanded: _conn
-                                                        .transcriptReasoningExpanded,
-                                                    expansionStore:
-                                                        _transcriptExpansion,
-                                                    showTimestamp: _conn
-                                                        .transcriptTimestampsVisible,
-                                                    highlighted:
-                                                        _highlightedMessageID ==
-                                                        m.info.id,
-                                                    onLongPress: () =>
-                                                        unawaited(
-                                                          _showMessageActions(
+                                                      m: m,
+                                                      meta: meta,
+                                                      parts: parts,
+                                                      reasoningExpanded: _conn
+                                                          .transcriptReasoningExpanded,
+                                                      expansionStore:
+                                                          _transcriptExpansion,
+                                                      showTimestamp: _conn
+                                                          .transcriptTimestampsVisible,
+                                                      highlighted:
+                                                          _highlightedMessageID ==
+                                                          m.info.id,
+                                                      onLongPress: () =>
+                                                          unawaited(
+                                                            _showMessageActions(
+                                                              m,
+                                                            ),
+                                                          ),
+                                                      contextActions: () =>
+                                                          _messageContextActions(
                                                             m,
                                                           ),
-                                                        ),
-                                                    contextActions: () =>
-                                                        _messageContextActions(
-                                                          m,
-                                                        ),
-                                                    filePreviewLoader:
-                                                        _loadToolOutputFile,
-                                                    onAttachFile:
-                                                        _attachToolOutputFile,
-                                                    onDownloadFile:
-                                                        _downloadToolOutputFile,
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                            if (_awayFromLatest)
-                                              Positioned(
-                                                right: 14,
-                                                bottom: 10,
-                                                child: _JumpToLatestButton(
-                                                  onTap: _jumpToLatest,
+                                                      filePreviewLoader:
+                                                          _loadToolOutputFile,
+                                                      onAttachFile:
+                                                          _attachToolOutputFile,
+                                                      onDownloadFile:
+                                                          _downloadToolOutputFile,
+                                                    );
+                                                  },
                                                 ),
                                               ),
-                                            // Only while reading history, and
-                                            // counting only the messages that
-                                            // actually sit above the viewport.
-                                            if (_awayFromLatest &&
-                                                _messages.length > 30)
-                                              Positioned(
-                                                top: 8,
-                                                child: ValueListenableBuilder(
-                                                  valueListenable:
-                                                      _messagePositions
-                                                          .itemPositions,
-                                                  builder:
-                                                      (
-                                                        context,
-                                                        positions,
-                                                        _,
-                                                      ) {
-                                                        final earlier =
-                                                            _earlierMessageCount(
-                                                              positions,
-                                                            );
-                                                        if (earlier <= 0) {
-                                                          return const SizedBox.shrink();
-                                                        }
-                                                        return _EarlierMessagesPill(
-                                                          count: earlier,
-                                                          onTap: () =>
-                                                              unawaited(
-                                                                _openTimeline(),
-                                                              ),
-                                                        );
-                                                      },
+                                              if (_awayFromLatest)
+                                                Positioned(
+                                                  right: 14,
+                                                  bottom: 10,
+                                                  child: _JumpToLatestButton(
+                                                    onTap: _jumpToLatest,
+                                                  ),
                                                 ),
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    ),
-                            ),
-                            // A permission request lands as an inline card
-                            // above the composer — oldest first, one at a
-                            // time — instead of a modal sheet that steals
-                            // the keyboard mid-sentence.
-                            AnimatedSize(
-                              duration: reduceMotion
-                                  ? Duration.zero
-                                  : const Duration(milliseconds: 220),
-                              curve: Curves.easeOutCubic,
-                              alignment: Alignment.bottomCenter,
-                              child: AnimatedSwitcher(
-                                duration: reduceMotion
-                                    ? Duration.zero
-                                    : const Duration(milliseconds: 180),
-                                child: pendingPermissions.isEmpty
-                                    ? const SizedBox.shrink(
-                                        key: ValueKey('permission-card-none'),
-                                      )
-                                    : _PermissionAttentionCard(
-                                        key: ValueKey(
-                                          'permission-card-'
-                                          '${pendingPermissions.first.id}',
-                                        ),
-                                        permission: pendingPermissions.first,
-                                        replying: _permissionReplying,
-                                        onReview: () => unawaited(
-                                          _showPermissionDialog(
-                                            pendingPermissions.first,
-                                          ),
-                                        ),
-                                        onAllowOnce: () => unawaited(
-                                          _allowPermissionOnce(
-                                            pendingPermissions.first,
+                                              // Only while reading history, and
+                                              // counting only the messages that
+                                              // actually sit above the viewport.
+                                              if (_awayFromLatest &&
+                                                  _messages.length > 30)
+                                                Positioned(
+                                                  top: 8,
+                                                  child: ValueListenableBuilder(
+                                                    valueListenable:
+                                                        _messagePositions
+                                                            .itemPositions,
+                                                    builder: (context, positions, _) {
+                                                      final earlier =
+                                                          _earlierMessageCount(
+                                                            positions,
+                                                          );
+                                                      if (earlier <= 0) {
+                                                        return const SizedBox.shrink();
+                                                      }
+                                                      return _EarlierMessagesPill(
+                                                        count: earlier,
+                                                        onTap: () => unawaited(
+                                                          _openTimeline(),
+                                                        ),
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+                                            ],
                                           ),
                                         ),
                                       ),
-                              ),
+                                    ),
                             ),
+                            _attentionRegion(reduceMotion, pendingPermissions),
                             // §7 rule 5: v2-only surfaces stay silent on v1.
                             // The map is already empty there, but the gate is
                             // explicit so a stale entry cannot leak a form
@@ -3908,11 +3937,13 @@ class _ChatScreenState extends State<ChatScreen>
                             // The offline-draft half of the strip is v1-safe;
                             // only the inbox bubbles are v2-only (§7 rule 5).
                             if ((
-                              drafts: _conn.queuedPromptsFor(widget.sessionID),
-                              inbox: _conn.capabilities.inbox
-                                  ? _conn.inboxItemsFor(widget.sessionID)
-                                  : const <Api2InboxItem>[],
-                            )
+                                  drafts: _conn.queuedPromptsFor(
+                                    widget.sessionID,
+                                  ),
+                                  inbox: _conn.capabilities.inbox
+                                      ? _conn.inboxItemsFor(widget.sessionID)
+                                      : const <Api2InboxItem>[],
+                                )
                                 case final pendingSends
                                 when pendingSends.drafts.isNotEmpty ||
                                     pendingSends.inbox.isNotEmpty)
@@ -3944,57 +3975,58 @@ class _ChatScreenState extends State<ChatScreen>
                                 child: DesktopFileDropTarget(
                                   onDrop: _handleDroppedFiles,
                                   child: _ChatComposer(
-                                  compact: compactComposer,
-                                  allowInlineCommands:
-                                      bodyConstraints.maxHeight >= 300,
-                                  controller: _composer,
-                                  focusNode: _focus,
-                                  commands: _chatCommands,
-                                  agents: _subagents,
-                                  onSelectCommand: _selectChatCommand,
-                                  onSelectAgent: _insertAgentMention,
-                                  onOpenCommands: _openCommandLauncher,
-                                  onOpenAgents: () => _openCommandLauncher(
-                                    initialTab: _ComposerToolTab.agents,
+                                    compact: compactComposer,
+                                    allowInlineCommands:
+                                        bodyConstraints.maxHeight >= 300,
+                                    controller: _composer,
+                                    focusNode: _focus,
+                                    commands: _chatCommands,
+                                    agents: _subagents,
+                                    onSelectCommand: _selectChatCommand,
+                                    onSelectAgent: _insertAgentMention,
+                                    onOpenCommands: _openCommandLauncher,
+                                    onOpenAgents: () => _openCommandLauncher(
+                                      initialTab: _ComposerToolTab.agents,
+                                    ),
+                                    onOpenEditor: _openPromptEditor,
+                                    attachments: _attachments,
+                                    busy: busy,
+                                    sending: _sending,
+                                    canSendWhileBusy: _conn.supportsInbox,
+                                    delivery: _delivery,
+                                    onDeliveryChanged: (delivery) =>
+                                        setState(() => _delivery = delivery),
+                                    voiceOpening: _voiceOpening,
+                                    selectedAgent: _conn.selectedAgent,
+                                    defaultAgent: _defaultAgentName,
+                                    selectedModel: _conn.selectedModel,
+                                    modelLabel: _presentedModelLabel,
+                                    selectedVariant: _conn.selectedVariant,
+                                    showAttachmentNote: showAttachmentNote,
+                                    pulse: _composerPulse,
+                                    onAttach: _pickAttachment,
+                                    onContentInserted: (content) => unawaited(
+                                      _handleInsertedContent(content),
+                                    ),
+                                    onVoice: _openVoice,
+                                    onSend: _send,
+                                    onSendDelivery: (delivery) =>
+                                        unawaited(_send(delivery: delivery)),
+                                    onStop: _abort,
+                                    onChooseModel: () => showModelPicker(
+                                      context,
+                                      applyScope: _modelApplyScope,
+                                    ),
+                                    contextUsage: _contextWindowUsage(),
+                                    onRemoveAttachment: (attachment) =>
+                                        setState(
+                                          () => _attachments.remove(attachment),
+                                        ),
+                                    // UX-103 review handoff (start).
+                                    references: _stagedReferences,
+                                    onRemoveReference: _removeStagedReference,
+                                    // UX-103 review handoff (end).
                                   ),
-                                  onOpenEditor: _openPromptEditor,
-                                  attachments: _attachments,
-                                  busy: busy,
-                                  sending: _sending,
-                                  canSendWhileBusy: _conn.supportsInbox,
-                                  delivery: _delivery,
-                                  onDeliveryChanged: (delivery) =>
-                                      setState(() => _delivery = delivery),
-                                  voiceOpening: _voiceOpening,
-                                  selectedAgent: _conn.selectedAgent,
-                                  defaultAgent: _defaultAgentName,
-                                  selectedModel: _conn.selectedModel,
-                                  modelLabel: _presentedModelLabel,
-                                  selectedVariant: _conn.selectedVariant,
-                                  showAttachmentNote: showAttachmentNote,
-                                  pulse: _composerPulse,
-                                  onAttach: _pickAttachment,
-                                  onContentInserted: (content) => unawaited(
-                                    _handleInsertedContent(content),
-                                  ),
-                                  onVoice: _openVoice,
-                                  onSend: _send,
-                                  onSendDelivery: (delivery) =>
-                                      unawaited(_send(delivery: delivery)),
-                                  onStop: _abort,
-                                  onChooseModel: () => showModelPicker(
-                                    context,
-                                    applyScope: _modelApplyScope,
-                                  ),
-                                  contextUsage: _contextWindowUsage(),
-                                  onRemoveAttachment: (attachment) => setState(
-                                    () => _attachments.remove(attachment),
-                                  ),
-                                  // UX-103 review handoff (start).
-                                  references: _stagedReferences,
-                                  onRemoveReference: _removeStagedReference,
-                                  // UX-103 review handoff (end).
-                                ),
                                 ),
                               ),
                             ),
@@ -4031,7 +4063,11 @@ class _ChatScreenState extends State<ChatScreen>
 /// doc §2): icon, form title, question count, and an Answer button that
 /// opens the shared form renderer.
 class _FormRequestCard extends StatelessWidget {
-  const _FormRequestCard({super.key, required this.form, required this.onAnswer});
+  const _FormRequestCard({
+    super.key,
+    required this.form,
+    required this.onAnswer,
+  });
 
   final Api2FormInfo form;
   final VoidCallback onAnswer;

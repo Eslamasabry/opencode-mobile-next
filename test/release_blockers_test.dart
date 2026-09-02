@@ -209,7 +209,10 @@ void main() {
     );
     expect(normalizeServerProfileUrl('fe80::1'), 'https://[fe80::1]');
     // And the IPv4 and hostname behavior is unchanged.
-    expect(normalizeServerProfileUrl('127.0.0.1:4096'), 'http://127.0.0.1:4096');
+    expect(
+      normalizeServerProfileUrl('127.0.0.1:4096'),
+      'http://127.0.0.1:4096',
+    );
     expect(normalizeServerProfileUrl(':4096'), ':4096');
   });
 
@@ -376,8 +379,7 @@ void main() {
             builder: (context) => Column(
               children: [
                 TextButton(
-                  onPressed: () =>
-                      openExternalLink(context, 'intent://steal'),
+                  onPressed: () => openExternalLink(context, 'intent://steal'),
                   child: const Text('Blocked'),
                 ),
                 TextButton(
@@ -426,6 +428,10 @@ void main() {
     );
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Session menu'));
+    await tester.pumpAndSettle();
+    // Sharing sits under Actions in the merged menu; scroll it into view on
+    // the short test surface before tapping.
+    await tester.ensureVisible(find.text('Share session'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Share session'));
     await tester.pumpAndSettle();
@@ -716,9 +722,9 @@ void main() {
 
     // The same sentence is the public README's opening claim, so the two
     // cannot drift apart.
-    final readme = File('README.md')
-        .readAsStringSync()
-        .replaceAll(RegExp(r'[>\s]+'), ' ');
+    final readme = File(
+      'README.md',
+    ).readAsStringSync().replaceAll(RegExp(r'[>\s]+'), ' ');
     expect(readme, contains(nonAffiliationDisclaimer));
   });
 
@@ -739,7 +745,12 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.textContaining('Displayed data may be stale'), findsOneWidget);
+    // The banner itself is one line; the staleness explanation and the raw
+    // error live behind its Details action.
+    expect(find.text('Connection lost'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('connection-banner-details')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('may be stale'), findsOneWidget);
     await tester.pumpWidget(const MaterialApp(home: SizedBox()));
     controller.dispose();
   });

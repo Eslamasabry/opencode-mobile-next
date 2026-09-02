@@ -12,7 +12,6 @@ import 'external_link.dart';
 
 // The chat transcript (a `part` of chat_screen.dart) reaches the glossary
 // through this library, which it already imports.
-export 'info_label.dart' show InfoLabel, Glossary;
 
 /// Installed by screens that can resolve server file paths. Inline code
 /// spans that look like paths stay plain until [validate] confirms the file
@@ -828,9 +827,7 @@ class CodeBlock extends StatelessWidget {
                     ),
                     child: Text(
                       language!,
-                      style: theme.textTheme.labelSmall!.copyWith(
-                        color: muted,
-                      ),
+                      style: theme.textTheme.labelSmall!.copyWith(color: muted),
                     ),
                   ),
                 const Spacer(),

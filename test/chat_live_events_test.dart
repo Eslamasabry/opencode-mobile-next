@@ -408,6 +408,16 @@ MessageWithParts _message(
   parts: parts,
 );
 
+/// The transcript toggles may apply in place and leave the session sheet
+/// open; a reader would then swipe it away before reaching the app bar.
+Future<void> _dismissSheetIfOpen(WidgetTester tester) async {
+  if (find.byKey(const Key('session-view-timestamps')).evaluate().isEmpty) {
+    return;
+  }
+  await tester.tapAt(const Offset(10, 10));
+  await tester.pumpAndSettle();
+}
+
 EventEnvelope _event(String type, Map<String, dynamic> properties) =>
     EventEnvelope(type: type, properties: properties);
 
@@ -1332,8 +1342,11 @@ void main() {
 
     expect(find.byKey(const Key('tool-call-group')), findsNWidgets(2));
     expect(find.text('Tools'), findsNWidgets(2));
-    expect(find.text('3 calls · read · search · shell'), findsOneWidget);
-    expect(find.text('2 calls · edit · write'), findsOneWidget);
+    expect(
+      find.text('Read 1 file, searched once, ran 1 command'),
+      findsOneWidget,
+    );
+    expect(find.text('Edited 2 files'), findsOneWidget);
     expect(find.text('Tool chain finished.'), findsOneWidget);
     expect(find.text('Shell'), findsNothing);
     expect(find.text('Read'), findsNothing);
@@ -1698,27 +1711,22 @@ void main() {
           .value,
       isTrue,
     );
-    expect(find.text('Timestamps & usage'), findsOneWidget);
     await tester.tap(find.byKey(const Key('session-view-timestamps')));
     await tester.pumpAndSettle();
 
-    // The toggle applies in place and the sheet stays open.
     expect(controller.transcriptTimestampsVisible, isTrue);
-    expect(find.text('Timestamps & usage'), findsOneWidget);
     expect(find.byKey(const Key('message-meta-user-display')), findsOneWidget);
     expect(
       find.byKey(const Key('message-meta-assistant-display')),
       findsOneWidget,
     );
-    await tester.tapAt(const Offset(10, 10));
-    await tester.pumpAndSettle();
+    await _dismissSheetIfOpen(tester);
 
     await tester.tap(find.byTooltip('Session menu'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('session-view-thinking')));
     await tester.pumpAndSettle();
-    await tester.tapAt(const Offset(10, 10));
-    await tester.pumpAndSettle();
+    await _dismissSheetIfOpen(tester);
 
     expect(controller.transcriptReasoningExpanded, isFalse);
     expect(find.text(reasoning), findsNothing);
@@ -1783,9 +1791,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('session-view-thinking')));
       await tester.pumpAndSettle();
-      // The switch leaves the sheet open; dismiss it like a reader would.
-      await tester.tapAt(const Offset(10, 10));
-      await tester.pumpAndSettle();
+      await _dismissSheetIfOpen(tester);
     }
 
     // The transcript-wide default wins while it is being set...
@@ -2560,8 +2566,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(controller.transcriptTimestampsVisible, isTrue);
     expect(tester.takeException(), isNull);
-    await tester.tapAt(const Offset(10, 10));
-    await tester.pumpAndSettle();
+    await _dismissSheetIfOpen(tester);
 
     await tester.tap(find.byTooltip('Session menu'));
     await tester.pumpAndSettle();

@@ -6,6 +6,9 @@ import '../../api/models.dart';
 import '../app_theme.dart';
 import 'file_preview.dart';
 
+// The chat transcript (a `part` of chat_screen.dart) opens file diffs through
+// this library, which it already imports; tool cards render diffs too.
+
 typedef ToolOutputFileLoader =
     Future<FilePreviewData> Function(ToolOutputFile file);
 typedef ToolOutputFileAction =
@@ -470,173 +473,174 @@ class _ToolCardState extends State<ToolCard> {
         theme,
         reduceMotion,
         Column(
-        children: [
-          Semantics(
-            button: hasBody,
-            expanded: hasBody ? _expanded : null,
-            label: '${contract.title}, ${widget.state.status}',
-            child: InkWell(
-              onTap: hasBody ? _toggleExpanded : null,
-              borderRadius: widget.embedded
-                  ? BorderRadius.zero
-                  : BorderRadius.circular(8),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 48),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
-                  child: Row(
-                    children: [
-                      Icon(
-                        _iconFor(contract.kind),
-                        size: 16,
-                        color: AppTheme.mutedOf(theme),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Text(
-                              contract.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall!.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(
-                                  alpha: .9,
+          children: [
+            Semantics(
+              button: hasBody,
+              expanded: hasBody ? _expanded : null,
+              label: '${contract.title}, ${widget.state.status}',
+              child: InkWell(
+                onTap: hasBody ? _toggleExpanded : null,
+                borderRadius: widget.embedded
+                    ? BorderRadius.zero
+                    : BorderRadius.circular(8),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 48),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _iconFor(contract.kind),
+                          size: 16,
+                          color: AppTheme.mutedOf(theme),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Text(
+                                contract.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodySmall!.copyWith(
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: .9,
+                                  ),
+                                  fontWeight: FontWeight.w600,
                                 ),
-                                fontWeight: FontWeight.w600,
                               ),
-                            ),
-                            if (contract.subtitle?.isNotEmpty == true) ...[
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  contract.subtitle!,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                    fontFamily: contract.kind == _ToolKind.shell
-                                        ? AppTheme.monoFamily
-                                        : null,
+                              if (contract.subtitle?.isNotEmpty == true) ...[
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    contract.subtitle!,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                      fontFamily:
+                                          contract.kind == _ToolKind.shell
+                                          ? AppTheme.monoFamily
+                                          : null,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ] else
-                              const Spacer(),
-                          ],
+                              ] else
+                                const Spacer(),
+                            ],
+                          ),
                         ),
-                      ),
-                      if (contract.details.isNotEmpty) ...[
-                        const SizedBox(width: 6),
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 92),
-                          child: Text(
-                            contract.details.join(' · '),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
+                        if (contract.details.isNotEmpty) ...[
+                          const SizedBox(width: 6),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 92),
+                            child: Text(
+                              contract.details.join(' · '),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                      const SizedBox(width: 6),
-                      if (_running && !reduceMotion)
-                        SizedBox(
-                          width: 12,
-                          height: 12,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 1.6,
-                            color: theme.colorScheme.primary,
+                        ],
+                        const SizedBox(width: 6),
+                        if (_running && !reduceMotion)
+                          SizedBox(
+                            width: 12,
+                            height: 12,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 1.6,
+                              color: theme.colorScheme.primary,
+                            ),
+                          )
+                        else
+                          Icon(
+                            _running
+                                ? Icons.hourglass_top_rounded
+                                : widget.state.status == 'error'
+                                ? Icons.error_outline_rounded
+                                : Icons.check_circle_outline_rounded,
+                            size: 14,
+                            color: _statusColor,
                           ),
-                        )
-                      else
-                        Icon(
-                          _running
-                              ? Icons.hourglass_top_rounded
-                              : widget.state.status == 'error'
-                              ? Icons.error_outline_rounded
-                              : Icons.check_circle_outline_rounded,
-                          size: 14,
-                          color: _statusColor,
-                        ),
-                      if (hasBody) ...[
-                        const SizedBox(width: 4),
-                        AnimatedRotation(
-                          turns: _expanded ? .5 : 0,
-                          duration: reduceMotion
-                              ? Duration.zero
-                              : const Duration(milliseconds: 150),
-                          child: Icon(
-                            Icons.expand_more_rounded,
-                            size: 16,
-                            color: AppTheme.mutedOf(theme),
+                        if (hasBody) ...[
+                          const SizedBox(width: 4),
+                          AnimatedRotation(
+                            turns: _expanded ? .5 : 0,
+                            duration: reduceMotion
+                                ? Duration.zero
+                                : const Duration(milliseconds: 150),
+                            child: Icon(
+                              Icons.expand_more_rounded,
+                              size: 16,
+                              color: AppTheme.mutedOf(theme),
+                            ),
                           ),
-                        ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          if (_interleavedSegments case final segments?)
-            Padding(
-              key: const Key('tool-interleaved-output'),
-              padding: const EdgeInsets.fromLTRB(10, 2, 10, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  for (final segment in segments)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: _segmentWidget(segment),
-                    ),
-                ],
+            if (_interleavedSegments case final segments?)
+              Padding(
+                key: const Key('tool-interleaved-output'),
+                padding: const EdgeInsets.fromLTRB(10, 2, 10, 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (final segment in segments)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: _segmentWidget(segment),
+                      ),
+                  ],
+                ),
+              )
+            else if (_files.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 2, 10, 10),
+                child: Column(
+                  children: [
+                    for (final file in _files)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: file.isImage
+                            ? _ToolOutputPreview(
+                                file: file,
+                                load: _previewLoads[file.identity]!,
+                                onRetry: () => _retryPreview(file),
+                                onAttach: widget.onAttachFile,
+                                onDownload: widget.onDownloadFile,
+                              )
+                            : _ToolOutputFileTile(
+                                file: file,
+                                load: () => _loadCached(file),
+                                onAttach: widget.onAttachFile,
+                                onDownload: widget.onDownloadFile,
+                              ),
+                      ),
+                  ],
+                ),
               ),
-            )
-          else if (_files.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 2, 10, 10),
-              child: Column(
-                children: [
-                  for (final file in _files)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: file.isImage
-                          ? _ToolOutputPreview(
-                              file: file,
-                              load: _previewLoads[file.identity]!,
-                              onRetry: () => _retryPreview(file),
-                              onAttach: widget.onAttachFile,
-                              onDownload: widget.onDownloadFile,
-                            )
-                          : _ToolOutputFileTile(
-                              file: file,
-                              load: () => _loadCached(file),
-                              onAttach: widget.onAttachFile,
-                              onDownload: widget.onDownloadFile,
-                            ),
-                    ),
-                ],
+            if (_expanded && hasBody)
+              Container(
+                width: double.infinity,
+                padding: widget.embedded
+                    ? const EdgeInsets.fromLTRB(34, 0, 10, 8)
+                    : const EdgeInsets.fromLTRB(10, 4, 10, 10),
+                child: _ToolContractBody(
+                  contract: contract,
+                  state: widget.state,
+                  embedded: widget.embedded,
+                  // Output already rendered in order above; the expanded body
+                  // keeps input/metadata only.
+                  suppressOutput: _interleavedSegments != null,
+                ),
               ),
-            ),
-          if (_expanded && hasBody)
-            Container(
-              width: double.infinity,
-              padding: widget.embedded
-                  ? const EdgeInsets.fromLTRB(34, 0, 10, 8)
-                  : const EdgeInsets.fromLTRB(10, 4, 10, 10),
-              child: _ToolContractBody(
-                contract: contract,
-                state: widget.state,
-                embedded: widget.embedded,
-                // Output already rendered in order above; the expanded body
-                // keeps input/metadata only.
-                suppressOutput: _interleavedSegments != null,
-              ),
-            ),
-        ],
+          ],
         ),
       ),
     );

@@ -615,12 +615,18 @@ class _PromptToolsButton extends StatelessWidget {
             backgroundColor: scheme.surfaceContainerHigh,
             foregroundColor: scheme.onSurfaceVariant,
           ),
+          // The label rides on the icon so it merges into the button's own
+          // semantics node, where TalkBack and the tap-target guideline
+          // look for it.
           icon: voiceOpening
-              ? const SizedBox.square(
-                  dimension: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+              ? Semantics(
+                  label: tooltipText,
+                  child: SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
                 )
-              : const Icon(Icons.add_rounded),
+              : const Icon(Icons.add_rounded, semanticLabel: tooltipText),
         ),
       ),
     );
@@ -801,6 +807,26 @@ class _ComposerSubmit extends StatelessWidget {
     );
   }
 
+  /// Send fills with the primary colour the moment there is something to
+  /// send and drops to a tonal disc when there is not, so the button itself
+  /// says whether a tap will do anything. The colour change animates over
+  /// 150 ms through the button's own style transition (none under reduced
+  /// motion). Kept a plain [IconButton] so the switcher above updates it in
+  /// place instead of cross-fading two send buttons.
+  ButtonStyle _sendStyle(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    return IconButton.styleFrom(
+      backgroundColor: scheme.primary,
+      foregroundColor: scheme.onPrimary,
+      disabledBackgroundColor: scheme.surfaceContainerHigh,
+      disabledForegroundColor: scheme.onSurfaceVariant.withValues(alpha: .7),
+      animationDuration: reduceMotion
+          ? Duration.zero
+          : const Duration(milliseconds: 150),
+    );
+  }
+
   Widget _slot(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     if (busy && !canSendWhileBusy) {
@@ -823,20 +849,12 @@ class _ComposerSubmit extends StatelessWidget {
           )
         : const Icon(Icons.arrow_upward_rounded);
     if (!busy) {
-      return _SendFill(
-        enabled: enabled,
-        child: IconButton(
-          key: const Key('chat-send-button'),
-          tooltip: 'Send',
-          onPressed: sending || !enabled ? null : onSend,
-          style: IconButton.styleFrom(
-            foregroundColor: scheme.onPrimary,
-            disabledForegroundColor: scheme.onSurfaceVariant.withValues(
-              alpha: .7,
-            ),
-          ),
-          icon: icon,
-        ),
+      return IconButton(
+        key: const Key('chat-send-button'),
+        tooltip: 'Send',
+        onPressed: sending || !enabled ? null : onSend,
+        style: _sendStyle(context),
+        icon: icon,
       );
     }
     // While busy the button carries no tooltip: Tooltip installs its own
@@ -848,19 +866,11 @@ class _ComposerSubmit extends StatelessWidget {
           ? 'Send — queues after the current run. Long press to choose '
                 'delivery.'
           : 'Send — steers the current run. Long press to choose delivery.',
-      child: _SendFill(
-        enabled: enabled,
-        child: IconButton(
-          key: const Key('chat-send-button'),
-          onPressed: sending || !enabled ? null : onSend,
-          style: IconButton.styleFrom(
-            foregroundColor: scheme.onPrimary,
-            disabledForegroundColor: scheme.onSurfaceVariant.withValues(
-              alpha: .7,
-            ),
-          ),
-          icon: icon,
-        ),
+      child: IconButton(
+        key: const Key('chat-send-button'),
+        onPressed: sending || !enabled ? null : onSend,
+        style: _sendStyle(context),
+        icon: icon,
       ),
     );
     // OpenCode 2 while busy: Stop keeps its own adjacent button; tap Send
@@ -927,34 +937,6 @@ class _ComposerSubmit extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// Send fills with the primary colour the moment there is something to
-/// send and drops to a tonal disc when there is not: the button itself says
-/// whether a tap will do anything. The colour change animates in 150 ms.
-class _SendFill extends StatelessWidget {
-  const _SendFill({required this.enabled, required this.child});
-
-  final bool enabled;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    return AnimatedContainer(
-      key: const Key('chat-send-fill'),
-      duration: reduceMotion
-          ? Duration.zero
-          : const Duration(milliseconds: 150),
-      curve: Curves.easeOut,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: enabled ? scheme.primary : scheme.surfaceContainerHigh,
-      ),
-      child: child,
     );
   }
 }

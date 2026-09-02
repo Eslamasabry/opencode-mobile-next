@@ -72,7 +72,8 @@ class _AttentionCard extends StatelessWidget {
                               style: theme.textTheme.titleSmall,
                             ),
                           ),
-                          if (summary case final summary? when summary.isNotEmpty)
+                          if (summary case final summary?
+                              when summary.isNotEmpty)
                             Padding(
                               padding: const EdgeInsets.only(top: 2),
                               child: Text(
@@ -270,25 +271,11 @@ class _SessionMenuSheet extends StatelessWidget {
                 ],
               ),
             ),
-            SwitchListTile(
-              key: const ValueKey('session-view-thinking'),
+            const SectionLabel('Transcript'),
+            TranscriptDisplayToggles(
+              reasoningExpanded: reasoningExpanded,
+              timestampsVisible: timestampsVisible,
               dense: true,
-              secondary: const Icon(Icons.psychology_alt_outlined),
-              title: Text(
-                reasoningExpanded ? 'Collapse reasoning' : 'Expand reasoning',
-              ),
-              value: reasoningExpanded,
-              onChanged: (_) => Navigator.pop(context, 'thinking'),
-            ),
-            SwitchListTile(
-              key: const ValueKey('session-view-timestamps'),
-              dense: true,
-              secondary: const Icon(Icons.schedule_rounded),
-              title: Text(
-                timestampsVisible ? 'Hide timestamps' : 'Show timestamps',
-              ),
-              value: timestampsVisible,
-              onChanged: (_) => Navigator.pop(context, 'timestamps'),
             ),
             const SectionLabel('Actions'),
             _SessionSheetRow(
