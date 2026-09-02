@@ -2388,6 +2388,13 @@ class _SplitDiffRow extends StatelessWidget {
   final bool selected;
   final VoidCallback? onTap;
 
+  /// A patch header (`diff --git`, `index`, `---`, `+++`) describes the
+  /// whole file, not one side of it: it spans both panes once instead of
+  /// repeating in each.
+  bool get _spansPanes =>
+      row.left?.kind == _ReviewLineKind.metadata &&
+      identical(row.left, row.right);
+
   @override
   Widget build(BuildContext context) {
     final left = row.left;
@@ -2399,20 +2406,26 @@ class _SplitDiffRow extends StatelessWidget {
         color: selected
             ? theme.colorScheme.primaryContainer.withValues(alpha: .62)
             : null,
-        child: Row(
-          children: [
-            Expanded(child: _SplitCell(line: left, old: true)),
-            VerticalDivider(width: 1, color: AppTheme.hairline(theme)),
-            Expanded(child: _SplitCell(line: right, old: false)),
-          ],
-        ),
+        child: _spansPanes
+            ? _SplitCell(
+                key: const ValueKey('review-split-header'),
+                line: left,
+                old: true,
+              )
+            : Row(
+                children: [
+                  Expanded(child: _SplitCell(line: left, old: true)),
+                  VerticalDivider(width: 1, color: AppTheme.hairline(theme)),
+                  Expanded(child: _SplitCell(line: right, old: false)),
+                ],
+              ),
       ),
     );
   }
 }
 
 class _SplitCell extends StatelessWidget {
-  const _SplitCell({required this.line, required this.old});
+  const _SplitCell({super.key, required this.line, required this.old});
 
   final _ReviewDiffLine? line;
   final bool old;

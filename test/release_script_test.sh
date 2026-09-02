@@ -3,6 +3,8 @@ set -euo pipefail
 
 readonly REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 readonly SOURCE_SCRIPT="$REPO_ROOT/scripts/release.sh"
+readonly CUT_SCRIPT="$REPO_ROOT/scripts/cut-alpha.sh"
+readonly NOTES_ANCHOR="# OpenCode Mobile — Alpha"
 readonly LEGACY_SIDELOAD_FINGERPRINT="1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C"
 TEST_ROOT="$(mktemp -d)"
 readonly TEST_ROOT
@@ -16,6 +18,7 @@ STATUS=0
 
 fail_test() {
   echo "FAIL: $*" >&2
+  echo "--- in test case $TEST_NUMBER (fixture $FIXTURE) ---" >&2
   if [[ -n "$OUTPUT" ]]; then
     echo "--- command output ---" >&2
     echo "$OUTPUT" >&2
@@ -29,8 +32,18 @@ new_fixture() {
   KEYSTORE_PATH="$TEST_ROOT/keystores/case-$TEST_NUMBER/release.jks"
   mkdir -p "$FIXTURE/scripts" "$FIXTURE/android/app" "$FIXTURE/mock-bin" "$FIXTURE/home" "$(dirname "$KEYSTORE_PATH")"
   cp "$SOURCE_SCRIPT" "$FIXTURE/scripts/release.sh"
-  chmod +x "$FIXTURE/scripts/release.sh"
+  cp "$CUT_SCRIPT" "$FIXTURE/scripts/cut-alpha.sh"
+  chmod +x "$FIXTURE/scripts/release.sh" "$FIXTURE/scripts/cut-alpha.sh"
   : >"$FIXTURE/commands.log"
+
+  # The alpha notes as committed: a draft preamble for the person cutting
+  # the release, then the body that goes to GitHub.
+  mkdir -p "$FIXTURE/docs"
+  {
+    printf '# Release notes draft\n\nOwner: paste into the GitHub release body.\n\n---\n\n'
+    printf '%s\n\n' "$NOTES_ANCHOR"
+    printf 'Alpha warning block.\n\n## Report a bug\n\nOpen an issue.\n\n## What is in this cut\n\n- one\n- two\n- three\n\n## Install\n\nSideload the APK.\n'
+  } >"$FIXTURE/docs/release-alpha-notes.md"
 
   cat >"$FIXTURE/pubspec.yaml" <<'EOF'
 name: release_fixture
@@ -91,6 +104,19 @@ case "${1:-}" in
   diff)
     printf '%s' "${MOCK_DIFF_FILES:-}"
     ;;
+  show)
+    if [[ "${MOCK_GIT_SHOW_FAIL:-false}" == true ]]; then
+      echo 'fatal: not a git repository (or any of the parent directories): .git' >&2
+      exit 128
+    fi
+    if [[ -n "${MOCK_GIT_SHOW_BODY+x}" ]]; then
+      printf '%s' "$MOCK_GIT_SHOW_BODY"
+    else
+      cat "$MOCK_NOTES_FILE"
+    fi
+    ;;
+  checkout | merge | push | tag)
+    ;;
   rev-parse)
     case "${2:-}" in
       --is-inside-work-tree)
@@ -112,6 +138,36 @@ case "${1:-}" in
         exit 2
         ;;
     esac
+    ;;
+  *)
+    exit 2
+    ;;
+esac
+EOF
+
+  cat >"$FIXTURE/mock-bin/gh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'gh %s\n' "$*" >>"$MOCK_COMMAND_LOG"
+case "${1:-} ${2:-}" in
+  "auth status")
+    ;;
+  "release create")
+    shift 2
+    while (( $# > 0 )); do
+      if [[ "$1" == --notes-file ]]; then
+        cp "$2" "$MOCK_GH_BODY_FILE"
+        shift
+      fi
+      shift
+    done
+    ;;
+  "release view")
+    if [[ "${MOCK_GH_TRUNCATE_BODY:-false}" == true ]]; then
+      printf 'Release notes draft\n'
+    else
+      cat "$MOCK_GH_BODY_FILE"
+    fi
     ;;
   *)
     exit 2
@@ -179,7 +235,7 @@ printf "package: name='%s' versionCode='%s' versionName='%s'\n" \
   "${MOCK_APK_VERSION_NAME:-1.0.12}"
 EOF
 
-  chmod +x "$FIXTURE/mock-bin/git" "$FIXTURE/mock-bin/flutter" "$FIXTURE/mock-bin/shorebird" "$FIXTURE/mock-bin/keytool"
+  chmod +x "$FIXTURE/mock-bin/git" "$FIXTURE/mock-bin/gh" "$FIXTURE/mock-bin/flutter" "$FIXTURE/mock-bin/shorebird" "$FIXTURE/mock-bin/keytool"
   chmod +x "$FIXTURE/home/Android/Sdk/build-tools/99.0.0/apksigner" "$FIXTURE/home/Android/Sdk/build-tools/99.0.0/aapt"
 }
 
@@ -220,6 +276,49 @@ run_release() {
   } 2>&1)"
   STATUS=$?
   set -e
+}
+
+# Runs the fixture's cut-alpha.sh with the mock toolchain. The sideload
+# signing mocks default to the public lineage so release.sh passes and the
+# cases below exercise the notes and publish gates only.
+run_cut() {
+  set +e
+  OUTPUT="$({
+    env \
+      HOME="$FIXTURE/home" \
+      PATH="$FIXTURE/mock-bin:/usr/bin:/bin" \
+      ANDROID_HOME= \
+      ANDROID_SDK_ROOT= \
+      MOCK_COMMAND_LOG="$FIXTURE/commands.log" \
+      MOCK_NOTES_FILE="$FIXTURE/docs/release-alpha-notes.md" \
+      MOCK_GH_BODY_FILE="$FIXTURE/gh-release-body" \
+      MOCK_GIT_SHOW_FAIL="${MOCK_GIT_SHOW_FAIL:-false}" \
+      MOCK_GH_TRUNCATE_BODY="${MOCK_GH_TRUNCATE_BODY:-false}" \
+      MOCK_KEYSTORE_OWNER='CN=Android Debug,O=Android,C=US' \
+      MOCK_KEYSTORE_FINGERPRINT="$LEGACY_SIDELOAD_FINGERPRINT" \
+      MOCK_APK_FINGERPRINT="$LEGACY_SIDELOAD_FINGERPRINT" \
+      "$FIXTURE/scripts/cut-alpha.sh" "$@"
+  } 2>&1)"
+  STATUS=$?
+  set -e
+}
+
+# Runs cut-alpha.sh --print-notes with the real git, from the fixture — a
+# directory that is not a repository.
+run_cut_notes_outside_repository() {
+  set +e
+  OUTPUT="$({
+    env \
+      HOME="$FIXTURE/home" \
+      PATH="/usr/bin:/bin" \
+      "$FIXTURE/scripts/cut-alpha.sh" --print-notes
+  } 2>&1)"
+  STATUS=$?
+  set -e
+}
+
+assert_output_not_contains() {
+  [[ "$OUTPUT" != *"$1"* ]] || fail_test "output unexpectedly contains: $1"
 }
 
 assert_status() {
@@ -537,6 +636,71 @@ test_invalid_version_is_rejected() {
   assert_log_not_contains 'shorebird '
 }
 
+test_alpha_notes_body_is_validated_before_publish() {
+  # A body assembled where `git show` cannot run must fail the cut instead of
+  # producing an empty file that gets uploaded.
+  new_fixture
+  command -v /usr/bin/git >/dev/null 2>&1 || fail_test "real git is required at /usr/bin/git"
+  run_cut_notes_outside_repository
+  assert_status 1
+  assert_output_contains 'git show failed'
+  assert_output_not_contains "$NOTES_ANCHOR"
+
+  new_fixture
+  MOCK_GIT_SHOW_FAIL=true run_cut --print-notes
+  assert_status 1
+  assert_output_contains 'git show failed'
+  assert_log_not_contains 'gh '
+
+  # The committed body prints from its heading onward, preamble dropped.
+  new_fixture
+  run_cut --print-notes
+  assert_status 0
+  [[ "$OUTPUT" == "$NOTES_ANCHOR"* ]] || fail_test "notes do not start with the anchor heading"
+  assert_output_not_contains 'Release notes draft'
+  assert_output_contains '## Install'
+
+  # A body without the heading, or shorter than ten lines, is refused.
+  new_fixture
+  MOCK_GIT_SHOW_BODY=$'# Something else\n\nline\nline\nline\nline\nline\nline\nline\nline\nline\nline\n' run_cut --print-notes
+  assert_status 1
+  assert_output_contains "missing the heading '$NOTES_ANCHOR'"
+
+  new_fixture
+  MOCK_GIT_SHOW_BODY="$NOTES_ANCHOR"$'\n\nToo short.\n' run_cut --print-notes
+  assert_status 1
+  assert_output_contains 'only 3 lines'
+
+  # The same gate runs before anything is pushed on a real cut.
+  new_fixture
+  MOCK_GIT_SHOW_FAIL=true run_cut --publish
+  assert_status 1
+  assert_output_contains 'git show failed'
+  assert_log_not_contains 'git merge'
+  assert_log_not_contains 'git push'
+  assert_log_not_contains 'shorebird release'
+  assert_log_not_contains 'gh release'
+}
+
+test_alpha_publish_verifies_the_body_github_stored() {
+  new_fixture
+  run_cut --publish
+  assert_status 0
+  assert_log_contains 'gh release create v1.0.31+32'
+  assert_log_contains 'gh release view v1.0.31+32 --json body'
+  assert_output_contains 'Alpha 1.0.31+32 published'
+  local stored
+  stored="$(<"$FIXTURE/gh-release-body")"
+  [[ "$stored" == "$NOTES_ANCHOR"* ]] || fail_test "uploaded body does not start with the anchor heading"
+  [[ "$stored" != *'Release notes draft'* ]] || fail_test "uploaded body carries the draft preamble"
+
+  new_fixture
+  MOCK_GH_TRUNCATE_BODY=true run_cut --publish
+  assert_status 1
+  assert_output_contains 'truncated'
+  assert_output_not_contains 'Alpha 1.0.31+32 published'
+}
+
 test_strict_arguments
 test_git_gates
 test_flutter_toolchain_gate
@@ -547,5 +711,7 @@ test_quality_gate_failure_prevents_shorebird
 test_patch_targets_exact_version_and_requires_baseline
 test_patch_rejects_native_and_asset_inputs
 test_invalid_version_is_rejected
+test_alpha_notes_body_is_validated_before_publish
+test_alpha_publish_verifies_the_body_github_stored
 
 echo "PASS: release script safety contract"

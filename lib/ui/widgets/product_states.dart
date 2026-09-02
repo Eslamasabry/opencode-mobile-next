@@ -1,17 +1,22 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show PlatformException;
 
 import '../../api/mcp_oauth.dart' show McpOAuthCallbackException;
 import '../../api/opencode_api.dart';
 import '../../api/product_repository.dart';
 import '../../feedback/bug_report.dart';
+import '../../state/profiles.dart' show SecureStorageUnavailable;
 import '../app_theme.dart';
 
 /// Maps any thrown object onto copy that is safe to show users.
 ///
 /// - [ProductException], [ApiException], and [McpOAuthCallbackException]
 ///   carry product-facing messages and pass through unchanged.
+/// - [SecureStorageUnavailable] names the missing keyring; any other
+///   [PlatformException] is a device-side failure, so its own message is
+///   shown rather than blaming the server.
 /// - A [String] is treated as already-composed product copy.
 /// - Everything else — [StateError]s, socket/transport failures, and other
 ///   internals — collapses to one generic connectivity line instead of leaking
@@ -20,6 +25,12 @@ String productErrorText(Object error) {
   if (error is ProductException) return error.message;
   if (error is ApiException) return error.message;
   if (error is McpOAuthCallbackException) return error.message;
+  if (error is SecureStorageUnavailable) return error.message;
+  if (error is PlatformException) {
+    final message = error.message?.trim();
+    if (message != null && message.isNotEmpty) return message;
+    return 'This device reported an error (${error.code}).';
+  }
   if (error is String && error.trim().isNotEmpty) return error;
   return 'OpenCode is unreachable. Try again.';
 }

@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show TargetPlatform;
+import 'package:flutter/services.dart'
+    show MissingPluginException, PlatformException;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -110,9 +113,7 @@ bool isLoopbackHost(String host) {
 String normalizeServerProfileUrl(String value) {
   final raw = value.trim();
   if (raw.isEmpty || raw.contains('://')) return raw;
-  final bare = RegExp(
-    r'^\[?[A-Za-z0-9._\-:]+\]?(:\d{1,5})?$',
-  );
+  final bare = RegExp(r'^\[?[A-Za-z0-9._\-:]+\]?(:\d{1,5})?$');
   if (!bare.hasMatch(raw)) return raw;
   final parsed = _bareAuthority(raw);
   if (parsed == null) return raw;
@@ -229,6 +230,38 @@ class ProfileLocation {
   const ProfileLocation({this.directory, this.workspace});
 }
 
+/// The platform keyring refused to hold a secret.
+///
+/// On Linux flutter_secure_storage needs a Secret Service (GNOME Keyring,
+/// KWallet) inside a desktop session; without one every write throws a
+/// [PlatformException]. That is a local storage problem, not a server one,
+/// so it carries its own product sentence instead of collapsing into
+/// "OpenCode is unreachable".
+class SecureStorageUnavailable implements Exception {
+  final String message;
+  final Object? cause;
+
+  const SecureStorageUnavailable(this.message, {this.cause});
+
+  factory SecureStorageUnavailable.forPlatform(
+    TargetPlatform platform, {
+    Object? cause,
+  }) => SecureStorageUnavailable(messageFor(platform), cause: cause);
+
+  static const linuxMessage =
+      'Could not store the password: no keyring is available. Install GNOME '
+      'Keyring or KWallet, or run the app inside a desktop session, then try '
+      'again.';
+  static const genericMessage =
+      'Could not store the password securely on this device.';
+
+  static String messageFor(TargetPlatform platform) =>
+      platform == TargetPlatform.linux ? linuxMessage : genericMessage;
+
+  @override
+  String toString() => message;
+}
+
 /// Persists server profiles. Metadata in SharedPreferences, secrets in the
 /// Android Keystore via flutter_secure_storage.
 class ProfileStore {
@@ -315,12 +348,43 @@ class ProfileStore {
       } else {
         await secure.write(key: 'pw.${profile.id}', value: profile.password);
       }
-    } catch (_) {
+    } catch (error) {
       await _restoreProfiles(previousRaw);
+      if (_isKeyringFailure(error)) {
+        throw SecureStorageUnavailable.forPlatform(
+          platformCapabilities.platform,
+          cause: error,
+        );
+      }
       rethrow;
     }
     profile.requiresPasswordReentry = false;
     _cache = next;
+  }
+
+  /// flutter_secure_storage reports a missing or locked keyring as a
+  /// [PlatformException]; on a platform without the plugin at all the call
+  /// surfaces as [MissingPluginException].
+  static bool _isKeyringFailure(Object error) =>
+      error is PlatformException || error is MissingPluginException;
+
+  static const _probeKey = 'oc.secure.probe';
+
+  /// Null when the keyring answers, otherwise the sentence to show before the
+  /// user types a password that could not be kept. Only Linux desktops lack
+  /// a keyring in practice; elsewhere the probe is skipped.
+  Future<String?> secureStorageProblem() async {
+    final platform = platformCapabilities.platform;
+    if (platform != TargetPlatform.linux) return null;
+    try {
+      await secure.read(key: _probeKey);
+      return null;
+    } catch (error) {
+      if (_isKeyringFailure(error)) {
+        return SecureStorageUnavailable.messageFor(platform);
+      }
+      return null;
+    }
   }
 
   /// Every preference key this app scopes to [profileId].
@@ -390,11 +454,17 @@ class ProfileStore {
     try {
       if (previousActive == id) await setActiveId(null);
       await secure.delete(key: 'pw.$id');
-    } catch (_) {
+    } catch (error) {
       await _restoreProfiles(previousRaw);
       if (previousActive == id &&
           !await prefs.setString(_activeKey, previousActive!)) {
         throw StateError('Could not restore the active server profile');
+      }
+      if (_isKeyringFailure(error)) {
+        throw SecureStorageUnavailable.forPlatform(
+          platformCapabilities.platform,
+          cause: error,
+        );
       }
       rethrow;
     }

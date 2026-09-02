@@ -73,6 +73,46 @@ void main() {
     expect(find.text('Split'), findsOneWidget);
   });
 
+  testWidgets('split review shows the patch header once, not per pane', (
+    tester,
+  ) async {
+    final diffs = [
+      FileDiff.fromJson({
+        'file': 'lib/api/client.dart',
+        'patch':
+            'diff --git a/lib/api/client.dart b/lib/api/client.dart\n'
+            'index 1111111..2222222 100644\n'
+            '--- a/lib/api/client.dart\n'
+            '+++ b/lib/api/client.dart\n'
+            '@@ -1,2 +1,2 @@\n-old client\n+new client\n same',
+        'additions': 1,
+        'deletions': 1,
+        'status': 'modified',
+      }),
+    ];
+
+    await _pumpReview(tester, () async => diffs);
+    await tester.tap(find.byKey(const Key('review-mode-split')));
+    await tester.pumpAndSettle();
+
+    for (final header in [
+      'diff --git a/lib/api/client.dart b/lib/api/client.dart',
+      'index 1111111..2222222 100644',
+      '--- a/lib/api/client.dart',
+      '+++ b/lib/api/client.dart',
+    ]) {
+      expect(find.text(header), findsOneWidget, reason: header);
+    }
+    expect(find.byKey(const ValueKey('review-split-header')), findsNWidgets(4));
+    // Changed lines still sit in their own pane.
+    expect(find.text('-old client'), findsOneWidget);
+    expect(find.text('+new client'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('-old client')).dx,
+      lessThan(tester.getTopLeft(find.text('+new client')).dx),
+    );
+  });
+
   testWidgets('disambiguates duplicate basenames in the phone file strip', (
     tester,
   ) async {
@@ -549,8 +589,10 @@ void main() {
     // and never counted as changes.
     expect(find.text('--- a/lib/sample.dart'), findsOneWidget);
     expect(find.text('+++ b/lib/sample.dart'), findsOneWidget);
-    expect(find.text('diff --git a/lib/sample.dart b/lib/sample.dart'),
-        findsOneWidget);
+    expect(
+      find.text('diff --git a/lib/sample.dart b/lib/sample.dart'),
+      findsOneWidget,
+    );
     // The header count would be +2/-1 wrong if those markers were read as
     // edits; the strip reports the server's own totals for one file.
     expect(find.text('1 changed file'), findsOneWidget);

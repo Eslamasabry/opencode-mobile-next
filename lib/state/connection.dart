@@ -769,6 +769,82 @@ class ConnectionController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Trailing separators dropped, case kept, so a location saved as
+  /// `/work/acme/` still matches the `/work/acme` the server reports.
+  static String normalizeDirectoryPath(String path) {
+    var value = path.trim();
+    while (value.length > 1 && (value.endsWith('/') || value.endsWith('\\'))) {
+      final trimmed = value.substring(0, value.length - 1);
+      if (trimmed.endsWith(':')) break; // Keep a Windows drive root intact.
+      value = trimmed;
+    }
+    return value;
+  }
+
+  static bool sameDirectoryPath(String? a, String? b) {
+    if (a == null || b == null) return a == b;
+    return normalizeDirectoryPath(a) == normalizeDirectoryPath(b);
+  }
+
+  /// True when [directory] is the project root, one of its worktrees, or a
+  /// folder inside either. The server's catch-all `/` project covers nothing.
+  static bool projectContainsDirectory(
+    WorkspaceProject project,
+    String directory,
+  ) {
+    final target = normalizeDirectoryPath(directory);
+    if (target.isEmpty) return false;
+    bool covers(String root) {
+      final base = normalizeDirectoryPath(root);
+      if (base.isEmpty || base == '/') return base == target;
+      if (base == target) return true;
+      return target.startsWith('$base/') || target.startsWith('$base\\');
+    }
+
+    return covers(project.directory) || project.worktrees.any(covers);
+  }
+
+  /// The most recently updated real project, or null when the server only
+  /// knows its catch-all root.
+  static WorkspaceProject? newestProject(Iterable<WorkspaceProject> projects) {
+    WorkspaceProject? best;
+    for (final project in projects) {
+      final directory = normalizeDirectoryPath(project.directory);
+      if (directory.isEmpty || directory == '/') continue;
+      if (best == null || project.updatedAt > best.updatedAt) best = project;
+    }
+    return best;
+  }
+
+  static bool _isCatchAllProject(WorkspaceProject project) {
+    final directory = normalizeDirectoryPath(project.directory);
+    return directory.isEmpty || directory == '/' || project.id == 'global';
+  }
+
+  /// Set when the saved directory was restored without the project list
+  /// confirming it; [revalidateRestoredLocation] clears it once the list
+  /// loads.
+  bool _pendingLocationRevalidation = false;
+
+  @visibleForTesting
+  bool get pendingLocationRevalidation => _pendingLocationRevalidation;
+
+  Future<void> _forgetSavedLocation(ServerProfile profile) async {
+    try {
+      await store.clearLocation(profile.id);
+    } catch (_) {
+      // The current connection can still recover to its server root.
+    }
+  }
+
+  String _replacementNotice(String lost, WorkspaceProject replacement) =>
+      'The last project ($lost) is no longer available on the server. '
+      'OpenCode Mobile opened ${replacement.name} instead.';
+
+  /// Resolves the location to restore for [profile]. The saved directory is
+  /// kept whenever the server confirms it or cannot yet say; it is replaced
+  /// by the newest project only when the project list proves it gone, and
+  /// dropped only when the server has no projects at all.
   Future<ProfileLocation?> _validatedSavedLocation(
     ServerProfile profile,
     ServerOperationsGateway currentRepository,
@@ -777,52 +853,138 @@ class ConnectionController extends ChangeNotifier {
   ) async {
     final saved = store.locationFor(profile.id);
     if (saved == null) return null;
+    final savedDirectory = saved.directory;
+    var directory = savedDirectory == null
+        ? null
+        : normalizeDirectoryPath(savedDirectory);
+    if (directory != null && directory.isEmpty) directory = null;
     var workspace = saved.workspace;
+    _pendingLocationRevalidation = false;
     try {
-      if (saved.directory != null) {
-        currentRepository.setLocation(
-          directory: saved.directory,
-          workspace: null,
-        );
-        final project = await currentRepository.loadCurrentProject();
+      if (directory != null) {
+        currentRepository.setLocation(directory: directory, workspace: null);
+        WorkspaceProject? project;
+        try {
+          project = await currentRepository.loadCurrentProject();
+        } catch (_) {
+          // Verified against the project list below.
+        }
         if (!_isCurrent(generation, currentApi)) return null;
-        if (project == null) {
+        final confirmed =
+            project != null &&
+            (projectContainsDirectory(project, directory) ||
+                !_isCatchAllProject(project));
+        if (!confirmed) {
+          currentRepository.setLocation(directory: null, workspace: null);
+          List<WorkspaceProject>? projects;
           try {
-            await store.clearLocation(profile.id);
+            projects = await currentRepository.listProjects();
           } catch (_) {
-            // The current connection can still recover to its server root.
+            projects = null;
           }
-          locationNotice =
-              'The last project is no longer available. '
-              'OpenCode Mobile returned to the server workspace.';
-          return null;
+          if (!_isCurrent(generation, currentApi)) return null;
+          if (projects == null) {
+            // The list is not available yet: keep the saved directory and
+            // re-check it once the list loads.
+            _pendingLocationRevalidation = true;
+          } else {
+            final target = directory;
+            final present = projects.any(
+              (candidate) => projectContainsDirectory(candidate, target),
+            );
+            if (!present) {
+              final replacement = newestProject(projects);
+              if (replacement == null) {
+                await _forgetSavedLocation(profile);
+                locationNotice =
+                    'The last project is no longer available. '
+                    'OpenCode Mobile returned to the server workspace.';
+                return null;
+              }
+              locationNotice = _replacementNotice(target, replacement);
+              directory = normalizeDirectoryPath(replacement.directory);
+              workspace = null;
+            }
+          }
         }
       }
       if (workspace != null) {
-        currentRepository.setLocation(
-          directory: saved.directory,
-          workspace: null,
-        );
-        final workspaces = await currentRepository.listWorkspaces();
+        currentRepository.setLocation(directory: directory, workspace: null);
+        List<WorkspaceInfo>? workspaces;
+        try {
+          workspaces = await currentRepository.listWorkspaces();
+        } catch (_) {
+          workspaces = null;
+        }
         if (!_isCurrent(generation, currentApi)) return null;
-        if (!workspaces.any((candidate) => candidate.id == workspace)) {
+        if (workspaces == null) {
+          workspace = null;
+          locationNotice =
+              'The last remote workspace could not be verified. '
+              'The project was opened locally.';
+        } else if (!workspaces.any((candidate) => candidate.id == workspace)) {
           workspace = null;
           locationNotice =
               'The last remote workspace is no longer available. '
               'The project was opened locally.';
         }
       }
-      return ProfileLocation(directory: saved.directory, workspace: workspace);
+      return ProfileLocation(directory: directory, workspace: workspace);
     } catch (_) {
-      if (_isCurrent(generation, currentApi)) {
+      if (!_isCurrent(generation, currentApi)) return null;
+      if (directory == null) {
         locationNotice =
             'The last project could not be verified. '
             'OpenCode Mobile opened the server workspace instead.';
+        return null;
       }
-      return null;
+      _pendingLocationRevalidation = true;
+      locationNotice =
+          'The last project could not be verified. '
+          'OpenCode Mobile opened it anyway and will check again once the '
+          'project list loads.';
+      return ProfileLocation(directory: directory, workspace: null);
     } finally {
       currentRepository.setLocation(directory: null, workspace: null);
     }
+  }
+
+  /// Re-checks a directory restored while the project list was unavailable.
+  /// When the list now loads without it, the newest project is opened and a
+  /// plain-sentence [locationNotice] explains the switch.
+  Future<void> revalidateRestoredLocation() async {
+    if (!_pendingLocationRevalidation) return;
+    final currentRepository = repository;
+    final currentApi = api;
+    final directory = this.directory;
+    if (currentRepository == null || currentApi == null || directory == null) {
+      _pendingLocationRevalidation = false;
+      return;
+    }
+    final generation = _generation;
+    List<WorkspaceProject> projects;
+    try {
+      projects = await currentRepository.listProjects();
+    } catch (_) {
+      return; // Still pending: try again on the next location refresh.
+    }
+    if (!_isCurrent(generation, currentApi) || this.directory != directory) {
+      return;
+    }
+    _pendingLocationRevalidation = false;
+    if (projects.any(
+      (candidate) => projectContainsDirectory(candidate, directory),
+    )) {
+      return;
+    }
+    final replacement = newestProject(projects);
+    if (replacement == null) return;
+    locationNotice = _replacementNotice(directory, replacement);
+    await _selectLocation(
+      directory: normalizeDirectoryPath(replacement.directory),
+      workspace: null,
+      preserveNotice: true,
+    );
   }
 
   /// [redetectOnFailure] lets one failed connect re-probe the address and
@@ -2039,7 +2201,12 @@ class ConnectionController extends ChangeNotifier {
       throw StateError('Permission request $requestID is no longer pending');
     }
     final currentApi = await _requireActionTransport();
-    await _sendPermissionReply(currentApi, requestID, response, message: message);
+    await _sendPermissionReply(
+      currentApi,
+      requestID,
+      response,
+      message: message,
+    );
   }
 
   /// True when [requestID] arrived over the OpenCode 2 permission contract,
@@ -2941,8 +3108,7 @@ class ConnectionController extends ChangeNotifier {
     if (profileID == null) return const [];
     return [
       for (final entry in _queue)
-        if (entry.profileID == profileID && entry.sessionID == sessionID)
-          entry,
+        if (entry.profileID == profileID && entry.sessionID == sessionID) entry,
     ];
   }
 
@@ -3136,8 +3302,7 @@ class ConnectionController extends ChangeNotifier {
           removedPreferenceKeys: scopedKeys.difference(unclearedKeys),
           removedQueuedPrompts: clearedQueued,
           removedDrafts: clearedDrafts,
-          clearedWidgetSnapshot:
-              widgetOutcome == WidgetSnapshotClear.cleared,
+          clearedWidgetSnapshot: widgetOutcome == WidgetSnapshotClear.cleared,
           removedProfile: false,
           failures: List.unmodifiable(failures),
         );
@@ -3548,6 +3713,7 @@ class ConnectionController extends ChangeNotifier {
     if (!_isCurrent(generation, currentApi)) return;
     locationLoading = false;
     notifyListeners();
+    if (_pendingLocationRevalidation) unawaited(revalidateRestoredLocation());
   }
 
   Future<void> moveSessionToDirectory(

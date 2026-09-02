@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,6 +15,7 @@ import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/desktop/desktop_interaction.dart';
 import 'package:opencode_mobile/ui/desktop/shortcuts.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
+import 'package:opencode_mobile/ui/screens/terminal_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _ShellApi extends OpenCodeApi {
@@ -339,6 +342,68 @@ void main() {
         'Workspace',
       );
     });
+
+    desktopTest(
+      'Ctrl+1..4 and Ctrl+` return to the shell from a pushed route',
+      (tester) async {
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final connection = await _controller();
+        addTearDown(connection.dispose);
+        final harness = _Harness();
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [connProvider.overrideWithValue(connection)],
+            child: harness.app(const HomeScreen()),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        Future<void> pushRoute() async {
+          unawaited(
+            harness.navigatorKey.currentState!.push(
+              MaterialPageRoute<void>(
+                builder: (_) => const Scaffold(body: Text('pushed-route')),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(find.text('pushed-route'), findsOneWidget);
+        }
+
+        // A destination shortcut over chat/review/terminal used to be a
+        // no-op: the shell was buried and nothing else claimed it.
+        await pushRoute();
+        await _press(tester, LogicalKeyboardKey.digit2);
+        expect(find.text('pushed-route'), findsNothing);
+        expect(
+          tester
+              .widget<Text>(find.byKey(const ValueKey('current-tab-title')))
+              .data,
+          'Files',
+        );
+
+        await pushRoute();
+        await _press(tester, LogicalKeyboardKey.digit4);
+        expect(find.text('pushed-route'), findsNothing);
+        expect(
+          tester
+              .widget<Text>(find.byKey(const ValueKey('current-tab-title')))
+              .data,
+          'More',
+        );
+
+        // The terminal shortcut likewise returns to the shell first, then
+        // opens the one terminal page from there.
+        await pushRoute();
+        await _press(tester, LogicalKeyboardKey.backquote);
+        expect(find.text('pushed-route'), findsNothing);
+        expect(find.byType(TerminalPage), findsOneWidget);
+      },
+    );
 
     desktopTest('Ctrl+F focuses the Files find field, and only there', (
       tester,

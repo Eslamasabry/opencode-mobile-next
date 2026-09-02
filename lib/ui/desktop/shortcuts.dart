@@ -148,6 +148,25 @@ class AppShortcutSignals {
   }
 }
 
+/// Pops every pushed route, then offers [intent] to the shell root.
+///
+/// Ctrl+1..4 and Ctrl+` are shell-level: pressed while chat, the terminal,
+/// or review is open they must not silently do nothing. The pop is
+/// synchronous, so the root surface is current again by the time the
+/// signal is dispatched; a surface still animating in gets one more try
+/// after the frame.
+void dispatchAtShellRoot(
+  NavigatorState navigator,
+  AppShortcutSignals signals,
+  Intent intent,
+) {
+  navigator.popUntil((route) => route.isFirst);
+  if (signals.dispatch(intent)) return;
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    signals.dispatch(intent);
+  });
+}
+
 /// Exposes [AppShortcutSignals] to every route below the shell.
 class AppShortcutScope extends InheritedWidget {
   const AppShortcutScope({
@@ -253,6 +272,12 @@ class _AppShortcutsState extends State<AppShortcuts> {
 
   NavigatorState? get _navigator => widget.navigatorKey.currentState;
 
+  void _returnToShell(Intent intent) {
+    final navigator = _navigator;
+    if (navigator == null) return;
+    dispatchAtShellRoot(navigator, _signals, intent);
+  }
+
   /// Runs [fallback] only when no visible surface claimed the intent.
   Object? _dispatch(Intent intent, void Function(BuildContext) fallback) {
     if (_signals.dispatch(intent)) return null;
@@ -307,11 +332,17 @@ class _AppShortcutsState extends State<AppShortcuts> {
             FindInSurfaceIntent: CallbackAction<FindInSurfaceIntent>(
               onInvoke: (intent) => _dispatch(intent, (_) {}),
             ),
+            // Shell destinations and the terminal belong to the shell root.
+            // From a pushed route (chat, terminal, review) nothing visible
+            // claims them, so the fallback returns to the root and asks the
+            // shell again.
             SelectDestinationIntent: CallbackAction<SelectDestinationIntent>(
-              onInvoke: (intent) => _dispatch(intent, (_) {}),
+              onInvoke: (intent) =>
+                  _dispatch(intent, (_) => _returnToShell(intent)),
             ),
             OpenTerminalIntent: CallbackAction<OpenTerminalIntent>(
-              onInvoke: (intent) => _dispatch(intent, (_) {}),
+              onInvoke: (intent) =>
+                  _dispatch(intent, (_) => _returnToShell(intent)),
             ),
           },
           child: widget.child,
@@ -461,35 +492,35 @@ class _CommandPaletteState extends State<_CommandPalette> {
                         thumbVisibility: true,
                         child: OwnScrollbar(
                           child: ListView.builder(
-                          controller: _listController,
-                          shrinkWrap: true,
-                          itemCount: matches.length,
-                          itemBuilder: (context, index) {
-                            final command = matches[index];
-                            return ListTile(
-                              key: ValueKey('command-${command.label}'),
-                              dense: true,
-                              selected: index == _highlighted,
-                              leading: Icon(command.icon, size: 20),
-                              title: Text(command.label),
-                              subtitle: command.hint == null
-                                  ? null
-                                  : Text(command.hint!),
-                              trailing: command.keys == null
-                                  ? null
-                                  : Text(
-                                      command.keys!,
-                                      style: theme.textTheme.labelSmall
-                                          ?.copyWith(
-                                            color: theme
-                                                .colorScheme
-                                                .onSurfaceVariant,
-                                          ),
-                                    ),
-                              onTap: () => _run(command),
-                            );
-                          },
-                        ),
+                            controller: _listController,
+                            shrinkWrap: true,
+                            itemCount: matches.length,
+                            itemBuilder: (context, index) {
+                              final command = matches[index];
+                              return ListTile(
+                                key: ValueKey('command-${command.label}'),
+                                dense: true,
+                                selected: index == _highlighted,
+                                leading: Icon(command.icon, size: 20),
+                                title: Text(command.label),
+                                subtitle: command.hint == null
+                                    ? null
+                                    : Text(command.hint!),
+                                trailing: command.keys == null
+                                    ? null
+                                    : Text(
+                                        command.keys!,
+                                        style: theme.textTheme.labelSmall
+                                            ?.copyWith(
+                                              color: theme
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                      ),
+                                onTap: () => _run(command),
+                              );
+                            },
+                          ),
                         ),
                       ),
               ),

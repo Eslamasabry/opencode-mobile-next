@@ -165,10 +165,14 @@ class _LocationRepository extends _TestRepository {
     super.api, {
     required this.projectsByDirectory,
     this.workspaces = const [],
+    this.projects = const [],
   });
 
   final Map<String, WorkspaceProject?> projectsByDirectory;
   final List<WorkspaceInfo> workspaces;
+
+  /// The server's project list; an empty list means "no projects at all".
+  final List<WorkspaceProject> projects;
   String? selectedDirectory;
   String? selectedWorkspace;
 
@@ -182,6 +186,9 @@ class _LocationRepository extends _TestRepository {
   @override
   Future<WorkspaceProject?> loadCurrentProject() async =>
       projectsByDirectory[selectedDirectory];
+
+  @override
+  Future<List<WorkspaceProject>> listProjects() async => projects;
 
   @override
   Future<List<WorkspaceInfo>> listWorkspaces() async => workspaces;
@@ -827,6 +834,7 @@ void main() {
       repositoryFactory: (api) => _LocationRepository(
         api,
         projectsByDirectory: const {'/deleted/worktree': null},
+        projects: const [],
       ),
       eventStreamFactory: _streamFactory([]),
     );

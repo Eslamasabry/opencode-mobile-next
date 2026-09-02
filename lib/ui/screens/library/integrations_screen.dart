@@ -380,7 +380,10 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   }
 
   List<Widget> _providerSection() {
-    final integrations = _integrations;
+    final loaded = _integrations;
+    final integrations = loaded == null
+        ? null
+        : _withConfiguredProviders(loaded);
     return [
       const _SectionHeader(
         text: 'Providers',
@@ -529,6 +532,33 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
               overflow: TextOverflow.ellipsis,
             ),
           ),
+    ];
+  }
+
+  /// The integrations list only knows providers with a connection method;
+  /// a custom provider declared in `opencode.json` (catalog source
+  /// "config") never appears there, yet it is enabled and serves models.
+  /// Surface every enabled catalog provider the list omits as a
+  /// server-configured entry, so the Providers section matches what the
+  /// model picker offers.
+  List<IntegrationInfo> _withConfiguredProviders(
+    List<IntegrationInfo> integrations,
+  ) {
+    final catalog = widget.controller.catalog;
+    if (catalog == null) return integrations;
+    final known = {
+      for (final integration in integrations) integration.id,
+      for (final integration in integrations)
+        for (final connection in integration.connections) ?connection.id,
+    };
+    return [
+      ...integrations,
+      for (final provider in catalog.providers)
+        if (provider.enabled &&
+            provider.id.isNotEmpty &&
+            !known.contains(provider.id) &&
+            !known.contains(provider.integrationID))
+          configuredProviderIntegration(provider),
     ];
   }
 
@@ -941,3 +971,20 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     }
   }
 }
+
+/// A provider the server configured itself (an `opencode.json` entry) shown
+/// as an integration: connected through the server, nothing to connect from
+/// here, and no credential mobile could remove.
+IntegrationInfo configuredProviderIntegration(CatalogProvider provider) =>
+    IntegrationInfo(
+      id: provider.id,
+      name: provider.name.isEmpty ? provider.id : provider.name,
+      methods: const [],
+      connections: const [
+        IntegrationConnectionInfo(
+          type: 'config',
+          label: 'Configured on the server',
+        ),
+      ],
+      connectionCount: 1,
+    );

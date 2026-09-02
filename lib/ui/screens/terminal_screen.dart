@@ -9,7 +9,65 @@ import 'package:xterm/xterm.dart' as xterm;
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../desktop/context_menu.dart';
+import '../desktop/desktop_interaction.dart';
 import '../widgets/product_states.dart';
+
+/// Serialises terminal keystrokes into one ordered write per flush.
+///
+/// Every keystroke used to reach the channel as its own send; under fast
+/// typing that let sends interleave and the PTY echo arrive out of order or
+/// twice. The queue appends to a single FIFO buffer and flushes it as one
+/// write on the next microtask, so bytes leave in exactly the order typed.
+class TerminalInputQueue {
+  TerminalInputQueue(this._send);
+
+  final void Function(String value) _send;
+  final _buffer = StringBuffer();
+  bool _flushScheduled = false;
+  bool _closed = false;
+
+  bool get hasPending => _buffer.isNotEmpty;
+
+  void write(String value) {
+    if (_closed || value.isEmpty) return;
+    _buffer.write(value);
+    if (_flushScheduled) return;
+    _flushScheduled = true;
+    scheduleMicrotask(flush);
+  }
+
+  /// Sends everything queued so far as one write, in order.
+  void flush() {
+    _flushScheduled = false;
+    if (_closed || _buffer.isEmpty) return;
+    final pending = _buffer.toString();
+    _buffer.clear();
+    _send(pending);
+  }
+
+  /// Drops what has not been sent; used when the channel goes away.
+  void discard() {
+    _buffer.clear();
+  }
+
+  void close() {
+    _closed = true;
+    _buffer.clear();
+  }
+}
+
+/// Whether a hardware key event carries a printable character the terminal
+/// should receive as text; modifier chords and control keys are left to
+/// xterm's own key table.
+bool terminalKeyEventText(KeyEvent event) {
+  if (event is KeyUpEvent) return false;
+  final character = event.character;
+  if (character == null || character.isEmpty) return false;
+  final code = character.codeUnitAt(0);
+  if (code < 0x20 || code == 0x7f) return false;
+  final keyboard = HardwareKeyboard.instance;
+  return !keyboard.isControlPressed && !keyboard.isMetaPressed;
+}
 
 /// [TerminalScreen] as its own pushed route. Every entry point that leaves
 /// the shell for the terminal — the More hub, the Workspace header, the
@@ -481,6 +539,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
   final _focus = FocusNode();
   final _accessibleInput = TextEditingController();
   TerminalChannel? _channel;
+  late final TerminalInputQueue _input = TerminalInputQueue(_sendNow);
   StreamSubscription<String>? _subscription;
   String? _error;
   bool _connecting = true;
@@ -561,6 +620,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
       _rememberCursor(channel);
       _subscription = null;
       _channel = null;
+      _input.discard();
       if (mounted && !_lifecycleSuspended) {
         setState(() {
           _connecting = false;
@@ -587,6 +647,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
     _rememberCursor(previousChannel);
     _subscription = null;
     _channel = null;
+    _input.discard();
     try {
       await _closeConnectionBestEffort(previousSubscription, previousChannel);
       if (!mounted ||
@@ -674,6 +735,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
     _rememberCursor(channel);
     _subscription = null;
     _channel = null;
+    _input.discard();
     if (mounted) {
       setState(() {
         _connecting = false;
@@ -720,7 +782,21 @@ class _TerminalSurfaceState extends State<TerminalSurface>
 
   void _write(String value) {
     if (!_canWrite) return;
+    _input.write(value);
+  }
+
+  void _sendNow(String value) {
+    if (!_canWrite) return;
     _channel!.write(value);
+  }
+
+  /// Desktop keyboards deliver each key once as a hardware event; routing
+  /// printable characters from there (instead of the IME text path) keeps
+  /// fast typing from being re-delivered as accumulated deltas.
+  KeyEventResult _onTerminalKey(FocusNode node, KeyEvent event) {
+    if (!terminalKeyEventText(event)) return KeyEventResult.ignored;
+    _write(event.character!);
+    return KeyEventResult.handled;
   }
 
   void _rememberCursor(TerminalChannel? channel) {
@@ -865,7 +941,12 @@ class _TerminalSurfaceState extends State<TerminalSurface>
                           keyboardType: TextInputType.text,
                           keyboardAppearance: Brightness.dark,
                           deleteDetection: true,
-                          hardwareKeyboardOnly: false,
+                          // Desktop: hardware keys only, so a keystroke is
+                          // never delivered twice (key event + IME delta).
+                          hardwareKeyboardOnly: desktopInteractions,
+                          onKeyEvent: desktopInteractions
+                              ? _onTerminalKey
+                              : null,
                           readOnly: !canWrite,
                           padding: const EdgeInsets.all(10),
                           textStyle: const xterm.TerminalStyle(
@@ -952,6 +1033,7 @@ class _TerminalSurfaceState extends State<TerminalSurface>
     unawaited(_channel?.close().catchError((_) {}));
     _terminalController.dispose();
     _scrollController.dispose();
+    _input.close();
     _focus.dispose();
     _accessibleInput.dispose();
     super.dispose();

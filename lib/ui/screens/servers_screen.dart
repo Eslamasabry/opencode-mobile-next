@@ -120,6 +120,8 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
           existing: existing,
           focusPassword: focusPassword,
           onSubmit: (profile) => _saveAndConnect(profile, isNew: isNew),
+          secureStorageProbe: () =>
+              ref.read(bootstrapProvider).store.secureStorageProblem(),
         ),
       ),
     );
@@ -653,10 +655,16 @@ class _ProfileEditorScreen extends StatefulWidget {
   /// the profile only when this reports no failure; otherwise the failure is
   /// rendered inline and the fields stay editable.
   final Future<_SubmitOutcome> Function(ServerProfile profile) onSubmit;
+
+  /// Resolves to a sentence when the device cannot keep a password (a Linux
+  /// desktop without a keyring), shown above the form before the user types
+  /// one that would be lost on save. Null skips the probe.
+  final Future<String?> Function()? secureStorageProbe;
   const _ProfileEditorScreen({
     this.existing,
     this.focusPassword = false,
     required this.onSubmit,
+    this.secureStorageProbe,
   });
 
   @override
@@ -693,6 +701,9 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
   /// Why the last save or connect did not finish, in product copy.
   String? _submitFailure;
 
+  /// The keyring problem [_ProfileEditorScreen.secureStorageProbe] found.
+  String? _secureStorageNotice;
+
   /// The profile as last written to the store from this editor, so a save
   /// that stored but could not connect no longer counts as unsaved edits.
   ServerProfile? _savedProfile;
@@ -714,9 +725,23 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
 
   bool get _needsPassword => widget.existing?.requiresPasswordReentry ?? false;
 
+  Future<void> _probeSecureStorage() async {
+    final probe = widget.secureStorageProbe;
+    if (probe == null) return;
+    String? notice;
+    try {
+      notice = await probe();
+    } catch (_) {
+      notice = null;
+    }
+    if (!mounted || notice == null) return;
+    setState(() => _secureStorageNotice = notice);
+  }
+
   @override
   void initState() {
     super.initState();
+    _probeSecureStorage();
     _urlLength = _url.text.length;
   }
 
@@ -1125,6 +1150,13 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                 _InlineFailureCard(
                   key: const ValueKey('server-save-failure'),
                   message: failure,
+                ),
+                const SizedBox(height: 12),
+              ],
+              if (_secureStorageNotice case final notice?) ...[
+                _InlineFailureCard(
+                  key: const ValueKey('server-secure-storage-notice'),
+                  message: notice,
                 ),
                 const SizedBox(height: 12),
               ],

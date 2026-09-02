@@ -402,8 +402,16 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
 
   List<DesktopCommand> _shellCommands(BuildContext context) {
     final mod = shortcutModifierLabel;
-    void go(int index) =>
-        _shortcutSignals.dispatch(SelectDestinationIntent(index));
+    void go(int index) {
+      final navigator = _navigatorKey.currentState;
+      if (navigator == null) return;
+      dispatchAtShellRoot(
+        navigator,
+        _shortcutSignals,
+        SelectDestinationIntent(index),
+      );
+    }
+
     return [
       DesktopCommand(
         label: 'New session',

@@ -279,6 +279,76 @@ void main() {
     expect(find.text('Persisted configuration'), findsOneWidget);
   });
 
+  testWidgets(
+    'custom providers from opencode.json appear as configured on the server',
+    (tester) async {
+      final repository = _IntegrationsRepository()
+        ..integrations = const [
+          IntegrationInfo(
+            id: 'anthropic',
+            name: 'Anthropic',
+            methods: [IntegrationMethodInfo(type: 'key', label: 'API key')],
+            connectionCount: 0,
+          ),
+        ];
+      final controller = await _controller(repository);
+      addTearDown(controller.dispose);
+      CatalogModel model(String id, String providerID) => CatalogModel(
+        id: id,
+        providerID: providerID,
+        name: id,
+        enabled: true,
+        status: 'active',
+        contextLimit: 128000,
+        outputLimit: 8192,
+        reasoning: false,
+        attachments: false,
+        tools: true,
+        variants: const [],
+      );
+      // The integrations list only knows providers with a connection
+      // method; the catalog (v1 /config/providers) also carries the custom
+      // provider declared in opencode.json, source "config".
+      controller.catalog = CatalogSnapshot(
+        providers: const [
+          CatalogProvider(id: 'anthropic', name: 'Anthropic', enabled: true),
+          CatalogProvider(id: 'my-llm', name: 'My LLM', enabled: true),
+          CatalogProvider(id: 'off', name: 'Disabled', enabled: false),
+        ],
+        models: [
+          model('claude', 'anthropic'),
+          model('local-a', 'my-llm'),
+          model('local-b', 'my-llm'),
+        ],
+        agents: const [],
+      );
+
+      await tester.pumpWidget(_app(controller));
+      await tester.pumpAndSettle();
+
+      expect(find.text('My LLM'), findsOneWidget);
+      expect(find.text('Configured on the server'), findsOneWidget);
+      expect(find.textContaining('2 models'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('connect-provider-my-llm')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('disconnect-provider-my-llm')),
+        findsNothing,
+      );
+      // The listed provider keeps its own Connect action; the disabled
+      // catalog entry is not a provider the server can use.
+      expect(
+        find.byKey(const ValueKey('connect-provider-anthropic')),
+        findsOneWidget,
+      );
+      expect(find.text('Disabled'), findsNothing);
+      // The summary counts the configured provider as connected.
+      expect(find.text('1 connected · 1 available'), findsOneWidget);
+    },
+  );
+
   testWidgets('provider aliases retain separate regional connection states', (
     tester,
   ) async {

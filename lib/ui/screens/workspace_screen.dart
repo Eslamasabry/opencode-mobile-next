@@ -75,6 +75,11 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     try {
       final projects = await repository.listProjects();
       if (!mounted || generation != _loadGeneration) return;
+      // A location restored before the project list was available is only
+      // provisional; confirm it against the real list now rather than on the
+      // next location change.
+      await widget.controller.revalidateRestoredLocation();
+      if (!mounted || generation != _loadGeneration) return;
       projects.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
       var shouldSelectInitialLocation = false;
       setState(() {

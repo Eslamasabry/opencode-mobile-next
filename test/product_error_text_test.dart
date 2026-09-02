@@ -1,8 +1,11 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show TargetPlatform;
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
+import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/widgets/product_states.dart';
 
 void main() {
@@ -43,6 +46,50 @@ void main() {
           const SocketException('Connection refused (OS Error: errno 111)'),
         ),
         'OpenCode is unreachable. Try again.',
+      );
+    });
+
+    test('names the missing keyring instead of blaming the server', () {
+      expect(
+        productErrorText(
+          SecureStorageUnavailable.forPlatform(
+            TargetPlatform.linux,
+            cause: PlatformException(code: 'Libsecret error'),
+          ),
+        ),
+        SecureStorageUnavailable.linuxMessage,
+      );
+      expect(
+        productErrorText(
+          SecureStorageUnavailable.forPlatform(TargetPlatform.android),
+        ),
+        'Could not store the password securely on this device.',
+      );
+      expect(
+        SecureStorageUnavailable.linuxMessage,
+        'Could not store the password: no keyring is available. Install '
+        'GNOME Keyring or KWallet, or run the app inside a desktop session, '
+        'then try again.',
+      );
+    });
+
+    test('shows a PlatformException message rather than "unreachable"', () {
+      expect(
+        productErrorText(
+          PlatformException(
+            code: 'Libsecret error',
+            message: 'Failed to unlock the keyring',
+          ),
+        ),
+        'Failed to unlock the keyring',
+      );
+      expect(
+        productErrorText(PlatformException(code: 'Libsecret error')),
+        'This device reported an error (Libsecret error).',
+      );
+      expect(
+        productErrorText(PlatformException(code: 'x', message: '  ')),
+        isNot(contains('unreachable')),
       );
     });
 
