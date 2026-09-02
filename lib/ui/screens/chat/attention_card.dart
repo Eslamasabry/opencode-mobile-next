@@ -12,11 +12,21 @@ class _AttentionCard extends StatelessWidget {
     this.summary,
     this.detail,
     required this.primary,
-    required this.secondary,
+    this.secondary,
+    this.accent,
+    this.minHeight = 72,
   });
 
   final IconData icon;
   final String title;
+
+  /// Icon and border tint; defaults to the primary colour. The retry banner
+  /// passes the attention tone so it reads as a wait, not an ask.
+  final Color? accent;
+
+  /// Minimum card height; the permission card keeps 72 so its two buttons
+  /// never crowd, the slimmer retry banner passes 0.
+  final double minHeight;
 
   /// Read by TalkBack when the card appears, e.g. "Permission needed: Run a
   /// shell command". The visible title stays a plain [Text] for tests and
@@ -25,24 +35,25 @@ class _AttentionCard extends StatelessWidget {
   final String? summary;
   final String? detail;
   final Widget primary;
-  final Widget secondary;
+  final Widget? secondary;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final tint = accent ?? scheme.primary;
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 860),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 4, 12, 2),
           child: Container(
-            constraints: const BoxConstraints(minHeight: 72),
+            constraints: BoxConstraints(minHeight: minHeight),
             padding: const EdgeInsets.fromLTRB(14, 12, 12, 10),
             decoration: BoxDecoration(
               color: scheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(AppTheme.radiusCard),
-              border: Border.all(color: scheme.primary.withValues(alpha: .45)),
+              border: Border.all(color: tint.withValues(alpha: .45)),
               boxShadow: AppTheme.raised(theme),
             ),
             child: Column(
@@ -54,7 +65,7 @@ class _AttentionCard extends StatelessWidget {
                   children: [
                     Padding(
                       padding: const EdgeInsets.only(top: 2),
-                      child: Icon(icon, color: scheme.primary),
+                      child: Icon(icon, color: tint),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -110,7 +121,7 @@ class _AttentionCard extends StatelessWidget {
                     spacing: 8,
                     runSpacing: 4,
                     alignment: WrapAlignment.end,
-                    children: [secondary, primary],
+                    children: [?secondary, primary],
                   ),
                 ),
               ],
@@ -164,6 +175,64 @@ class _PermissionAttentionCard extends StatelessWidget {
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             : const Text('Allow once'),
+      ),
+    );
+  }
+}
+
+/// The provider-retry flavour of [_AttentionCard]: a slim banner naming the
+/// attempt and counting down to the next one, the server's own words when
+/// it sent any, and Stop wired to the same abort as the app-bar button.
+class _RetryAttentionCard extends StatelessWidget {
+  const _RetryAttentionCard({
+    super.key,
+    required this.retry,
+    required this.stopping,
+    required this.onStop,
+  });
+
+  final SessionRetryState retry;
+  final bool stopping;
+  final VoidCallback onStop;
+
+  /// "Retrying 2 in 0:42" — the server sends no attempt ceiling, so the
+  /// banner names the attempt rather than inventing a total.
+  static String headline(SessionRetryState retry, {DateTime? now}) {
+    final attempt = retry.attempt > 0 ? ' ${retry.attempt}' : '';
+    final next = retry.next;
+    if (next == null) return 'Rate limited. Retrying$attempt…';
+    final delta = next.difference(now ?? DateTime.now());
+    final remaining = delta.isNegative ? Duration.zero : delta;
+    return 'Rate limited. Retrying$attempt in ${_countdown(remaining)}';
+  }
+
+  static String _countdown(Duration d) {
+    final total = d.inSeconds;
+    final minutes = total ~/ 60;
+    final seconds = total % 60;
+    if (minutes >= 60) {
+      final hours = minutes ~/ 60;
+      return '$hours:${(minutes % 60).toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final title = headline(retry);
+    final message = retry.message?.trim();
+    return _AttentionCard(
+      icon: AppIcons.retry,
+      accent: AppTheme.statusColor(theme, AppStatusTone.attention),
+      minHeight: 0,
+      title: title,
+      announcement: title,
+      detail: message == null || message.isEmpty ? null : message,
+      primary: TextButton(
+        key: const Key('retry-banner-stop'),
+        onPressed: stopping ? null : onStop,
+        child: const Text('Stop'),
       ),
     );
   }

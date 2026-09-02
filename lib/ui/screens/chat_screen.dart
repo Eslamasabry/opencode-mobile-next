@@ -314,6 +314,10 @@ class _ChatScreenState extends State<ChatScreen>
   Key? _composerNoteKey;
   Timer? _composerNoteTimer;
 
+  /// Ticks once a second while this session sits in a provider-retry
+  /// backoff so the banner's countdown stays live; null otherwise.
+  Timer? _retryTicker;
+
   /// The "attachments are not saved" note shows once per session, not on
   /// every attachment. [_attachmentNoteActive] keeps it up while the first
   /// batch is staged; the static set remembers sessions that have seen it.
@@ -361,6 +365,7 @@ class _ChatScreenState extends State<ChatScreen>
     }
     _dataRefreshRevision = _conn.dataRefreshRevision;
     _conn.addListener(_onConnectionChanged);
+    _syncRetryTicker();
     _handoff.store.addListener(_onHandoffChanged); // UX-103 review handoff
     _load();
     unawaited(_loadServerCommands());
@@ -2100,6 +2105,7 @@ class _ChatScreenState extends State<ChatScreen>
   void _onConnectionChanged() {
     if (!mounted) return;
     _announceCompletedFlush();
+    _syncRetryTicker();
     final shouldRehydrate =
         _dataRefreshRevision != _conn.dataRefreshRevision && _conn.api != null;
     _dataRefreshRevision = _conn.dataRefreshRevision;
@@ -2107,6 +2113,28 @@ class _ChatScreenState extends State<ChatScreen>
     _noteRunFinished();
     setState(() {});
     if (shouldRehydrate) unawaited(_load());
+  }
+
+  SessionRetryState? get _retryState => _conn.retryStates[widget.sessionID];
+
+  /// Starts the one-second countdown ticker when the session enters a retry
+  /// backoff and cancels it as soon as the backoff clears, so an idle chat
+  /// never pays for a periodic rebuild.
+  void _syncRetryTicker() {
+    final retry = _retryState;
+    if (retry == null || retry.next == null) {
+      _retryTicker?.cancel();
+      _retryTicker = null;
+      return;
+    }
+    _retryTicker ??= Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      if (_retryState == null) {
+        _syncRetryTicker();
+        return;
+      }
+      setState(() {});
+    });
   }
 
   /// The run-finished moment: one light haptic and a 300 ms primary pulse on
@@ -2400,7 +2428,7 @@ class _ChatScreenState extends State<ChatScreen>
       if (_conn.capabilities.workspaceWarp)
         _ChatCommand.mobile(
           slash: 'warp',
-          title: 'Warp session',
+          title: 'Move session',
           description: 'Change this session’s experimental workspace',
           group: 'Current session',
           action: _ChatCommandAction.warp,
@@ -3650,7 +3678,14 @@ class _ChatScreenState extends State<ChatScreen>
             ? Duration.zero
             : const Duration(milliseconds: 180),
         child: permission == null
-            ? const SizedBox.shrink(key: ValueKey('permission-card-none'))
+            ? (_retryState == null
+                  ? const SizedBox.shrink(key: ValueKey('permission-card-none'))
+                  : _RetryAttentionCard(
+                      key: const ValueKey('retry-banner'),
+                      retry: _retryState!,
+                      stopping: _aborting,
+                      onStop: _abort,
+                    ))
             : _PermissionAttentionCard(
                 key: ValueKey('permission-card-${permission.id}'),
                 permission: permission,
@@ -4051,6 +4086,7 @@ class _ChatScreenState extends State<ChatScreen>
     _streamFlushTimer?.cancel();
     _highlightTimer?.cancel();
     _composerNoteTimer?.cancel();
+    _retryTicker?.cancel();
     unawaited(_voice?.cancel());
     if (widget.voiceController == null) _voice?.dispose();
     _composer.dispose();
