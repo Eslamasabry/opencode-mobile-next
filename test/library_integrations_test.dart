@@ -9,6 +9,7 @@ import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/library_screen.dart';
 import 'package:opencode_mobile/ui/screens/mcp_setup_screen.dart';
+import 'package:opencode_mobile/ui/widgets/provider_logo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _IntegrationsRepository implements ProductRepository {
@@ -207,6 +208,9 @@ Widget _app(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  // Provider logos are fetched favicons; tests render the monogram instead.
+  setUpAll(() => ProviderLogo.imageProviderOverride = (_) => null);
+  tearDownAll(() => ProviderLogo.imageProviderOverride = null);
 
   test('authorization URL policy accepts only credential-free HTTPS hosts', () {
     expect(
@@ -302,8 +306,16 @@ void main() {
     expect(find.text('Z.AI Coding Plan · Global'), findsOneWidget);
     expect(find.text('Z.AI Coding Plan · China'), findsOneWidget);
     expect(find.text('Zhipu AI Coding Plan'), findsNothing);
-    expect(find.text('Connected\n(server-managed)'), findsOneWidget);
+    expect(find.text('Server-managed'), findsOneWidget);
+    expect(find.text('Connected'), findsOneWidget);
+    expect(find.text('Not connected'), findsOneWidget);
     expect(find.text('Connect'), findsOneWidget);
+    expect(find.text('1 connected · 1 available'), findsOneWidget);
+    // Connected providers lead the list regardless of alias order.
+    expect(
+      tester.getTopLeft(find.text('Z.AI Coding Plan · China')).dy,
+      lessThan(tester.getTopLeft(find.text('Z.AI Coding Plan · Global')).dy),
+    );
   });
 
   testWidgets(
@@ -389,7 +401,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Server environment: PROVIDER_TOKEN'), findsOneWidget);
-      expect(find.text('Server\nenvironment'), findsOneWidget);
+      expect(find.text('Server environment'), findsOneWidget);
       expect(find.text('Disconnect'), findsNothing);
       expect(repository.providerDisconnectCalls, 0);
     },
@@ -684,6 +696,14 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+    // Providers lead the screen now, so the MCP row starts below the fold.
+    await tester.scrollUntilVisible(
+      find.text('Authenticate'),
+      120,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.ensureVisible(find.text('Authenticate'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Authenticate'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));

@@ -198,3 +198,77 @@ List<PresentedIntegration> _presentIntegrationGroup(
       ),
   ];
 }
+
+/// The web domain whose favicon stands in for a provider's logo.
+///
+/// Wire ids are matched case-insensitively; aliases that share a company
+/// (the Z.AI / Zhipu routes, Google's Gemini and Vertex routes) share a
+/// domain. Unknown ids fall back to `<id>.com`, which is right often enough
+/// to be worth a try and cheap when it is not: a missing favicon renders as
+/// a monogram.
+String providerLogoDomain(String providerID) {
+  final id = providerID.trim().toLowerCase();
+  return switch (id) {
+    'anthropic' => 'anthropic.com',
+    'openai' => 'openai.com',
+    'google' || 'gemini' || 'google-vertex' => 'gemini.google.com',
+    'openrouter' => 'openrouter.ai',
+    'github-copilot' => 'github.com',
+    'ollama' => 'ollama.com',
+    'groq' => 'groq.com',
+    'xai' => 'x.ai',
+    'mistral' => 'mistral.ai',
+    'deepseek' => 'deepseek.com',
+    'zai' ||
+    'zhipuai' ||
+    'zai-coding-plan' ||
+    'zhipuai-coding-plan' => 'zhipuai.cn',
+    'amazon-bedrock' => 'aws.amazon.com',
+    'azure' => 'azure.microsoft.com',
+    'together' => 'together.ai',
+    'fireworks-ai' => 'fireworks.ai',
+    'cerebras' => 'cerebras.ai',
+    'huggingface' => 'huggingface.co',
+    'vercel' => 'vercel.com',
+    'lmstudio' => 'lmstudio.ai',
+    'opencode' || 'opencode-zen' => 'opencode.ai',
+    _ => '${id.replaceAll(RegExp(r'[^a-z0-9-]'), '')}.com',
+  };
+}
+
+/// True for the app's own provider ids, which draw the prompt glyph instead
+/// of a fetched logo.
+bool isOpenCodeProvider(String providerID) =>
+    switch (providerID.trim().toLowerCase()) {
+      'opencode' || 'opencode-zen' => true,
+      _ => false,
+    };
+
+/// Google's favicon service, 128px PNG. Same endpoint that
+/// `google.com/s2/favicons` redirects to, addressed directly so the image
+/// pipeline does not pay for the redirect.
+Uri providerLogoUrl(String providerID) =>
+    Uri.https('t1.gstatic.com', '/faviconV2', {
+      'client': 'SOCIAL',
+      'type': 'FAVICON',
+      'fallback_opts': 'TYPE,SIZE,URL',
+      'url': 'https://${providerLogoDomain(providerID)}',
+      'size': '128',
+    });
+
+/// One- or two-letter monogram for a provider whose logo is missing or still
+/// loading: initials of the first two words of its presented name
+/// ("fireworks-ai" -> "FA"), or the first two letters of a single word
+/// ("groq" -> "GR").
+String providerMonogram(String providerID) {
+  final words = presentProvider(providerID).name
+      .split(RegExp(r'[^A-Za-z0-9]+'))
+      .where((word) => word.isNotEmpty)
+      .toList();
+  if (words.isEmpty) return '?';
+  if (words.length == 1) {
+    final word = words.single;
+    return word.substring(0, word.length >= 2 ? 2 : 1).toUpperCase();
+  }
+  return '${words[0][0]}${words[1][0]}'.toUpperCase();
+}

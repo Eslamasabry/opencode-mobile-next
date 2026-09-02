@@ -16,6 +16,8 @@ import '../desktop/desktop_interaction.dart';
 import '../desktop/shortcuts.dart';
 import '../widgets/entrance.dart';
 import '../widgets/file_preview.dart';
+import '../widgets/info_label.dart';
+import '../widgets/provider_logo.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/product_states.dart';
 import '../widgets/pickers.dart';
@@ -46,95 +48,95 @@ class LibraryScreen extends StatelessWidget {
         // work has exactly one home — the Activity destination and its badge.
         return DesktopScrollbarArea(
           builder: (scrollController) => ListView(
-          controller: scrollController,
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
-          children: [
-            _ActiveSetupCard(controller: controller),
-            SectionLabel(l10n.libraryBrowseSection),
-            _DestinationGrid(
-              cards: [
-                _DestinationCard(
-                  icon: Icons.model_training_outlined,
-                  title: l10n.libraryModelsAgentsTitle,
-                  onTap: () =>
-                      _open(context, CatalogScreen(controller: controller)),
-                ),
-                _DestinationCard(
-                  icon: Icons.cloud_outlined,
-                  title: l10n.libraryProvidersTitle,
-                  onTap: () => _open(
-                    context,
-                    IntegrationsScreen(
-                      controller: controller,
-                      mode: IntegrationsMode.providers,
-                    ),
-                  ),
-                ),
-                _DestinationCard(
-                  icon: Icons.hub_outlined,
-                  title: l10n.libraryMcpTitle,
-                  onTap: () => _open(
-                    context,
-                    IntegrationsScreen(
-                      controller: controller,
-                      mode: IntegrationsMode.mcp,
-                    ),
-                  ),
-                ),
-                _DestinationCard(
-                  icon: Icons.build_circle_outlined,
-                  title: l10n.libraryCommandsToolsTitle,
-                  onTap: () => _open(
-                    context,
-                    CapabilitiesScreen(controller: controller),
-                  ),
-                ),
-                // §5: Terminal gives up its navigation slot to Activity and
-                // is reached from here (and from a session) instead.
-                _DestinationCard(
-                  key: const ValueKey('library-terminal'),
-                  icon: Icons.terminal_outlined,
-                  title: l10n.libraryTerminalTitle,
-                  onTap: () =>
-                      _open(context, TerminalPage(controller: controller)),
-                ),
-              ],
-            ),
-            SectionLabel(l10n.libraryManageSection),
-            _DestinationGrid(
-              cards: [
-                _DestinationCard(
-                  icon: Icons.settings_outlined,
-                  title: l10n.librarySettingsTitle,
-                  onTap: () =>
-                      _open(context, SettingsScreen(controller: controller)),
-                ),
-                _DestinationCard(
-                  icon: Icons.menu_book_outlined,
-                  title: 'Setup guide',
-                  onTap: () => _open(context, const GuideScreen()),
-                ),
-                // The bug form lives in the failure states themselves; this
-                // card is the deliberate path for everything a user notices
-                // outside a failure surface.
-                _DestinationCard(
-                  key: const ValueKey('library-report-bug'),
-                  icon: Icons.bug_report_outlined,
-                  title: 'Report a bug',
-                  onTap: () => unawaited(openBugReport(context)),
-                ),
-                // The shortcut layer must be discoverable without already
-                // knowing a shortcut.
-                if (desktopInteractions)
+            controller: scrollController,
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+            children: [
+              _ActiveSetupCard(controller: controller),
+              SectionLabel(l10n.libraryBrowseSection),
+              _DestinationGrid(
+                cards: [
                   _DestinationCard(
-                    key: const ValueKey('library-keyboard-shortcuts'),
-                    icon: Icons.keyboard_outlined,
-                    title: 'Keyboard shortcuts',
-                    onTap: () => unawaited(showShortcutsHelp(context)),
+                    icon: Icons.model_training_outlined,
+                    title: l10n.libraryModelsAgentsTitle,
+                    onTap: () =>
+                        _open(context, CatalogScreen(controller: controller)),
                   ),
-              ],
-            ),
-          ],
+                  _DestinationCard(
+                    icon: Icons.cloud_outlined,
+                    title: l10n.libraryProvidersTitle,
+                    onTap: () => _open(
+                      context,
+                      IntegrationsScreen(
+                        controller: controller,
+                        mode: IntegrationsMode.providers,
+                      ),
+                    ),
+                  ),
+                  _DestinationCard(
+                    icon: Icons.hub_outlined,
+                    title: l10n.libraryMcpTitle,
+                    onTap: () => _open(
+                      context,
+                      IntegrationsScreen(
+                        controller: controller,
+                        mode: IntegrationsMode.mcp,
+                      ),
+                    ),
+                  ),
+                  _DestinationCard(
+                    icon: Icons.build_circle_outlined,
+                    title: l10n.libraryCommandsToolsTitle,
+                    onTap: () => _open(
+                      context,
+                      CapabilitiesScreen(controller: controller),
+                    ),
+                  ),
+                  // §5: Terminal gives up its navigation slot to Activity and
+                  // is reached from here (and from a session) instead.
+                  _DestinationCard(
+                    key: const ValueKey('library-terminal'),
+                    icon: Icons.terminal_outlined,
+                    title: l10n.libraryTerminalTitle,
+                    onTap: () =>
+                        _open(context, TerminalPage(controller: controller)),
+                  ),
+                ],
+              ),
+              SectionLabel(l10n.libraryManageSection),
+              _DestinationGrid(
+                cards: [
+                  _DestinationCard(
+                    icon: Icons.settings_outlined,
+                    title: l10n.librarySettingsTitle,
+                    onTap: () =>
+                        _open(context, SettingsScreen(controller: controller)),
+                  ),
+                  _DestinationCard(
+                    icon: Icons.menu_book_outlined,
+                    title: 'Setup guide',
+                    onTap: () => _open(context, const GuideScreen()),
+                  ),
+                  // The bug form lives in the failure states themselves; this
+                  // card is the deliberate path for everything a user notices
+                  // outside a failure surface.
+                  _DestinationCard(
+                    key: const ValueKey('library-report-bug'),
+                    icon: Icons.bug_report_outlined,
+                    title: 'Report a bug',
+                    onTap: () => unawaited(openBugReport(context)),
+                  ),
+                  // The shortcut layer must be discoverable without already
+                  // knowing a shortcut.
+                  if (desktopInteractions)
+                    _DestinationCard(
+                      key: const ValueKey('library-keyboard-shortcuts'),
+                      icon: Icons.keyboard_outlined,
+                      title: 'Keyboard shortcuts',
+                      onTap: () => unawaited(showShortcutsHelp(context)),
+                    ),
+                ],
+              ),
+            ],
           ),
         );
       },

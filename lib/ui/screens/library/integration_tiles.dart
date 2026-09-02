@@ -249,6 +249,10 @@ class _McpOAuthCodeDialogState extends State<_McpOAuthCodeDialog> {
 class _ProviderIntegrationTile extends StatelessWidget {
   final PresentedIntegration presented;
   final String subtitle;
+
+  /// Models the catalog lists for this provider, or null when the catalog
+  /// has not loaded (or lists none).
+  final int? modelCount;
   final bool busy;
   final VoidCallback onConnect;
   final VoidCallback onDisconnect;
@@ -259,33 +263,59 @@ class _ProviderIntegrationTile extends StatelessWidget {
     required this.busy,
     required this.onConnect,
     required this.onDisconnect,
+    this.modelCount,
   });
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final theme = Theme.of(context);
         final textScale = MediaQuery.textScalerOf(context).scale(1);
         final stackAction = constraints.maxWidth < 400 && textScale > 1.3;
         final action = _action();
         return ListTile(
-          leading: const Icon(Icons.link_rounded),
-          title: Text(presented.name),
-          subtitle: stackAction
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(subtitle),
-                    if (action != null) ...[
-                      const SizedBox(height: 4),
-                      Align(
-                        alignment: AlignmentDirectional.centerEnd,
-                        child: action,
-                      ),
-                    ],
-                  ],
-                )
-              : Text(subtitle),
+          leading: ProviderLogo(presented.integration.id),
+          title: Text(
+            presented.name,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 2),
+              _ProviderStateLabel(
+                tone: busy
+                    ? AppStatusTone.progress
+                    : presented.connected
+                    ? AppStatusTone.ok
+                    : AppStatusTone.neutral,
+                label: busy
+                    ? 'Updating…'
+                    : presented.connected
+                    ? 'Connected'
+                    : 'Not connected',
+                modelCount: modelCount,
+              ),
+              if (subtitle.trim().isNotEmpty) ...[
+                const SizedBox(height: 1),
+                Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppTheme.mutedOf(theme),
+                  ),
+                ),
+              ],
+              if (stackAction && action != null) ...[
+                const SizedBox(height: 4),
+                Align(alignment: AlignmentDirectional.centerEnd, child: action),
+              ],
+            ],
+          ),
           trailing: stackAction ? null : action,
         );
       },
@@ -308,19 +338,83 @@ class _ProviderIntegrationTile extends StatelessWidget {
       );
     }
     if (presented.connected) {
-      return Text(
-        integration.hasEnvironmentConnection
-            ? 'Server\nenvironment'
-            : 'Connected\n(server-managed)',
-        textAlign: TextAlign.end,
+      // Nothing mobile can act on: the credential lives on the server.
+      return _ServerManagedLabel(
+        text: integration.hasEnvironmentConnection
+            ? 'Server environment'
+            : 'Server-managed',
       );
     }
     final canConnect = integration.methods.any(
       (method) => method.type == 'key' || method.type == 'oauth',
     );
-    return TextButton(
+    return FilledButton.tonal(
+      key: ValueKey('connect-provider-${integration.id}'),
       onPressed: !busy && canConnect ? onConnect : null,
+      style: FilledButton.styleFrom(
+        visualDensity: VisualDensity.compact,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+      ),
       child: const Text('Connect'),
+    );
+  }
+}
+
+/// "Connected · 12 models" in the status tone, one line.
+class _ProviderStateLabel extends StatelessWidget {
+  final AppStatusTone tone;
+  final String label;
+  final int? modelCount;
+
+  const _ProviderStateLabel({
+    required this.tone,
+    required this.label,
+    required this.modelCount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = AppTheme.statusColor(theme, tone);
+    final count = modelCount;
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(
+            text: label,
+            style: TextStyle(color: color, fontWeight: FontWeight.w600),
+          ),
+          if (count != null && count > 0)
+            TextSpan(
+              text: ' · $count ${count == 1 ? 'model' : 'models'}',
+              style: TextStyle(color: AppTheme.mutedOf(theme)),
+            ),
+        ],
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: theme.textTheme.bodySmall,
+    );
+  }
+}
+
+/// The muted, single-line trailing note for a connection mobile cannot
+/// change.
+class _ServerManagedLabel extends StatelessWidget {
+  final String text;
+  const _ServerManagedLabel({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Text(
+      text,
+      maxLines: 1,
+      softWrap: false,
+      overflow: TextOverflow.fade,
+      style: theme.textTheme.labelSmall?.copyWith(
+        color: AppTheme.mutedOf(theme),
+      ),
     );
   }
 }
@@ -681,18 +775,106 @@ class _McpStatus extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = AppTheme.statusColor(Theme.of(context), switch (status) {
+    final theme = Theme.of(context);
+    final color = AppTheme.statusColor(theme, switch (status) {
       'connected' => AppStatusTone.ok,
       'failed' => AppStatusTone.failure,
       'needs_auth' || 'needs_client_registration' => AppStatusTone.attention,
       _ => AppStatusTone.neutral,
     });
+    // Same tile as ProviderLogo so MCP rows line up with provider rows; the
+    // dot inside carries the state.
     return Semantics(
       label: status.replaceAll('_', ' '),
-      child: Container(
-        width: 10,
-        height: 10,
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      child: BrandTile(
+        size: 28,
+        child: Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+      ),
+    );
+  }
+}
+
+/// A section caption in the shared [SectionLabel] voice with a one-line
+/// muted description under it. [label] replaces the uppercase [text] when
+/// the caption needs an inline glossary affordance.
+class _SectionHeader extends StatelessWidget {
+  final String? text;
+  final Widget? label;
+  final String description;
+
+  const _SectionHeader({this.text, this.label, required this.description})
+    : assert(text != null || label != null);
+
+  static TextStyle? labelStyle(ThemeData theme) => theme.textTheme.labelSmall
+      ?.copyWith(color: AppTheme.mutedOf(theme), letterSpacing: 1.1);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          label ?? Text(text!.toUpperCase(), style: labelStyle(theme)),
+          const SizedBox(height: 2),
+          Text(
+            description,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppTheme.mutedOf(theme),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "2 connected · 5 available", above the provider list.
+class _ProviderSummaryRow extends StatelessWidget {
+  final int connected;
+  final int total;
+
+  const _ProviderSummaryRow({required this.connected, required this.total});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final available = total - connected;
+    return Padding(
+      key: const ValueKey('provider-summary'),
+      padding: const EdgeInsets.fromLTRB(16, 2, 16, 2),
+      child: Row(
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppTheme.statusColor(
+                theme,
+                connected > 0 ? AppStatusTone.ok : AppStatusTone.neutral,
+              ),
+            ),
+          ),
+          const SizedBox(width: 7),
+          Expanded(
+            child: Text(
+              '$connected connected · $available available',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: AppTheme.mutedOf(theme),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

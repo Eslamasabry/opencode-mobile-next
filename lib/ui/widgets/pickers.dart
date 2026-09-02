@@ -9,6 +9,7 @@ import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../app_theme.dart';
 import 'agent_color.dart';
+import 'provider_logo.dart';
 
 /// How applying a model/agent selection is scoped and labeled.
 ///
@@ -531,7 +532,15 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
         for (final provider in providers)
           DropdownMenuItem(
             value: provider.id,
-            child: Text(provider.name, overflow: TextOverflow.ellipsis),
+            child: Row(
+              children: [
+                ProviderLogo(provider.providerIDs.first, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(provider.name, overflow: TextOverflow.ellipsis),
+                ),
+              ],
+            ),
           ),
       ],
       onChanged: (value) => setState(() => _provider = value ?? '*'),
@@ -580,22 +589,36 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
               fontWeight: current ? FontWeight.w700 : FontWeight.w500,
             ),
           ),
-          subtitle: Text(
-            [
-              '$providerName · ${model.id}',
-              if (model.contextLimit > 0)
-                '${_number(model.contextLimit)} context',
-              if (model.outputLimit > 0) '${_number(model.outputLimit)} output',
-              // Price per million tokens, straight from the catalog, so the
-              // trade-off between models is visible where the choice is made.
-              ?modelCostLabel(model),
-              if (model.deprecated)
-                'Deprecated'
-              else if (model.preview)
-                'Preview',
-            ].join(' · '),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+          subtitle: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 1),
+                child: ProviderLogo(model.providerID, size: 18),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  [
+                    '$providerName · ${model.id}',
+                    if (model.contextLimit > 0)
+                      '${_number(model.contextLimit)} context',
+                    if (model.outputLimit > 0)
+                      '${_number(model.outputLimit)} output',
+                    // Price per million tokens, straight from the catalog, so
+                    // the trade-off between models is visible where the
+                    // choice is made.
+                    ?modelCostLabel(model),
+                    if (model.deprecated)
+                      'Deprecated'
+                    else if (model.preview)
+                      'Preview',
+                  ].join(' · '),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
           trailing: Icon(
             draft

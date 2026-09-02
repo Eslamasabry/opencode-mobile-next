@@ -8,6 +8,7 @@ import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/widgets/pickers.dart';
+import 'package:opencode_mobile/ui/widgets/provider_logo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _RefreshCountingController extends ConnectionController {
@@ -186,6 +187,9 @@ Widget _app(ConnectionController controller, {double textScale = 1}) {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  // Provider logos are fetched favicons; tests render the monogram instead.
+  setUpAll(() => ProviderLogo.imageProviderOverride = (_) => null);
+  tearDownAll(() => ProviderLogo.imageProviderOverride = null);
 
   test('model presentation leads with current model and provider family', () {
     const models = [
@@ -356,13 +360,17 @@ void main() {
     // The pinned apply bar also names the drafted (current) model, so the
     // name can appear twice while its row stays unique.
     expect(
-      find.byKey(const Key('model-option-opencode-nemotron-3.5-lightning-free')),
+      find.byKey(
+        const Key('model-option-opencode-nemotron-3.5-lightning-free'),
+      ),
       findsOneWidget,
     );
     expect(find.text('Nemotron Ultra'), findsNothing);
 
     await tester.tap(
-      find.byKey(const Key('model-option-opencode-nemotron-3.5-lightning-free')),
+      find.byKey(
+        const Key('model-option-opencode-nemotron-3.5-lightning-free'),
+      ),
     );
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('fast · low effort'));

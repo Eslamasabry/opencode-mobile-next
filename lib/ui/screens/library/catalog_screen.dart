@@ -202,12 +202,11 @@ class _CatalogScreenState extends State<CatalogScreen> {
               .where((model) => model.providerID == provider.id)
               .length;
           return ListTile(
-            leading: Icon(
-              provider.enabled
-                  ? Icons.cloud_done_outlined
-                  : Icons.cloud_off_outlined,
+            leading: ProviderLogo(provider.id, size: 22),
+            title: Text(
+              provider.name,
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
-            title: Text(provider.name),
             subtitle: Text(
               '$count available models\nAuthentication is managed under MCP and integrations.',
               maxLines: 2,

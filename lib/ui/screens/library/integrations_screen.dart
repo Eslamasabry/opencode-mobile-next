@@ -370,117 +370,189 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 24),
           children: [
-            if (_showMcp) ...[
-            const SectionLabel('MCP servers'),
-            if (_serverError != null)
-              _SectionLoadError(message: _serverError!, onRetry: _retryServers)
-            else if (_servers == null)
-              const _SectionLoading(label: 'Loading MCP servers')
-            else if (_servers!.isEmpty)
-              ProductInlineEmpty(
-                icon: Icons.hub_outlined,
-                title: 'No MCP servers configured',
-                message:
-                    'Save one for this project or every project on the server.',
-                actionLabel: 'Add',
-                onAction: _openMcpSetup,
-              )
-            else
-              for (final server in _servers!) ...[
-                _McpServerTile(
-                  server: server,
-                  subtitle: server.error?.isNotEmpty == true
-                      ? server.error!
-                      : _statusLabel(server.status),
-                  actionLabel: _pendingMcpOAuth?.server.name == server.name
-                      ? 'Authorizing'
-                      : _actionLabel(server.status),
-                  busy:
-                      _busy.contains(server.name) ||
-                      (_pendingMcpOAuth?.server.name == server.name &&
-                          _finishingMcpOAuth),
-                  authGated: _mcpAuthGated(server.status),
-                  onAction:
-                      _pendingMcpOAuth?.server.name == server.name ||
-                          _mcpAuthGated(server.status)
-                      ? null
-                      : () => _action(server),
-                ),
-                if (_pendingMcpOAuth case final pending?
-                    when pending.server.name == server.name)
-                  _PendingMcpOAuthTile(
-                    pending: pending,
-                    busy: _finishingMcpOAuth,
-                    onEnterCode: _enterMcpAuthorizationCode,
-                    onCancel: _cancelMcpAuthentication,
-                  ),
-              ],
-            ],
-            if (_showProviders) ...[
-            const SectionLabel('Provider connections'),
-            if (_pendingOAuth case final pending?)
-              _PendingOAuthTile(
-                pending: pending,
-                checking: _checkingOAuth,
-                onContinue: pending.launch.mode == IntegrationAuthMode.code
-                    ? _enterOAuthCode
-                    : _checkOAuth,
-                onCancel: _cancelOAuth,
-              ),
-            if (_integrationError != null)
-              _SectionLoadError(
-                message: _integrationError!,
-                onRetry: _retryIntegrations,
-              )
-            else if (_integrations == null)
-              const _SectionLoading(label: 'Loading provider connections')
-            else if (_integrations!.isEmpty)
-              const ProductInlineEmpty(
-                icon: Icons.link_off_rounded,
-                title: 'No provider connections available',
-                message: 'This server did not return any provider integrations.',
-              )
-            else
-              for (final presented in presentIntegrations(_integrations!))
-                _ProviderIntegrationTile(
-                  presented: presented,
-                  subtitle: _integrationSubtitle(presented.integration),
-                  busy: _busy.contains(presented.integration.id),
-                  onConnect: () => _connectIntegration(presented.integration),
-                  onDisconnect: () => _disconnectIntegration(presented),
-                ),
-            ],
-            if (_showMcp) ...[
-            const SectionLabel('Available resources'),
-            if (_resourceError != null)
-              _SectionLoadError(
-                message: _resourceError!,
-                onRetry: _retryResources,
-              )
-            else if (_resources == null)
-              const _SectionLoading(label: 'Loading available resources')
-            else if (_resources!.isEmpty)
-              const ProductInlineEmpty(
-                icon: Icons.description_outlined,
-                title: 'No resources available',
-                message: 'Connected MCP servers have not exposed any resources.',
-              )
-            else
-              for (final resource in _resources!)
-                ListTile(
-                  leading: const Icon(Icons.description_outlined),
-                  title: Text(resource.name),
-                  subtitle: Text(
-                    '${resource.server} - ${resource.uri}',
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-            ],
+            // Providers lead: a new user needs a model before anything else.
+            if (_showProviders) ..._providerSection(),
+            if (_showMcp) ...[..._mcpSection(), ..._resourceSection()],
           ],
         ),
       ),
     );
+  }
+
+  List<Widget> _providerSection() {
+    final integrations = _integrations;
+    return [
+      const _SectionHeader(
+        text: 'Providers',
+        description:
+            'The model providers this OpenCode server can use. Connect one to start chatting.',
+      ),
+      if (_pendingOAuth case final pending?)
+        _PendingOAuthTile(
+          pending: pending,
+          checking: _checkingOAuth,
+          onContinue: pending.launch.mode == IntegrationAuthMode.code
+              ? _enterOAuthCode
+              : _checkOAuth,
+          onCancel: _cancelOAuth,
+        ),
+      if (_integrationError != null)
+        _SectionLoadError(
+          message: _integrationError!,
+          onRetry: _retryIntegrations,
+        )
+      else if (integrations == null)
+        const _SectionLoading(label: 'Loading providers')
+      else if (integrations.isEmpty)
+        ProductInlineEmpty(
+          icon: Icons.link_off_rounded,
+          title: 'No provider connections available',
+          message: 'This server did not return any provider integrations.',
+          actionLabel: 'Refresh',
+          onAction: _retryIntegrations,
+        )
+      else ...[
+        _ProviderSummaryRow(
+          connected: integrations
+              .where((integration) => integration.connectionCount > 0)
+              .length,
+          total: integrations.length,
+        ),
+        for (final presented in _sortedIntegrations(integrations))
+          _ProviderIntegrationTile(
+            presented: presented,
+            subtitle: _integrationSubtitle(presented.integration),
+            modelCount: _modelCount(presented.integration.id),
+            busy: _busy.contains(presented.integration.id),
+            onConnect: () => _connectIntegration(presented.integration),
+            onDisconnect: () => _disconnectIntegration(presented),
+          ),
+      ],
+    ];
+  }
+
+  List<Widget> _mcpSection() {
+    final servers = _servers;
+    return [
+      _SectionHeader(
+        label: Builder(
+          builder: (context) {
+            final style = _SectionHeader.labelStyle(Theme.of(context));
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                InfoLabel.glossary(Glossary.mcp, style: style, iconSize: 13),
+                Text(' SERVERS', style: style),
+              ],
+            );
+          },
+        ),
+        description:
+            'Add-on servers that give the agent extra tools, like a browser or a database.',
+      ),
+      if (_serverError != null)
+        _SectionLoadError(message: _serverError!, onRetry: _retryServers)
+      else if (servers == null)
+        const _SectionLoading(label: 'Loading MCP servers')
+      else if (servers.isEmpty)
+        ProductInlineEmpty(
+          icon: Icons.hub_outlined,
+          title: 'No MCP servers configured',
+          message: 'Save one for this project or every project on the server.',
+          actionLabel: 'Add an MCP server',
+          onAction: _openMcpSetup,
+        )
+      else
+        for (final server in servers) ...[
+          _McpServerTile(
+            server: server,
+            subtitle: server.error?.isNotEmpty == true
+                ? server.error!
+                : _statusLabel(server.status),
+            actionLabel: _pendingMcpOAuth?.server.name == server.name
+                ? 'Authorizing'
+                : _actionLabel(server.status),
+            busy:
+                _busy.contains(server.name) ||
+                (_pendingMcpOAuth?.server.name == server.name &&
+                    _finishingMcpOAuth),
+            authGated: _mcpAuthGated(server.status),
+            onAction:
+                _pendingMcpOAuth?.server.name == server.name ||
+                    _mcpAuthGated(server.status)
+                ? null
+                : () => _action(server),
+          ),
+          if (_pendingMcpOAuth case final pending?
+              when pending.server.name == server.name)
+            _PendingMcpOAuthTile(
+              pending: pending,
+              busy: _finishingMcpOAuth,
+              onEnterCode: _enterMcpAuthorizationCode,
+              onCancel: _cancelMcpAuthentication,
+            ),
+        ],
+    ];
+  }
+
+  List<Widget> _resourceSection() {
+    final resources = _resources;
+    return [
+      const _SectionHeader(
+        text: 'Resources',
+        description:
+            'Files and data that connected MCP servers expose to the agent.',
+      ),
+      if (_resourceError != null)
+        _SectionLoadError(message: _resourceError!, onRetry: _retryResources)
+      else if (resources == null)
+        const _SectionLoading(label: 'Loading available resources')
+      else if (resources.isEmpty)
+        ProductInlineEmpty(
+          icon: Icons.description_outlined,
+          title: 'No resources available',
+          message: 'Connected MCP servers have not exposed any resources.',
+          actionLabel: _servers?.isEmpty == true ? 'Add an MCP server' : null,
+          onAction: _servers?.isEmpty == true ? _openMcpSetup : null,
+        )
+      else
+        for (final resource in resources)
+          ListTile(
+            leading: const BrandTile(
+              size: 28,
+              child: Icon(Icons.description_outlined, size: 16),
+            ),
+            title: Text(resource.name),
+            subtitle: Text(
+              '${resource.server} - ${resource.uri}',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+    ];
+  }
+
+  /// Connected providers first, then alphabetical, so the ones a user can
+  /// already use sit at the top of the list.
+  static List<PresentedIntegration> _sortedIntegrations(
+    List<IntegrationInfo> integrations,
+  ) {
+    final presented = presentIntegrations(integrations);
+    presented.sort((a, b) {
+      if (a.connected != b.connected) return a.connected ? -1 : 1;
+      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    });
+    return presented;
+  }
+
+  /// Models the catalog lists for this provider, or null until the catalog
+  /// has loaded.
+  int? _modelCount(String providerID) {
+    final catalog = widget.controller.catalog;
+    if (catalog == null) return null;
+    return catalog.models
+        .where((model) => model.providerID == providerID)
+        .length;
   }
 
   Future<bool> _confirmAuthorizationLaunch(Uri destination) async {
@@ -869,4 +941,3 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     }
   }
 }
-
