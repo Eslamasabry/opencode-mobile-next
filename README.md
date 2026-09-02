@@ -65,6 +65,8 @@ home-screen widget that shows your sessions.
 | --- | --- | --- |
 | ![Linux desktop workspace with the session list](video/public/shots/desktop-01-workspace.png) | ![Linux desktop chat with the permission card above the composer](video/public/shots/desktop-02-chat-permission.png) | ![Linux desktop review workspace, split diff](video/public/shots/desktop-05-review.png) |
 
+**Full demo (51 s, 1080p, with sound):** [opencode-mobile-demo.mp4](video/public/opencode-mobile-demo.mp4). Phone footage is rendered from the app's real screens; the Linux desktop scene was recorded live.
+
 ![Demo](video/public/demo.gif)
 
 The same demo as a video: [video/public/demo.webm](video/public/demo.webm).

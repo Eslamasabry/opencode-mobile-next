@@ -1,3 +1,5 @@
 node_modules/
 out/
 public/shots/*.mp4
+public/phone-frames
+public/desktop-frames
