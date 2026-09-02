@@ -24,6 +24,7 @@ import 'ui/theme_packs.dart';
 import 'ui/navigation/chat_route.dart';
 import 'ui/screens/settings_screen.dart';
 import 'ui/widgets/product_states.dart' show productErrorText;
+import 'ui/widgets/saved_server_connection_card.dart';
 import 'ui/screens/guide_screen.dart';
 import 'ui/screens/about_screen.dart';
 import 'ui/screens/home_screen.dart';
@@ -599,6 +600,7 @@ class _Root extends ConsumerStatefulWidget {
 
 class _RootState extends ConsumerState<_Root> {
   bool _started = false;
+  int _attempts = 0;
   late final ConnectionController _controller;
 
   @override
@@ -608,7 +610,11 @@ class _RootState extends ConsumerState<_Root> {
   }
 
   void _changed() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    // A successful connect resets the streak, so the next failure after a
+    // long healthy session starts its count from one again.
+    if (_controller.api != null && _controller.version != null) _attempts = 0;
+    setState(() {});
   }
 
   void _connectSaved() {
@@ -617,6 +623,7 @@ class _RootState extends ConsumerState<_Root> {
     final profile = conn.profile;
     if (profile == null || profile.requiresPasswordReentry) return;
     _started = true;
+    _attempts += 1;
     WidgetsBinding.instance.addPostFrameCallback((_) => conn.connect(profile));
   }
 
@@ -631,17 +638,27 @@ class _RootState extends ConsumerState<_Root> {
       return const ServersScreen();
     }
     _connectSaved();
+    final navigator = Navigator.of(context);
     return Scaffold(
       body: SafeArea(
-        child: _SavedServerConnectionView(
+        child: SavedServerConnectionCard(
           profileName: conn.profile!.name,
           baseUrl: conn.profile!.baseUrl,
           error: conn.lastError == null
               ? null
               : productErrorText(conn.lastError!),
-          onChangeServer: () => Navigator.of(
-            context,
-          ).pushNamedAndRemoveUntil('/servers', (_) => false),
+          attempts: _attempts,
+          supportsTermux: platformCapabilities.supportsTermux,
+          onChangeServer: () =>
+              navigator.pushNamedAndRemoveUntil('/servers', (_) => false),
+          onUpdatePassword: () => navigator.pushNamedAndRemoveUntil(
+            '/servers',
+            (_) => false,
+            arguments: 'edit-active',
+          ),
+          onOpenTermuxSetup: platformCapabilities.supportsTermux
+              ? () => navigator.pushNamed('/termux-setup')
+              : null,
           onRetry: () {
             _started = false;
             _connectSaved();
@@ -655,167 +672,5 @@ class _RootState extends ConsumerState<_Root> {
   void dispose() {
     _controller.removeListener(_changed);
     super.dispose();
-  }
-}
-
-class _SavedServerConnectionView extends StatelessWidget {
-  final String profileName;
-  final String baseUrl;
-  final String? error;
-  final VoidCallback onChangeServer;
-  final VoidCallback onRetry;
-
-  const _SavedServerConnectionView({
-    required this.profileName,
-    required this.baseUrl,
-    required this.error,
-    required this.onChangeServer,
-    required this.onRetry,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final failed = error != null;
-
-    return Semantics(
-      container: true,
-      liveRegion: true,
-      label: failed
-          ? 'Could not connect to $profileName. $error'
-          : 'Connecting to $profileName',
-      child: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: scheme.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: scheme.outlineVariant.withValues(alpha: .75),
-                ),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x33000000),
-                    blurRadius: 36,
-                    offset: Offset(0, 18),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 26, 24, 24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: failed
-                              ? scheme.errorContainer
-                              : scheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Icon(
-                          failed
-                              ? Icons.cloud_off_outlined
-                              : Icons.terminal_rounded,
-                          color: failed
-                              ? scheme.onErrorContainer
-                              : scheme.onPrimaryContainer,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      failed
-                          ? 'Could not connect'
-                          : 'Connecting to $profileName',
-                      style: theme.textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      failed
-                          ? productErrorText(error!)
-                          : 'Opening your saved workspace.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        height: 1.45,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: scheme.surfaceContainer,
-                        borderRadius: BorderRadius.circular(
-                          AppTheme.radiusControl,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.dns_outlined,
-                            size: 18,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              baseUrl,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: scheme.onSurfaceVariant,
-                                fontFamily: AppTheme.monoFamily,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (!failed) ...[
-                      const SizedBox(height: 22),
-                      const LinearProgressIndicator(
-                        key: ValueKey('saved-server-connect-progress'),
-                        minHeight: 3,
-                        borderRadius: BorderRadius.all(Radius.circular(2)),
-                      ),
-                    ] else ...[
-                      const SizedBox(height: 22),
-                      Wrap(
-                        alignment: WrapAlignment.end,
-                        spacing: 10,
-                        runSpacing: 10,
-                        children: [
-                          OutlinedButton(
-                            onPressed: onChangeServer,
-                            child: const Text('Change server'),
-                          ),
-                          FilledButton.icon(
-                            onPressed: onRetry,
-                            icon: const Icon(Icons.refresh_rounded, size: 19),
-                            label: const Text('Try again'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

@@ -88,12 +88,56 @@ class OpenCodeApi
     final error = responseData is Map
         ? Map<String, dynamic>.from(responseData)
         : null;
+    // Without a status code the message used to end at "failed", which told
+    // the user nothing. Keep the transport cause so the UI can say whether
+    // nothing answered, the connection timed out, or the certificate was
+    // rejected, and act on it.
+    final cause = code == null ? transportCause(e) : null;
     throw ApiException(
-      '$what failed${code != null ? ' (HTTP $code)' : ''}${detail != null && code != null ? ': $detail' : ''}',
+      '$what failed'
+      '${code != null ? ' (HTTP $code)' : ''}'
+      '${detail != null && code != null ? ': $detail' : ''}'
+      '${cause != null ? ': $cause' : ''}',
       statusCode: code,
       errorTag: error?['_tag']?.toString(),
       requestID: error?['requestID']?.toString(),
     );
+  }
+
+  /// A short, human cause for a request that never produced a response.
+  static String transportCause(DioException e) {
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+      case DioExceptionType.transformTimeout:
+        return 'timed out';
+      case DioExceptionType.badCertificate:
+        return 'certificate not trusted';
+      case DioExceptionType.cancel:
+        return 'cancelled';
+      case DioExceptionType.connectionError:
+      case DioExceptionType.badResponse:
+      case DioExceptionType.unknown:
+        final inner = e.error;
+        final text = (inner ?? e.message ?? '').toString();
+        final lower = text.toLowerCase();
+        if (lower.contains('refused')) return 'connection refused';
+        if (lower.contains('unreachable')) return 'network unreachable';
+        if (lower.contains('no route')) return 'no route to host';
+        if (lower.contains('handshake') || lower.contains('certificate')) {
+          return 'certificate not trusted';
+        }
+        if (lower.contains('failed host lookup') ||
+            lower.contains('name or service not known')) {
+          return 'host name not found';
+        }
+        if (lower.contains('timed out')) return 'timed out';
+        if (lower.contains('reset by peer') || lower.contains('broken pipe')) {
+          return 'connection dropped';
+        }
+        return text.isEmpty ? 'no response' : text;
+    }
   }
 
   Never _failGenerated(sdk.OpenCodeApiException e, String what) {
