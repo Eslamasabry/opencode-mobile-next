@@ -12,6 +12,7 @@ import 'desktop/window_state.dart';
 import 'diagnostics/app_diagnostics.dart';
 import 'l10n/app_localizations.dart';
 import 'platform/platform_capabilities.dart';
+import 'platform/share_intent.dart';
 import 'state/connection.dart';
 import 'state/profiles.dart';
 import 'update/desktop_release_check.dart';
@@ -200,9 +201,12 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
 }
 
 class OcApp extends ConsumerStatefulWidget {
-  const OcApp({super.key, this.updateService});
+  const OcApp({super.key, this.updateService, this.shareIntent});
 
   final AppUpdateService? updateService;
+
+  /// Text shared in from other apps; injectable so tests can drive it.
+  final ShareIntent? shareIntent;
 
   @override
   ConsumerState<OcApp> createState() => _OcAppState();
@@ -217,6 +221,9 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
   // it, and the Ctrl+K launcher dispatches the same intents the keyboard does.
   final _shortcutSignals = AppShortcutSignals();
   bool _codingAlertRouteScheduled = false;
+  late final ShareIntent _share;
+  bool _shareRouteScheduled = false;
+  bool _shareWaitingNoticeShown = false;
 
   @override
   void initState() {
@@ -224,6 +231,9 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
     unawaited(_harvestDynamicColors());
     _controller = ref.read(connProvider);
     _controller.addListener(_controllerChanged);
+    _share = widget.shareIntent ?? ShareIntent();
+    _share.pending.addListener(_scheduleShareRoute);
+    unawaited(_share.start());
     // Only the Android build is Shorebird-released; desktop gets its update
     // news from the GitHub release check in DesktopReleaseNotice below.
     _updateService =
@@ -262,7 +272,66 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
     ]);
   }
 
-  void _controllerChanged() => _scheduleCodingAlertRoute();
+  void _controllerChanged() {
+    _scheduleCodingAlertRoute();
+    _scheduleShareRoute();
+  }
+
+  /// Text shared from another app becomes the first prompt of a new session.
+  /// Until a server is connected the text waits, and the user is told once
+  /// where it went, so a share never silently disappears.
+  void _scheduleShareRoute() {
+    if (_shareRouteScheduled || _share.pending.value == null) return;
+    final connected =
+        _controller.api != null &&
+        _controller.repository != null &&
+        _controller.version != null;
+    if (!connected) {
+      if (!_shareWaitingNoticeShown) {
+        _shareWaitingNoticeShown = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _messengerKey.currentState
+            ?..hideCurrentSnackBar()
+            ..showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Connect to a server and the shared text opens in a new '
+                  'session.',
+                ),
+              ),
+            );
+        });
+      }
+      return;
+    }
+    _shareRouteScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _shareRouteScheduled = false;
+      _shareWaitingNoticeShown = false;
+      if (!mounted) return;
+      final navigator = _navigatorKey.currentState;
+      if (navigator == null) {
+        _scheduleShareRoute();
+        return;
+      }
+      final text = _share.take();
+      if (text == null) return;
+      try {
+        final session = await _controller.createSession();
+        if (!mounted) return;
+        await navigator.push(
+          MaterialPageRoute<void>(
+            builder: (_) =>
+                ChatScreen(sessionID: session.id, initialText: text),
+          ),
+        );
+      } catch (error) {
+        _messengerKey.currentState
+          ?..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(productErrorText(error))));
+      }
+    });
+  }
 
   void _scheduleCodingAlertRoute() {
     if (_codingAlertRouteScheduled ||
@@ -516,6 +585,8 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _controller.removeListener(_controllerChanged);
+    _share.pending.removeListener(_scheduleShareRoute);
+    if (widget.shareIntent == null) _share.dispose();
     super.dispose();
   }
 }
