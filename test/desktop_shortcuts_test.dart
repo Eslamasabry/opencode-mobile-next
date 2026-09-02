@@ -135,7 +135,8 @@ void main() {
           ),
         );
       }
-      expect(appShortcutBindings.length, 20);
+      // 11 accelerators × Ctrl and Cmd.
+      expect(appShortcutBindings.length, 22);
     });
 
     desktopTest('Ctrl+K opens the command launcher and Enter runs a command', (

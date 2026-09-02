@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderAbstractViewport;
 import 'package:flutter/services.dart';
 
 import '../../api/models.dart';
@@ -46,6 +47,9 @@ class ReviewWorkspace extends StatefulWidget {
 }
 
 class _ReviewWorkspaceState extends State<ReviewWorkspace> {
+  /// Hunk navigation asks the canvas to scroll, because only the canvas
+  /// knows whether its rows have a fixed extent or wrap.
+  final _canvasKey = GlobalKey<_ReviewDiffCanvasState>();
   List<FileDiff>? _diffs;
   Object? _error;
   int _selectedFile = 0;
@@ -388,6 +392,8 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
             child: lines.isEmpty
                 ? const _NoDiffContent()
                 : _ReviewDiffCanvas(
+                    key: _canvasKey,
+                    diff: diff,
                     lines: lines,
                     mode: _mode,
                     vertical: _vertical,
@@ -603,9 +609,9 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
   }
 
   void _jumpToHunk(int direction, List<int> hunks) {
-    if (hunks.isEmpty || !_vertical.hasClients) return;
-    const rowExtent = _ReviewDiffCanvas.rowExtent;
-    final currentRow = (_vertical.offset / rowExtent).round();
+    final canvas = _canvasKey.currentState;
+    if (hunks.isEmpty || canvas == null || !_vertical.hasClients) return;
+    final currentRow = canvas.firstVisibleSourceIndex();
     int target;
     if (direction > 0) {
       target = hunks.firstWhere(
@@ -618,11 +624,7 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
         orElse: () => hunks.last,
       );
     }
-    _vertical.animateTo(
-      target * rowExtent,
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOutCubic,
-    );
+    canvas.revealSourceIndex(target);
   }
 
   static String _normalizedPath(String path) =>
@@ -1392,8 +1394,9 @@ class _ModeButton extends StatelessWidget {
   }
 }
 
-class _ReviewDiffCanvas extends StatelessWidget {
+class _ReviewDiffCanvas extends StatefulWidget {
   const _ReviewDiffCanvas({
+    super.key,
     required this.lines,
     required this.mode,
     required this.vertical,
@@ -1401,9 +1404,21 @@ class _ReviewDiffCanvas extends StatelessWidget {
     required this.isSelected,
     required this.onSelect,
     required this.onSelectHunk,
+    this.diff,
   });
 
   static const rowExtent = 30.0;
+
+  /// Below this width a unified diff wraps its lines instead of forcing a
+  /// fixed canvas the phone has to pan sideways.
+  static const wrapBelowWidth = 600.0;
+
+  /// Minimum row height once lines wrap on a touch platform: a fingertip
+  /// target, not a mouse one.
+  static const touchRowExtent = 40.0;
+
+  /// How many unchanged lines one tap on a collapsed-context bar reveals.
+  static const expandStep = 20;
 
   final List<_ReviewDiffLine> lines;
   final ReviewDiffMode mode;
@@ -1415,13 +1430,10 @@ class _ReviewDiffCanvas extends StatelessWidget {
   /// Tap on a hunk header row: selects the whole hunk.
   final ValueChanged<int> onSelectHunk;
 
-  /// Below this width a unified diff wraps its lines instead of forcing a
-  /// fixed canvas the phone has to pan sideways.
-  static const wrapBelowWidth = 600.0;
-
-  /// Minimum row height once lines wrap on a touch platform: a fingertip
-  /// target, not a mouse one.
-  static const touchRowExtent = 40.0;
+  /// The file behind [lines]: names the compact header, and its `after`
+  /// text is what a collapsed-context bar expands from when the server
+  /// supplied it.
+  final FileDiff? diff;
 
   static bool _touchPlatform(BuildContext context) =>
       !desktopInteractions ||
@@ -1430,25 +1442,335 @@ class _ReviewDiffCanvas extends StatelessWidget {
         _ => false,
       };
 
+  static bool wraps(ReviewDiffMode mode, double width) =>
+      mode == ReviewDiffMode.unified && width < wrapBelowWidth;
+
+  @override
+  State<_ReviewDiffCanvas> createState() => _ReviewDiffCanvasState();
+}
+
+class _ReviewDiffCanvasState extends State<_ReviewDiffCanvas> {
+  /// Unchanged lines revealed above / below each hunk (by hunk source index).
+  final Map<int, int> _revealedAbove = {};
+  final Map<int, int> _revealedBelow = {};
+  String? _expansionFile;
+  int _expansionLength = -1;
+
+  bool _wrap = false;
+  double _minRowHeight = _ReviewDiffCanvas.rowExtent;
+
+  @override
+  void didUpdateWidget(covariant _ReviewDiffCanvas oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _resetExpansionIfNeeded();
+  }
+
+  /// Expansion belongs to one file's diff; a different file (or a reloaded
+  /// diff of a different shape) starts collapsed again.
+  void _resetExpansionIfNeeded() {
+    final file = widget.diff?.file;
+    if (file == _expansionFile && widget.lines.length == _expansionLength) {
+      return;
+    }
+    _expansionFile = file;
+    _expansionLength = widget.lines.length;
+    _revealedAbove.clear();
+    _revealedBelow.clear();
+  }
+
+  // ---------------------------------------------------------------------
+  // Hunk navigation (called by the workspace through a GlobalKey)
+  // ---------------------------------------------------------------------
+
+  /// The source index of the row at the top of the viewport.
+  int firstVisibleSourceIndex() {
+    if (!widget.vertical.hasClients) return 0;
+    if (!_wrap) {
+      return (widget.vertical.offset / _ReviewDiffCanvas.rowExtent).round();
+    }
+    int? best;
+    double? bestTop;
+    for (final (index, box) in _builtRows()) {
+      final top = _topInViewport(box);
+      if (top == null || top < -1) continue;
+      if (bestTop == null || top < bestTop) {
+        bestTop = top;
+        best = index;
+      }
+    }
+    return best ??
+        (widget.vertical.offset / _minRowHeight).round().clamp(
+          0,
+          widget.lines.length - 1,
+        );
+  }
+
+  /// Scrolls so the row for source [index] sits at the top of the viewport.
+  /// Fixed-extent canvases jump by arithmetic; the wrapped canvas has rows
+  /// of varying height, so it jumps to a lower-bound estimate and then
+  /// walks forward until the row is built and can be brought into view.
+  void revealSourceIndex(int index) {
+    if (!widget.vertical.hasClients) return;
+    if (!_wrap) {
+      widget.vertical.animateTo(
+        index * _ReviewDiffCanvas.rowExtent,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+    _revealWrapped(index, attempts: 16, first: true);
+  }
+
+  void _revealWrapped(int index, {required int attempts, bool first = false}) {
+    if (!mounted || !widget.vertical.hasClients) return;
+    final built = _builtRowContext(index);
+    if (built != null) {
+      Scrollable.ensureVisible(
+        built,
+        alignment: 0,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+    if (attempts <= 0) return;
+    final position = widget.vertical.position;
+    final target = first
+        ? (_compactRowIndexOf(index) * _minRowHeight)
+        : widget.vertical.offset + position.viewportDimension;
+    final clamped = target.clamp(0.0, position.maxScrollExtent);
+    if (!first && clamped <= widget.vertical.offset) return;
+    widget.vertical.jumpTo(clamped);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _revealWrapped(index, attempts: attempts - 1);
+    });
+  }
+
+  int _compactRowIndexOf(int sourceIndex) {
+    final rows = _compactRows();
+    for (var i = 0; i < rows.length; i++) {
+      final row = rows[i];
+      if (row is _SourceRow && row.index == sourceIndex) return i;
+    }
+    return sourceIndex;
+  }
+
+  static final _rowKeyPattern = RegExp(r'^review-line-(\d+)$');
+
+  Iterable<(int, RenderBox)> _builtRows() sync* {
+    final found = <(int, RenderBox)>[];
+    void visit(Element element) {
+      final key = element.widget.key;
+      if (key is ValueKey<String>) {
+        final match = _rowKeyPattern.firstMatch(key.value);
+        final render = element.renderObject;
+        if (match != null && render is RenderBox && render.hasSize) {
+          found.add((int.parse(match.group(1)!), render));
+          return;
+        }
+      }
+      element.visitChildElements(visit);
+    }
+
+    context.visitChildElements(visit);
+    yield* found;
+  }
+
+  BuildContext? _builtRowContext(int index) {
+    BuildContext? found;
+    void visit(Element element) {
+      if (found != null) return;
+      final key = element.widget.key;
+      if (key is ValueKey<String> && key.value == 'review-line-$index') {
+        found = element;
+        return;
+      }
+      element.visitChildElements(visit);
+    }
+
+    context.visitChildElements(visit);
+    return found;
+  }
+
+  double? _topInViewport(RenderBox box) {
+    final viewport = RenderAbstractViewport.maybeOf(box);
+    if (viewport is! RenderBox) return null;
+    return box.localToGlobal(Offset.zero, ancestor: viewport).dy;
+  }
+
+  // ---------------------------------------------------------------------
+  // Compact row model
+  // ---------------------------------------------------------------------
+
+  List<_HunkInfo> _hunks() {
+    final hunks = <_HunkInfo>[];
+    final pattern = RegExp(r'^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@');
+    _HunkInfo? previous;
+    for (var i = 0; i < widget.lines.length; i++) {
+      final line = widget.lines[i];
+      if (line.kind != _ReviewLineKind.hunk) continue;
+      final match = pattern.firstMatch(line.text);
+      final info = match == null
+          ? _HunkInfo(index: i, numbered: false)
+          : _HunkInfo(
+              index: i,
+              numbered: true,
+              oldStart: int.parse(match.group(1)!),
+              oldCount: int.tryParse(match.group(2) ?? '') ?? 1,
+              newStart: int.parse(match.group(3)!),
+              newCount: int.tryParse(match.group(4) ?? '') ?? 1,
+              gapBefore: previous == null
+                  ? int.parse(match.group(3)!) - 1
+                  : int.parse(match.group(3)!) - previous.newEnd - 1,
+            );
+      hunks.add(info);
+      previous = info;
+    }
+    return hunks;
+  }
+
+  List<String>? get _afterLines {
+    final after = widget.diff?.after;
+    if (after == null) return null;
+    return after.split('\n');
+  }
+
+  /// Unchanged lines still hidden above hunk [i] (shared with the "below"
+  /// side of the hunk before it).
+  int _hiddenAbove(List<_HunkInfo> hunks, int i) {
+    final hunk = hunks[i];
+    if (!hunk.numbered) return 0;
+    final below = i == 0 ? 0 : (_revealedBelow[hunks[i - 1].index] ?? 0);
+    return hunk.gapBefore - (_revealedAbove[hunk.index] ?? 0) - below;
+  }
+
+  int _hiddenBelow(List<_HunkInfo> hunks, int i, List<String>? after) {
+    final hunk = hunks[i];
+    if (!hunk.numbered) return 0;
+    if (i + 1 < hunks.length) return _hiddenAbove(hunks, i + 1);
+    if (after == null) return 0;
+    return after.length - hunk.newEnd - (_revealedBelow[hunk.index] ?? 0);
+  }
+
+  List<_CompactRow> _compactRows() {
+    final hunks = _hunks();
+    final after = _afterLines;
+    final rows = <_CompactRow>[];
+    var hunkCursor = -1;
+
+    void closeHunk() {
+      if (hunkCursor < 0) return;
+      final hunk = hunks[hunkCursor];
+      final revealed = _revealedBelow[hunk.index] ?? 0;
+      if (after != null && hunk.numbered) {
+        for (var k = 1; k <= revealed; k++) {
+          final newLine = hunk.newEnd + k;
+          if (newLine < 1 || newLine > after.length) break;
+          rows.add(
+            _ExtraRow(
+              _ReviewDiffLine(
+                text: ' ${after[newLine - 1]}',
+                kind: _ReviewLineKind.context,
+                oldLine: newLine - (hunk.newEnd - hunk.oldEnd),
+                newLine: newLine,
+              ),
+            ),
+          );
+        }
+        final remaining = _hiddenBelow(hunks, hunkCursor, after);
+        if (remaining > 0) {
+          rows.add(_ExpandBelowRow(hunk: hunk.index, remaining: remaining));
+        }
+      }
+    }
+
+    for (var i = 0; i < widget.lines.length; i++) {
+      final line = widget.lines[i];
+      if (line.kind != _ReviewLineKind.hunk) {
+        rows.add(_SourceRow(i));
+        continue;
+      }
+      closeHunk();
+      hunkCursor += 1;
+      final hunk = hunks[hunkCursor];
+      rows.add(
+        _SourceRow(
+          i,
+          hiddenAbove: _hiddenAbove(hunks, hunkCursor),
+          expandable: after != null && hunk.numbered,
+          firstHunk: hunkCursor == 0,
+        ),
+      );
+      final revealed = _revealedAbove[hunk.index] ?? 0;
+      if (after != null && hunk.numbered) {
+        for (var k = revealed; k >= 1; k--) {
+          final newLine = hunk.newStart - k;
+          if (newLine < 1 || newLine > after.length) continue;
+          rows.add(
+            _ExtraRow(
+              _ReviewDiffLine(
+                text: ' ${after[newLine - 1]}',
+                kind: _ReviewLineKind.context,
+                oldLine: newLine - (hunk.newStart - hunk.oldStart),
+                newLine: newLine,
+              ),
+            ),
+          );
+        }
+      }
+    }
+    closeHunk();
+    return rows;
+  }
+
+  void _expandAbove(int hunkIndex, int hidden) {
+    setState(() {
+      _revealedAbove[hunkIndex] =
+          (_revealedAbove[hunkIndex] ?? 0) +
+          (hidden < _ReviewDiffCanvas.expandStep
+              ? hidden
+              : _ReviewDiffCanvas.expandStep);
+    });
+  }
+
+  void _expandBelow(int hunkIndex, int hidden) {
+    setState(() {
+      _revealedBelow[hunkIndex] =
+          (_revealedBelow[hunkIndex] ?? 0) +
+          (hidden < _ReviewDiffCanvas.expandStep
+              ? hidden
+              : _ReviewDiffCanvas.expandStep);
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // Build
+  // ---------------------------------------------------------------------
+
   @override
   Widget build(BuildContext context) {
-    final splitRows = mode == ReviewDiffMode.split ? _splitRows(lines) : null;
+    _resetExpansionIfNeeded();
+    final lines = widget.lines;
+    final splitRows = widget.mode == ReviewDiffMode.split
+        ? _splitRows(lines)
+        : null;
     return LayoutBuilder(
       builder: (context, constraints) {
         // Phones read a unified diff with soft-wrapped lines; wide layouts
         // and split mode keep the fixed, horizontally panning canvas.
-        final wrap =
-            mode == ReviewDiffMode.unified &&
-            constraints.maxWidth < wrapBelowWidth;
-        final minRowHeight = wrap && _touchPlatform(context)
-            ? touchRowExtent
-            : rowExtent;
+        _wrap = _ReviewDiffCanvas.wraps(widget.mode, constraints.maxWidth);
+        _minRowHeight = _wrap && _ReviewDiffCanvas._touchPlatform(context)
+            ? _ReviewDiffCanvas.touchRowExtent
+            : _ReviewDiffCanvas.rowExtent;
+        if (_wrap) return _buildCompact(context, constraints);
+
         final list = ListView.builder(
-          controller: vertical,
+          controller: widget.vertical,
           // Always scrollable so pull-to-refresh works even when the
           // diff fits the viewport.
           physics: const AlwaysScrollableScrollPhysics(),
-          itemExtent: wrap ? null : rowExtent,
+          itemExtent: _ReviewDiffCanvas.rowExtent,
           itemCount: splitRows?.length ?? lines.length,
           itemBuilder: (context, index) {
             if (splitRows != null) {
@@ -1457,56 +1779,432 @@ class _ReviewDiffCanvas extends StatelessWidget {
               return _SplitDiffRow(
                 key: Key('review-split-row-$index'),
                 row: row,
-                selected: row.sourceIndices.any(isSelected),
+                selected: row.sourceIndices.any(widget.isSelected),
                 onTap: row.selectable
-                    ? () => onSelect(row.sourceIndices.first)
+                    ? () => widget.onSelect(row.sourceIndices.first)
                     : hunkIndex == null
                     ? null
-                    : () => onSelectHunk(hunkIndex),
+                    : () => widget.onSelectHunk(hunkIndex),
               );
             }
             final line = lines[index];
             return _UnifiedDiffRow(
               key: Key('review-line-$index'),
               line: line,
-              selected: isSelected(index),
-              wrap: wrap,
-              minHeight: minRowHeight,
+              selected: widget.isSelected(index),
               onTap: line.selectable
-                  ? () => onSelect(index)
+                  ? () => widget.onSelect(index)
                   : line.kind == _ReviewLineKind.hunk
-                  ? () => onSelectHunk(index)
+                  ? () => widget.onSelectHunk(index)
                   : null,
             );
           },
         );
-        // The diff pane draws its own thumbs; without OwnScrollbar the
-        // desktop scroll behaviour would draw a second vertical one.
-        final verticalPane = Scrollbar(
-          controller: vertical,
-          child: OwnScrollbar(child: list),
-        );
-        if (wrap) return verticalPane;
-        final minimumWidth = mode == ReviewDiffMode.split ? 1040.0 : 760.0;
+        final minimumWidth = widget.mode == ReviewDiffMode.split
+            ? 1040.0
+            : 760.0;
         final width = constraints.maxWidth > minimumWidth
             ? constraints.maxWidth
             : minimumWidth;
         return Scrollbar(
-          controller: horizontal,
+          controller: widget.horizontal,
           thumbVisibility: true,
           notificationPredicate: (notification) =>
               notification.metrics.axis == Axis.horizontal,
           child: SingleChildScrollView(
-            controller: horizontal,
+            controller: widget.horizontal,
             scrollDirection: Axis.horizontal,
             child: SizedBox(
               width: width,
               height: constraints.maxHeight,
-              child: verticalPane,
+              child: Scrollbar(
+                controller: widget.vertical,
+                // The diff pane draws its own thumbs; without this the
+                // desktop scroll behaviour would draw a second vertical one.
+                child: OwnScrollbar(child: list),
+              ),
             ),
           ),
         );
       },
+    );
+  }
+
+  /// The phone canvas: a pinned file header, then one wrapped list where
+  /// unchanged runs between hunks collapse into bars.
+  Widget _buildCompact(BuildContext context, BoxConstraints constraints) {
+    final lines = widget.lines;
+    final rows = _compactRows();
+    final hunks = _hunks();
+    var maxNumber = 0;
+    for (final line in lines) {
+      final number = line.newLine ?? line.oldLine ?? 0;
+      if (number > maxNumber) maxNumber = number;
+    }
+    final afterLength = _afterLines?.length ?? 0;
+    if (afterLength > maxNumber) maxNumber = afterLength;
+    final gutterWidth = _UnifiedDiffRow.compactGutterWidth(maxNumber);
+    final diff = widget.diff;
+    return Column(
+      children: [
+        if (diff != null) _CompactFileHeader(diff: diff),
+        Expanded(
+          child: Scrollbar(
+            controller: widget.vertical,
+            child: OwnScrollbar(
+              child: ListView.builder(
+                controller: widget.vertical,
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemCount: rows.length,
+                itemBuilder: (context, position) {
+                  final row = rows[position];
+                  switch (row) {
+                    case _ExtraRow(:final line):
+                      return _UnifiedDiffRow(
+                        line: line,
+                        selected: false,
+                        onTap: null,
+                        wrap: true,
+                        minHeight: _minRowHeight,
+                        gutterWidth: gutterWidth,
+                      );
+                    case _ExpandBelowRow(:final hunk, :final remaining):
+                      return _CompactExpandBar(
+                        key: Key('review-expand-below-$hunk'),
+                        remaining: remaining,
+                        minHeight: _minRowHeight,
+                        onTap: () => _expandBelow(hunk, remaining),
+                      );
+                    case _SourceRow(:final index):
+                      final line = lines[index];
+                      if (line.kind == _ReviewLineKind.hunk) {
+                        final info = hunks.firstWhere(
+                          (hunk) => hunk.index == index,
+                        );
+                        return _CompactHunkBar(
+                          key: Key('review-line-$index'),
+                          line: line,
+                          hidden: row.hiddenAbove,
+                          firstHunk: row.firstHunk,
+                          minHeight: _minRowHeight,
+                          onExpand: row.expandable && row.hiddenAbove > 0
+                              ? () => _expandAbove(info.index, row.hiddenAbove)
+                              : null,
+                          onSelectHunk: () => widget.onSelectHunk(index),
+                        );
+                      }
+                      return _UnifiedDiffRow(
+                        key: Key('review-line-$index'),
+                        line: line,
+                        selected: widget.isSelected(index),
+                        wrap: true,
+                        minHeight: _minRowHeight,
+                        gutterWidth: gutterWidth,
+                        onTap: line.selectable
+                            ? () => widget.onSelect(index)
+                            : null,
+                      );
+                  }
+                },
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// One hunk header parsed for the compact canvas.
+class _HunkInfo {
+  const _HunkInfo({
+    required this.index,
+    required this.numbered,
+    this.oldStart = 0,
+    this.oldCount = 0,
+    this.newStart = 0,
+    this.newCount = 0,
+    this.gapBefore = 0,
+  });
+
+  /// Source index of the `@@` line.
+  final int index;
+
+  /// False for the synthetic header of a before/after diff, which carries
+  /// no line numbers and therefore nothing to expand.
+  final bool numbered;
+  final int oldStart;
+  final int oldCount;
+  final int newStart;
+  final int newCount;
+
+  /// Unchanged lines between the previous hunk (or the file start) and
+  /// this one — the lines the patch left out.
+  final int gapBefore;
+
+  int get oldEnd => oldStart + oldCount - 1;
+  int get newEnd => newStart + newCount - 1;
+}
+
+sealed class _CompactRow {
+  const _CompactRow();
+}
+
+/// A row for source line [index]. Hunk headers carry their collapsed gap.
+class _SourceRow extends _CompactRow {
+  const _SourceRow(
+    this.index, {
+    this.hiddenAbove = 0,
+    this.expandable = false,
+    this.firstHunk = false,
+  });
+
+  final int index;
+  final int hiddenAbove;
+  final bool expandable;
+  final bool firstHunk;
+}
+
+/// An unchanged line revealed from the file itself, not from the patch.
+class _ExtraRow extends _CompactRow {
+  const _ExtraRow(this.line);
+
+  final _ReviewDiffLine line;
+}
+
+class _ExpandBelowRow extends _CompactRow {
+  const _ExpandBelowRow({required this.hunk, required this.remaining});
+
+  final int hunk;
+  final int remaining;
+}
+
+/// Pinned above the compact list: file name in bold mono, its directory in
+/// muted text, and the +/− totals in the success and error colours.
+class _CompactFileHeader extends StatelessWidget {
+  const _CompactFileHeader({required this.diff});
+
+  final FileDiff diff;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final counts = diff.counts;
+    final directory = _directory(diff.file);
+    return Material(
+      key: const Key('review-compact-file-header'),
+      color: theme.colorScheme.surfaceContainerLow,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: _basename(diff.file),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontFamily: AppTheme.monoFamily,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    if (directory != '.')
+                      TextSpan(
+                        text: '  $directory',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppTheme.mutedOf(theme),
+                        ),
+                      ),
+                  ],
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              '+${counts.added}',
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontFamily: AppTheme.monoFamily,
+                fontWeight: FontWeight.w700,
+                color: _additionColor(theme),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '−${counts.removed}',
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontFamily: AppTheme.monoFamily,
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.error,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A hunk header on the phone: the unchanged run before it collapsed into a
+/// "+N lines" bar with a chevron-up (tap reveals 20 more, when the file text
+/// is available), and the `@@` range at the right, which still selects the
+/// whole hunk as it does on the wide canvas.
+class _CompactHunkBar extends StatelessWidget {
+  const _CompactHunkBar({
+    super.key,
+    required this.line,
+    required this.hidden,
+    required this.firstHunk,
+    required this.minHeight,
+    required this.onExpand,
+    required this.onSelectHunk,
+  });
+
+  final _ReviewDiffLine line;
+  final int hidden;
+  final bool firstHunk;
+  final double minHeight;
+  final VoidCallback? onExpand;
+  final VoidCallback onSelectHunk;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final label = hidden > 0
+        ? '+$hidden line${hidden == 1 ? '' : 's'}'
+        : firstHunk
+        ? 'Start of file'
+        : 'No gap';
+    final muted = theme.textTheme.labelMedium?.copyWith(
+      color: scheme.onSurfaceVariant,
+      fontFamily: AppTheme.monoFamily,
+    );
+    return Semantics(
+      label: hidden > 0
+          ? '$hidden unchanged lines hidden. ${line.text}'
+          : _lineSemantics(line),
+      child: Container(
+        color: scheme.primaryContainer.withValues(alpha: .22),
+        constraints: BoxConstraints(minHeight: minHeight),
+        // IntrinsicHeight bounds the row so both tap zones can stretch to
+        // the bar's full height inside an unbounded list.
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              InkWell(
+                onTap: onExpand,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.keyboard_arrow_up_rounded,
+                        size: 20,
+                        color: onExpand == null
+                            ? AppTheme.mutedOf(theme)
+                            : scheme.primary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        label,
+                        style: muted?.copyWith(
+                          color: onExpand == null
+                              ? scheme.onSurfaceVariant
+                              : scheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Expanded(
+                child: InkWell(
+                  onTap: onSelectHunk,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Align(
+                      alignment: AlignmentDirectional.centerEnd,
+                      child: Text(
+                        line.text,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                        style: muted,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The "Expand" bar closing a hunk on the phone: chevron-down, reveals the
+/// next 20 unchanged lines from the file text.
+class _CompactExpandBar extends StatelessWidget {
+  const _CompactExpandBar({
+    super.key,
+    required this.remaining,
+    required this.minHeight,
+    required this.onTap,
+  });
+
+  final int remaining;
+  final double minHeight;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Semantics(
+      button: true,
+      label: 'Expand. $remaining unchanged lines hidden below',
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          color: scheme.primaryContainer.withValues(alpha: .22),
+          constraints: BoxConstraints(minHeight: minHeight),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Row(
+            children: [
+              Icon(
+                Icons.keyboard_arrow_down_rounded,
+                size: 20,
+                color: scheme.primary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Expand',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: scheme.primary,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: AppTheme.monoFamily,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '$remaining more',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  fontFamily: AppTheme.monoFamily,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1519,47 +2217,119 @@ class _UnifiedDiffRow extends StatelessWidget {
     required this.onTap,
     this.wrap = false,
     this.minHeight = _ReviewDiffCanvas.rowExtent,
+    this.gutterWidth = 36,
   });
 
   final _ReviewDiffLine line;
   final bool selected;
   final VoidCallback? onTap;
 
-  /// Soft-wrap the code instead of clipping it at the canvas edge. Rows then
-  /// size to their text, with [minHeight] as the floor.
+  /// The phone treatment: soft-wrapped code at body size, a 3px change bar
+  /// at the far left, an 8% tint, and a muted fixed-width number gutter.
+  /// Rows then size to their text, with [minHeight] as the floor.
   final bool wrap;
   final double minHeight;
+
+  /// Width of one line-number column in the compact gutter.
+  final double gutterWidth;
+
+  /// Room for the widest line number plus padding, per column.
+  static double compactGutterWidth(int maxNumber) {
+    final digits = maxNumber.toString().length;
+    final width = digits * 7.5 + 8;
+    return width < 30 ? 30 : width;
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    if (wrap) return _buildCompact(context, theme);
     final background = selected
         ? theme.colorScheme.primaryContainer.withValues(alpha: .62)
         : _lineBackground(theme, line.kind);
+    return Semantics(
+      button: onTap != null,
+      selected: selected,
+      label: _lineSemantics(line),
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          color: background,
+          child: Row(
+            children: [
+              _LineNumber(value: line.oldLine),
+              _LineNumber(value: line.newLine),
+              Container(width: 2, color: _lineAccent(theme, line.kind)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  line.text.isEmpty ? ' ' : line.text,
+                  maxLines: 1,
+                  overflow: TextOverflow.clip,
+                  softWrap: false,
+                  style: TextStyle(
+                    fontFamily: AppTheme.monoFamily,
+                    fontSize: AppTheme.codeFontSize,
+                    height: 1.55,
+                    color: _lineForeground(theme, line.kind),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompact(BuildContext context, ThemeData theme) {
+    final scheme = theme.colorScheme;
+    final changed =
+        line.kind == _ReviewLineKind.added ||
+        line.kind == _ReviewLineKind.removed;
+    final accent = _lineAccent(theme, line.kind);
+    final background = selected
+        ? scheme.primaryContainer.withValues(alpha: .62)
+        : changed
+        ? accent.withValues(alpha: .08)
+        : line.kind == _ReviewLineKind.metadata
+        ? scheme.surfaceContainerHigh
+        : null;
+    final numberStyle = theme.textTheme.labelSmall?.copyWith(
+      fontFamily: AppTheme.monoFamily,
+      color: AppTheme.mutedOf(theme),
+    );
     final row = Row(
-      crossAxisAlignment: wrap
-          ? CrossAxisAlignment.stretch
-          : CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _LineNumber(value: line.oldLine),
-        _LineNumber(value: line.newLine),
-        Container(width: 2, color: _lineAccent(theme, line.kind)),
+        // 3px change bar at the far left of the gutter; nothing on
+        // unchanged lines.
+        Container(width: 3, color: changed ? accent : Colors.transparent),
+        if (line.kind != _ReviewLineKind.metadata) ...[
+          _CompactLineNumber(
+            value: line.oldLine,
+            width: gutterWidth,
+            style: numberStyle,
+          ),
+          _CompactLineNumber(
+            value: line.newLine,
+            width: gutterWidth,
+            style: numberStyle,
+          ),
+        ],
         const SizedBox(width: 8),
         Expanded(
           child: Padding(
-            padding: wrap
-                ? const EdgeInsets.symmetric(vertical: 4)
-                : EdgeInsets.zero,
+            padding: const EdgeInsets.fromLTRB(0, 4, 8, 4),
             child: Text(
               line.text.isEmpty ? ' ' : line.text,
-              maxLines: wrap ? null : 1,
-              overflow: TextOverflow.clip,
-              softWrap: wrap,
-              style: TextStyle(
+              softWrap: true,
+              style: theme.textTheme.bodyMedium?.copyWith(
                 fontFamily: AppTheme.monoFamily,
-                fontSize: AppTheme.codeFontSize,
-                height: 1.55,
-                color: _lineForeground(theme, line.kind),
+                height: 1.4,
+                color: line.kind == _ReviewLineKind.metadata
+                    ? scheme.onSurfaceVariant
+                    : null,
               ),
             ),
           ),
@@ -1574,18 +2344,36 @@ class _UnifiedDiffRow extends StatelessWidget {
         onTap: onTap,
         child: Container(
           color: background,
-          // IntrinsicHeight lets the gutter columns paint the full height of
+          // IntrinsicHeight lets the bar and gutter paint the full height of
           // a wrapped line while the row still sizes to its text.
-          child: wrap
-              ? ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: minHeight),
-                  child: IntrinsicHeight(child: row),
-                )
-              : row,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: minHeight),
+            child: IntrinsicHeight(child: row),
+          ),
         ),
       ),
     );
   }
+}
+
+class _CompactLineNumber extends StatelessWidget {
+  const _CompactLineNumber({
+    required this.value,
+    required this.width,
+    required this.style,
+  });
+
+  final int? value;
+  final double width;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: width,
+    alignment: AlignmentDirectional.topEnd,
+    padding: const EdgeInsets.only(top: 6, right: 4),
+    child: Text(value?.toString() ?? '', style: style, maxLines: 1),
+  );
 }
 
 class _SplitDiffRow extends StatelessWidget {

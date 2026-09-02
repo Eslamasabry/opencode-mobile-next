@@ -654,6 +654,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         key: ValueKey('archive-undo-${session.id}'),
         content: Text('Archived “$title”'),
         duration: const Duration(seconds: 5),
+        // Material keeps a snackbar with an action open until it is acted
+        // on; here the timeout *is* the commit, so it must run out.
+        persist: false,
         action: SnackBarAction(
           label: 'Undo',
           onPressed: () => messenger.hideCurrentSnackBar(

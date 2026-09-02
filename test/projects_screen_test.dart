@@ -441,8 +441,11 @@ void main() {
     // Letting the snackbar expire commits the archive.
     await tester.drag(row, const Offset(-400, 0));
     await tester.pumpAndSettle();
+    expect(find.text('Swipe target'), findsNothing);
+    expect(find.text('Archived “Swipe target”'), findsOneWidget);
     await tester.pump(const Duration(seconds: 6));
     await tester.pumpAndSettle();
+    expect(find.text('Archived “Swipe target”'), findsNothing);
     expect(repository.archiveCalls, ['session-1']);
     expect(api.deleteCalls, isEmpty);
   });

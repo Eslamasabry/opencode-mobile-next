@@ -560,7 +560,7 @@ void main() {
       expect(find.text('Connect to Sentry'), findsNothing);
       // Silently hidden: no explainer for a feature the user has never seen.
       expect(find.textContaining('OpenCode 2'), findsNothing);
-      expect(find.text('Nothing needs attention'), findsOneWidget);
+      expect(find.text('All clear'), findsOneWidget);
     });
   });
 
