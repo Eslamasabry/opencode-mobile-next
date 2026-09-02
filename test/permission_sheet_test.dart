@@ -41,6 +41,7 @@ Future<void> _pump(
 }
 
 void main() {
+  _previewTests();
   testWidgets('renders the triad, resources card, and context line', (
     tester,
   ) async {
@@ -52,7 +53,10 @@ void main() {
     );
 
     expect(find.byKey(const Key('permission-sheet')), findsOneWidget);
-    expect(find.byKey(const Key('permission-resources')), findsOneWidget);
+    // The bash pattern is the command, so it renders once as the highlighted
+    // command preview (with its own Copy) rather than again as a resource row.
+    expect(find.byKey(const Key('permission-command-preview')), findsOneWidget);
+    expect(find.byKey(const Key('permission-resources')), findsNothing);
     expect(find.text('Run a shell command'), findsOneWidget);
     expect(find.text('Pushing the release branch'), findsOneWidget);
     expect(find.text('git push origin main'), findsOneWidget);
@@ -200,5 +204,86 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('Reply failed:'), findsOneWidget);
     expect(find.byKey(const Key('permission-allow-once')), findsOneWidget);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Previews from the widened PermissionRequest: command, file path, diff.
+// ---------------------------------------------------------------------------
+
+void _previewTests() {
+  testWidgets('bash asks render the command in a highlighted mono block', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      permission: PermissionRequest(
+        id: 'per_2',
+        sessionID: 'ses_1',
+        permission: 'bash',
+        patterns: const ['*'],
+        metadata: const {'command': 'git push origin main | tee log.txt'},
+      ),
+      onReply: (reply, {message}) async {},
+    );
+    expect(find.byKey(const Key('permission-command-preview')), findsOneWidget);
+    expect(
+      find.textContaining('git push origin main | tee log.txt'),
+      findsOneWidget,
+    );
+    // The wildcard pattern is not the command, so the resources card stays.
+    expect(find.byKey(const Key('permission-resources')), findsOneWidget);
+    expect(find.byKey(const Key('permission-file-path')), findsNothing);
+    expect(find.byKey(const Key('permission-diff-preview')), findsNothing);
+  });
+
+  testWidgets('edit asks show the file path and a bounded diff preview', (
+    tester,
+  ) async {
+    const patch = '@@ -1 +1 @@\n-old line\n+new line';
+    await _pump(
+      tester,
+      permission: PermissionRequest(
+        id: 'per_3',
+        sessionID: 'ses_1',
+        permission: 'edit',
+        patterns: const ['/workspace/lib/main.dart'],
+        metadata: const {
+          'filePath': '/workspace/lib/main.dart',
+          'diff': patch,
+        },
+      ),
+      onReply: (reply, {message}) async {},
+    );
+    expect(find.byKey(const Key('permission-file-path')), findsOneWidget);
+    expect(find.byIcon(Icons.folder_outlined), findsOneWidget);
+    expect(find.byKey(const Key('permission-command-preview')), findsNothing);
+    final preview = find.byKey(const Key('permission-diff-preview'));
+    expect(preview, findsOneWidget);
+    expect(tester.getSize(preview).height, lessThanOrEqualTo(240));
+    expect(find.textContaining('+new line'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('permission-see-full-diff')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('diff-view')), findsOneWidget);
+    expect(find.text('main.dart'), findsOneWidget);
+  });
+
+  testWidgets('read asks without a diff show only the path row', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      permission: PermissionRequest(
+        id: 'per_4',
+        sessionID: 'ses_1',
+        permission: 'read',
+        patterns: const ['/workspace/README.md'],
+        metadata: const {'patch': 'ignored for read'},
+      ),
+      onReply: (reply, {message}) async {},
+    );
+    expect(find.byKey(const Key('permission-file-path')), findsOneWidget);
+    expect(find.byKey(const Key('permission-diff-preview')), findsNothing);
   });
 }

@@ -137,7 +137,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('permission-sheet')), findsOneWidget);
-    expect(find.byKey(const Key('permission-resources')), findsOneWidget);
+    // A bash pattern is the command itself, so the sheet shows it once as
+    // the highlighted command preview instead of repeating it as a resource
+    // row; the always-allow scope below stays a separate list.
+    expect(find.byKey(const Key('permission-command-preview')), findsOneWidget);
+    expect(find.byKey(const Key('permission-resources')), findsNothing);
     expect(find.text('git status'), findsWidgets);
     expect(find.text('Always allow would also cover'), findsOneWidget);
     expect(find.text('git *\ngh *'), findsOneWidget);

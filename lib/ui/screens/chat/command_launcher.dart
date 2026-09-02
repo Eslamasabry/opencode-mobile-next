@@ -464,12 +464,13 @@ class _AgentPickerList extends StatelessWidget {
         separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (context, index) {
           final agent = agents[index];
+          final model = agent.model?.trim();
           return ListTile(
             key: Key('composer-agent-${agent.id}'),
             minTileHeight: 64,
-            leading: Icon(
-              Icons.smart_toy_outlined,
-              color: theme.colorScheme.primary,
+            leading: _AgentColorDot(
+              key: Key('composer-agent-color-${agent.id}'),
+              color: agentColor(agent.color, theme.colorScheme),
             ),
             title: Text(
               '@${agent.id}',
@@ -479,10 +480,14 @@ class _AgentPickerList extends StatelessWidget {
               ),
             ),
             subtitle: Text(
-              agent.description ?? 'Delegate this prompt',
-              maxLines: 2,
+              [
+                agent.description ?? 'Delegate this prompt',
+                if (model != null && model.isNotEmpty) model,
+              ].join('\n'),
+              maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),
+            isThreeLine: model != null && model.isNotEmpty,
             trailing: const Icon(Icons.add_rounded),
             onTap: () => onSelected(agent),
           );
@@ -735,6 +740,34 @@ class _InlineAgentSuggestions extends StatelessWidget {
           ),
         Divider(height: 1, color: AppTheme.hairline(theme)),
       ],
+    );
+  }
+}
+
+/// Agent colour swatch: a 14 dp dot with the smart-toy glyph faintly behind
+/// it, so agents without a colour still read as agents.
+class _AgentColorDot extends StatelessWidget {
+  const _AgentColorDot({super.key, required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.square(
+      dimension: 24,
+      child: Center(
+        child: Container(
+          width: 14,
+          height: 14,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

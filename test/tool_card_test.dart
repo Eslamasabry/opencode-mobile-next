@@ -20,6 +20,7 @@ Future<void> _pumpTool(
 }
 
 void main() {
+  _serverStateTests();
   testWidgets('renders the OpenCode shell contract without generic sections', (
     tester,
   ) async {
@@ -134,5 +135,85 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect((accent().border! as Border).left.color, Colors.transparent);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Widened tool state: duration, pruned output, never-run calls.
+// ---------------------------------------------------------------------------
+
+void _serverStateTests() {
+  test('formatToolDuration uses tenths under a minute and m/ss past it', () {
+    expect(formatToolDuration(const Duration(milliseconds: 800)), '0.8s');
+    expect(formatToolDuration(const Duration(milliseconds: 12400)), '12.4s');
+    expect(formatToolDuration(const Duration(seconds: 65)), '1m 05s');
+    expect(formatToolDuration(const Duration(minutes: 12, seconds: 3)), '12m 03s');
+  });
+
+  testWidgets('completed tools show their run time in the header', (
+    tester,
+  ) async {
+    final start = DateTime.fromMillisecondsSinceEpoch(1000);
+    await _pumpTool(
+      tester,
+      name: 'bash',
+      state: ToolState(
+        status: 'completed',
+        input: const {'command': 'ls'},
+        output: 'ok',
+        startedAt: start,
+        completedAt: start.add(const Duration(milliseconds: 12400)),
+      ),
+    );
+    expect(find.byKey(const Key('tool-duration')), findsOneWidget);
+    expect(find.text('12.4s'), findsOneWidget);
+    expect(find.byKey(const Key('tool-pruned')), findsNothing);
+    expect(find.byKey(const Key('tool-not-run')), findsNothing);
+  });
+
+  testWidgets('running tools show no duration yet', (tester) async {
+    await _pumpTool(
+      tester,
+      name: 'bash',
+      state: ToolState(
+        status: 'running',
+        input: const {'command': 'ls'},
+        startedAt: DateTime.fromMillisecondsSinceEpoch(1000),
+      ),
+    );
+    expect(find.byKey(const Key('tool-duration')), findsNothing);
+  });
+
+  testWidgets('pruned output is announced under the header', (tester) async {
+    await _pumpTool(
+      tester,
+      name: 'read',
+      state: ToolState(
+        status: 'completed',
+        input: const {'filePath': '/a/b.txt'},
+        pruned: true,
+      ),
+    );
+    expect(find.byKey(const Key('tool-pruned')), findsOneWidget);
+    expect(find.text('Output pruned'), findsOneWidget);
+  });
+
+  testWidgets('never-run calls grey out with a Not run state', (tester) async {
+    await _pumpTool(
+      tester,
+      name: 'bash',
+      state: ToolState(
+        status: 'pending',
+        input: const {'command': 'rm -rf build'},
+        executed: false,
+      ),
+    );
+    expect(find.byKey(const Key('tool-not-run')), findsOneWidget);
+    expect(find.text('Not run'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    final title = tester.widget<Text>(find.text('Shell'));
+    expect(title.style?.decoration, isNot(TextDecoration.lineThrough));
+    final semantics = tester.getSemantics(find.byType(InkWell).first);
+    expect(semantics.label, contains('not run'));
   });
 }

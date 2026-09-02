@@ -25,6 +25,7 @@ import '../desktop/context_menu.dart';
 import '../desktop/desktop_interaction.dart';
 import '../desktop/file_drop.dart';
 import '../desktop/shortcuts.dart';
+import '../widgets/agent_color.dart';
 import '../widgets/appearance_picker.dart';
 import '../widgets/connection_status_banner.dart';
 import '../widgets/entrance.dart';
@@ -1998,6 +1999,28 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
+  /// The providers/integrations screen, reached from a provider-auth error
+  /// card; the same destination the `/integrations` command opens.
+  Future<void> _openProviders() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => IntegrationsScreen(controller: _conn),
+      ),
+    );
+  }
+
+  /// Sends "Continue" through the normal send path after an output-length
+  /// cut, keeping any half-typed draft for afterwards.
+  Future<void> _continueTruncated() async {
+    if (_sending) return;
+    final draft = _composer.text;
+    _composer.text = 'Continue';
+    await _send();
+    if (mounted && _composer.text.isEmpty && draft.trim().isNotEmpty) {
+      _composer.text = draft;
+    }
+  }
+
   Future<void> _revertLast() async {
     MessageWithParts? target;
     for (final message in _messages.reversed) {
@@ -3650,6 +3673,19 @@ class _ChatScreenState extends State<ChatScreen>
     return presentedModelLabel(model.providerID, model.modelID);
   }
 
+  /// The selected model's catalog entry, when the catalog knows it.
+  CatalogModel? get _selectedCatalogModel {
+    final model = _conn.selectedModel;
+    if (model == null) return null;
+    for (final candidate in _conn.catalog?.models ?? const <CatalogModel>[]) {
+      if (candidate.id == model.modelID &&
+          candidate.providerID == model.providerID) {
+        return candidate;
+      }
+    }
+    return null;
+  }
+
   /// The agent the server would use unprompted — the first primary agent —
   /// so the composer chip only names an agent when it is a real choice.
   String get _defaultAgentName {
@@ -3907,6 +3943,11 @@ class _ChatScreenState extends State<ChatScreen>
                                                           _attachToolOutputFile,
                                                       onDownloadFile:
                                                           _downloadToolOutputFile,
+                                                      onCompact: _compact,
+                                                      onOpenProviders:
+                                                          _openProviders,
+                                                      onContinue:
+                                                          _continueTruncated,
                                                     );
                                                   },
                                                 ),
@@ -4036,6 +4077,7 @@ class _ChatScreenState extends State<ChatScreen>
                                     defaultAgent: _defaultAgentName,
                                     selectedModel: _conn.selectedModel,
                                     modelLabel: _presentedModelLabel,
+                                    selectedCatalogModel: _selectedCatalogModel,
                                     selectedVariant: _conn.selectedVariant,
                                     showAttachmentNote: showAttachmentNote,
                                     pulse: _composerPulse,

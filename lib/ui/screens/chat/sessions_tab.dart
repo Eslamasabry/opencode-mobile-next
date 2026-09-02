@@ -73,6 +73,7 @@ class SessionsTab extends StatelessWidget {
                   itemBuilder: (context, i) {
                     final s = sessions[i];
                     final busy = controller.busySessions.contains(s.id);
+                    final retrying = controller.retryStates.containsKey(s.id);
                     return EntranceReveal(
                       index: i,
                       child: ContextMenuRegion(
@@ -114,7 +115,17 @@ class SessionsTab extends StatelessWidget {
                           },
                           background: const SwipeDeleteBackground(),
                           child: ListTile(
-                            leading: busy
+                            leading: retrying
+                                ? Icon(
+                                    key: Key('session-retrying-icon-${s.id}'),
+                                    AppIcons.retry,
+                                    size: 20,
+                                    color: AppTheme.statusColor(
+                                      Theme.of(context),
+                                      AppStatusTone.attention,
+                                    ),
+                                  )
+                                : busy
                                 ? SizedBox(
                                     width: 18,
                                     height: 18,
@@ -137,8 +148,10 @@ class SessionsTab extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            subtitle: Text(
-                              _fmtSessionTime(
+                            subtitle: _SessionRowMeta(
+                              session: s,
+                              retrying: retrying,
+                              time: _fmtSessionTime(
                                 s.time?.updated ?? s.time?.created ?? 0,
                               ),
                             ),
@@ -241,5 +254,140 @@ class SessionsTab extends StatelessWidget {
       if (!context.mounted) return;
       showProductError(context, error);
     }
+  }
+}
+
+/// The row's second line: the timestamp, then compact usage chips when the
+/// server reported any — a retry/compaction state first, then cost and the
+/// aggregate diff. Past the stacked-actions text scale the usage chips hide
+/// (the state labels stay as plain text) so a row never grows past three
+/// lines.
+class _SessionRowMeta extends StatelessWidget {
+  const _SessionRowMeta({
+    required this.session,
+    required this.retrying,
+    required this.time,
+  });
+
+  final Session session;
+  final bool retrying;
+  final String time;
+
+  static String costLabel(double cost) => '\$${cost.toStringAsFixed(2)}';
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final stacked = AppTheme.stackedActions(context);
+    final compacting = session.compactingSince != null;
+    final cost = session.cost;
+    final summary = session.summary;
+    final hasSummary =
+        summary != null &&
+        (summary.additions > 0 || summary.deletions > 0 || summary.files > 0);
+    final chips = <Widget>[
+      if (retrying)
+        _SessionChip(
+          key: Key('session-retrying-${session.id}'),
+          label: 'Retrying',
+          color: AppTheme.statusColor(theme, AppStatusTone.attention),
+        ),
+      if (compacting)
+        _SessionChip(
+          key: Key('session-compacting-${session.id}'),
+          label: 'Compacting…',
+          color: AppTheme.statusColor(theme, AppStatusTone.progress),
+          leading: SizedBox.square(
+            dimension: 10,
+            child: CircularProgressIndicator(
+              strokeWidth: 1.5,
+              color: AppTheme.statusColor(theme, AppStatusTone.progress),
+            ),
+          ),
+        ),
+      if (!stacked && cost != null && cost > 0)
+        _SessionChip(
+          key: Key('session-cost-${session.id}'),
+          label: costLabel(cost),
+        ),
+      if (!stacked && hasSummary)
+        _SessionChip(
+          key: Key('session-diff-${session.id}'),
+          span: TextSpan(
+            children: [
+              TextSpan(
+                text: '+${summary.additions}',
+                style: TextStyle(color: AppTheme.successOf(theme)),
+              ),
+              const TextSpan(text: ' '),
+              TextSpan(
+                text: '−${summary.deletions}',
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+              TextSpan(
+                text:
+                    ' · ${summary.files} ${summary.files == 1 ? 'file' : 'files'}',
+              ),
+            ],
+          ),
+        ),
+    ];
+    if (chips.isEmpty) return Text(time);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(time),
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Wrap(spacing: 6, runSpacing: 4, children: chips),
+        ),
+      ],
+    );
+  }
+}
+
+class _SessionChip extends StatelessWidget {
+  const _SessionChip({
+    super.key,
+    this.label,
+    this.span,
+    this.color,
+    this.leading,
+  }) : assert(label != null || span != null);
+
+  final String? label;
+  final TextSpan? span;
+  final Color? color;
+  final Widget? leading;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final style = theme.textTheme.labelSmall?.copyWith(
+      color: color ?? AppTheme.mutedOf(theme),
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: color?.withValues(alpha: .5) ?? AppTheme.hairline(theme),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (leading case final leading?) ...[
+            leading,
+            const SizedBox(width: 5),
+          ],
+          span == null
+              ? Text(label!, style: style)
+              : Text.rich(span!, style: style),
+        ],
+      ),
+    );
   }
 }

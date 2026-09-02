@@ -8,6 +8,7 @@ import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../app_theme.dart';
+import 'agent_color.dart';
 
 /// How applying a model/agent selection is scoped and labeled.
 ///
@@ -475,11 +476,34 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
         for (final agent in visible)
           DropdownMenuItem(
             value: agent.id,
-            child: Text(
-              agent.mode == 'unknown'
-                  ? agent.id
-                  : '${agent.id} · ${agent.mode}',
-              overflow: TextOverflow.ellipsis,
+            child: Row(
+              children: [
+                // The agent's own colour, as the terminal client shows it,
+                // so the same agent is recognisable across both clients.
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: agentColor(
+                      agent.color,
+                      Theme.of(context).colorScheme,
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    [
+                      agent.mode == 'unknown'
+                          ? agent.id
+                          : '${agent.id} · ${agent.mode}',
+                      if (agent.model?.isNotEmpty == true) agent.model!,
+                    ].join(' · '),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
           ),
       ],

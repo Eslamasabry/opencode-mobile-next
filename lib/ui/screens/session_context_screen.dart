@@ -32,6 +32,11 @@ class SessionContextMetrics {
   final double sessionCost;
   final List<SessionContextBreakdownSegment> breakdown;
 
+  /// Session-level cost/tokens as the server reported them; null when the
+  /// server sent none and the client-side sums stand in.
+  final double? serverCost;
+  final Tokens? serverTokens;
+
   const SessionContextMetrics({
     required this.currentMessage,
     required this.model,
@@ -39,7 +44,17 @@ class SessionContextMetrics {
     required this.assistantMessages,
     required this.sessionCost,
     required this.breakdown,
+    this.serverCost,
+    this.serverTokens,
   });
+
+  /// True when the totals below come from the server rather than a sum over
+  /// the loaded messages.
+  bool get reportedByServer => serverCost != null || serverTokens != null;
+
+  /// Accumulated cost: the server's figure when it sent one, else the sum of
+  /// message costs.
+  double get totalCost => serverCost ?? sessionCost;
 
   Tokens get tokens => currentMessage?.tokens ?? Tokens();
   int get contextLimit => model?.contextLimit ?? 0;
@@ -50,8 +65,9 @@ class SessionContextMetrics {
 @visibleForTesting
 SessionContextMetrics calculateSessionContextMetrics(
   List<MessageWithParts> messages,
-  CatalogSnapshot? catalog,
-) {
+  CatalogSnapshot? catalog, {
+  Session? session,
+}) {
   MessageWithParts? current;
   for (final message in messages.reversed) {
     if (message.info.role == 'assistant' && message.info.tokens.total > 0) {
@@ -90,6 +106,8 @@ SessionContextMetrics calculateSessionContextMetrics(
     assistantMessages: assistantMessages,
     sessionCost: sessionCost,
     breakdown: _estimateBreakdown(messages, current?.info.tokens.input ?? 0),
+    serverCost: session?.cost,
+    serverTokens: session?.tokens,
   );
 }
 
@@ -240,6 +258,7 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
     final metrics = calculateSessionContextMetrics(
       _messages,
       widget.controller.catalog,
+      session: widget.controller.sessionsById[widget.sessionID],
     );
     return Scaffold(
       appBar: AppBar(
@@ -479,7 +498,7 @@ class _MetricRow extends StatelessWidget {
   final String label;
   final String value;
 
-  const _MetricRow({required this.label, required this.value});
+  const _MetricRow({super.key, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -604,9 +623,29 @@ class _SessionTotals extends StatelessWidget {
                 '${_formatNumber(metrics.userMessages)} / ${_formatNumber(metrics.assistantMessages)}',
           ),
           _MetricRow(
-            label: 'Accumulated cost',
-            value: '\$${metrics.sessionCost.toStringAsFixed(4)}',
+            key: const ValueKey('session-context-cost'),
+            label: metrics.serverCost != null
+                ? 'Accumulated cost · reported by server'
+                : 'Accumulated cost',
+            value: '\$${metrics.totalCost.toStringAsFixed(4)}',
           ),
+          if (metrics.serverTokens case final tokens?)
+            _MetricRow(
+              key: const ValueKey('session-context-server-tokens'),
+              label: 'Session tokens · reported by server',
+              value: _formatNumber(tokens.total),
+            ),
+          if (metrics.reportedByServer)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                'Reported by server: totals come from OpenCode\'s own session usage, not a sum over the loaded messages.',
+                key: const ValueKey('session-context-reported-by-server'),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: AppTheme.mutedOf(Theme.of(context)),
+                ),
+              ),
+            ),
         ],
       ),
     );

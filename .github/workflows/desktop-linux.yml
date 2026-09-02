@@ -36,9 +36,9 @@ env:
   # Must match the Shorebird-pinned Flutter used for local builds and
   # releases: `flutter --version` from
   # ~/.shorebird/bin/cache/flutter/91f8bd75.../bin/flutter reports
-  # "Flutter 3.47.2 ... Tools • Dart 3.13.1". Shorebird's fork is not
+  # "Flutter 3.47.1 ... Tools • Dart 3.13.1". Shorebird's fork is not
   # installable here, so CI uses upstream stable at the same version.
-  FLUTTER_VERSION: "3.47.2"
+  FLUTTER_VERSION: "3.47.1"
 
 jobs:
   build:

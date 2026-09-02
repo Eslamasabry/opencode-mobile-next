@@ -28,6 +28,7 @@ class _ChatComposer extends StatelessWidget {
     this.defaultAgent = '',
     required this.selectedModel,
     this.modelLabel,
+    this.selectedCatalogModel,
     required this.selectedVariant,
     this.showAttachmentNote = true,
     this.pulse = 0,
@@ -85,6 +86,10 @@ class _ChatComposer extends StatelessWidget {
   /// Presented model name (catalog name or provider · model); the chip shows
   /// it instead of the raw ID. The tooltip keeps the raw string.
   final String? modelLabel;
+
+  /// The selection's catalog entry, for the pricing line in the chip's
+  /// tooltip; null when the catalog does not know the model.
+  final CatalogModel? selectedCatalogModel;
   final String selectedVariant;
 
   /// The "not saved with your draft" note shows once per session, so the
@@ -216,6 +221,7 @@ class _ChatComposer extends StatelessWidget {
                       child: _ModelContextChip(
                         label: _contextLabel,
                         tooltip: _rawContextLabel,
+                        costLine: _costLine,
                         trailing: _contextPercent(context),
                         onPressed: onChooseModel,
                       ),
@@ -355,6 +361,7 @@ class _ChatComposer extends StatelessWidget {
                   child: _ModelContextChip(
                     label: _contextLabel,
                     tooltip: _rawContextLabel,
+                    costLine: _costLine,
                     trailing: _contextPercent(context),
                     onPressed: onChooseModel,
                   ),
@@ -486,6 +493,13 @@ class _ChatComposer extends StatelessWidget {
     if (model != null && model.modelID.isNotEmpty) parts.add(model.wireName);
     if (selectedVariant.isNotEmpty) parts.add(selectedVariant);
     return parts.isEmpty ? 'Choose model' : parts.join(' · ');
+  }
+
+  /// "$3.00 in · $15.00 out /1M" (the picker's pricing line), or null for
+  /// free/unknown pricing.
+  String? get _costLine {
+    final model = selectedCatalogModel;
+    return model == null ? null : modelCostLabel(model);
   }
 
   static bool _isDefaultVariant(String variant) => switch (variant
@@ -721,6 +735,7 @@ class _ModelContextChip extends StatelessWidget {
   const _ModelContextChip({
     required this.label,
     required this.tooltip,
+    this.costLine,
     this.trailing,
     required this.onPressed,
   });
@@ -729,6 +744,9 @@ class _ModelContextChip extends StatelessWidget {
 
   /// The raw agent · provider/model · variant string.
   final String tooltip;
+
+  /// Second tooltip line with the model's per-million pricing, when known.
+  final String? costLine;
 
   /// Trailing slot for the context-window percentage once it matters.
   final Widget? trailing;
@@ -739,7 +757,9 @@ class _ModelContextChip extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return Tooltip(
-      message: 'Model and agent: $tooltip. Tap to change.',
+      message:
+          'Model and agent: $tooltip. Tap to change.'
+          '${costLine == null ? '' : '\n$costLine'}',
       child: ActionChip(
         key: const Key('composer-model-context'),
         avatar: Icon(

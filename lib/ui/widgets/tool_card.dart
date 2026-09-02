@@ -258,6 +258,18 @@ class _ToolContract {
   }
 }
 
+/// Wall-clock tool run time as the card shows it: tenths of a second under
+/// a minute ("0.8s", "12.4s"), minutes and zero-padded seconds past it
+/// ("1m 05s").
+String formatToolDuration(Duration duration) {
+  final clamped = duration.isNegative ? Duration.zero : duration;
+  if (clamped.inMinutes >= 1) {
+    final seconds = (clamped.inSeconds % 60).toString().padLeft(2, '0');
+    return '${clamped.inMinutes}m ${seconds}s';
+  }
+  return '${(clamped.inMilliseconds / 1000).toStringAsFixed(1)}s';
+}
+
 /// Renders a single tool invocation as an expandable card with status,
 /// title, input and output.
 class ToolCard extends StatefulWidget {
@@ -417,7 +429,16 @@ class _ToolCardState extends State<ToolCard> {
   }
 
   bool get _running =>
-      widget.state.status == 'pending' || widget.state.status == 'running';
+      widget.state.executed &&
+      (widget.state.status == 'pending' || widget.state.status == 'running');
+
+  /// Run time shown once the tool has finished; nothing while it runs or
+  /// when the server sent no timestamps.
+  String? get _durationLabel {
+    if (_running || !widget.state.executed) return null;
+    final duration = widget.state.duration;
+    return duration == null ? null : formatToolDuration(duration);
+  }
 
   /// One ordered v2 content segment: a mono text run, an image preview, or a
   /// file tile.
@@ -477,7 +498,8 @@ class _ToolCardState extends State<ToolCard> {
             Semantics(
               button: hasBody,
               expanded: hasBody ? _expanded : null,
-              label: '${contract.title}, ${widget.state.status}',
+              label:
+                  '${contract.title}, ${widget.state.executed ? widget.state.status : 'not run'}',
               child: InkWell(
                 onTap: hasBody ? _toggleExpanded : null,
                 borderRadius: widget.embedded
@@ -492,7 +514,9 @@ class _ToolCardState extends State<ToolCard> {
                         Icon(
                           _iconFor(contract.kind),
                           size: 16,
-                          color: AppTheme.mutedOf(theme),
+                          color: AppTheme.mutedOf(theme).withValues(
+                            alpha: widget.state.executed ? 1 : .6,
+                          ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -503,9 +527,14 @@ class _ToolCardState extends State<ToolCard> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: theme.textTheme.bodySmall!.copyWith(
-                                  color: theme.colorScheme.onSurface.withValues(
-                                    alpha: .9,
-                                  ),
+                                  // A call the server never ran greys out
+                                  // rather than striking through: the title
+                                  // stays legible, the state carries the news.
+                                  color: widget.state.executed
+                                      ? theme.colorScheme.onSurface.withValues(
+                                          alpha: .9,
+                                        )
+                                      : AppTheme.mutedOf(theme),
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -544,6 +573,28 @@ class _ToolCardState extends State<ToolCard> {
                             ),
                           ),
                         ],
+                        if (!widget.state.executed) ...[
+                          const SizedBox(width: 6),
+                          Text(
+                            'Not run',
+                            key: const Key('tool-not-run'),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: AppTheme.mutedOf(theme),
+                            ),
+                          ),
+                        ] else if (_durationLabel case final duration?) ...[
+                          const SizedBox(width: 6),
+                          Text(
+                            duration,
+                            key: const Key('tool-duration'),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: AppTheme.mutedOf(theme),
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                          ),
+                        ],
                         const SizedBox(width: 6),
                         if (_running && !reduceMotion)
                           SizedBox(
@@ -552,6 +603,15 @@ class _ToolCardState extends State<ToolCard> {
                             child: CircularProgressIndicator(
                               strokeWidth: 1.6,
                               color: theme.colorScheme.primary,
+                            ),
+                          )
+                        else if (!widget.state.executed)
+                          Icon(
+                            Icons.block_rounded,
+                            size: 14,
+                            color: AppTheme.statusColor(
+                              theme,
+                              AppStatusTone.neutral,
                             ),
                           )
                         else
@@ -584,6 +644,8 @@ class _ToolCardState extends State<ToolCard> {
                 ),
               ),
             ),
+            if (widget.state.pruned)
+              _PrunedNote(embedded: widget.embedded),
             if (_interleavedSegments case final segments?)
               Padding(
                 key: const Key('tool-interleaved-output'),
@@ -1716,6 +1778,57 @@ class _Mono extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// "Output pruned": the server dropped this tool's output from the model's
+/// context. A hatched wash marks the gap so it reads as removed content, not
+/// an empty result.
+class _PrunedNote extends StatelessWidget {
+  const _PrunedNote({required this.embedded});
+
+  final bool embedded;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = AppTheme.mutedOf(theme);
+    return Padding(
+      padding: embedded
+          ? const EdgeInsets.fromLTRB(34, 0, 10, 8)
+          : const EdgeInsets.fromLTRB(10, 0, 10, 8),
+      child: Container(
+        key: const Key('tool-pruned'),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: AppTheme.hairline(theme)),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: const Alignment(-0.9, -0.55),
+            tileMode: TileMode.repeated,
+            stops: const [0, .5, .5, 1],
+            colors: [
+              muted.withValues(alpha: .10),
+              muted.withValues(alpha: .10),
+              Colors.transparent,
+              Colors.transparent,
+            ],
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.content_cut_rounded, size: 13, color: muted),
+            const SizedBox(width: 6),
+            Text(
+              'Output pruned',
+              style: theme.textTheme.labelSmall?.copyWith(color: muted),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

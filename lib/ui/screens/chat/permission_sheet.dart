@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import '../../../api/models.dart';
 import '../../permission_presentation.dart';
 import '../../app_theme.dart';
+import '../../widgets/code_highlight.dart';
+import '../../widgets/diff_view.dart';
 
 /// Presents the OpenCode 2 permission prompt as a modal bottom sheet
 /// (design doc §3). One component serves three entry points: the chat
@@ -170,6 +172,37 @@ class _PermissionSheetState extends State<PermissionSheet> {
         false;
   }
 
+  static const _diffPermissions = {'edit', 'write', 'multiedit', 'patch'};
+  static const _diffMetadataKeys = ['diff', 'patch', 'preview'];
+
+  /// A unified diff the server attached to an edit/write ask, from the
+  /// common metadata spellings; null for other tools or when absent.
+  String? get _diffPreview {
+    final permission = widget.permission;
+    if (!_diffPermissions.contains(permission.permission.toLowerCase())) {
+      return null;
+    }
+    for (final key in _diffMetadataKeys) {
+      final value = permission.metadata[key];
+      if (value is String && value.trim().isNotEmpty) return value;
+    }
+    return null;
+  }
+
+  FileDiff _pendingDiff(String diff) => FileDiff(
+    file: widget.permission.filePath ?? 'Pending change',
+    patch: diff,
+  );
+
+  void _openFullDiff(String diff) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        fullscreenDialog: true,
+        builder: (_) => DiffView.single(_pendingDiff(diff)),
+      ),
+    );
+  }
+
   IconData get _resourceIcon => switch (widget.permission.permission) {
     'bash' => Icons.terminal_rounded,
     'read' || 'edit' => Icons.description_outlined,
@@ -216,8 +249,25 @@ class _PermissionSheetState extends State<PermissionSheet> {
                 ),
                 const SizedBox(height: 8),
                 Text(contextLine, style: theme.textTheme.bodyMedium),
-                const SizedBox(height: 12),
-                _resourcesCard(theme),
+                if (permission.commandPreview case final command?) ...[
+                  const SizedBox(height: 12),
+                  _CommandPreview(command: command),
+                ],
+                if (permission.filePath case final path?) ...[
+                  const SizedBox(height: 12),
+                  _FilePathRow(path: path),
+                ],
+                if (_diffPreview case final diff?) ...[
+                  const SizedBox(height: 12),
+                  _DiffPreviewBox(
+                    diff: diff,
+                    onSeeFull: () => _openFullDiff(diff),
+                  ),
+                ],
+                if (_resourcesCard(theme) case final resources?) ...[
+                  const SizedBox(height: 12),
+                  resources,
+                ],
                 if (permission.always.isNotEmpty) ...[
                   const SizedBox(height: 14),
                   Text(
@@ -262,8 +312,16 @@ class _PermissionSheetState extends State<PermissionSheet> {
     );
   }
 
-  Widget _resourcesCard(ThemeData theme) {
-    final resources = widget.permission.patterns;
+  /// The requested patterns, minus any already shown as the command or file
+  /// preview above (those blocks carry their own Copy). Null when the
+  /// previews covered everything, so the same string never appears twice.
+  Widget? _resourcesCard(ThemeData theme) {
+    final permission = widget.permission;
+    final shown = {?permission.commandPreview, ?permission.filePath};
+    final resources = permission.patterns
+        .where((pattern) => !shown.contains(pattern))
+        .toList();
+    if (resources.isEmpty && shown.isNotEmpty) return null;
     final rows = resources.isEmpty
         ? const ['(all matching requests)']
         : resources;
@@ -414,6 +472,163 @@ class _PermissionSheetState extends State<PermissionSheet> {
               ? null
               : () => setState(() => _rejecting = false),
           child: const Text('Back'),
+        ),
+      ],
+    );
+  }
+}
+
+/// The shell command awaiting approval, highlighted as bash in a mono block
+/// so quoting and pipes read at a glance before the user allows it.
+class _CommandPreview extends StatelessWidget {
+  const _CommandPreview({required this.command});
+
+  final String command;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      key: const Key('permission-command-preview'),
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.hairline(theme)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              '\$',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontFamily: AppTheme.monoFamily,
+                color: AppTheme.mutedOf(theme),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text.rich(
+              highlightedCode(command, 'bash', CodeHighlightTheme.of(context)),
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontFamily: AppTheme.monoFamily,
+                fontSize: AppTheme.codeFontSize,
+                height: 1.4,
+              ),
+            ),
+          ),
+          _CopyButton(text: command, label: 'Copy command'),
+        ],
+      ),
+    );
+  }
+}
+
+class _CopyButton extends StatelessWidget {
+  const _CopyButton({required this.text, required this.label});
+
+  final String text;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    tooltip: label,
+    constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+    padding: EdgeInsets.zero,
+    onPressed: () => unawaited(Clipboard.setData(ClipboardData(text: text))),
+    icon: const Icon(AppIcons.copy, size: 18),
+  );
+}
+
+/// The file an edit/write/read ask concerns: folder glyph plus the mono path.
+class _FilePathRow extends StatelessWidget {
+  const _FilePathRow({required this.path});
+
+  final String path;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      key: const Key('permission-file-path'),
+      children: [
+        Icon(
+          Icons.folder_outlined,
+          size: 16,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            path,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontFamily: AppTheme.monoFamily,
+            ),
+          ),
+        ),
+        _CopyButton(text: path, label: 'Copy $path'),
+      ],
+    );
+  }
+}
+
+/// The pending change as a diff-highlighted mono block, capped at 240 dp
+/// with its own scroll, plus "See full diff" into the full-screen
+/// [DiffView]. (DiffView itself is a Scaffold with a close button, so it is
+/// not embedded inline where its close would dismiss the sheet.)
+class _DiffPreviewBox extends StatelessWidget {
+  const _DiffPreviewBox({required this.diff, required this.onSeeFull});
+
+  final String diff;
+  final VoidCallback onSeeFull;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 240),
+          child: Container(
+            key: const Key('permission-diff-preview'),
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppTheme.hairline(theme)),
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Text.rich(
+                  highlightedCode(diff, 'diff', CodeHighlightTheme.of(context)),
+                  softWrap: false,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontFamily: AppTheme.monoFamily,
+                    fontSize: AppTheme.codeFontSize,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        Align(
+          alignment: AlignmentDirectional.centerEnd,
+          child: TextButton.icon(
+            key: const Key('permission-see-full-diff'),
+            onPressed: onSeeFull,
+            icon: const Icon(Icons.difference_outlined, size: 18),
+            label: const Text('See full diff'),
+          ),
         ),
       ],
     );

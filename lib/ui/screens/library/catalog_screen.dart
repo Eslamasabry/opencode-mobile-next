@@ -1,5 +1,41 @@
 part of '../library_screen.dart';
 
+/// "Deprecated" / "Preview" lifecycle pill for a catalog model; null when
+/// the model is plainly active.
+class ModelStatusPill extends StatelessWidget {
+  const ModelStatusPill._(this.label, this.tone, {super.key});
+
+  static ModelStatusPill? forModel(CatalogModel model, {Key? key}) {
+    if (model.deprecated) {
+      return ModelStatusPill._('Deprecated', AppStatusTone.neutral, key: key);
+    }
+    if (model.preview) {
+      return ModelStatusPill._('Preview', AppStatusTone.attention, key: key);
+    }
+    return null;
+  }
+
+  final String label;
+  final AppStatusTone tone;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = AppTheme.statusColor(theme, tone);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: .6)),
+      ),
+      child: Text(
+        label,
+        style: theme.textTheme.labelSmall?.copyWith(color: color),
+      ),
+    );
+  }
+}
+
 class CatalogScreen extends StatefulWidget {
   final ConnectionController controller;
   const CatalogScreen({super.key, required this.controller});
@@ -95,12 +131,31 @@ class _CatalogScreenState extends State<CatalogScreen> {
                           widget.controller.selectedModel?.providerID ==
                               model.providerID &&
                           widget.controller.selectedModel?.modelID == model.id;
+                      final pill = ModelStatusPill.forModel(model);
+                      final cost = modelCostLabel(model);
                       return ListTile(
                         enabled: model.enabled,
-                        title: Text(model.name),
+                        title: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                model.name,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (pill != null) ...[
+                              const SizedBox(width: 8),
+                              pill,
+                            ],
+                          ],
+                        ),
                         subtitle: Text(
-                          '${model.providerID}/${model.id}\n${_compactNumber(model.contextLimit)} context - ${_compactNumber(model.outputLimit)} output',
-                          maxLines: 2,
+                          [
+                            '${model.providerID}/${model.id}',
+                            '${_compactNumber(model.contextLimit)} context - ${_compactNumber(model.outputLimit)} output',
+                            ?cost,
+                          ].join('\n'),
+                          maxLines: 3,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontSize: AppTheme.codeFontSize,
@@ -227,12 +282,34 @@ class _CatalogScreenState extends State<CatalogScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(model.name, style: Theme.of(context).textTheme.titleLarge),
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        model.name,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
+                    if (ModelStatusPill.forModel(model) case final pill?) ...[
+                      const SizedBox(width: 8),
+                      pill,
+                    ],
+                  ],
+                ),
                 const SizedBox(height: 4),
                 SelectableText(
                   '${model.providerID}/${model.id}',
                   style: const TextStyle(fontFamily: AppTheme.monoFamily),
                 ),
+                if (modelCostLabel(model) case final cost?) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    cost,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.mutedOf(Theme.of(context)),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 Wrap(
                   spacing: 8,

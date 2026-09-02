@@ -1219,6 +1219,13 @@ class _MessageView extends StatelessWidget {
   final ToolOutputFileLoader filePreviewLoader;
   final ToolOutputFileAction onAttachFile;
   final ToolOutputFileAction onDownloadFile;
+
+  /// Recovery actions for typed assistant errors: compact the session after
+  /// a context overflow, open the providers screen after an auth failure,
+  /// send "Continue" after an output-length cut. Null hides the button.
+  final VoidCallback? onCompact;
+  final VoidCallback? onOpenProviders;
+  final VoidCallback? onContinue;
   const _MessageView({
     super.key,
     required this.m,
@@ -1233,6 +1240,9 @@ class _MessageView extends StatelessWidget {
     required this.filePreviewLoader,
     required this.onAttachFile,
     required this.onDownloadFile,
+    this.onCompact,
+    this.onOpenProviders,
+    this.onContinue,
   });
 
   @override
@@ -1388,10 +1398,22 @@ class _MessageView extends StatelessWidget {
             if (m.info.errorText != null)
               Padding(
                 padding: const EdgeInsets.only(top: 3),
+                child: _AssistantErrorRow(
+                  info: m.info,
+                  onCompact: onCompact,
+                  onOpenProviders: onOpenProviders,
+                  onContinue: onContinue,
+                ),
+              ),
+            if (m.info.finish == 'length' &&
+                m.info.errorKind != MessageErrorKind.outputLength)
+              Padding(
+                padding: const EdgeInsets.only(top: 3),
                 child: Text(
-                  m.info.errorText!,
-                  style: theme.textTheme.bodySmall!.copyWith(
-                    color: theme.colorScheme.error,
+                  'Answer was cut off by the length limit',
+                  key: const Key('message-length-footer'),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: AppTheme.mutedOf(theme),
                   ),
                 ),
               ),
@@ -1414,6 +1436,145 @@ class _MessageView extends StatelessWidget {
   /// "essentially free" rather than a string of zeros.
   static String _fmtCost(double cost) =>
       cost < .001 ? '< \$0.001' : '\$${cost.toStringAsFixed(3)}';
+}
+
+/// The assistant error row, keyed on the server's typed error: overflow,
+/// auth and length errors get the one action that fixes them; an abort is a
+/// quiet "Stopped"; anything else keeps the plain red message.
+class _AssistantErrorRow extends StatelessWidget {
+  const _AssistantErrorRow({
+    required this.info,
+    this.onCompact,
+    this.onOpenProviders,
+    this.onContinue,
+  });
+
+  final MessageInfo info;
+  final VoidCallback? onCompact;
+  final VoidCallback? onOpenProviders;
+  final VoidCallback? onContinue;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final text = info.errorText ?? '';
+    switch (info.errorKind ?? MessageErrorKind.unknown) {
+      case MessageErrorKind.contextOverflow:
+        return _ErrorActionCard(
+          key: const Key('error-card-context-overflow'),
+          icon: Icons.compress_rounded,
+          text: text,
+          actionKey: const Key('error-action-compact'),
+          actionLabel: 'Compact session',
+          onAction: onCompact,
+        );
+      case MessageErrorKind.providerAuth:
+        return _ErrorActionCard(
+          key: const Key('error-card-provider-auth'),
+          icon: Icons.key_off_rounded,
+          text: text,
+          actionKey: const Key('error-action-providers'),
+          actionLabel: 'Open providers',
+          onAction: onOpenProviders,
+        );
+      case MessageErrorKind.outputLength:
+        return _ErrorActionCard(
+          key: const Key('error-card-output-length'),
+          icon: Icons.short_text_rounded,
+          text: text,
+          actionKey: const Key('error-action-continue'),
+          actionLabel: 'Continue',
+          onAction: onContinue,
+        );
+      case MessageErrorKind.aborted:
+        return Row(
+          key: const Key('message-stopped'),
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(AppIcons.stop, size: 14, color: AppTheme.mutedOf(theme)),
+            const SizedBox(width: 4),
+            Text(
+              'Stopped',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppTheme.mutedOf(theme),
+              ),
+            ),
+          ],
+        );
+      case MessageErrorKind.contentFilter:
+      case MessageErrorKind.unknown:
+        return Text(
+          text,
+          style: theme.textTheme.bodySmall!.copyWith(
+            color: theme.colorScheme.error,
+          ),
+        );
+    }
+  }
+}
+
+class _ErrorActionCard extends StatelessWidget {
+  const _ErrorActionCard({
+    super.key,
+    required this.icon,
+    required this.text,
+    required this.actionKey,
+    required this.actionLabel,
+    required this.onAction,
+  });
+
+  final IconData icon;
+  final String text;
+  final Key actionKey;
+  final String actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 8, 8, 6),
+      decoration: BoxDecoration(
+        color: scheme.errorContainer.withValues(alpha: .35),
+        borderRadius: BorderRadius.circular(AppTheme.radiusControl),
+        border: Border.all(color: scheme.error.withValues(alpha: .35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 1),
+                child: Icon(icon, size: 16, color: scheme.error),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  text,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (onAction != null)
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: TextButton(
+                key: actionKey,
+                onPressed: onAction,
+                child: Text(actionLabel),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 class _MessageMeta {

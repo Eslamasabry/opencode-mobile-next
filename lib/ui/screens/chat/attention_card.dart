@@ -180,6 +180,30 @@ class _PermissionAttentionCard extends StatelessWidget {
   }
 }
 
+/// "Rate limited. Retrying 2 in 0:42" — the server sends no attempt ceiling,
+/// so the banner names the attempt rather than inventing a total. [now]
+/// defaults to the wall clock; tests pass a fixed instant.
+@visibleForTesting
+String retryBannerHeadline(SessionRetryState retry, {DateTime? now}) {
+  final attempt = retry.attempt > 0 ? ' ${retry.attempt}' : '';
+  final next = retry.next;
+  if (next == null) return 'Rate limited. Retrying$attempt…';
+  final delta = next.difference(now ?? DateTime.now());
+  final remaining = delta.isNegative ? Duration.zero : delta;
+  return 'Rate limited. Retrying$attempt in ${_countdown(remaining)}';
+}
+
+String _countdown(Duration d) {
+  final total = d.inSeconds;
+  final minutes = total ~/ 60;
+  final seconds = (total % 60).toString().padLeft(2, '0');
+  if (minutes >= 60) {
+    final hours = minutes ~/ 60;
+    return '$hours:${(minutes % 60).toString().padLeft(2, '0')}:$seconds';
+  }
+  return '$minutes:$seconds';
+}
+
 /// The provider-retry flavour of [_AttentionCard]: a slim banner naming the
 /// attempt and counting down to the next one, the server's own words when
 /// it sent any, and Stop wired to the same abort as the app-bar button.
@@ -195,32 +219,10 @@ class _RetryAttentionCard extends StatelessWidget {
   final bool stopping;
   final VoidCallback onStop;
 
-  /// "Retrying 2 in 0:42" — the server sends no attempt ceiling, so the
-  /// banner names the attempt rather than inventing a total.
-  static String headline(SessionRetryState retry, {DateTime? now}) {
-    final attempt = retry.attempt > 0 ? ' ${retry.attempt}' : '';
-    final next = retry.next;
-    if (next == null) return 'Rate limited. Retrying$attempt…';
-    final delta = next.difference(now ?? DateTime.now());
-    final remaining = delta.isNegative ? Duration.zero : delta;
-    return 'Rate limited. Retrying$attempt in ${_countdown(remaining)}';
-  }
-
-  static String _countdown(Duration d) {
-    final total = d.inSeconds;
-    final minutes = total ~/ 60;
-    final seconds = total % 60;
-    if (minutes >= 60) {
-      final hours = minutes ~/ 60;
-      return '$hours:${(minutes % 60).toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-    }
-    return '$minutes:${seconds.toString().padLeft(2, '0')}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final title = headline(retry);
+    final title = retryBannerHeadline(retry);
     final message = retry.message?.trim();
     return _AttentionCard(
       icon: AppIcons.retry,
