@@ -129,6 +129,8 @@ Future<ConnectionController> _controllerFor(
   var consumed = false;
   final backgroundLive = BackgroundLiveController(
     preferences: preferences,
+    // Fake time never advances past the debounce; send status at once.
+    liveStatusDebounce: Duration.zero,
     invoke: (method, [arguments]) async {
       if (method == 'consumeCodingAlertOpen' && !consumed) {
         consumed = true;

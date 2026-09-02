@@ -1,6 +1,6 @@
-# Release notes draft — Alpha 1.0.32+33
+# Release notes draft — Alpha 1.0.33+34
 
-Owner: paste into the GitHub release body for tag `v1.0.32+33` (or adjust the
+Owner: paste into the GitHub release body for tag `v1.0.33+34` (or adjust the
 tag/version when the actual cut is made). Keep the two warning blocks at the
 top verbatim; everything below the fold can be trimmed per release.
 
@@ -26,6 +26,18 @@ The app carries its own bug-report flow now: **More hub → Report a bug**,
 the error screens themselves, or Settings → About. The form arrives with
 your app version and platform prefilled and nothing else — redact the rest
 (no passwords, no keys, no hostnames, no transcripts).
+
+## New in 1.0.33: providers and background
+
+- **Providers**: every provider shows its real logo (fetched from Google's
+  public favicon service by domain, monogram fallback), a Connected / Not
+  connected state with model count, connected providers first, and the
+  Providers section now leads the Integrations screen.
+- **Background**: the persistent notification is live — session title, what
+  the agent is doing, running and pending counts, a progress bar, Android 16
+  live-update promotion, and a Pause action. Background mode is one tap from
+  the Workspace header, suggested from the empty Activity inbox, and the
+  Settings hub shows whether it is running.
 
 ## New in 1.0.32: the UI/UX refresh
 

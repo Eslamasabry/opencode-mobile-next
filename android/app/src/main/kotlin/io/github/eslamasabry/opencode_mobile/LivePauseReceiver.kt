@@ -12,9 +12,23 @@ import android.content.Intent
  * "Android stopped it" notice.
  */
 class LivePauseReceiver : BroadcastReceiver() {
+    private companion object {
+        // shared_preferences' Android store and key prefix; the key matches
+        // BackgroundLiveController.preferenceKey.
+        const val FLUTTER_PREFERENCES = "FlutterSharedPreferences"
+        const val FLUTTER_PREFERENCE_KEEP_LIVE = "flutter.oc.keepLiveInBackground"
+    }
+
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != BackgroundConnectionService.ACTION_PAUSE_LIVE) return
         BackgroundConnectionService.stop(context)
+        // Flip the persisted Dart preference here as well: when no engine is
+        // alive to hear the push, the next launch would otherwise restore
+        // "on" and restart the service the user just paused.
+        context.getSharedPreferences(FLUTTER_PREFERENCES, Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean(FLUTTER_PREFERENCE_KEEP_LIVE, false)
+            .apply()
         BackgroundConnectionService.notifyDartStopped(
             BackgroundConnectionService.REASON_USER_PAUSE
         )

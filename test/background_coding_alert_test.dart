@@ -16,7 +16,11 @@ _backgroundController({bool backgrounded = true}) async {
   final calls = <_NativeCall>[];
   final backgroundLive = BackgroundLiveController(
     preferences: preferences,
+    liveStatusDebounce: Duration.zero,
     invoke: (method, [arguments]) async {
+      // Ongoing-notification refreshes ride along with every state change;
+      // these tests assert on the alert contract alone.
+      if (method == 'updateLiveStatus') return const {'updated': true};
       calls.add((method: method, arguments: arguments));
       if (method == 'showCodingAlert') return const {'shown': true};
       if (method == 'dismissCodingAlert') return const {'dismissed': true};
