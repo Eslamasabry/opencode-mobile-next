@@ -171,7 +171,8 @@ void main() {
       tester.widget<Text>(find.byKey(const ValueKey('current-tab-title'))).data,
       'Activity',
     );
-    expect(find.text('Nothing needs attention'), findsWidgets);
+    // An empty inbox reads as success, not as a missing feature.
+    expect(find.text('All clear'), findsWidgets);
   });
 
   testWidgets('failed reconnect keeps the product shell and location visible', (

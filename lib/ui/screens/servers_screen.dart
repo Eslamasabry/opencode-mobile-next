@@ -78,7 +78,10 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
       await _edit(existing: p);
       return;
     }
-    setState(() => _busy = true);
+    setState(() {
+      _busy = true;
+      _listFailure = null;
+    });
     final conn = ref.read(connProvider);
     Object? failure;
     try {
@@ -1115,14 +1118,18 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
             children: [
-              Text(
-                'Connect to an OpenCode server running on this phone or another machine.',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+              // A save or connect that failed is shown first, where it is
+              // seen without scrolling, in the same verdict style as Test
+              // connection.
+              if (_submitFailure case final failure?) ...[
+                _InlineFailureCard(
+                  key: const ValueKey('server-save-failure'),
+                  message: failure,
                 ),
-              ),
+                const SizedBox(height: 12),
+              ],
               if (_needsPassword) ...[
-                const SizedBox(height: 16),
+                const SizedBox(height: 4),
                 Semantics(
                   container: true,
                   liveRegion: true,
@@ -1283,13 +1290,6 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                     : const Icon(Icons.network_check_rounded),
                 label: Text(_testing ? 'Testing…' : 'Test connection'),
               ),
-              if (_submitFailure case final failure?) ...[
-                const SizedBox(height: 12),
-                _InlineFailureCard(
-                  key: const ValueKey('server-save-failure'),
-                  message: failure,
-                ),
-              ],
               if (_testResult case final result?) ...[
                 const SizedBox(height: 12),
                 Semantics(

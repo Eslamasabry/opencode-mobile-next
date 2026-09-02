@@ -112,14 +112,22 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Add '),
-            InfoLabel.glossary(Glossary.mcp, iconSize: 18),
-            const Text(' server'),
-          ],
-        ),
+        title: const Text('Add MCP server'),
+        actions: [
+          // A full-size info target instead of an inline label: the form is
+          // a lazy list and a header row would push its fields below the
+          // fold on a narrow large-text phone.
+          IconButton(
+            key: const ValueKey('mcp-glossary'),
+            tooltip: 'What is MCP?',
+            icon: const Icon(Icons.info_outline_rounded),
+            onPressed: () => InfoLabel.show(
+              context,
+              term: Glossary.mcp.term,
+              explanation: Glossary.mcp.explanation,
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(16, 8, 16, 12),
