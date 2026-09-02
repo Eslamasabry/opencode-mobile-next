@@ -208,7 +208,7 @@ class _EmptyTranscript extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            '❯',
+                            '>',
                             style: theme.textTheme.headlineSmall!.copyWith(
                               color: theme.colorScheme.primary,
                               fontFamily: AppTheme.monoFamily,
@@ -253,9 +253,28 @@ class _EmptyTranscript extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Text(
-                        'Tip: type / for commands · tap ⋯ under a message '
-                        'for actions',
+                      // The "more" affordance is drawn as the same Material
+                      // icon the meta row uses: Roboto has no glyph for the
+                      // midline-ellipsis character, which rendered as a box.
+                      Text.rich(
+                        TextSpan(
+                          children: [
+                            const TextSpan(
+                              text: 'Tip: type / for commands · tap ',
+                            ),
+                            WidgetSpan(
+                              alignment: PlaceholderAlignment.middle,
+                              child: Icon(
+                                Icons.more_horiz_rounded,
+                                size: 14,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const TextSpan(
+                              text: ' under a message for actions',
+                            ),
+                          ],
+                        ),
                         key: const ValueKey('empty-transcript-tip'),
                         textAlign: TextAlign.center,
                         style: theme.textTheme.labelSmall?.copyWith(
@@ -848,7 +867,8 @@ String _toolRunSentence(List<Part> parts) {
       '$count ${count == 1 ? one : many}';
   final segments = <String>[
     if (reads > 0) 'read ${plural(reads, 'file', 'files')}',
-    if (searches > 0) searches == 1 ? 'searched once' : 'searched $searches times',
+    if (searches > 0)
+      searches == 1 ? 'searched once' : 'searched $searches times',
     if (lists > 0) 'listed ${plural(lists, 'folder', 'folders')}',
     if (edits > 0)
       reads > 0 ? 'edited $edits' : 'edited ${plural(edits, 'file', 'files')}',
@@ -1267,6 +1287,17 @@ class _MessageView extends StatelessWidget {
     ];
     final streaming =
         !isUser && m.info.errorText == null && m.info.time?.isDone == false;
+    // A message whose parts are all non-renderable bookkeeping (`step-finish`,
+    // `patch`, `snapshot`) has nothing to say; without this guard it drew an
+    // empty bubble with a lone "…" actions button after every tool card and
+    // at the end of the turn.
+    if (!isUser &&
+        visibleParts.isEmpty &&
+        metaParts.isEmpty &&
+        m.info.errorText == null &&
+        m.info.finish != 'length') {
+      return const SizedBox.shrink();
+    }
 
     final bubbleWidthCap = MediaQuery.of(context).size.width * .88;
 

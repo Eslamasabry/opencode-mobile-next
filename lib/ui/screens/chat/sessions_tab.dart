@@ -65,117 +65,137 @@ class SessionsTab extends StatelessWidget {
                 onRefresh: controller.refreshSessions,
                 child: DesktopScrollbarArea(
                   builder: (scrollController) => ListView.builder(
-                  controller: scrollController,
-                  // The extended FAB floats over the list's tail; this keeps
-                  // the last row tappable above it.
-                  padding: const EdgeInsets.only(bottom: 88),
-                  itemCount: sessions.length,
-                  itemBuilder: (context, i) {
-                    final s = sessions[i];
-                    final busy = controller.busySessions.contains(s.id);
-                    final retrying = controller.retryStates.containsKey(s.id);
-                    return EntranceReveal(
-                      index: i,
-                      child: ContextMenuRegion(
-                        actions: () => [
-                          ContextMenuAction(
-                            menuKey: const ValueKey('session-menu-open'),
-                            label: 'Open',
-                            icon: Icons.open_in_new_rounded,
-                            onSelected: () => Navigator.of(
-                              context,
-                            ).pushNamed('/chat/${s.id}'),
-                          ),
-                          ContextMenuAction(
-                            menuKey: const ValueKey('session-menu-rename'),
-                            label: 'Rename',
-                            icon: Icons.edit_outlined,
-                            onSelected: () =>
-                                unawaited(_sessionAction(context, 'rename', s)),
-                          ),
-                          ContextMenuAction(
-                            menuKey: const ValueKey('session-menu-delete'),
-                            label: 'Delete',
-                            icon: Icons.delete_outline_rounded,
-                            destructive: true,
-                            onSelected: () =>
-                                unawaited(_sessionAction(context, 'delete', s)),
-                          ),
-                        ],
-                        child: Dismissible(
-                          key: ValueKey('session-dismiss-${s.id}'),
-                          direction: DismissDirection.endToStart,
-                          // The existing confirm-and-delete flow runs inside
-                          // confirmDismiss and always resolves false: the row is
-                          // removed by the refreshed session list, never by the
-                          // Dismissible itself, so a failed delete snaps back.
-                          confirmDismiss: (_) async {
-                            await _sessionAction(context, 'delete', s);
-                            return false;
-                          },
-                          background: const SwipeDeleteBackground(),
-                          child: ListTile(
-                            leading: retrying
-                                ? Icon(
-                                    key: Key('session-retrying-icon-${s.id}'),
-                                    AppIcons.retry,
-                                    size: 20,
-                                    color: AppTheme.statusColor(
-                                      Theme.of(context),
-                                      AppStatusTone.attention,
-                                    ),
-                                  )
-                                : busy
-                                ? SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                    ),
-                                  )
-                                : Icon(
-                                    Icons.chat_bubble_outline_rounded,
-                                    size: 20,
-                                    color: AppTheme.mutedOf(Theme.of(context)),
-                                  ),
-                            title: Text(
-                              s.title?.isNotEmpty == true
-                                  ? s.title!
-                                  : 'New chat',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                    controller: scrollController,
+                    // The extended FAB floats over the list's tail; this keeps
+                    // the last row tappable above it.
+                    padding: const EdgeInsets.only(bottom: 88),
+                    itemCount: sessions.length,
+                    itemBuilder: (context, i) {
+                      final s = sessions[i];
+                      final busy = controller.busySessions.contains(s.id);
+                      final retrying = controller.retryStates.containsKey(s.id);
+                      final needsAttention = _sessionNeedsAttention(
+                        controller,
+                        s.id,
+                      );
+                      return EntranceReveal(
+                        index: i,
+                        child: ContextMenuRegion(
+                          actions: () => [
+                            ContextMenuAction(
+                              menuKey: const ValueKey('session-menu-open'),
+                              label: 'Open',
+                              icon: Icons.open_in_new_rounded,
+                              onSelected: () => Navigator.of(
+                                context,
+                              ).pushNamed('/chat/${s.id}'),
                             ),
-                            subtitle: _SessionRowMeta(
-                              session: s,
-                              retrying: retrying,
-                              time: _fmtSessionTime(
-                                s.time?.updated ?? s.time?.created ?? 0,
+                            ContextMenuAction(
+                              menuKey: const ValueKey('session-menu-rename'),
+                              label: 'Rename',
+                              icon: Icons.edit_outlined,
+                              onSelected: () => unawaited(
+                                _sessionAction(context, 'rename', s),
                               ),
                             ),
-                            trailing: PopupMenuButton<String>(
-                              onSelected: (v) => _sessionAction(context, v, s),
-                              itemBuilder: (_) => const [
-                                PopupMenuItem(
-                                  value: 'rename',
-                                  child: Text('Rename'),
-                                ),
-                                PopupMenuItem(
-                                  value: 'delete',
-                                  child: Text('Delete'),
-                                ),
-                              ],
+                            ContextMenuAction(
+                              menuKey: const ValueKey('session-menu-delete'),
+                              label: 'Delete',
+                              icon: Icons.delete_outline_rounded,
+                              destructive: true,
+                              onSelected: () => unawaited(
+                                _sessionAction(context, 'delete', s),
+                              ),
                             ),
-                            onTap: () => Navigator.of(
-                              context,
-                            ).pushNamed('/chat/${s.id}'),
+                          ],
+                          child: Dismissible(
+                            key: ValueKey('session-dismiss-${s.id}'),
+                            direction: DismissDirection.endToStart,
+                            // The existing confirm-and-delete flow runs inside
+                            // confirmDismiss and always resolves false: the row is
+                            // removed by the refreshed session list, never by the
+                            // Dismissible itself, so a failed delete snaps back.
+                            confirmDismiss: (_) async {
+                              await _sessionAction(context, 'delete', s);
+                              return false;
+                            },
+                            background: const SwipeDeleteBackground(),
+                            child: ListTile(
+                              leading: needsAttention
+                                  ? Icon(
+                                      key: Key(
+                                        'session-attention-icon-${s.id}',
+                                      ),
+                                      Icons.notification_important_outlined,
+                                      size: 20,
+                                      color: AppTheme.statusColor(
+                                        Theme.of(context),
+                                        AppStatusTone.attention,
+                                      ),
+                                    )
+                                  : retrying
+                                  ? Icon(
+                                      key: Key('session-retrying-icon-${s.id}'),
+                                      AppIcons.retry,
+                                      size: 20,
+                                      color: AppTheme.statusColor(
+                                        Theme.of(context),
+                                        AppStatusTone.attention,
+                                      ),
+                                    )
+                                  : busy
+                                  ? SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
+                                      ),
+                                    )
+                                  : Icon(
+                                      Icons.chat_bubble_outline_rounded,
+                                      size: 20,
+                                      color: AppTheme.mutedOf(
+                                        Theme.of(context),
+                                      ),
+                                    ),
+                              title: Text(
+                                presentedSessionTitle(s, fallback: 'New chat'),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              subtitle: _SessionRowMeta(
+                                session: s,
+                                retrying: retrying,
+                                needsAttention: needsAttention,
+                                time: _fmtSessionTime(
+                                  s.time?.updated ?? s.time?.created ?? 0,
+                                ),
+                              ),
+                              trailing: PopupMenuButton<String>(
+                                onSelected: (v) =>
+                                    _sessionAction(context, v, s),
+                                itemBuilder: (_) => const [
+                                  PopupMenuItem(
+                                    value: 'rename',
+                                    child: Text('Rename'),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'delete',
+                                    child: Text('Delete'),
+                                  ),
+                                ],
+                              ),
+                              onTap: () => Navigator.of(
+                                context,
+                              ).pushNamed('/chat/${s.id}'),
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
                   ),
                 ),
               ),
@@ -262,15 +282,29 @@ class SessionsTab extends StatelessWidget {
 /// aggregate diff. Past the stacked-actions text scale the usage chips hide
 /// (the state labels stay as plain text) so a row never grows past three
 /// lines.
+/// True when the controller holds a permission, question, or form waiting
+/// on [sessionID]: the row then says "Needs you" instead of "Working".
+bool _sessionNeedsAttention(
+  ConnectionController controller,
+  String sessionID,
+) =>
+    controller.permissionsForSession(sessionID).isNotEmpty ||
+    controller.questionForSession(sessionID) != null ||
+    controller.formForSession(sessionID) != null;
+
 class _SessionRowMeta extends StatelessWidget {
   const _SessionRowMeta({
     required this.session,
     required this.retrying,
+    this.needsAttention = false,
     required this.time,
   });
 
   final Session session;
   final bool retrying;
+
+  /// A permission, question, or form is waiting on this session.
+  final bool needsAttention;
   final String time;
 
   static String costLabel(double cost) => '\$${cost.toStringAsFixed(2)}';
@@ -286,6 +320,12 @@ class _SessionRowMeta extends StatelessWidget {
         summary != null &&
         (summary.additions > 0 || summary.deletions > 0 || summary.files > 0);
     final chips = <Widget>[
+      if (needsAttention)
+        _SessionChip(
+          key: Key('session-needs-you-${session.id}'),
+          label: 'Needs you',
+          color: AppTheme.statusColor(theme, AppStatusTone.attention),
+        ),
       if (retrying)
         _SessionChip(
           key: Key('session-retrying-${session.id}'),

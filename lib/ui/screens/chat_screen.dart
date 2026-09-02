@@ -36,10 +36,13 @@ import '../widgets/info_label.dart';
 import '../widgets/markdown.dart';
 import '../widgets/pickers.dart';
 import '../widgets/product_states.dart';
+import '../widgets/question_options.dart';
+import '../widgets/session_title.dart';
 import '../widgets/tool_card.dart';
 import '../widgets/transcript_display_toggles.dart';
 import '../../api2/models.dart' show Api2Delivery, Api2FormInfo, Api2InboxItem;
 import '../permission_presentation.dart';
+import 'activity_screen.dart' show showQuestionSheet;
 import 'app_diagnostics_screen.dart';
 import 'chat/form_flow.dart';
 import 'chat/permission_sheet.dart';
@@ -302,6 +305,7 @@ class _ChatScreenState extends State<ChatScreen>
   String? _activePermissionID;
   Route<void>? _activePermissionRoute;
   bool _permissionReplying = false;
+  bool _questionReplying = false;
   String? _activeFormID;
 
   /// Whether the last connection snapshot had this session running; the
@@ -1736,7 +1740,9 @@ class _ChatScreenState extends State<ChatScreen>
       if (position.index > oldestVisible) oldestVisible = position.index;
     }
     if (oldestVisible < 0) return 0;
-    final earlier = _renderedMessageCount - 1 - oldestVisible;
+    // Item 0 is the working indicator while the session is busy.
+    final offset = _conn.busySessions.contains(widget.sessionID) ? 1 : 0;
+    final earlier = _renderedMessageCount - 1 - (oldestVisible - offset);
     return earlier > 0 ? earlier : 0;
   }
 
@@ -1771,7 +1777,11 @@ class _ChatScreenState extends State<ChatScreen>
       _showActionError('That message is no longer in this session.');
       return;
     }
-    final listIndex = _messages.length - 1 - chronologicalIndex;
+    final listIndex =
+        _messages.length -
+        1 -
+        chronologicalIndex +
+        (_conn.busySessions.contains(widget.sessionID) ? 1 : 0);
     _highlightTimer?.cancel();
     setState(() {
       // Materialize any messages deferred while scrolled away so the target
@@ -2327,6 +2337,27 @@ class _ChatScreenState extends State<ChatScreen>
       if (mounted) setState(() => _permissionReplying = false);
     }
   }
+
+  /// The inline question card's answer path: the same controller call the
+  /// Activity sheet's Send answers makes, so the server sees one contract.
+  Future<void> _answerQuestion(
+    PendingQuestion question,
+    List<List<String>> answers,
+  ) async {
+    if (_questionReplying) return;
+    setState(() => _questionReplying = true);
+    try {
+      await _conn.answerQuestion(question.id, answers);
+    } catch (error) {
+      if (mounted) _showActionError(error);
+    } finally {
+      if (mounted) setState(() => _questionReplying = false);
+    }
+  }
+
+  /// More / Answer on the question card: the full sheet Activity uses.
+  Future<void> _showQuestionSheet(PendingQuestion question) =>
+      showQuestionSheet(context, _conn, question);
 
   Future<void> _runShellDialog() async {
     final ctrl = TextEditingController();
@@ -3703,6 +3734,7 @@ class _ChatScreenState extends State<ChatScreen>
     List<PermissionRequest> pendingPermissions,
   ) {
     final permission = pendingPermissions.firstOrNull;
+    final question = _conn.questionForSession(widget.sessionID);
     return AnimatedSize(
       duration: reduceMotion
           ? Duration.zero
@@ -3714,7 +3746,16 @@ class _ChatScreenState extends State<ChatScreen>
             ? Duration.zero
             : const Duration(milliseconds: 180),
         child: permission == null
-            ? (_retryState == null
+            ? (question != null
+                  ? _QuestionAttentionCard(
+                      key: ValueKey('question-card-${question.id}'),
+                      question: question,
+                      replying: _questionReplying,
+                      onAnswer: (answers) =>
+                          unawaited(_answerQuestion(question, answers)),
+                      onMore: () => unawaited(_showQuestionSheet(question)),
+                    )
+                  : _retryState == null
                   ? const SizedBox.shrink(key: ValueKey('permission-card-none'))
                   : _RetryAttentionCard(
                       key: const ValueKey('retry-banner'),
@@ -3743,7 +3784,6 @@ class _ChatScreenState extends State<ChatScreen>
     final pendingPermissions = _conn.permissionsForSession(widget.sessionID);
 
     final session = _conn.sessionsById[widget.sessionID];
-    final title = session?.title;
     final shareUrl = _shareUrl;
     final parentID = session?.parentID;
     final siblings = parentID == null
@@ -3766,7 +3806,7 @@ class _ChatScreenState extends State<ChatScreen>
       child: Scaffold(
         appBar: AppBar(
           title: Text(
-            title?.isNotEmpty == true ? title! : 'Chat',
+            presentedSessionTitle(session, fallback: 'Chat'),
             overflow: TextOverflow.ellipsis,
           ),
           actions: [
@@ -3881,13 +3921,17 @@ class _ChatScreenState extends State<ChatScreen>
                                                       _renderedMessageCount +
                                                       (busy ? 1 : 0),
                                                   itemBuilder: (context, i) {
+                                                    // Reversed list: item 0 is
+                                                    // the bottom, so the
+                                                    // working indicator sits
+                                                    // under the newest turn.
+                                                    if (busy && i == 0) {
+                                                      return _TypingIndicator();
+                                                    }
                                                     final index =
                                                         _renderedMessageCount -
                                                         1 -
-                                                        i;
-                                                    if (index < 0) {
-                                                      return _TypingIndicator();
-                                                    }
+                                                        (i - (busy ? 1 : 0));
                                                     final m = _messages[index];
                                                     if (v2VariantPart(m)
                                                         case final tagged?) {

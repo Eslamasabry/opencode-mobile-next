@@ -9,10 +9,10 @@ import '../app_theme.dart';
 import '../desktop/desktop_interaction.dart';
 import '../permission_presentation.dart';
 import '../widgets/product_states.dart';
+import '../widgets/question_options.dart';
 import 'chat/form_flow.dart';
 import 'chat/permission_sheet.dart';
 import 'settings_screen.dart';
-
 
 /// Activity: the single cross-session control centre (audit §3, §8).
 ///
@@ -268,66 +268,66 @@ class _ActivityScreenState extends State<ActivityScreen> {
             )
           : DesktopScrollbarArea(
               builder: (scrollController) => ListView(
-              controller: scrollController,
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.only(bottom: 24),
-              children: [
-                if (loading) const LinearProgressIndicator(minHeight: 2),
-                if (error != null)
-                  ProductInlineEmpty(
-                    icon: Icons.sync_problem_rounded,
-                    title: 'Could not refresh',
-                    message: error,
-                    actionLabel: 'Try again',
-                    onAction: _refresh,
-                  ),
-                const SectionLabel('Needs attention'),
-                if (attentionCount == 0)
-                  const ProductInlineEmpty(
-                    icon: Icons.task_alt_rounded,
-                    title: 'Nothing needs attention',
-                    message:
-                        'Permission requests, assistant questions, and forms '
-                        'appear here the moment a session asks.',
-                  ),
-                for (final permission in permissions)
-                  ActivityPermissionTile(
-                    key: ValueKey('activity-permission-${permission.id}'),
-                    permission: permission,
-                    controller: controller,
-                  ),
-                for (final question in questions)
-                  ActivityQuestionTile(
-                    key: ValueKey('activity-question-${question.id}'),
-                    question: question,
-                    controller: controller,
-                  ),
-                for (final form in sessionForms)
-                  ActivityFormTile(form: form, controller: controller),
-                if (globalForms.isNotEmpty) ...[
-                  const SectionLabel('Server requests'),
-                  for (final form in globalForms)
-                    ActivityFormTile(form: form, controller: controller),
-                ],
-                const SectionLabel('Running'),
-                if (running.isEmpty)
-                  const ProductInlineEmpty(
-                    icon: AppIcons.run,
-                    title: 'Nothing running',
-                    message:
-                        'Busy sessions appear here the moment a run starts.',
-                  )
-                else
-                  for (final session in running)
-                    _SessionRow(
-                      key: ValueKey('activity-running-${session.id}'),
-                      session: session,
-                      running: true,
-                      subagents: _subagentCount(session.id),
-                      detail: _place(session),
-                      onTap: () => _openChat(session.id),
+                controller: scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.only(bottom: 24),
+                children: [
+                  if (loading) const LinearProgressIndicator(minHeight: 2),
+                  if (error != null)
+                    ProductInlineEmpty(
+                      icon: Icons.sync_problem_rounded,
+                      title: 'Could not refresh',
+                      message: error,
+                      actionLabel: 'Try again',
+                      onAction: _refresh,
                     ),
-              ],
+                  const SectionLabel('Needs attention'),
+                  if (attentionCount == 0)
+                    const ProductInlineEmpty(
+                      icon: Icons.task_alt_rounded,
+                      title: 'Nothing needs attention',
+                      message:
+                          'Permission requests, assistant questions, and forms '
+                          'appear here the moment a session asks.',
+                    ),
+                  for (final permission in permissions)
+                    ActivityPermissionTile(
+                      key: ValueKey('activity-permission-${permission.id}'),
+                      permission: permission,
+                      controller: controller,
+                    ),
+                  for (final question in questions)
+                    ActivityQuestionTile(
+                      key: ValueKey('activity-question-${question.id}'),
+                      question: question,
+                      controller: controller,
+                    ),
+                  for (final form in sessionForms)
+                    ActivityFormTile(form: form, controller: controller),
+                  if (globalForms.isNotEmpty) ...[
+                    const SectionLabel('Server requests'),
+                    for (final form in globalForms)
+                      ActivityFormTile(form: form, controller: controller),
+                  ],
+                  const SectionLabel('Running'),
+                  if (running.isEmpty)
+                    const ProductInlineEmpty(
+                      icon: AppIcons.run,
+                      title: 'Nothing running',
+                      message:
+                          'Busy sessions appear here the moment a run starts.',
+                    )
+                  else
+                    for (final session in running)
+                      _SessionRow(
+                        key: ValueKey('activity-running-${session.id}'),
+                        session: session,
+                        running: true,
+                        subagents: _subagentCount(session.id),
+                        detail: _place(session),
+                        onTap: () => _openChat(session.id),
+                      ),
+                ],
               ),
             ),
     );
@@ -609,6 +609,24 @@ class _QuestionSheetState extends State<_QuestionSheet> {
     }
   }
 
+  /// The same selection rules the inline chat card applies: a single-select
+  /// tap replaces the choice and clears custom text; a multi-select tap
+  /// toggles the choice and keeps custom text.
+  void _toggle(int index, QuestionPrompt prompt, QuestionChoice choice) {
+    setState(() {
+      if (prompt.multiple) {
+        if (!_answers[index].remove(choice.label)) {
+          _answers[index].add(choice.label);
+        }
+      } else {
+        _custom[index].clear();
+        _answers[index]
+          ..clear()
+          ..add(choice.label);
+      }
+    });
+  }
+
   Future<void> _reject() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -701,76 +719,31 @@ class _QuestionSheetState extends State<_QuestionSheet> {
                                   const SizedBox(height: 4),
                                   Text(prompt.question),
                                   const SizedBox(height: 10),
-                                  if (prompt.multiple)
-                                    for (final choice in prompt.choices)
-                                      CheckboxListTile(
-                                        contentPadding: EdgeInsets.zero,
-                                        dense: true,
-                                        value: _answers[index].contains(
-                                          choice.label,
-                                        ),
-                                        title: Text(choice.label),
-                                        subtitle: choice.description.isEmpty
-                                            ? null
-                                            : Text(choice.description),
-                                        controlAffinity:
-                                            ListTileControlAffinity.leading,
-                                        onChanged: (selected) {
+                                  for (final choice in prompt.choices)
+                                    QuestionOptionRow(
+                                      choice: choice,
+                                      multiple: prompt.multiple,
+                                      selected: _answers[index].contains(
+                                        choice.label,
+                                      ),
+                                      enabled: !_busy,
+                                      onTap: () =>
+                                          _toggle(index, prompt, choice),
+                                    ),
+                                  if (prompt.custom)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 8),
+                                      child: QuestionCustomAnswerField(
+                                        controller: _custom[index],
+                                        enabled: !_busy,
+                                        onChanged: (value) {
                                           setState(() {
-                                            if (selected == true) {
-                                              _answers[index].add(choice.label);
-                                            } else {
-                                              _answers[index].remove(
-                                                choice.label,
-                                              );
+                                            if (!prompt.multiple &&
+                                                value.trim().isNotEmpty) {
+                                              _answers[index].clear();
                                             }
                                           });
                                         },
-                                      )
-                                  else
-                                    RadioGroup<String>(
-                                      groupValue: _answers[index].isEmpty
-                                          ? null
-                                          : _answers[index].first,
-                                      onChanged: (value) {
-                                        if (value == null) return;
-                                        setState(() {
-                                          _custom[index].clear();
-                                          _answers[index]
-                                            ..clear()
-                                            ..add(value);
-                                        });
-                                      },
-                                      child: Column(
-                                        children: [
-                                          for (final choice in prompt.choices)
-                                            RadioListTile<String>(
-                                              contentPadding: EdgeInsets.zero,
-                                              value: choice.label,
-                                              title: Text(choice.label),
-                                              subtitle:
-                                                  choice.description.isEmpty
-                                                  ? null
-                                                  : Text(choice.description),
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                  if (prompt.custom)
-                                    TextField(
-                                      controller: _custom[index],
-                                      maxLines: 3,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          if (!prompt.multiple &&
-                                              value.trim().isNotEmpty) {
-                                            _answers[index].clear();
-                                          }
-                                        });
-                                      },
-                                      decoration: const InputDecoration(
-                                        labelText: 'Your answer',
-                                        border: OutlineInputBorder(),
                                       ),
                                     ),
                                 ],

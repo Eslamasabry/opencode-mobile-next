@@ -502,11 +502,11 @@ class _ChatComposer extends StatelessWidget {
     return model == null ? null : modelCostLabel(model);
   }
 
-  static bool _isDefaultVariant(String variant) => switch (variant
-      .toLowerCase()) {
-    'default' || 'medium' || 'normal' || 'standard' || 'auto' => true,
-    _ => false,
-  };
+  static bool _isDefaultVariant(String variant) =>
+      switch (variant.toLowerCase()) {
+        'default' || 'medium' || 'normal' || 'standard' || 'auto' => true,
+        _ => false,
+      };
 
   /// Below 70 % the hairline meter is signal enough; from there the chip
   /// carries the number, escalating in colour as the window fills.
@@ -584,6 +584,13 @@ class _ComposerField extends StatelessWidget {
         const SingleActivator(LogicalKeyboardKey.enter, control: true):
             onSubmit,
         const SingleActivator(LogicalKeyboardKey.enter, meta: true): onSubmit,
+        // Desktop: plain Enter sends, as every chat client there does;
+        // Shift+Enter is left unbound so it still reaches the field as a
+        // newline. Touch keyboards keep Enter as a newline.
+        if (desktopInteractions)
+          const SingleActivator(LogicalKeyboardKey.enter): onSubmit,
+        if (desktopInteractions)
+          const SingleActivator(LogicalKeyboardKey.numpadEnter): onSubmit,
       },
       child: field,
     );
@@ -847,6 +854,14 @@ class _ComposerSubmit extends StatelessWidget {
     );
   }
 
+  /// The Stop tooltip is shown by hover or long-press, and the button it
+  /// belongs to is swapped for Send the moment the run ends — so the tooltip
+  /// is told to go before the swap, instead of outliving its button.
+  void _stop() {
+    Tooltip.dismissAllToolTips();
+    onStop();
+  }
+
   Widget _slot(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     if (busy && !canSendWhileBusy) {
@@ -854,7 +869,7 @@ class _ComposerSubmit extends StatelessWidget {
       return IconButton.filledTonal(
         key: const Key('chat-send-button'),
         tooltip: 'Stop',
-        onPressed: onStop,
+        onPressed: _stop,
         style: IconButton.styleFrom(
           foregroundColor: scheme.error,
           backgroundColor: scheme.errorContainer.withValues(alpha: .55),
@@ -902,7 +917,7 @@ class _ComposerSubmit extends StatelessWidget {
         IconButton.filledTonal(
           key: const Key('chat-stop-button'),
           tooltip: 'Stop',
-          onPressed: onStop,
+          onPressed: _stop,
           style: IconButton.styleFrom(
             foregroundColor: scheme.error,
             backgroundColor: scheme.errorContainer.withValues(alpha: .55),

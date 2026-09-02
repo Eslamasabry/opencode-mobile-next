@@ -15,10 +15,15 @@ class _AttentionCard extends StatelessWidget {
     this.secondary,
     this.accent,
     this.minHeight = 72,
+    this.body,
   });
 
   final IconData icon;
   final String title;
+
+  /// Optional content between the header and the buttons — the question
+  /// card puts its option rows here so every flavour shares one frame.
+  final Widget? body;
 
   /// Icon and border tint; defaults to the primary colour. The retry banner
   /// passes the attention tone so it reads as a wait, not an ask.
@@ -114,6 +119,8 @@ class _AttentionCard extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (body case final body?)
+                  Padding(padding: const EdgeInsets.only(top: 8), child: body),
                 const SizedBox(height: 8),
                 Align(
                   alignment: AlignmentDirectional.centerEnd,
@@ -121,6 +128,7 @@ class _AttentionCard extends StatelessWidget {
                     spacing: 8,
                     runSpacing: 4,
                     alignment: WrapAlignment.end,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [?secondary, primary],
                   ),
                 ),
@@ -176,6 +184,228 @@ class _PermissionAttentionCard extends StatelessWidget {
               )
             : const Text('Allow once'),
       ),
+    );
+  }
+}
+
+/// The question flavour of [_AttentionCard]: the prompt header and question,
+/// every choice as a tappable option row, the free-text field when the
+/// prompt accepts one, and More (opens the full sheet). A single-select
+/// prompt answers on tap; multi-select and two-prompt questions collect
+/// answers behind Send. Questions the card cannot hold — more than two
+/// prompts or a long description — collapse to the question and an Answer
+/// button that opens the sheet, mirroring `formPrefersFullScreen`.
+class _QuestionAttentionCard extends StatefulWidget {
+  const _QuestionAttentionCard({
+    super.key,
+    required this.question,
+    required this.replying,
+    required this.onAnswer,
+    required this.onMore,
+  });
+
+  final PendingQuestion question;
+  final bool replying;
+  final ValueChanged<List<List<String>>> onAnswer;
+  final VoidCallback onMore;
+
+  @override
+  State<_QuestionAttentionCard> createState() => _QuestionAttentionCardState();
+}
+
+class _QuestionAttentionCardState extends State<_QuestionAttentionCard> {
+  late final List<Set<String>> _selected = List.generate(
+    widget.question.prompts.length,
+    (_) => <String>{},
+  );
+  late final List<TextEditingController> _custom = List.generate(
+    widget.question.prompts.length,
+    (_) => TextEditingController(),
+  );
+
+  List<QuestionPrompt> get _prompts => widget.question.prompts;
+
+  /// Single-select, one prompt: a tap is the whole answer. Anything else
+  /// needs Send so a half-finished selection is never sent early.
+  bool get _answersOnTap => _prompts.length == 1 && !_prompts.single.multiple;
+
+  bool get _complete {
+    for (var i = 0; i < _prompts.length; i++) {
+      if (_selected[i].isEmpty && _custom[i].text.trim().isEmpty) return false;
+    }
+    return true;
+  }
+
+  bool get _hasCustomText =>
+      _custom.any((controller) => controller.text.trim().isNotEmpty);
+
+  List<List<String>> _serialize() {
+    final answers = <List<String>>[];
+    for (var i = 0; i < _prompts.length; i++) {
+      final prompt = _prompts[i];
+      final customAnswer = _custom[i].text.trim();
+      if (prompt.multiple) {
+        answers.add([
+          ..._selected[i],
+          if (customAnswer.isNotEmpty) customAnswer,
+        ]);
+      } else {
+        answers.add([
+          if (customAnswer.isNotEmpty)
+            customAnswer
+          else if (_selected[i].isNotEmpty)
+            _selected[i].first,
+        ]);
+      }
+    }
+    return answers;
+  }
+
+  void _send() {
+    if (!_complete || widget.replying) return;
+    widget.onAnswer(_serialize());
+  }
+
+  void _tap(int index, QuestionPrompt prompt, QuestionChoice choice) {
+    if (widget.replying) return;
+    setState(() {
+      if (prompt.multiple) {
+        if (!_selected[index].remove(choice.label)) {
+          _selected[index].add(choice.label);
+        }
+      } else {
+        _custom[index].clear();
+        _selected[index]
+          ..clear()
+          ..add(choice.label);
+      }
+    });
+    if (_answersOnTap) _send();
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _custom) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final first = _prompts.firstOrNull;
+    final title = first?.title.trim().isNotEmpty == true
+        ? first!.title.trim()
+        : 'OpenCode needs input';
+    final more = TextButton(
+      key: const Key('question-card-more'),
+      onPressed: widget.replying ? null : widget.onMore,
+      child: const Text('More'),
+    );
+    if (first == null || questionPrefersSheet(widget.question)) {
+      final count = _prompts.length;
+      return _AttentionCard(
+        icon: Icons.help_outline_rounded,
+        title: title,
+        announcement: 'Question: $title',
+        detail: first == null
+            ? null
+            : count > 1
+            ? '${first.question} · $count questions'
+            : first.question,
+        primary: FilledButton(
+          key: const Key('question-card-answer'),
+          onPressed: widget.replying ? null : widget.onMore,
+          child: const Text('Answer'),
+        ),
+      );
+    }
+
+    final sending = widget.replying;
+    // Send earns its place only when a tap cannot be the whole answer.
+    final showSend = !_answersOnTap || _hasCustomText;
+    final Widget primary = sending
+        ? Row(
+            key: const Key('question-card-sending'),
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox.square(
+                dimension: 14,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Sending…',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: AppTheme.mutedOf(theme),
+                ),
+              ),
+            ],
+          )
+        : showSend
+        ? FilledButton(
+            key: const Key('question-card-send'),
+            onPressed: _complete ? _send : null,
+            child: const Text('Send'),
+          )
+        : more;
+
+    return _AttentionCard(
+      icon: Icons.help_outline_rounded,
+      title: title,
+      announcement: 'Question: $title',
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var index = 0; index < _prompts.length; index++) ...[
+            if (index > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 10, bottom: 2),
+                child: Text(
+                  _prompts[index].title,
+                  style: theme.textTheme.labelLarge,
+                ),
+              ),
+            if (_prompts[index].question.trim().isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  _prompts[index].question,
+                  key: ValueKey('question-card-question-$index'),
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ),
+            for (final choice in _prompts[index].choices)
+              QuestionOptionRow(
+                choice: choice,
+                multiple: _prompts[index].multiple,
+                selected: _selected[index].contains(choice.label),
+                enabled: !sending,
+                onTap: () => _tap(index, _prompts[index], choice),
+              ),
+            if (_prompts[index].custom)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: QuestionCustomAnswerField(
+                  key: ValueKey('question-card-custom-$index'),
+                  controller: _custom[index],
+                  enabled: !sending,
+                  maxLines: 2,
+                  onChanged: (value) => setState(() {
+                    if (!_prompts[index].multiple && value.trim().isNotEmpty) {
+                      _selected[index].clear();
+                    }
+                  }),
+                  onSubmitted: (_) => _send(),
+                ),
+              ),
+          ],
+        ],
+      ),
+      secondary: identical(primary, more) ? null : more,
+      primary: primary,
     );
   }
 }

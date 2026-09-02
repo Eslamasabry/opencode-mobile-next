@@ -13,6 +13,7 @@ import '../navigation/chat_route.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/entrance.dart';
 import '../widgets/product_states.dart';
+import '../widgets/session_title.dart';
 import 'global_sessions_screen.dart';
 import 'manage_project_screen.dart';
 import 'projects_screen.dart';
@@ -210,6 +211,14 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     return parts.isEmpty ? path : parts.last;
   }
 
+  /// A permission, question, or form is waiting on the session: the row
+  /// must say so rather than "Working", since nothing moves until the user
+  /// answers.
+  bool _needsAttention(String sessionID) =>
+      widget.controller.permissionsForSession(sessionID).isNotEmpty ||
+      widget.controller.questionForSession(sessionID) != null ||
+      widget.controller.formForSession(sessionID) != null;
+
   Future<void> _createSession() async {
     if (_creating) return;
     setState(() => _creating = true);
@@ -356,6 +365,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     itemBuilder: (context, index) => _SessionRow(
                       session: active[index],
                       busy: true,
+                      needsAttention: _needsAttention(active[index].id),
                       onOpen: _openSession,
                       onAction: _sessionAction,
                       sharingAvailable:
@@ -403,8 +413,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                                 ? 'Stays connected in the background'
                                 : 'Background updates off',
                             onPressed: _openBackgroundSettings,
-                            isSelected:
-                                widget.controller.keepLiveInBackground,
+                            isSelected: widget.controller.keepLiveInBackground,
                             icon: Icon(
                               widget.controller.keepLiveInBackground
                                   ? Icons.cloud_sync_outlined
@@ -437,6 +446,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       child: _SessionRow(
                         session: recent[index],
                         busy: false,
+                        needsAttention: _needsAttention(recent[index].id),
                         onOpen: _openSession,
                         onAction: _sessionAction,
                         sharingAvailable:
@@ -892,6 +902,9 @@ class _ContextChoice {
 class _SessionRow extends StatelessWidget {
   final Session session;
   final bool busy;
+
+  /// The run is blocked on a permission, question, or form.
+  final bool needsAttention;
   final ValueChanged<Session> onOpen;
   final Future<void> Function(String, Session) onAction;
 
@@ -902,6 +915,7 @@ class _SessionRow extends StatelessWidget {
   const _SessionRow({
     required this.session,
     required this.busy,
+    this.needsAttention = false,
     required this.onOpen,
     required this.onAction,
     this.sharingAvailable = true,
@@ -927,23 +941,36 @@ class _SessionRow extends StatelessWidget {
           : const SwipeDeleteBackground(),
       child: ListTile(
         minTileHeight: 64,
-        leading: busy
+        leading: needsAttention
+            ? Icon(
+                key: ValueKey('session-attention-icon-${session.id}'),
+                Icons.notification_important_outlined,
+                size: 21,
+                color: AppTheme.statusColor(theme, AppStatusTone.attention),
+              )
+            : busy
             ? const _BreathingDot()
             : const Icon(Icons.chat_bubble_outline_rounded, size: 21),
         title: Text(
-          session.title?.isNotEmpty == true
-              ? session.title!
-              : 'Untitled session',
+          presentedSessionTitle(session, fallback: 'Untitled session'),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        subtitle: Text(
-          [
+        subtitle: _SessionRowSubtitle(
+          // "Needs you" outranks "Working": a run waiting on an answer is
+          // not making progress, and the colour says so.
+          status: needsAttention
+              ? 'Needs you'
+              : session.compactingSince != null
+              ? 'Compacting…'
+              : busy
+              ? 'Working'
+              : null,
+          statusColor: needsAttention
+              ? AppTheme.statusColor(theme, AppStatusTone.attention)
+              : null,
+          rest: [
             if (session.shareUrl != null) 'Shared: ${session.shareUrl}',
-            if (session.compactingSince != null)
-              'Compacting…'
-            else if (busy)
-              'Working',
             if (updated != null) _relativeTime(updated),
             if (session.directory?.isNotEmpty == true)
               _basename(session.directory!),
@@ -951,9 +978,7 @@ class _SessionRow extends StatelessWidget {
             // cost and how much it touched, so a row answers "was that
             // worth it?" without opening the session.
             ...sessionUsageLabels(session),
-          ].join(' · '),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+          ],
         ),
         trailing: PopupMenuButton<String>(
           tooltip: 'Session actions',
@@ -1045,6 +1070,44 @@ class _SessionRow extends StatelessWidget {
 
 /// End-swipe reveal for the archive gesture: a calm container, not the
 /// destructive field the delete swipe uses elsewhere.
+/// The one-line row subtitle: an optional status word first (tinted when it
+/// asks for attention), then the usual dot-separated facts.
+class _SessionRowSubtitle extends StatelessWidget {
+  const _SessionRowSubtitle({
+    required this.status,
+    required this.statusColor,
+    required this.rest,
+  });
+
+  final String? status;
+  final Color? statusColor;
+  final List<String> rest;
+
+  @override
+  Widget build(BuildContext context) {
+    // No explicit style: the ListTile's subtitle DefaultTextStyle applies,
+    // so the row keeps the exact typography it had as a plain Text.
+    final tail = rest.join(' · ');
+    return Text.rich(
+      TextSpan(
+        children: [
+          if (status case final status?)
+            TextSpan(
+              text: status,
+              style: statusColor == null
+                  ? null
+                  : TextStyle(color: statusColor, fontWeight: FontWeight.w600),
+            ),
+          if (status != null && tail.isNotEmpty) const TextSpan(text: ' · '),
+          if (tail.isNotEmpty) TextSpan(text: tail),
+        ],
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+}
+
 class _SwipeArchiveBackground extends StatelessWidget {
   const _SwipeArchiveBackground();
 

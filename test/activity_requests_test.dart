@@ -5,6 +5,7 @@ import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/activity_screen.dart';
+import 'package:opencode_mobile/ui/widgets/question_options.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _QuestionRepository extends ProductRepository {
@@ -67,6 +68,15 @@ Future<void> _openQuestion(
   await tester.pumpAndSettle();
 }
 
+/// Labels of the option rows currently drawn as selected — the sheet and
+/// the inline chat card share [QuestionOptionRow], so this is the one truth.
+List<String> _selectedLabels(WidgetTester tester) => [
+  for (final row in tester.widgetList<QuestionOptionRow>(
+    find.byType(QuestionOptionRow),
+  ))
+    if (row.selected) row.choice.label,
+];
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -79,21 +89,11 @@ void main() {
 
       await tester.tap(find.text('Staging'));
       await tester.pump();
-      expect(
-        tester
-            .widget<RadioGroup<String>>(find.byType(RadioGroup<String>))
-            .groupValue,
-        'Staging',
-      );
+      expect(_selectedLabels(tester), ['Staging']);
 
       await tester.enterText(find.byType(TextField), 'Canary');
       await tester.pump();
-      expect(
-        tester
-            .widget<RadioGroup<String>>(find.byType(RadioGroup<String>))
-            .groupValue,
-        isNull,
-      );
+      expect(_selectedLabels(tester), isEmpty);
 
       await tester.tap(find.widgetWithText(FilledButton, 'Send answers'));
       await tester.pumpAndSettle();
@@ -118,12 +118,7 @@ void main() {
 
       final customField = tester.widget<TextField>(find.byType(TextField));
       expect(customField.controller!.text, isEmpty);
-      expect(
-        tester
-            .widget<RadioGroup<String>>(find.byType(RadioGroup<String>))
-            .groupValue,
-        'Production',
-      );
+      expect(_selectedLabels(tester), ['Production']);
 
       await tester.tap(find.widgetWithText(FilledButton, 'Send answers'));
       await tester.pumpAndSettle();

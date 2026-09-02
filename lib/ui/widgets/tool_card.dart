@@ -514,9 +514,9 @@ class _ToolCardState extends State<ToolCard> {
                         Icon(
                           _iconFor(contract.kind),
                           size: 16,
-                          color: AppTheme.mutedOf(theme).withValues(
-                            alpha: widget.state.executed ? 1 : .6,
-                          ),
+                          color: AppTheme.mutedOf(
+                            theme,
+                          ).withValues(alpha: widget.state.executed ? 1 : .6),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -644,8 +644,7 @@ class _ToolCardState extends State<ToolCard> {
                 ),
               ),
             ),
-            if (widget.state.pruned)
-              _PrunedNote(embedded: widget.embedded),
+            if (widget.state.pruned) _PrunedNote(embedded: widget.embedded),
             if (_interleavedSegments case final segments?)
               Padding(
                 key: const Key('tool-interleaved-output'),
@@ -1375,9 +1374,10 @@ class _QuestionAnswer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final answerText = answer is List
-        ? (answer as List).join(', ')
+    final joined = answer is List
+        ? (answer as List).map((item) => '$item').join(', ')
         : _valueString(answer);
+    final answerText = joined == null || joined.trim().isEmpty ? null : joined;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Column(
@@ -1391,7 +1391,7 @@ class _QuestionAnswer extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            answerText ?? 'No answer',
+            answerText == null ? 'No answer' : 'Answered: $answerText',
             style: theme.textTheme.bodySmall?.copyWith(
               color: answerText == null
                   ? AppTheme.mutedOf(theme)
