@@ -13,7 +13,7 @@ McpAddRequest _$McpAddRequestFromJson(Map<String, dynamic> json) =>
         name: $checkedConvert('name', (v) => v as String),
         config: $checkedConvert(
           'config',
-          (v) => OpencodeSdkRawUnion055.fromJson(v),
+          (v) => OpencodeSdkRawUnion056.fromJson(v),
         ),
       );
       return val;

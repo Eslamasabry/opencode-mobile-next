@@ -3,10 +3,12 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union015_any_of_value_any_of1.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union015_any_of_value_any_of.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:equatable/src/equatable_utils.dart';
 
-part 'opencode_sdk_raw_union014_any_of_value_any_of1.g.dart';
+part 'opencode_sdk_raw_union015_any_of_value.g.dart';
 
 @JsonSerializable(
   checked: true,
@@ -14,28 +16,28 @@ part 'opencode_sdk_raw_union014_any_of_value_any_of1.g.dart';
   disallowUnrecognizedKeys: false,
   explicitToJson: true,
 )
-class OpencodeSdkRawUnion014AnyOfValueAnyOf1 {
-  /// Returns a new [OpencodeSdkRawUnion014AnyOfValueAnyOf1] instance.
-  OpencodeSdkRawUnion014AnyOfValueAnyOf1({
+class OpencodeSdkRawUnion015AnyOfValue {
+  /// Returns a new [OpencodeSdkRawUnion015AnyOfValue] instance.
+  OpencodeSdkRawUnion015AnyOfValue({
+    required this.disabled,
+
     required this.command,
 
     this.extensions,
-
-    this.disabled,
 
     this.env,
 
     this.initialization,
   });
 
+  @JsonKey(name: r'disabled', required: true, includeIfNull: false)
+  final bool disabled;
+
   @JsonKey(name: r'command', required: true, includeIfNull: false)
   final List<String> command;
 
   @JsonKey(name: r'extensions', required: false, includeIfNull: false)
   final List<String>? extensions;
-
-  @JsonKey(name: r'disabled', required: false, includeIfNull: false)
-  final bool? disabled;
 
   @JsonKey(name: r'env', required: false, includeIfNull: false)
   final Map<String, String>? env;
@@ -45,14 +47,14 @@ class OpencodeSdkRawUnion014AnyOfValueAnyOf1 {
 
   bool operator ==(Object other) {
     return identical(this, other) ||
-        other is OpencodeSdkRawUnion014AnyOfValueAnyOf1 &&
+        other is OpencodeSdkRawUnion015AnyOfValue &&
             runtimeType == other.runtimeType &&
             equals(
-              [command, extensions, disabled, env, initialization],
+              [disabled, command, extensions, env, initialization],
               [
+                other.disabled,
                 other.command,
                 other.extensions,
-                other.disabled,
                 other.env,
                 other.initialization,
               ],
@@ -61,14 +63,14 @@ class OpencodeSdkRawUnion014AnyOfValueAnyOf1 {
 
   int get hashCode =>
       runtimeType.hashCode ^
-      mapPropsToHashCode([command, extensions, disabled, env, initialization]);
+      mapPropsToHashCode([disabled, command, extensions, env, initialization]);
 
-  factory OpencodeSdkRawUnion014AnyOfValueAnyOf1.fromJson(
+  factory OpencodeSdkRawUnion015AnyOfValue.fromJson(
     Map<String, dynamic> json,
-  ) => _$OpencodeSdkRawUnion014AnyOfValueAnyOf1FromJson(json);
+  ) => _$OpencodeSdkRawUnion015AnyOfValueFromJson(json);
 
   Map<String, dynamic> toJson() =>
-      _$OpencodeSdkRawUnion014AnyOfValueAnyOf1ToJson(this);
+      _$OpencodeSdkRawUnion015AnyOfValueToJson(this);
 
   String toString() {
     return toJson().toString();

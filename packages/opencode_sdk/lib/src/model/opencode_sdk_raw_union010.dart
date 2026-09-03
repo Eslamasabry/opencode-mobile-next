@@ -18,7 +18,7 @@ class OpencodeSdkRawUnion010 implements OpenCodeRawJsonValue {
       OpencodeSdkRawUnion010(json);
 
   static const String openApiSchemaJson =
-      "{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"array\",\"prefixItems\":[{\"type\":\"string\"},{\"type\":\"object\"}],\"maxItems\":2,\"minItems\":2}]}";
+      "{\"anyOf\":[{\"type\":\"string\"},{\"\$ref\":\"#/components/schemas/ConfigV2ReferenceGit\"},{\"\$ref\":\"#/components/schemas/ConfigV2ReferenceLocal\"}]}";
 
   @override
   final Object? value;

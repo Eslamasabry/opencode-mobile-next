@@ -3,8 +3,8 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union031.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union030.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union029.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:equatable/src/equatable_utils.dart';
 
@@ -25,10 +25,10 @@ class IntegrationAttemptStatusAnyOf2Time {
   });
 
   @JsonKey(name: r'created', required: true, includeIfNull: false)
-  final OpencodeSdkRawUnion029 created;
+  final OpencodeSdkRawUnion030 created;
 
   @JsonKey(name: r'expires', required: true, includeIfNull: false)
-  final OpencodeSdkRawUnion030 expires;
+  final OpencodeSdkRawUnion031 expires;
 
   bool operator ==(Object other) {
     return identical(this, other) ||

@@ -18,7 +18,7 @@ class OpencodeSdkRawUnion086 implements OpenCodeRawJsonValue {
       OpencodeSdkRawUnion086(json);
 
   static const String openApiSchemaJson =
-      "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}";
+      "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/TextPartInput\"},{\"\$ref\":\"#/components/schemas/FilePartInput\"},{\"\$ref\":\"#/components/schemas/AgentPartInput\"},{\"\$ref\":\"#/components/schemas/SubtaskPartInput\"}]}";
 
   @override
   final Object? value;

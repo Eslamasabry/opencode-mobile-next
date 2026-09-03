@@ -8,7 +8,7 @@ import 'package:opencode_sdk/src/model/provider_config.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union011.dart';
 import 'package:opencode_sdk/src/model/layout_config.dart';
 import 'package:opencode_sdk/src/model/config_watcher.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union008.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union015.dart';
 import 'package:opencode_sdk/src/model/config_tool_output.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union010.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union013.dart';
@@ -136,10 +136,10 @@ class Config {
   final ConfigSkills? skills;
 
   @JsonKey(name: r'references', required: false, includeIfNull: false)
-  final Map<String, OpencodeSdkRawUnion008>? references;
+  final Map<String, OpencodeSdkRawUnion009>? references;
 
   @JsonKey(name: r'reference', required: false, includeIfNull: false)
-  final Map<String, OpencodeSdkRawUnion009>? reference;
+  final Map<String, OpencodeSdkRawUnion010>? reference;
 
   @JsonKey(name: r'watcher', required: false, includeIfNull: false)
   final ConfigWatcher? watcher;
@@ -148,7 +148,7 @@ class Config {
   final bool? snapshot;
 
   @JsonKey(name: r'plugin', required: false, includeIfNull: false)
-  final List<OpencodeSdkRawUnion010>? plugin;
+  final List<OpencodeSdkRawUnion011>? plugin;
 
   @JsonKey(
     name: r'share',
@@ -162,7 +162,7 @@ class Config {
   final bool? autoshare;
 
   @JsonKey(name: r'autoupdate', required: false, includeIfNull: false)
-  final OpencodeSdkRawUnion011? autoupdate;
+  final OpencodeSdkRawUnion012? autoupdate;
 
   @JsonKey(name: r'disabled_providers', required: false, includeIfNull: false)
   final List<String>? disabledProviders;
@@ -196,13 +196,13 @@ class Config {
   final Map<String, ProviderConfig>? provider;
 
   @JsonKey(name: r'mcp', required: false, includeIfNull: false)
-  final Map<String, OpencodeSdkRawUnion012>? mcp;
+  final Map<String, OpencodeSdkRawUnion013>? mcp;
 
   @JsonKey(name: r'formatter', required: false, includeIfNull: false)
-  final OpencodeSdkRawUnion013? formatter;
+  final OpencodeSdkRawUnion014? formatter;
 
   @JsonKey(name: r'lsp', required: false, includeIfNull: false)
-  final OpencodeSdkRawUnion014? lsp;
+  final OpencodeSdkRawUnion015? lsp;
 
   @JsonKey(name: r'instructions', required: false, includeIfNull: false)
   final List<String>? instructions;

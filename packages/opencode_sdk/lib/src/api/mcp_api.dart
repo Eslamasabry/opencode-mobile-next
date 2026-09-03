@@ -18,10 +18,10 @@ import 'package:opencode_sdk/src/model/mcp_auth_remove200_response.dart';
 import 'package:opencode_sdk/src/model/mcp_auth_start200_response.dart';
 import 'package:opencode_sdk/src/model/mcp_server_not_found_error.dart';
 import 'package:opencode_sdk/src/model/mcp_status.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union054.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union056.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union055.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union057.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union058.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union059.dart';
 
 class McpApi {
   final Dio _dio;

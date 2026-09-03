@@ -18,7 +18,7 @@ class OpencodeSdkRawUnion007 implements OpenCodeRawJsonValue {
       OpencodeSdkRawUnion007(json);
 
   static const String openApiSchemaJson =
-      "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/McpOAuthConfig\"},{\"type\":\"boolean\",\"enum\":[false]}],\"description\":\"OAuth authentication configuration for the MCP server. Set to false to disable OAuth auto-detection.\"}";
+      "{\"anyOf\":[{\"type\":\"boolean\"},{\"type\":\"string\",\"enum\":[\"reasoning\",\"reasoning_content\",\"reasoning_text\"]},{\"type\":\"string\"},{\"type\":\"object\",\"properties\":{\"field\":{\"anyOf\":[{\"type\":\"string\",\"enum\":[\"reasoning\",\"reasoning_content\",\"reasoning_text\"]},{\"type\":\"string\"}]}},\"required\":[\"field\"],\"additionalProperties\":false}]}";
 
   @override
   final Object? value;

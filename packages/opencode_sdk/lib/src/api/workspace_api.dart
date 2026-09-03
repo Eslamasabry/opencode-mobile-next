@@ -16,9 +16,9 @@ import 'package:opencode_sdk/src/model/experimental_workspace_adapter_list200_re
 import 'package:opencode_sdk/src/model/experimental_workspace_create_request.dart';
 import 'package:opencode_sdk/src/model/experimental_workspace_warp_request.dart';
 import 'package:opencode_sdk/src/model/not_found_error.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union102.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union103.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union104.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union105.dart';
 import 'package:opencode_sdk/src/model/workspace.dart';
 import 'package:opencode_sdk/src/model/workspace_event_connection_status.dart';
 

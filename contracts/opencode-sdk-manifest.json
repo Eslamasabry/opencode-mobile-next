@@ -2,10 +2,10 @@
   "formatVersion": 3,
   "source": {
     "repository": "https://github.com/anomalyco/opencode",
-    "commit": "03bba464d46f3eddf74195919b1344aa937f7b11",
+    "commit": "f12e14cf1640cbf0dfb6b1ff425b2daaef459eec",
     "path": "packages/sdk/openapi.json",
-    "file": "opencode-openapi-03bba464.json",
-    "sha256": "5bbd6493a1a488ef4294889341c896e420f814ecea95822100aaa9f3f95ab2d1",
+    "file": "opencode-openapi-f12e14cf.json",
+    "sha256": "00502bd13e9c86f3ca9e765e99a57e06fa9f434ca16f2a714766d1444f8d37f3",
     "openapiVersion": "3.1.0"
   },
   "generator": {
@@ -18,7 +18,7 @@
     "templateOverrides": "../tool/sdk/templates",
     "disallowAdditionalPropertiesIfNotPresent": false,
     "unionStrategy": "hoistInlineAndGenerateDescriptorBackedRawJsonValue",
-    "losslessRawJsonUnionComponents": 140,
+    "losslessRawJsonUnionComponents": 141,
     "residualLossyUnionComponents": 0,
     "mixedAdditionalPropertiesStrategy": "typedFieldsWithCapturedUnknownEntriesAndDescriptorBackedUnion",
     "losslessMixedAdditionalPropertiesSites": 6,
@@ -29,15 +29,15 @@
   "normalization": {
     "script": "../tool/sdk/normalize_openapi.dart",
     "before": {
-      "sha256": "5bbd6493a1a488ef4294889341c896e420f814ecea95822100aaa9f3f95ab2d1",
+      "sha256": "00502bd13e9c86f3ca9e765e99a57e06fa9f434ca16f2a714766d1444f8d37f3",
       "counts": {
         "paths": 162,
         "operations": 188,
         "schemas": 472,
         "parameters": 418,
         "rootTags": 38,
-        "unionSchemas": 173,
-        "unionBranches": 776,
+        "unionSchemas": 174,
+        "unionBranches": 778,
         "deepObjectLocationParameters": 31,
         "bracketedLocationParameters": 2,
         "patternProperties": 1,
@@ -48,15 +48,15 @@
       }
     },
     "after": {
-      "sha256": "5aae57b2b7284803605c73c24dbd1f7a155076807947e8b955047b1782b23149",
+      "sha256": "c424296cbcfbbefc639772778c146f82408ca84c09f086aac6e5bb90c9440bdd",
       "counts": {
         "paths": 162,
         "operations": 188,
-        "schemas": 587,
+        "schemas": 588,
         "parameters": 449,
         "rootTags": 32,
-        "unionSchemas": 169,
-        "unionBranches": 741,
+        "unionSchemas": 170,
+        "unionBranches": 743,
         "deepObjectLocationParameters": 0,
         "bracketedLocationParameters": 64,
         "patternProperties": 0,
@@ -178,7 +178,7 @@
       {
         "kind": "hoistInlineMeaningfulUnions",
         "strategy": "stableNamedComponentRawJsonWrapper",
-        "createdComponents": 115,
+        "createdComponents": 116,
         "preservesExactSchemaDescriptors": true,
         "semanticChange": false
       },
@@ -205,7 +205,7 @@
     "operations": 188,
     "schemas": 472,
     "generatedApiFiles": 32,
-    "generatedModelSourceFiles": 983,
+    "generatedModelSourceFiles": 984,
     "generatedSerializerFiles": 835
   },
   "deterministicSourceHashes": {
@@ -213,12 +213,12 @@
     "generatedApi": {
       "path": "../packages/opencode_sdk/lib/src/api",
       "algorithm": "sha256(relative-path-nul-bytes-v1)",
-      "sha256": "461259d3ad1267168ef0bcf0feec39c9f02477e8b5d1aaf0efd397eb45a96e20"
+      "sha256": "a850e727f6ffce4e9650b1bb4b8005748ef571e5ef4af23145440af87c56f2f9"
     },
     "generatedModels": {
       "path": "../packages/opencode_sdk/lib/src/model",
       "algorithm": "sha256(relative-path-nul-bytes-v1)",
-      "sha256": "ebc18563e8f9191b852be5a38ee52a6f21caeb16cde5b8a1fa2d87f684d7207e"
+      "sha256": "57539319e3498e67fe40d23b1e50a1434f2411d9d0ccc5302819bcb27391ca1b"
     },
     "generatedRuntime": {
       "paths": [
@@ -226,17 +226,17 @@
         "../packages/opencode_sdk/lib/src/sse"
       ],
       "algorithm": "sha256(relative-path-nul-bytes-v1)",
-      "sha256": "2406da9a8d83abcfd16861d554c0a6b28febaa5691a74ece483c44f9f25303de"
+      "sha256": "711617eb3da79b7bc126d63c2617508e3b7fd9a201ef598f5d8c9e8214e828ec"
     },
     "runtimeSources": {
       "path": "../tool/sdk/runtime",
       "algorithm": "sha256(relative-path-nul-bytes-v1)",
-      "sha256": "6b693a99b3c3548a10e4c7aee90f22e9c025aa00c2483a18f4343cf938f28d11"
+      "sha256": "fda3e77c429623a2b6a08c120cfc8c719acebfc10294f78f6f4563317b61f7c6"
     },
     "templates": {
       "path": "../tool/sdk/templates",
       "algorithm": "sha256(relative-path-nul-bytes-v1)",
-      "sha256": "41cd98aee0170979c459c6816dccf6612a08462b15dcf9ef1c9827abc8aa2ee0"
+      "sha256": "f4476a028e784978c223a64a936149cef9dd5e6cf434ab2aea3aab1bdd3975c3"
     },
     "testTemplates": {
       "paths": [
@@ -248,7 +248,7 @@
         "../tool/sdk/union_fixtures_test.dart.template"
       ],
       "algorithm": "sha256(relative-path-nul-bytes-v1)",
-      "sha256": "f96323141f74d86cf41ea1d96b8754227440224dae68e11525589d3681c10392"
+      "sha256": "c42cda76138193d87be5c7b92d3ae72b70ee7623230630d6f8a342ce9a88cf27"
     }
   },
   "httpWireAudit": {
@@ -311,7 +311,7 @@
     "wildcardRoute": {
       "operationId": "v2.fs.read",
       "path": "/api/fs/read/*",
-      "upstreamCommit": "03bba464d46f3eddf74195919b1344aa937f7b11",
+      "upstreamCommit": "f12e14cf1640cbf0dfb6b1ff425b2daaef459eec",
       "definition": "packages/protocol/src/groups/fs.ts",
       "handler": "packages/server/src/handlers/fs.ts",
       "exercise": "packages/opencode/test/server/httpapi-exercise/index.ts",

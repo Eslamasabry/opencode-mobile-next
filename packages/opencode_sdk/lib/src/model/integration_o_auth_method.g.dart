@@ -24,7 +24,7 @@ IntegrationOAuthMethod _$IntegrationOAuthMethodFromJson(
     prompts: $checkedConvert(
       'prompts',
       (v) =>
-          (v as List<dynamic>?)?.map(OpencodeSdkRawUnion022.fromJson).toList(),
+          (v as List<dynamic>?)?.map(OpencodeSdkRawUnion023.fromJson).toList(),
     ),
   );
   return val;

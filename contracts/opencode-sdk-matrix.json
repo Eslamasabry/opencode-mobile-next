@@ -1,11 +1,11 @@
 {
   "formatVersion": 1,
   "provenance": {
-    "canonicalFile": "opencode-openapi-03bba464.json",
-    "canonicalSha256": "5bbd6493a1a488ef4294889341c896e420f814ecea95822100aaa9f3f95ab2d1",
+    "canonicalFile": "opencode-openapi-f12e14cf.json",
+    "canonicalSha256": "00502bd13e9c86f3ca9e765e99a57e06fa9f434ca16f2a714766d1444f8d37f3",
     "schemaHashAlgorithm": "sha256(canonical-json-recursive-key-sort)",
     "upstreamRepository": "https://github.com/anomalyco/opencode",
-    "upstreamCommit": "03bba464d46f3eddf74195919b1344aa937f7b11",
+    "upstreamCommit": "f12e14cf1640cbf0dfb6b1ff425b2daaef459eec",
     "upstreamPath": "packages/sdk/openapi.json",
     "generator": "openapi-generator-cli",
     "generatorVersion": "7.19.0",
@@ -25,8 +25,8 @@
     "requestSchemaSlots": 60,
     "responseObjects": 520,
     "responseSchemaSlots": 497,
-    "enumSites": 617,
-    "enumEntries": 870
+    "enumSites": 618,
+    "enumEntries": 871
   },
   "canonicalOverrides": [
     {
@@ -3821,12 +3821,12 @@
       "requestBody": {
         "pointer": "#/paths/~1global~1upgrade/post/requestBody",
         "required": false,
-        "canonicalRequestBodyHash": "7e41cc17b39463a0df70659b53ac98af86eb98b9bb4e50268dffa22871dcd853",
+        "canonicalRequestBodyHash": "894317f7867221a5f847523e4e9865212a5dad46bec2165ef1b5fb67059063d2",
         "content": [
           {
             "pointer": "#/paths/~1global~1upgrade/post/requestBody/content/application~1json",
             "mediaType": "application/json",
-            "schemaHash": "71a4e07309b3897e4c17a6ca10fe3b6339c6b44178e37ad7dcef0526725af6b5"
+            "schemaHash": "47a06d2288d4bef5fd1e3e18c194299fc966ec7b71abd19d268670b40ac99e83"
           }
         ]
       },
@@ -25566,7 +25566,7 @@
     {
       "pointer": "#/components/schemas/ProviderConfig",
       "name": "ProviderConfig",
-      "canonicalSchemaHash": "8c0b7a1df26165bab561ad5d321a3dd4914382fd45bccc98ccbf9bd717659e54",
+      "canonicalSchemaHash": "220e1cbab5552ddf60d483757c9db758c081c9faad6455aee5f696723b37324c",
       "generated": {
         "normalizedName": "ProviderConfig",
         "file": "lib/src/model/provider_config.dart",
@@ -33491,6 +33491,16 @@
         {
           "type": "string",
           "value": "active"
+        }
+      ]
+    },
+    {
+      "pointer": "#/components/schemas/ProviderConfig/properties/options/properties/chunkTimeout/anyOf/1/enum",
+      "schemaHash": "4555c8229f3513646a1b44f38cd04e9b031698050291848a7681fdbec11af307",
+      "values": [
+        {
+          "type": "boolean",
+          "value": false
         }
       ]
     },

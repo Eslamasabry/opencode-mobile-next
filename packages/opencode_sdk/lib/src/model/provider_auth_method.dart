@@ -3,7 +3,7 @@
 //
 
 // ignore_for_file: unused_element
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union016.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union017.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:equatable/src/equatable_utils.dart';
 
@@ -31,7 +31,7 @@ class ProviderAuthMethod {
   final String label;
 
   @JsonKey(name: r'prompts', required: false, includeIfNull: false)
-  final List<OpencodeSdkRawUnion016>? prompts;
+  final List<OpencodeSdkRawUnion017>? prompts;
 
   bool operator ==(Object other) {
     return identical(this, other) ||

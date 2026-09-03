@@ -3,9 +3,9 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union007.dart';
 import 'package:opencode_sdk/src/model/provider_config_models_value_cost.dart';
 import 'package:opencode_sdk/src/model/provider_config_models_value_variants_value.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union006.dart';
 import 'package:opencode_sdk/src/model/provider_config_models_value_limit.dart';
 import 'package:opencode_sdk/src/model/provider_config_models_value_provider.dart';
 import 'package:opencode_sdk/src/model/provider_config_models_value_modalities.dart';
@@ -85,7 +85,7 @@ class ProviderConfigModelsValue {
   final bool? toolCall;
 
   @JsonKey(name: r'interleaved', required: false, includeIfNull: false)
-  final OpencodeSdkRawUnion006? interleaved;
+  final OpencodeSdkRawUnion007? interleaved;
 
   @JsonKey(name: r'cost', required: false, includeIfNull: false)
   final ProviderConfigModelsValueCost? cost;

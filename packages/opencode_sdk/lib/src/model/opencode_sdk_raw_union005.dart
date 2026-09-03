@@ -18,7 +18,7 @@ class OpencodeSdkRawUnion005 implements OpenCodeRawJsonValue {
       OpencodeSdkRawUnion005(json);
 
   static const String openApiSchemaJson =
-      "{\"anyOf\":[{\"type\":\"integer\",\"exclusiveMinimum\":0},{\"type\":\"boolean\",\"enum\":[false]}],\"description\":\"Timeout in milliseconds to wait for response headers. Provider integrations may set defaults. Set to false to disable timeout.\"}";
+      "{\"anyOf\":[{\"type\":\"integer\",\"exclusiveMinimum\":0},{\"type\":\"boolean\",\"enum\":[false]}],\"description\":\"Timeout in milliseconds to wait for response headers (default: 300000). Set to false to disable timeout.\"}";
 
   @override
   final Object? value;

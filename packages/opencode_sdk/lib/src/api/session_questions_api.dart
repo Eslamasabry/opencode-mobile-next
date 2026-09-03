@@ -12,8 +12,8 @@ import 'package:opencode_sdk/src/http/errors.dart';
 import 'package:opencode_sdk/src/http/wire.dart';
 
 import 'package:opencode_sdk/src/model/invalid_request_error.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union111.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union112.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union113.dart';
 import 'package:opencode_sdk/src/model/question_v2_reply.dart';
 import 'package:opencode_sdk/src/model/session_not_found_error.dart';
 import 'package:opencode_sdk/src/model/unauthorized_error.dart';

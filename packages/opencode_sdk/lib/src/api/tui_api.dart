@@ -14,11 +14,11 @@ import 'package:opencode_sdk/src/http/wire.dart';
 import 'package:opencode_sdk/src/model/bad_request_error.dart';
 import 'package:opencode_sdk/src/model/find_text200_response_inner_path.dart';
 import 'package:opencode_sdk/src/model/not_found_error.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union097.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union098.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union099.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union100.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union101.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union102.dart';
 import 'package:opencode_sdk/src/model/tui_control_next200_response.dart';
 import 'package:opencode_sdk/src/model/tui_execute_command_request.dart';
 import 'package:opencode_sdk/src/model/tui_select_session_request.dart';
@@ -927,7 +927,7 @@ class TuiApi {
   /// Parameters:
   /// * [directory]
   /// * [workspace]
-  /// * [opencodeSdkRawUnion100]
+  /// * [opencodeSdkRawUnion101]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -940,7 +940,7 @@ class TuiApi {
   Future<Response<bool>> tuiPublish({
     String? directory,
     String? workspace,
-    OpencodeSdkRawUnion100? opencodeSdkRawUnion100,
+    OpencodeSdkRawUnion101? opencodeSdkRawUnion101,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -972,8 +972,8 @@ class TuiApi {
     dynamic _bodyData;
 
     try {
-      if (opencodeSdkRawUnion100 != null) {
-        _bodyData = jsonEncode(opencodeSdkRawUnion100);
+      if (opencodeSdkRawUnion101 != null) {
+        _bodyData = jsonEncode(opencodeSdkRawUnion101);
       }
     } catch (error, stackTrace) {
       throw DioException(
@@ -993,7 +993,7 @@ class TuiApi {
       _response = await requestOpenCode<Object>(
         _dio,
         _path,
-        includeBody: opencodeSdkRawUnion100 != null,
+        includeBody: opencodeSdkRawUnion101 != null,
         bodyData: _bodyData,
         options: _options,
         queryParameters: _queryParameters,

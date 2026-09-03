@@ -6,7 +6,7 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:equatable/src/equatable_utils.dart';
 
-part 'opencode_sdk_raw_union016_any_of_when.g.dart';
+part 'opencode_sdk_raw_union017_any_of_when.g.dart';
 
 @JsonSerializable(
   checked: true,
@@ -14,9 +14,9 @@ part 'opencode_sdk_raw_union016_any_of_when.g.dart';
   disallowUnrecognizedKeys: false,
   explicitToJson: true,
 )
-class OpencodeSdkRawUnion016AnyOfWhen {
-  /// Returns a new [OpencodeSdkRawUnion016AnyOfWhen] instance.
-  OpencodeSdkRawUnion016AnyOfWhen({
+class OpencodeSdkRawUnion017AnyOfWhen {
+  /// Returns a new [OpencodeSdkRawUnion017AnyOfWhen] instance.
+  OpencodeSdkRawUnion017AnyOfWhen({
     required this.key,
 
     required this.op,
@@ -32,16 +32,16 @@ class OpencodeSdkRawUnion016AnyOfWhen {
     required: true,
     includeIfNull: false,
     unknownEnumValue:
-        OpencodeSdkRawUnion016AnyOfWhenOpEnum.unknownDefaultOpenApi,
+        OpencodeSdkRawUnion017AnyOfWhenOpEnum.unknownDefaultOpenApi,
   )
-  final OpencodeSdkRawUnion016AnyOfWhenOpEnum op;
+  final OpencodeSdkRawUnion017AnyOfWhenOpEnum op;
 
   @JsonKey(name: r'value', required: true, includeIfNull: false)
   final String value;
 
   bool operator ==(Object other) {
     return identical(this, other) ||
-        other is OpencodeSdkRawUnion016AnyOfWhen &&
+        other is OpencodeSdkRawUnion017AnyOfWhen &&
             runtimeType == other.runtimeType &&
             equals([key, op, value], [other.key, other.op, other.value]);
   }
@@ -49,18 +49,18 @@ class OpencodeSdkRawUnion016AnyOfWhen {
   int get hashCode =>
       runtimeType.hashCode ^ mapPropsToHashCode([key, op, value]);
 
-  factory OpencodeSdkRawUnion016AnyOfWhen.fromJson(Map<String, dynamic> json) =>
-      _$OpencodeSdkRawUnion016AnyOfWhenFromJson(json);
+  factory OpencodeSdkRawUnion017AnyOfWhen.fromJson(Map<String, dynamic> json) =>
+      _$OpencodeSdkRawUnion017AnyOfWhenFromJson(json);
 
   Map<String, dynamic> toJson() =>
-      _$OpencodeSdkRawUnion016AnyOfWhenToJson(this);
+      _$OpencodeSdkRawUnion017AnyOfWhenToJson(this);
 
   String toString() {
     return toJson().toString();
   }
 }
 
-enum OpencodeSdkRawUnion016AnyOfWhenOpEnum {
+enum OpencodeSdkRawUnion017AnyOfWhenOpEnum {
   @JsonValue(r'eq')
   eq(r'eq'),
   @JsonValue(r'neq')
@@ -68,7 +68,7 @@ enum OpencodeSdkRawUnion016AnyOfWhenOpEnum {
   @JsonValue(r'unknown_default_open_api')
   unknownDefaultOpenApi(r'unknown_default_open_api');
 
-  const OpencodeSdkRawUnion016AnyOfWhenOpEnum(this.value);
+  const OpencodeSdkRawUnion017AnyOfWhenOpEnum(this.value);
 
   final Object value;
 

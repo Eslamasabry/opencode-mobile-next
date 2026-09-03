@@ -4,8 +4,8 @@
 
 // ignore_for_file: unused_element
 import 'package:opencode_sdk/src/model/session_message_assistant_tool_time.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union020.dart';
 import 'package:opencode_sdk/src/model/session_message_assistant_tool_provider.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union021.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:equatable/src/equatable_utils.dart';
 
@@ -51,7 +51,7 @@ class SessionMessageAssistantTool {
   final SessionMessageAssistantToolProvider? provider;
 
   @JsonKey(name: r'state', required: true, includeIfNull: false)
-  final OpencodeSdkRawUnion020 state;
+  final OpencodeSdkRawUnion021 state;
 
   @JsonKey(name: r'time', required: true, includeIfNull: false)
   final SessionMessageAssistantToolTime time;

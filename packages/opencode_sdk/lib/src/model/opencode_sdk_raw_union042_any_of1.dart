@@ -6,7 +6,7 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:equatable/src/equatable_utils.dart';
 
-part 'opencode_sdk_raw_union041_any_of1.g.dart';
+part 'opencode_sdk_raw_union042_any_of1.g.dart';
 
 @JsonSerializable(
   checked: true,
@@ -14,25 +14,25 @@ part 'opencode_sdk_raw_union041_any_of1.g.dart';
   disallowUnrecognizedKeys: false,
   explicitToJson: true,
 )
-class OpencodeSdkRawUnion041AnyOf1 {
-  /// Returns a new [OpencodeSdkRawUnion041AnyOf1] instance.
-  OpencodeSdkRawUnion041AnyOf1({required this.success, required this.error});
+class OpencodeSdkRawUnion042AnyOf1 {
+  /// Returns a new [OpencodeSdkRawUnion042AnyOf1] instance.
+  OpencodeSdkRawUnion042AnyOf1({required this.success, required this.error});
 
   @JsonKey(
     name: r'success',
     required: true,
     includeIfNull: false,
     unknownEnumValue:
-        OpencodeSdkRawUnion041AnyOf1SuccessEnum.unknownDefaultOpenApi,
+        OpencodeSdkRawUnion042AnyOf1SuccessEnum.unknownDefaultOpenApi,
   )
-  final OpencodeSdkRawUnion041AnyOf1SuccessEnum success;
+  final OpencodeSdkRawUnion042AnyOf1SuccessEnum success;
 
   @JsonKey(name: r'error', required: true, includeIfNull: false)
   final String error;
 
   bool operator ==(Object other) {
     return identical(this, other) ||
-        other is OpencodeSdkRawUnion041AnyOf1 &&
+        other is OpencodeSdkRawUnion042AnyOf1 &&
             runtimeType == other.runtimeType &&
             equals([success, error], [other.success, other.error]);
   }
@@ -40,23 +40,23 @@ class OpencodeSdkRawUnion041AnyOf1 {
   int get hashCode =>
       runtimeType.hashCode ^ mapPropsToHashCode([success, error]);
 
-  factory OpencodeSdkRawUnion041AnyOf1.fromJson(Map<String, dynamic> json) =>
-      _$OpencodeSdkRawUnion041AnyOf1FromJson(json);
+  factory OpencodeSdkRawUnion042AnyOf1.fromJson(Map<String, dynamic> json) =>
+      _$OpencodeSdkRawUnion042AnyOf1FromJson(json);
 
-  Map<String, dynamic> toJson() => _$OpencodeSdkRawUnion041AnyOf1ToJson(this);
+  Map<String, dynamic> toJson() => _$OpencodeSdkRawUnion042AnyOf1ToJson(this);
 
   String toString() {
     return toJson().toString();
   }
 }
 
-enum OpencodeSdkRawUnion041AnyOf1SuccessEnum {
+enum OpencodeSdkRawUnion042AnyOf1SuccessEnum {
   @JsonValue('false')
   false_('false'),
   @JsonValue('11184809')
   unknownDefaultOpenApi('11184809');
 
-  const OpencodeSdkRawUnion041AnyOf1SuccessEnum(this.value);
+  const OpencodeSdkRawUnion042AnyOf1SuccessEnum(this.value);
 
   final Object value;
 

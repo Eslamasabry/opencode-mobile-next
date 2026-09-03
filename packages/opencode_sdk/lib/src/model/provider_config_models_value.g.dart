@@ -20,7 +20,7 @@ ProviderConfigModelsValue _$ProviderConfigModelsValueFromJson(
     toolCall: $checkedConvert('tool_call', (v) => v as bool?),
     interleaved: $checkedConvert(
       'interleaved',
-      (v) => v == null ? null : OpencodeSdkRawUnion006.fromJson(v),
+      (v) => v == null ? null : OpencodeSdkRawUnion007.fromJson(v),
     ),
     cost: $checkedConvert(
       'cost',

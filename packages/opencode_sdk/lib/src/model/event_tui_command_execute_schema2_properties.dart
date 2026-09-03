@@ -3,7 +3,7 @@
 //
 
 // ignore_for_file: unused_element
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union019.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union020.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:equatable/src/equatable_utils.dart';
 
@@ -20,7 +20,7 @@ class EventTuiCommandExecuteSchema2Properties {
   EventTuiCommandExecuteSchema2Properties({required this.command});
 
   @JsonKey(name: r'command', required: true, includeIfNull: false)
-  final OpencodeSdkRawUnion019 command;
+  final OpencodeSdkRawUnion020 command;
 
   bool operator ==(Object other) {
     return identical(this, other) ||

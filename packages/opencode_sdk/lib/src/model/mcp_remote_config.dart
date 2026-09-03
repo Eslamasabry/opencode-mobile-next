@@ -3,7 +3,7 @@
 //
 
 // ignore_for_file: unused_element
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union007.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union008.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:equatable/src/equatable_utils.dart';
 
@@ -51,7 +51,7 @@ class McpRemoteConfig {
   final Map<String, String>? headers;
 
   @JsonKey(name: r'oauth', required: false, includeIfNull: false)
-  final OpencodeSdkRawUnion007? oauth;
+  final OpencodeSdkRawUnion008? oauth;
 
   @JsonKey(name: r'timeout', required: false, includeIfNull: false)
   final int? timeout;

@@ -22,7 +22,7 @@ ProviderAuthMethod _$ProviderAuthMethodFromJson(Map<String, dynamic> json) =>
         prompts: $checkedConvert(
           'prompts',
           (v) => (v as List<dynamic>?)
-              ?.map(OpencodeSdkRawUnion016.fromJson)
+              ?.map(OpencodeSdkRawUnion017.fromJson)
               .toList(),
         ),
       );

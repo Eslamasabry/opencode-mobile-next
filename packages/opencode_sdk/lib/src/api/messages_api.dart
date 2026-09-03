@@ -11,7 +11,7 @@ import 'package:dio/dio.dart';
 import 'package:opencode_sdk/src/http/errors.dart';
 import 'package:opencode_sdk/src/http/wire.dart';
 
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union108.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union109.dart';
 import 'package:opencode_sdk/src/model/session_messages_response.dart';
 import 'package:opencode_sdk/src/model/session_not_found_error.dart';
 import 'package:opencode_sdk/src/model/unauthorized_error.dart';

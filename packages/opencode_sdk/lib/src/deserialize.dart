@@ -377,27 +377,27 @@ import 'package:opencode_sdk/src/model/opencode_sdk_raw_union003.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union004.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union005.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union006.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union006_any_of.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union006_any_of_field.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union007.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union007_any_of.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union007_any_of_field.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union008.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union009.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union010.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union011.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union012.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union012_any_of.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union013.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union013_any_of_value.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union013_any_of.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union014.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union014_any_of_value.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union014_any_of_value_any_of.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union014_any_of_value_any_of1.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union015.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union015_any_of_value.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union015_any_of_value_any_of.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union015_any_of_value_any_of1.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union016.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union016_any_of.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union016_any_of1.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union016_any_of_when.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union017.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union017_any_of.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union017_any_of1.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union017_any_of_when.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union018.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union019.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union020.dart';
@@ -422,9 +422,9 @@ import 'package:opencode_sdk/src/model/opencode_sdk_raw_union038.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union039.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union040.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union041.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union041_any_of.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union041_any_of1.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union042.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union042_any_of.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union042_any_of1.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union043.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union044.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union045.dart';
@@ -498,6 +498,7 @@ import 'package:opencode_sdk/src/model/opencode_sdk_raw_union112.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union113.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union114.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union115.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union116.dart';
 import 'package:opencode_sdk/src/model/output_format.dart';
 import 'package:opencode_sdk/src/model/output_format1.dart';
 import 'package:opencode_sdk/src/model/output_format1_any_of.dart';
@@ -2369,16 +2370,16 @@ ReturnType deserialize<ReturnType, BaseType>(
       return OpencodeSdkRawUnion005.fromJson(value) as ReturnType;
     case 'OpencodeSdkRawUnion006':
       return OpencodeSdkRawUnion006.fromJson(value) as ReturnType;
-    case 'OpencodeSdkRawUnion006AnyOf':
-      return OpencodeSdkRawUnion006AnyOf.fromJson(value as Map<String, dynamic>)
+    case 'OpencodeSdkRawUnion007':
+      return OpencodeSdkRawUnion007.fromJson(value) as ReturnType;
+    case 'OpencodeSdkRawUnion007AnyOf':
+      return OpencodeSdkRawUnion007AnyOf.fromJson(value as Map<String, dynamic>)
           as ReturnType;
-    case 'OpencodeSdkRawUnion006AnyOfField':
-      return OpencodeSdkRawUnion006AnyOfField.fromJson(
+    case 'OpencodeSdkRawUnion007AnyOfField':
+      return OpencodeSdkRawUnion007AnyOfField.fromJson(
             value as Map<String, dynamic>,
           )
           as ReturnType;
-    case 'OpencodeSdkRawUnion007':
-      return OpencodeSdkRawUnion007.fromJson(value) as ReturnType;
     case 'OpencodeSdkRawUnion008':
       return OpencodeSdkRawUnion008.fromJson(value) as ReturnType;
     case 'OpencodeSdkRawUnion009':
@@ -2389,15 +2390,10 @@ ReturnType deserialize<ReturnType, BaseType>(
       return OpencodeSdkRawUnion011.fromJson(value) as ReturnType;
     case 'OpencodeSdkRawUnion012':
       return OpencodeSdkRawUnion012.fromJson(value) as ReturnType;
-    case 'OpencodeSdkRawUnion012AnyOf':
-      return OpencodeSdkRawUnion012AnyOf.fromJson(value as Map<String, dynamic>)
-          as ReturnType;
     case 'OpencodeSdkRawUnion013':
       return OpencodeSdkRawUnion013.fromJson(value) as ReturnType;
-    case 'OpencodeSdkRawUnion013AnyOfValue':
-      return OpencodeSdkRawUnion013AnyOfValue.fromJson(
-            value as Map<String, dynamic>,
-          )
+    case 'OpencodeSdkRawUnion013AnyOf':
+      return OpencodeSdkRawUnion013AnyOf.fromJson(value as Map<String, dynamic>)
           as ReturnType;
     case 'OpencodeSdkRawUnion014':
       return OpencodeSdkRawUnion014.fromJson(value) as ReturnType;
@@ -2406,35 +2402,40 @@ ReturnType deserialize<ReturnType, BaseType>(
             value as Map<String, dynamic>,
           )
           as ReturnType;
-    case 'OpencodeSdkRawUnion014AnyOfValueAnyOf':
-      return OpencodeSdkRawUnion014AnyOfValueAnyOf.fromJson(
-            value as Map<String, dynamic>,
-          )
-          as ReturnType;
-    case 'OpencodeSdkRawUnion014AnyOfValueAnyOf1':
-      return OpencodeSdkRawUnion014AnyOfValueAnyOf1.fromJson(
-            value as Map<String, dynamic>,
-          )
-          as ReturnType;
     case 'OpencodeSdkRawUnion015':
       return OpencodeSdkRawUnion015.fromJson(value) as ReturnType;
+    case 'OpencodeSdkRawUnion015AnyOfValue':
+      return OpencodeSdkRawUnion015AnyOfValue.fromJson(
+            value as Map<String, dynamic>,
+          )
+          as ReturnType;
+    case 'OpencodeSdkRawUnion015AnyOfValueAnyOf':
+      return OpencodeSdkRawUnion015AnyOfValueAnyOf.fromJson(
+            value as Map<String, dynamic>,
+          )
+          as ReturnType;
+    case 'OpencodeSdkRawUnion015AnyOfValueAnyOf1':
+      return OpencodeSdkRawUnion015AnyOfValueAnyOf1.fromJson(
+            value as Map<String, dynamic>,
+          )
+          as ReturnType;
     case 'OpencodeSdkRawUnion016':
       return OpencodeSdkRawUnion016.fromJson(value) as ReturnType;
-    case 'OpencodeSdkRawUnion016AnyOf':
-      return OpencodeSdkRawUnion016AnyOf.fromJson(value as Map<String, dynamic>)
-          as ReturnType;
-    case 'OpencodeSdkRawUnion016AnyOf1':
-      return OpencodeSdkRawUnion016AnyOf1.fromJson(
-            value as Map<String, dynamic>,
-          )
-          as ReturnType;
-    case 'OpencodeSdkRawUnion016AnyOfWhen':
-      return OpencodeSdkRawUnion016AnyOfWhen.fromJson(
-            value as Map<String, dynamic>,
-          )
-          as ReturnType;
     case 'OpencodeSdkRawUnion017':
       return OpencodeSdkRawUnion017.fromJson(value) as ReturnType;
+    case 'OpencodeSdkRawUnion017AnyOf':
+      return OpencodeSdkRawUnion017AnyOf.fromJson(value as Map<String, dynamic>)
+          as ReturnType;
+    case 'OpencodeSdkRawUnion017AnyOf1':
+      return OpencodeSdkRawUnion017AnyOf1.fromJson(
+            value as Map<String, dynamic>,
+          )
+          as ReturnType;
+    case 'OpencodeSdkRawUnion017AnyOfWhen':
+      return OpencodeSdkRawUnion017AnyOfWhen.fromJson(
+            value as Map<String, dynamic>,
+          )
+          as ReturnType;
     case 'OpencodeSdkRawUnion018':
       return OpencodeSdkRawUnion018.fromJson(value) as ReturnType;
     case 'OpencodeSdkRawUnion019':
@@ -2483,16 +2484,16 @@ ReturnType deserialize<ReturnType, BaseType>(
       return OpencodeSdkRawUnion040.fromJson(value) as ReturnType;
     case 'OpencodeSdkRawUnion041':
       return OpencodeSdkRawUnion041.fromJson(value) as ReturnType;
-    case 'OpencodeSdkRawUnion041AnyOf':
-      return OpencodeSdkRawUnion041AnyOf.fromJson(value as Map<String, dynamic>)
+    case 'OpencodeSdkRawUnion042':
+      return OpencodeSdkRawUnion042.fromJson(value) as ReturnType;
+    case 'OpencodeSdkRawUnion042AnyOf':
+      return OpencodeSdkRawUnion042AnyOf.fromJson(value as Map<String, dynamic>)
           as ReturnType;
-    case 'OpencodeSdkRawUnion041AnyOf1':
-      return OpencodeSdkRawUnion041AnyOf1.fromJson(
+    case 'OpencodeSdkRawUnion042AnyOf1':
+      return OpencodeSdkRawUnion042AnyOf1.fromJson(
             value as Map<String, dynamic>,
           )
           as ReturnType;
-    case 'OpencodeSdkRawUnion042':
-      return OpencodeSdkRawUnion042.fromJson(value) as ReturnType;
     case 'OpencodeSdkRawUnion043':
       return OpencodeSdkRawUnion043.fromJson(value) as ReturnType;
     case 'OpencodeSdkRawUnion044':
@@ -2639,6 +2640,8 @@ ReturnType deserialize<ReturnType, BaseType>(
       return OpencodeSdkRawUnion114.fromJson(value) as ReturnType;
     case 'OpencodeSdkRawUnion115':
       return OpencodeSdkRawUnion115.fromJson(value) as ReturnType;
+    case 'OpencodeSdkRawUnion116':
+      return OpencodeSdkRawUnion116.fromJson(value) as ReturnType;
     case 'OutputFormat':
       return OutputFormat.fromJson(value) as ReturnType;
     case 'OutputFormat1':

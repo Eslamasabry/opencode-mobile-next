@@ -17,7 +17,7 @@ import 'package:opencode_sdk/src/model/bad_request_error.dart';
 import 'package:opencode_sdk/src/model/command.dart';
 import 'package:opencode_sdk/src/model/formatter_status.dart';
 import 'package:opencode_sdk/src/model/lsp_status.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union053.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union054.dart';
 import 'package:opencode_sdk/src/model/path.dart';
 import 'package:opencode_sdk/src/model/vcs_apply200_response.dart';
 import 'package:opencode_sdk/src/model/vcs_apply_request.dart';

@@ -12,8 +12,8 @@ import 'package:opencode_sdk/src/http/errors.dart';
 import 'package:opencode_sdk/src/http/wire.dart';
 
 import 'package:opencode_sdk/src/model/bad_request_error.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union065.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union066.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union067.dart';
 import 'package:opencode_sdk/src/model/provider_auth_authorization.dart';
 import 'package:opencode_sdk/src/model/provider_auth_method.dart';
 import 'package:opencode_sdk/src/model/provider_list200_response.dart';

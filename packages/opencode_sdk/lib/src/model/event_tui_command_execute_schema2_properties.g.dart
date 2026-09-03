@@ -15,7 +15,7 @@ _$EventTuiCommandExecuteSchema2PropertiesFromJson(Map<String, dynamic> json) =>
       final val = EventTuiCommandExecuteSchema2Properties(
         command: $checkedConvert(
           'command',
-          (v) => OpencodeSdkRawUnion019.fromJson(v),
+          (v) => OpencodeSdkRawUnion020.fromJson(v),
         ),
       );
       return val;

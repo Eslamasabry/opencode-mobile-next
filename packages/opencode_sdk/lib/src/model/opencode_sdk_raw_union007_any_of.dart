@@ -3,11 +3,11 @@
 //
 
 // ignore_for_file: unused_element
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union006_any_of_field.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union007_any_of_field.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:equatable/src/equatable_utils.dart';
 
-part 'opencode_sdk_raw_union006_any_of.g.dart';
+part 'opencode_sdk_raw_union007_any_of.g.dart';
 
 @JsonSerializable(
   checked: true,
@@ -15,26 +15,26 @@ part 'opencode_sdk_raw_union006_any_of.g.dart';
   disallowUnrecognizedKeys: false,
   explicitToJson: true,
 )
-class OpencodeSdkRawUnion006AnyOf {
-  /// Returns a new [OpencodeSdkRawUnion006AnyOf] instance.
-  OpencodeSdkRawUnion006AnyOf({required this.field});
+class OpencodeSdkRawUnion007AnyOf {
+  /// Returns a new [OpencodeSdkRawUnion007AnyOf] instance.
+  OpencodeSdkRawUnion007AnyOf({required this.field});
 
   @JsonKey(name: r'field', required: true, includeIfNull: false)
-  final OpencodeSdkRawUnion006AnyOfField field;
+  final OpencodeSdkRawUnion007AnyOfField field;
 
   bool operator ==(Object other) {
     return identical(this, other) ||
-        other is OpencodeSdkRawUnion006AnyOf &&
+        other is OpencodeSdkRawUnion007AnyOf &&
             runtimeType == other.runtimeType &&
             equals([field], [other.field]);
   }
 
   int get hashCode => runtimeType.hashCode ^ mapPropsToHashCode([field]);
 
-  factory OpencodeSdkRawUnion006AnyOf.fromJson(Map<String, dynamic> json) =>
-      _$OpencodeSdkRawUnion006AnyOfFromJson(json);
+  factory OpencodeSdkRawUnion007AnyOf.fromJson(Map<String, dynamic> json) =>
+      _$OpencodeSdkRawUnion007AnyOfFromJson(json);
 
-  Map<String, dynamic> toJson() => _$OpencodeSdkRawUnion006AnyOfToJson(this);
+  Map<String, dynamic> toJson() => _$OpencodeSdkRawUnion007AnyOfToJson(this);
 
   String toString() {
     return toJson().toString();

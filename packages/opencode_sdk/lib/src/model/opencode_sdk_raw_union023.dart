@@ -18,7 +18,7 @@ class OpencodeSdkRawUnion023 implements OpenCodeRawJsonValue {
       OpencodeSdkRawUnion023(json);
 
   static const String openApiSchemaJson =
-      "{\"anyOf\":[{\"type\":\"number\"},{\"type\":\"string\",\"enum\":[\"NaN\"]},{\"type\":\"string\",\"enum\":[\"Infinity\"]},{\"type\":\"string\",\"enum\":[\"-Infinity\"]},{\"type\":\"string\",\"enum\":[\"Infinity\",\"-Infinity\",\"NaN\"]}]}";
+      "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/IntegrationTextPrompt\"},{\"\$ref\":\"#/components/schemas/IntegrationSelectPrompt\"}]}";
 
   @override
   final Object? value;

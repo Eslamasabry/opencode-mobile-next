@@ -76,6 +76,22 @@ void main() {
     expect(value.toJson(), fixture);
   });
 
+  test('Config decodes a disabled provider chunk timeout', () {
+    final fixture = <String, dynamic>{
+      'provider': {
+        'custom-provider': {
+          'options': {'chunkTimeout': false},
+        },
+      },
+    };
+    final value = Config.fromJson(fixture);
+    expect(
+      value.provider!['custom-provider']!.options!.chunkTimeout?.toJson(),
+      isFalse,
+    );
+    expect(value.toJson(), fixture);
+  });
+
   test('Config.mode retains named and arbitrary typed agent entries', () {
     final fixture = <String, dynamic>{
       'build': {'model': 'openai/gpt-5', 'buildOption': 1},

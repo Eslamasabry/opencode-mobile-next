@@ -149,8 +149,7 @@
             "$ref": "#/components/schemas/OpencodeSdkRawUnion005"
           },
           "chunkTimeout": {
-            "type": "integer",
-            "exclusiveMinimum": 0
+            "$ref": "#/components/schemas/OpencodeSdkRawUnion006"
           }
         },
         "additionalProperties": {}

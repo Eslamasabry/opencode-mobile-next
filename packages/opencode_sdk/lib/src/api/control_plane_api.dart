@@ -12,7 +12,7 @@ import 'package:opencode_sdk/src/http/errors.dart';
 import 'package:opencode_sdk/src/http/wire.dart';
 
 import 'package:opencode_sdk/src/model/experimental_control_plane_move_session_request.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union039.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union040.dart';
 
 class ControlPlaneApi {
   final Dio _dio;

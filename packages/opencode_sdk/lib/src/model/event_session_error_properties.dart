@@ -3,7 +3,7 @@
 //
 
 // ignore_for_file: unused_element
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union035.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union036.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:equatable/src/equatable_utils.dart';
 
@@ -23,7 +23,7 @@ class EventSessionErrorProperties {
   final String? sessionID;
 
   @JsonKey(name: r'error', required: false, includeIfNull: false)
-  final OpencodeSdkRawUnion035? error;
+  final OpencodeSdkRawUnion036? error;
 
   bool operator ==(Object other) {
     return identical(this, other) ||

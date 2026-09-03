@@ -18,7 +18,7 @@ class OpencodeSdkRawUnion016 implements OpenCodeRawJsonValue {
       OpencodeSdkRawUnion016(json);
 
   static const String openApiSchemaJson =
-      "{\"anyOf\":[{\"type\":\"object\",\"properties\":{\"type\":{\"type\":\"string\",\"enum\":[\"text\"]},\"key\":{\"type\":\"string\"},\"message\":{\"type\":\"string\"},\"placeholder\":{\"type\":\"string\"},\"when\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\"},\"op\":{\"type\":\"string\",\"enum\":[\"eq\",\"neq\"]},\"value\":{\"type\":\"string\"}},\"required\":[\"key\",\"op\",\"value\"],\"additionalProperties\":false}},\"required\":[\"type\",\"key\",\"message\"],\"additionalProperties\":false},{\"type\":\"object\",\"properties\":{\"type\":{\"type\":\"string\",\"enum\":[\"select\"]},\"key\":{\"type\":\"string\"},\"message\":{\"type\":\"string\"},\"options\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"label\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"},\"hint\":{\"type\":\"string\"}},\"required\":[\"label\",\"value\"],\"additionalProperties\":false}},\"when\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\"},\"op\":{\"type\":\"string\",\"enum\":[\"eq\",\"neq\"]},\"value\":{\"type\":\"string\"}},\"required\":[\"key\",\"op\",\"value\"],\"additionalProperties\":false}},\"required\":[\"type\",\"key\",\"message\",\"options\"],\"additionalProperties\":false}]}";
+      "{\"anyOf\":[{\"type\":\"boolean\"},{\"type\":\"object\",\"properties\":{\"field\":{\"anyOf\":[{\"type\":\"string\",\"enum\":[\"reasoning\",\"reasoning_content\",\"reasoning_text\"]},{\"type\":\"string\"}]}},\"required\":[\"field\"],\"additionalProperties\":false}]}";
 
   @override
   final Object? value;

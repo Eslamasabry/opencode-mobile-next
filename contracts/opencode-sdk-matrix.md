@@ -1,8 +1,8 @@
 # OpenCode Dart SDK contract matrix
 
-Generated from `opencode-openapi-03bba464.json` at upstream commit `03bba464d46f3eddf74195919b1344aa937f7b11` (SHA-256 `5bbd6493a1a488ef4294889341c896e420f814ecea95822100aaa9f3f95ab2d1`).
+Generated from `opencode-openapi-f12e14cf.json` at upstream commit `f12e14cf1640cbf0dfb6b1ff425b2daaef459eec` (SHA-256 `00502bd13e9c86f3ca9e765e99a57e06fa9f434ca16f2a714766d1444f8d37f3`).
 
-**Totals:** 162 paths, 188 operations (87 GET, 78 POST, 14 DELETE, 6 PATCH, 3 PUT), 418 effective parameters, 60 request schema slots, 520 response objects, 497 response schema slots, 472 component schemas, 89 Event variants, and 617 enum sites / 870 entries.
+**Totals:** 162 paths, 188 operations (87 GET, 78 POST, 14 DELETE, 6 PATCH, 3 PUT), 418 effective parameters, 60 request schema slots, 520 response objects, 497 response schema slots, 472 component schemas, 89 Event variants, and 618 enum sites / 871 entries.
 
 Machine-readable component/schema hashes, exact parameters, request and response media, Event discriminators, enums, and runtime replacement links are in `contracts/opencode-sdk-matrix.json`.
 

@@ -18,7 +18,7 @@ class OpencodeSdkRawUnion013 implements OpenCodeRawJsonValue {
       OpencodeSdkRawUnion013(json);
 
   static const String openApiSchemaJson =
-      "{\"anyOf\":[{\"type\":\"boolean\"},{\"type\":\"object\",\"additionalProperties\":{\"type\":\"object\",\"properties\":{\"disabled\":{\"type\":\"boolean\"},\"command\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"environment\":{\"type\":\"object\",\"additionalProperties\":{\"type\":\"string\"}},\"extensions\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}}},\"additionalProperties\":false}}],\"description\":\"Enable or configure formatters. Omit or set to false to disable, true to enable built-ins, or an object to enable built-ins with overrides.\"}";
+      "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/McpLocalConfig\"},{\"\$ref\":\"#/components/schemas/McpRemoteConfig\"},{\"type\":\"object\",\"properties\":{\"enabled\":{\"type\":\"boolean\"}},\"required\":[\"enabled\"],\"additionalProperties\":false}]}";
 
   @override
   final Object? value;

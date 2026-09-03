@@ -15,7 +15,6 @@ import 'package:opencode_sdk/src/model/bad_request_error.dart';
 import 'package:opencode_sdk/src/model/effect_http_api_error_internal_server_error.dart';
 import 'package:opencode_sdk/src/model/model_part.dart';
 import 'package:opencode_sdk/src/model/not_found_error.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union067.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union068.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union069.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union070.dart';
@@ -25,14 +24,14 @@ import 'package:opencode_sdk/src/model/opencode_sdk_raw_union073.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union074.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union075.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union076.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union078.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union077.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union079.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union080.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union081.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union082.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union083.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union084.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union086.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union085.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union087.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union088.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union089.dart';
@@ -40,6 +39,7 @@ import 'package:opencode_sdk/src/model/opencode_sdk_raw_union090.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union091.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union092.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union093.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union094.dart';
 import 'package:opencode_sdk/src/model/permission_respond_request.dart';
 import 'package:opencode_sdk/src/model/session.dart';
 import 'package:opencode_sdk/src/model/session_busy_error.dart';
@@ -1606,7 +1606,7 @@ class SessionApi {
     String? workspace,
     String? scope,
     String? path,
-    OpencodeSdkRawUnion067? roots,
+    OpencodeSdkRawUnion068? roots,
     num? start,
     String? search,
     num? limit,

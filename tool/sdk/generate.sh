@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-CONTRACT="$ROOT/contracts/opencode-openapi-03bba464.json"
+CONTRACT="$ROOT/contracts/opencode-openapi-f12e14cf.json"
 MANIFEST="$ROOT/contracts/opencode-sdk-manifest.json"
 MATRIX_JSON="$ROOT/contracts/opencode-sdk-matrix.json"
 MATRIX_MD="$ROOT/contracts/opencode-sdk-matrix.md"
@@ -62,7 +62,7 @@ WORK_DIR="$(mktemp -d "$PACKAGE_PARENT/.opencode_sdk.generate.XXXXXX")"
 PACKAGE_CANDIDATE="$WORK_DIR/packages/opencode_sdk"
 NORMALIZED="$WORK_DIR/openapi.normalized.json"
 NORMALIZATION_REPORT="$WORK_DIR/normalization-report.json"
-STAGED_CONTRACT="$WORK_DIR/contracts/opencode-openapi-03bba464.json"
+STAGED_CONTRACT="$WORK_DIR/contracts/opencode-openapi-f12e14cf.json"
 STAGED_MANIFEST="$WORK_DIR/contracts/opencode-sdk-manifest.json"
 STAGED_MATRIX_JSON="$WORK_DIR/contracts/opencode-sdk-matrix.json"
 STAGED_MATRIX_MD="$WORK_DIR/contracts/opencode-sdk-matrix.md"

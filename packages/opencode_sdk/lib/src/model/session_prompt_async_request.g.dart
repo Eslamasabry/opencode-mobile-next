@@ -33,7 +33,7 @@ SessionPromptAsyncRequest _$SessionPromptAsyncRequestFromJson(
     variant: $checkedConvert('variant', (v) => v as String?),
     parts: $checkedConvert(
       'parts',
-      (v) => (v as List<dynamic>).map(OpencodeSdkRawUnion085.fromJson).toList(),
+      (v) => (v as List<dynamic>).map(OpencodeSdkRawUnion086.fromJson).toList(),
     ),
   );
   return val;

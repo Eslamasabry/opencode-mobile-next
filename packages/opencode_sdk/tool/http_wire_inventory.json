@@ -784,7 +784,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion036",
+      "payloadType": "OpencodeSdkRawUnion037",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -792,7 +792,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion037",
+      "payloadType": "OpencodeSdkRawUnion038",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -800,7 +800,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion038",
+      "payloadType": "OpencodeSdkRawUnion039",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -808,7 +808,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/MoveSessionError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion039",
+      "payloadType": "OpencodeSdkRawUnion040",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -840,7 +840,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion040",
+      "payloadType": "OpencodeSdkRawUnion041",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -856,7 +856,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion042",
+      "payloadType": "OpencodeSdkRawUnion043",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -872,7 +872,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion043",
+      "payloadType": "OpencodeSdkRawUnion044",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -928,7 +928,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion044",
+      "payloadType": "OpencodeSdkRawUnion045",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -936,7 +936,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion045",
+      "payloadType": "OpencodeSdkRawUnion046",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -944,7 +944,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/WorktreeError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion046",
+      "payloadType": "OpencodeSdkRawUnion047",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -952,7 +952,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/WorktreeError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion047",
+      "payloadType": "OpencodeSdkRawUnion048",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -960,7 +960,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/WorktreeError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion048",
+      "payloadType": "OpencodeSdkRawUnion049",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -968,7 +968,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/WorktreeError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion049",
+      "payloadType": "OpencodeSdkRawUnion050",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -984,7 +984,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion052",
+      "payloadType": "OpencodeSdkRawUnion053",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1096,7 +1096,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/VcsApplyError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion053",
+      "payloadType": "OpencodeSdkRawUnion054",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1152,7 +1152,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion054",
+      "payloadType": "OpencodeSdkRawUnion055",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1160,7 +1160,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/McpUnsupportedOAuthError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion056",
+      "payloadType": "OpencodeSdkRawUnion057",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1192,7 +1192,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion057",
+      "payloadType": "OpencodeSdkRawUnion058",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1208,7 +1208,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/McpUnsupportedOAuthError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion058",
+      "payloadType": "OpencodeSdkRawUnion059",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1280,7 +1280,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion059",
+      "payloadType": "OpencodeSdkRawUnion060",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1328,7 +1328,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion060",
+      "payloadType": "OpencodeSdkRawUnion061",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1352,7 +1352,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion061",
+      "payloadType": "OpencodeSdkRawUnion062",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1416,7 +1416,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion062",
+      "payloadType": "OpencodeSdkRawUnion063",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1432,7 +1432,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion063",
+      "payloadType": "OpencodeSdkRawUnion064",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1456,7 +1456,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion064",
+      "payloadType": "OpencodeSdkRawUnion065",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1488,7 +1488,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/ProviderAuthError1\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion065",
+      "payloadType": "OpencodeSdkRawUnion066",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1496,7 +1496,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/ProviderAuthError1\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion066",
+      "payloadType": "OpencodeSdkRawUnion067",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1512,7 +1512,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion068",
+      "payloadType": "OpencodeSdkRawUnion069",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1520,7 +1520,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion069",
+      "payloadType": "OpencodeSdkRawUnion070",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1528,7 +1528,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion070",
+      "payloadType": "OpencodeSdkRawUnion071",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1544,7 +1544,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion071",
+      "payloadType": "OpencodeSdkRawUnion072",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1560,7 +1560,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion072",
+      "payloadType": "OpencodeSdkRawUnion073",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1576,7 +1576,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion073",
+      "payloadType": "OpencodeSdkRawUnion074",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1592,7 +1592,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion074",
+      "payloadType": "OpencodeSdkRawUnion075",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1616,7 +1616,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion075",
+      "payloadType": "OpencodeSdkRawUnion076",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1632,7 +1632,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion076",
+      "payloadType": "OpencodeSdkRawUnion077",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1648,7 +1648,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion078",
+      "payloadType": "OpencodeSdkRawUnion079",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1664,7 +1664,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion079",
+      "payloadType": "OpencodeSdkRawUnion080",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1688,7 +1688,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion080",
+      "payloadType": "OpencodeSdkRawUnion081",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1704,75 +1704,11 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion081",
-      "decoderKind": "generatedLosslessUnionWrapper"
-    },
-    {
-      "operationId": "session.init",
-      "status": 400,
-      "mediaType": "application/json",
-      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
       "payloadType": "OpencodeSdkRawUnion082",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
       "operationId": "session.init",
-      "status": 404,
-      "mediaType": "application/json",
-      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
-      "payloadType": "NotFoundError",
-      "decoderKind": "generatedModel"
-    },
-    {
-      "operationId": "session.share",
-      "status": 400,
-      "mediaType": "application/json",
-      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
-      "payloadType": "BadRequestError",
-      "decoderKind": "generatedModel"
-    },
-    {
-      "operationId": "session.share",
-      "status": 404,
-      "mediaType": "application/json",
-      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
-      "payloadType": "NotFoundError",
-      "decoderKind": "generatedModel"
-    },
-    {
-      "operationId": "session.share",
-      "status": 500,
-      "mediaType": "application/json",
-      "schemaJson": "{\"$ref\":\"#/components/schemas/effect_HttpApiError_InternalServerError\"}",
-      "payloadType": "EffectHttpApiErrorInternalServerError",
-      "decoderKind": "generatedModel"
-    },
-    {
-      "operationId": "session.unshare",
-      "status": 400,
-      "mediaType": "application/json",
-      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
-      "payloadType": "BadRequestError",
-      "decoderKind": "generatedModel"
-    },
-    {
-      "operationId": "session.unshare",
-      "status": 404,
-      "mediaType": "application/json",
-      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
-      "payloadType": "NotFoundError",
-      "decoderKind": "generatedModel"
-    },
-    {
-      "operationId": "session.unshare",
-      "status": 500,
-      "mediaType": "application/json",
-      "schemaJson": "{\"$ref\":\"#/components/schemas/effect_HttpApiError_InternalServerError\"}",
-      "payloadType": "EffectHttpApiErrorInternalServerError",
-      "decoderKind": "generatedModel"
-    },
-    {
-      "operationId": "session.summarize",
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
@@ -1780,6 +1716,70 @@
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
+      "operationId": "session.init",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.share",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.share",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.share",
+      "status": 500,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/effect_HttpApiError_InternalServerError\"}",
+      "payloadType": "EffectHttpApiErrorInternalServerError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.unshare",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/BadRequestError\"}",
+      "payloadType": "BadRequestError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.unshare",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.unshare",
+      "status": 500,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/effect_HttpApiError_InternalServerError\"}",
+      "payloadType": "EffectHttpApiErrorInternalServerError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.summarize",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion084",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
       "operationId": "session.summarize",
       "status": 404,
       "mediaType": "application/json",
@@ -1792,7 +1792,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion084",
+      "payloadType": "OpencodeSdkRawUnion085",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1808,7 +1808,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion086",
+      "payloadType": "OpencodeSdkRawUnion087",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1824,35 +1824,11 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion087",
-      "decoderKind": "generatedLosslessUnionWrapper"
-    },
-    {
-      "operationId": "session.shell",
-      "status": 404,
-      "mediaType": "application/json",
-      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
-      "payloadType": "NotFoundError",
-      "decoderKind": "generatedModel"
-    },
-    {
-      "operationId": "session.shell",
-      "status": 409,
-      "mediaType": "application/json",
-      "schemaJson": "{\"$ref\":\"#/components/schemas/SessionBusyError\"}",
-      "payloadType": "SessionBusyError",
-      "decoderKind": "generatedModel"
-    },
-    {
-      "operationId": "session.revert",
-      "status": 400,
-      "mediaType": "application/json",
-      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
       "payloadType": "OpencodeSdkRawUnion088",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
-      "operationId": "session.revert",
+      "operationId": "session.shell",
       "status": 404,
       "mediaType": "application/json",
       "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
@@ -1860,7 +1836,7 @@
       "decoderKind": "generatedModel"
     },
     {
-      "operationId": "session.revert",
+      "operationId": "session.shell",
       "status": 409,
       "mediaType": "application/json",
       "schemaJson": "{\"$ref\":\"#/components/schemas/SessionBusyError\"}",
@@ -1868,7 +1844,7 @@
       "decoderKind": "generatedModel"
     },
     {
-      "operationId": "session.unrevert",
+      "operationId": "session.revert",
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
@@ -1876,6 +1852,30 @@
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
+      "operationId": "session.revert",
+      "status": 404,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/NotFoundError\"}",
+      "payloadType": "NotFoundError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.revert",
+      "status": 409,
+      "mediaType": "application/json",
+      "schemaJson": "{\"$ref\":\"#/components/schemas/SessionBusyError\"}",
+      "payloadType": "SessionBusyError",
+      "decoderKind": "generatedModel"
+    },
+    {
+      "operationId": "session.unrevert",
+      "status": 400,
+      "mediaType": "application/json",
+      "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
+      "payloadType": "OpencodeSdkRawUnion090",
+      "decoderKind": "generatedLosslessUnionWrapper"
+    },
+    {
       "operationId": "session.unrevert",
       "status": 404,
       "mediaType": "application/json",
@@ -1896,7 +1896,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion090",
+      "payloadType": "OpencodeSdkRawUnion091",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1904,7 +1904,7 @@
       "status": 404,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/NotFoundError\"},{\"$ref\":\"#/components/schemas/PermissionNotFoundError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion091",
+      "payloadType": "OpencodeSdkRawUnion092",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1912,7 +1912,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion092",
+      "payloadType": "OpencodeSdkRawUnion093",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1928,7 +1928,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion093",
+      "payloadType": "OpencodeSdkRawUnion094",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1952,7 +1952,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion094",
+      "payloadType": "OpencodeSdkRawUnion095",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1960,7 +1960,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion095",
+      "payloadType": "OpencodeSdkRawUnion096",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1968,7 +1968,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion096",
+      "payloadType": "OpencodeSdkRawUnion097",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -1976,7 +1976,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion097",
+      "payloadType": "OpencodeSdkRawUnion098",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -2032,7 +2032,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion098",
+      "payloadType": "OpencodeSdkRawUnion099",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -2048,7 +2048,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion099",
+      "payloadType": "OpencodeSdkRawUnion100",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -2056,7 +2056,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion101",
+      "payloadType": "OpencodeSdkRawUnion102",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -2104,7 +2104,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/WorkspaceCreateError\"},{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion102",
+      "payloadType": "OpencodeSdkRawUnion103",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -2128,7 +2128,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion103",
+      "payloadType": "OpencodeSdkRawUnion104",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -2136,7 +2136,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/WorkspaceWarpError\"},{\"$ref\":\"#/components/schemas/VcsApplyError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion104",
+      "payloadType": "OpencodeSdkRawUnion105",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -2200,7 +2200,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/InvalidCursorError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion105",
+      "payloadType": "OpencodeSdkRawUnion106",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -2432,7 +2432,7 @@
       "status": 404,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/MessageNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion106",
+      "payloadType": "OpencodeSdkRawUnion107",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -2624,7 +2624,7 @@
       "status": 404,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/MessageNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion107",
+      "payloadType": "OpencodeSdkRawUnion108",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -2632,7 +2632,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/InvalidCursorError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion108",
+      "payloadType": "OpencodeSdkRawUnion109",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -3000,7 +3000,7 @@
       "status": 404,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/PermissionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion109",
+      "payloadType": "OpencodeSdkRawUnion110",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -3024,7 +3024,7 @@
       "status": 404,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/PermissionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion110",
+      "payloadType": "OpencodeSdkRawUnion111",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -3352,7 +3352,7 @@
       "status": 404,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/QuestionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion111",
+      "payloadType": "OpencodeSdkRawUnion112",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -3376,7 +3376,7 @@
       "status": 404,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/QuestionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion112",
+      "payloadType": "OpencodeSdkRawUnion113",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -3400,7 +3400,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/ProjectCopyError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion113",
+      "payloadType": "OpencodeSdkRawUnion114",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -3408,7 +3408,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/ProjectCopyError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion114",
+      "payloadType": "OpencodeSdkRawUnion115",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {
@@ -3416,7 +3416,7 @@
       "status": 400,
       "mediaType": "application/json",
       "schemaJson": "{\"anyOf\":[{\"$ref\":\"#/components/schemas/ProjectCopyError\"},{\"$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
-      "payloadType": "OpencodeSdkRawUnion115",
+      "payloadType": "OpencodeSdkRawUnion116",
       "decoderKind": "generatedLosslessUnionWrapper"
     },
     {

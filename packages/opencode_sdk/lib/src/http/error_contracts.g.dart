@@ -16,9 +16,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion036",
+    payloadType: "OpencodeSdkRawUnion037",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion036", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion037", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "auth.remove",
@@ -34,9 +34,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion037",
+    payloadType: "OpencodeSdkRawUnion038",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion037", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion038", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "app.log",
@@ -52,9 +52,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion038",
+    payloadType: "OpencodeSdkRawUnion039",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion038", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion039", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "experimental.controlPlane.moveSession",
@@ -70,9 +70,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/MoveSessionError\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion039",
+    payloadType: "OpencodeSdkRawUnion040",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion039", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion040", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "global.health",
@@ -136,9 +136,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion040",
+    payloadType: "OpencodeSdkRawUnion041",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion040", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion041", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "global.dispose",
@@ -170,9 +170,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion042",
+    payloadType: "OpencodeSdkRawUnion043",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion042", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion043", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "config.get",
@@ -204,9 +204,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion043",
+    payloadType: "OpencodeSdkRawUnion044",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion043", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion044", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "config.providers",
@@ -328,9 +328,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion044",
+    payloadType: "OpencodeSdkRawUnion045",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion044", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion045", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "tool.ids",
@@ -346,9 +346,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion045",
+    payloadType: "OpencodeSdkRawUnion046",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion045", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion046", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "worktree.list",
@@ -364,9 +364,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/WorktreeError\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion046",
+    payloadType: "OpencodeSdkRawUnion047",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion046", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion047", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "worktree.create",
@@ -382,9 +382,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/WorktreeError\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion047",
+    payloadType: "OpencodeSdkRawUnion048",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion047", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion048", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "worktree.remove",
@@ -400,9 +400,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/WorktreeError\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion048",
+    payloadType: "OpencodeSdkRawUnion049",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion048", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion049", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "worktree.reset",
@@ -418,9 +418,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/WorktreeError\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion049",
+    payloadType: "OpencodeSdkRawUnion050",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion049", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion050", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "experimental.session.list",
@@ -452,9 +452,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion052",
+    payloadType: "OpencodeSdkRawUnion053",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion052", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion053", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "experimental.resource.list",
@@ -678,9 +678,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/VcsApplyError\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion053",
+    payloadType: "OpencodeSdkRawUnion054",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion053", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion054", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "command.list",
@@ -792,9 +792,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion054",
+    payloadType: "OpencodeSdkRawUnion055",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion054", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion055", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "mcp.auth.start",
@@ -810,9 +810,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/McpUnsupportedOAuthError\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion056",
+    payloadType: "OpencodeSdkRawUnion057",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion056", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion057", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "mcp.auth.start",
@@ -876,9 +876,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion057",
+    payloadType: "OpencodeSdkRawUnion058",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion057", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion058", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "mcp.auth.callback",
@@ -910,9 +910,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/McpUnsupportedOAuthError\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion058",
+    payloadType: "OpencodeSdkRawUnion059",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion058", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion059", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "mcp.auth.authenticate",
@@ -1056,9 +1056,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion059",
+    payloadType: "OpencodeSdkRawUnion060",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion059", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion060", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "project.update",
@@ -1154,9 +1154,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion060",
+    payloadType: "OpencodeSdkRawUnion061",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion060", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion061", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "pty.get",
@@ -1204,9 +1204,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion061",
+    payloadType: "OpencodeSdkRawUnion062",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion061", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion062", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "pty.update",
@@ -1334,9 +1334,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion062",
+    payloadType: "OpencodeSdkRawUnion063",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion062", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion063", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "question.reply",
@@ -1368,9 +1368,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion063",
+    payloadType: "OpencodeSdkRawUnion064",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion063", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion064", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "question.reject",
@@ -1418,9 +1418,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion064",
+    payloadType: "OpencodeSdkRawUnion065",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion064", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion065", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "permission.reply",
@@ -1485,9 +1485,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/ProviderAuthError1\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion065",
+    payloadType: "OpencodeSdkRawUnion066",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion065", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion066", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "provider.oauth.callback",
@@ -1503,9 +1503,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/ProviderAuthError1\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion066",
+    payloadType: "OpencodeSdkRawUnion067",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion066", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion067", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "session.list",
@@ -1537,9 +1537,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion068",
+    payloadType: "OpencodeSdkRawUnion069",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion068", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion069", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "session.status",
@@ -1555,9 +1555,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion069",
+    payloadType: "OpencodeSdkRawUnion070",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion069", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion070", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "session.get",
@@ -1573,9 +1573,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion070",
+    payloadType: "OpencodeSdkRawUnion071",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion070", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion071", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "session.get",
@@ -1607,9 +1607,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion071",
+    payloadType: "OpencodeSdkRawUnion072",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion071", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion072", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "session.delete",
@@ -1641,9 +1641,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion072",
+    payloadType: "OpencodeSdkRawUnion073",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion072", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion073", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "session.update",
@@ -1675,9 +1675,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion073",
+    payloadType: "OpencodeSdkRawUnion074",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion073", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion074", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "session.children",
@@ -1709,9 +1709,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion074",
+    payloadType: "OpencodeSdkRawUnion075",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion074", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion075", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "session.todo",
@@ -1759,9 +1759,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion075",
+    payloadType: "OpencodeSdkRawUnion076",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion075", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion076", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "session.messages",
@@ -1793,9 +1793,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion076",
+    payloadType: "OpencodeSdkRawUnion077",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion076", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion077", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "session.prompt",
@@ -1827,9 +1827,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion078",
+    payloadType: "OpencodeSdkRawUnion079",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion078", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion079", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "session.message",
@@ -1861,9 +1861,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion079",
+    payloadType: "OpencodeSdkRawUnion080",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion079", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion080", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "session.deleteMessage",
@@ -1911,9 +1911,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion080",
+    payloadType: "OpencodeSdkRawUnion081",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion080", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion081", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "session.fork",
@@ -1945,9 +1945,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion081",
+    payloadType: "OpencodeSdkRawUnion082",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion081", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion082", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "session.init",
@@ -1963,9 +1963,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion082",
+    payloadType: "OpencodeSdkRawUnion083",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion082", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion083", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "session.init",
@@ -2103,9 +2103,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion083",
+    payloadType: "OpencodeSdkRawUnion084",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion083", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion084", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "session.summarize",
@@ -2137,9 +2137,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion084",
+    payloadType: "OpencodeSdkRawUnion085",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion084", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion085", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "session.prompt_async",
@@ -2171,9 +2171,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion086",
+    payloadType: "OpencodeSdkRawUnion087",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion086", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion087", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "session.command",
@@ -2205,9 +2205,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion087",
+    payloadType: "OpencodeSdkRawUnion088",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion087", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion088", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "session.shell",
@@ -2255,9 +2255,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion088",
+    payloadType: "OpencodeSdkRawUnion089",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion088", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion089", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "session.revert",
@@ -2305,9 +2305,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion089",
+    payloadType: "OpencodeSdkRawUnion090",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion089", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion090", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "session.unrevert",
@@ -2355,9 +2355,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion090",
+    payloadType: "OpencodeSdkRawUnion091",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion090", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion091", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "permission.respond",
@@ -2373,9 +2373,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/NotFoundError\"},{\"\$ref\":\"#/components/schemas/PermissionNotFoundError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion091",
+    payloadType: "OpencodeSdkRawUnion092",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion091", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion092", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "part.delete",
@@ -2391,9 +2391,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion092",
+    payloadType: "OpencodeSdkRawUnion093",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion092", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion093", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "part.delete",
@@ -2425,9 +2425,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion093",
+    payloadType: "OpencodeSdkRawUnion094",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion093", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion094", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "part.update",
@@ -2475,9 +2475,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion094",
+    payloadType: "OpencodeSdkRawUnion095",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion094", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion095", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "sync.steal",
@@ -2493,9 +2493,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion095",
+    payloadType: "OpencodeSdkRawUnion096",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion095", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion096", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "sync.history.list",
@@ -2511,9 +2511,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion096",
+    payloadType: "OpencodeSdkRawUnion097",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion096", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion097", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "tui.appendPrompt",
@@ -2529,9 +2529,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion097",
+    payloadType: "OpencodeSdkRawUnion098",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion097", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion098", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "tui.openHelp",
@@ -2643,9 +2643,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion098",
+    payloadType: "OpencodeSdkRawUnion099",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion098", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion099", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "tui.showToast",
@@ -2677,9 +2677,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion099",
+    payloadType: "OpencodeSdkRawUnion100",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion099", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion100", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "tui.selectSession",
@@ -2695,9 +2695,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion101",
+    payloadType: "OpencodeSdkRawUnion102",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion101", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion102", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "tui.selectSession",
@@ -2793,9 +2793,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/WorkspaceCreateError\"},{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion102",
+    payloadType: "OpencodeSdkRawUnion103",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion102", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion103", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "experimental.workspace.syncList",
@@ -2843,9 +2843,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion103",
+    payloadType: "OpencodeSdkRawUnion104",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion103", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion104", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "experimental.workspace.warp",
@@ -2861,9 +2861,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/WorkspaceWarpError\"},{\"\$ref\":\"#/components/schemas/VcsApplyError\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion104",
+    payloadType: "OpencodeSdkRawUnion105",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion104", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion105", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "experimental.workspace.warp",
@@ -2991,9 +2991,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/InvalidCursorError\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion105",
+    payloadType: "OpencodeSdkRawUnion106",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion105", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion106", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "v2.session.list",
@@ -3471,9 +3471,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/MessageNotFoundError\"},{\"\$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"\$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion106",
+    payloadType: "OpencodeSdkRawUnion107",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion106", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion107", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "v2.session.revert.stage",
@@ -3869,9 +3869,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/MessageNotFoundError\"},{\"\$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"\$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion107",
+    payloadType: "OpencodeSdkRawUnion108",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion107", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion108", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "v2.session.messages",
@@ -3887,9 +3887,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/InvalidCursorError\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion108",
+    payloadType: "OpencodeSdkRawUnion109",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion108", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion109", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "v2.session.messages",
@@ -4640,9 +4640,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/PermissionNotFoundError\"},{\"\$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"\$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion109",
+    payloadType: "OpencodeSdkRawUnion110",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion109", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion110", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "v2.session.permission.reply",
@@ -4690,9 +4690,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/PermissionNotFoundError\"},{\"\$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"\$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion110",
+    payloadType: "OpencodeSdkRawUnion111",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion110", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion111", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "v2.fs.read",
@@ -5350,9 +5350,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/QuestionNotFoundError\"},{\"\$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"\$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion111",
+    payloadType: "OpencodeSdkRawUnion112",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion111", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion112", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "v2.session.question.reject",
@@ -5400,9 +5400,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/QuestionNotFoundError\"},{\"\$ref\":\"#/components/schemas/SessionNotFoundError\"},{\"\$ref\":\"#/components/schemas/SessionNotFoundError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion112",
+    payloadType: "OpencodeSdkRawUnion113",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion112", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion113", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "v2.reference.list",
@@ -5450,9 +5450,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/ProjectCopyError\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion113",
+    payloadType: "OpencodeSdkRawUnion114",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion113", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion114", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "v2.projectCopy.remove",
@@ -5468,9 +5468,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/ProjectCopyError\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion114",
+    payloadType: "OpencodeSdkRawUnion115",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion114", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion115", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "v2.projectCopy.refresh",
@@ -5486,9 +5486,9 @@ openCodeErrorContracts = {
       schemaJson:
           "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/ProjectCopyError\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}",
     ),
-    payloadType: "OpencodeSdkRawUnion115",
+    payloadType: "OpencodeSdkRawUnion116",
     decoder: (payload, contract) =>
-        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion115", contract),
+        decodeOpenCodeErrorModel(payload, "OpencodeSdkRawUnion116", contract),
   ),
   const OpenCodeErrorContractKey(
     operationId: "pty.connect",

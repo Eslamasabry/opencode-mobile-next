@@ -18,7 +18,7 @@ class OpencodeSdkRawUnion006 implements OpenCodeRawJsonValue {
       OpencodeSdkRawUnion006(json);
 
   static const String openApiSchemaJson =
-      "{\"anyOf\":[{\"type\":\"boolean\"},{\"type\":\"string\",\"enum\":[\"reasoning\",\"reasoning_content\",\"reasoning_text\"]},{\"type\":\"string\"},{\"type\":\"object\",\"properties\":{\"field\":{\"anyOf\":[{\"type\":\"string\",\"enum\":[\"reasoning\",\"reasoning_content\",\"reasoning_text\"]},{\"type\":\"string\"}]}},\"required\":[\"field\"],\"additionalProperties\":false}]}";
+      "{\"anyOf\":[{\"type\":\"integer\",\"exclusiveMinimum\":0},{\"type\":\"boolean\",\"enum\":[false]}],\"description\":\"Timeout in milliseconds between streamed SSE chunks for this provider (default: 300000). If no chunk arrives within this window, the request is aborted. Set to false to disable timeout.\"}";
 
   @override
   final Object? value;

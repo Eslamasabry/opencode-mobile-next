@@ -18,7 +18,7 @@ const _requiredTotals = <String, int>{
   'operations': 188,
   'schemas': 472,
   'generatedParameters': 449,
-  'wrappers': 140,
+  'wrappers': 141,
   'errors': 332,
   'mixedAdditionalProperties': 6,
 };
@@ -360,11 +360,11 @@ void _verifyNormalizationLedger(
   _expect(actual.nullableMarkersAdded, 7, 'nullable markers');
   _expect(actual.unconstrainedUnionsCollapsed, 2, 'unconstrained unions');
   _expect(actual.effectExtensionsRemoved, 1, 'effect-stream removals');
-  _expect(actual.inlineUnionsHoisted, 115, 'hoisted inline unions');
+  _expect(actual.inlineUnionsHoisted, 116, 'hoisted inline unions');
   _expect(actual.renames.length, 9, 'component renames');
   _expect(
     ((normalized['components'] as Map)['schemas'] as Map).length,
-    587,
+    588,
     'normalized component count',
   );
 

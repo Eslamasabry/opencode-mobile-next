@@ -9,12 +9,13 @@ part of 'global_upgrade_request.dart';
 GlobalUpgradeRequest _$GlobalUpgradeRequestFromJson(
   Map<String, dynamic> json,
 ) => $checkedCreate('GlobalUpgradeRequest', json, ($checkedConvert) {
+  $checkKeys(json, requiredKeys: const ['target']);
   final val = GlobalUpgradeRequest(
-    target: $checkedConvert('target', (v) => v as String?),
+    target: $checkedConvert('target', (v) => v as String),
   );
   return val;
 });
 
 Map<String, dynamic> _$GlobalUpgradeRequestToJson(
   GlobalUpgradeRequest instance,
-) => <String, dynamic>{'target': ?instance.target};
+) => <String, dynamic>{'target': instance.target};

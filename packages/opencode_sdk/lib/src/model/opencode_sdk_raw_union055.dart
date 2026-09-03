@@ -18,7 +18,7 @@ class OpencodeSdkRawUnion055 implements OpenCodeRawJsonValue {
       OpencodeSdkRawUnion055(json);
 
   static const String openApiSchemaJson =
-      "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/McpLocalConfig\"},{\"\$ref\":\"#/components/schemas/McpRemoteConfig\"}]}";
+      "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/effect_HttpApiError_BadRequest\"},{\"\$ref\":\"#/components/schemas/InvalidRequestError\"}]}";
 
   @override
   final Object? value;

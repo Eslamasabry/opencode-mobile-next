@@ -29,7 +29,7 @@ SessionMessageAssistantTool _$SessionMessageAssistantToolFromJson(
               v as Map<String, dynamic>,
             ),
     ),
-    state: $checkedConvert('state', (v) => OpencodeSdkRawUnion020.fromJson(v)),
+    state: $checkedConvert('state', (v) => OpencodeSdkRawUnion021.fromJson(v)),
     time: $checkedConvert(
       'time',
       (v) =>

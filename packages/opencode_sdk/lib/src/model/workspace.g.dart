@@ -22,7 +22,7 @@ Workspace _$WorkspaceFromJson(Map<String, dynamic> json) =>
         projectID: $checkedConvert('projectID', (v) => v as String),
         timeUsed: $checkedConvert(
           'timeUsed',
-          (v) => OpencodeSdkRawUnion018.fromJson(v),
+          (v) => OpencodeSdkRawUnion019.fromJson(v),
         ),
       );
       return val;

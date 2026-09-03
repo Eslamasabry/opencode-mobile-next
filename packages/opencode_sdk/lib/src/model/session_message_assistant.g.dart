@@ -35,7 +35,7 @@ SessionMessageAssistant _$SessionMessageAssistantFromJson(
     ),
     content: $checkedConvert(
       'content',
-      (v) => (v as List<dynamic>).map(OpencodeSdkRawUnion021.fromJson).toList(),
+      (v) => (v as List<dynamic>).map(OpencodeSdkRawUnion022.fromJson).toList(),
     ),
     snapshot: $checkedConvert(
       'snapshot',

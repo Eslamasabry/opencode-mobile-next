@@ -4,7 +4,7 @@
 
 // ignore_for_file: unused_element
 import 'package:opencode_sdk/src/model/session_prompt_request_model.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union077.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union078.dart';
 import 'package:opencode_sdk/src/model/output_format.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:equatable/src/equatable_utils.dart';
@@ -64,7 +64,7 @@ class SessionPromptRequest {
   final String? variant;
 
   @JsonKey(name: r'parts', required: true, includeIfNull: false)
-  final List<OpencodeSdkRawUnion077> parts;
+  final List<OpencodeSdkRawUnion078> parts;
 
   bool operator ==(Object other) {
     return identical(this, other) ||

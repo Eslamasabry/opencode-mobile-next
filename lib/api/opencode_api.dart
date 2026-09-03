@@ -534,9 +534,9 @@ class OpenCodeApi
           agent: agent,
           variant: variant,
           parts: [
-            sdk.OpencodeSdkRawUnion085({'type': 'text', 'text': text}),
+            sdk.OpencodeSdkRawUnion086({'type': 'text', 'text': text}),
             ...agentMentions.map(
-              (mention) => sdk.OpencodeSdkRawUnion085(
+              (mention) => sdk.OpencodeSdkRawUnion086(
                 sdk.AgentPartInput(
                   type: sdk.AgentPartInputTypeEnum.agent,
                   name: mention.name,
@@ -549,7 +549,7 @@ class OpenCodeApi
               ),
             ),
             ...attachments.map(
-              (attachment) => sdk.OpencodeSdkRawUnion085(attachment.toJson()),
+              (attachment) => sdk.OpencodeSdkRawUnion086(attachment.toJson()),
             ),
           ],
         ),

@@ -86,7 +86,7 @@ Future<ProcessResult> _verify(Directory root, Directory package) =>
       'run',
       '${root.path}/tool/sdk/verify_artifacts_independent.dart',
       '--skip-source-hashes',
-      '${root.path}/contracts/opencode-openapi-03bba464.json',
+      '${root.path}/contracts/opencode-openapi-f12e14cf.json',
       '${root.path}/contracts/opencode-sdk-manifest.json',
       package.path,
       '${root.path}/contracts/opencode-sdk-matrix.json',
@@ -111,7 +111,7 @@ Directory _workspaceRoot() {
   var directory = Directory.current.absolute;
   while (true) {
     if (File(
-      '${directory.path}/contracts/opencode-openapi-03bba464.json',
+      '${directory.path}/contracts/opencode-openapi-f12e14cf.json',
     ).existsSync()) {
       return directory;
     }

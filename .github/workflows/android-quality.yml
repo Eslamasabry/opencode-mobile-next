@@ -61,19 +61,19 @@ jobs:
       - name: Verify generated OpenCode SDK integrity
         run: |
           dart run tool/sdk/verify_contract.dart \
-            contracts/opencode-openapi-03bba464.json \
+            contracts/opencode-openapi-f12e14cf.json \
             contracts/opencode-sdk-manifest.json before
           dart run tool/sdk/verify_generated.dart \
             packages/opencode_sdk \
             contracts/opencode-sdk-manifest.json
           dart run tool/sdk/verify_contract_matrix.dart \
-            contracts/opencode-openapi-03bba464.json \
+            contracts/opencode-openapi-f12e14cf.json \
             contracts/opencode-sdk-manifest.json \
             packages/opencode_sdk \
             contracts/opencode-sdk-matrix.json \
             contracts/opencode-sdk-matrix.md
           dart run tool/sdk/verify_artifacts_independent.dart \
-            contracts/opencode-openapi-03bba464.json \
+            contracts/opencode-openapi-f12e14cf.json \
             contracts/opencode-sdk-manifest.json \
             packages/opencode_sdk \
             contracts/opencode-sdk-matrix.json \

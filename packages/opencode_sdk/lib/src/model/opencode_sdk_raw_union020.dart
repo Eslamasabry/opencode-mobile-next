@@ -18,7 +18,7 @@ class OpencodeSdkRawUnion020 implements OpenCodeRawJsonValue {
       OpencodeSdkRawUnion020(json);
 
   static const String openApiSchemaJson =
-      "{\"anyOf\":[{\"\$ref\":\"#/components/schemas/SessionMessageToolStatePending\"},{\"\$ref\":\"#/components/schemas/SessionMessageToolStateRunning\"},{\"\$ref\":\"#/components/schemas/SessionMessageToolStateCompleted\"},{\"\$ref\":\"#/components/schemas/SessionMessageToolStateError\"}]}";
+      "{\"anyOf\":[{\"type\":\"string\",\"enum\":[\"session.list\",\"session.new\",\"session.share\",\"session.interrupt\",\"session.compact\",\"session.page.up\",\"session.page.down\",\"session.line.up\",\"session.line.down\",\"session.half.page.up\",\"session.half.page.down\",\"session.first\",\"session.last\",\"prompt.clear\",\"prompt.submit\",\"agent.cycle\"]},{\"type\":\"string\"}]}";
 
   @override
   final Object? value;

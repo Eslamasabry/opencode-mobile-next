@@ -17,8 +17,8 @@ const _requiredTotals = <String, int>{
   'requestSchemaSlots': 60,
   'responseObjects': 520,
   'responseSchemaSlots': 497,
-  'enumSites': 617,
-  'enumEntries': 870,
+  'enumSites': 618,
+  'enumEntries': 871,
 };
 
 Future<void> main(List<String> arguments) async {

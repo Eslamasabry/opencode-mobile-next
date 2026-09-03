@@ -43,13 +43,13 @@ Config _$ConfigFromJson(Map<String, dynamic> json) => $checkedCreate(
       references: $checkedConvert(
         'references',
         (v) => (v as Map<String, dynamic>?)?.map(
-          (k, e) => MapEntry(k, OpencodeSdkRawUnion008.fromJson(e)),
+          (k, e) => MapEntry(k, OpencodeSdkRawUnion009.fromJson(e)),
         ),
       ),
       reference: $checkedConvert(
         'reference',
         (v) => (v as Map<String, dynamic>?)?.map(
-          (k, e) => MapEntry(k, OpencodeSdkRawUnion009.fromJson(e)),
+          (k, e) => MapEntry(k, OpencodeSdkRawUnion010.fromJson(e)),
         ),
       ),
       watcher: $checkedConvert(
@@ -62,7 +62,7 @@ Config _$ConfigFromJson(Map<String, dynamic> json) => $checkedCreate(
       plugin: $checkedConvert(
         'plugin',
         (v) => (v as List<dynamic>?)
-            ?.map(OpencodeSdkRawUnion010.fromJson)
+            ?.map(OpencodeSdkRawUnion011.fromJson)
             .toList(),
       ),
       share: $checkedConvert(
@@ -76,7 +76,7 @@ Config _$ConfigFromJson(Map<String, dynamic> json) => $checkedCreate(
       autoshare: $checkedConvert('autoshare', (v) => v as bool?),
       autoupdate: $checkedConvert(
         'autoupdate',
-        (v) => v == null ? null : OpencodeSdkRawUnion011.fromJson(v),
+        (v) => v == null ? null : OpencodeSdkRawUnion012.fromJson(v),
       ),
       disabledProviders: $checkedConvert(
         'disabled_providers',
@@ -114,16 +114,16 @@ Config _$ConfigFromJson(Map<String, dynamic> json) => $checkedCreate(
       mcp: $checkedConvert(
         'mcp',
         (v) => (v as Map<String, dynamic>?)?.map(
-          (k, e) => MapEntry(k, OpencodeSdkRawUnion012.fromJson(e)),
+          (k, e) => MapEntry(k, OpencodeSdkRawUnion013.fromJson(e)),
         ),
       ),
       formatter: $checkedConvert(
         'formatter',
-        (v) => v == null ? null : OpencodeSdkRawUnion013.fromJson(v),
+        (v) => v == null ? null : OpencodeSdkRawUnion014.fromJson(v),
       ),
       lsp: $checkedConvert(
         'lsp',
-        (v) => v == null ? null : OpencodeSdkRawUnion014.fromJson(v),
+        (v) => v == null ? null : OpencodeSdkRawUnion015.fromJson(v),
       ),
       instructions: $checkedConvert(
         'instructions',

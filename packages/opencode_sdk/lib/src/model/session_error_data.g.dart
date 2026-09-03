@@ -12,7 +12,7 @@ SessionErrorData _$SessionErrorDataFromJson(Map<String, dynamic> json) =>
         sessionID: $checkedConvert('sessionID', (v) => v as String?),
         error: $checkedConvert(
           'error',
-          (v) => v == null ? null : OpencodeSdkRawUnion033.fromJson(v),
+          (v) => v == null ? null : OpencodeSdkRawUnion034.fromJson(v),
         ),
       );
       return val;

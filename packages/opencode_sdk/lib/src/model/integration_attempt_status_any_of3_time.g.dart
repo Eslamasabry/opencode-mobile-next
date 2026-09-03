@@ -15,11 +15,11 @@ IntegrationAttemptStatusAnyOf3Time _$IntegrationAttemptStatusAnyOf3TimeFromJson(
   final val = IntegrationAttemptStatusAnyOf3Time(
     created: $checkedConvert(
       'created',
-      (v) => OpencodeSdkRawUnion031.fromJson(v),
+      (v) => OpencodeSdkRawUnion032.fromJson(v),
     ),
     expires: $checkedConvert(
       'expires',
-      (v) => OpencodeSdkRawUnion032.fromJson(v),
+      (v) => OpencodeSdkRawUnion033.fromJson(v),
     ),
   );
   return val;

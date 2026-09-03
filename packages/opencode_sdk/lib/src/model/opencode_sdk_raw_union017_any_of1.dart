@@ -3,12 +3,12 @@
 //
 
 // ignore_for_file: unused_element
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union016_any_of_when.dart';
 import 'package:opencode_sdk/src/model/integration_select_prompt_options_inner.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union017_any_of_when.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:equatable/src/equatable_utils.dart';
 
-part 'opencode_sdk_raw_union016_any_of1.g.dart';
+part 'opencode_sdk_raw_union017_any_of1.g.dart';
 
 @JsonSerializable(
   checked: true,
@@ -16,9 +16,9 @@ part 'opencode_sdk_raw_union016_any_of1.g.dart';
   disallowUnrecognizedKeys: false,
   explicitToJson: true,
 )
-class OpencodeSdkRawUnion016AnyOf1 {
-  /// Returns a new [OpencodeSdkRawUnion016AnyOf1] instance.
-  OpencodeSdkRawUnion016AnyOf1({
+class OpencodeSdkRawUnion017AnyOf1 {
+  /// Returns a new [OpencodeSdkRawUnion017AnyOf1] instance.
+  OpencodeSdkRawUnion017AnyOf1({
     required this.type,
 
     required this.key,
@@ -35,9 +35,9 @@ class OpencodeSdkRawUnion016AnyOf1 {
     required: true,
     includeIfNull: false,
     unknownEnumValue:
-        OpencodeSdkRawUnion016AnyOf1TypeEnum.unknownDefaultOpenApi,
+        OpencodeSdkRawUnion017AnyOf1TypeEnum.unknownDefaultOpenApi,
   )
-  final OpencodeSdkRawUnion016AnyOf1TypeEnum type;
+  final OpencodeSdkRawUnion017AnyOf1TypeEnum type;
 
   @JsonKey(name: r'key', required: true, includeIfNull: false)
   final String key;
@@ -49,11 +49,11 @@ class OpencodeSdkRawUnion016AnyOf1 {
   final List<IntegrationSelectPromptOptionsInner> options;
 
   @JsonKey(name: r'when', required: false, includeIfNull: false)
-  final OpencodeSdkRawUnion016AnyOfWhen? when_;
+  final OpencodeSdkRawUnion017AnyOfWhen? when_;
 
   bool operator ==(Object other) {
     return identical(this, other) ||
-        other is OpencodeSdkRawUnion016AnyOf1 &&
+        other is OpencodeSdkRawUnion017AnyOf1 &&
             runtimeType == other.runtimeType &&
             equals(
               [type, key, message, options, when_],
@@ -71,23 +71,23 @@ class OpencodeSdkRawUnion016AnyOf1 {
       runtimeType.hashCode ^
       mapPropsToHashCode([type, key, message, options, when_]);
 
-  factory OpencodeSdkRawUnion016AnyOf1.fromJson(Map<String, dynamic> json) =>
-      _$OpencodeSdkRawUnion016AnyOf1FromJson(json);
+  factory OpencodeSdkRawUnion017AnyOf1.fromJson(Map<String, dynamic> json) =>
+      _$OpencodeSdkRawUnion017AnyOf1FromJson(json);
 
-  Map<String, dynamic> toJson() => _$OpencodeSdkRawUnion016AnyOf1ToJson(this);
+  Map<String, dynamic> toJson() => _$OpencodeSdkRawUnion017AnyOf1ToJson(this);
 
   String toString() {
     return toJson().toString();
   }
 }
 
-enum OpencodeSdkRawUnion016AnyOf1TypeEnum {
+enum OpencodeSdkRawUnion017AnyOf1TypeEnum {
   @JsonValue(r'select')
   select(r'select'),
   @JsonValue(r'unknown_default_open_api')
   unknownDefaultOpenApi(r'unknown_default_open_api');
 
-  const OpencodeSdkRawUnion016AnyOf1TypeEnum(this.value);
+  const OpencodeSdkRawUnion017AnyOf1TypeEnum(this.value);
 
   final Object value;
 

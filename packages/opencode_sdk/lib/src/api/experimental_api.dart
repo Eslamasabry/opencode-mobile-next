@@ -19,7 +19,6 @@ import 'package:opencode_sdk/src/model/experimental_console_list_orgs200_respons
 import 'package:opencode_sdk/src/model/experimental_console_switch_org_request.dart';
 import 'package:opencode_sdk/src/model/global_session.dart';
 import 'package:opencode_sdk/src/model/mcp_resource.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union044.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union045.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union046.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union047.dart';
@@ -28,6 +27,7 @@ import 'package:opencode_sdk/src/model/opencode_sdk_raw_union049.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union050.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union051.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union052.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union053.dart';
 import 'package:opencode_sdk/src/model/tool_list_item.dart';
 import 'package:opencode_sdk/src/model/worktree.dart';
 import 'package:opencode_sdk/src/model/worktree_create_input.dart';
@@ -661,12 +661,12 @@ class ExperimentalApi {
   Future<Response<List<GlobalSession>>> experimentalSessionList({
     String? directory,
     String? workspace,
-    OpencodeSdkRawUnion050? roots,
+    OpencodeSdkRawUnion051? roots,
     num? start,
     num? cursor,
     String? search,
     num? limit,
-    OpencodeSdkRawUnion051? archived,
+    OpencodeSdkRawUnion052? archived,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,

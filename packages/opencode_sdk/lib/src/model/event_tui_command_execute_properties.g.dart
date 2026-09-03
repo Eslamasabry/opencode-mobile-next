@@ -14,7 +14,7 @@ EventTuiCommandExecuteProperties _$EventTuiCommandExecutePropertiesFromJson(
       final val = EventTuiCommandExecuteProperties(
         command: $checkedConvert(
           'command',
-          (v) => OpencodeSdkRawUnion017.fromJson(v),
+          (v) => OpencodeSdkRawUnion018.fromJson(v),
         ),
       );
       return val;

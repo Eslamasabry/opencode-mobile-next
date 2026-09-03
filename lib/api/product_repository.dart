@@ -818,11 +818,11 @@ class SdkProductRepository
     // endpoint is the server-wide finder; passing the active directory would
     // silently reduce it to the list the Workspace screen already has.
     final response = await _client.getExperimentalApi().experimentalSessionList(
-      roots: sdk.OpencodeSdkRawUnion050(true),
+      roots: sdk.OpencodeSdkRawUnion051(true),
       cursor: cursor,
       search: query?.isNotEmpty == true ? query : null,
       limit: limit,
-      archived: sdk.OpencodeSdkRawUnion051(includeArchived),
+      archived: sdk.OpencodeSdkRawUnion052(includeArchived),
     );
     return (response.data ?? const [])
         .map(
@@ -1004,7 +1004,7 @@ class SdkProductRepository
       sessionPromptAsyncRequest: sdk.SessionPromptAsyncRequest(
         noReply: true,
         parts: [
-          sdk.OpencodeSdkRawUnion085({
+          sdk.OpencodeSdkRawUnion086({
             'type': 'text',
             'text':
                 '<system-reminder>The user has changed the current working directory to "$directory". This is still the same project but at a possibly new location; take this into account when working with any files from now on.</system-reminder>',
@@ -1604,7 +1604,7 @@ class SdkProductRepository
   }) => _guard('Could not save the MCP server', () async {
     final name = draft.normalizedName;
     final config = draft.toConfigJson();
-    final patch = sdk.Config(mcp: {name: sdk.OpencodeSdkRawUnion012(config)});
+    final patch = sdk.Config(mcp: {name: sdk.OpencodeSdkRawUnion013(config)});
 
     switch (scope) {
       case McpConfigScope.project:

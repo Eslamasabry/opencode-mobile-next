@@ -35,7 +35,7 @@ ModelCapabilities _$ModelCapabilitiesFromJson(Map<String, dynamic> json) =>
         ),
         interleaved: $checkedConvert(
           'interleaved',
-          (v) => OpencodeSdkRawUnion015.fromJson(v),
+          (v) => OpencodeSdkRawUnion016.fromJson(v),
         ),
       );
       return val;

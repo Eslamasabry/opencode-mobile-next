@@ -13,9 +13,9 @@ import 'package:opencode_sdk/src/http/wire.dart';
 
 import 'package:opencode_sdk/src/model/app_log_request.dart';
 import 'package:opencode_sdk/src/model/auth.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union036.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union037.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union038.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union039.dart';
 
 class ControlApi {
   final Dio _dio;

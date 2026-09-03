@@ -15,11 +15,11 @@ IntegrationAttemptStatusAnyOf2Time _$IntegrationAttemptStatusAnyOf2TimeFromJson(
   final val = IntegrationAttemptStatusAnyOf2Time(
     created: $checkedConvert(
       'created',
-      (v) => OpencodeSdkRawUnion029.fromJson(v),
+      (v) => OpencodeSdkRawUnion030.fromJson(v),
     ),
     expires: $checkedConvert(
       'expires',
-      (v) => OpencodeSdkRawUnion030.fromJson(v),
+      (v) => OpencodeSdkRawUnion031.fromJson(v),
     ),
   );
   return val;

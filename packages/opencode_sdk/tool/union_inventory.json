@@ -139,7 +139,8 @@
     "OpencodeSdkRawUnion112",
     "OpencodeSdkRawUnion113",
     "OpencodeSdkRawUnion114",
-    "OpencodeSdkRawUnion115"
+    "OpencodeSdkRawUnion115",
+    "OpencodeSdkRawUnion116"
   ],
   "covered": [
     {
@@ -387,7 +388,7 @@
       "className": "OpencodeSdkRawUnion006",
       "file": "lib/src/model/opencode_sdk_raw_union006.dart",
       "locations": [
-        "#/components/schemas/ProviderConfig/properties/models/additionalProperties/properties/interleaved"
+        "#/components/schemas/ProviderConfig/properties/options/properties/chunkTimeout"
       ]
     },
     {
@@ -395,7 +396,7 @@
       "className": "OpencodeSdkRawUnion007",
       "file": "lib/src/model/opencode_sdk_raw_union007.dart",
       "locations": [
-        "#/components/schemas/McpRemoteConfig/properties/oauth"
+        "#/components/schemas/ProviderConfig/properties/models/additionalProperties/properties/interleaved"
       ]
     },
     {
@@ -403,7 +404,7 @@
       "className": "OpencodeSdkRawUnion008",
       "file": "lib/src/model/opencode_sdk_raw_union008.dart",
       "locations": [
-        "#/components/schemas/Config/properties/references/additionalProperties"
+        "#/components/schemas/McpRemoteConfig/properties/oauth"
       ]
     },
     {
@@ -411,7 +412,7 @@
       "className": "OpencodeSdkRawUnion009",
       "file": "lib/src/model/opencode_sdk_raw_union009.dart",
       "locations": [
-        "#/components/schemas/Config/properties/reference/additionalProperties"
+        "#/components/schemas/Config/properties/references/additionalProperties"
       ]
     },
     {
@@ -419,7 +420,7 @@
       "className": "OpencodeSdkRawUnion010",
       "file": "lib/src/model/opencode_sdk_raw_union010.dart",
       "locations": [
-        "#/components/schemas/Config/properties/plugin/items"
+        "#/components/schemas/Config/properties/reference/additionalProperties"
       ]
     },
     {
@@ -427,7 +428,7 @@
       "className": "OpencodeSdkRawUnion011",
       "file": "lib/src/model/opencode_sdk_raw_union011.dart",
       "locations": [
-        "#/components/schemas/Config/properties/autoupdate"
+        "#/components/schemas/Config/properties/plugin/items"
       ]
     },
     {
@@ -435,7 +436,7 @@
       "className": "OpencodeSdkRawUnion012",
       "file": "lib/src/model/opencode_sdk_raw_union012.dart",
       "locations": [
-        "#/components/schemas/Config/properties/mcp/additionalProperties"
+        "#/components/schemas/Config/properties/autoupdate"
       ]
     },
     {
@@ -443,7 +444,7 @@
       "className": "OpencodeSdkRawUnion013",
       "file": "lib/src/model/opencode_sdk_raw_union013.dart",
       "locations": [
-        "#/components/schemas/Config/properties/formatter"
+        "#/components/schemas/Config/properties/mcp/additionalProperties"
       ]
     },
     {
@@ -451,7 +452,7 @@
       "className": "OpencodeSdkRawUnion014",
       "file": "lib/src/model/opencode_sdk_raw_union014.dart",
       "locations": [
-        "#/components/schemas/Config/properties/lsp"
+        "#/components/schemas/Config/properties/formatter"
       ]
     },
     {
@@ -459,7 +460,7 @@
       "className": "OpencodeSdkRawUnion015",
       "file": "lib/src/model/opencode_sdk_raw_union015.dart",
       "locations": [
-        "#/components/schemas/Model/properties/capabilities/properties/interleaved"
+        "#/components/schemas/Config/properties/lsp"
       ]
     },
     {
@@ -467,7 +468,7 @@
       "className": "OpencodeSdkRawUnion016",
       "file": "lib/src/model/opencode_sdk_raw_union016.dart",
       "locations": [
-        "#/components/schemas/ProviderAuthMethod/properties/prompts/items"
+        "#/components/schemas/Model/properties/capabilities/properties/interleaved"
       ]
     },
     {
@@ -475,7 +476,7 @@
       "className": "OpencodeSdkRawUnion017",
       "file": "lib/src/model/opencode_sdk_raw_union017.dart",
       "locations": [
-        "#/components/schemas/EventTuiCommandExecute/properties/properties/properties/command"
+        "#/components/schemas/ProviderAuthMethod/properties/prompts/items"
       ]
     },
     {
@@ -483,7 +484,7 @@
       "className": "OpencodeSdkRawUnion018",
       "file": "lib/src/model/opencode_sdk_raw_union018.dart",
       "locations": [
-        "#/components/schemas/Workspace/properties/timeUsed"
+        "#/components/schemas/EventTuiCommandExecute/properties/properties/properties/command"
       ]
     },
     {
@@ -491,7 +492,7 @@
       "className": "OpencodeSdkRawUnion019",
       "file": "lib/src/model/opencode_sdk_raw_union019.dart",
       "locations": [
-        "#/components/schemas/EventTuiCommandExecuteSchema2/properties/properties/properties/command"
+        "#/components/schemas/Workspace/properties/timeUsed"
       ]
     },
     {
@@ -499,7 +500,7 @@
       "className": "OpencodeSdkRawUnion020",
       "file": "lib/src/model/opencode_sdk_raw_union020.dart",
       "locations": [
-        "#/components/schemas/SessionMessageAssistantTool/properties/state"
+        "#/components/schemas/EventTuiCommandExecuteSchema2/properties/properties/properties/command"
       ]
     },
     {
@@ -507,7 +508,7 @@
       "className": "OpencodeSdkRawUnion021",
       "file": "lib/src/model/opencode_sdk_raw_union021.dart",
       "locations": [
-        "#/components/schemas/SessionMessageAssistant/properties/content/items"
+        "#/components/schemas/SessionMessageAssistantTool/properties/state"
       ]
     },
     {
@@ -515,7 +516,7 @@
       "className": "OpencodeSdkRawUnion022",
       "file": "lib/src/model/opencode_sdk_raw_union022.dart",
       "locations": [
-        "#/components/schemas/IntegrationOAuthMethod/properties/prompts/items"
+        "#/components/schemas/SessionMessageAssistant/properties/content/items"
       ]
     },
     {
@@ -523,7 +524,7 @@
       "className": "OpencodeSdkRawUnion023",
       "file": "lib/src/model/opencode_sdk_raw_union023.dart",
       "locations": [
-        "#/components/schemas/IntegrationAttempt/properties/time/properties/created"
+        "#/components/schemas/IntegrationOAuthMethod/properties/prompts/items"
       ]
     },
     {
@@ -531,7 +532,7 @@
       "className": "OpencodeSdkRawUnion024",
       "file": "lib/src/model/opencode_sdk_raw_union024.dart",
       "locations": [
-        "#/components/schemas/IntegrationAttempt/properties/time/properties/expires"
+        "#/components/schemas/IntegrationAttempt/properties/time/properties/created"
       ]
     },
     {
@@ -539,7 +540,7 @@
       "className": "OpencodeSdkRawUnion025",
       "file": "lib/src/model/opencode_sdk_raw_union025.dart",
       "locations": [
-        "#/components/schemas/IntegrationAttemptStatus/anyOf/0/properties/time/properties/created"
+        "#/components/schemas/IntegrationAttempt/properties/time/properties/expires"
       ]
     },
     {
@@ -547,7 +548,7 @@
       "className": "OpencodeSdkRawUnion026",
       "file": "lib/src/model/opencode_sdk_raw_union026.dart",
       "locations": [
-        "#/components/schemas/IntegrationAttemptStatus/anyOf/0/properties/time/properties/expires"
+        "#/components/schemas/IntegrationAttemptStatus/anyOf/0/properties/time/properties/created"
       ]
     },
     {
@@ -555,7 +556,7 @@
       "className": "OpencodeSdkRawUnion027",
       "file": "lib/src/model/opencode_sdk_raw_union027.dart",
       "locations": [
-        "#/components/schemas/IntegrationAttemptStatus/anyOf/1/properties/time/properties/created"
+        "#/components/schemas/IntegrationAttemptStatus/anyOf/0/properties/time/properties/expires"
       ]
     },
     {
@@ -563,7 +564,7 @@
       "className": "OpencodeSdkRawUnion028",
       "file": "lib/src/model/opencode_sdk_raw_union028.dart",
       "locations": [
-        "#/components/schemas/IntegrationAttemptStatus/anyOf/1/properties/time/properties/expires"
+        "#/components/schemas/IntegrationAttemptStatus/anyOf/1/properties/time/properties/created"
       ]
     },
     {
@@ -571,7 +572,7 @@
       "className": "OpencodeSdkRawUnion029",
       "file": "lib/src/model/opencode_sdk_raw_union029.dart",
       "locations": [
-        "#/components/schemas/IntegrationAttemptStatus/anyOf/2/properties/time/properties/created"
+        "#/components/schemas/IntegrationAttemptStatus/anyOf/1/properties/time/properties/expires"
       ]
     },
     {
@@ -579,7 +580,7 @@
       "className": "OpencodeSdkRawUnion030",
       "file": "lib/src/model/opencode_sdk_raw_union030.dart",
       "locations": [
-        "#/components/schemas/IntegrationAttemptStatus/anyOf/2/properties/time/properties/expires"
+        "#/components/schemas/IntegrationAttemptStatus/anyOf/2/properties/time/properties/created"
       ]
     },
     {
@@ -587,7 +588,7 @@
       "className": "OpencodeSdkRawUnion031",
       "file": "lib/src/model/opencode_sdk_raw_union031.dart",
       "locations": [
-        "#/components/schemas/IntegrationAttemptStatus/anyOf/3/properties/time/properties/created"
+        "#/components/schemas/IntegrationAttemptStatus/anyOf/2/properties/time/properties/expires"
       ]
     },
     {
@@ -595,7 +596,7 @@
       "className": "OpencodeSdkRawUnion032",
       "file": "lib/src/model/opencode_sdk_raw_union032.dart",
       "locations": [
-        "#/components/schemas/IntegrationAttemptStatus/anyOf/3/properties/time/properties/expires"
+        "#/components/schemas/IntegrationAttemptStatus/anyOf/3/properties/time/properties/created"
       ]
     },
     {
@@ -603,7 +604,7 @@
       "className": "OpencodeSdkRawUnion033",
       "file": "lib/src/model/opencode_sdk_raw_union033.dart",
       "locations": [
-        "#/components/schemas/SessionError/properties/data/properties/error"
+        "#/components/schemas/IntegrationAttemptStatus/anyOf/3/properties/time/properties/expires"
       ]
     },
     {
@@ -611,7 +612,7 @@
       "className": "OpencodeSdkRawUnion034",
       "file": "lib/src/model/opencode_sdk_raw_union034.dart",
       "locations": [
-        "#/components/schemas/TuiCommandExecute/properties/data/properties/command"
+        "#/components/schemas/SessionError/properties/data/properties/error"
       ]
     },
     {
@@ -619,7 +620,7 @@
       "className": "OpencodeSdkRawUnion035",
       "file": "lib/src/model/opencode_sdk_raw_union035.dart",
       "locations": [
-        "#/components/schemas/EventSessionError/properties/properties/properties/error"
+        "#/components/schemas/TuiCommandExecute/properties/data/properties/command"
       ]
     },
     {
@@ -627,7 +628,7 @@
       "className": "OpencodeSdkRawUnion036",
       "file": "lib/src/model/opencode_sdk_raw_union036.dart",
       "locations": [
-        "#/paths/~1auth~1{providerID}/put/responses/400/content/application~1json/schema"
+        "#/components/schemas/EventSessionError/properties/properties/properties/error"
       ]
     },
     {
@@ -635,7 +636,7 @@
       "className": "OpencodeSdkRawUnion037",
       "file": "lib/src/model/opencode_sdk_raw_union037.dart",
       "locations": [
-        "#/paths/~1auth~1{providerID}/delete/responses/400/content/application~1json/schema"
+        "#/paths/~1auth~1{providerID}/put/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -643,7 +644,7 @@
       "className": "OpencodeSdkRawUnion038",
       "file": "lib/src/model/opencode_sdk_raw_union038.dart",
       "locations": [
-        "#/paths/~1log/post/responses/400/content/application~1json/schema"
+        "#/paths/~1auth~1{providerID}/delete/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -651,7 +652,7 @@
       "className": "OpencodeSdkRawUnion039",
       "file": "lib/src/model/opencode_sdk_raw_union039.dart",
       "locations": [
-        "#/paths/~1experimental~1control-plane~1move-session/post/responses/400/content/application~1json/schema"
+        "#/paths/~1log/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -659,7 +660,7 @@
       "className": "OpencodeSdkRawUnion040",
       "file": "lib/src/model/opencode_sdk_raw_union040.dart",
       "locations": [
-        "#/paths/~1global~1config/patch/responses/400/content/application~1json/schema"
+        "#/paths/~1experimental~1control-plane~1move-session/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -667,7 +668,7 @@
       "className": "OpencodeSdkRawUnion041",
       "file": "lib/src/model/opencode_sdk_raw_union041.dart",
       "locations": [
-        "#/paths/~1global~1upgrade/post/responses/200/content/application~1json/schema"
+        "#/paths/~1global~1config/patch/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -675,7 +676,7 @@
       "className": "OpencodeSdkRawUnion042",
       "file": "lib/src/model/opencode_sdk_raw_union042.dart",
       "locations": [
-        "#/paths/~1global~1upgrade/post/responses/400/content/application~1json/schema"
+        "#/paths/~1global~1upgrade/post/responses/200/content/application~1json/schema"
       ]
     },
     {
@@ -683,7 +684,7 @@
       "className": "OpencodeSdkRawUnion043",
       "file": "lib/src/model/opencode_sdk_raw_union043.dart",
       "locations": [
-        "#/paths/~1config/patch/responses/400/content/application~1json/schema"
+        "#/paths/~1global~1upgrade/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -691,7 +692,7 @@
       "className": "OpencodeSdkRawUnion044",
       "file": "lib/src/model/opencode_sdk_raw_union044.dart",
       "locations": [
-        "#/paths/~1experimental~1tool/get/responses/400/content/application~1json/schema"
+        "#/paths/~1config/patch/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -699,7 +700,7 @@
       "className": "OpencodeSdkRawUnion045",
       "file": "lib/src/model/opencode_sdk_raw_union045.dart",
       "locations": [
-        "#/paths/~1experimental~1tool~1ids/get/responses/400/content/application~1json/schema"
+        "#/paths/~1experimental~1tool/get/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -707,7 +708,7 @@
       "className": "OpencodeSdkRawUnion046",
       "file": "lib/src/model/opencode_sdk_raw_union046.dart",
       "locations": [
-        "#/paths/~1experimental~1worktree/get/responses/400/content/application~1json/schema"
+        "#/paths/~1experimental~1tool~1ids/get/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -715,7 +716,7 @@
       "className": "OpencodeSdkRawUnion047",
       "file": "lib/src/model/opencode_sdk_raw_union047.dart",
       "locations": [
-        "#/paths/~1experimental~1worktree/post/responses/400/content/application~1json/schema"
+        "#/paths/~1experimental~1worktree/get/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -723,7 +724,7 @@
       "className": "OpencodeSdkRawUnion048",
       "file": "lib/src/model/opencode_sdk_raw_union048.dart",
       "locations": [
-        "#/paths/~1experimental~1worktree/delete/responses/400/content/application~1json/schema"
+        "#/paths/~1experimental~1worktree/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -731,7 +732,7 @@
       "className": "OpencodeSdkRawUnion049",
       "file": "lib/src/model/opencode_sdk_raw_union049.dart",
       "locations": [
-        "#/paths/~1experimental~1worktree~1reset/post/responses/400/content/application~1json/schema"
+        "#/paths/~1experimental~1worktree/delete/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -739,7 +740,7 @@
       "className": "OpencodeSdkRawUnion050",
       "file": "lib/src/model/opencode_sdk_raw_union050.dart",
       "locations": [
-        "#/paths/~1experimental~1session/get/parameters/2/schema"
+        "#/paths/~1experimental~1worktree~1reset/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -747,7 +748,7 @@
       "className": "OpencodeSdkRawUnion051",
       "file": "lib/src/model/opencode_sdk_raw_union051.dart",
       "locations": [
-        "#/paths/~1experimental~1session/get/parameters/7/schema"
+        "#/paths/~1experimental~1session/get/parameters/2/schema"
       ]
     },
     {
@@ -755,7 +756,7 @@
       "className": "OpencodeSdkRawUnion052",
       "file": "lib/src/model/opencode_sdk_raw_union052.dart",
       "locations": [
-        "#/paths/~1experimental~1session~1{sessionID}~1background/post/responses/400/content/application~1json/schema"
+        "#/paths/~1experimental~1session/get/parameters/7/schema"
       ]
     },
     {
@@ -763,7 +764,7 @@
       "className": "OpencodeSdkRawUnion053",
       "file": "lib/src/model/opencode_sdk_raw_union053.dart",
       "locations": [
-        "#/paths/~1vcs~1apply/post/responses/400/content/application~1json/schema"
+        "#/paths/~1experimental~1session~1{sessionID}~1background/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -771,7 +772,7 @@
       "className": "OpencodeSdkRawUnion054",
       "file": "lib/src/model/opencode_sdk_raw_union054.dart",
       "locations": [
-        "#/paths/~1mcp/post/responses/400/content/application~1json/schema"
+        "#/paths/~1vcs~1apply/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -779,7 +780,7 @@
       "className": "OpencodeSdkRawUnion055",
       "file": "lib/src/model/opencode_sdk_raw_union055.dart",
       "locations": [
-        "#/paths/~1mcp/post/requestBody/content/application~1json/schema/properties/config"
+        "#/paths/~1mcp/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -787,7 +788,7 @@
       "className": "OpencodeSdkRawUnion056",
       "file": "lib/src/model/opencode_sdk_raw_union056.dart",
       "locations": [
-        "#/paths/~1mcp~1{name}~1auth/post/responses/400/content/application~1json/schema"
+        "#/paths/~1mcp/post/requestBody/content/application~1json/schema/properties/config"
       ]
     },
     {
@@ -795,7 +796,7 @@
       "className": "OpencodeSdkRawUnion057",
       "file": "lib/src/model/opencode_sdk_raw_union057.dart",
       "locations": [
-        "#/paths/~1mcp~1{name}~1auth~1callback/post/responses/400/content/application~1json/schema"
+        "#/paths/~1mcp~1{name}~1auth/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -803,7 +804,7 @@
       "className": "OpencodeSdkRawUnion058",
       "file": "lib/src/model/opencode_sdk_raw_union058.dart",
       "locations": [
-        "#/paths/~1mcp~1{name}~1auth~1authenticate/post/responses/400/content/application~1json/schema"
+        "#/paths/~1mcp~1{name}~1auth~1callback/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -811,7 +812,7 @@
       "className": "OpencodeSdkRawUnion059",
       "file": "lib/src/model/opencode_sdk_raw_union059.dart",
       "locations": [
-        "#/paths/~1project~1{projectID}/patch/responses/400/content/application~1json/schema"
+        "#/paths/~1mcp~1{name}~1auth~1authenticate/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -819,7 +820,7 @@
       "className": "OpencodeSdkRawUnion060",
       "file": "lib/src/model/opencode_sdk_raw_union060.dart",
       "locations": [
-        "#/paths/~1pty/post/responses/400/content/application~1json/schema"
+        "#/paths/~1project~1{projectID}/patch/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -827,7 +828,7 @@
       "className": "OpencodeSdkRawUnion061",
       "file": "lib/src/model/opencode_sdk_raw_union061.dart",
       "locations": [
-        "#/paths/~1pty~1{ptyID}/put/responses/400/content/application~1json/schema"
+        "#/paths/~1pty/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -835,7 +836,7 @@
       "className": "OpencodeSdkRawUnion062",
       "file": "lib/src/model/opencode_sdk_raw_union062.dart",
       "locations": [
-        "#/paths/~1question~1{requestID}~1reply/post/responses/400/content/application~1json/schema"
+        "#/paths/~1pty~1{ptyID}/put/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -843,7 +844,7 @@
       "className": "OpencodeSdkRawUnion063",
       "file": "lib/src/model/opencode_sdk_raw_union063.dart",
       "locations": [
-        "#/paths/~1question~1{requestID}~1reject/post/responses/400/content/application~1json/schema"
+        "#/paths/~1question~1{requestID}~1reply/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -851,7 +852,7 @@
       "className": "OpencodeSdkRawUnion064",
       "file": "lib/src/model/opencode_sdk_raw_union064.dart",
       "locations": [
-        "#/paths/~1permission~1{requestID}~1reply/post/responses/400/content/application~1json/schema"
+        "#/paths/~1question~1{requestID}~1reject/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -859,7 +860,7 @@
       "className": "OpencodeSdkRawUnion065",
       "file": "lib/src/model/opencode_sdk_raw_union065.dart",
       "locations": [
-        "#/paths/~1provider~1{providerID}~1oauth~1authorize/post/responses/400/content/application~1json/schema"
+        "#/paths/~1permission~1{requestID}~1reply/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -867,7 +868,7 @@
       "className": "OpencodeSdkRawUnion066",
       "file": "lib/src/model/opencode_sdk_raw_union066.dart",
       "locations": [
-        "#/paths/~1provider~1{providerID}~1oauth~1callback/post/responses/400/content/application~1json/schema"
+        "#/paths/~1provider~1{providerID}~1oauth~1authorize/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -875,7 +876,7 @@
       "className": "OpencodeSdkRawUnion067",
       "file": "lib/src/model/opencode_sdk_raw_union067.dart",
       "locations": [
-        "#/paths/~1session/get/parameters/4/schema"
+        "#/paths/~1provider~1{providerID}~1oauth~1callback/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -883,7 +884,7 @@
       "className": "OpencodeSdkRawUnion068",
       "file": "lib/src/model/opencode_sdk_raw_union068.dart",
       "locations": [
-        "#/paths/~1session/post/responses/400/content/application~1json/schema"
+        "#/paths/~1session/get/parameters/4/schema"
       ]
     },
     {
@@ -891,7 +892,7 @@
       "className": "OpencodeSdkRawUnion069",
       "file": "lib/src/model/opencode_sdk_raw_union069.dart",
       "locations": [
-        "#/paths/~1session~1status/get/responses/400/content/application~1json/schema"
+        "#/paths/~1session/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -899,7 +900,7 @@
       "className": "OpencodeSdkRawUnion070",
       "file": "lib/src/model/opencode_sdk_raw_union070.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}/get/responses/400/content/application~1json/schema"
+        "#/paths/~1session~1status/get/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -907,7 +908,7 @@
       "className": "OpencodeSdkRawUnion071",
       "file": "lib/src/model/opencode_sdk_raw_union071.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}/delete/responses/400/content/application~1json/schema"
+        "#/paths/~1session~1{sessionID}/get/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -915,7 +916,7 @@
       "className": "OpencodeSdkRawUnion072",
       "file": "lib/src/model/opencode_sdk_raw_union072.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}/patch/responses/400/content/application~1json/schema"
+        "#/paths/~1session~1{sessionID}/delete/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -923,7 +924,7 @@
       "className": "OpencodeSdkRawUnion073",
       "file": "lib/src/model/opencode_sdk_raw_union073.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}~1children/get/responses/400/content/application~1json/schema"
+        "#/paths/~1session~1{sessionID}/patch/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -931,7 +932,7 @@
       "className": "OpencodeSdkRawUnion074",
       "file": "lib/src/model/opencode_sdk_raw_union074.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}~1todo/get/responses/400/content/application~1json/schema"
+        "#/paths/~1session~1{sessionID}~1children/get/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -939,7 +940,7 @@
       "className": "OpencodeSdkRawUnion075",
       "file": "lib/src/model/opencode_sdk_raw_union075.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}~1message/get/responses/400/content/application~1json/schema"
+        "#/paths/~1session~1{sessionID}~1todo/get/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -947,7 +948,7 @@
       "className": "OpencodeSdkRawUnion076",
       "file": "lib/src/model/opencode_sdk_raw_union076.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}~1message/post/responses/400/content/application~1json/schema"
+        "#/paths/~1session~1{sessionID}~1message/get/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -955,7 +956,7 @@
       "className": "OpencodeSdkRawUnion077",
       "file": "lib/src/model/opencode_sdk_raw_union077.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}~1message/post/requestBody/content/application~1json/schema/properties/parts/items"
+        "#/paths/~1session~1{sessionID}~1message/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -963,7 +964,7 @@
       "className": "OpencodeSdkRawUnion078",
       "file": "lib/src/model/opencode_sdk_raw_union078.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}~1message~1{messageID}/get/responses/400/content/application~1json/schema"
+        "#/paths/~1session~1{sessionID}~1message/post/requestBody/content/application~1json/schema/properties/parts/items"
       ]
     },
     {
@@ -971,7 +972,7 @@
       "className": "OpencodeSdkRawUnion079",
       "file": "lib/src/model/opencode_sdk_raw_union079.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}~1message~1{messageID}/delete/responses/400/content/application~1json/schema"
+        "#/paths/~1session~1{sessionID}~1message~1{messageID}/get/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -979,7 +980,7 @@
       "className": "OpencodeSdkRawUnion080",
       "file": "lib/src/model/opencode_sdk_raw_union080.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}~1fork/post/responses/400/content/application~1json/schema"
+        "#/paths/~1session~1{sessionID}~1message~1{messageID}/delete/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -987,7 +988,7 @@
       "className": "OpencodeSdkRawUnion081",
       "file": "lib/src/model/opencode_sdk_raw_union081.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}~1abort/post/responses/400/content/application~1json/schema"
+        "#/paths/~1session~1{sessionID}~1fork/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -995,7 +996,7 @@
       "className": "OpencodeSdkRawUnion082",
       "file": "lib/src/model/opencode_sdk_raw_union082.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}~1init/post/responses/400/content/application~1json/schema"
+        "#/paths/~1session~1{sessionID}~1abort/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -1003,7 +1004,7 @@
       "className": "OpencodeSdkRawUnion083",
       "file": "lib/src/model/opencode_sdk_raw_union083.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}~1summarize/post/responses/400/content/application~1json/schema"
+        "#/paths/~1session~1{sessionID}~1init/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -1011,7 +1012,7 @@
       "className": "OpencodeSdkRawUnion084",
       "file": "lib/src/model/opencode_sdk_raw_union084.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}~1prompt_async/post/responses/400/content/application~1json/schema"
+        "#/paths/~1session~1{sessionID}~1summarize/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -1019,7 +1020,7 @@
       "className": "OpencodeSdkRawUnion085",
       "file": "lib/src/model/opencode_sdk_raw_union085.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}~1prompt_async/post/requestBody/content/application~1json/schema/properties/parts/items"
+        "#/paths/~1session~1{sessionID}~1prompt_async/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -1027,7 +1028,7 @@
       "className": "OpencodeSdkRawUnion086",
       "file": "lib/src/model/opencode_sdk_raw_union086.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}~1command/post/responses/400/content/application~1json/schema"
+        "#/paths/~1session~1{sessionID}~1prompt_async/post/requestBody/content/application~1json/schema/properties/parts/items"
       ]
     },
     {
@@ -1035,7 +1036,7 @@
       "className": "OpencodeSdkRawUnion087",
       "file": "lib/src/model/opencode_sdk_raw_union087.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}~1shell/post/responses/400/content/application~1json/schema"
+        "#/paths/~1session~1{sessionID}~1command/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -1043,7 +1044,7 @@
       "className": "OpencodeSdkRawUnion088",
       "file": "lib/src/model/opencode_sdk_raw_union088.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}~1revert/post/responses/400/content/application~1json/schema"
+        "#/paths/~1session~1{sessionID}~1shell/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -1051,7 +1052,7 @@
       "className": "OpencodeSdkRawUnion089",
       "file": "lib/src/model/opencode_sdk_raw_union089.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}~1unrevert/post/responses/400/content/application~1json/schema"
+        "#/paths/~1session~1{sessionID}~1revert/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -1059,7 +1060,7 @@
       "className": "OpencodeSdkRawUnion090",
       "file": "lib/src/model/opencode_sdk_raw_union090.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}~1permissions~1{permissionID}/post/responses/400/content/application~1json/schema"
+        "#/paths/~1session~1{sessionID}~1unrevert/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -1067,7 +1068,7 @@
       "className": "OpencodeSdkRawUnion091",
       "file": "lib/src/model/opencode_sdk_raw_union091.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}~1permissions~1{permissionID}/post/responses/404/content/application~1json/schema"
+        "#/paths/~1session~1{sessionID}~1permissions~1{permissionID}/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -1075,7 +1076,7 @@
       "className": "OpencodeSdkRawUnion092",
       "file": "lib/src/model/opencode_sdk_raw_union092.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}~1message~1{messageID}~1part~1{partID}/delete/responses/400/content/application~1json/schema"
+        "#/paths/~1session~1{sessionID}~1permissions~1{permissionID}/post/responses/404/content/application~1json/schema"
       ]
     },
     {
@@ -1083,7 +1084,7 @@
       "className": "OpencodeSdkRawUnion093",
       "file": "lib/src/model/opencode_sdk_raw_union093.dart",
       "locations": [
-        "#/paths/~1session~1{sessionID}~1message~1{messageID}~1part~1{partID}/patch/responses/400/content/application~1json/schema"
+        "#/paths/~1session~1{sessionID}~1message~1{messageID}~1part~1{partID}/delete/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -1091,7 +1092,7 @@
       "className": "OpencodeSdkRawUnion094",
       "file": "lib/src/model/opencode_sdk_raw_union094.dart",
       "locations": [
-        "#/paths/~1sync~1replay/post/responses/400/content/application~1json/schema"
+        "#/paths/~1session~1{sessionID}~1message~1{messageID}~1part~1{partID}/patch/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -1099,7 +1100,7 @@
       "className": "OpencodeSdkRawUnion095",
       "file": "lib/src/model/opencode_sdk_raw_union095.dart",
       "locations": [
-        "#/paths/~1sync~1steal/post/responses/400/content/application~1json/schema"
+        "#/paths/~1sync~1replay/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -1107,7 +1108,7 @@
       "className": "OpencodeSdkRawUnion096",
       "file": "lib/src/model/opencode_sdk_raw_union096.dart",
       "locations": [
-        "#/paths/~1sync~1history/post/responses/400/content/application~1json/schema"
+        "#/paths/~1sync~1steal/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -1115,7 +1116,7 @@
       "className": "OpencodeSdkRawUnion097",
       "file": "lib/src/model/opencode_sdk_raw_union097.dart",
       "locations": [
-        "#/paths/~1tui~1append-prompt/post/responses/400/content/application~1json/schema"
+        "#/paths/~1sync~1history/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -1123,7 +1124,7 @@
       "className": "OpencodeSdkRawUnion098",
       "file": "lib/src/model/opencode_sdk_raw_union098.dart",
       "locations": [
-        "#/paths/~1tui~1execute-command/post/responses/400/content/application~1json/schema"
+        "#/paths/~1tui~1append-prompt/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -1131,7 +1132,7 @@
       "className": "OpencodeSdkRawUnion099",
       "file": "lib/src/model/opencode_sdk_raw_union099.dart",
       "locations": [
-        "#/paths/~1tui~1publish/post/responses/400/content/application~1json/schema"
+        "#/paths/~1tui~1execute-command/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -1139,7 +1140,7 @@
       "className": "OpencodeSdkRawUnion100",
       "file": "lib/src/model/opencode_sdk_raw_union100.dart",
       "locations": [
-        "#/paths/~1tui~1publish/post/requestBody/content/application~1json/schema"
+        "#/paths/~1tui~1publish/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -1147,7 +1148,7 @@
       "className": "OpencodeSdkRawUnion101",
       "file": "lib/src/model/opencode_sdk_raw_union101.dart",
       "locations": [
-        "#/paths/~1tui~1select-session/post/responses/400/content/application~1json/schema"
+        "#/paths/~1tui~1publish/post/requestBody/content/application~1json/schema"
       ]
     },
     {
@@ -1155,7 +1156,7 @@
       "className": "OpencodeSdkRawUnion102",
       "file": "lib/src/model/opencode_sdk_raw_union102.dart",
       "locations": [
-        "#/paths/~1experimental~1workspace/post/responses/400/content/application~1json/schema"
+        "#/paths/~1tui~1select-session/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -1163,7 +1164,7 @@
       "className": "OpencodeSdkRawUnion103",
       "file": "lib/src/model/opencode_sdk_raw_union103.dart",
       "locations": [
-        "#/paths/~1experimental~1workspace~1{id}/delete/responses/400/content/application~1json/schema"
+        "#/paths/~1experimental~1workspace/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -1171,7 +1172,7 @@
       "className": "OpencodeSdkRawUnion104",
       "file": "lib/src/model/opencode_sdk_raw_union104.dart",
       "locations": [
-        "#/paths/~1experimental~1workspace~1warp/post/responses/400/content/application~1json/schema"
+        "#/paths/~1experimental~1workspace~1{id}/delete/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -1179,7 +1180,7 @@
       "className": "OpencodeSdkRawUnion105",
       "file": "lib/src/model/opencode_sdk_raw_union105.dart",
       "locations": [
-        "#/paths/~1api~1session/get/responses/400/content/application~1json/schema"
+        "#/paths/~1experimental~1workspace~1warp/post/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -1187,7 +1188,7 @@
       "className": "OpencodeSdkRawUnion106",
       "file": "lib/src/model/opencode_sdk_raw_union106.dart",
       "locations": [
-        "#/paths/~1api~1session~1{sessionID}~1revert~1stage/post/responses/404/content/application~1json/schema"
+        "#/paths/~1api~1session/get/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -1195,7 +1196,7 @@
       "className": "OpencodeSdkRawUnion107",
       "file": "lib/src/model/opencode_sdk_raw_union107.dart",
       "locations": [
-        "#/paths/~1api~1session~1{sessionID}~1message~1{messageID}/get/responses/404/content/application~1json/schema"
+        "#/paths/~1api~1session~1{sessionID}~1revert~1stage/post/responses/404/content/application~1json/schema"
       ]
     },
     {
@@ -1203,7 +1204,7 @@
       "className": "OpencodeSdkRawUnion108",
       "file": "lib/src/model/opencode_sdk_raw_union108.dart",
       "locations": [
-        "#/paths/~1api~1session~1{sessionID}~1message/get/responses/400/content/application~1json/schema"
+        "#/paths/~1api~1session~1{sessionID}~1message~1{messageID}/get/responses/404/content/application~1json/schema"
       ]
     },
     {
@@ -1211,7 +1212,7 @@
       "className": "OpencodeSdkRawUnion109",
       "file": "lib/src/model/opencode_sdk_raw_union109.dart",
       "locations": [
-        "#/paths/~1api~1session~1{sessionID}~1permission~1{requestID}/get/responses/404/content/application~1json/schema"
+        "#/paths/~1api~1session~1{sessionID}~1message/get/responses/400/content/application~1json/schema"
       ]
     },
     {
@@ -1219,7 +1220,7 @@
       "className": "OpencodeSdkRawUnion110",
       "file": "lib/src/model/opencode_sdk_raw_union110.dart",
       "locations": [
-        "#/paths/~1api~1session~1{sessionID}~1permission~1{requestID}~1reply/post/responses/404/content/application~1json/schema"
+        "#/paths/~1api~1session~1{sessionID}~1permission~1{requestID}/get/responses/404/content/application~1json/schema"
       ]
     },
     {
@@ -1227,7 +1228,7 @@
       "className": "OpencodeSdkRawUnion111",
       "file": "lib/src/model/opencode_sdk_raw_union111.dart",
       "locations": [
-        "#/paths/~1api~1session~1{sessionID}~1question~1{requestID}~1reply/post/responses/404/content/application~1json/schema"
+        "#/paths/~1api~1session~1{sessionID}~1permission~1{requestID}~1reply/post/responses/404/content/application~1json/schema"
       ]
     },
     {
@@ -1235,7 +1236,7 @@
       "className": "OpencodeSdkRawUnion112",
       "file": "lib/src/model/opencode_sdk_raw_union112.dart",
       "locations": [
-        "#/paths/~1api~1session~1{sessionID}~1question~1{requestID}~1reject/post/responses/404/content/application~1json/schema"
+        "#/paths/~1api~1session~1{sessionID}~1question~1{requestID}~1reply/post/responses/404/content/application~1json/schema"
       ]
     },
     {
@@ -1243,7 +1244,7 @@
       "className": "OpencodeSdkRawUnion113",
       "file": "lib/src/model/opencode_sdk_raw_union113.dart",
       "locations": [
-        "#/paths/~1experimental~1project~1{projectID}~1copy/post/responses/400/content/application~1json/schema"
+        "#/paths/~1api~1session~1{sessionID}~1question~1{requestID}~1reject/post/responses/404/content/application~1json/schema"
       ]
     },
     {
@@ -1251,13 +1252,21 @@
       "className": "OpencodeSdkRawUnion114",
       "file": "lib/src/model/opencode_sdk_raw_union114.dart",
       "locations": [
-        "#/paths/~1experimental~1project~1{projectID}~1copy/delete/responses/400/content/application~1json/schema"
+        "#/paths/~1experimental~1project~1{projectID}~1copy/post/responses/400/content/application~1json/schema"
       ]
     },
     {
       "schema": "OpencodeSdkRawUnion115",
       "className": "OpencodeSdkRawUnion115",
       "file": "lib/src/model/opencode_sdk_raw_union115.dart",
+      "locations": [
+        "#/paths/~1experimental~1project~1{projectID}~1copy/delete/responses/400/content/application~1json/schema"
+      ]
+    },
+    {
+      "schema": "OpencodeSdkRawUnion116",
+      "className": "OpencodeSdkRawUnion116",
+      "file": "lib/src/model/opencode_sdk_raw_union116.dart",
       "locations": [
         "#/paths/~1experimental~1project~1{projectID}~1copy~1refresh/post/responses/400/content/application~1json/schema"
       ]

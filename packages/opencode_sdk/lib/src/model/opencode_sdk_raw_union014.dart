@@ -18,7 +18,7 @@ class OpencodeSdkRawUnion014 implements OpenCodeRawJsonValue {
       OpencodeSdkRawUnion014(json);
 
   static const String openApiSchemaJson =
-      "{\"anyOf\":[{\"type\":\"boolean\"},{\"type\":\"object\",\"additionalProperties\":{\"anyOf\":[{\"type\":\"object\",\"properties\":{\"disabled\":{\"type\":\"boolean\",\"enum\":[true]}},\"required\":[\"disabled\"],\"additionalProperties\":false},{\"type\":\"object\",\"properties\":{\"command\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"extensions\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"disabled\":{\"type\":\"boolean\"},\"env\":{\"type\":\"object\",\"additionalProperties\":{\"type\":\"string\"}},\"initialization\":{\"type\":\"object\"}},\"required\":[\"command\"],\"additionalProperties\":false}]}}],\"description\":\"Enable or configure LSP servers. Omit or set to false to disable, true to enable built-ins, or an object to enable built-ins with overrides.\"}";
+      "{\"anyOf\":[{\"type\":\"boolean\"},{\"type\":\"object\",\"additionalProperties\":{\"type\":\"object\",\"properties\":{\"disabled\":{\"type\":\"boolean\"},\"command\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"environment\":{\"type\":\"object\",\"additionalProperties\":{\"type\":\"string\"}},\"extensions\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}}},\"additionalProperties\":false}}],\"description\":\"Enable or configure formatters. Omit or set to false to disable, true to enable built-ins, or an object to enable built-ins with overrides.\"}";
 
   @override
   final Object? value;

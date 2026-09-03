@@ -16,10 +16,10 @@ part 'global_upgrade_request.g.dart';
 )
 class GlobalUpgradeRequest {
   /// Returns a new [GlobalUpgradeRequest] instance.
-  GlobalUpgradeRequest({this.target});
+  GlobalUpgradeRequest({required this.target});
 
-  @JsonKey(name: r'target', required: false, includeIfNull: false)
-  final String? target;
+  @JsonKey(name: r'target', required: true, includeIfNull: false)
+  final String target;
 
   bool operator ==(Object other) {
     return identical(this, other) ||

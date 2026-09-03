@@ -14,7 +14,7 @@ import 'package:opencode_sdk/src/http/wire.dart';
 import 'package:opencode_sdk/src/model/bad_request_error.dart';
 import 'package:opencode_sdk/src/model/config.dart';
 import 'package:opencode_sdk/src/model/config_providers200_response.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union043.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union044.dart';
 
 class ConfigApi {
   final Dio _dio;

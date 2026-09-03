@@ -7,7 +7,7 @@ Authoritative inputs:
 - v1 API layer: `lib/api/opencode_api.dart`, `lib/api/product_repository.dart`,
   `lib/api/models.dart`, `lib/api/sse.dart`, `lib/api/server_probe.dart`,
   `lib/api/mcp_oauth.dart`
-- v1 contract: `contracts/opencode-openapi-03bba464.json` (188 ops; includes a
+- v1 contract: `contracts/opencode-openapi-f12e14cf.json` (188 ops; includes a
   beta "v2 compatibility" surface under `/api/*` that the app already partly uses)
 - v2 contract: `contracts/opencode2-openapi-beta-18600.json` (server
   v0.0.0-beta-18600; 135 ops across 114 paths, all under `/api/*`; a strict

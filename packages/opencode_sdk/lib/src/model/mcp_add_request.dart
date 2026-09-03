@@ -3,7 +3,7 @@
 //
 
 // ignore_for_file: unused_element
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union055.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union056.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:equatable/src/equatable_utils.dart';
 
@@ -23,7 +23,7 @@ class McpAddRequest {
   final String name;
 
   @JsonKey(name: r'config', required: true, includeIfNull: false)
-  final OpencodeSdkRawUnion055 config;
+  final OpencodeSdkRawUnion056 config;
 
   bool operator ==(Object other) {
     return identical(this, other) ||

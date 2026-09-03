@@ -16,9 +16,9 @@ import 'package:opencode_sdk/src/model/config.dart';
 import 'package:opencode_sdk/src/model/global_event.dart';
 import 'package:opencode_sdk/src/model/global_health200_response.dart';
 import 'package:opencode_sdk/src/model/global_upgrade_request.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union040.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union041.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union042.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union043.dart';
 
 class GlobalApi {
   final Dio _dio;
@@ -449,7 +449,7 @@ class GlobalApi {
   }
 
   /// Upgrade opencode
-  /// Upgrade opencode to the specified version or latest if not specified.
+  /// Upgrade opencode to the specified version.
   ///
   /// Parameters:
   /// * [globalUpgradeRequest]
@@ -460,9 +460,9 @@ class GlobalApi {
   /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
   /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
   ///
-  /// Returns a [Future] containing a [Response] with a [OpencodeSdkRawUnion041] as data
+  /// Returns a [Future] containing a [Response] with a [OpencodeSdkRawUnion042] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<OpencodeSdkRawUnion041>> globalUpgrade({
+  Future<Response<OpencodeSdkRawUnion042>> globalUpgrade({
     GlobalUpgradeRequest? globalUpgradeRequest,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -517,15 +517,15 @@ class GlobalApi {
     }
     throwIfOpenCodeApiError(_response, operationId: _operationId);
 
-    OpencodeSdkRawUnion041? _responseData;
+    OpencodeSdkRawUnion042? _responseData;
 
     try {
       final rawData = _response.data;
       _responseData = rawData == null
           ? null
-          : deserialize<OpencodeSdkRawUnion041, OpencodeSdkRawUnion041>(
+          : deserialize<OpencodeSdkRawUnion042, OpencodeSdkRawUnion042>(
               rawData,
-              'OpencodeSdkRawUnion041',
+              'OpencodeSdkRawUnion042',
               growable: true,
             );
     } catch (error, stackTrace) {
@@ -538,7 +538,7 @@ class GlobalApi {
       );
     }
 
-    return Response<OpencodeSdkRawUnion041>(
+    return Response<OpencodeSdkRawUnion042>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

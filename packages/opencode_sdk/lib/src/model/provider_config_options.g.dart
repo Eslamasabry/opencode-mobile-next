@@ -22,7 +22,10 @@ ProviderConfigOptions _$ProviderConfigOptionsFromJson(
       'headerTimeout',
       (v) => v == null ? null : OpencodeSdkRawUnion005.fromJson(v),
     ),
-    chunkTimeout: $checkedConvert('chunkTimeout', (v) => (v as num?)?.toInt()),
+    chunkTimeout: $checkedConvert(
+      'chunkTimeout',
+      (v) => v == null ? null : OpencodeSdkRawUnion006.fromJson(v),
+    ),
   );
   return val;
 });
@@ -36,5 +39,5 @@ Map<String, dynamic> _$ProviderConfigOptionsToJson(
   'setCacheKey': ?instance.setCacheKey,
   'timeout': ?instance.timeout?.toJson(),
   'headerTimeout': ?instance.headerTimeout?.toJson(),
-  'chunkTimeout': ?instance.chunkTimeout,
+  'chunkTimeout': ?instance.chunkTimeout?.toJson(),
 };

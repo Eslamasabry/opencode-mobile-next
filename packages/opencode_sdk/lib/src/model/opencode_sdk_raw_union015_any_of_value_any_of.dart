@@ -6,7 +6,7 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:equatable/src/equatable_utils.dart';
 
-part 'opencode_sdk_raw_union014_any_of_value_any_of.g.dart';
+part 'opencode_sdk_raw_union015_any_of_value_any_of.g.dart';
 
 @JsonSerializable(
   checked: true,
@@ -14,47 +14,47 @@ part 'opencode_sdk_raw_union014_any_of_value_any_of.g.dart';
   disallowUnrecognizedKeys: false,
   explicitToJson: true,
 )
-class OpencodeSdkRawUnion014AnyOfValueAnyOf {
-  /// Returns a new [OpencodeSdkRawUnion014AnyOfValueAnyOf] instance.
-  OpencodeSdkRawUnion014AnyOfValueAnyOf({required this.disabled});
+class OpencodeSdkRawUnion015AnyOfValueAnyOf {
+  /// Returns a new [OpencodeSdkRawUnion015AnyOfValueAnyOf] instance.
+  OpencodeSdkRawUnion015AnyOfValueAnyOf({required this.disabled});
 
   @JsonKey(
     name: r'disabled',
     required: true,
     includeIfNull: false,
     unknownEnumValue:
-        OpencodeSdkRawUnion014AnyOfValueAnyOfDisabledEnum.unknownDefaultOpenApi,
+        OpencodeSdkRawUnion015AnyOfValueAnyOfDisabledEnum.unknownDefaultOpenApi,
   )
-  final OpencodeSdkRawUnion014AnyOfValueAnyOfDisabledEnum disabled;
+  final OpencodeSdkRawUnion015AnyOfValueAnyOfDisabledEnum disabled;
 
   bool operator ==(Object other) {
     return identical(this, other) ||
-        other is OpencodeSdkRawUnion014AnyOfValueAnyOf &&
+        other is OpencodeSdkRawUnion015AnyOfValueAnyOf &&
             runtimeType == other.runtimeType &&
             equals([disabled], [other.disabled]);
   }
 
   int get hashCode => runtimeType.hashCode ^ mapPropsToHashCode([disabled]);
 
-  factory OpencodeSdkRawUnion014AnyOfValueAnyOf.fromJson(
+  factory OpencodeSdkRawUnion015AnyOfValueAnyOf.fromJson(
     Map<String, dynamic> json,
-  ) => _$OpencodeSdkRawUnion014AnyOfValueAnyOfFromJson(json);
+  ) => _$OpencodeSdkRawUnion015AnyOfValueAnyOfFromJson(json);
 
   Map<String, dynamic> toJson() =>
-      _$OpencodeSdkRawUnion014AnyOfValueAnyOfToJson(this);
+      _$OpencodeSdkRawUnion015AnyOfValueAnyOfToJson(this);
 
   String toString() {
     return toJson().toString();
   }
 }
 
-enum OpencodeSdkRawUnion014AnyOfValueAnyOfDisabledEnum {
+enum OpencodeSdkRawUnion015AnyOfValueAnyOfDisabledEnum {
   @JsonValue('true')
   true_('true'),
   @JsonValue('11184809')
   unknownDefaultOpenApi('11184809');
 
-  const OpencodeSdkRawUnion014AnyOfValueAnyOfDisabledEnum(this.value);
+  const OpencodeSdkRawUnion015AnyOfValueAnyOfDisabledEnum(this.value);
 
   final Object value;
 

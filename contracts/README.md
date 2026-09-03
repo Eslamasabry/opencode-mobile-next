@@ -1,13 +1,13 @@
 # OpenCode SDK contract provenance
 
-`opencode-openapi-03bba464.json` is an unmodified snapshot of
+`opencode-openapi-f12e14cf.json` is an unmodified snapshot of
 `packages/sdk/openapi.json` from
-[`anomalyco/opencode` commit `03bba464d46f3eddf74195919b1344aa937f7b11`](https://github.com/anomalyco/opencode/tree/03bba464d46f3eddf74195919b1344aa937f7b11).
+[`anomalyco/opencode` commit `f12e14cf1640cbf0dfb6b1ff425b2daaef459eec`](https://github.com/anomalyco/opencode/tree/f12e14cf1640cbf0dfb6b1ff425b2daaef459eec).
 Its SHA-256 is
-`5bbd6493a1a488ef4294889341c896e420f814ecea95822100aaa9f3f95ab2d1`.
+`00502bd13e9c86f3ca9e765e99a57e06fa9f434ca16f2a714766d1444f8d37f3`.
 
 The upstream repository at that commit is licensed under the
-[MIT License](https://github.com/anomalyco/opencode/blob/03bba464d46f3eddf74195919b1344aa937f7b11/LICENSE)
+[MIT License](https://github.com/anomalyco/opencode/blob/f12e14cf1640cbf0dfb6b1ff425b2daaef459eec/LICENSE)
 (Copyright 2025 opencode). The SDK is generated with OpenAPI Generator 7.19.0,
 which is licensed under the
 [Apache License 2.0](https://github.com/OpenAPITools/openapi-generator/blob/v7.19.0/LICENSE).

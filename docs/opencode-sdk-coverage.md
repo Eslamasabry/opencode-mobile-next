@@ -5,7 +5,7 @@ Audit date: 2026-08-28
 Authoritative inputs:
 
 - generated SDK under `packages/opencode_sdk/lib/src/api/`
-- source contract `contracts/opencode-openapi-03bba464.json`
+- source contract `contracts/opencode-openapi-f12e14cf.json`
 - production call sites under `lib/`
 
 The SDK exposes **188 generated HTTP operations** across 32 API groups. The app

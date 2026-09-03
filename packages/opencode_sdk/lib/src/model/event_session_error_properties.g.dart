@@ -13,7 +13,7 @@ EventSessionErrorProperties _$EventSessionErrorPropertiesFromJson(
     sessionID: $checkedConvert('sessionID', (v) => v as String?),
     error: $checkedConvert(
       'error',
-      (v) => v == null ? null : OpencodeSdkRawUnion035.fromJson(v),
+      (v) => v == null ? null : OpencodeSdkRawUnion036.fromJson(v),
     ),
   );
   return val;

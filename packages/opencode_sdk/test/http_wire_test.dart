@@ -95,11 +95,11 @@ void main() {
       addTearDown(fixture.close);
 
       await fixture.sdk.getSessionApi().sessionList(
-        roots: OpencodeSdkRawUnion067('true'),
+        roots: OpencodeSdkRawUnion068('true'),
       );
       await fixture.sdk.getExperimentalApi().experimentalSessionList(
-        roots: OpencodeSdkRawUnion050(false),
-        archived: OpencodeSdkRawUnion051('false'),
+        roots: OpencodeSdkRawUnion051(false),
+        archived: OpencodeSdkRawUnion052('false'),
       );
 
       expect(queries[0]['roots'], 'true');

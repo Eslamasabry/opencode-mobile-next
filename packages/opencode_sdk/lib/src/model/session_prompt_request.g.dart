@@ -33,7 +33,7 @@ SessionPromptRequest _$SessionPromptRequestFromJson(
     variant: $checkedConvert('variant', (v) => v as String?),
     parts: $checkedConvert(
       'parts',
-      (v) => (v as List<dynamic>).map(OpencodeSdkRawUnion077.fromJson).toList(),
+      (v) => (v as List<dynamic>).map(OpencodeSdkRawUnion078.fromJson).toList(),
     ),
   );
   return val;

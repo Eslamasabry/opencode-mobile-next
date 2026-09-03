@@ -151,8 +151,8 @@ Future<void> main(List<String> arguments) async {
   );
   assertNoDuplicateUnionBranches(normalized);
   expect(
-    report.inlineMeaningfulUnionsHoisted == 115,
-    'expected 115 inline meaningful unions to be hoisted',
+    report.inlineMeaningfulUnionsHoisted == 116,
+    'expected 116 inline meaningful unions to be hoisted',
   );
   final schemas = (normalized['components'] as Map)['schemas'] as Map;
   final componentRoots = <Object>{...schemas.values};

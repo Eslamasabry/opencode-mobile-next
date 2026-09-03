@@ -18,7 +18,7 @@ class OpencodeSdkRawUnion011 implements OpenCodeRawJsonValue {
       OpencodeSdkRawUnion011(json);
 
   static const String openApiSchemaJson =
-      "{\"anyOf\":[{\"type\":\"boolean\"},{\"type\":\"string\",\"enum\":[\"notify\"]}],\"description\":\"Automatically update to the latest version. Set to true to auto-update, false to disable, or 'notify' to show update notifications\"}";
+      "{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"array\",\"prefixItems\":[{\"type\":\"string\"},{\"type\":\"object\"}],\"maxItems\":2,\"minItems\":2}]}";
 
   @override
   final Object? value;

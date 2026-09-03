@@ -12,7 +12,7 @@ import 'package:opencode_sdk/src/http/errors.dart';
 import 'package:opencode_sdk/src/http/wire.dart';
 
 import 'package:opencode_sdk/src/model/bad_request_error.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union059.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union060.dart';
 import 'package:opencode_sdk/src/model/project.dart';
 import 'package:opencode_sdk/src/model/project_directories_inner.dart';
 import 'package:opencode_sdk/src/model/project_not_found_error.dart';

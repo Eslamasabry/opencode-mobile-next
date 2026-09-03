@@ -12,9 +12,9 @@ import 'package:opencode_sdk/src/http/errors.dart';
 import 'package:opencode_sdk/src/http/wire.dart';
 
 import 'package:opencode_sdk/src/model/bad_request_error.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union094.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union095.dart';
 import 'package:opencode_sdk/src/model/opencode_sdk_raw_union096.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union097.dart';
 import 'package:opencode_sdk/src/model/sync_history_list200_response_inner.dart';
 import 'package:opencode_sdk/src/model/sync_replay200_response.dart';
 import 'package:opencode_sdk/src/model/sync_replay_request.dart';

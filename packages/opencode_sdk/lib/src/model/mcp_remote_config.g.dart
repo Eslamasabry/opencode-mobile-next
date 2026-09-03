@@ -28,7 +28,7 @@ McpRemoteConfig _$McpRemoteConfigFromJson(Map<String, dynamic> json) =>
         ),
         oauth: $checkedConvert(
           'oauth',
-          (v) => v == null ? null : OpencodeSdkRawUnion007.fromJson(v),
+          (v) => v == null ? null : OpencodeSdkRawUnion008.fromJson(v),
         ),
         timeout: $checkedConvert('timeout', (v) => (v as num?)?.toInt()),
       );

@@ -1,21 +1,21 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'opencode_sdk_raw_union012_any_of.dart';
+part of 'opencode_sdk_raw_union013_any_of.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-OpencodeSdkRawUnion012AnyOf _$OpencodeSdkRawUnion012AnyOfFromJson(
+OpencodeSdkRawUnion013AnyOf _$OpencodeSdkRawUnion013AnyOfFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate('OpencodeSdkRawUnion012AnyOf', json, ($checkedConvert) {
+) => $checkedCreate('OpencodeSdkRawUnion013AnyOf', json, ($checkedConvert) {
   $checkKeys(json, requiredKeys: const ['enabled']);
-  final val = OpencodeSdkRawUnion012AnyOf(
+  final val = OpencodeSdkRawUnion013AnyOf(
     enabled: $checkedConvert('enabled', (v) => v as bool),
   );
   return val;
 });
 
-Map<String, dynamic> _$OpencodeSdkRawUnion012AnyOfToJson(
-  OpencodeSdkRawUnion012AnyOf instance,
+Map<String, dynamic> _$OpencodeSdkRawUnion013AnyOfToJson(
+  OpencodeSdkRawUnion013AnyOf instance,
 ) => <String, dynamic>{'enabled': instance.enabled};

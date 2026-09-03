@@ -7,8 +7,8 @@ import 'package:opencode_sdk/src/model/session_error_unknown.dart';
 import 'package:opencode_sdk/src/model/session_message_shell_time.dart';
 import 'package:opencode_sdk/src/model/session_tokens.dart';
 import 'package:opencode_sdk/src/model/model_ref.dart';
-import 'package:opencode_sdk/src/model/opencode_sdk_raw_union021.dart';
 import 'package:opencode_sdk/src/model/session_message_assistant_snapshot.dart';
+import 'package:opencode_sdk/src/model/opencode_sdk_raw_union022.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:equatable/src/equatable_utils.dart';
 
@@ -72,7 +72,7 @@ class SessionMessageAssistant {
   final ModelRef model;
 
   @JsonKey(name: r'content', required: true, includeIfNull: false)
-  final List<OpencodeSdkRawUnion021> content;
+  final List<OpencodeSdkRawUnion022> content;
 
   @JsonKey(name: r'snapshot', required: false, includeIfNull: false)
   final SessionMessageAssistantSnapshot? snapshot;

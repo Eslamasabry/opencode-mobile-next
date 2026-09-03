@@ -13,11 +13,11 @@ IntegrationAttemptTime _$IntegrationAttemptTimeFromJson(
   final val = IntegrationAttemptTime(
     created: $checkedConvert(
       'created',
-      (v) => OpencodeSdkRawUnion023.fromJson(v),
+      (v) => OpencodeSdkRawUnion024.fromJson(v),
     ),
     expires: $checkedConvert(
       'expires',
-      (v) => OpencodeSdkRawUnion024.fromJson(v),
+      (v) => OpencodeSdkRawUnion025.fromJson(v),
     ),
   );
   return val;

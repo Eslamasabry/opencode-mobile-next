@@ -13,7 +13,7 @@ TuiCommandExecuteData _$TuiCommandExecuteDataFromJson(
   final val = TuiCommandExecuteData(
     command: $checkedConvert(
       'command',
-      (v) => OpencodeSdkRawUnion034.fromJson(v),
+      (v) => OpencodeSdkRawUnion035.fromJson(v),
     ),
   );
   return val;

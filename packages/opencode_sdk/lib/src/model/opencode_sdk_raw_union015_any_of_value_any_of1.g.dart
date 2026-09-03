@@ -1,18 +1,18 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'opencode_sdk_raw_union014_any_of_value_any_of1.dart';
+part of 'opencode_sdk_raw_union015_any_of_value_any_of1.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-OpencodeSdkRawUnion014AnyOfValueAnyOf1
-_$OpencodeSdkRawUnion014AnyOfValueAnyOf1FromJson(Map<String, dynamic> json) =>
-    $checkedCreate('OpencodeSdkRawUnion014AnyOfValueAnyOf1', json, (
+OpencodeSdkRawUnion015AnyOfValueAnyOf1
+_$OpencodeSdkRawUnion015AnyOfValueAnyOf1FromJson(Map<String, dynamic> json) =>
+    $checkedCreate('OpencodeSdkRawUnion015AnyOfValueAnyOf1', json, (
       $checkedConvert,
     ) {
       $checkKeys(json, requiredKeys: const ['command']);
-      final val = OpencodeSdkRawUnion014AnyOfValueAnyOf1(
+      final val = OpencodeSdkRawUnion015AnyOfValueAnyOf1(
         command: $checkedConvert(
           'command',
           (v) => (v as List<dynamic>).map((e) => e as String).toList(),
@@ -33,8 +33,8 @@ _$OpencodeSdkRawUnion014AnyOfValueAnyOf1FromJson(Map<String, dynamic> json) =>
       return val;
     });
 
-Map<String, dynamic> _$OpencodeSdkRawUnion014AnyOfValueAnyOf1ToJson(
-  OpencodeSdkRawUnion014AnyOfValueAnyOf1 instance,
+Map<String, dynamic> _$OpencodeSdkRawUnion015AnyOfValueAnyOf1ToJson(
+  OpencodeSdkRawUnion015AnyOfValueAnyOf1 instance,
 ) => <String, dynamic>{
   'command': instance.command,
   'extensions': ?instance.extensions,
