@@ -14,7 +14,7 @@ which is licensed under the
 
 ## Deterministic generation
 
-The reference validation toolchain is Dart 3.10.4, OpenJDK 17.0.19, and OpenAPI
+The reference validation toolchain is Dart 3.13.2 (Flutter 3.47.2), OpenJDK 17, and OpenAPI
 Generator 7.19.0. The generator JAR is pinned by SHA-256 in
 `opencode-sdk-manifest.json`, and transitive Dart package versions and content
 hashes are pinned by `packages/opencode_sdk/pubspec.lock`. Generation reuses

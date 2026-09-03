@@ -9,21 +9,18 @@ part of 'provider_config_models_value_cost_context_over200k.dart';
 ProviderConfigModelsValueCostContextOver200k
 _$ProviderConfigModelsValueCostContextOver200kFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate(
-  'ProviderConfigModelsValueCostContextOver200k',
-  json,
-  ($checkedConvert) {
-    $checkKeys(json, requiredKeys: const ['input', 'output']);
-    final val = ProviderConfigModelsValueCostContextOver200k(
-      input: $checkedConvert('input', (v) => v as num),
-      output: $checkedConvert('output', (v) => v as num),
-      cacheRead: $checkedConvert('cache_read', (v) => v as num?),
-      cacheWrite: $checkedConvert('cache_write', (v) => v as num?),
-    );
-    return val;
-  },
-  fieldKeyMap: const {'cacheRead': 'cache_read', 'cacheWrite': 'cache_write'},
-);
+) => $checkedCreate('ProviderConfigModelsValueCostContextOver200k', json, (
+  $checkedConvert,
+) {
+  $checkKeys(json, requiredKeys: const ['input', 'output']);
+  final val = ProviderConfigModelsValueCostContextOver200k(
+    input: $checkedConvert('input', (v) => v as num),
+    output: $checkedConvert('output', (v) => v as num),
+    cacheRead: $checkedConvert('cache_read', (v) => v as num?),
+    cacheWrite: $checkedConvert('cache_write', (v) => v as num?),
+  );
+  return val;
+}, fieldKeyMap: const {'cacheRead': 'cache_read', 'cacheWrite': 'cache_write'});
 
 Map<String, dynamic> _$ProviderConfigModelsValueCostContextOver200kToJson(
   ProviderConfigModelsValueCostContextOver200k instance,

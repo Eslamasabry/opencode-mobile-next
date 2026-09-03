@@ -8,20 +8,17 @@ part of 'sync_event_message_part_updated_sync_event_data.dart';
 
 SyncEventMessagePartUpdatedSyncEventData
 _$SyncEventMessagePartUpdatedSyncEventDataFromJson(Map<String, dynamic> json) =>
-    $checkedCreate(
-      'SyncEventMessagePartUpdatedSyncEventData',
-      json,
-      ($checkedConvert) {
-        $checkKeys(json, requiredKeys: const ['sessionID', 'part', 'time']);
-        final val = SyncEventMessagePartUpdatedSyncEventData(
-          sessionID: $checkedConvert('sessionID', (v) => v as String),
-          part_: $checkedConvert('part', (v) => ModelPart.fromJson(v)),
-          time: $checkedConvert('time', (v) => v as num),
-        );
-        return val;
-      },
-      fieldKeyMap: const {'part_': 'part'},
-    );
+    $checkedCreate('SyncEventMessagePartUpdatedSyncEventData', json, (
+      $checkedConvert,
+    ) {
+      $checkKeys(json, requiredKeys: const ['sessionID', 'part', 'time']);
+      final val = SyncEventMessagePartUpdatedSyncEventData(
+        sessionID: $checkedConvert('sessionID', (v) => v as String),
+        part_: $checkedConvert('part', (v) => ModelPart.fromJson(v)),
+        time: $checkedConvert('time', (v) => v as num),
+      );
+      return val;
+    }, fieldKeyMap: const {'part_': 'part'});
 
 Map<String, dynamic> _$SyncEventMessagePartUpdatedSyncEventDataToJson(
   SyncEventMessagePartUpdatedSyncEventData instance,

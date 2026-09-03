@@ -218,7 +218,7 @@
     "generatedModels": {
       "path": "../packages/opencode_sdk/lib/src/model",
       "algorithm": "sha256(relative-path-nul-bytes-v1)",
-      "sha256": "80715f2ddc3409e14821a336e70e86535be1fc3279081fb2b9c4ef83c9cd2560"
+      "sha256": "ebc18563e8f9191b852be5a38ee52a6f21caeb16cde5b8a1fa2d87f684d7207e"
     },
     "generatedRuntime": {
       "paths": [
