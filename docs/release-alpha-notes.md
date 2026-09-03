@@ -34,7 +34,7 @@ check have all been recorded.
 ## Install and verify
 
 The public sideload signer expected for this release is
-`8F51FBCA8101DE600C0E878DF7E2CC65DFA29ADD58A1771D776908349CD82053`.
+`842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C`.
 Compare it with **Settings → About**. If it differs, Android cannot update in
 place. Uninstalling first erases local app profiles, drafts, and queued prompts.
 The tag workflow appends the exact APK checksum and source commit to the draft

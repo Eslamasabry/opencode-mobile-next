@@ -5,7 +5,7 @@ readonly REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 readonly SOURCE_SCRIPT="$REPO_ROOT/scripts/release.sh"
 readonly CUT_SCRIPT="$REPO_ROOT/scripts/cut-alpha.sh"
 readonly NOTES_ANCHOR="# OpenCode Mobile - Alpha 1.0.12+13"
-readonly LEGACY_SIDELOAD_FINGERPRINT="8F51FBCA8101DE600C0E878DF7E2CC65DFA29ADD58A1771D776908349CD82053"
+readonly LEGACY_SIDELOAD_FINGERPRINT="842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C"
 TEST_ROOT="$(mktemp -d)"
 readonly TEST_ROOT
 trap 'rm -rf "$TEST_ROOT"' EXIT
@@ -225,7 +225,7 @@ EOF
 #!/usr/bin/env bash
 set -euo pipefail
 printf 'apksigner %s\n' "$*" >>"$MOCK_COMMAND_LOG"
-printf 'Signer #1 certificate SHA-256 digest: %s\n' "${MOCK_APK_FINGERPRINT:-8F51FBCA8101DE600C0E878DF7E2CC65DFA29ADD58A1771D776908349CD82053}"
+printf 'Signer #1 certificate SHA-256 digest: %s\n' "${MOCK_APK_FINGERPRINT:-842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C}"
 EOF
 
   cat >"$FIXTURE/home/Android/Sdk/build-tools/99.0.0/aapt" <<'EOF'

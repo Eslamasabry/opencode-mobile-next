@@ -127,6 +127,9 @@ This is an alpha. Here is what that means, plainly:
 - **Public releases and CI artifacts are different channels.** The current
   `v1.0.33+34` release signer is
   `8F51FBCA8101DE600C0E878DF7E2CC65DFA29ADD58A1771D776908349CD82053`.
+  Starting with `v1.0.34+35`, the recoverable permanent release signer is
+  `842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C`.
+  Moving from `v1.0.33+34` therefore requires one final uninstall.
   Android updates in place only when the package ID and signer both match.
   CI artifacts are test-only and may require uninstalling first, which erases
   local app data. Verify the installed signer in **Settings → About**.

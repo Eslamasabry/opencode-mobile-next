@@ -10,6 +10,8 @@ This project is in public alpha. Only the newest preview is supported.
   for `ProviderConfig.options.chunkTimeout: false`.
 - Give CI branch APKs one stable non-production signer so they update one
   another; public-release signing remains separate.
+- Establish a recoverable permanent public signer. Moving from `1.0.33+34`
+  requires one final uninstall because that release's private key was lost.
 - Show the installed version, package ID, and Android signing certificate in
   About.
 - Require device authentication for notification-based tool approval on

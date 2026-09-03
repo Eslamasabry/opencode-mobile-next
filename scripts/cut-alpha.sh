@@ -10,7 +10,7 @@
 #
 # Prerequisites (checked, never worked around):
 #   * android/key.properties present with the legacy GitHub sideload key
-#     (certificate SHA-256 8f51fbca8101de600c0e878df7e2cc65dfa29add58a1771d776908349cd82053)
+#     (certificate SHA-256 842284b27aa297fb74cf831779fd16498517e1bc2104451459fec2ea7ac11d1c)
 #   * Shorebird CLI installed and authenticated (shorebird doctor)
 #   * gh CLI installed and authenticated (only needed for --publish)
 #
@@ -46,7 +46,7 @@ readonly NOTES="docs/release-alpha-notes.md"
 # $NOTES is for the person cutting the release, not for GitHub.
 readonly NOTES_ANCHOR="# OpenCode Mobile - Alpha $VERSION"
 readonly NOTES_MIN_LINES=10
-readonly SIDELoad_CERT="8f51fbca8101de600c0e878df7e2cc65dfa29add58a1771d776908349cd82053"
+readonly SIDELOAD_CERT="842284b27aa297fb74cf831779fd16498517e1bc2104451459fec2ea7ac11d1c"
 
 PUBLISH=false
 PRINT_NOTES=false
@@ -143,7 +143,7 @@ properties_cert="$(grep -oP '(?<=^certificate_sha256=).*' android/key.properties
 # is release.sh's post-build identity gate. Here we only warn early.
 if [[ -n "$properties_cert" ]]; then
   normalized="${properties_cert//:/}"
-  [[ "${normalized,,}" == "$SIDELoad_CERT" ]] ||
+  [[ "${normalized,,}" == "$SIDELOAD_CERT" ]] ||
     echo "  ⚠ key.properties certificate differs from the public sideload lineage — release.sh will refuse later if it is wrong."
 fi
 

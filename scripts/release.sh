@@ -8,7 +8,7 @@ readonly SHOREBIRD_FLUTTER_VERSION="3.47.2"
 readonly AAB_PATH="build/app/outputs/bundle/release/app-release.aab"
 readonly APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
 readonly ANDROID_APPLICATION_ID="io.github.eslamasabry.opencode_mobile"
-readonly LEGACY_DEBUG_CERT_SHA256="8F51FBCA8101DE600C0E878DF7E2CC65DFA29ADD58A1771D776908349CD82053"
+readonly PUBLIC_SIDELOAD_CERT_SHA256="842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C"
 
 UPSTREAM_REMOTE=""
 RELEASE_KEYSTORE=""
@@ -204,7 +204,7 @@ assert_store_signing_ready() {
   [[ "${RELEASE_CERT_SHA256//:/}" =~ ^[0-9A-Fa-f]{64}$ ]] ||
     fail "RELEASE_CERT_SHA256 must be a 32-byte SHA-256 fingerprint, with or without colons."
   EXPECTED_CERT_SHA256="$(normalize_fingerprint "$RELEASE_CERT_SHA256")"
-  [[ "$EXPECTED_CERT_SHA256" != "$LEGACY_DEBUG_CERT_SHA256" ]] ||
+  [[ "$EXPECTED_CERT_SHA256" != "$PUBLIC_SIDELOAD_CERT_SHA256" ]] ||
     fail "Store release is blocked: RELEASE_CERT_SHA256 is the legacy Android debug certificate."
   [[ "$SIGNING_CERTIFICATE_OUTPUT" != *"CN=Android Debug"* ]] ||
     fail "Store release is blocked: the configured alias contains an Android debug certificate."
@@ -214,7 +214,7 @@ assert_store_signing_ready() {
 
 assert_sideload_signing_ready() {
   load_release_signing_identity "GitHub sideload"
-  EXPECTED_CERT_SHA256="$LEGACY_DEBUG_CERT_SHA256"
+  EXPECTED_CERT_SHA256="$PUBLIC_SIDELOAD_CERT_SHA256"
   [[ "$ACTUAL_CERT_SHA256" == "$EXPECTED_CERT_SHA256" ]] ||
     fail "GitHub sideload release is blocked: the configured certificate does not match the public APK upgrade lineage."
 }
