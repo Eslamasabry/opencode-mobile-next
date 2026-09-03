@@ -58,6 +58,10 @@ class _ControlledApi extends OpenCodeApi {
       ProvidersResponse(providers: const []);
 
   @override
+  Future<ProvidersResponse> configuredProviders() async =>
+      ProvidersResponse(providers: const []);
+
+  @override
   Future<List<AgentInfo>> agents() async => const [];
 
   @override

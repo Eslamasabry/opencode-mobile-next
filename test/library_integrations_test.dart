@@ -20,6 +20,7 @@ class _IntegrationsRepository implements ProductRepository {
   Object? resourceError;
   Object? integrationError;
   Object? providerDisconnectError;
+  Object? providerRefreshError;
   McpAuthLaunch mcpAuthLaunch = McpAuthLaunch(
     authorizationUrl: Uri.parse(
       'https://mcp-auth.example.com/authorize?redirect_uri='
@@ -36,6 +37,7 @@ class _IntegrationsRepository implements ProductRepository {
   IntegrationAuthStatus oauthStatus = const IntegrationAuthStatus(
     state: IntegrationAuthState.pending,
   );
+  Completer<IntegrationAuthStatus>? oauthStatusCompleter;
   Map<String, String>? oauthInputs;
   int oauthCalls = 0;
   int oauthStatusCalls = 0;
@@ -111,6 +113,8 @@ class _IntegrationsRepository implements ProductRepository {
   @override
   Future<IntegrationAuthStatus> integrationOAuthStatus(String attemptID) async {
     oauthStatusCalls++;
+    final completer = oauthStatusCompleter;
+    if (completer != null) return completer.future;
     return oauthStatus;
   }
 
@@ -131,6 +135,7 @@ class _IntegrationsRepository implements ProductRepository {
   @override
   Future<void> refreshProviderRuntime() async {
     providerRefreshCalls++;
+    if (providerRefreshError case final error?) throw error;
   }
 
   @override
@@ -148,10 +153,18 @@ class _IntegrationsRepository implements ProductRepository {
             name: current.name,
             methods: current.methods,
             connections: current.connections
-                .where((connection) => connection.type != 'credential')
+                .where(
+                  (connection) =>
+                      connection.type != 'credential' &&
+                      connection.type != 'runtime',
+                )
                 .toList(),
             connectionCount: current.connections
-                .where((connection) => connection.type != 'credential')
+                .where(
+                  (connection) =>
+                      connection.type != 'credential' &&
+                      connection.type != 'runtime',
+                )
                 .length,
           ),
     ];
@@ -232,6 +245,16 @@ void main() {
         reason: value,
       );
     }
+  });
+
+  test('provider OAuth completion accepts a code or callback URL', () {
+    expect(providerOAuthCompletionCode(' returned-code '), 'returned-code');
+    expect(
+      providerOAuthCompletionCode(
+        'https://auth.example.com/callback?code=returned-code&state=state-1',
+      ),
+      'returned-code',
+    );
   });
 
   testWidgets(
@@ -448,6 +471,43 @@ void main() {
     },
   );
 
+  testWidgets('legacy OAuth provider can be disconnected from mobile', (
+    tester,
+  ) async {
+    final repository = _IntegrationsRepository()
+      ..integrations = const [
+        IntegrationInfo(
+          id: 'cloud',
+          name: 'Cloud Provider',
+          methods: [
+            IntegrationMethodInfo(type: 'oauth', id: '0', label: 'Cloud OAuth'),
+          ],
+          connections: [
+            IntegrationConnectionInfo(
+              type: 'runtime',
+              label: 'Connected to OpenCode',
+            ),
+          ],
+          connectionCount: 1,
+        ),
+      ];
+    final controller = await _controller(repository);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('disconnect-provider-cloud')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('confirm-provider-disconnect')));
+    await tester.pumpAndSettle();
+
+    expect(repository.providerDisconnectCalls, 1);
+    expect(repository.disconnectedIntegration?.credentialIDs, isEmpty);
+    expect(find.text('Cloud Provider disconnected'), findsOneWidget);
+    expect(find.text('Connect'), findsOneWidget);
+  });
+
   testWidgets(
     'environment provider explains that mobile cannot disconnect it',
     (tester) async {
@@ -481,6 +541,56 @@ void main() {
       expect(repository.providerDisconnectCalls, 0);
     },
   );
+
+  testWidgets('legacy OAuth can be removed while environment stays active', (
+    tester,
+  ) async {
+    final repository = _IntegrationsRepository()
+      ..integrations = const [
+        IntegrationInfo(
+          id: 'cloud',
+          name: 'Cloud Provider',
+          methods: [
+            IntegrationMethodInfo(type: 'oauth', id: '0', label: 'Cloud OAuth'),
+            IntegrationMethodInfo(
+              type: 'env',
+              label: 'Server environment',
+              environmentNames: ['CLOUD_TOKEN'],
+            ),
+          ],
+          connections: [
+            IntegrationConnectionInfo(type: 'env', label: 'CLOUD_TOKEN'),
+          ],
+          connectionCount: 1,
+        ),
+      ];
+    final controller = await _controller(repository);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('disconnect-provider-cloud')));
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('server environment, which mobile cannot remove'),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const ValueKey('confirm-provider-disconnect')));
+    await tester.pumpAndSettle();
+
+    expect(repository.providerDisconnectCalls, 1);
+    expect(
+      find.text(
+        'Cloud Provider credential removed; server environment remains active',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Server environment: CLOUD_TOKEN'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('disconnect-provider-cloud')),
+      findsOneWidget,
+    );
+  });
 
   testWidgets('failed provider disconnect keeps its action visible for retry', (
     tester,
@@ -1034,7 +1144,13 @@ void main() {
             ],
             connectionCount: 0,
           ),
-        ];
+        ]
+        ..oauthLaunch = const IntegrationAuthLaunch(
+          attemptID: 'attempt-device',
+          url: 'https://provider-auth.example.com/device',
+          instructions: 'Enter code: ABCD-EFGH',
+          mode: IntegrationAuthMode.auto,
+        );
 
       await tester.pumpWidget(
         _app(
@@ -1045,6 +1161,14 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Connect'));
       await tester.pumpAndSettle();
+      expect(find.text('OpenCode instructions'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text('Enter code: ABCD-EFGH'),
+        ),
+        findsOneWidget,
+      );
       await tester.tap(find.text('Open browser'));
       await tester.pumpAndSettle();
 
@@ -1063,6 +1187,49 @@ void main() {
       );
     },
   );
+
+  testWidgets('automatic OAuth cannot be cancelled during its callback', (
+    tester,
+  ) async {
+    final statusCompleter = Completer<IntegrationAuthStatus>();
+    final repository = _IntegrationsRepository()
+      ..oauthStatusCompleter = statusCompleter
+      ..integrations = const [
+        IntegrationInfo(
+          id: 'cloud',
+          name: 'Cloud Provider',
+          methods: [
+            IntegrationMethodInfo(
+              type: 'oauth',
+              id: 'oauth-1',
+              label: 'Cloud OAuth',
+            ),
+          ],
+          connectionCount: 0,
+        ),
+      ];
+    final controller = await _controller(repository);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      _app(controller, authorizationLauncher: (_) async => true),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Connect'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Open browser'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Check'));
+    await tester.pump();
+
+    expect(find.byTooltip('Authentication options'), findsNothing);
+
+    statusCompleter.complete(
+      const IntegrationAuthStatus(state: IntegrationAuthState.pending),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Authentication options'), findsOneWidget);
+  });
 
   testWidgets('code OAuth completes, refreshes models, and clears its state', (
     tester,
@@ -1107,7 +1274,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const ValueKey('oauth-completion-code')),
-      'returned-code',
+      'https://provider-auth.example.com/callback?code=returned-code&state=state-1',
     );
     await tester.tap(find.text('Complete'));
     await tester.pumpAndSettle();
@@ -1239,5 +1406,55 @@ void main() {
     expect(find.text('Anthropic'), findsOneWidget);
     expect(find.text('OpenAI'), findsOneWidget);
     expect(find.text('Z.AI · Global'), findsOneWidget);
+  });
+
+  testWidgets('completed OAuth can retry a failed runtime refresh', (
+    tester,
+  ) async {
+    final repository = _IntegrationsRepository()
+      ..integrations = const [
+        IntegrationInfo(
+          id: 'cloud',
+          name: 'Cloud Provider',
+          methods: [
+            IntegrationMethodInfo(
+              type: 'oauth',
+              id: 'oauth-1',
+              label: 'Cloud OAuth',
+            ),
+          ],
+          connectionCount: 0,
+        ),
+      ]
+      ..oauthStatus = const IntegrationAuthStatus(
+        state: IntegrationAuthState.complete,
+      )
+      ..providerRefreshError = const ProductException('Refresh failed');
+    final controller = await _controller(repository);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      _app(controller, authorizationLauncher: (_) async => true),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Connect'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Open browser'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Check'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Authentication complete'), findsOneWidget);
+    expect(find.text('Finish'), findsOneWidget);
+    expect(repository.oauthStatusCalls, 1);
+    expect(repository.providerRefreshCalls, 1);
+
+    repository.providerRefreshError = null;
+    await tester.tap(find.text('Finish'));
+    await tester.pumpAndSettle();
+
+    expect(repository.oauthStatusCalls, 1);
+    expect(repository.providerRefreshCalls, 2);
+    expect(find.byKey(const ValueKey('pending-provider-oauth')), findsNothing);
   });
 }

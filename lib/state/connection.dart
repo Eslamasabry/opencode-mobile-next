@@ -1247,7 +1247,9 @@ class ConnectionController extends ChangeNotifier {
       )) {
         return;
       }
-      if (integrations.isNotEmpty) {
+      // V1 chat reads /provider.connected, not the v2 integration credential
+      // store. A v2-only OAuth credential must not expose unusable models.
+      if (!comparesRuntime && integrations.isNotEmpty) {
         final present = {
           for (final provider in nextProviders.providers) provider.id,
         };

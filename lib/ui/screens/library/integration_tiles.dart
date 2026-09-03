@@ -324,7 +324,10 @@ class _ProviderIntegrationTile extends StatelessWidget {
 
   Widget? _action() {
     final integration = presented.integration;
-    if (integration.credentialIDs.isNotEmpty) {
+    final hasLegacyOAuth =
+        presented.connected &&
+        integration.methods.any((method) => method.type == 'oauth');
+    if (integration.credentialIDs.isNotEmpty || hasLegacyOAuth) {
       if (busy) {
         return const SizedBox.square(
           dimension: 20,
@@ -474,6 +477,8 @@ class _PendingOAuthTile extends StatelessWidget {
     };
     final actionLabel = terminal
         ? 'Dismiss'
+        : state == IntegrationAuthState.complete
+        ? 'Finish'
         : pending.launch.mode == IntegrationAuthMode.code
         ? 'Enter code'
         : 'Check';
@@ -499,7 +504,7 @@ class _PendingOAuthTile extends StatelessWidget {
                 : onContinue,
             child: Text(actionLabel),
           ),
-          if (!terminal)
+          if (!terminal && !checking)
             PopupMenuButton<void>(
               tooltip: 'Authentication options',
               itemBuilder: (context) => [
@@ -736,6 +741,14 @@ Uri parseAuthorizationUrl(String value) {
     );
   }
   return uri;
+}
+
+/// Accept either the short code shown by a provider or the callback URL a
+/// headless browser leaves in its address bar.
+String providerOAuthCompletionCode(String value) {
+  final trimmed = value.trim();
+  final fromUrl = Uri.tryParse(trimmed)?.queryParameters['code']?.trim();
+  return fromUrl?.isNotEmpty == true ? fromUrl! : trimmed;
 }
 
 class _SectionLoading extends StatelessWidget {

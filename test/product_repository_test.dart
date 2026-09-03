@@ -84,6 +84,25 @@ void main() {
     expect(response.defaultModelID, 'glm-5.2');
   });
 
+  test('explicit empty connected list does not expose catalog-only models', () {
+    final response = ProvidersResponse.fromJson({
+      'all': [
+        {
+          'id': 'openai',
+          'name': 'OpenAI',
+          'models': {'gpt-5.6-sol': <String, Object?>{}},
+        },
+      ],
+      'connected': <String>[],
+      'default': {'openai': 'gpt-5.6-sol'},
+    });
+
+    expect(response.providers, isEmpty);
+    expect(response.availableProviders.single.id, 'openai');
+    expect(response.defaultProviderID, isNull);
+    expect(response.defaultModelID, isNull);
+  });
+
   test(
     'chat defaults use the exact generated project config contract',
     () async {
@@ -1290,36 +1309,79 @@ void main() {
         final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
         server.listen((request) async {
           request.response.headers.contentType = ContentType.json;
-          request.response.write(
-            jsonEncode({
-              'location': {
-                'directory': '/root',
-                'workspaceID': 'phone',
-                'project': {'id': 'project-1', 'directory': '/root'},
-              },
-              'data': [
-                {
-                  'id': 'cloud',
-                  'name': 'Cloud Provider',
-                  'methods': [
-                    {'type': 'key', 'label': 'API key'},
-                    {
-                      'type': 'env',
-                      'names': ['CLOUD_TOKEN'],
-                    },
-                  ],
-                  'connections': [
-                    {
-                      'type': 'credential',
-                      'id': 'credential-1',
-                      'label': 'Phone key',
-                    },
-                    {'type': 'env', 'name': 'CLOUD_TOKEN'},
-                  ],
+          if (request.uri.path == '/api/integration') {
+            request.response.write(
+              jsonEncode({
+                'location': {
+                  'directory': '/root',
+                  'workspaceID': 'phone',
+                  'project': {'id': 'project-1', 'directory': '/root'},
                 },
-              ],
-            }),
-          );
+                'data': [
+                  {
+                    'id': 'cloud',
+                    'name': 'Cloud Provider',
+                    'methods': [
+                      {'type': 'key', 'label': 'API key'},
+                      {
+                        'id': 'oauth-cloud',
+                        'type': 'oauth',
+                        'label': 'Cloud OAuth',
+                      },
+                      {
+                        'type': 'env',
+                        'names': ['CLOUD_TOKEN'],
+                      },
+                    ],
+                    'connections': [
+                      {
+                        'type': 'credential',
+                        'id': 'credential-1',
+                        'label': 'Phone key',
+                      },
+                      {'type': 'env', 'name': 'CLOUD_TOKEN'},
+                    ],
+                  },
+                  {
+                    'id': 'stale',
+                    'name': 'Stale Provider',
+                    'methods': [
+                      {'type': 'key', 'label': 'API key'},
+                    ],
+                    'connections': [
+                      {
+                        'type': 'credential',
+                        'id': 'credential-stale',
+                        'label': 'Old key',
+                      },
+                    ],
+                  },
+                ],
+              }),
+            );
+          } else if (request.uri.path == '/provider/auth') {
+            request.response.write(
+              jsonEncode({
+                'cloud': [
+                  {'type': 'oauth', 'label': 'Cloud OAuth'},
+                  {'type': 'oauth', 'label': 'Legacy-only OAuth'},
+                ],
+                'legacy': [
+                  {'type': 'oauth', 'label': 'Legacy Login'},
+                ],
+              }),
+            );
+          } else if (request.uri.path == '/provider') {
+            request.response.write(
+              jsonEncode({
+                'all': <Object>[],
+                'default': <String, String>{},
+                'connected': ['cloud'],
+              }),
+            );
+          } else {
+            request.response.statusCode = HttpStatus.notFound;
+          }
           await request.response.close();
         });
 
@@ -1330,16 +1392,37 @@ void main() {
           final repository = SdkProductRepository(api.sdkClient)
             ..setLocation(directory: '/root', workspace: 'phone');
 
-          final integration = (await repository.listIntegrations()).single;
+          final integrations = await repository.listIntegrations();
+          final integration = integrations.singleWhere(
+            (integration) => integration.id == 'cloud',
+          );
 
           expect(integration.id, 'cloud');
           expect(integration.connectionCount, 2);
           expect(integration.credentialIDs, ['credential-1']);
           expect(integration.hasEnvironmentConnection, isTrue);
           expect(
+            integration.methods
+                .where((method) => method.type == 'oauth')
+                .map((method) => (method.id, method.label)),
+            [('0', 'Cloud OAuth'), ('1', 'Legacy-only OAuth')],
+          );
+          expect(
             integration.connections.map((connection) => connection.label),
             ['Phone key', 'CLOUD_TOKEN'],
           );
+          final legacy = integrations.singleWhere(
+            (integration) => integration.id == 'legacy',
+          );
+          expect(legacy.name, 'legacy');
+          expect(legacy.methods.single.id, '0');
+          expect(legacy.methods.single.label, 'Legacy Login');
+          expect(legacy.connectionCount, 0);
+          final stale = integrations.singleWhere(
+            (integration) => integration.id == 'stale',
+          );
+          expect(stale.connectionCount, 0);
+          expect(stale.credentialIDs, ['credential-stale']);
         } finally {
           await server.close(force: true);
         }
@@ -1693,7 +1776,7 @@ void main() {
   );
 
   test(
-    'provider OAuth keeps and completes the server attempt contract',
+    'provider code OAuth writes the legacy auth store used by v1 chat',
     () async {
       await HttpOverrides.runZoned(() async {
         final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
@@ -1702,37 +1785,28 @@ void main() {
           final body = await utf8.decoder.bind(request).join();
           requests.add((method: request.method, uri: request.uri, body: body));
           request.response.headers.contentType = ContentType.json;
-          final location = {
-            'directory': '/root',
-            'workspaceID': 'phone',
-            'project': {'id': 'project-1', 'directory': '/root'},
-          };
-          if (request.method == 'POST' &&
-              request.uri.path == '/api/integration/cloud/connect/oauth') {
+          if (request.method == 'GET' && request.uri.path == '/provider/auth') {
             request.response.write(
               jsonEncode({
-                'location': location,
-                'data': {
-                  'attemptID': 'attempt-1',
-                  'url': 'https://auth.example.com/authorize',
-                  'instructions': 'Paste the returned code',
-                  'mode': 'code',
-                  'time': {'created': 100, 'expires': 999},
-                },
+                'cloud': [
+                  {'type': 'oauth', 'label': 'Cloud OAuth'},
+                ],
               }),
             );
-          } else if (request.method == 'GET') {
+          } else if (request.method == 'POST' &&
+              request.uri.path == '/provider/cloud/oauth/authorize') {
             request.response.write(
               jsonEncode({
-                'location': location,
-                'data': {
-                  'status': 'complete',
-                  'time': {'created': 100, 'expires': 999},
-                },
+                'url': 'https://auth.example.com/authorize',
+                'instructions': 'Paste the returned code',
+                'method': 'code',
               }),
             );
+          } else if (request.method == 'POST' &&
+              request.uri.path == '/provider/cloud/oauth/callback') {
+            request.response.write('true');
           } else {
-            request.response.statusCode = HttpStatus.noContent;
+            request.response.statusCode = HttpStatus.notFound;
           }
           await request.response.close();
         });
@@ -1746,48 +1820,113 @@ void main() {
 
           final launch = await repository.startIntegrationOAuth(
             'cloud',
-            'oauth-1',
+            '0',
             inputs: const {'tenant': 'acme'},
-            label: 'Work',
           );
-          final status = await repository.integrationOAuthStatus(
+          final resumedRepository = SdkProductRepository(api.sdkClient)
+            ..setLocation(directory: '/root', workspace: 'phone');
+          final pending = await resumedRepository.integrationOAuthStatus(
             launch.attemptID,
           );
-          await repository.completeIntegrationOAuth(
+          await resumedRepository.completeIntegrationOAuth(
             launch.attemptID,
-            code: 'returned-code',
+            code:
+                'https://auth.example.com/callback?code=returned-code&state=state-1',
           );
-          await repository.cancelIntegrationOAuth(launch.attemptID);
+          final complete = await resumedRepository.integrationOAuthStatus(
+            launch.attemptID,
+          );
+          await resumedRepository.cancelIntegrationOAuth(launch.attemptID);
 
-          expect(launch.attemptID, 'attempt-1');
+          expect(launch.attemptID, startsWith('provider-oauth-'));
           expect(launch.mode, IntegrationAuthMode.code);
-          expect(launch.expiresAt, 999);
-          expect(status.state, IntegrationAuthState.complete);
-          expect(status.expiresAt, 999);
+          expect(pending.state, IntegrationAuthState.pending);
+          expect(complete.state, IntegrationAuthState.complete);
           expect(requests.map((request) => request.method), [
-            'POST',
             'GET',
             'POST',
-            'DELETE',
+            'POST',
           ]);
           expect(requests.map((request) => request.uri.path), [
-            '/api/integration/cloud/connect/oauth',
-            '/api/integration/attempt/attempt-1',
-            '/api/integration/attempt/attempt-1/complete',
-            '/api/integration/attempt/attempt-1',
+            '/provider/auth',
+            '/provider/cloud/oauth/authorize',
+            '/provider/cloud/oauth/callback',
           ]);
-          expect(jsonDecode(requests[0].body), {
-            'methodID': 'oauth-1',
+          expect(jsonDecode(requests[1].body), {
+            'method': 0,
             'inputs': {'tenant': 'acme'},
-            'label': 'Work',
           });
-          expect(jsonDecode(requests[2].body), {'code': 'returned-code'});
+          expect(jsonDecode(requests[2].body), {
+            'method': 0,
+            'code': 'returned-code',
+          });
           for (final request in requests) {
             expect(request.uri.queryParameters, {
-              'location[directory]': '/root',
-              'location[workspace]': 'phone',
+              'directory': '/root',
+              'workspace': 'phone',
             });
           }
+        } finally {
+          await server.close(force: true);
+        }
+      }, createHttpClient: (_) => _RealHttpOverrides().createHttpClient(null));
+    },
+  );
+
+  test(
+    'provider automatic OAuth completes through the legacy callback',
+    () async {
+      await HttpOverrides.runZoned(() async {
+        final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        final requests = <({String method, Uri uri, String body})>[];
+        server.listen((request) async {
+          final body = await utf8.decoder.bind(request).join();
+          requests.add((method: request.method, uri: request.uri, body: body));
+          request.response.headers.contentType = ContentType.json;
+          if (request.method == 'GET' && request.uri.path == '/provider/auth') {
+            request.response.write(
+              jsonEncode({
+                'openai': [
+                  {'type': 'oauth', 'label': 'ChatGPT Pro/Plus (headless)'},
+                ],
+              }),
+            );
+          } else if (request.uri.path == '/provider/openai/oauth/authorize') {
+            request.response.write(
+              jsonEncode({
+                'url': 'https://auth.openai.com/codex/device',
+                'instructions': 'Enter code: ABCD-EFGH',
+                'method': 'auto',
+              }),
+            );
+          } else if (request.uri.path == '/provider/openai/oauth/callback') {
+            request.response.write('true');
+          } else {
+            request.response.statusCode = HttpStatus.notFound;
+          }
+          await request.response.close();
+        });
+
+        try {
+          final api = OpenCodeApi(
+            baseUrl: 'http://${server.address.host}:${server.port}',
+          );
+          final repository = SdkProductRepository(api.sdkClient);
+          final launch = await repository.startIntegrationOAuth('openai', '0');
+          final resumedRepository = SdkProductRepository(api.sdkClient);
+          final status = await resumedRepository.integrationOAuthStatus(
+            launch.attemptID,
+          );
+
+          expect(launch.mode, IntegrationAuthMode.auto);
+          expect(launch.instructions, 'Enter code: ABCD-EFGH');
+          expect(status.state, IntegrationAuthState.complete);
+          expect(requests.map((request) => request.uri.path), [
+            '/provider/auth',
+            '/provider/openai/oauth/authorize',
+            '/provider/openai/oauth/callback',
+          ]);
+          expect(jsonDecode(requests.last.body), {'method': 0});
         } finally {
           await server.close(force: true);
         }

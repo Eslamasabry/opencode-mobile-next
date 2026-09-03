@@ -370,10 +370,14 @@ abstract class ProductRepository implements ServerOperationsGateway {
 
 class SdkProductRepository
     implements ProductRepository, LocationAwareProductRepository {
+  static const _providerOAuthAttemptPrefix = 'provider-oauth-';
+
   final sdk.OpencodeSdk _client;
+  final Map<String, _LegacyProviderOAuthAttempt> _providerOAuthAttempts = {};
   String? _directory;
   String? _workspace;
   int _locationRevision = 0;
+  int _providerOAuthAttemptSerial = 0;
 
   SdkProductRepository(this._client);
 
@@ -1649,8 +1653,15 @@ class SdkProductRepository
         locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
         locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
       );
-      return (response.data?.data ?? const []).map((integration) {
-        final connections = integration.connections
+      final authMethods = await _loadProviderAuthMethods();
+      final providerResponse = await _client.getProviderApi().providerList(
+        directory: _directory,
+        workspace: _workspace,
+      );
+      final connectedProviderIDs =
+          providerResponse.data?.connected.toSet() ?? const <String>{};
+      final integrations = (response.data?.data ?? const []).map((integration) {
+        final storedConnections = integration.connections
             .map((connection) {
               final value = connection.objectValue ?? const <String, dynamic>{};
               final type = (value['type'] ?? 'unknown').toString();
@@ -1666,18 +1677,38 @@ class SdkProductRepository
               );
             })
             .toList(growable: false);
-        return IntegrationInfo(
-          id: integration.id,
-          name: integration.name,
-          methods: integration.methods.map((method) {
-            final value = method.objectValue ?? const <String, dynamic>{};
-            final type = (value['type'] ?? 'unknown').toString();
-            final names = value['names'];
-            final prompts = value['prompts'];
-            return IntegrationMethodInfo(
+        final connected = connectedProviderIDs.contains(integration.id);
+        final connections = <IntegrationConnectionInfo>[
+          ...storedConnections,
+          if (connected && storedConnections.isEmpty)
+            const IntegrationConnectionInfo(
+              type: 'runtime',
+              label: 'Connected to OpenCode',
+            ),
+        ];
+        final legacyMethods = authMethods[integration.id] ?? const [];
+        final methods = <IntegrationMethodInfo>[];
+        final matchedLegacyMethods = <int>{};
+        for (final method in integration.methods) {
+          final value = method.objectValue ?? const <String, dynamic>{};
+          final type = (value['type'] ?? 'unknown').toString();
+          final label = (value['label'] ?? _methodLabel(type)).toString();
+          final legacyIndex = type == 'oauth'
+              ? _legacyOAuthMethodIndex(legacyMethods, label)
+              : null;
+          // OpenCode 1 chat reads the legacy provider auth store. Do not offer
+          // a v2-only OAuth method that cannot populate that store.
+          if (type == 'oauth' && legacyIndex == null) continue;
+          if (legacyIndex != null) matchedLegacyMethods.add(legacyIndex);
+          final names = value['names'];
+          final prompts = value['prompts'];
+          methods.add(
+            IntegrationMethodInfo(
               type: type,
-              id: value['id']?.toString(),
-              label: (value['label'] ?? _methodLabel(type)).toString(),
+              id: type == 'oauth'
+                  ? legacyIndex.toString()
+                  : value['id']?.toString(),
+              label: label,
               prompts: prompts is List
                   ? prompts
                         .whereType<Map>()
@@ -1687,14 +1718,131 @@ class SdkProductRepository
               environmentNames: names is List
                   ? names.map((name) => name.toString()).toList()
                   : const [],
-            );
-          }).toList(),
+            ),
+          );
+        }
+        for (var index = 0; index < legacyMethods.length; index++) {
+          final method = legacyMethods[index];
+          if (method.type != sdk.ProviderAuthMethodTypeEnum.oauth ||
+              matchedLegacyMethods.contains(index)) {
+            continue;
+          }
+          methods.add(_legacyOAuthMethod(method, index));
+        }
+        return IntegrationInfo(
+          id: integration.id,
+          name: integration.name,
+          methods: methods,
           connections: connections,
-          connectionCount: connections.length,
+          connectionCount: connected ? connections.length : 0,
         );
       }).toList();
+      final listedIDs = integrations
+          .map((integration) => integration.id)
+          .toSet();
+      final providerNames = {
+        for (final provider in providerResponse.data?.all ?? const [])
+          provider.id: provider.name,
+      };
+      for (final entry in authMethods.entries) {
+        if (listedIDs.contains(entry.key)) continue;
+        final methods = <IntegrationMethodInfo>[];
+        for (var index = 0; index < entry.value.length; index++) {
+          final method = entry.value[index];
+          if (method.type == sdk.ProviderAuthMethodTypeEnum.oauth) {
+            methods.add(_legacyOAuthMethod(method, index));
+          }
+        }
+        if (methods.isEmpty) continue;
+        final connected = connectedProviderIDs.contains(entry.key);
+        final connections = <IntegrationConnectionInfo>[
+          if (connected)
+            const IntegrationConnectionInfo(
+              type: 'runtime',
+              label: 'Connected to OpenCode',
+            ),
+        ];
+        integrations.add(
+          IntegrationInfo(
+            id: entry.key,
+            name: providerNames[entry.key] ?? entry.key,
+            methods: methods,
+            connections: connections,
+            connectionCount: connections.length,
+          ),
+        );
+      }
+      return integrations;
     },
   );
+
+  static IntegrationMethodInfo _legacyOAuthMethod(
+    sdk.ProviderAuthMethod method,
+    int index,
+  ) => IntegrationMethodInfo(
+    type: 'oauth',
+    id: index.toString(),
+    label: method.label,
+    prompts:
+        method.prompts
+            ?.map((prompt) => prompt.objectValue)
+            .whereType<Map<String, dynamic>>()
+            .toList(growable: false) ??
+        const [],
+  );
+
+  static int? _legacyOAuthMethodIndex(
+    List<sdk.ProviderAuthMethod> methods,
+    String label,
+  ) {
+    final normalizedLabel = label.trim().toLowerCase();
+    for (var index = 0; index < methods.length; index++) {
+      final method = methods[index];
+      if (method.type == sdk.ProviderAuthMethodTypeEnum.oauth &&
+          method.label.trim().toLowerCase() == normalizedLabel) {
+        return index;
+      }
+    }
+    return null;
+  }
+
+  Future<Map<String, List<sdk.ProviderAuthMethod>>>
+  _loadProviderAuthMethods() async {
+    // The generated nested Map<String, List<ProviderAuthMethod>> decoder in
+    // the current SDK casts each method as a list. Decode this one endpoint at
+    // the boundary until the generator can represent nested collection maps.
+    final response = await _client.dio.get<Object>(
+      '/provider/auth',
+      queryParameters: {
+        if (_directory != null) 'directory': _directory,
+        if (_workspace != null) 'workspace': _workspace,
+      },
+    );
+    final raw = response.data;
+    if (raw is! Map) {
+      throw StateError('OpenCode returned invalid provider auth methods');
+    }
+    final methods = <String, List<sdk.ProviderAuthMethod>>{};
+    for (final entry in raw.entries) {
+      final values = entry.value;
+      if (values is! List) {
+        throw StateError('OpenCode returned invalid provider auth methods');
+      }
+      methods[entry.key.toString()] = values
+          .map((value) {
+            if (value is! Map) {
+              throw StateError(
+                'OpenCode returned an invalid provider auth method',
+              );
+            }
+            return sdk.ProviderAuthMethod.fromJson(
+              Map<String, dynamic>.from(value),
+            );
+          })
+          .toList(growable: false);
+    }
+    return methods;
+  }
 
   @override
   Future<void> connectIntegrationKey(String id, String key, {String? label}) =>
@@ -1723,12 +1871,6 @@ class SdkProductRepository
   Future<void> disconnectIntegration(IntegrationInfo integration) =>
       _guard('Could not disconnect the provider', () async {
         final credentialIDs = integration.credentialIDs.toSet().toList();
-        if (credentialIDs.isEmpty) {
-          throw const ProductException(
-            'This provider is connected through the server environment and '
-            'cannot be disconnected from mobile',
-          );
-        }
 
         // OpenCode 1.18.x can retain the same key in its legacy provider auth
         // store and its v2 integration credential store. Remove the legacy
@@ -1807,84 +1949,183 @@ class SdkProductRepository
     Map<String, String> inputs = const {},
     String? label,
   }) => _guard('Could not start provider authentication', () async {
-    final response = await _client
-        .getIntegrationsApi()
-        .v2IntegrationConnectOauth(
-          integrationID: id,
-          locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
-          locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
-          v2IntegrationConnectOauthRequest:
-              sdk.V2IntegrationConnectOauthRequest(
-                methodID: methodID,
-                inputs: inputs,
-                label: label,
-              ),
-        );
-    final attempt = response.data?.data;
-    if (attempt == null || attempt.url.isEmpty) {
+    final methodIndex = int.tryParse(methodID);
+    final methods = (await _loadProviderAuthMethods())[id];
+    if (methodIndex == null ||
+        methods == null ||
+        methodIndex < 0 ||
+        methodIndex >= methods.length ||
+        methods[methodIndex].type != sdk.ProviderAuthMethodTypeEnum.oauth) {
+      throw const ProductException(
+        'OpenCode did not return a matching provider authentication method. '
+        'Refresh providers and try again.',
+      );
+    }
+    final response = await _client.getProviderApi().providerOauthAuthorize(
+      providerID: id,
+      directory: _directory,
+      workspace: _workspace,
+      providerOauthAuthorizeRequest: sdk.ProviderOauthAuthorizeRequest(
+        method: methodIndex,
+        inputs: inputs.isEmpty ? null : inputs,
+      ),
+    );
+    final authorization = response.data;
+    if (authorization == null || authorization.url.isEmpty) {
       throw const ProductException('No authorization link was returned');
     }
+    final mode =
+        authorization.method == sdk.ProviderAuthAuthorizationMethodEnum.code
+        ? IntegrationAuthMode.code
+        : IntegrationAuthMode.auto;
+    final attempt = _LegacyProviderOAuthAttempt(
+      providerID: id,
+      methodIndex: methodIndex,
+      mode: mode,
+    );
+    final attemptID = _providerOAuthAttemptID(attempt);
+    _providerOAuthAttempts[attemptID] = attempt;
     return IntegrationAuthLaunch(
-      attemptID: attempt.attemptID,
-      url: attempt.url,
-      instructions: attempt.instructions,
-      mode: attempt.mode == sdk.IntegrationAttemptModeEnum.code
-          ? IntegrationAuthMode.code
-          : IntegrationAuthMode.auto,
-      expiresAt: _finiteTimestamp(attempt.time.expires.toJson()),
+      attemptID: attemptID,
+      url: authorization.url,
+      instructions: authorization.instructions,
+      mode: mode,
     );
   });
 
   @override
   Future<IntegrationAuthStatus> integrationOAuthStatus(String attemptID) =>
       _guard('Could not check provider authentication', () async {
-        final response = await _client
-            .getIntegrationsApi()
-            .v2IntegrationAttemptStatus(
-              attemptID: attemptID,
-              locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
-              locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
-            );
-        final data = response.data?.data.objectValue;
-        final value = data?['status']?.toString();
-        final state = switch (value) {
-          'pending' => IntegrationAuthState.pending,
-          'complete' => IntegrationAuthState.complete,
-          'failed' => IntegrationAuthState.failed,
-          'expired' => IntegrationAuthState.expired,
-          _ => throw const ProductException(
-            'Server returned an unknown authentication state',
-          ),
-        };
-        final time = _stringMap(data?['time']);
-        return IntegrationAuthStatus(
-          state: state,
-          message: data?['message']?.toString(),
-          expiresAt: _finiteTimestamp(time['expires']),
-        );
+        final attempt = _providerOAuthAttempt(attemptID);
+        if (attempt == null) {
+          return const IntegrationAuthStatus(
+            state: IntegrationAuthState.expired,
+            message: 'This authentication attempt is no longer active.',
+          );
+        }
+        if (attempt.status.state != IntegrationAuthState.pending) {
+          _providerOAuthAttempts.remove(attemptID);
+          return attempt.status;
+        }
+        if (attempt.mode == IntegrationAuthMode.code) {
+          return attempt.status;
+        }
+        final activeCompletion = attempt.completion;
+        if (activeCompletion != null) return activeCompletion;
+        final completion = _completeProviderOAuth(attempt);
+        attempt.completion = completion;
+        try {
+          final status = await completion;
+          _providerOAuthAttempts.remove(attemptID);
+          return status;
+        } catch (_) {
+          if (identical(attempt.completion, completion)) {
+            attempt.completion = null;
+          }
+          rethrow;
+        }
       });
 
   @override
   Future<void> completeIntegrationOAuth(String attemptID, {String? code}) =>
       _guard('Could not complete provider authentication', () async {
-        await _client.getIntegrationsApi().v2IntegrationAttemptComplete(
-          attemptID: attemptID,
-          locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
-          locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
-          v2IntegrationAttemptCompleteRequest:
-              sdk.V2IntegrationAttemptCompleteRequest(code: code),
-        );
+        final attempt = _providerOAuthAttempt(attemptID);
+        if (attempt == null) {
+          throw const ProductException(
+            'This authentication attempt is no longer active.',
+          );
+        }
+        await _completeProviderOAuth(attempt, code: _oauthCode(code));
       });
 
   @override
-  Future<void> cancelIntegrationOAuth(String attemptID) =>
-      _guard('Could not cancel provider authentication', () async {
-        await _client.getIntegrationsApi().v2IntegrationAttemptCancel(
-          attemptID: attemptID,
-          locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
-          locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
-        );
-      });
+  Future<void> cancelIntegrationOAuth(String attemptID) async {
+    _providerOAuthAttempts.remove(attemptID);
+  }
+
+  String _providerOAuthAttemptID(_LegacyProviderOAuthAttempt attempt) {
+    final payload = base64Url
+        .encode(
+          utf8.encode(
+            jsonEncode({
+              'provider': attempt.providerID,
+              'method': attempt.methodIndex,
+              'mode': attempt.mode.name,
+              'server': _client.dio.options.baseUrl,
+              'nonce': ++_providerOAuthAttemptSerial,
+            }),
+          ),
+        )
+        .replaceAll('=', '');
+    return '$_providerOAuthAttemptPrefix$payload';
+  }
+
+  _LegacyProviderOAuthAttempt? _providerOAuthAttempt(String attemptID) {
+    final active = _providerOAuthAttempts[attemptID];
+    if (active != null || !attemptID.startsWith(_providerOAuthAttemptPrefix)) {
+      return active;
+    }
+    try {
+      var encoded = attemptID.substring(_providerOAuthAttemptPrefix.length);
+      encoded += '=' * ((4 - encoded.length % 4) % 4);
+      final value = jsonDecode(utf8.decode(base64Url.decode(encoded)));
+      if (value is! Map || value['server'] != _client.dio.options.baseUrl) {
+        return null;
+      }
+      final providerID = value['provider'];
+      final methodIndex = value['method'];
+      final mode = switch (value['mode']) {
+        'auto' => IntegrationAuthMode.auto,
+        'code' => IntegrationAuthMode.code,
+        _ => null,
+      };
+      if (providerID is! String ||
+          providerID.isEmpty ||
+          methodIndex is! num ||
+          mode == null) {
+        return null;
+      }
+      final restored = _LegacyProviderOAuthAttempt(
+        providerID: providerID,
+        methodIndex: methodIndex.toInt(),
+        mode: mode,
+      );
+      _providerOAuthAttempts[attemptID] = restored;
+      return restored;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<IntegrationAuthStatus> _completeProviderOAuth(
+    _LegacyProviderOAuthAttempt attempt, {
+    String? code,
+  }) async {
+    final response = await _client.getProviderApi().providerOauthCallback(
+      providerID: attempt.providerID,
+      directory: _directory,
+      workspace: _workspace,
+      providerOauthCallbackRequest: sdk.ProviderOauthCallbackRequest(
+        method: attempt.methodIndex,
+        code: code,
+      ),
+    );
+    if (response.data != true) {
+      throw const ProductException(
+        'OpenCode did not confirm provider authentication.',
+      );
+    }
+    return attempt.status = const IntegrationAuthStatus(
+      state: IntegrationAuthState.complete,
+    );
+  }
+
+  static String? _oauthCode(String? value) {
+    final code = value?.trim();
+    if (code == null || code.isEmpty) return null;
+    final parsed = Uri.tryParse(code)?.queryParameters['code']?.trim();
+    return parsed?.isNotEmpty == true ? parsed : code;
+  }
 
   @override
   Future<List<CommandInfo>> listCommands() =>
@@ -2140,11 +2381,6 @@ class SdkProductRepository
   static Map<String, dynamic> _stringMap(Object? value) =>
       value is Map ? Map<String, dynamic>.from(value) : const {};
 
-  static int? _finiteTimestamp(Object? value) {
-    if (value is num && value.isFinite) return value.toInt();
-    return null;
-  }
-
   String _symbolPath(String value) {
     var path = value;
     final uri = Uri.tryParse(value);
@@ -2247,6 +2483,22 @@ class SdkProductRepository
       throw ProductException(message, cause: error);
     }
   }
+}
+
+class _LegacyProviderOAuthAttempt {
+  final String providerID;
+  final int methodIndex;
+  final IntegrationAuthMode mode;
+  IntegrationAuthStatus status = const IntegrationAuthStatus(
+    state: IntegrationAuthState.pending,
+  );
+  Future<IntegrationAuthStatus>? completion;
+
+  _LegacyProviderOAuthAttempt({
+    required this.providerID,
+    required this.methodIndex,
+    required this.mode,
+  });
 }
 
 Session _sessionFromSdk(sdk.Session item) => Session(

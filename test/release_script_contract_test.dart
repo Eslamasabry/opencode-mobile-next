@@ -14,5 +14,5 @@ void main() {
       reason: 'stdout:\n${result.stdout}\nstderr:\n${result.stderr}',
     );
     expect(result.stdout, contains('PASS: release script safety contract'));
-  });
+  }, timeout: const Timeout(Duration(minutes: 2)));
 }

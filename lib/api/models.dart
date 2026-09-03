@@ -893,6 +893,7 @@ class ProvidersResponse {
 
   factory ProvidersResponse.fromJson(Map<String, dynamic> j) {
     final providers = <ProviderInfo>[];
+    final hasConnectedList = j['connected'] is List;
     final connected = (j['connected'] as List? ?? const [])
         .map((value) => value.toString())
         .where((value) => value.isNotEmpty)
@@ -936,15 +937,15 @@ class ProvidersResponse {
       for (final provider in availableProviders) provider.id: provider,
     };
     providers.addAll(
-      connected.isEmpty
-          ? availableProviders
-          : connected.map((id) => availableByID[id]).whereType<ProviderInfo>(),
+      hasConnectedList
+          ? connected.map((id) => availableByID[id]).whereType<ProviderInfo>()
+          : availableProviders,
     );
     String? defP;
     String? defM;
     final d = j['default'];
     if (d is Map<String, dynamic> && d.isNotEmpty) {
-      final defaults = connected.isEmpty
+      final defaults = !hasConnectedList
           ? d.entries
           : connected
                 .map((id) => MapEntry(id, d[id]))

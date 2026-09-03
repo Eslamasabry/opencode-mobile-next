@@ -1239,7 +1239,7 @@ void main() {
   });
 
   testWidgets(
-    'connected integration recovers Z.AI from phone provider all payload',
+    'v1 integration credential does not expose a provider absent from runtime',
     (tester) async {
       final api = _V2Api(
         providersResult: ProvidersResponse.fromJson({
@@ -1344,19 +1344,15 @@ void main() {
 
       expect(
         controller.catalog?.providers.map((provider) => provider.id),
-        contains('zai-coding-plan'),
+        isNot(contains('zai-coding-plan')),
       );
       expect(
         controller.catalog?.models.map(
           (model) => '${model.providerID}/${model.id}',
         ),
-        contains('zai-coding-plan/glm-5.2'),
+        isNot(contains('zai-coding-plan/glm-5.2')),
       );
-      final zai = controller.catalog!.models.firstWhere(
-        (model) => model.providerID == 'zai-coding-plan',
-      );
-      expect(zai.variants.map((variant) => variant.id), ['high', 'max']);
-      expect(controller.selectedModel?.providerID, 'zai-coding-plan');
+      expect(controller.selectedModel?.providerID, 'opencode');
       expect(repository.runtimeRefreshCalls, 1);
       expect(store.providerRuntimeWasRefreshed('termux'), isTrue);
 

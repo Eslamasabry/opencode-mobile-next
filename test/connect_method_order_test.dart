@@ -28,7 +28,7 @@ void main() {
   });
 
   test('hints say where each flow finishes', () {
-    expect(connectMethodHint(browser), contains('computer running OpenCode'));
+    expect(connectMethodHint(browser), contains('paste the callback URL'));
     expect(connectMethodHint(headless), contains('Works from a phone'));
     expect(connectMethodHint(key), 'Paste an API key');
     expect(connectMethodNeedsServerBrowser(browser), isTrue);

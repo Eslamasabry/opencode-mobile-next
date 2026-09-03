@@ -25,11 +25,11 @@ List<IntegrationMethodInfo> orderConnectMethods(
 String connectMethodHint(IntegrationMethodInfo method) {
   if (method.type == 'key') return 'Paste an API key';
   if (connectMethodNeedsServerBrowser(method)) {
-    return 'Opens a browser, but sign-in completes on the computer running '
-        'OpenCode. From this device choose a headless option instead.';
+    return 'Opens a browser. If the redirect cannot reach OpenCode, paste the '
+        'callback URL here.';
   }
   if (method.label.toLowerCase().contains('headless')) {
-    return 'Sign in on any device, then paste the code here. Works from a phone.';
+    return 'Uses a one-time code. Works from a phone.';
   }
   return 'Sign in with your account';
 }

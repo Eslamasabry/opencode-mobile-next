@@ -410,7 +410,9 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
         _PendingOAuthTile(
           pending: pending,
           checking: _checkingOAuth,
-          onContinue: pending.launch.mode == IntegrationAuthMode.code
+          onContinue: pending.status?.state == IntegrationAuthState.complete
+              ? () => _finishOAuth(pending)
+              : pending.launch.mode == IntegrationAuthMode.code
               ? _enterOAuthCode
               : _checkOAuth,
           onCancel: _cancelOAuth,
@@ -644,7 +646,10 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
         .length;
   }
 
-  Future<bool> _confirmAuthorizationLaunch(Uri destination) async {
+  Future<bool> _confirmAuthorizationLaunch(
+    Uri destination, {
+    String instructions = '',
+  }) async {
     final host = destination.hasPort
         ? '${destination.host}:${destination.port}'
         : destination.host;
@@ -667,6 +672,15 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
                 ),
                 const SizedBox(height: 4),
                 SelectableText(host),
+                if (instructions.trim().isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    'OpenCode instructions',
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  SelectableText(instructions.trim()),
+                ],
               ],
             ),
             actions: [
@@ -872,7 +886,10 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
       });
       try {
         final destination = parseAuthorizationUrl(launch.url);
-        if (!await _confirmAuthorizationLaunch(destination)) {
+        if (!await _confirmAuthorizationLaunch(
+          destination,
+          instructions: launch.instructions,
+        )) {
           await _cancelOAuth();
           return;
         }
@@ -899,7 +916,9 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
       );
       if (!mounted || _pendingOAuth != pending) return;
       if (status.state == IntegrationAuthState.complete) {
-        await _finishOAuth(pending);
+        final completed = pending.copyWith(status: status);
+        setState(() => _pendingOAuth = completed);
+        await _finishOAuth(completed);
         return;
       }
       setState(() => _pendingOAuth = pending.copyWith(status: status));
@@ -928,14 +947,16 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
       final repository = await _requireActionRepository();
       await repository.completeIntegrationOAuth(
         pending.launch.attemptID,
-        code: code,
+        code: providerOAuthCompletionCode(code),
       );
       final status = await repository.integrationOAuthStatus(
         pending.launch.attemptID,
       );
       if (!mounted || _pendingOAuth != pending) return;
       if (status.state == IntegrationAuthState.complete) {
-        await _finishOAuth(pending);
+        final completed = pending.copyWith(status: status);
+        setState(() => _pendingOAuth = completed);
+        await _finishOAuth(completed);
       } else {
         setState(() => _pendingOAuth = pending.copyWith(status: status));
       }
@@ -1015,6 +1036,9 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     if (_pendingMcpOAuth case final pending?) {
       unawaited(_disposePendingMcpAuthentication(pending));
     }
+    if (_pendingOAuth case final pending?) {
+      unawaited(_disposePendingProviderAuthentication(pending));
+    }
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -1029,6 +1053,17 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
     } catch (_) {
       // Route disposal cannot present recovery UI. A later auth start replaces
       // any abandoned server-side pending transport.
+    }
+  }
+
+  Future<void> _disposePendingProviderAuthentication(
+    _PendingIntegrationOAuth pending,
+  ) async {
+    try {
+      final repository = await widget.controller.prepareActionRepository();
+      await repository?.cancelIntegrationOAuth(pending.launch.attemptID);
+    } catch (_) {
+      // Route disposal cannot present recovery UI. Server attempts expire.
     }
   }
 }
