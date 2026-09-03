@@ -17,9 +17,10 @@ ARB file rather than a moving target.
       that match on text keep passing.
 - [ ] Give static helpers and sheets that lack a `BuildContext` a way to
       resolve strings (pass `AppLocalizations` in, or restructure).
-- [ ] Add a `test/l10n_coverage_test.dart` that fails when a `Text('...')`
+- [x] Add a `test/l10n_coverage_test.dart` that fails when a `Text('...')`
       literal with letters appears under `lib/ui/**`, with an allowlist for
-      identifiers (model ids, paths, shortcuts).
+      identifiers (model ids, paths, shortcuts). Landed as a per-file ratchet:
+      751 literals in 67 files on 2026-09-03; the baseline only goes down.
 - [ ] Plurals and dates through `intl` rather than string concatenation
       (`'$n files'`, relative times, cost formatting).
 - [ ] Add the first non-English locale. Arabic is the natural candidate
