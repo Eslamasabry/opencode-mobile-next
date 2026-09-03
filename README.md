@@ -109,9 +109,9 @@ This is an alpha. Here is what that means, plainly:
 - **Signed with the project's own key**, not a store key. Upgrading between
   builds works in place; moving from a very old preview means uninstalling
   it first.
-- **The automated checks run on the maintainer's machine**, not on GitHub's
-  servers, because the GitHub account's billing is blocked. The workflow files
-  say so. You should know that before trusting a badge.
+- **Automated checks run in GitHub Actions** on `master` and `dev`. Android CI
+  uploads a short-lived test-signed APK to prove the release build compiles;
+  public releases still use the project's upgrade-compatible signing key.
 
 ## Your data
 

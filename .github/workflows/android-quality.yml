@@ -1,13 +1,5 @@
-# OWNER ACTION REQUIRED before this gate can run at all:
-# Every recorded run of this workflow (35/35 as of 2026-08-28) failed in ~5s
-# with zero steps and runner_id 0. The check-run annotation on each says:
-#   "The job was not started because recent account payments have failed or
-#    your spending limit needs to be increased. Please check the
-#    'Billing & plans' section in your settings"
-# This is a GitHub account-level block, not a workflow defect. Fix it at
-# https://github.com/settings/billing (resolve the failed payment or raise
-# the Actions spending limit), then re-run any run or push to verify.
-# Nothing inside this file can lift that block.
+# The uploaded APK is signed with an isolated CI key. It proves the release
+# build compiles, but it is not an upgrade-compatible distribution artifact.
 
 name: Android quality gate
 
@@ -16,7 +8,7 @@ on:
   push:
     branches:
       - master
-      - production/android-release-hardening
+      - dev
   workflow_dispatch:
 
 permissions:
@@ -40,6 +32,11 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Set up Gradle 9.5
+        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
+        with:
+          gradle-version: "9.5.0"
+
       - name: Set up pinned Flutter
         uses: subosito/flutter-action@fd55f4c5af5b953cc57a2be44cb082c8f6635e8e # v2.21.0
         with:
@@ -49,6 +46,13 @@ jobs:
 
       - name: Resolve dependencies
         run: flutter pub get
+
+      - name: Generate ignored Gradle wrapper
+        run: >-
+          gradle -p android wrapper
+          --gradle-version 9.5.0
+          --distribution-type all
+          --gradle-distribution-sha256-sum a3c4ba4aca8f0075688b9c5b18939fd28e8cb4357c227da5c1d9f38343791439
 
       - name: Resolve generated SDK dependencies
         run: dart pub get --directory packages/opencode_sdk --enforce-lockfile
@@ -130,3 +134,11 @@ jobs:
 
       - name: Verify release artifact exists
         run: test -s build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload test-signed APK
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: opencode-mobile-ci-test-signed-${{ github.sha }}
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 7

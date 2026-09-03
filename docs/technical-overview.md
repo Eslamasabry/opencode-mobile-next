@@ -215,14 +215,12 @@ package ID, and version on every artifact. Shorebird patches are Dart-only
 and always target an exact `x.y.z+build`; never distribute an APK from a raw
 `flutter build apk` — it cannot receive patches.
 
-**CI is defined but not currently running.**
-[android-quality.yml](../.github/workflows/android-quality.yml) encodes the same
-gates plus contract/SDK verification and a test-signed release compile whose
-artifact is never distributed, but every recorded run has failed in seconds
-on a GitHub account-level billing block. Until that is resolved by the
-repository owner, no release here is backed by CI evidence — the gates were
-run locally. The workflow file says so at the top, and so does this README,
-because a green-looking badge nobody can run is worse than no badge.
+CI runs [android-quality.yml](../.github/workflows/android-quality.yml) on
+`master`, `dev`, and pull requests. It includes contract/SDK verification,
+analysis, the serial test suite, Android release lint, and a test-signed release
+compile. The short-lived APK artifact proves the app compiles, but its isolated
+CI certificate is intentionally not the public upgrade lineage and the APK
+must not be distributed as a release.
 
 
 ## Architecture
@@ -273,4 +271,3 @@ UI talks to the gateway, never to `api/` or `api2/` directly. See
   the server API the app exercises
 - [docs/showcase-video-plan.md](showcase-video-plan.md) — the showcase
   storyboard, shot list, and render plan
-
