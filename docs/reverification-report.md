@@ -1,5 +1,8 @@
 # Re-verification report — v2 migration claim + "all findings fixed" claim
 
+> Historical report. CI availability statements below are superseded: current
+> Android, Linux, Windows, and SDK workflows run on GitHub Actions.
+
 > **2026-08-30 re-check (HEAD `17a42bf`, 69 commits later):** analyzer clean,
 > **1021/1021 tests pass**. Lens 4 visual sweep landed (12/15 fixed), the
 > fix-regression cluster mostly landed (7/13), desktop Phase 1 + window

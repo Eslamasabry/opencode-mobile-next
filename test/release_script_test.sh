@@ -4,8 +4,8 @@ set -euo pipefail
 readonly REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 readonly SOURCE_SCRIPT="$REPO_ROOT/scripts/release.sh"
 readonly CUT_SCRIPT="$REPO_ROOT/scripts/cut-alpha.sh"
-readonly NOTES_ANCHOR="# OpenCode Mobile — Alpha"
-readonly LEGACY_SIDELOAD_FINGERPRINT="1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C"
+readonly NOTES_ANCHOR="# OpenCode Mobile - Alpha 1.0.12+13"
+readonly LEGACY_SIDELOAD_FINGERPRINT="8F51FBCA8101DE600C0E878DF7E2CC65DFA29ADD58A1771D776908349CD82053"
 TEST_ROOT="$(mktemp -d)"
 readonly TEST_ROOT
 trap 'rm -rf "$TEST_ROOT"' EXIT
@@ -163,6 +163,9 @@ case "${1:-} ${2:-}" in
     done
     ;;
   "release view")
+    if [[ "$*" != *'--json body'* && "${MOCK_GH_RELEASE_EXISTS:-false}" != true ]]; then
+      exit 1
+    fi
     if [[ "${MOCK_GH_TRUNCATE_BODY:-false}" == true ]]; then
       printf 'Release notes draft\n'
     else
@@ -222,7 +225,7 @@ EOF
 #!/usr/bin/env bash
 set -euo pipefail
 printf 'apksigner %s\n' "$*" >>"$MOCK_COMMAND_LOG"
-printf 'Signer #1 certificate SHA-256 digest: %s\n' "${MOCK_APK_FINGERPRINT:-1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C}"
+printf 'Signer #1 certificate SHA-256 digest: %s\n' "${MOCK_APK_FINGERPRINT:-8F51FBCA8101DE600C0E878DF7E2CC65DFA29ADD58A1771D776908349CD82053}"
 EOF
 
   cat >"$FIXTURE/home/Android/Sdk/build-tools/99.0.0/aapt" <<'EOF'
@@ -294,6 +297,8 @@ run_cut() {
       MOCK_GH_BODY_FILE="$FIXTURE/gh-release-body" \
       MOCK_GIT_SHOW_FAIL="${MOCK_GIT_SHOW_FAIL:-false}" \
       MOCK_GH_TRUNCATE_BODY="${MOCK_GH_TRUNCATE_BODY:-false}" \
+      MOCK_TAG_EXISTS=false \
+      MOCK_REMOTE_TAG_EXISTS=false \
       MOCK_KEYSTORE_OWNER='CN=Android Debug,O=Android,C=US' \
       MOCK_KEYSTORE_FINGERPRINT="$LEGACY_SIDELOAD_FINGERPRINT" \
       MOCK_APK_FINGERPRINT="$LEGACY_SIDELOAD_FINGERPRINT" \
@@ -686,9 +691,9 @@ test_alpha_publish_verifies_the_body_github_stored() {
   new_fixture
   run_cut --publish
   assert_status 0
-  assert_log_contains 'gh release create v1.0.31+32'
-  assert_log_contains 'gh release view v1.0.31+32 --json body'
-  assert_output_contains 'Alpha 1.0.31+32 published'
+  assert_log_contains 'gh release create v1.0.12+13'
+  assert_log_contains 'gh release view v1.0.12+13 --json body'
+  assert_output_contains 'Alpha 1.0.12+13 published'
   local stored
   stored="$(<"$FIXTURE/gh-release-body")"
   [[ "$stored" == "$NOTES_ANCHOR"* ]] || fail_test "uploaded body does not start with the anchor heading"
@@ -698,7 +703,7 @@ test_alpha_publish_verifies_the_body_github_stored() {
   MOCK_GH_TRUNCATE_BODY=true run_cut --publish
   assert_status 1
   assert_output_contains 'truncated'
-  assert_output_not_contains 'Alpha 1.0.31+32 published'
+  assert_output_not_contains 'Alpha 1.0.12+13 published'
 }
 
 test_strict_arguments

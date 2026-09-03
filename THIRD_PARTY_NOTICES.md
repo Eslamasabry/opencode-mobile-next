@@ -130,7 +130,7 @@ product uses beyond the platform default.
 - Component: the Flutter framework and engine, and the SDK-sourced packages
   `flutter`, `flutter_localizations`, `flutter_web_plugins`, `sky_engine`
   (and `flutter_test`, which is not shipped)
-- Version: 3.47.1, the revision pinned for Shorebird releases
+- Version: 3.47.2, the revision pinned for Shorebird releases
 - Project: https://github.com/flutter/flutter
 - Copyright: 2014 The Flutter Authors. All rights reserved.
 - License: BSD 3-Clause; see `LICENSES/BSD-3-Clause.txt`. The engine

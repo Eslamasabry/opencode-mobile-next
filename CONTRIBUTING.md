@@ -9,7 +9,7 @@ of how the project is built and what a change has to satisfy.
 |---|---|
 | Flutter | 3.47.2 — Shorebird's cached copy, `~/.shorebird/bin/cache/flutter/<rev>/bin/flutter` |
 | JDK | 17 (temurin) |
-| Android SDK | API 36 |
+| Android SDK | API 37 |
 | Shorebird CLI | 1.6.x, only for release/patch work |
 
 The Flutter pin is not advisory. Release artifacts and the test suite are

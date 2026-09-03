@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Cut the alpha: promote the production line to master, publish the signed
-# GitHub APK, tag it, and open the GitHub release with the alpha notes.
+# Cut an alpha from an already reviewed and synchronized master branch,
+# publish the signed APK, create an immutable tag, and open the GitHub release.
 #
 # Why this script exists: scripts/release.sh is fail-closed by design — it
 # demands a clean synced master, the private signing identity, and Shorebird,
@@ -10,17 +10,17 @@
 #
 # Prerequisites (checked, never worked around):
 #   * android/key.properties present with the legacy GitHub sideload key
-#     (certificate SHA-256 1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c)
+#     (certificate SHA-256 8f51fbca8101de600c0e878df7e2cc65dfa29add58a1771d776908349cd82053)
 #   * Shorebird CLI installed and authenticated (shorebird doctor)
 #   * gh CLI installed and authenticated (only needed for --publish)
 #
 # Usage:
-#   ./scripts/cut-alpha.sh              # promote + dry-run, uploads nothing
-#   ./scripts/cut-alpha.sh --publish    # promote + publish + tag + release
+#   ./scripts/cut-alpha.sh              # preflight + dry-run, uploads nothing
+#   ./scripts/cut-alpha.sh --publish    # publish + immutable tag + release
 #   ./scripts/cut-alpha.sh --print-notes  # assemble + validate the release body only
 #
-# Everything is fail-closed: any failed step aborts with nothing half-done
-# except the master promotion, which is pushed only after a clean merge.
+# Everything is fail-closed. The script never merges or pushes source changes;
+# master must already be the exact reviewed release commit.
 #
 # The release body is read from HEAD with `git show` (no pipe, so a failure
 # aborts under `set -e`), must carry the alpha heading and at least
@@ -30,17 +30,23 @@
 # uploaded anyway.
 set -euo pipefail
 
-readonly PRODUCTION_BRANCH="production/android-release-hardening"
-readonly VERSION="1.0.31+32"
+cd "$(dirname "$0")/.."
+
+VERSION="$(sed -n 's/^[[:space:]]*version:[[:space:]]*//p' pubspec.yaml)"
+[[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+\+[1-9][0-9]*$ ]] || {
+  echo "Invalid pubspec.yaml version: ${VERSION:-<missing>}" >&2
+  exit 1
+}
+readonly VERSION
 readonly TAG="v${VERSION}"
 readonly APK_SRC="build/app/outputs/flutter-apk/app-release.apk"
 readonly APK_NAME="opencode-mobile-${VERSION}-alpha.apk"
 readonly NOTES="docs/release-alpha-notes.md"
 # The published body starts at this heading; the draft preamble above it in
 # $NOTES is for the person cutting the release, not for GitHub.
-readonly NOTES_ANCHOR="# OpenCode Mobile — Alpha"
+readonly NOTES_ANCHOR="# OpenCode Mobile - Alpha $VERSION"
 readonly NOTES_MIN_LINES=10
-readonly SIDELoad_CERT="1de5bf08146f269bcd9eb5c2ffc94469ce4617d37806285955f978a62494d60c"
+readonly SIDELoad_CERT="8f51fbca8101de600c0e878df7e2cc65dfa29add58a1771d776908349cd82053"
 
 PUBLISH=false
 PRINT_NOTES=false
@@ -85,8 +91,6 @@ assert_published_body() {
     fail "GitHub release $TAG body is missing '$NOTES_ANCHOR' (truncated). Repair it with: gh release edit $TAG --notes-file <validated body>"
 }
 
-cd "$(dirname "$0")/.."
-
 if [[ "$PRINT_NOTES" == true ]]; then
   build_release_body
   exit 0
@@ -116,6 +120,23 @@ shorebird doctor >/dev/null 2>&1 ||
 step "Preflight: release notes body assembles from HEAD"
 build_release_body >/dev/null
 
+step "Preflight: master is clean, pushed, and unreleased"
+[[ "$(git symbolic-ref --quiet --short HEAD 2>/dev/null)" == master ]] ||
+  fail "release cuts run only from master"
+[[ -z "$(git status --porcelain=v1 --untracked-files=all)" ]] ||
+  fail "worktree is not clean"
+git fetch origin master --quiet || fail "could not fetch origin/master"
+read -r ahead behind < <(git rev-list --left-right --count HEAD...origin/master)
+[[ "$ahead" == 0 && "$behind" == 0 ]] ||
+  fail "master is not synchronized with origin/master"
+! git rev-parse --verify "refs/tags/$TAG" >/dev/null 2>&1 ||
+  fail "local tag $TAG already exists; release tags are immutable"
+! git fetch --quiet origin "refs/tags/$TAG" >/dev/null 2>&1 ||
+  fail "remote tag $TAG already exists; release tags are immutable"
+if gh release view "$TAG" >/dev/null 2>&1; then
+  fail "GitHub release $TAG already exists"
+fi
+
 step "Preflight: signing identity matches the public sideload lineage"
 properties_cert="$(grep -oP '(?<=^certificate_sha256=).*' android/key.properties 2>/dev/null || true)"
 # key.properties carries whatever the owner stored; the authoritative check
@@ -125,15 +146,6 @@ if [[ -n "$properties_cert" ]]; then
   [[ "${normalized,,}" == "$SIDELoad_CERT" ]] ||
     echo "  ⚠ key.properties certificate differs from the public sideload lineage — release.sh will refuse later if it is wrong."
 fi
-
-step "Promoting $PRODUCTION_BRANCH to master"
-git checkout master ||
-  fail "cannot check out master."
-git merge --no-ff "$PRODUCTION_BRANCH" -m "Cut alpha $VERSION from the production line" ||
-  fail "merge conflict — resolve by hand; the release is not cut."
-step "Pushing master"
-git push origin master ||
-  fail "push failed; fix the remote and re-run."
 
 step "Running the fail-closed sideload release (dry-run, uploads nothing)"
 ./scripts/release.sh sideload || fail "dry-run failed — nothing was uploaded."
@@ -150,7 +162,7 @@ step "Publishing the signed APK through Shorebird"
 [[ -f "$APK_SRC" ]] || fail "expected APK missing at $APK_SRC."
 
 step "Tagging $TAG"
-git tag -f "$TAG"
+git tag -a "$TAG" -m "OpenCode Mobile $VERSION alpha"
 git push origin "$TAG"
 
 step "Assembling the release notes from the merged HEAD"
@@ -171,5 +183,4 @@ assert_published_body
 
 echo
 echo "✓ Alpha $VERSION published. The Linux desktop packages attach to this"
-echo "  tag automatically once CI can run (account billing); until then they"
-echo "  are build-from-source via docs/desktop.md."
+echo "  tag automatically after their workflow passes."

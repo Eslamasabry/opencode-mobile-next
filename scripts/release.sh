@@ -8,7 +8,7 @@ readonly SHOREBIRD_FLUTTER_VERSION="3.47.2"
 readonly AAB_PATH="build/app/outputs/bundle/release/app-release.aab"
 readonly APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
 readonly ANDROID_APPLICATION_ID="io.github.eslamasabry.opencode_mobile"
-readonly LEGACY_DEBUG_CERT_SHA256="1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C"
+readonly LEGACY_DEBUG_CERT_SHA256="8F51FBCA8101DE600C0E878DF7E2CC65DFA29ADD58A1771D776908349CD82053"
 
 UPSTREAM_REMOTE=""
 RELEASE_KEYSTORE=""
@@ -232,13 +232,6 @@ assert_aab_certificate() {
 
 resolve_android_tool() {
   local tool_name="$1"
-  local direct
-  direct="$(command -v "$tool_name" 2>/dev/null || true)"
-  if [[ -n "$direct" ]]; then
-    printf '%s\n' "$direct"
-    return
-  fi
-
   local local_properties_sdk=""
   if [[ -f android/local.properties ]]; then
     local_properties_sdk="$(read_property sdk.dir android/local.properties)"
@@ -257,6 +250,15 @@ resolve_android_tool() {
       return
     fi
   done
+
+  # Distro packages can lag the SDK that compiled the app. Prefer the latest
+  # tool from the configured Android SDK, then fall back to PATH.
+  local direct
+  direct="$(command -v "$tool_name" 2>/dev/null || true)"
+  if [[ -n "$direct" ]]; then
+    printf '%s\n' "$direct"
+    return
+  fi
   fail "Required Android build tool is not available: $tool_name"
 }
 

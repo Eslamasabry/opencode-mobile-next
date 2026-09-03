@@ -22,9 +22,16 @@ loopback addresses used by a server running on the same device.
 ## Data stored on your device
 
 The app stores server profile metadata, interface preferences, cached server
-state, downloaded voice models, and other data needed to restore your workspace.
-Server passwords are stored with Android secure storage. Android backup is
-disabled for this app.
+state, downloaded voice models, unsent draft text, and prompts queued while
+offline. A queued prompt can include an attachment encoded into the queue. Drafts
+and queued prompts are stored in the app's private preferences; they are not
+encrypted separately from the Android app sandbox. Queue entries are bounded by
+age, count, and total size. Server passwords are stored with Android secure
+storage. Android backup is disabled for this app.
+
+On-device Termux setup writes a server password into the private Termux/Ubuntu
+environment so that the local server can restart. Protect access to both apps
+and remove that environment when you no longer use it.
 
 You can remove a server profile in the app. You can erase all local data by
 clearing the app's storage or uninstalling it. Data retained by an OpenCode

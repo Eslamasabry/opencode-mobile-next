@@ -19,6 +19,7 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import java.security.MessageDigest
 import java.util.concurrent.atomic.AtomicInteger
 
 class MainActivity : FlutterActivity() {
@@ -52,6 +53,8 @@ class MainActivity : FlutterActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "getCapabilities" -> result.success(capabilities())
+                    "getSigningCertificateSha256" ->
+                        result.success(signingCertificateSha256())
                     "requestRunCommandPermission" -> requestRunCommandPermission(result)
                     "openTermux" -> result.success(openTermux())
                     "openAppSettings" -> {
@@ -176,6 +179,26 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun signingCertificateSha256(): String? {
+        val info = packageManager.getPackageInfo(
+            packageName,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                PackageManager.GET_SIGNING_CERTIFICATES
+            } else {
+                PackageManager.GET_SIGNATURES
+            }
+        )
+        val signature = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            info.signingInfo?.apkContentsSigners?.singleOrNull()
+        } else {
+            info.signatures?.singleOrNull()
+        } ?: return null
+        return MessageDigest.getInstance("SHA-256")
+            .digest(signature.toByteArray())
+            .joinToString("") { byte -> "%02X".format(byte) }
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {

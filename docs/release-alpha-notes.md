@@ -1,24 +1,35 @@
-# Release notes draft — Alpha 1.0.33+34
+# Release notes draft - Alpha 1.0.34+35
 
-Owner: paste into the GitHub release body for tag `v1.0.33+34` (or adjust the
-tag/version when the actual cut is made). Keep the two warning blocks at the
-top verbatim; everything below the fold can be trimmed per release.
+Used by `scripts/cut-alpha.sh` for tag `v1.0.34+35`. Do not publish until the
+release signer, exact commit, Android quality run, and physical-device smoke
+check have all been recorded.
 
 ---
 
-# OpenCode Mobile — Alpha
+# OpenCode Mobile - Alpha 1.0.34+35
 
 > ⚠️ **This is an alpha release of a vibecoded app.** OpenCode Mobile is
 > built heavily with AI assistance by an independent community maintainer.
 > It is not affiliated with the official OpenCode project. Expect rough
 > edges, breaking changes between previews, and untested corners.
 
-> ⚠️ **The desktop builds have never been hardware-tested.** Linux is
-> packaged but the window has never been seen on a display; Windows builds
-> in CI but has never been launched by anyone. Desktop testing *is*
-> contributor testing — if you try one, you are among the first, and the
-> in-app **Report a bug** button is the fastest way to tell us what
-> happened.
+> **Desktop builds are experimental.** Linux is exercised on a virtual display
+> in CI. Windows compiles and packages in CI but still needs routine manual
+> testing. The Android app is the primary target.
+
+## New in 1.0.34
+
+- Model selection is isolated per conversation instead of changing every open
+  session, including queued and mid-turn sends.
+- Android and desktop now display the consistent **OpenCode Mobile** identity.
+- Settings → About shows the exact app version, package ID, and Android signing
+  certificate so update conflicts can be diagnosed before data is removed.
+- Notification permission approvals require device authentication on Android
+  12 and newer.
+- Linux packages use `opencode-mobile` and refuse to overwrite or remove the
+  OpenCode server CLI.
+- Public security reporting, Discussions, dependency alerts, and stable CI
+  test signing are enabled.
 
 ## Report a bug (please, genuinely)
 

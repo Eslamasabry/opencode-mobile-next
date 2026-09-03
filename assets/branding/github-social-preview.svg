@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#09110E"/>
+      <stop offset="1" stop-color="#111A17"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#78F0A7"/>
+      <stop offset="1" stop-color="#35C979"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#000" flood-opacity=".48"/>
+    </filter>
+  </defs>
+  <rect width="1280" height="640" rx="32" fill="url(#bg)"/>
+  <path d="M0 520 C250 430 390 650 690 530 C900 445 1060 440 1280 510 V640 H0Z" fill="#0E2B1E" opacity=".72"/>
+  <g transform="translate(82 92)">
+    <rect width="246" height="34" rx="17" fill="#173727"/>
+    <circle cx="20" cy="17" r="6" fill="#55D187"/>
+    <text x="37" y="23" fill="#A8DDBB" font-family="Space Grotesk, sans-serif" font-size="15" font-weight="600" letter-spacing="1.5">UNOFFICIAL ANDROID CLIENT</text>
+    <text x="0" y="133" fill="#F4F8F5" font-family="Space Grotesk, sans-serif" font-size="66" font-weight="700">OpenCode</text>
+    <text x="0" y="202" fill="#55D187" font-family="Space Grotesk, sans-serif" font-size="66" font-weight="700">Mobile</text>
+    <text x="2" y="270" fill="#C4CEC8" font-family="Space Grotesk, sans-serif" font-size="27">Approve tools. Review diffs.</text>
+    <text x="2" y="307" fill="#C4CEC8" font-family="Space Grotesk, sans-serif" font-size="27">Keep moving.</text>
+    <text x="2" y="389" fill="#809087" font-family="JetBrains Mono, monospace" font-size="17">OPEN SOURCE  /  SELF-HOSTED  /  PUBLIC ALPHA</text>
+  </g>
+  <g transform="translate(815 55) rotate(5 180 265)" filter="url(#shadow)">
+    <rect x="0" y="0" width="356" height="548" rx="48" fill="#222B27" stroke="#3B4A42" stroke-width="3"/>
+    <rect x="17" y="17" width="322" height="514" rx="34" fill="#0B100E"/>
+    <rect x="117" y="29" width="122" height="22" rx="11" fill="#222B27"/>
+    <text x="40" y="95" fill="#F4F8F5" font-family="Space Grotesk, sans-serif" font-size="21" font-weight="700">Live session</text>
+    <circle cx="300" cy="88" r="7" fill="#55D187"/>
+    <rect x="38" y="125" width="280" height="76" rx="16" fill="#151D19"/>
+    <text x="56" y="154" fill="#8FA096" font-family="JetBrains Mono, monospace" font-size="12">EDIT  lib/state/connection.dart</text>
+    <rect x="56" y="172" width="197" height="7" rx="3" fill="#3D5D4A"/>
+    <rect x="38" y="218" width="280" height="140" rx="16" fill="#12271B" stroke="#2B6846"/>
+    <text x="56" y="252" fill="#DDF7E6" font-family="Space Grotesk, sans-serif" font-size="16" font-weight="600">Allow shell command?</text>
+    <text x="56" y="280" fill="#8FA096" font-family="JetBrains Mono, monospace" font-size="12">flutter test</text>
+    <rect x="56" y="309" width="116" height="32" rx="16" fill="#55D187"/>
+    <text x="80" y="330" fill="#092014" font-family="Space Grotesk, sans-serif" font-size="13" font-weight="700">Allow once</text>
+    <rect x="182" y="309" width="78" height="32" rx="16" fill="#27332C"/>
+    <text x="206" y="330" fill="#D7E2DB" font-family="Space Grotesk, sans-serif" font-size="13">Deny</text>
+    <rect x="38" y="376" width="280" height="86" rx="16" fill="#151D19"/>
+    <rect x="55" y="396" width="8" height="46" rx="4" fill="#55D187"/>
+    <rect x="77" y="399" width="208" height="7" rx="3" fill="#476052"/>
+    <rect x="77" y="419" width="165" height="7" rx="3" fill="#314239"/>
+    <rect x="55" y="482" width="263" height="34" rx="17" fill="#1C2922"/>
+    <text x="75" y="504" fill="#718178" font-family="Space Grotesk, sans-serif" font-size="13">Message OpenCode...</text>
+  </g>
+</svg>

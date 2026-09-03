@@ -9,12 +9,12 @@
   <id>io.github.eslamasabry.opencode_mobile</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
-  <name>OpenCode</name>
-  <summary>Connect to a remote opencode server and drive coding sessions</summary>
+  <name>OpenCode Mobile</name>
+  <summary>Unofficial client for an OpenCode server you control</summary>
 
   <description>
     <p>
-      OpenCode is a client for an opencode server. Point it at a server you
+      OpenCode Mobile is an independent client for an OpenCode server. Point it at a server you
       run — on this machine, on a workstation over SSH, or anywhere you can
       reach over HTTP — and it gives you the sessions, chat transcript, file
       browser, diff review and terminal for that workspace.
@@ -27,10 +27,10 @@
   </description>
 
   <launchable type="desktop-id">io.github.eslamasabry.opencode_mobile.desktop</launchable>
-  <url type="homepage">https://github.com/Eslamasabry/opencode-mobile</url>
-  <url type="bugtracker">https://github.com/Eslamasabry/opencode-mobile/issues</url>
+  <url type="homepage">https://github.com/Eslamasabry/opencode-mobile-next</url>
+  <url type="bugtracker">https://github.com/Eslamasabry/opencode-mobile-next/issues</url>
   <developer id="io.github.eslamasabry">
-    <name>OpenCode</name>
+    <name>OpenCode Mobile contributors</name>
   </developer>
 
   <supports>

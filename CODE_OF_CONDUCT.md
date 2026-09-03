@@ -1,11 +1,9 @@
 # Contributor Covenant Code of Conduct
 
-> **TODO-owner: a real contact must be filled in before this repository goes
-> public.** Every occurrence of `CONDUCT-CONTACT-TODO` below is a placeholder
-> and must be replaced with a monitored address or a private reporting form
-> that the maintainer actually reads. A code of conduct with no working
-> contact is worse than none — it promises a process that cannot be started.
-> Search this file for `CONDUCT-CONTACT-TODO` and replace all occurrences.
+> Conduct reports may contain private information. Use the repository's
+> [private reporting form](https://github.com/Eslamasabry/opencode-mobile-next/security/advisories/new)
+> and begin the title with **Conduct report**. Do not put the details in a
+> public issue or discussion.
 
 ## Our Pledge
 
@@ -69,8 +67,7 @@ requests, discussions, code review, and commit history.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the community leaders responsible for enforcement at
-`CONDUCT-CONTACT-TODO`.
+reported through the private form linked at the top of this document.
 All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the

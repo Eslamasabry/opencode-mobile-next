@@ -59,7 +59,10 @@ void main() {
       // The version is read from pubspec.yaml, not hardcoded...
       expect(script, contains(r'''sed -n 's/^version:'''));
       // ...and it reaches both artifact names.
-      expect(script, contains(r'readonly TAR_NAME="opencode-linux-x64-$version"'));
+      expect(
+        script,
+        contains(r'readonly TAR_NAME="opencode-mobile-linux-x64-$version"'),
+      );
       expect(script, contains(r'${DEB_PACKAGE}_${version}_${arch}.deb'));
     });
 
@@ -74,13 +77,28 @@ void main() {
 
     test('the release API target matches the repository CI publishes to', () {
       final workflow = _read('.github/workflows/desktop-linux.yml');
-      expect(desktopReleasesApiUrl, contains('Eslamasabry/opencode-mobile-next'));
-      expect(desktopReleasesPageUrl, contains('Eslamasabry/opencode-mobile-next'));
+      expect(
+        desktopReleasesApiUrl,
+        contains('Eslamasabry/opencode-mobile-next'),
+      );
+      expect(
+        desktopReleasesPageUrl,
+        contains('Eslamasabry/opencode-mobile-next'),
+      );
       // The release job attaches assets to the tag's existing release rather
       // than creating one, so the tag the checker parses is always the tag
       // scripts/release.sh made.
       expect(workflow, contains('gh release upload'));
-      expect(workflow, contains(r'startsWith(github.ref, ' "'" r'refs/tags/v' "'" r')'));
+      expect(
+        workflow,
+        contains(
+          r'startsWith(github.ref, '
+          "'"
+          r'refs/tags/v'
+          "'"
+          r')',
+        ),
+      );
     });
   });
 
@@ -89,7 +107,11 @@ void main() {
       final appId = RegExp(
         r'set\(APPLICATION_ID "([^"]+)"\)',
       ).firstMatch(_read('linux/CMakeLists.txt'))?.group(1);
-      expect(appId, isNotNull, reason: 'linux/CMakeLists.txt has no APPLICATION_ID');
+      expect(
+        appId,
+        isNotNull,
+        reason: 'linux/CMakeLists.txt has no APPLICATION_ID',
+      );
 
       // The desktop file is named after the app id, which is how a Wayland
       // compositor pairs the window (whose app_id is the program name) with
@@ -110,13 +132,32 @@ void main() {
       expect(metainfo, contains('$appId.desktop'));
     });
 
+    test('packaging never claims the OpenCode server command', () {
+      final packaging = [
+        _read('scripts/package-linux.sh'),
+        _read('linux/packaging/install.sh'),
+        _read('linux/packaging/uninstall.sh'),
+        _read('linux/packaging/io.github.eslamasabry.opencode_mobile.desktop'),
+      ].join('\n');
+      expect(packaging, isNot(contains('/bin/opencode\n')));
+      expect(packaging, isNot(contains('/lib/opencode/')));
+      expect(packaging, contains('opencode-mobile'));
+      expect(packaging, contains('.opencode-mobile-install'));
+    });
+
+    test('public package metadata points at this repository', () {
+      final metainfo = _read(
+        'linux/packaging/io.github.eslamasabry.opencode_mobile.metainfo.xml',
+      );
+      expect(metainfo, contains('Eslamasabry/opencode-mobile-next'));
+      expect(metainfo, isNot(contains('Eslamasabry/opencode-mobile/issues')));
+    });
+
     test('every icon size the packaging script requires is committed', () {
       final script = _read('scripts/package-linux.sh');
-      final sizes = RegExp(r'ICON_SIZES=\(([^)]*)\)')
-          .firstMatch(script)!
-          .group(1)!
-          .trim()
-          .split(RegExp(r'\s+'));
+      final sizes = RegExp(
+        r'ICON_SIZES=\(([^)]*)\)',
+      ).firstMatch(script)!.group(1)!.trim().split(RegExp(r'\s+'));
       expect(sizes, isNotEmpty);
       for (final size in sizes) {
         final icon = File(

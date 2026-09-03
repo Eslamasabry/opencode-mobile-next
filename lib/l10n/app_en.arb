@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "OpenCode",
+  "appTitle": "OpenCode Mobile",
   "@appTitle": {
     "description": "Application title shown in the task switcher / window title"
   },
@@ -35,5 +35,17 @@
   "librarySettingsTitle": "Settings",
   "@librarySettingsTitle": {
     "description": "More hub card: app settings"
+  },
+  "aboutBuildVersion": "OpenCode Mobile {version}+{buildNumber}",
+  "@aboutBuildVersion": {
+    "description": "Installed app version and build shown in About",
+    "placeholders": {
+      "version": {"type": "String"},
+      "buildNumber": {"type": "String"}
+    }
+  },
+  "aboutSigningCertificate": "Signing certificate SHA-256",
+  "@aboutSigningCertificate": {
+    "description": "Label for the installed Android APK signer fingerprint"
   }
 }

@@ -368,6 +368,23 @@ void main() {
     expect(example, contains('keyAlias=upload'));
   });
 
+  test('Android exposes build identity and authenticates shell approval', () {
+    final activity = File(
+      'android/app/src/main/kotlin/io/github/eslamasabry/'
+      'opencode_mobile/MainActivity.kt',
+    ).readAsStringSync();
+    final background = File(
+      'android/app/src/main/kotlin/io/github/eslamasabry/'
+      'opencode_mobile/BackgroundConnectionService.kt',
+    ).readAsStringSync();
+    final about = File('lib/ui/screens/about_screen.dart').readAsStringSync();
+
+    expect(activity, contains('getSigningCertificateSha256'));
+    expect(activity, contains('MessageDigest.getInstance("SHA-256")'));
+    expect(about, contains('l10n.aboutSigningCertificate'));
+    expect(background, contains('setAuthenticationRequired(true)'));
+  });
+
   testWidgets('markdown blocks custom schemes and confirms HTTP with host', (
     tester,
   ) async {

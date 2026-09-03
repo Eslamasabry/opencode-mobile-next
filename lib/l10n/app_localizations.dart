@@ -97,7 +97,7 @@ abstract class AppLocalizations {
   /// Application title shown in the task switcher / window title
   ///
   /// In en, this message translates to:
-  /// **'OpenCode'**
+  /// **'OpenCode Mobile'**
   String get appTitle;
 
   /// Section label above the More hub's browse destination grid
@@ -147,6 +147,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Settings'**
   String get librarySettingsTitle;
+
+  /// Installed app version and build shown in About
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode Mobile {version}+{buildNumber}'**
+  String aboutBuildVersion(String version, String buildNumber);
+
+  /// Label for the installed Android APK signer fingerprint
+  ///
+  /// In en, this message translates to:
+  /// **'Signing certificate SHA-256'**
+  String get aboutSigningCertificate;
 }
 
 class _AppLocalizationsDelegate

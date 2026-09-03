@@ -108,7 +108,7 @@ the one to bang on hardest", "three widget tests unverified"). That honesty
 is a feature, but re-read the notes of the releases you expect visitors to
 open (v1.0.27+28-preview.7 especially, since the README links its video
 assets) once with public eyes. The APK signing note there ("signer matches
-the public lineage 1de5bf08…") is correct and should stay — it is the
+the public lineage 8f51fbca…") is correct and should stay - it is the
 verification anchor for sideloaders.
 
 ---

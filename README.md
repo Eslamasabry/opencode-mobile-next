@@ -1,6 +1,10 @@
 # OpenCode Mobile
 
-**Your coding agent, in your pocket.**
+[![Android quality gate](https://github.com/Eslamasabry/opencode-mobile-next/actions/workflows/android-quality.yml/badge.svg?branch=master)](https://github.com/Eslamasabry/opencode-mobile-next/actions/workflows/android-quality.yml)
+[![Linux desktop](https://github.com/Eslamasabry/opencode-mobile-next/actions/workflows/desktop-linux.yml/badge.svg?branch=master)](https://github.com/Eslamasabry/opencode-mobile-next/actions/workflows/desktop-linux.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-55D187.svg)](LICENSE)
+
+**An unofficial Android client for the OpenCode server you control.**
 
 OpenCode Mobile is an Android app for [OpenCode](https://opencode.ai), the
 open-source coding agent. You keep OpenCode running on your computer, or on
@@ -34,16 +38,16 @@ yes.
 **Choices as buttons.** When the agent offers options, they come as buttons
 you can tap, not a list you have to retype.
 
-**Your providers, recognisable.** Anthropic, OpenAI, Google, Groq, Ollama and
-the rest show up with their own logos, a clear connected state, and what each
-model costs per million tokens, right where you pick one.
+**Your providers, recognisable.** Providers show a favicon where available,
+with a monogram fallback, a clear connected state, and server-supplied model
+pricing right where you pick one.
 
-**It keeps going when you leave.** Turn on background mode and the
+**Stay connected while Android permits.** Turn on background mode and the
 notification becomes a live view of the run: which session, what the agent
 is doing right now, how many things need you. On Android 16 it shows as a
 live update. There is a Pause button in the shade.
 
-**Share anything into it.** A stack trace, a link, a message. Share from any
+**Share text into it.** A stack trace, a link, a message. Share from any
 app and it opens a new session with that as your first prompt.
 
 **Talk instead of type.** Voice input is transcribed on the phone. Audio
@@ -65,7 +69,7 @@ home-screen widget that shows your sessions.
 | --- | --- | --- |
 | ![Linux desktop workspace with the session list](video/public/shots/desktop-01-workspace.png) | ![Linux desktop chat with the permission card above the composer](video/public/shots/desktop-02-chat-permission.png) | ![Linux desktop review workspace, split diff](video/public/shots/desktop-05-review.png) |
 
-**Full demo (51 s, 1080p, with sound):** [opencode-mobile-demo.mp4](video/public/opencode-mobile-demo.mp4). Phone footage is rendered from the app's real screens; the Linux desktop scene was recorded live.
+**Full demo (51 s, 1080p, with sound):** [opencode-mobile-demo.mp4](video/public/opencode-mobile-demo.mp4). Phone footage uses production widgets with sample data; the Linux desktop scene was recorded live.
 
 ![Demo](video/public/demo.gif)
 
@@ -73,8 +77,8 @@ The same demo as a video: [video/public/demo.webm](video/public/demo.webm).
 
 ## Getting started
 
-1. **Install the app.** Grab the APK from the
-   [latest release](https://github.com/Eslamasabry/opencode-mobile-next/releases).
+1. **Install the app.** Grab the arm64 APK from the
+   [latest release](https://github.com/Eslamasabry/opencode-mobile-next/releases/latest).
    Android will warn that it is not from the Play Store. That is expected.
 2. **On your computer, run one command.**
    ```bash
@@ -93,6 +97,20 @@ the server as a service on a Linux box are all covered in
 [the guide inside the app](lib/ui/screens/guide_screen.dart) and in
 [docs/technical-overview.md](docs/technical-overview.md).
 
+## Compatibility
+
+| Surface | Public-alpha status |
+|---|---|
+| Android | Primary target; arm64 sideload APK |
+| OpenCode 1 | Supported against the current 1.18.x line |
+| OpenCode 2 | Beta support pinned to upstream commit `f12e14cf` |
+| Linux x64 | Experimental; CI-built tarball and Debian package |
+| Windows x64 | Experimental; CI artifact, no installer |
+| iOS / macOS | Not available |
+
+The client connects directly to a server you choose. It does not provide a
+hosted OpenCode account or model subscription.
+
 ## Where things stand
 
 This is an alpha. Here is what that means, plainly:
@@ -106,12 +124,14 @@ This is an alpha. Here is what that means, plainly:
   what happened.
 - **English only** for now. The plan to change that is written down in
   [docs/localization-todo.md](docs/localization-todo.md).
-- **Signed with the project's own key**, not a store key. Upgrading between
-  builds works in place; moving from a very old preview means uninstalling
-  it first.
+- **Public releases and CI artifacts are different channels.** The current
+  `v1.0.33+34` release signer is
+  `8F51FBCA8101DE600C0E878DF7E2CC65DFA29ADD58A1771D776908349CD82053`.
+  Android updates in place only when the package ID and signer both match.
+  CI artifacts are test-only and may require uninstalling first, which erases
+  local app data. Verify the installed signer in **Settings → About**.
 - **Automated checks run in GitHub Actions** on `master` and `dev`. Android CI
-  uploads a short-lived test-signed APK to prove the release build compiles;
-  public releases still use the project's upgrade-compatible signing key.
+  uploads a short-lived, non-production APK to prove the release build compiles.
 
 ## Your data
 

@@ -27,7 +27,7 @@
         </intent>
     </queries>
     <application
-        android:label="OpenCode"
+        android:label="OpenCode Mobile"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"

@@ -1,11 +1,11 @@
 [Desktop Entry]
 Type=Application
 Version=1.5
-Name=OpenCode
+Name=OpenCode Mobile
 GenericName=Coding Agent Client
 Comment=Connect to a remote opencode server and drive coding sessions
 # Rewritten by the installer to the absolute path of the installed binary.
-Exec=opencode
+Exec=opencode-mobile
 # Icon and file name both use the GApplication application-id set in
 # linux/CMakeLists.txt. Under Wayland GTK reports that id as the xdg-shell
 # app_id, so the compositor pairs the window with this file by name alone.

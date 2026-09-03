@@ -128,7 +128,7 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
       );
     }
     return MaterialApp(
-      title: 'OpenCode',
+      title: 'OpenCode Mobile',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
@@ -524,7 +524,7 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
               );
             },
             scrollBehavior: const AppScrollBehavior(),
-            title: 'OpenCode',
+            title: 'OpenCode Mobile',
             onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,

@@ -4,8 +4,8 @@
 #   scripts/package-linux.sh [options]
 #
 # Produces, in build/linux/packages:
-#   opencode-linux-x64-<version>.tar.gz   bundle + icons + .desktop + installer
-#   opencode_<version>_amd64.deb          same payload under /usr
+#   opencode-mobile-linux-x64-<version>.tar.gz   bundle + desktop integration
+#   opencode-mobile_<version>_amd64.deb          same payload under /usr
 #   SHA256SUMS                            checksums for both
 #
 # The script never builds by itself unless asked (--build): CI builds once and
@@ -29,7 +29,8 @@ set -euo pipefail
 
 readonly APP_ID="io.github.eslamasabry.opencode_mobile"
 readonly BINARY_NAME="opencode_mobile"
-readonly DEB_PACKAGE="opencode"
+readonly INSTALL_NAME="opencode-mobile"
+readonly DEB_PACKAGE="$INSTALL_NAME"
 readonly ICON_SIZES=(16 24 32 48 64 128 256 512)
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -158,12 +159,13 @@ stage_share() {
 }
 
 # ---------------------------------------------------------------- tarball ---
-readonly TAR_NAME="opencode-linux-x64-$version"
+readonly TAR_NAME="opencode-mobile-linux-x64-$version"
 tar_root="$work/$TAR_NAME"
 note "staging tarball tree"
-install -d "$tar_root/lib/opencode"
-cp -a "$bundle_dir/." "$tar_root/lib/opencode/"
-stage_share "$tar_root" '$PREFIX/lib/opencode/'"$BINARY_NAME"
+install -d "$tar_root/lib/$INSTALL_NAME"
+cp -a "$bundle_dir/." "$tar_root/lib/$INSTALL_NAME/"
+touch "$tar_root/lib/$INSTALL_NAME/.opencode-mobile-install"
+stage_share "$tar_root" '$PREFIX/lib/'"$INSTALL_NAME/$BINARY_NAME"
 install -Dm644 "$repo_root/LICENSE" "$tar_root/LICENSE"
 install -Dm755 "$packaging_dir/install.sh" "$tar_root/install.sh"
 install -Dm755 "$packaging_dir/uninstall.sh" "$tar_root/uninstall.sh"
@@ -194,13 +196,14 @@ else
   arch="$(dpkg --print-architecture 2>/dev/null || echo amd64)"
   deb_root="$work/deb"
   note "staging .deb tree ($arch)"
-  install -d "$deb_root/usr/lib/opencode" "$deb_root/usr/bin" "$deb_root/DEBIAN"
-  cp -a "$bundle_dir/." "$deb_root/usr/lib/opencode/"
+  install -d "$deb_root/usr/lib/$INSTALL_NAME" "$deb_root/usr/bin" "$deb_root/DEBIAN"
+  cp -a "$bundle_dir/." "$deb_root/usr/lib/$INSTALL_NAME/"
+  touch "$deb_root/usr/lib/$INSTALL_NAME/.opencode-mobile-install"
   # The Flutter binary resolves its data/ and lib/ from $ORIGIN, and the
   # kernel resolves the symlink before $ORIGIN is expanded, so a link on PATH
   # is safe.
-  ln -sf "../lib/opencode/$BINARY_NAME" "$deb_root/usr/bin/$DEB_PACKAGE"
-  stage_share "$deb_root/usr" "/usr/lib/opencode/$BINARY_NAME"
+  ln -sf "../lib/$INSTALL_NAME/$BINARY_NAME" "$deb_root/usr/bin/$INSTALL_NAME"
+  stage_share "$deb_root/usr" "/usr/lib/$INSTALL_NAME/$BINARY_NAME"
   # Validate the copy with a real absolute Exec (the tarball's carries a
   # $PREFIX placeholder the installer substitutes).
   if command -v desktop-file-validate >/dev/null 2>&1; then
@@ -226,12 +229,12 @@ Package: $DEB_PACKAGE
 Architecture: $arch
 EOF
     mapfile -t elf_objects < <(
-      printf '%s\n' "$deb_root/usr/lib/opencode/$BINARY_NAME"
-      find "$deb_root/usr/lib/opencode/lib" -name '*.so' -print | sort
+      printf '%s\n' "$deb_root/usr/lib/$INSTALL_NAME/$BINARY_NAME"
+      find "$deb_root/usr/lib/$INSTALL_NAME/lib" -name '*.so' -print | sort
     )
     if (cd "$shlib_dir" && dpkg-shlibdeps \
           --ignore-missing-info \
-          -l"$deb_root/usr/lib/opencode/lib" \
+          -l"$deb_root/usr/lib/$INSTALL_NAME/lib" \
           -O -e"${elf_objects[@]}" > "$work/shlibdeps.txt" 2> "$work/shlibdeps.log"); then
       depends="$(sed -n 's/^shlibs:Depends=//p' "$work/shlibdeps.txt")"
     fi
@@ -258,8 +261,8 @@ Maintainer: OpenCode <noreply@github.com>
 Installed-Size: $installed_kb
 Depends: $depends
 Homepage: https://github.com/Eslamasabry/opencode-mobile-next
-Description: OpenCode desktop client for opencode servers
- OpenCode connects to an opencode server you run and gives you its sessions,
+Description: Unofficial OpenCode Mobile client for OpenCode servers
+ OpenCode Mobile connects to an OpenCode server you run and gives you its sessions,
  chat transcript, file browser, diff review and terminal.
  .
  The Linux build is experimental. Android-only features (Termux hosting,
@@ -298,7 +301,7 @@ EOF
   chmod 644 "$deb_root/usr/share/doc/$DEB_PACKAGE/changelog.Debian.gz"
 
   find "$deb_root" -type d -exec chmod 755 {} +
-  chmod 755 "$deb_root/usr/lib/opencode/$BINARY_NAME"
+  chmod 755 "$deb_root/usr/lib/$INSTALL_NAME/$BINARY_NAME"
   # dpkg-deb copies each file's mtime into data.tar, so freshly generated
   # control files and sed output would otherwise make every run produce a
   # different .deb. Flattening the tree to SOURCE_DATE_EPOCH makes the

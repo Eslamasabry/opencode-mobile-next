@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
-# Install OpenCode from an unpacked release tarball.
+# Install OpenCode Mobile from an unpacked release tarball.
 #
 #   ./install.sh                 install into ~/.local (no root needed)
 #   ./install.sh --prefix DIR    install somewhere else
 #   sudo ./install.sh            installs into /usr/local
 #
-# Places the runtime under <prefix>/lib/opencode, a launcher on PATH at
-# <prefix>/bin/opencode, and the .desktop entry, icons and AppStream metadata
+# Places the runtime under <prefix>/lib/opencode-mobile, a launcher on PATH at
+# <prefix>/bin/opencode-mobile, and the desktop integration files
 # under <prefix>/share so the shell shows the app with its own icon.
 set -euo pipefail
 
 readonly APP_ID="io.github.eslamasabry.opencode_mobile"
 readonly BINARY_NAME="opencode_mobile"
+readonly INSTALL_NAME="opencode-mobile"
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -34,8 +35,10 @@ done
 
 fail() { echo "ERROR: $*" >&2; exit 1; }
 
-[ -x "$here/lib/opencode/$BINARY_NAME" ] ||
-  fail "run this from the unpacked tarball (no lib/opencode/$BINARY_NAME here)"
+[ -x "$here/lib/$INSTALL_NAME/$BINARY_NAME" ] ||
+  fail "run this from the unpacked tarball (no lib/$INSTALL_NAME/$BINARY_NAME here)"
+[ -f "$here/lib/$INSTALL_NAME/.opencode-mobile-install" ] ||
+  fail "the archive has no OpenCode Mobile ownership marker"
 
 mkdir -p "$prefix" 2>/dev/null ||
   fail "cannot create $prefix — pass --prefix, or re-run with sudo"
@@ -43,17 +46,28 @@ mkdir -p "$prefix" 2>/dev/null ||
 
 echo "==> installing into $prefix"
 
-# Replace wholesale rather than merging, so an upgrade cannot leave a stale
-# plugin .so behind for the new binary to load.
-rm -rf "$prefix/lib/opencode"
+# Refuse to replace paths we cannot prove belong to this installer.
+runtime="$prefix/lib/$INSTALL_NAME"
+launcher="$prefix/bin/$INSTALL_NAME"
+if [ -e "$runtime" ] && [ ! -f "$runtime/.opencode-mobile-install" ]; then
+  fail "$runtime exists but is not owned by OpenCode Mobile"
+fi
+if [ -e "$launcher" ] || [ -L "$launcher" ]; then
+  if [ ! -L "$launcher" ] || [ "$(readlink "$launcher")" != "$runtime/$BINARY_NAME" ]; then
+    fail "$launcher exists but is not owned by OpenCode Mobile"
+  fi
+fi
+
+# Replace wholesale so an upgrade cannot leave a stale plugin behind.
+rm -rf "$runtime"
 mkdir -p "$prefix/lib"
-cp -a "$here/lib/opencode" "$prefix/lib/opencode"
-chmod 755 "$prefix/lib/opencode/$BINARY_NAME"
+cp -a "$here/lib/$INSTALL_NAME" "$runtime"
+chmod 755 "$runtime/$BINARY_NAME"
 
 mkdir -p "$prefix/bin"
 # The binary resolves data/ and lib/ relative to its own real path, and the
 # kernel resolves this symlink first, so launching through it is safe.
-ln -sfn "$prefix/lib/opencode/$BINARY_NAME" "$prefix/bin/opencode"
+ln -sfn "$runtime/$BINARY_NAME" "$launcher"
 
 mkdir -p "$prefix/share/applications" "$prefix/share/metainfo"
 # The staged Exec line carries a literal $PREFIX placeholder.
@@ -76,8 +90,8 @@ if command -v gtk-update-icon-cache >/dev/null 2>&1; then
 fi
 
 echo "==> installed"
-echo "    binary : $prefix/bin/opencode"
-echo "    runtime: $prefix/lib/opencode"
+echo "    binary : $launcher"
+echo "    runtime: $runtime"
 echo "    entry  : $prefix/share/applications/$APP_ID.desktop"
 case ":$PATH:" in
   *":$prefix/bin:"*) ;;
@@ -92,7 +106,7 @@ if [ "$prefix" != "/usr/local" ] && [ "$prefix" != "/usr" ]; then
     *) echo
        echo "NOTE: $prefix/share is not in XDG_DATA_DIRS. Most desktops read"
        echo "      ~/.local/share anyway; if the launcher does not appear, log"
-       echo "      out and back in."
+     echo "      out and back in."
        ;;
   esac
 fi

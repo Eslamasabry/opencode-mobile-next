@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../feedback/bug_report.dart';
+import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
 import '../app_theme.dart';
 import '../widgets/markdown.dart';
@@ -94,6 +96,13 @@ class AboutScreen extends StatelessWidget {
   }
 }
 
+class _BuildData {
+  const _BuildData({required this.package, required this.signer});
+
+  final PackageInfo? package;
+  final String? signer;
+}
+
 class _AlphaNotice extends StatelessWidget {
   const _AlphaNotice();
 
@@ -117,7 +126,10 @@ class _AlphaNotice extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text('Alpha · vibecoded', style: theme.textTheme.titleSmall),
+                  child: Text(
+                    'Alpha · vibecoded',
+                    style: theme.textTheme.titleSmall,
+                  ),
                 ),
               ],
             ),
@@ -157,6 +169,8 @@ class _DocumentView extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         children: [
+          const _BuildIdentityCard(),
+          const SizedBox(height: 16),
           const _NonAffiliationNotice(),
           const SizedBox(height: 16),
           // Scrolls with the document rather than sitting as fixed chrome:
@@ -189,6 +203,80 @@ class _DocumentView extends StatelessWidget {
           MarkdownText(data),
         ],
       ),
+    );
+  }
+}
+
+class _BuildIdentityCard extends StatelessWidget {
+  const _BuildIdentityCard();
+
+  static const _platform = MethodChannel('oc/termux');
+
+  Future<_BuildData> _load() async {
+    PackageInfo? package;
+    try {
+      package = await PackageInfo.fromPlatform();
+    } catch (_) {
+      return const _BuildData(package: null, signer: null);
+    }
+    String? signer;
+    if (platformCapabilities.supportsTermux) {
+      try {
+        signer = await _platform.invokeMethod<String>(
+          'getSigningCertificateSha256',
+        );
+      } catch (_) {
+        // Desktop and older Android builds do not expose a signer.
+      }
+    }
+    return _BuildData(package: package, signer: signer);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<_BuildData>(
+      future: _load(),
+      builder: (context, snapshot) {
+        final data = snapshot.data;
+        final package = data?.package;
+        if (package == null) return const SizedBox.shrink();
+        final signer = data?.signer;
+        final l10n = AppLocalizations.of(context);
+        return Card(
+          margin: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.aboutBuildVersion(package.version, package.buildNumber),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  package.packageName,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                if (signer != null && signer.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.aboutSigningCertificate,
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    signer,
+                    key: const ValueKey('about-signing-certificate'),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontFamily: 'JetBrainsMono',
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

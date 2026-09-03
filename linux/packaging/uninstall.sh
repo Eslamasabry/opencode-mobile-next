@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Remove an OpenCode install placed by install.sh.
+# Remove an OpenCode Mobile install placed by install.sh.
 #
 #   ./uninstall.sh                 remove from ~/.local
 #   ./uninstall.sh --prefix DIR    remove from somewhere else
@@ -10,6 +10,8 @@
 set -euo pipefail
 
 readonly APP_ID="io.github.eslamasabry.opencode_mobile"
+readonly BINARY_NAME="opencode_mobile"
+readonly INSTALL_NAME="opencode-mobile"
 
 if [ "$(id -u)" -eq 0 ]; then
   prefix="/usr/local"
@@ -25,9 +27,22 @@ while (($#)); do
   esac
 done
 
-echo "==> removing OpenCode from $prefix"
-rm -rf "$prefix/lib/opencode"
-rm -f "$prefix/bin/opencode"
+runtime="$prefix/lib/$INSTALL_NAME"
+launcher="$prefix/bin/$INSTALL_NAME"
+[ ! -e "$runtime" ] || [ -f "$runtime/.opencode-mobile-install" ] || {
+  echo "ERROR: refusing to remove unowned path $runtime" >&2
+  exit 1
+}
+if [ -e "$launcher" ] || [ -L "$launcher" ]; then
+  [ -L "$launcher" ] && [ "$(readlink "$launcher")" = "$runtime/$BINARY_NAME" ] || {
+    echo "ERROR: refusing to remove unowned path $launcher" >&2
+    exit 1
+  }
+fi
+
+echo "==> removing OpenCode Mobile from $prefix"
+rm -rf "$runtime"
+rm -f "$launcher"
 rm -f "$prefix/share/applications/$APP_ID.desktop"
 rm -f "$prefix/share/metainfo/$APP_ID.metainfo.xml"
 find "$prefix/share/icons/hicolor" \

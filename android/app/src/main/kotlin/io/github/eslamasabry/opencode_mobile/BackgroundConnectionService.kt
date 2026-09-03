@@ -376,7 +376,13 @@ class BackgroundConnectionService : Service() {
                             actionIntent("allow"),
                             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                         )
-                    ).build(),
+                    ).apply {
+                        // A lock-screen tap can authorize code execution on the
+                        // server host. Android 12+ must authenticate the user.
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            setAuthenticationRequired(true)
+                        }
+                    }.build(),
                     Notification.Action.Builder(
                         icon,
                         "Deny",

@@ -1,5 +1,9 @@
 # OpenCode Mobile audit reports
 
+> Historical record. Statements below about CI never having run were accurate
+> when these audits were written. Current Android, Linux, Windows, and SDK
+> workflows run on GitHub Actions; use the README and open issues for live status.
+
 OpenCode Mobile is an independent community project. It is not built,
 maintained, endorsed by, or affiliated with the official OpenCode team.
 

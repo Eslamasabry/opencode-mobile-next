@@ -49,11 +49,12 @@ Future<Uri> buildBugReportUrl({PackageInfo? info}) async {
     // The plugin channel can fail or simply never answer (bare desktop
     // shells, plugin regressions). A bug report must never hang on it, so
     // after two seconds the report files with an unknown version instead.
-    packageInfo = info ??
+    packageInfo =
+        info ??
         await PackageInfo.fromPlatform().timeout(const Duration(seconds: 2));
   } on Object {
     packageInfo = PackageInfo(
-      appName: 'opencode_mobile',
+      appName: 'OpenCode Mobile',
       packageName: 'io.github.eslamasabry.opencode_mobile',
       version: 'unknown',
       buildNumber: '0',
@@ -65,7 +66,8 @@ Future<Uri> buildBugReportUrl({PackageInfo? info}) async {
     queryParameters: <String, String>{
       'template': 'bug_report.yml',
       'app-version': version,
-      'what-happened': 'What happened?\n\n\n'
+      'what-happened':
+          'What happened?\n\n\n'
           'Environment (prefilled by the app):\n'
           '- App: $version\n'
           '- Platform: $platform\n',
@@ -92,7 +94,8 @@ Future<void> openBugReport(
   final url = await (urlBuilder ?? buildBugReportUrl)();
   var opened = false;
   try {
-    final launch = launcher ??
+    final launch =
+        launcher ??
         (url) => launchUrl(url, mode: LaunchMode.externalApplication);
     opened = await launch(url).timeout(const Duration(seconds: 2));
   } catch (_) {
@@ -102,9 +105,9 @@ Future<void> openBugReport(
     // Best-effort copy, never awaited: a dead clipboard channel must not
     // hold the fallback hostage. The snackbar below is the guarantee.
     unawaited(
-      Clipboard.setData(ClipboardData(text: url.toString()))
-          .then((_) {})
-          .catchError((Object _) {}),
+      Clipboard.setData(
+        ClipboardData(text: url.toString()),
+      ).then((_) {}).catchError((Object _) {}),
     );
     messenger.showSnackBar(
       const SnackBar(

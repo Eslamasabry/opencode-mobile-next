@@ -1,13 +1,14 @@
-# OpenCode on Linux desktop
+# OpenCode Mobile on Linux desktop
 
 **Status: experimental.** The Linux target compiles, packages and installs,
 and it shares every line of Dart with the Android app. It has had far less
 testing than Android, nothing is signed, and some of what follows was
-verified by hand on one machine rather than by a green CI run — the
+verified by hand on one machine rather than by a green CI run - the
 [Verification log](#verification-log) says exactly which is which.
 
-Only `linux/` exists. There is no `windows/` or `macos/` runner in this
-repository; `docs/desktop-feasibility.md` covers what Windows would take.
+Linux and Windows runners exist; both remain experimental. Linux is exercised
+on Xvfb in CI. Windows compiles and packages in CI but still needs routine
+hands-on testing. There is no macOS target.
 
 ---
 
@@ -18,7 +19,7 @@ Android release path uses too:
 
 ```sh
 ~/.shorebird/bin/cache/flutter/91f8bd75076e9c740aa13cf67eb9ec1a093f68f5/bin/flutter
-# Flutter 3.47.1 · Dart 3.13.1
+# Flutter 3.47.2 / Dart 3.13.2
 ```
 
 ```sh
@@ -91,8 +92,8 @@ Output lands in `build/linux/packages`:
 
 | Artifact | Contents |
 |---|---|
-| `opencode-linux-x64-<version>.tar.gz` | runtime, icons, `.desktop`, AppStream file, `install.sh`, `uninstall.sh`, README, LICENSE |
-| `opencode_<version>_amd64.deb` | the same payload under `/usr` |
+| `opencode-mobile-linux-x64-<version>.tar.gz` | runtime, icons, `.desktop`, AppStream file, `install.sh`, `uninstall.sh`, README, LICENSE |
+| `opencode-mobile_<version>_amd64.deb` | the same payload under `/usr` |
 | `SHA256SUMS` | checksums for both |
 
 The script refuses to run if `data/flutter_assets/version.json` in the
@@ -103,19 +104,20 @@ with `desktop-file-validate` when that tool is installed.
 ### Installing from the tarball
 
 ```sh
-tar -xzf opencode-linux-x64-1.0.29+30.tar.gz
-cd opencode-linux-x64-1.0.29+30
+tar -xzf opencode-mobile-linux-x64-1.0.34+35.tar.gz
+cd opencode-mobile-linux-x64-1.0.34+35
 ./install.sh                     # into ~/.local — no root
 sudo ./install.sh                # into /usr/local
 ./install.sh --prefix /opt/oc    # anywhere
 ./uninstall.sh --prefix <same>
 ```
 
-It puts the runtime in `<prefix>/lib/opencode`, a symlink on PATH at
-`<prefix>/bin/opencode`, and the desktop entry, icons and AppStream file
+It puts the runtime in `<prefix>/lib/opencode-mobile`, a symlink on PATH at
+`<prefix>/bin/opencode-mobile`, and the desktop entry, icons and AppStream file
 under `<prefix>/share`, rewriting `Exec=` to the prefix it used. It replaces
 the runtime directory wholesale rather than merging, so an upgrade cannot
-leave a stale plugin `.so` behind for the new binary to load.
+leave a stale plugin `.so` behind for the new binary to load. The installer
+uses an ownership marker and refuses to replace or remove unrelated paths.
 
 ### The .deb's dependencies
 
@@ -282,7 +284,7 @@ nothing missing, runs the packaging script, and uploads the tarball, the
 `.deb` and `SHA256SUMS`. On a `v*` tag a second job attaches those to that
 tag's release.
 
-CI pins **upstream stable Flutter 3.47.1** — the same version
+CI pins **upstream stable Flutter 3.47.2** - the same version
 `flutter --version` reports from the Shorebird toolchain used locally.
 Shorebird's fork is not installable on a runner, so the *version* is matched
 rather than the toolchain.
@@ -293,14 +295,9 @@ because `flutter_secure_storage_linux` is the only plugin in this app
 needing anything past GTK, and `desktop-file-utils` + `dpkg-dev` because the
 packaging script uses `desktop-file-validate` and `dpkg-shlibdeps`.
 
-> **This workflow has never been observed running.** Every recorded run of
-> this repository's Actions (35/35 as of 2026-08-28) failed in about five
-> seconds with zero steps and `runner_id 0`, annotated *"The job was not
-> started because recent account payments have failed or your spending limit
-> needs to be increased."* That is an account-level block at
-> <https://github.com/settings/billing>, not a workflow defect, and nothing
-> in the file can lift it. Treat the first green run as the real
-> verification.
+The Linux workflow now runs successfully on GitHub Actions, including an Xvfb
+launch and artifact packaging. Release acceptance still requires checking the
+exact tagged run rather than relying on an older branch result.
 
 ---
 
@@ -308,15 +305,15 @@ packaging script uses `desktop-file-validate` and `dpkg-shlibdeps`.
 
 The Windows runner is scaffolded (`windows/`) and CI builds a release zip
 (`desktop-windows.yml`, artifact `opencode-windows-x64-<version>`), but
-**nobody has ever launched a Windows build**. There is no maintainer Windows
-machine in the loop; Windows exists so contributors can prove it, and the
+hands-on Windows coverage remains limited. Windows exists so contributors can
+exercise it, and the
 bug-report flow is set up for that: the in-app **Report a bug** action
 prefills `Platform: Windows desktop (experimental — contributor-tested)` on
 a Windows build, and the issue template treats Windows reports as
 contributor testing.
 
-What is expected to work (unverified, from the dependency audit and the
-platform seam):
+What is expected to work (from CI and the dependency audit; not a support
+guarantee):
 
 - Everything the capability seam marks desktop: server connect (v1 and v2),
   sessions, chat, files, review, terminal (WebSocket), theming, window
@@ -366,8 +363,7 @@ credential storage (via libsecret).
 
 **Still missing:**
 
-- No visual verification of the window on a real display from this work (see
-  below).
+- No routine verification on a physical Linux desktop; CI uses Xvfb.
 - No AppImage or Flatpak. The tarball is the portable format for now; the
   `.deb` is distro-narrow by construction.
 - No code signing of any kind.
@@ -387,9 +383,9 @@ Run and passing on this machine (Pop!_OS 24.04, clang 18):
 - `scripts/package-linux.sh` end to end. From the run on 2026-08-30:
 
   ```
-  opencode-linux-x64-1.0.29+30.tar.gz   27,579,750 bytes
+  opencode-mobile-linux-x64-1.0.29+30.tar.gz   27,579,750 bytes
     6c1d1d395be9fb79d963799b2685df01c74e7d4985425f23a62878476e99df82
-  opencode_1.0.29+30_amd64.deb          27,551,400 bytes
+  opencode-mobile_1.0.29+30_amd64.deb          27,551,400 bytes
     836055f2e16f87b89a7d5646b068ae33ae224790c8ac455a8b90f99b9aa721cd
   ```
 
@@ -404,14 +400,9 @@ Run and passing on this machine (Pop!_OS 24.04, clang 18):
 - `linux/packaging/gcc-install-dir.sh` — prints
   `/usr/lib/gcc/x86_64-linux-gnu/13`, exactly the flag verified by hand.
 
-**Not verified, and why:**
+**Historical gaps from the original verification:**
 
-- **The window has never been seen.** This build shell is a tty with no
-  display, so the binary reaches GTK's `cannot open display` and stops.
-  Window restore, multi-monitor re-homing, the maximized path, taskbar
-  grouping and the icon are all reasoned from the APIs and unit-tested where
-  they are pure logic, but nobody has watched them happen. Run the binary
-  from a normal desktop session to confirm.
-- **The CI workflow has never run** — account billing, above.
+- Physical-desktop behavior still needs broader contributor testing. Xvfb now
+  verifies that the window launches and renders in CI.
 - **The `.deb` has not been installed** with `dpkg -i`; that needs root. Its
   contents and metadata were inspected instead.

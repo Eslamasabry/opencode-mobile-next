@@ -1,4 +1,4 @@
-# OpenCode for Linux — @VERSION@ (x86_64)
+# OpenCode Mobile for Linux - @VERSION@ (x86_64)
 
 **Experimental.** The Linux build shares all of its Dart code with the
 Android app and is used daily by its authors, but it has had far less
@@ -8,7 +8,7 @@ preview.
 ## What's in here
 
 ```
-lib/opencode/            the application (binary, Flutter assets, plugins)
+lib/opencode-mobile/     the application (binary, Flutter assets, plugins)
 share/applications/      the .desktop entry
 share/icons/hicolor/     icons, 16px to 512px plus scalable SVG
 share/metainfo/          AppStream metadata for GNOME Software / Discover
@@ -25,7 +25,7 @@ sudo ./install.sh             # into /usr/local, system-wide
 ./install.sh --prefix /opt/oc # anywhere else
 ```
 
-Afterwards `opencode` is on your PATH (if `<prefix>/bin` is) and OpenCode
+Afterwards `opencode-mobile` is on your PATH (if `<prefix>/bin` is) and OpenCode Mobile
 appears in your applications menu with its own icon.
 
 To uninstall: `./uninstall.sh --prefix <the prefix you used>`.
@@ -33,10 +33,10 @@ To uninstall: `./uninstall.sh --prefix <the prefix you used>`.
 You can also skip the installer entirely and just run the binary in place:
 
 ```sh
-./lib/opencode/@BINARY@
+./lib/opencode-mobile/@BINARY@
 ```
 
-It resolves its assets relative to itself, so the whole `lib/opencode`
+It resolves its assets relative to itself, so the whole `lib/opencode-mobile`
 directory has to stay together.
 
 ## Runtime requirements

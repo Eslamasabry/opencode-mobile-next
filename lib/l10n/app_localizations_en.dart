@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'OpenCode';
+  String get appTitle => 'OpenCode Mobile';
 
   @override
   String get libraryBrowseSection => 'Browse';
@@ -34,4 +34,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get librarySettingsTitle => 'Settings';
+
+  @override
+  String aboutBuildVersion(String version, String buildNumber) {
+    return 'OpenCode Mobile $version+$buildNumber';
+  }
+
+  @override
+  String get aboutSigningCertificate => 'Signing certificate SHA-256';
 }

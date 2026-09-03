@@ -93,8 +93,9 @@ These are real security concerns, but they belong somewhere else:
   is. Documented, not a vulnerability. What *is* in scope is the app doing it
   without the user's authorization.
 - **Sideload signing warnings** — these builds are signed with the project's
-  own certificate, not a Play Store key, and Android says so. The fingerprint
-  is published in the README so you can verify it.
+  own certificate, not a Play Store key, and Android says so. The current
+  public fingerprint is published in the README and the installed fingerprint
+  is shown in Settings → About.
 
 ## Things already known and documented
 
@@ -102,9 +103,9 @@ Reporting these again is welcome but will be closed as known:
 
 - The app refuses plain HTTP to anything but the phone's own loopback;
   reaching a remote server needs adb reverse, an SSH forward, or TLS.
-- CI (`android-quality.yml`) has never run — a GitHub account-level billing
-  block, documented at the top of the workflow and in the README. Release
-  gates were run locally.
+- Android, Linux, Windows and generated-SDK checks run in GitHub Actions.
+  A green branch build is not a public release: release artifacts additionally
+  require the documented signing identity and exact tag/version match.
 - Findings from the two published audits are tracked, with their current
   status, in
   [docs/audits/post-remediation-status-2026-08-29.md](docs/audits/post-remediation-status-2026-08-29.md).
