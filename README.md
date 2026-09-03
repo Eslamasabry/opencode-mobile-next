@@ -74,9 +74,7 @@ The same demo as a video: [video/public/demo.webm](video/public/demo.webm).
 ## Getting started
 
 1. **Install the app.** Grab the APK from the
-   [latest release](https://github.com/Eslamasabry/opencode-mobile-next/releases),
-   or the [newest build of master](https://github.com/Eslamasabry/opencode-mobile-next/raw/apk/opencode-mobile-arm64.apk)
-   if you want what was merged today (dev-signed; uninstall an older build first).
+   [latest release](https://github.com/Eslamasabry/opencode-mobile-next/releases).
    Android will warn that it is not from the Play Store. That is expected.
 2. **On your computer, run one command.**
    ```bash
