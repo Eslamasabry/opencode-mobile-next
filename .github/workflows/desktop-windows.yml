@@ -9,10 +9,6 @@
 # contributor proves the artifact launches and connects, a Windows zip in a
 # release would be an untested promise. Promote it to the release job once
 # one artifact has been verified by hand.
-#
-# Billing note: like android-quality.yml, no run of this workflow has been
-# observed — the account's Actions payments have failed. Revisit after
-# billing is restored.
 name: Windows desktop (experimental)
 
 on:
@@ -20,7 +16,7 @@ on:
   push:
     branches:
       - master
-      - production/android-release-hardening
+      - dev
   workflow_dispatch:
 
 permissions:
@@ -40,13 +36,13 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up pinned Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: custom
+          channel: stable
           cache: true
 
       - name: Resolve dependencies
@@ -88,7 +84,7 @@ jobs:
             -DestinationPath "opencode-windows-x64-$env:VERSION.zip"
 
       - name: Upload the Windows artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: opencode-windows-x64-${{ steps.version.outputs.version }}
           path: opencode-windows-x64-*.zip
