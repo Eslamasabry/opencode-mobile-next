@@ -693,7 +693,7 @@ test_alpha_publish_verifies_the_body_github_stored() {
   assert_status 0
   assert_log_contains 'gh release create v1.0.12+13'
   assert_log_contains 'gh release view v1.0.12+13 --json body'
-  assert_output_contains 'Alpha 1.0.12+13 published'
+  assert_output_contains 'Alpha 1.0.12+13 is staged as a draft'
   local stored
   stored="$(<"$FIXTURE/gh-release-body")"
   [[ "$stored" == "$NOTES_ANCHOR"* ]] || fail_test "uploaded body does not start with the anchor heading"
@@ -703,7 +703,7 @@ test_alpha_publish_verifies_the_body_github_stored() {
   MOCK_GH_TRUNCATE_BODY=true run_cut --publish
   assert_status 1
   assert_output_contains 'truncated'
-  assert_output_not_contains 'Alpha 1.0.12+13 published'
+  assert_output_not_contains 'Alpha 1.0.12+13 is staged as a draft'
 }
 
 test_strict_arguments

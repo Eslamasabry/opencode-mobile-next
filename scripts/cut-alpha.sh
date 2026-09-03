@@ -170,17 +170,17 @@ BODY_FILE="$(mktemp)"
 trap 'rm -f "$BODY_FILE"' EXIT
 build_release_body >"$BODY_FILE"
 
-step "Opening the GitHub release"
-cp "$APK_SRC" "$APK_NAME"
+step "Opening the draft GitHub prerelease"
 gh release create "$TAG" \
-  --title "OpenCode Mobile $VERSION — Alpha" \
-  --notes-file "$BODY_FILE" \
-  "$APK_NAME" ||
-  fail "release creation failed — attach $APK_NAME to tag $TAG by hand."
+  --draft --prerelease \
+  --title "OpenCode Mobile $VERSION alpha" \
+  --notes-file "$BODY_FILE" ||
+  fail "draft release creation failed; inspect tag $TAG before proceeding."
 
 step "Verifying the published release body"
 assert_published_body
 
 echo
-echo "✓ Alpha $VERSION published. The Linux desktop packages attach to this"
-echo "  tag automatically after their workflow passes."
+echo "✓ Alpha $VERSION is staged as a draft. The signed Android and Linux"
+echo "  workflows attach verified artifacts. Inspect their results, then publish"
+echo "  the draft release manually."

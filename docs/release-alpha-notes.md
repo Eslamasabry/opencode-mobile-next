@@ -31,6 +31,15 @@ check have all been recorded.
 - Public security reporting, Discussions, dependency alerts, and stable CI
   test signing are enabled.
 
+## Install and verify
+
+The public sideload signer expected for this release is
+`8F51FBCA8101DE600C0E878DF7E2CC65DFA29ADD58A1771D776908349CD82053`.
+Compare it with **Settings → About**. If it differs, Android cannot update in
+place. Uninstalling first erases local app profiles, drafts, and queued prompts.
+The tag workflow appends the exact APK checksum and source commit to the draft
+release after verifying both version and signer.
+
 ## Report a bug (please, genuinely)
 
 The app carries its own bug-report flow now: **More hub → Report a bug**,

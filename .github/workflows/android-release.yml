@@ -1,10 +1,8 @@
 # Builds the Android sideload APK on a release tag with the project's real
 # signing key, proves the signer is the public upgrade lineage and the version
-# matches the tag, and keeps the APK as a workflow artifact for 90 days.
-#
-# It never publishes. Public releases are cut by scripts/release.sh through
-# Shorebird so Dart patches can be applied later; an APK built here has no
-# Shorebird release behind it and must not replace the release asset.
+# matches the tag, keeps the APK as a workflow artifact for 90 days, and
+# creates or updates a draft GitHub prerelease for a tag. A maintainer must
+# inspect and publish the draft; this workflow never announces it publicly.
 #
 # Fails closed: without the four RELEASE_* secrets the job stops before it
 # touches Gradle, so a fork or a missing secret cannot produce a misleading
@@ -19,7 +17,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: android-release-${{ github.ref }}
@@ -165,3 +163,44 @@ jobs:
           path: dist/
           if-no-files-found: error
           retention-days: 90
+
+      - name: Create draft GitHub prerelease
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          notes=dist/RELEASE_NOTES.md
+          anchor="# OpenCode Mobile - Alpha $version"
+          awk -v anchor="$anchor" 'index($0, anchor) == 1 { found = 1 } found { print }' \
+            docs/release-alpha-notes.md > "$notes"
+          grep -qF "$anchor" "$notes"
+          {
+            echo
+            echo '## Verify this build'
+            echo
+            echo "- Source commit: \`$GITHUB_SHA\`"
+            echo '- Package ID: `io.github.eslamasabry.opencode_mobile`'
+            echo "- Signer SHA-256: \`$SIDELOAD_CERT_SHA256\`"
+            echo '- APK SHA-256:'
+            echo '```text'
+            cat dist/SHA256SUMS
+            echo '```'
+            echo
+            echo 'If Settings → About shows a different signer, uninstalling is required and erases local app data.'
+          } >> "$notes"
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release edit "$GITHUB_REF_NAME" \
+              --draft --prerelease \
+              --title "OpenCode Mobile $version alpha" \
+              --notes-file "$notes"
+            gh release upload "$GITHUB_REF_NAME" \
+              "dist/opencode-mobile-$version.apk" dist/SHA256SUMS --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" \
+              --draft --prerelease \
+              --title "OpenCode Mobile $version alpha" \
+              --notes-file "$notes" \
+              "dist/opencode-mobile-$version.apk" dist/SHA256SUMS
+          fi

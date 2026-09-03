@@ -342,6 +342,9 @@ void main() {
       'android/gradle/wrapper/gradle-wrapper.properties',
     ).readAsStringSync();
     final example = File('android/key.properties.example').readAsStringSync();
+    final workflow = File(
+      '.github/workflows/android-release.yml',
+    ).readAsStringSync();
 
     expect(appGradle, contains('create("release")'));
     expect(
@@ -366,6 +369,10 @@ void main() {
     expect(wrapper, contains('gradle-9.5.0-all.zip'));
     expect(example, contains('storeFile=/absolute/path/'));
     expect(example, contains('keyAlias=upload'));
+    expect(workflow, contains('Create draft GitHub prerelease'));
+    expect(workflow, contains('--draft --prerelease'));
+    expect(workflow, contains('dist/SHA256SUMS'));
+    expect(workflow, contains('Signer SHA-256'));
   });
 
   test('Android exposes build identity and authenticates shell approval', () {
