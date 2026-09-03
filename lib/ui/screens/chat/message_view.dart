@@ -1271,7 +1271,12 @@ class _MessageView extends StatelessWidget {
     this.onContinue,
     this.onChooseModel,
     this.onOpenSession,
+    this.queued = false,
   });
+
+  /// True for a user prompt the server has accepted but not started: it
+  /// runs after the current turn (OpenCode 1 queues mid-turn sends).
+  final bool queued;
 
   @override
   Widget build(BuildContext context) {
@@ -1389,6 +1394,28 @@ class _MessageView extends StatelessWidget {
                       ],
                     ),
             ),
+            if (queued)
+              Padding(
+                key: ValueKey('queued-message-${m.info.id}'),
+                padding: const EdgeInsets.only(top: 3, right: 6),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      AppIcons.queue,
+                      size: 12,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Queued · runs after this turn',
+                      style: theme.textTheme.labelSmall!.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             if (metaParts.isNotEmpty || onLongPress != null)
               Padding(
                 padding: const EdgeInsets.only(top: 1, left: 6, right: 6),
@@ -2256,7 +2283,7 @@ class _PendingSendsStrip extends StatelessWidget {
             children: [
               for (final entry in entries)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(48, 2, 16, 2),
+                  padding: const EdgeInsets.fromLTRB(16, 2, 8, 2),
                   child: entry.child,
                 ),
             ],
@@ -2278,7 +2305,7 @@ class _PendingSendBubble extends StatelessWidget {
     required this.label,
     required this.semanticsLabel,
     this.error = false,
-    this.onTap,
+    this.actions = const [],
   });
 
   final String text;
@@ -2287,7 +2314,10 @@ class _PendingSendBubble extends StatelessWidget {
   final String label;
   final String semanticsLabel;
   final bool error;
-  final VoidCallback? onTap;
+
+  /// Inline actions on the status row (flip delivery, cancel, edit): one tap
+  /// each, no sheet in between.
+  final List<Widget> actions;
 
   @override
   Widget build(BuildContext context) {
@@ -2296,65 +2326,90 @@ class _PendingSendBubble extends StatelessWidget {
         ? theme.colorScheme.error
         : theme.colorScheme.onSurfaceVariant;
     return Semantics(
-      button: onTap != null,
+      container: true,
       label: semanticsLabel,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: error
-                  ? theme.colorScheme.error.withValues(alpha: .6)
-                  : theme.colorScheme.outlineVariant,
-            ),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: error
+                ? theme.colorScheme.error.withValues(alpha: .6)
+                : theme.colorScheme.outlineVariant,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (text.isNotEmpty)
-                Text(
-                  text,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (text.isNotEmpty)
+              Text(
+                text,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium,
+              ),
+            if (attachmentCount > 0)
+              Text(
+                '$attachmentCount attachment'
+                '${attachmentCount == 1 ? '' : 's'}',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
-              if (attachmentCount > 0)
-                Text(
-                  '$attachmentCount attachment'
-                  '${attachmentCount == 1 ? '' : 's'}',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              const SizedBox(height: 3),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(icon, size: 13, color: statusColor),
-                  const SizedBox(width: 5),
-                  Flexible(
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: statusColor,
-                      ),
+              ),
+            const SizedBox(height: 2),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 13, color: statusColor),
+                const SizedBox(width: 5),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: statusColor,
                     ),
                   ),
+                ),
+                if (actions.isNotEmpty) ...[
+                  const SizedBox(width: 6),
+                  for (final action in actions) action,
                 ],
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
+}
+
+/// A 32 dp inline action on a pending-send bubble.
+class _PendingSendAction extends StatelessWidget {
+  const _PendingSendAction({
+    super.key,
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    tooltip: tooltip,
+    onPressed: onPressed,
+    visualDensity: VisualDensity.compact,
+    constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+    padding: EdgeInsets.zero,
+    iconSize: 17,
+    icon: Icon(icon),
+  );
 }
 
 class _QueuedPromptBubble extends StatelessWidget {
@@ -2383,47 +2438,28 @@ class _QueuedPromptBubble extends StatelessWidget {
       label: label,
       error: entry.error != null,
       semanticsLabel: 'Queued draft. $label',
-      onTap: () => _showActions(context),
-    );
-  }
-
-  void _showActions(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          key: const ValueKey('pending-send-actions'),
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              key: const ValueKey('queued-action-edit'),
-              leading: const Icon(Icons.edit_outlined),
-              title: const Text('Edit draft'),
-              subtitle: const Text('Move it back into the composer'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                onEdit();
-              },
-            ),
-            ListTile(
-              key: const ValueKey('queued-action-discard'),
-              leading: const Icon(Icons.delete_outline_rounded),
-              title: const Text('Discard draft'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                onDiscard();
-              },
-            ),
-          ],
+      actions: [
+        _PendingSendAction(
+          key: const ValueKey('queued-action-edit'),
+          icon: Icons.edit_outlined,
+          tooltip: 'Edit draft',
+          onPressed: onEdit,
         ),
-      ),
+        _PendingSendAction(
+          key: const ValueKey('queued-action-discard'),
+          icon: Icons.delete_outline_rounded,
+          tooltip: 'Discard draft',
+          onPressed: onDiscard,
+        ),
+      ],
     );
   }
 }
 
-/// A server inbox item in the strip. `user` items offer a steer/queue flip
-/// and cancel-back-to-composer (server items are immutable — cancel is the
-/// edit affordance); synthetic/compaction/move items are informational.
+/// A server inbox item in the strip. `user` items get inline flip and
+/// cancel actions (server items are immutable, so cancel-back-to-composer
+/// is the edit affordance); synthetic/compaction/move items are
+/// informational.
 class _InboxSendBubble extends StatelessWidget {
   const _InboxSendBubble({
     super.key,
@@ -2444,7 +2480,7 @@ class _InboxSendBubble extends StatelessWidget {
     final label = !_isUser
         ? 'Context update pending'
         : _steering
-        ? 'Sending at next step'
+        ? 'Steering at the next step'
         : 'Waiting for this run to finish';
     return _PendingSendBubble(
       text: _isUser ? (item.promptText ?? '') : '',
@@ -2456,55 +2492,31 @@ class _InboxSendBubble extends StatelessWidget {
           : AppIcons.queue,
       label: label,
       semanticsLabel: 'Pending send. $label',
-      onTap: _isUser ? () => _showActions(context) : null,
-    );
-  }
-
-  void _showActions(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          key: const ValueKey('pending-send-actions'),
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Only the row that flips the current mode is shown; the server
-            // offers no reorder, so none is faked.
-            if (_steering)
-              ListTile(
-                key: const ValueKey('inbox-action-queue'),
-                leading: const Icon(AppIcons.queue),
-                title: const Text('Wait for this run'),
-                subtitle: const Text('Deliver after the current run ends'),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  onFlipDelivery();
-                },
-              )
-            else
-              ListTile(
-                key: const ValueKey('inbox-action-steer'),
-                leading: const Icon(AppIcons.run),
-                title: const Text('Send now'),
-                subtitle: const Text('Steers the current run'),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  onFlipDelivery();
-                },
-              ),
-            ListTile(
-              key: const ValueKey('inbox-action-cancel'),
-              leading: const Icon(Icons.delete_outline_rounded),
-              title: const Text('Cancel'),
-              subtitle: const Text('Returns the text to the composer'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                onCancel();
-              },
-            ),
-          ],
-        ),
-      ),
+      actions: [
+        // Only the flip that changes the current mode is offered; the server
+        // has no reorder, so none is faked.
+        if (_isUser)
+          _steering
+              ? _PendingSendAction(
+                  key: const ValueKey('inbox-action-queue'),
+                  icon: AppIcons.queue,
+                  tooltip: 'Wait for this run instead',
+                  onPressed: onFlipDelivery,
+                )
+              : _PendingSendAction(
+                  key: const ValueKey('inbox-action-steer'),
+                  icon: AppIcons.run,
+                  tooltip: 'Send now and steer instead',
+                  onPressed: onFlipDelivery,
+                ),
+        if (_isUser)
+          _PendingSendAction(
+            key: const ValueKey('inbox-action-cancel'),
+            icon: Icons.close_rounded,
+            tooltip: 'Cancel and return to the composer',
+            onPressed: onCancel,
+          ),
+      ],
     );
   }
 }

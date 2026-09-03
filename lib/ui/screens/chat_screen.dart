@@ -583,6 +583,17 @@ class _ChatScreenState extends State<ChatScreen>
     });
   }
 
+  /// The index of the message the server is working on while busy on
+  /// OpenCode 1: the assistant's current message, or, before it has been
+  /// created, the first user prompt. Every user message after it is queued.
+  static int _queuedAfterIndex(List<MessageWithParts> messages) {
+    final assistant = messages.lastIndexWhere(
+      (m) => m.info.role == 'assistant',
+    );
+    if (assistant >= 0) return assistant;
+    return messages.indexWhere((m) => m.info.role == 'user');
+  }
+
   /// A "Model not found" error means the server's model list moved under
   /// the selection (typically a provider it only just loaded). Re-read the
   /// catalog so the picker and the selected model reflect what it can serve.
@@ -3810,6 +3821,11 @@ class _ChatScreenState extends State<ChatScreen>
     final theme = Theme.of(context);
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final busy = _conn.busySessions.contains(widget.sessionID);
+    // OpenCode 1 runs a prompt sent mid-turn after that turn: every user
+    // message past the assistant's current one is waiting, and says so.
+    final queuedAfterIndex = busy && !_conn.supportsInbox
+        ? _queuedAfterIndex(_messages)
+        : -1;
     final displayParts = _timelineDisplayParts(_messages);
     final showAttachmentNote = _attachmentNoteVisible();
     final pendingPermissions = _conn.permissionsForSession(widget.sessionID);
@@ -3994,6 +4010,13 @@ class _ChatScreenState extends State<ChatScreen>
                                                       key: ValueKey(
                                                         'message-${m.info.id}',
                                                       ),
+                                                      queued:
+                                                          queuedAfterIndex >=
+                                                              0 &&
+                                                          m.info.role ==
+                                                              'user' &&
+                                                          index >
+                                                              queuedAfterIndex,
                                                       m: m,
                                                       meta: meta,
                                                       parts: parts,
@@ -4168,7 +4191,11 @@ class _ChatScreenState extends State<ChatScreen>
                                     attachments: _attachments,
                                     busy: busy,
                                     sending: _sending,
-                                    canSendWhileBusy: _conn.supportsInbox,
+                                    // OpenCode 1 runs a send made mid-turn
+                                    // after that turn; OpenCode 2 steers or
+                                    // queues it. Either way Send stays live.
+                                    canSendWhileBusy: true,
+                                    canChooseDelivery: _conn.supportsInbox,
                                     delivery: _delivery,
                                     onDeliveryChanged: (delivery) =>
                                         setState(() => _delivery = delivery),
@@ -4187,8 +4214,6 @@ class _ChatScreenState extends State<ChatScreen>
                                     ),
                                     onVoice: _openVoice,
                                     onSend: _send,
-                                    onSendDelivery: (delivery) =>
-                                        unawaited(_send(delivery: delivery)),
                                     onStop: _abort,
                                     onChooseModel: () => showModelPicker(
                                       context,

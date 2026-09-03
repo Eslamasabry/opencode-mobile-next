@@ -21,6 +21,7 @@ class _ChatComposer extends StatelessWidget {
     required this.busy,
     required this.sending,
     this.canSendWhileBusy = false,
+    this.canChooseDelivery = false,
     this.delivery = PromptDelivery.steer,
     this.onDeliveryChanged,
     required this.voiceOpening,
@@ -36,7 +37,6 @@ class _ChatComposer extends StatelessWidget {
     required this.onContentInserted,
     required this.onVoice,
     required this.onSend,
-    this.onSendDelivery,
     required this.onStop,
     required this.onChooseModel,
     required this.onRemoveAttachment,
@@ -67,6 +67,12 @@ class _ChatComposer extends StatelessWidget {
   /// on Send remains a shortcut to the same choice. On v1 the busy composer
   /// keeps its lone Stop button and no delivery control appears.
   final bool canSendWhileBusy;
+
+  /// OpenCode 2 only: the server has an inbox, so a send made while a turn
+  /// runs can either steer it or wait for it. OpenCode 1 accepts the send
+  /// too but always runs it after the current turn, so it gets a hint
+  /// instead of a choice.
+  final bool canChooseDelivery;
 
   /// What Send does while a run is active. Only meaningful when
   /// [canSendWhileBusy] is true.
@@ -107,8 +113,6 @@ class _ChatComposer extends StatelessWidget {
   final VoidCallback onVoice;
   final VoidCallback onSend;
 
-  /// Sends with an explicit delivery mode from the long-press menu.
-  final ValueChanged<PromptDelivery>? onSendDelivery;
   final VoidCallback onStop;
   final VoidCallback onChooseModel;
   final ValueChanged<PromptAttachment> onRemoveAttachment;
@@ -243,11 +247,14 @@ class _ChatComposer extends StatelessWidget {
                 // hidden behind a long press on an unchanged arrow. The
                 // strip only exists while it applies, so the idle composer
                 // gains no density from it.
-                if (busy && canSendWhileBusy && onDeliveryChanged != null)
-                  _DeliveryControl(
-                    delivery: delivery,
-                    onChanged: onDeliveryChanged!,
-                  ),
+                if (busy && canSendWhileBusy)
+                  if (canChooseDelivery && onDeliveryChanged != null)
+                    _DeliveryControl(
+                      delivery: delivery,
+                      onChanged: onDeliveryChanged!,
+                    )
+                  else
+                    const _QueueHint(),
                 // UX-103 review handoff (start): staged references ride
                 // above the attachment strip so the two never read as one
                 // kind of thing.
@@ -387,7 +394,7 @@ class _ChatComposer extends StatelessWidget {
                 delivery: delivery,
                 onDeliveryChanged: onDeliveryChanged,
                 onSend: onSend,
-                onSendDelivery: onSendDelivery,
+                canChooseDelivery: canChooseDelivery,
                 onStop: onStop,
               ),
             ],
@@ -432,7 +439,7 @@ class _ChatComposer extends StatelessWidget {
             delivery: delivery,
             onDeliveryChanged: onDeliveryChanged,
             onSend: onSend,
-            onSendDelivery: onSendDelivery,
+            canChooseDelivery: canChooseDelivery,
             onStop: onStop,
           ),
         ],
@@ -817,10 +824,10 @@ class _ComposerSubmit extends StatelessWidget {
     required this.sending,
     required this.enabled,
     this.canSendWhileBusy = false,
+    this.canChooseDelivery = false,
     this.delivery = PromptDelivery.steer,
     this.onDeliveryChanged,
     required this.onSend,
-    this.onSendDelivery,
     required this.onStop,
   });
 
@@ -828,10 +835,10 @@ class _ComposerSubmit extends StatelessWidget {
   final bool sending;
   final bool enabled;
   final bool canSendWhileBusy;
+  final bool canChooseDelivery;
   final PromptDelivery delivery;
   final ValueChanged<PromptDelivery>? onDeliveryChanged;
   final VoidCallback onSend;
-  final ValueChanged<PromptDelivery>? onSendDelivery;
   final VoidCallback onStop;
 
   @override
@@ -903,24 +910,15 @@ class _ComposerSubmit extends StatelessWidget {
         icon: icon,
       );
     }
-    // While busy the button carries no tooltip: Tooltip installs its own
-    // long-press recognizer, which would swallow the delivery menu gesture.
-    // The hint lives in the semantics label instead, and the visible
-    // delivery control above the field carries the same choice.
-    final send = Semantics(
-      label: delivery == PromptDelivery.queue
-          ? 'Send — queues after the current run. Long press to choose '
-                'delivery.'
-          : 'Send — steers the current run. Long press to choose delivery.',
-      child: IconButton(
-        key: const Key('chat-send-button'),
-        onPressed: sending || !enabled ? null : onSend,
-        style: _sendStyle(context),
-        icon: icon,
-      ),
-    );
-    // OpenCode 2 while busy: Stop keeps its own adjacent button; tap Send
-    // steers (the v2 default), long-press offers the delivery choice.
+    // While a turn runs, Send keeps working: OpenCode 2 steers or queues
+    // per the visible toggle above the field, OpenCode 1 queues after the
+    // run. Stop keeps its own adjacent button so neither action hides the
+    // other.
+    final sendHint = !canChooseDelivery
+        ? 'Send after this run'
+        : delivery == PromptDelivery.queue
+        ? 'Queue after this run'
+        : 'Send now and steer this run';
     return Row(
       key: const Key('chat-busy-submit-row'),
       mainAxisSize: MainAxisSize.min,
@@ -936,53 +934,14 @@ class _ComposerSubmit extends StatelessWidget {
           icon: const Icon(AppIcons.stop),
         ),
         const SizedBox(width: 4),
-        GestureDetector(
-          onLongPress: sending || !enabled
-              ? null
-              : () => _showDeliveryMenu(context),
-          child: send,
+        IconButton(
+          key: const Key('chat-send-button'),
+          tooltip: sendHint,
+          onPressed: sending || !enabled ? null : onSend,
+          style: _sendStyle(context),
+          icon: icon,
         ),
       ],
-    );
-  }
-
-  void _showDeliveryMenu(BuildContext context) {
-    final onDelivery = onSendDelivery;
-    if (onDelivery == null) return;
-    void choose(BuildContext sheetContext, PromptDelivery choice) {
-      Navigator.pop(sheetContext);
-      // Keep the visible control in step with the shortcut: the label has
-      // to keep telling the truth about what Send does next.
-      onDeliveryChanged?.call(choice);
-      onDelivery(choice);
-    }
-
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          key: const Key('send-delivery-menu'),
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              key: const Key('send-delivery-steer'),
-              leading: const Icon(AppIcons.run),
-              title: const Text('Send now'),
-              subtitle: const Text('Steers the current run'),
-              selected: delivery == PromptDelivery.steer,
-              onTap: () => choose(sheetContext, PromptDelivery.steer),
-            ),
-            ListTile(
-              key: const Key('send-delivery-queue'),
-              leading: const Icon(AppIcons.queue),
-              title: const Text('Queue for after this run'),
-              subtitle: const Text('Waits for the current run to finish'),
-              selected: delivery == PromptDelivery.queue,
-              onTap: () => choose(sheetContext, PromptDelivery.queue),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -1023,6 +982,10 @@ class _ContextPercentBadge extends StatelessWidget {
 /// knowledge. It appears only while a run is active on a server that
 /// supports the inbox, states in words what Send will do, and stays
 /// operable by keyboard and TalkBack because it is two real buttons.
+/// While a run is active on OpenCode 2, the one choice that changes what
+/// Send does: steer the current run now, or queue for after it. A compact
+/// two-segment toggle, right-aligned above the field, that only exists while
+/// it applies.
 class _DeliveryControl extends StatelessWidget {
   const _DeliveryControl({required this.delivery, required this.onChanged});
 
@@ -1032,35 +995,55 @@ class _DeliveryControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return Padding(
       key: const Key('composer-delivery-control'),
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      // A Wrap, not a Row: at large text scales the toggle drops under the
+      // caption instead of pushing off the edge.
       child: Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
         spacing: 8,
         runSpacing: 4,
-        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           Text(
-            'While running',
+            delivery == PromptDelivery.steer
+                ? 'Send steers the current run'
+                : 'Send waits for this run to finish',
             style: theme.textTheme.labelSmall?.copyWith(
               color: AppTheme.mutedOf(theme),
             ),
           ),
-          _DeliveryChoice(
-            buttonKey: const Key('composer-delivery-steer'),
-            icon: AppIcons.run,
-            label: 'Steer',
-            hint: 'Send now and steer the current run',
-            selected: delivery == PromptDelivery.steer,
-            onSelected: () => onChanged(PromptDelivery.steer),
-          ),
-          _DeliveryChoice(
-            buttonKey: const Key('composer-delivery-queue'),
-            icon: AppIcons.queue,
-            label: 'Queue',
-            hint: 'Wait for the current run to finish, then send',
-            selected: delivery == PromptDelivery.queue,
-            onSelected: () => onChanged(PromptDelivery.queue),
+          SegmentedButton<PromptDelivery>(
+            showSelectedIcon: false,
+            style: ButtonStyle(
+              visualDensity: VisualDensity.compact,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const WidgetStatePropertyAll(
+                EdgeInsets.symmetric(horizontal: 10),
+              ),
+              textStyle: WidgetStatePropertyAll(theme.textTheme.labelMedium),
+              side: WidgetStatePropertyAll(
+                BorderSide(color: scheme.outlineVariant),
+              ),
+            ),
+            segments: const [
+              ButtonSegment(
+                value: PromptDelivery.steer,
+                icon: Icon(AppIcons.run, size: 15),
+                label: Text('Steer', key: Key('composer-delivery-steer')),
+                tooltip: 'Send now and steer the current run',
+              ),
+              ButtonSegment(
+                value: PromptDelivery.queue,
+                icon: Icon(AppIcons.queue, size: 15),
+                label: Text('Queue', key: Key('composer-delivery-queue')),
+                tooltip: 'Wait for the current run to finish, then send',
+              ),
+            ],
+            selected: {delivery},
+            onSelectionChanged: (selection) => onChanged(selection.single),
           ),
         ],
       ),
@@ -1068,39 +1051,32 @@ class _DeliveryControl extends StatelessWidget {
   }
 }
 
-class _DeliveryChoice extends StatelessWidget {
-  const _DeliveryChoice({
-    required this.buttonKey,
-    required this.icon,
-    required this.label,
-    required this.hint,
-    required this.selected,
-    required this.onSelected,
-  });
-
-  final Key buttonKey;
-  final IconData icon;
-  final String label;
-  final String hint;
-  final bool selected;
-  final VoidCallback onSelected;
+/// OpenCode 1 while a run is active: the server accepts the send and runs
+/// it after the current turn, so the composer says so instead of hiding
+/// Send behind Stop.
+class _QueueHint extends StatelessWidget {
+  const _QueueHint();
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      // The chip announces its own selected state; the hint explains the
-      // consequence, which is the part a long press used to hide.
-      hint: hint,
-      child: Tooltip(
-        message: hint,
-        child: ChoiceChip(
-          key: buttonKey,
-          avatar: Icon(icon, size: 16),
-          label: Text(label),
-          selected: selected,
-          showCheckmark: false,
-          onSelected: (_) => onSelected(),
-        ),
+    final theme = Theme.of(context);
+    final muted = AppTheme.mutedOf(theme);
+    return Padding(
+      key: const Key('composer-queue-hint'),
+      padding: const EdgeInsets.fromLTRB(14, 8, 12, 0),
+      child: Row(
+        children: [
+          Icon(AppIcons.queue, size: 14, color: muted),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              'Sends after this run finishes',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelSmall?.copyWith(color: muted),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -137,6 +137,17 @@ set, and plain `gpt-5.6` is deliberately not in it. If the reload does not
 bring the provider up, the picker says so and offers **Reload providers**,
 and a "Model not found" error in chat re-reads the catalog on arrival.
 
+### Sending while a run is active
+
+Both server generations accept a prompt mid-turn, so Send stays live next
+to Stop. OpenCode 1 creates the user message at once and runs it after the
+current turn; the app marks such messages "Queued · runs after this turn"
+and the composer says "Sends after this run finishes". OpenCode 2 has an
+inbox with two delivery modes, so the composer shows a Steer / Queue toggle
+above the field while a turn runs (steer injects at the next step, queue
+waits), the caption under it states what Send will do, and pending inbox
+items carry inline flip and cancel actions.
+
 ## OpenCode 2
 
 The app speaks **both protocols**. The existing v1 client keeps serving

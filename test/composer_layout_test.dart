@@ -179,47 +179,51 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('the tools sheet closes Attach and Voice while a run is active', (
-    tester,
-  ) async {
-    final controller = await _controller();
-    addTearDown(controller.dispose);
-    await _pumpChat(
-      tester,
-      controller,
-      size: const Size(360, 760),
-      textScale: 1,
-    );
-    controller.busySessions.add('session-1');
-    controller.notifyListeners();
-    // The busy composer animates its activity ring forever, so this pumps
-    // explicit frames instead of settling.
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
+  testWidgets(
+    'the tools sheet closes Voice while a run is active; Attach stays '
+    'open for the queued send',
+    (tester) async {
+      final controller = await _controller();
+      addTearDown(controller.dispose);
+      await _pumpChat(
+        tester,
+        controller,
+        size: const Size(360, 760),
+        textScale: 1,
+      );
+      controller.busySessions.add('session-1');
+      controller.notifyListeners();
+      // The busy composer animates its activity ring forever, so this pumps
+      // explicit frames instead of settling.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
 
-    await tester.tap(find.byKey(const Key('composer-tools-button')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(
-      tester
-          .widget<ListTile>(find.byKey(const Key('composer-tool-attach')))
-          .enabled,
-      isFalse,
-    );
-    expect(
-      tester
-          .widget<ListTile>(find.byKey(const Key('composer-tool-voice')))
-          .enabled,
-      isFalse,
-    );
-    // Commands stay available: they do not depend on the run finishing.
-    expect(
-      tester
-          .widget<ListTile>(find.byKey(const Key('composer-tool-commands')))
-          .enabled,
-      isTrue,
-    );
-  });
+      await tester.tap(find.byKey(const Key('composer-tools-button')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      // A send made mid-turn is queued (v1) or steered/queued (v2), and can
+      // carry attachments like any other send.
+      expect(
+        tester
+            .widget<ListTile>(find.byKey(const Key('composer-tool-attach')))
+            .enabled,
+        isTrue,
+      );
+      expect(
+        tester
+            .widget<ListTile>(find.byKey(const Key('composer-tool-voice')))
+            .enabled,
+        isFalse,
+      );
+      // Commands stay available: they do not depend on the run finishing.
+      expect(
+        tester
+            .widget<ListTile>(find.byKey(const Key('composer-tool-commands')))
+            .enabled,
+        isTrue,
+      );
+    },
+  );
 
   testWidgets('a busy run lights the composer surface instead of a transcript '
       'row', (tester) async {

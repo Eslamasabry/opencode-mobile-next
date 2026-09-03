@@ -179,13 +179,17 @@ void main() {
     final controller = await _controller(api);
     addTearDown(controller.dispose);
     await controller.queuePrompt(
-      _entry('q1', text: 'first', attachments: const [
-        PromptAttachment(
-          mime: 'text/plain',
-          filename: 'notes.txt',
-          url: 'data:text/plain;base64,bm90ZXM=',
-        ),
-      ]),
+      _entry(
+        'q1',
+        text: 'first',
+        attachments: const [
+          PromptAttachment(
+            mime: 'text/plain',
+            filename: 'notes.txt',
+            url: 'data:text/plain;base64,bm90ZXM=',
+          ),
+        ],
+      ),
     );
     await controller.queuePrompt(_entry('q2', text: 'second'));
     await controller.queuePrompt(_entry('q3', text: 'third'));
@@ -277,9 +281,7 @@ void main() {
     expect(OfflineQueueStore(prefs: prefs).load().single.id, 'other');
   });
 
-  testWidgets('a completed flush surfaces a sent confirmation', (
-    tester,
-  ) async {
+  testWidgets('a completed flush surfaces a sent confirmation', (tester) async {
     final api = _FakeApi();
     final controller = await _controller(api);
     addTearDown(controller.dispose);
@@ -375,8 +377,6 @@ void main() {
     await controller.queuePrompt(_entry('q1', text: 'edit me'));
     await _pumpChat(tester, controller);
 
-    await tester.tap(find.byKey(const ValueKey('queued-send-0')));
-    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('queued-action-edit')));
     await tester.pumpAndSettle();
 
@@ -398,8 +398,6 @@ void main() {
     await controller.queuePrompt(_entry('q1', text: 'discard me'));
     await _pumpChat(tester, controller);
 
-    await tester.tap(find.byKey(const ValueKey('queued-send-0')));
-    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('queued-action-discard')));
     await tester.pumpAndSettle();
 
@@ -570,10 +568,7 @@ void main() {
         controller.queuedPromptsFor('session-1').map((entry) => entry.id),
         ['recent'],
       );
-      expect(
-        controller.takeQueueEvictionNotice(),
-        contains('too old to send'),
-      );
+      expect(controller.takeQueueEvictionNotice(), contains('too old to send'));
       // Written back, so the next start does not re-evict the same entry.
       await Future<void>.delayed(Duration.zero);
       expect(prefs.getString('oc.offlineQueue'), isNot(contains('ancient')));

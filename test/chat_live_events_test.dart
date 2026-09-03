@@ -1087,7 +1087,8 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    await tester.tap(find.byKey(const Key('chat-send-button')));
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.tap(find.byKey(const Key('chat-stop-button')));
     await tester.pump();
 
     expect(retainedApi.abortCalls, 0);
@@ -1114,7 +1115,8 @@ void main() {
     controller.notifyListeners();
     await tester.pump();
 
-    await tester.tap(find.byKey(const Key('chat-send-button')));
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.tap(find.byKey(const Key('chat-stop-button')));
     // Still busy after the failed stop, so the composer keeps animating.
     for (var i = 0; i < 6; i++) {
       await tester.pump(const Duration(milliseconds: 100));
