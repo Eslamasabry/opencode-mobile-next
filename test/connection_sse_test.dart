@@ -51,6 +51,12 @@ class _ControlledApi extends OpenCodeApi {
   Future<ProvidersResponse> providers() async =>
       ProvidersResponse(providers: const []);
 
+  // The v1 catalog load also reads the runtime view; answer it locally so
+  // the test never reaches the network.
+  @override
+  Future<ProvidersResponse> configuredProviders() async =>
+      ProvidersResponse(providers: const []);
+
   @override
   Future<List<AgentInfo>> agents() async => const [];
 
