@@ -1,0 +1,167 @@
+# Builds the Android sideload APK on a release tag with the project's real
+# signing key, proves the signer is the public upgrade lineage and the version
+# matches the tag, and keeps the APK as a workflow artifact for 90 days.
+#
+# It never publishes. Public releases are cut by scripts/release.sh through
+# Shorebird so Dart patches can be applied later; an APK built here has no
+# Shorebird release behind it and must not replace the release asset.
+#
+# Fails closed: without the four RELEASE_* secrets the job stops before it
+# touches Gradle, so a fork or a missing secret cannot produce a misleading
+# "signed" artifact.
+
+name: Android release build
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # Public sideload lineage. Must equal LEGACY_DEBUG_CERT_SHA256 in
+  # scripts/release.sh and the fingerprint printed in every release note.
+  SIDELOAD_CERT_SHA256: 1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Require the release signing secrets
+        env:
+          KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          missing=()
+          [ -n "$KEYSTORE_B64" ]  || missing+=(RELEASE_KEYSTORE_BASE64)
+          [ -n "$STORE_PASSWORD" ] || missing+=(RELEASE_STORE_PASSWORD)
+          [ -n "$KEY_ALIAS" ]     || missing+=(RELEASE_KEY_ALIAS)
+          [ -n "$KEY_PASSWORD" ]  || missing+=(RELEASE_KEY_PASSWORD)
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Release build blocked: repository secrets not set: ${missing[*]}"
+            echo "Add them under Settings → Secrets and variables → Actions. See android/key.properties.example."
+            exit 1
+          fi
+
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Verify the tag matches pubspec.yaml
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's/^version:[[:space:]]*\([^[:space:]#]*\).*/\1/p' pubspec.yaml | head -1)"
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "$version" != "$tag" ]; then
+            echo "::error::Tag v$tag does not match pubspec.yaml version $version"
+            exit 1
+          fi
+          echo "Building $version"
+
+      - name: Set up Java 17
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle 9.5
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        with:
+          gradle-version: "9.5.0"
+
+      - name: Set up pinned Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: 3.47.2
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Generate ignored Gradle wrapper
+        run: >-
+          gradle -p android wrapper
+          --gradle-version 9.5.0
+          --distribution-type all
+          --gradle-distribution-sha256-sum a3c4ba4aca8f0075688b9c5b18939fd28e8cb4357c227da5c1d9f38343791439
+
+      - name: Install the release signing identity
+        env:
+          KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          KEYSTORE: ${{ runner.temp }}/opencode-release.jks
+        run: |
+          set -euo pipefail
+          umask 077
+          printf '%s' "$KEYSTORE_B64" | base64 -d > "$KEYSTORE"
+          # Refuse before building if the keystore is not the public lineage.
+          actual="$(OC_STORE_PASSWORD="$STORE_PASSWORD" keytool -J-Duser.language=en -list -v \
+              -keystore "$KEYSTORE" -alias "$KEY_ALIAS" -storepass:env OC_STORE_PASSWORD |
+            sed -n 's/^[[:space:]]*SHA256:[[:space:]]*//p' | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')"
+          if [ "$actual" != "$SIDELOAD_CERT_SHA256" ]; then
+            echo "::error::Keystore certificate $actual is not the public sideload lineage"
+            exit 1
+          fi
+          printf '%s\n' \
+            "storeFile=$KEYSTORE" \
+            "storePassword=$STORE_PASSWORD" \
+            "keyAlias=$KEY_ALIAS" \
+            "keyPassword=$KEY_PASSWORD" \
+            > android/key.properties
+
+      - name: Compile signed release APK
+        run: flutter build apk --release
+
+      - name: Remove the signing identity
+        if: always()
+        run: rm -f android/key.properties "${{ runner.temp }}/opencode-release.jks"
+
+      - name: Verify APK signer and version
+        run: |
+          set -euo pipefail
+          apk=build/app/outputs/flutter-apk/app-release.apk
+          test -s "$apk"
+          tools="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
+          mapfile -t signers < <("$tools/apksigner" verify --print-certs "$apk" |
+            sed -n 's/^Signer #[0-9][0-9]* certificate SHA-256 digest:[[:space:]]*//p' | tr '[:lower:]' '[:upper:]')
+          [ "${#signers[@]}" = 1 ] || { echo "::error::APK has ${#signers[@]} signers, expected 1"; exit 1; }
+          [ "${signers[0]}" = "$SIDELOAD_CERT_SHA256" ] || { echo "::error::APK signer ${signers[0]} is not the sideload lineage"; exit 1; }
+          badging="$("$tools/aapt" dump badging "$apk" | sed -n '1p')"
+          version="$(sed -n 's/^version:[[:space:]]*\([^[:space:]#]*\).*/\1/p' pubspec.yaml | head -1)"
+          name="${version%%+*}"; code="${version#*+}"
+          grep -q "versionCode='$code'" <<<"$badging" || { echo "::error::versionCode mismatch: $badging"; exit 1; }
+          grep -q "versionName='$name'" <<<"$badging" || { echo "::error::versionName mismatch: $badging"; exit 1; }
+          mkdir -p dist
+          cp "$apk" "dist/opencode-mobile-$version.apk"
+          (cd dist && sha256sum "opencode-mobile-$version.apk" > SHA256SUMS)
+          {
+            echo "## opencode-mobile-$version.apk"
+            echo
+            echo '```'
+            cat dist/SHA256SUMS
+            echo '```'
+            echo
+            echo "Signer SHA-256: \`$SIDELOAD_CERT_SHA256\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload signed APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: opencode-mobile-signed-${{ github.ref_name }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 90
