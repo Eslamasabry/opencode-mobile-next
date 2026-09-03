@@ -149,7 +149,8 @@ void main() {
     final api = _ComposerApi();
     final controller = await _pump(tester, api, busy: true);
 
-    final stop = find.byKey(const Key('chat-send-button'));
+    // Stop has its own button next to a live Send while the run is active.
+    final stop = find.byKey(const Key('chat-stop-button'));
     expect(tester.widget<IconButton>(stop).tooltip, 'Stop');
     // Long-press shows the tooltip the way a touch user would see it.
     await tester.longPress(stop);
@@ -159,12 +160,18 @@ void main() {
     await tester.tap(stop);
     await tester.pump();
     expect(api.abortCalls, 1);
-    // The run ends and the button becomes Send; nothing may still say Stop.
+    // The run ends and Stop goes away; nothing may still say Stop.
     controller.busySessions.remove('session-1');
     controller.notifyListeners();
     await tester.pumpAndSettle();
 
     expect(find.text('Stop'), findsNothing);
-    expect(tester.widget<IconButton>(stop).tooltip, 'Send');
+    expect(stop, findsNothing);
+    expect(
+      tester
+          .widget<IconButton>(find.byKey(const Key('chat-send-button')))
+          .tooltip,
+      'Send',
+    );
   });
 }
