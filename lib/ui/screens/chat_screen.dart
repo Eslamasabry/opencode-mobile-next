@@ -12,7 +12,6 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../../api/models.dart';
 import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
-import '../../api/server_probe.dart' show ServerFlavor;
 import '../../api/sse.dart';
 import '../../platform/platform_capabilities.dart';
 import '../../state/offline_queue.dart';
@@ -994,10 +993,10 @@ class _ChatScreenState extends State<ChatScreen>
         text: text,
         attachments: attachments,
         mentions: mentions,
-        modelProviderID: _conn.selectedModel?.providerID,
-        modelID: _conn.selectedModel?.modelID,
+        modelProviderID: _conn.modelForSession(widget.sessionID)?.providerID,
+        modelID: _conn.modelForSession(widget.sessionID)?.modelID,
         agent: _conn.selectedAgent,
-        variant: _conn.selectedVariant,
+        variant: _conn.variantForSession(widget.sessionID),
         createdAt: now.millisecondsSinceEpoch,
       ),
     );
@@ -1238,9 +1237,11 @@ class _ChatScreenState extends State<ChatScreen>
       await actionApi.promptAsync(
         widget.sessionID,
         text: text,
-        model: _conn.selectedModel,
+        model: _conn.modelForSession(widget.sessionID),
         agent: _conn.selectedAgent.isNotEmpty ? _conn.selectedAgent : null,
-        variant: _conn.selectedVariant.isEmpty ? null : _conn.selectedVariant,
+        variant: _conn.variantForSession(widget.sessionID).isEmpty
+            ? null
+            : _conn.variantForSession(widget.sessionID),
         attachments: attachments,
         agentMentions: agentMentions,
         delivery: delivery,
@@ -1351,8 +1352,10 @@ class _ChatScreenState extends State<ChatScreen>
         widget.sessionID,
         command.serverCommand!.name,
         typed.arguments,
-        model: _conn.selectedModel,
-        variant: _conn.selectedVariant.isEmpty ? null : _conn.selectedVariant,
+        model: _conn.modelForSession(widget.sessionID),
+        variant: _conn.variantForSession(widget.sessionID).isEmpty
+            ? null
+            : _conn.variantForSession(widget.sessionID),
       );
       if (!mounted) return;
       _composer.clear();
@@ -2013,7 +2016,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _compact() async {
-    final model = _conn.selectedModel;
+    final model = _conn.modelForSession(widget.sessionID);
     if (model == null) {
       _showActionError('Select a model before compacting this session.');
       return;
@@ -2145,9 +2148,11 @@ class _ChatScreenState extends State<ChatScreen>
       await api.promptAsync(
         widget.sessionID,
         text: text,
-        model: _conn.selectedModel,
+        model: _conn.modelForSession(widget.sessionID),
         agent: _conn.selectedAgent.isEmpty ? null : _conn.selectedAgent,
-        variant: _conn.selectedVariant.isEmpty ? null : _conn.selectedVariant,
+        variant: _conn.variantForSession(widget.sessionID).isEmpty
+            ? null
+            : _conn.variantForSession(widget.sessionID),
         attachments: attachments,
       );
     } catch (error) {
@@ -2421,8 +2426,10 @@ class _ChatScreenState extends State<ChatScreen>
         widget.sessionID,
         command: cmd,
         agent: _conn.selectedAgent.isNotEmpty ? _conn.selectedAgent : 'build',
-        model: _conn.selectedModel,
-        variant: _conn.selectedVariant.isEmpty ? null : _conn.selectedVariant,
+        model: _conn.modelForSession(widget.sessionID),
+        variant: _conn.variantForSession(widget.sessionID).isEmpty
+            ? null
+            : _conn.variantForSession(widget.sessionID),
       );
     } catch (e) {
       if (mounted) showProductError(context, e);
@@ -2950,7 +2957,11 @@ class _ChatScreenState extends State<ChatScreen>
         return;
       case _ChatCommandAction.model:
         if (mounted) {
-          await showModelPicker(context, applyScope: _modelApplyScope);
+          await showModelPicker(
+            context,
+            applyScope: _modelApplyScope,
+            sessionID: widget.sessionID,
+          );
         }
         return;
       case _ChatCommandAction.integrations:
@@ -3724,17 +3735,15 @@ class _ChatScreenState extends State<ChatScreen>
     return parts.isEmpty ? null : parts.join(' ');
   }
 
-  /// On OpenCode 2 servers the model/agent choice is session state, so the
-  /// picker opened from an active chat applies to this session.
-  ModelPickerApplyScope get _modelApplyScope =>
-      _conn.serverFlavor == ServerFlavor.v2
-      ? ModelPickerApplyScope.session
-      : ModelPickerApplyScope.classic;
+  /// A picker opened from an open chat applies to this session only. Other
+  /// sessions keep the profile default; on OpenCode 2 the server also treats
+  /// the model as session state.
+  ModelPickerApplyScope get _modelApplyScope => ModelPickerApplyScope.session;
 
   /// The model as the catalog names it, falling back to the presented
   /// provider/model pair; never a raw wire ID.
   String? get _presentedModelLabel {
-    final model = _conn.selectedModel;
+    final model = _conn.modelForSession(widget.sessionID);
     if (model == null) return null;
     for (final candidate in _conn.catalog?.models ?? const <CatalogModel>[]) {
       if (candidate.id == model.modelID &&
@@ -3748,7 +3757,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   /// The selected model's catalog entry, when the catalog knows it.
   CatalogModel? get _selectedCatalogModel {
-    final model = _conn.selectedModel;
+    final model = _conn.modelForSession(widget.sessionID);
     if (model == null) return null;
     for (final candidate in _conn.catalog?.models ?? const <CatalogModel>[]) {
       if (candidate.id == model.modelID &&
@@ -3893,8 +3902,11 @@ class _ChatScreenState extends State<ChatScreen>
               _PromptErrorBanner(
                 message: promptError,
                 onDismiss: () => setState(() => _promptError = null),
-                onChooseModel: () =>
-                    showModelPicker(context, applyScope: _modelApplyScope),
+                onChooseModel: () => showModelPicker(
+                  context,
+                  applyScope: _modelApplyScope,
+                  sessionID: widget.sessionID,
+                ),
               )
             else if (parentID != null)
               _SubagentContextBanner(
@@ -4055,6 +4067,8 @@ class _ChatScreenState extends State<ChatScreen>
                                                             context,
                                                             applyScope:
                                                                 _modelApplyScope,
+                                                            sessionID: widget
+                                                                .sessionID,
                                                           ),
                                                       onOpenSession:
                                                           _openSubagentSession,
@@ -4202,10 +4216,14 @@ class _ChatScreenState extends State<ChatScreen>
                                     voiceOpening: _voiceOpening,
                                     selectedAgent: _conn.selectedAgent,
                                     defaultAgent: _defaultAgentName,
-                                    selectedModel: _conn.selectedModel,
+                                    selectedModel: _conn.modelForSession(
+                                      widget.sessionID,
+                                    ),
                                     modelLabel: _presentedModelLabel,
                                     selectedCatalogModel: _selectedCatalogModel,
-                                    selectedVariant: _conn.selectedVariant,
+                                    selectedVariant: _conn.variantForSession(
+                                      widget.sessionID,
+                                    ),
                                     showAttachmentNote: showAttachmentNote,
                                     pulse: _composerPulse,
                                     onAttach: _pickAttachment,
@@ -4218,6 +4236,7 @@ class _ChatScreenState extends State<ChatScreen>
                                     onChooseModel: () => showModelPicker(
                                       context,
                                       applyScope: _modelApplyScope,
+                                      sessionID: widget.sessionID,
                                     ),
                                     contextUsage: _contextWindowUsage(),
                                     onRemoveAttachment: (attachment) =>

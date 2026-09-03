@@ -254,9 +254,16 @@ class ConnectionController extends ChangeNotifier {
   String? _runtimeHealKey;
   int _runtimeHealGeneration = -1;
 
+  /// Default model for pickers opened outside a chat and for new sessions.
   ModelRef? selectedModel;
   String selectedAgent = '';
   String selectedVariant = '';
+
+  /// Model choices made from inside a chat, keyed by session ID. A choice
+  /// here belongs to that session only; every other session keeps using
+  /// [selectedModel]. Restored per profile on connect and dropped with the
+  /// session.
+  Map<String, SessionModelChoice> sessionModels = {};
   bool transcriptReasoningExpanded = false;
   bool transcriptTimestampsVisible = false;
 
@@ -1094,6 +1101,7 @@ class ConnectionController extends ChangeNotifier {
         : null;
     selectedAgent = store.agentFor(profile.id);
     selectedVariant = store.variantFor(profile.id);
+    sessionModels = store.sessionModelsFor(profile.id);
 
     final savedLocation = await _validatedSavedLocation(
       profile,
@@ -1684,6 +1692,7 @@ class ConnectionController extends ChangeNotifier {
           if (id != null && id.isNotEmpty) {
             _markSessionChanged(id);
             sessionsById.remove(id);
+            _forgetSessionModel(id);
             busySessions.remove(id);
             retryStates.remove(id);
             _dismissSessionCodingAlerts(id);
@@ -3844,19 +3853,58 @@ class ConnectionController extends ChangeNotifier {
 
   // ---------------- Selection persistence ----------------
 
-  Future<void> selectModel(ModelRef ref, {String? variant}) async {
-    final nextVariant = variant ?? '';
+  /// Whether [variant] is one the catalog offers for [ref]. The empty
+  /// variant is always allowed.
+  bool _variantAllowed(ModelRef ref, String variant) {
+    if (variant.isEmpty) return true;
     final matchingModel = catalog?.models.where(
       (model) => model.providerID == ref.providerID && model.id == ref.modelID,
     );
-    if (nextVariant.isNotEmpty &&
-        (matchingModel == null ||
-            matchingModel.isEmpty ||
-            !matchingModel.first.variants.any(
-              (item) => item.id == nextVariant && !item.disabled,
-            ))) {
-      return;
-    }
+    return matchingModel != null &&
+        matchingModel.isNotEmpty &&
+        matchingModel.first.variants.any(
+          (item) => item.id == variant && !item.disabled,
+        );
+  }
+
+  /// The model [sessionID] sends with: its own choice when one was made from
+  /// that chat, else the profile default.
+  ModelRef? modelForSession(String sessionID) =>
+      sessionModels[sessionID]?.model ?? selectedModel;
+
+  /// The variant [sessionID] sends with; see [modelForSession].
+  String variantForSession(String sessionID) =>
+      sessionModels[sessionID]?.variant ?? selectedVariant;
+
+  /// Chooses a model for one session without touching the profile default
+  /// or any other session.
+  Future<void> selectModelForSession(
+    String sessionID,
+    ModelRef ref, {
+    String? variant,
+  }) async {
+    final nextVariant = variant ?? '';
+    if (!_variantAllowed(ref, nextVariant)) return;
+    sessionModels[sessionID] = SessionModelChoice(
+      model: ref,
+      variant: nextVariant,
+    );
+    final p = profile;
+    final generation = _generation;
+    if (p != null) await store.setSessionModels(p.id, sessionModels);
+    if (_disposed || generation != _generation) return;
+    notifyListeners();
+  }
+
+  void _forgetSessionModel(String sessionID) {
+    if (sessionModels.remove(sessionID) == null) return;
+    final p = profile;
+    if (p != null) unawaited(store.setSessionModels(p.id, sessionModels));
+  }
+
+  Future<void> selectModel(ModelRef ref, {String? variant}) async {
+    final nextVariant = variant ?? '';
+    if (!_variantAllowed(ref, nextVariant)) return;
     selectedModel = ref;
     selectedVariant = nextVariant;
     final p = profile;
@@ -4059,6 +4107,7 @@ class ConnectionController extends ChangeNotifier {
     _sessionRevision += 1;
     _sessionRevisions.clear();
     sessionsById = {};
+    sessionModels = {};
     busySessions = {};
     retryStates = {};
     permissions = {};

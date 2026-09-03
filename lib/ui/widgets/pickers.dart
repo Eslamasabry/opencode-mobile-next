@@ -21,9 +21,13 @@ import 'provider_logo.dart';
 /// choice becomes the default for `POST /api/session`).
 enum ModelPickerApplyScope { classic, session, newSessions }
 
+/// Opens the model/agent sheet. With [sessionID] and
+/// [ModelPickerApplyScope.session] the choice applies to that session only;
+/// otherwise it becomes the profile default.
 Future<void> showModelPicker(
   BuildContext context, {
   ModelPickerApplyScope applyScope = ModelPickerApplyScope.classic,
+  String? sessionID,
 }) {
   final controller = ProviderScope.containerOf(
     context,
@@ -41,14 +45,19 @@ Future<void> showModelPicker(
     // collapses by dragging.
     clipBehavior: Clip.antiAlias,
     constraints: const BoxConstraints(maxWidth: 720),
-    builder: (_) => _ModelAgentSheet(applyScope: applyScope),
+    builder: (_) =>
+        _ModelAgentSheet(applyScope: applyScope, sessionID: sessionID),
   );
 }
 
 class _ModelAgentSheet extends ConsumerWidget {
-  const _ModelAgentSheet({this.applyScope = ModelPickerApplyScope.classic});
+  const _ModelAgentSheet({
+    this.applyScope = ModelPickerApplyScope.classic,
+    this.sessionID,
+  });
 
   final ModelPickerApplyScope applyScope;
+  final String? sessionID;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => DraggableScrollableSheet(
@@ -66,6 +75,7 @@ class _ModelAgentSheet extends ConsumerWidget {
         onApplied: () => Navigator.maybePop(context),
         onClose: () => Navigator.maybePop(context),
         applyScope: applyScope,
+        sessionID: sessionID,
       ),
     ),
   );
@@ -83,6 +93,7 @@ class ModelCatalogView extends StatefulWidget {
     this.onClose,
     this.showHeader = true,
     this.applyScope = ModelPickerApplyScope.classic,
+    this.sessionID,
   });
 
   final ConnectionController controller;
@@ -91,6 +102,7 @@ class ModelCatalogView extends StatefulWidget {
   final VoidCallback? onClose;
   final bool showHeader;
   final ModelPickerApplyScope applyScope;
+  final String? sessionID;
 
   @override
   State<ModelCatalogView> createState() => _ModelCatalogViewState();
@@ -129,9 +141,21 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
     }
   }
 
+  /// The session this picker edits, when the apply scope is per-session.
+  String? get _scopedSessionID =>
+      widget.applyScope == ModelPickerApplyScope.session
+      ? widget.sessionID
+      : null;
+
   void _syncDraft() {
-    _draftModel = widget.controller.selectedModel;
-    _draftVariant = widget.controller.selectedVariant;
+    final sessionID = _scopedSessionID;
+    if (sessionID != null) {
+      _draftModel = widget.controller.modelForSession(sessionID);
+      _draftVariant = widget.controller.variantForSession(sessionID);
+    } else {
+      _draftModel = widget.controller.selectedModel;
+      _draftVariant = widget.controller.selectedVariant;
+    }
   }
 
   void _scrolled() {
@@ -771,10 +795,19 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
               FilledButton.icon(
                 key: ValueKey('use-model-${model.providerID}-${model.id}'),
                 onPressed: () async {
-                  await widget.controller.selectModel(
-                    _draftModel!,
-                    variant: _draftVariant,
-                  );
+                  final sessionID = _scopedSessionID;
+                  if (sessionID != null) {
+                    await widget.controller.selectModelForSession(
+                      sessionID,
+                      _draftModel!,
+                      variant: _draftVariant,
+                    );
+                  } else {
+                    await widget.controller.selectModel(
+                      _draftModel!,
+                      variant: _draftVariant,
+                    );
+                  }
                   widget.onApplied?.call();
                   if (mounted && widget.onApplied == null) {
                     setState(_syncDraft);

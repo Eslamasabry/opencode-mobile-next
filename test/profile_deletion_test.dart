@@ -19,7 +19,8 @@ class _RefusingStore extends InMemorySharedPreferencesStore {
 
   final Set<String> refused;
 
-  bool _blocks(String key) => refused.contains(key.replaceFirst('flutter.', ''));
+  bool _blocks(String key) =>
+      refused.contains(key.replaceFirst('flutter.', ''));
 
   @override
   Future<bool> remove(String key) async =>
@@ -56,6 +57,7 @@ Map<String, Object> _seed() => {
   'oc.modelExplicit.doomed': true,
   'oc.agent.doomed': 'build',
   'oc.variant.doomed': 'high',
+  'oc.sessionModels.doomed': jsonEncode({'ses_1': 'anthropic|opus|'}),
   'oc.location.doomed': jsonEncode({
     'directory': '/home/dev/code',
     'workspace': 'main',
@@ -202,6 +204,7 @@ void main() {
         'oc.modelExplicit.doomed',
         'oc.agent.doomed',
         'oc.variant.doomed',
+        'oc.sessionModels.doomed',
         'oc.location.doomed',
         'oc.providerRuntimeRefresh.v1.doomed.%2Fhome%2Fdev%2Fcode%0Amain',
       });
@@ -220,7 +223,7 @@ void main() {
     final result = await controller.deleteProfileAndLocalData('doomed');
 
     // Reported truthfully: the UI copy depends on these numbers.
-    expect(result.removedPreferenceKeys, hasLength(6));
+    expect(result.removedPreferenceKeys, hasLength(7));
     expect(result.removedQueuedPrompts, 2);
     expect(result.removedDrafts, 2); // owned + unattributable
     expect(result.clearedWidgetSnapshot, isTrue);
@@ -241,6 +244,7 @@ void main() {
       'oc.modelExplicit.doomed',
       'oc.agent.doomed',
       'oc.variant.doomed',
+      'oc.sessionModels.doomed',
       'oc.location.doomed',
       'oc.providerRuntimeRefresh.v1.doomed.%2Fhome%2Fdev%2Fcode%0Amain',
     ]) {
@@ -362,35 +366,42 @@ void main() {
     // the store and never puts it back when the store says no, so only the
     // durable store answers "is this still on the device?" honestly.
     Future<Object?> onDisk(String key) async =>
-        (await SharedPreferencesStorePlatform.instance.getAll())['flutter.$key'];
+        (await SharedPreferencesStorePlatform.instance
+            .getAll())['flutter.$key'];
 
-    test('keeps the server when its queued prompts cannot be deleted', () async {
-      final (controller, _) = await bootRefusing({'oc.offlineQueue'});
+    test(
+      'keeps the server when its queued prompts cannot be deleted',
+      () async {
+        final (controller, _) = await bootRefusing({'oc.offlineQueue'});
 
-      final result = await controller.deleteProfileAndLocalData('doomed');
+        final result = await controller.deleteProfileAndLocalData('doomed');
 
-      // The prompts are still on the device, so the server that owns them
-      // stays too — an orphaned queue behind a deleted row is exactly what
-      // "remove server" promises will not happen.
-      expect(result.complete, isFalse);
-      expect(result.removedProfile, isFalse);
-      expect(result.failures, ['2 queued prompts']);
-      expect(result.removedQueuedPrompts, 0);
-      expect(
-        result.partialDeletionMessage,
-        allOf(
-          contains('The server was kept'),
-          contains('2 queued prompts'),
-          contains('Free up storage'),
-        ),
-      );
+        // The prompts are still on the device, so the server that owns them
+        // stays too — an orphaned queue behind a deleted row is exactly what
+        // "remove server" promises will not happen.
+        expect(result.complete, isFalse);
+        expect(result.removedProfile, isFalse);
+        expect(result.failures, ['2 queued prompts']);
+        expect(result.removedQueuedPrompts, 0);
+        expect(
+          result.partialDeletionMessage,
+          allOf(
+            contains('The server was kept'),
+            contains('2 queued prompts'),
+            contains('Free up storage'),
+          ),
+        );
 
-      expect(controller.store.profiles.map((p) => p.id), ['doomed', 'keeper']);
-      expect(await onDisk('oc.profiles'), contains('doomed'));
-      expect(await onDisk('oc.activeProfile'), 'doomed');
-      expect(secureDeletes, isEmpty, reason: 'the Keystore entry must stay');
-      expect(await onDisk('oc.offlineQueue'), contains('secret prompt'));
-    });
+        expect(controller.store.profiles.map((p) => p.id), [
+          'doomed',
+          'keeper',
+        ]);
+        expect(await onDisk('oc.profiles'), contains('doomed'));
+        expect(await onDisk('oc.activeProfile'), 'doomed');
+        expect(secureDeletes, isEmpty, reason: 'the Keystore entry must stay');
+        expect(await onDisk('oc.offlineQueue'), contains('secret prompt'));
+      },
+    );
 
     test('keeps the server when a draft write is refused', () async {
       final (controller, _) = await bootRefusing({'oc.sessionDrafts'});
@@ -415,8 +426,8 @@ void main() {
 
       expect(result.removedProfile, isFalse);
       expect(result.failures, ['1 saved setting']);
-      // The five keys that did go are reported; the sixth is not claimed.
-      expect(result.removedPreferenceKeys, hasLength(5));
+      // The six keys that did go are reported; the seventh is not claimed.
+      expect(result.removedPreferenceKeys, hasLength(6));
       expect(result.removedPreferenceKeys, isNot(contains('oc.agent.doomed')));
       expect(await onDisk('oc.agent.doomed'), 'build');
       expect(controller.store.profiles.map((p) => p.id), ['doomed', 'keeper']);

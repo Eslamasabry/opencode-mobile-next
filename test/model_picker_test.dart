@@ -165,7 +165,12 @@ Future<_RefreshCountingController> _controller() async {
     );
 }
 
-Widget _app(ConnectionController controller, {double textScale = 1}) {
+Widget _app(
+  ConnectionController controller, {
+  double textScale = 1,
+  ModelPickerApplyScope applyScope = ModelPickerApplyScope.classic,
+  String? sessionID,
+}) {
   return ProviderScope(
     overrides: [connProvider.overrideWithValue(controller)],
     child: MaterialApp(
@@ -181,7 +186,11 @@ Widget _app(ConnectionController controller, {double textScale = 1}) {
         builder: (context) => Scaffold(
           body: Center(
             child: FilledButton(
-              onPressed: () => showModelPicker(context),
+              onPressed: () => showModelPicker(
+                context,
+                applyScope: applyScope,
+                sessionID: sessionID,
+              ),
               child: const Text('Choose model'),
             ),
           ),
@@ -303,6 +312,59 @@ void main() {
     expect(controller.selectedModel?.providerID, 'opencode');
     expect(controller.selectedModel?.modelID, 'nemotron-3-ultra-free');
     expect(find.text('Model, mode & agent'), findsNothing);
+  });
+
+  testWidgets('"Use for this session" leaves every other session alone', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(411, 891));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    controller.selectedModel = ModelRef(
+      providerID: 'opencode',
+      modelID: 'nemotron-3.5-lightning-free',
+    );
+    await tester.pumpWidget(
+      _app(
+        controller,
+        applyScope: ModelPickerApplyScope.session,
+        sessionID: 'ses_a',
+      ),
+    );
+
+    await tester.tap(find.text('Choose model'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('model-picker-search')),
+      'ultra',
+    );
+    await tester.pump();
+    await tester.tap(find.text('Nemotron Ultra'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Use for this session'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Use for this session'));
+    await tester.pumpAndSettle();
+
+    expect(
+      controller.modelForSession('ses_a')?.modelID,
+      'nemotron-3-ultra-free',
+    );
+    // The profile default and any other session are untouched.
+    expect(controller.selectedModel?.modelID, 'nemotron-3.5-lightning-free');
+    expect(
+      controller.modelForSession('ses_b')?.modelID,
+      'nemotron-3.5-lightning-free',
+    );
+
+    // Reopening the picker for that session starts from its own choice.
+    await tester.tap(find.text('Choose model'));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('use-model-opencode-nemotron-3-ultra-free')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('a signed-in provider the server has not loaded is called out', (

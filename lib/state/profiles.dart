@@ -6,8 +6,16 @@ import 'package:flutter/services.dart'
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../api/models.dart' show ModelRef;
 import '../api/server_probe.dart' show ServerFlavor;
 import '../platform/platform_capabilities.dart';
+
+/// A model (and variant) chosen for one session from inside its chat.
+class SessionModelChoice {
+  final ModelRef model;
+  final String variant;
+  const SessionModelChoice({required this.model, this.variant = ''});
+}
 
 /// One opencode server the user can connect to.
 class ServerProfile {
@@ -271,6 +279,9 @@ class ProfileStore {
   static const _modelExplicitKey = 'oc.modelExplicit.'; // + profileId
   static const _agentKey = 'oc.agent.'; // + profileId
   static const _variantKey = 'oc.variant.'; // + profileId
+  // + profileId -> JSON {sessionID: "providerID|modelID|variant"}
+  static const _sessionModelsKey = 'oc.sessionModels.';
+  static const _sessionModelsCap = 200;
   static const _locationKey = 'oc.location.'; // + profileId -> JSON
   static const _transcriptReasoningKey = 'oc.transcript.reasoningExpanded';
   static const _transcriptTimestampsKey = 'oc.transcript.timestampsVisible';
@@ -627,6 +638,56 @@ class ProfileStore {
     } else {
       await prefs.setString('$_variantKey$profileId', variant);
     }
+  }
+
+  /// Per-session model choices for [profileId]; malformed entries are
+  /// dropped rather than surfaced.
+  Map<String, SessionModelChoice> sessionModelsFor(String profileId) {
+    final raw = prefs.getString('$_sessionModelsKey$profileId');
+    if (raw == null || raw.isEmpty) return {};
+    final Object? decoded;
+    try {
+      decoded = jsonDecode(raw);
+    } on FormatException {
+      return {};
+    }
+    if (decoded is! Map) return {};
+    final result = <String, SessionModelChoice>{};
+    for (final entry in decoded.entries) {
+      final id = entry.key.toString();
+      final value = entry.value;
+      if (id.isEmpty || value is! String) continue;
+      final parts = value.split('|');
+      if (parts.length < 2 || parts[0].isEmpty || parts[1].isEmpty) continue;
+      result[id] = SessionModelChoice(
+        model: ModelRef(providerID: parts[0], modelID: parts[1]).normalized,
+        variant: parts.length > 2 ? parts[2] : '',
+      );
+    }
+    return result;
+  }
+
+  /// Replaces the per-session model choices for [profileId]. Keeps the most
+  /// recently written [_sessionModelsCap] entries so a long-lived profile
+  /// cannot grow the preference without bound.
+  Future<void> setSessionModels(
+    String profileId,
+    Map<String, SessionModelChoice> choices,
+  ) async {
+    if (choices.isEmpty) {
+      await prefs.remove('$_sessionModelsKey$profileId');
+      return;
+    }
+    final entries = choices.entries.toList();
+    final kept = entries.length > _sessionModelsCap
+        ? entries.sublist(entries.length - _sessionModelsCap)
+        : entries;
+    final encoded = <String, String>{
+      for (final e in kept)
+        e.key:
+            '${e.value.model.providerID}|${e.value.model.modelID}|${e.value.variant}',
+    };
+    await prefs.setString('$_sessionModelsKey$profileId', jsonEncode(encoded));
   }
 
   String agentFor(String profileId) =>
