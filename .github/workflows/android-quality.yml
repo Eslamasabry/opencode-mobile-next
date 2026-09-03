@@ -1,5 +1,6 @@
-# The uploaded APK is signed with an isolated CI key. It proves the release
-# build compiles, but it is not an upgrade-compatible distribution artifact.
+# Branch APKs use one stable, non-production CI certificate so they can update
+# one another. Fork pull requests cannot access secrets and use an isolated
+# key instead. Neither certificate is the production release identity.
 
 name: Android quality gate
 
@@ -104,25 +105,43 @@ jobs:
             flutter test --concurrency=1 "${chunk[@]}"
           done
 
-      - name: Create isolated CI signing identity
+      - name: Configure CI signing identity
         env:
           CI_KEYSTORE: ${{ runner.temp }}/opencode-ci-release.jks
+          CI_KEYSTORE_BASE64: ${{ secrets.CI_KEYSTORE_BASE64 }}
+          CI_KEYSTORE_PASSWORD: ${{ secrets.CI_KEYSTORE_PASSWORD }}
         run: |
-          keytool -genkeypair -noprompt \
-            -keystore "$CI_KEYSTORE" \
-            -storepass ci-not-for-distribution \
-            -keypass ci-not-for-distribution \
-            -alias ci-release \
-            -keyalg RSA \
-            -keysize 3072 \
-            -validity 1 \
-            -dname "CN=CI Build, O=OpenCode Mobile"
+          set -euo pipefail
+          if [[ -n "$CI_KEYSTORE_BASE64" && -n "$CI_KEYSTORE_PASSWORD" ]]; then
+            printf '%s' "$CI_KEYSTORE_BASE64" | base64 --decode > "$CI_KEYSTORE"
+            actual=$(keytool -list -v \
+              -keystore "$CI_KEYSTORE" \
+              -alias ci-release \
+              -storepass "$CI_KEYSTORE_PASSWORD" |
+              sed -n 's/.*SHA256: //p' | tr -d ':[:space:]')
+            expected=2D010C2103CB2F78ABAACA690EAD4D45F8003A6C0A02082CD2A2AE62FD18D0EC
+            test "$actual" = "$expected"
+          elif [[ "${{ github.event_name }}" == pull_request ]]; then
+            CI_KEYSTORE_PASSWORD=ci-not-for-distribution
+            keytool -genkeypair -noprompt \
+              -keystore "$CI_KEYSTORE" \
+              -storepass "$CI_KEYSTORE_PASSWORD" \
+              -keypass "$CI_KEYSTORE_PASSWORD" \
+              -alias ci-release \
+              -keyalg RSA \
+              -keysize 3072 \
+              -validity 1 \
+              -dname "CN=CI Pull Request Build, O=OpenCode Mobile"
+          else
+            echo 'Stable CI signing secrets are missing' >&2
+            exit 1
+          fi
           chmod 600 "$CI_KEYSTORE"
           printf '%s\n' \
             "storeFile=$CI_KEYSTORE" \
-            'storePassword=ci-not-for-distribution' \
+            "storePassword=$CI_KEYSTORE_PASSWORD" \
             'keyAlias=ci-release' \
-            'keyPassword=ci-not-for-distribution' \
+            "keyPassword=$CI_KEYSTORE_PASSWORD" \
             > android/key.properties
           chmod 600 android/key.properties
 
