@@ -212,7 +212,10 @@ class BackgroundConnectionService : Service() {
                     ).build()
                 )
             if (running > 0) builder.setProgress(0, 0, true)
-            if (Build.VERSION.SDK_INT >= 36) {
+            if (
+                Build.VERSION.SDK_INT >= 36 &&
+                Build.VERSION.SDK_INT_FULL >= Build.VERSION_CODES_FULL.BAKLAVA_1
+            ) {
                 // Android 16 live updates: promoted to the status bar chip and
                 // pinned atop the shade while something is actually running.
                 builder.setRequestPromotedOngoing(true)
