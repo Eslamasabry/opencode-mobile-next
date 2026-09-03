@@ -101,6 +101,32 @@ Include, where they apply:
   external links, or notifications;
 - migration notes when a stored format changes.
 
+## Triage
+
+New reports arrive with `bug` + `needs triage` from the in-app **Report a bug**
+link and the issue template. Triage them like this:
+
+1. **Redaction check first.** If the report contains a server password, a
+   provider API key, or a real hostname the reporter probably did not mean to
+   share, edit it out before anything else and say so in a comment.
+2. **Is it ours?** Server or model misbehaviour goes upstream
+   (see [SUPPORT.md](SUPPORT.md)); close with a link. Keep it here if the app
+   renders, stores, or sends something wrong.
+3. **Can you reproduce it?**
+   - Yes: drop `needs triage`, add a priority (`P0` breaks connect/send/approve
+     or loses data; `P1` a feature does not work; `P2` everything else) and a
+     platform label (`device:android`, `device:linux`, `device:windows`).
+     Add `ux` or `accessibility` when that is the nature of the defect.
+   - No: add `needs-repro` and ask for exactly one thing — usually the
+     redacted diagnostics from Settings → App diagnostics, or the server
+     version and flavor (OpenCode 1 or 2). Close after 30 days without reply.
+4. **Old preview?** If the app version is behind the current release, ask the
+   reporter to retest on the current APK before spending time on it.
+5. **Duplicate?** Link the original, label `duplicate`, close.
+
+Anything a newcomer could finish in an evening gets `good first issue` and a
+one-paragraph pointer to the files involved.
+
 ## Security issues
 
 Do not open a public issue for a vulnerability. Report it privately through
