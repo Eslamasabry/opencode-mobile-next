@@ -3807,9 +3807,7 @@ void main() {
     expect(find.textContaining('Second deletion failed'), findsOneWidget);
   });
 
-  testWidgets('composer shows the context window meter above 70 percent', (
-    tester,
-  ) async {
+  testWidgets('composer always shows known context usage', (tester) async {
     final api = _FakeOpenCodeApi()
       ..messagesHandler = (_) async => [
         _message(
@@ -3818,7 +3816,7 @@ void main() {
           [Part(type: 'text', text: 'done')],
           providerID: 'p',
           modelID: 'm',
-          tokens: Tokens(input: 70000, output: 5000),
+          tokens: Tokens(input: 20000, output: 5000),
         ),
       ];
     final controller = await _controller(api);
@@ -3849,9 +3847,10 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.bySemanticsLabel('Context window 75 percent used'),
+      find.bySemanticsLabel('Context window 25 percent used'),
       findsOneWidget,
     );
+    expect(find.text('25%'), findsOneWidget);
 
     // The fill must actually paint at the reported share of the track.
     await tester.pumpAndSettle();
@@ -3864,12 +3863,12 @@ void main() {
     expect(fillSize.height, trackSize.height);
     expect(
       fillSize.width / trackSize.width,
-      moreOrLessEquals(.75, epsilon: .01),
+      moreOrLessEquals(.25, epsilon: .01),
     );
     semantics.dispose();
   });
 
-  testWidgets('composer meter stays a plain divider without a known limit', (
+  testWidgets('composer meter stays hidden without a known limit', (
     tester,
   ) async {
     final api = _FakeOpenCodeApi();

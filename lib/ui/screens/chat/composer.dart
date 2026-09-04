@@ -488,11 +488,11 @@ class _ChatComposer extends StatelessWidget {
         _ => false,
       };
 
-  /// Below 70 % the hairline meter is signal enough; from there the chip
-  /// carries the number, escalating in colour as the window fills.
+  /// Keep the exact known share visible beside the model at every usage level;
+  /// people use this for orientation before the window needs attention.
   Widget? _contextPercent(BuildContext context) {
     final usage = contextUsage;
-    if (usage == null || usage < .7) return null;
+    if (usage == null) return null;
     return _ContextPercentBadge(usage: usage.clamp(0.0, 1.0));
   }
 
@@ -949,8 +949,7 @@ class _ComposerSubmit extends StatelessWidget {
   }
 }
 
-/// The context-window percentage the model chip carries from 70 % on. The
-/// hairline meter stays; this is the number for when the number matters.
+/// The known context-window percentage carried by the model chip.
 class _ContextPercentBadge extends StatelessWidget {
   const _ContextPercentBadge({required this.usage});
 
@@ -1244,9 +1243,9 @@ class _StagedReferenceChip extends StatelessWidget {
   }
 }
 
-/// A context-window meter appears only once usage needs attention. Keeping the
-/// normal composer free of an ambient divider saves space and avoids implying
-/// precision when the server does not report a limit.
+/// A context-window meter stays visible whenever the server reports enough
+/// information to calculate usage; warning colours remain reserved for high
+/// usage.
 class _ContextMeterLine extends StatelessWidget {
   const _ContextMeterLine({required this.usage});
 
@@ -1256,11 +1255,15 @@ class _ContextMeterLine extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final value = usage?.clamp(0.0, 1.0);
-    if (value == null || value < .7) {
+    if (value == null) {
       return const SizedBox.shrink();
     }
-    final track = scheme.outlineVariant.withValues(alpha: .55);
-    final fill = value >= .9 ? scheme.error : scheme.tertiary;
+    final track = scheme.outlineVariant.withValues(alpha: .72);
+    final fill = value >= .9
+        ? scheme.error
+        : value >= .7
+        ? scheme.tertiary
+        : scheme.primary;
     final percent = (value * 100).round();
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return Semantics(
@@ -1271,7 +1274,7 @@ class _ContextMeterLine extends StatelessWidget {
           key: const ValueKey('composer-context-meter'),
           borderRadius: BorderRadius.circular(1.25),
           child: SizedBox(
-            height: 2.5,
+            height: 3,
             width: double.infinity,
             child: ColoredBox(
               color: track,

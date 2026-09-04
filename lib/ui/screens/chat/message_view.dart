@@ -1408,7 +1408,9 @@ class _MessageView extends StatelessWidget {
         // remount would kill this fade and reset per-part expansion state.
         key: ValueKey('message-highlight-${m.info.id}'),
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.fromLTRB(6, 4, 6, 10),
+        padding: isUser
+            ? const EdgeInsets.fromLTRB(6, 4, 6, 10)
+            : const EdgeInsets.fromLTRB(6, 0, 6, 4),
         decoration: BoxDecoration(
           color: highlighted
               ? theme.colorScheme.primaryContainer.withValues(alpha: .24)
@@ -1429,7 +1431,7 @@ class _MessageView extends StatelessWidget {
               ),
               padding: isUser
                   ? const EdgeInsets.symmetric(horizontal: 10, vertical: 10)
-                  : const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                  : const EdgeInsets.symmetric(horizontal: 4),
               decoration: isUser
                   ? BoxDecoration(
                       color: theme.colorScheme.primaryContainer.withValues(

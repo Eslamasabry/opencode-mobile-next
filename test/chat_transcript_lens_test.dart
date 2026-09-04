@@ -510,6 +510,54 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('assistant tool and reasoning blocks keep a compact rhythm', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(360, 740));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final api = _TranscriptApi()
+      ..messagesBuilder = () => [
+        _message('assistant-tools', 'assistant', [
+          for (var index = 0; index < 2; index++)
+            Part(
+              id: 'tool-$index',
+              type: 'tool',
+              toolName: 'read',
+              toolState: ToolState.fromJson({
+                'status': 'completed',
+                'input': {'filePath': '/project/file-$index.txt'},
+                'output': 'done',
+              }, toolName: 'read'),
+            ),
+        ]),
+        _message('assistant-reasoning', 'assistant', [
+          Part(
+            id: 'reasoning',
+            type: 'reasoning',
+            text:
+                'A reasoning block long enough to stay collapsed behind its '
+                'compact disclosure row.',
+          ),
+        ], created: 2),
+        _message('assistant-answer', 'assistant', [
+          Part(id: 'answer', type: 'text', text: 'Final answer.'),
+        ], created: 3),
+      ];
+
+    await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+
+    final tools = tester.getRect(find.byKey(const Key('tool-call-group')));
+    final reasoning = tester.getRect(
+      find.byKey(const Key('assistant-reasoning-block')),
+    );
+    expect(
+      reasoning.top - tools.bottom,
+      lessThanOrEqualTo(8),
+      reason: 'assistant protocol records should read as one compact turn',
+    );
+  });
+
   testWidgets('earlier-messages pill gates on scroll and excludes visible '
       'messages; new turns defer while reading history', (tester) async {
     final api = _TranscriptApi()
