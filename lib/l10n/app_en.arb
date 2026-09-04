@@ -141,5 +141,26 @@
   "@librarySearchResults": {
     "description": "Number of matching destinations in More",
     "placeholders": {"count": {"type": "int"}, "query": {"type": "String"}}
-  }
+  },
+  "chatAttachmentUnsupported": "Only PNG, JPEG, GIF, WebP, PDF, and text files can be attached.",
+  "termuxRestartServer": "Restart local server",
+  "@termuxRestartServer": {"description":"Action that restarts the app-managed OpenCode server running in Termux"},
+  "termuxRestartTitle": "Restart the local server?",
+  "@termuxRestartTitle": {"description":"Confirmation title before restarting the managed Termux server"},
+  "termuxRestartMessage": "OpenCode will be briefly unavailable. The app will keep your current workspace and reconnect automatically.",
+  "@termuxRestartMessage": {"description":"Confirmation explanation before restarting the managed Termux server"},
+  "termuxRestartBusyMessage": "{count, plural, =1{1 session is generating. Restarting will interrupt it.} other{{count} sessions are generating. Restarting will interrupt them.}}",
+  "@termuxRestartBusyMessage": {"description":"Additional restart warning when one or more sessions are generating","placeholders":{"count":{"type":"int"}}},
+  "termuxRestartConfirm": "Restart",
+  "@termuxRestartConfirm": {"description":"Confirmation button that starts a managed Termux server restart"},
+  "termuxRestarting": "Restarting local server...",
+  "@termuxRestarting": {"description":"Progress label while the managed Termux server restarts"},
+  "termuxRestartProgress": "The installed OpenCode version and saved credential are unchanged. The app will reconnect when the server is ready.",
+  "@termuxRestartProgress": {"description":"Progress explanation while the managed Termux server restarts"},
+  "termuxRestartSucceeded": "Local server restarted and reconnected.",
+  "@termuxRestartSucceeded": {"description":"Success message after a managed Termux server restart"},
+  "termuxRestartNotPerformed": "Restart was not performed. The existing local server is still running.",
+  "@termuxRestartNotPerformed": {"description":"Message after restart preflight fails while the existing managed server remains healthy"},
+  "chatCopyCompleteReply": "Copy complete reply",
+  "chatCopyReplySoFar": "Copy reply so far"
 }

@@ -657,6 +657,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =0 {No matching tools for “{query}”.} one {1 result for “{query}”.} other {{count} results for “{query}”.}}'**
   String librarySearchResults(int count, String query);
+
+  /// No description provided for @chatAttachmentUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Only PNG, JPEG, GIF, WebP, PDF, and text files can be attached.'**
+  String get chatAttachmentUnsupported;
+
+  /// Action that restarts the app-managed OpenCode server running in Termux
+  ///
+  /// In en, this message translates to:
+  /// **'Restart local server'**
+  String get termuxRestartServer;
+
+  /// Confirmation title before restarting the managed Termux server
+  ///
+  /// In en, this message translates to:
+  /// **'Restart the local server?'**
+  String get termuxRestartTitle;
+
+  /// Confirmation explanation before restarting the managed Termux server
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode will be briefly unavailable. The app will keep your current workspace and reconnect automatically.'**
+  String get termuxRestartMessage;
+
+  /// Additional restart warning when one or more sessions are generating
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 session is generating. Restarting will interrupt it.} other{{count} sessions are generating. Restarting will interrupt them.}}'**
+  String termuxRestartBusyMessage(int count);
+
+  /// Confirmation button that starts a managed Termux server restart
+  ///
+  /// In en, this message translates to:
+  /// **'Restart'**
+  String get termuxRestartConfirm;
+
+  /// Progress label while the managed Termux server restarts
+  ///
+  /// In en, this message translates to:
+  /// **'Restarting local server...'**
+  String get termuxRestarting;
+
+  /// Progress explanation while the managed Termux server restarts
+  ///
+  /// In en, this message translates to:
+  /// **'The installed OpenCode version and saved credential are unchanged. The app will reconnect when the server is ready.'**
+  String get termuxRestartProgress;
+
+  /// Success message after a managed Termux server restart
+  ///
+  /// In en, this message translates to:
+  /// **'Local server restarted and reconnected.'**
+  String get termuxRestartSucceeded;
+
+  /// Message after restart preflight fails while the existing managed server remains healthy
+  ///
+  /// In en, this message translates to:
+  /// **'Restart was not performed. The existing local server is still running.'**
+  String get termuxRestartNotPerformed;
+
+  /// No description provided for @chatCopyCompleteReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy complete reply'**
+  String get chatCopyCompleteReply;
+
+  /// No description provided for @chatCopyReplySoFar.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy reply so far'**
+  String get chatCopyReplySoFar;
 }
 
 class _AppLocalizationsDelegate

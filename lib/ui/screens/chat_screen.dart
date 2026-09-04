@@ -13,6 +13,7 @@ import '../../api/models.dart';
 import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../api/sse.dart';
+import '../../domain/prompt_attachment.dart';
 import '../../domain/background_work.dart';
 import 'running_work_sheet.dart';
 import '../../l10n/app_localizations.dart';
@@ -1691,6 +1692,7 @@ class _ChatScreenState extends State<ChatScreen>
   Future<PromptAttachment?> _chooseAttachment(
     List<PromptAttachment> current,
   ) async {
+    final unsupportedAttachment = _chatL10n(context).chatAttachmentUnsupported;
     if (current.length >= _maxAttachmentCount) {
       throw ProductException(
         'You can attach up to $_maxAttachmentCount files.',
@@ -1732,7 +1734,10 @@ class _ChatScreenState extends State<ChatScreen>
     if (bytes == null) {
       throw const ProductException('Each attachment must be 10 MB or smaller.');
     }
-    final mime = _mimeForFilename(file.name);
+    final mime = promptAttachmentMime(filename: file.name, bytes: bytes);
+    if (mime == null) {
+      throw ProductException(unsupportedAttachment);
+    }
     final attachment = PromptAttachment(
       mime: mime,
       filename: file.name,
@@ -2081,8 +2086,44 @@ class _ChatScreenState extends State<ChatScreen>
       .where((value) => value.trim().isNotEmpty)
       .join('\n\n');
 
+  /// Adjacent assistant messages form the reply already presented by the
+  /// transcript. Copy that complete text without changing which individual
+  /// message destructive actions target.
+  ({String label, String text}) _messageCopy(MessageWithParts message) {
+    final index = _messages.indexWhere(
+      (item) => item.info.id == message.info.id,
+    );
+    if (message.info.role != 'assistant' || index < 0) {
+      return (label: 'Copy message text', text: _messageText(message));
+    }
+    var start = index;
+    var end = index;
+    while (start > 0 && _messages[start - 1].info.role == 'assistant') {
+      start--;
+    }
+    while (end + 1 < _messages.length &&
+        _messages[end + 1].info.role == 'assistant') {
+      end++;
+    }
+    final reply = _messages.getRange(start, end + 1);
+    final unfinished =
+        _conn.busySessions.contains(widget.sessionID) &&
+        reply.any((item) => item.info.time?.isDone != true);
+    return (
+      label: start == end
+          ? 'Copy message text'
+          : unfinished
+          ? _chatL10n(context).chatCopyReplySoFar
+          : _chatL10n(context).chatCopyCompleteReply,
+      text: reply
+          .map(_messageText)
+          .where((text) => text.trim().isNotEmpty)
+          .join('\n\n'),
+    );
+  }
+
   Future<void> _copyMessageText(MessageWithParts message) async {
-    await Clipboard.setData(ClipboardData(text: _messageText(message)));
+    await Clipboard.setData(ClipboardData(text: _messageCopy(message).text));
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,
@@ -2093,10 +2134,10 @@ class _ChatScreenState extends State<ChatScreen>
   /// actions, same gates, same handlers as the long-press sheet below —
   /// mouse users simply reach them with the button they already use.
   List<ContextMenuAction> _messageContextActions(MessageWithParts message) => [
-    if (_messageText(message).isNotEmpty)
+    if (_messageCopy(message).text.isNotEmpty)
       ContextMenuAction(
         menuKey: const ValueKey('message-menu-copy'),
-        label: 'Copy message text',
+        label: _messageCopy(message).label,
         icon: AppIcons.copy,
         onSelected: () => unawaited(_copyMessageText(message)),
       ),
@@ -2118,7 +2159,7 @@ class _ChatScreenState extends State<ChatScreen>
   ];
 
   Future<void> _showMessageActions(MessageWithParts message) async {
-    final text = _messageText(message);
+    final copy = _messageCopy(message);
     final canFork = message.info.role == 'user';
     final theme = Theme.of(context);
     final action = await showModalBottomSheet<String>(
@@ -2127,11 +2168,11 @@ class _ChatScreenState extends State<ChatScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (text.isNotEmpty)
+            if (copy.text.isNotEmpty)
               ListTile(
                 key: const ValueKey('message-action-copy'),
                 leading: const Icon(AppIcons.copy),
-                title: const Text('Copy message text'),
+                title: Text(copy.label),
                 onTap: () => Navigator.pop(context, 'copy'),
               ),
             if (canFork)
@@ -3917,7 +3958,14 @@ class _ChatScreenState extends State<ChatScreen>
         'Attachments must total no more than 20 MB.',
       );
     }
-    final mime = mimeType ?? 'application/octet-stream';
+    final mime = promptAttachmentMime(
+      filename: filename,
+      bytes: bytes,
+      declaredMime: mimeType,
+    );
+    if (mime == null) {
+      throw ProductException(_chatL10n(context).chatAttachmentUnsupported);
+    }
     final attachment = PromptAttachment(
       mime: mime,
       filename: filename,

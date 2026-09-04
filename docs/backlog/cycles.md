@@ -23,3 +23,29 @@ batch. The preceding Running work native evidence is in [QA](../qa/running-work.
 Next priorities: **BE-007** OAuth completion, **BE-009** MCP timeout encoding,
 **FE-005** command launch into a new chat, then **BE-006** concurrent request errors.
 Remaining ready work stays in the backend and frontend queues.
+
+## 2026-09-05 — Adaptation and clean production baseline
+
+Recovered the useful product changes from the preserved `afd5252` / `ca0b249`
+commits onto the current app:
+
+- Known context usage stays visible beside the model, including below 70%;
+  unknown usage has no meter. Assistant messages use tighter vertical spacing.
+- Copy gathers consecutive assistant messages into a complete reply; an active
+  reply is labelled as text so far. Delete still targets only the selected
+  message. Tool summaries distinguish work that was not executed.
+- Source and configuration attachments become provider-readable UTF-8 text.
+  Unsupported binary attachments are rejected before sending.
+- Termux can restart the managed server without reinstalling packages or
+  replacing the saved credential. Process ownership is checked before stopping
+  it, and operation IDs distinguish restart completion from stale readiness.
+- Updated the workspace regression assertion to identify the directory and
+  active-session context labels independently, addressing the previous CI failure.
+
+The current bounded, lifecycle-aware Running work implementation is retained.
+The old branch and QA artifacts remain preserved outside the clean baseline.
+
+Verification: pinned Flutter analysis clean; **155 focused checks passed** across
+the initial checks and the final affected-file rerun (**111 passed**). One Linux
+process-group check was skipped on Windows and remains covered by the existing
+Linux CI workflows. No additional native build or emulator campaign was run.

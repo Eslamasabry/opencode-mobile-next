@@ -340,8 +340,7 @@ class _ChatComposer extends StatelessWidget {
           contentPadding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
           onSubmitShortcut: _submitFromKeyboard,
         ),
-        if (contextUsage case final usage? when usage >= .7)
-          _ContextMeterLine(usage: usage),
+        if (contextUsage case final usage?) _ContextMeterLine(usage: usage),
         Padding(
           padding: const EdgeInsets.fromLTRB(6, 0, 6, 6),
           child: Row(
@@ -476,11 +475,10 @@ class _ChatComposer extends StatelessWidget {
         _ => false,
       };
 
-  /// Context becomes a visible warning at 70 %, leaving everyday prompts
-  /// free of a progress-like line that does not represent the current run.
+  /// Show the known context share beside the model before it needs attention.
   Widget? _contextPercent(BuildContext context) {
     final usage = contextUsage;
-    if (usage == null || usage < .7) return null;
+    if (usage == null) return null;
     return _ContextPercentBadge(usage: usage.clamp(0.0, 1.0));
   }
 
@@ -902,7 +900,7 @@ class _ComposerSubmit extends StatelessWidget {
   }
 }
 
-/// The context-window percentage shown with the warning meter from 70 % on.
+/// The known context-window percentage shown beside the model.
 class _ContextPercentBadge extends StatelessWidget {
   const _ContextPercentBadge({required this.usage});
 
@@ -1290,8 +1288,7 @@ class _StagedReferenceChip extends StatelessWidget {
   }
 }
 
-/// A context-window warning meter, shown only once usage reaches 70 %.
-/// Colors escalate as the window approaches full.
+/// Known context usage, with warning colors as the window approaches full.
 class _ContextMeterLine extends StatelessWidget {
   const _ContextMeterLine({required this.usage});
 
@@ -1300,10 +1297,10 @@ class _ContextMeterLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final track = scheme.outlineVariant.withValues(alpha: .55);
+    final track = scheme.outlineVariant.withValues(alpha: .72);
     final value = usage?.clamp(0.0, 1.0);
     if (value == null) {
-      return Divider(height: 1, indent: 14, endIndent: 14, color: track);
+      return const SizedBox.shrink();
     }
     final fill = value >= .9
         ? scheme.error
@@ -1320,7 +1317,7 @@ class _ContextMeterLine extends StatelessWidget {
           key: const ValueKey('composer-context-meter'),
           borderRadius: BorderRadius.circular(1.25),
           child: SizedBox(
-            height: 2.5,
+            height: 3,
             width: double.infinity,
             child: ColoredBox(
               color: track,
