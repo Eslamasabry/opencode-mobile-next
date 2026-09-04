@@ -3,6 +3,12 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/termux/bridge.dart';
 
+String _processStart(int pid) {
+  final stat = File('/proc/$pid/stat').readAsStringSync();
+  final fields = stat.substring(stat.lastIndexOf(') ') + 2).split(' ');
+  return fields[19];
+}
+
 void main() {
   test('generated termux scripts pass bash syntax validation', () {
     final directory = Directory.systemTemp.createTempSync('oc-scripts-');
@@ -13,6 +19,10 @@ void main() {
         password: 'test-password',
       ),
       'manager.sh': TermuxBridge.managerScriptForTesting(),
+      'restart.sh': TermuxBridge.restartScript(
+        port: 4096,
+        operationID: 'test-1',
+      ),
       'diagnostics.sh': TermuxBridge.diagnosticsScript(),
       'snapshot.sh': TermuxBridge.setupSnapshotScript(),
       'status.sh': TermuxBridge.statusScript(),
@@ -37,6 +47,8 @@ port=4096
 runner=proot
 version=1.2.3
 pid=1234
+operation=restart-1
+operation_result=completed
 ''');
 
     expect(status.isReady, isTrue);
@@ -44,6 +56,73 @@ pid=1234
     expect(status.port, 4096);
     expect(status.version, '1.2.3');
     expect(status.pid, 1234);
+    expect(status.operationID, 'restart-1');
+    expect(status.operationResult, 'completed');
+  });
+
+  test('restart is treated as a running managed operation', () {
+    final status = TermuxSetupStatus.parse('''
+phase=restarting
+message=Restarting the local server
+port=4096
+runner=proot
+version=1.2.3
+pid=1234
+''');
+
+    expect(status.isRunning, isTrue);
+    expect(status.isReady, isFalse);
+  });
+
+  test('restart validates ownership and reuses the installed server', () {
+    final script = TermuxBridge.restartScript(
+      port: 4096,
+      operationID: 'test-1',
+    );
+    final manager = TermuxBridge.managerScriptForTesting();
+    final restart = manager.substring(
+      manager.indexOf('restart() {'),
+      manager.indexOf('\nstatus() {'),
+    );
+    final verifiedStop = manager.substring(
+      manager.indexOf('stop_verified_server_process() {'),
+      manager.indexOf('\nstop_verified_setup_process() {'),
+    );
+
+    expect(script, contains("\"\$MANAGER\" restart '4096' 'test-1' &"));
+    expect(script, contains('another-managed-operation-is-running'));
+    expect(script, isNot(contains('server.password.tmp')));
+    expect(restart, contains('ubuntu_usable'));
+    expect(restart, contains('The tracked process is not the managed'));
+    expect(
+      verifiedStop.indexOf(r'server_process "$pid" "$port"'),
+      lessThan(verifiedStop.indexOf(r'kill -KILL -- "-$group"')),
+    );
+    expect(verifiedStop, contains(r'process_start "$pid"'));
+    expect(verifiedStop, contains(r'kill -STOP "$pid"'));
+    expect(restart, contains(r'/dev/tcp/127.0.0.1/$CURRENT_PORT'));
+    expect(restart, contains(r'start_server "$installed_version" restarting'));
+    expect(restart, isNot(contains('prepare_termux_dependencies')));
+    expect(restart, isNot(contains('install_opencode')));
+    expect(
+      restart.indexOf('write_state restarting'),
+      lessThan(restart.indexOf('ubuntu_usable ||')),
+    );
+    expect(manager, contains('operation_result=%s'));
+    expect(manager, contains('not_performed'));
+    expect(manager, contains(r'[ "${args[1]:-}" = "$MANAGER" ]'));
+    expect(manager, contains(r'[ "${args[2]:-}" = restart ]'));
+  });
+
+  test('restart operation IDs cannot inject shell syntax', () {
+    expect(
+      () => TermuxBridge.restartScript(operationID: "bad'; echo injected"),
+      throwsArgumentError,
+    );
+    expect(
+      () => TermuxBridge.restartScript(operationID: ''),
+      throwsArgumentError,
+    );
   });
 
   test('setup snapshot keeps terminal output separate from status', () {
@@ -126,9 +205,7 @@ message=This belongs to the terminal
     expect(manager, contains('cleanup_legacy_npm_cache'));
     expect(
       manager,
-      contains(
-        r'proot-distro login "$PROOT_NAME" -- npm cache clean --force',
-      ),
+      contains(r'proot-distro login "$PROOT_NAME" -- npm cache clean --force'),
     );
     expect(manager, contains('opencode models --refresh'));
     expect(manager, contains('refreshing_models'));
@@ -391,9 +468,81 @@ exit 99
       final manager = TermuxBridge.managerScriptForTesting();
 
       expect(manager, contains(r'2>&1 | "$manager" write-log server'));
-      expect(manager, contains(r'*"$SERVER_RUNNER $port "*'));
-      expect(manager, contains(r'kill_tree "$pid"'));
+      expect(manager, contains(r'[ "${args[1]:-}" = "$SERVER_RUNNER" ]'));
+      expect(manager, contains(r'[ "${args[2]:-}" = "$port" ]'));
+      expect(
+        manager,
+        contains(r'''printf '%s %s\n' "$server_pid" "$server_start"'''),
+      );
+      expect(manager, contains('group_is_managed_tree'));
+      expect(manager, contains(r'kill -KILL -- "-$group"'));
     },
+  );
+
+  test(
+    'manager stops its verified process group but refuses a decoy',
+    () async {
+      final home = Directory.systemTemp.createTempSync('oc-manager-stop-');
+      addTearDown(() => home.deleteSync(recursive: true));
+      final ocDirectory = Directory('${home.path}/.oc')..createSync();
+      final manager = File('${ocDirectory.path}/manager.sh')
+        ..writeAsStringSync(TermuxBridge.managerScriptForTesting());
+      final runner = File('${ocDirectory.path}/server-runner.sh')
+        ..writeAsStringSync('''#!/usr/bin/env bash
+sleep 60 &
+wait
+''');
+      final password = File('${ocDirectory.path}/server.password')
+        ..writeAsStringSync('test');
+      await Process.run('chmod', ['700', manager.path, runner.path]);
+
+      final managed = await Process.start('setsid', [
+        runner.path,
+        '4096',
+        password.path,
+        manager.path,
+      ]);
+      addTearDown(() async {
+        await Process.run('kill', ['-KILL', '--', '-${managed.pid}']);
+      });
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      File(
+        '${ocDirectory.path}/server.pid',
+      ).writeAsStringSync('${managed.pid} ${_processStart(managed.pid)}\n');
+      final stopped = await Process.run(
+        'bash',
+        [manager.path, 'stop', '4096'],
+        environment: {...Platform.environment, 'HOME': home.path},
+      );
+      expect(
+        stopped.exitCode,
+        0,
+        reason: '${stopped.stdout}\n${stopped.stderr}',
+      );
+      expect(
+        await managed.exitCode.timeout(const Duration(seconds: 2)),
+        isNot(0),
+      );
+
+      final decoy = await Process.start('setsid', ['sleep', '60']);
+      addTearDown(() {
+        decoy.kill(ProcessSignal.sigkill);
+      });
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      File(
+        '${ocDirectory.path}/server.pid',
+      ).writeAsStringSync('${decoy.pid} ${_processStart(decoy.pid)}\n');
+      final refused = await Process.run(
+        'bash',
+        [manager.path, 'stop', '4096'],
+        environment: {...Platform.environment, 'HOME': home.path},
+      );
+      expect(refused.exitCode, isNot(0));
+      expect(Process.runSync('kill', ['-0', '${decoy.pid}']).exitCode, 0);
+      decoy.kill(ProcessSignal.sigkill);
+      await decoy.exitCode;
+    },
+    skip: !Platform.isLinux,
   );
 
   test('Ubuntu setup bypasses registries and verifies Canonical archives', () {
@@ -477,9 +626,10 @@ exit 99
 
     expect(script, contains(r'read -r lock_pid lock_start'));
     expect(script, contains(r'[ "$lock_start" = "$live_start" ]'));
-    expect(script, contains(r'$OC_DIR/manager.sh setup '));
-    expect(script, contains(r'kill_tree "$pid"'));
-    expect(script, contains(r'kill -KILL "$root"'));
+    expect(script, contains(r'[ "${args[1]:-}" = "$OC_DIR/manager.sh" ]'));
+    expect(script, contains(r'[ "${args[2]:-}" = setup ]'));
+    expect(script, contains(r'[ "$stopped_start" != "$lock_start" ]'));
+    expect(script, contains(r'kill -KILL -- "-$pid"'));
     expect(script, contains(r'[ "$lock_owned" = 1 ]'));
   });
 }

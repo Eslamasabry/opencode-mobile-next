@@ -104,7 +104,8 @@ class _WorkspaceLocationController extends ConnectionController {
   final locations = <({String? directory, String? workspace})>[];
 
   @override
-  Future<ServerOperationsGateway?> prepareActionRepository() async => repository;
+  Future<ServerOperationsGateway?> prepareActionRepository() async =>
+      repository;
 
   @override
   Future<void> selectLocation({String? directory, String? workspace}) async {
@@ -454,6 +455,10 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('runtime-probe'), findsOneWidget);
-    expect(find.textContaining('/tmp/runtime-probe'), findsOneWidget);
+    expect(find.text('/tmp/runtime-probe'), findsOneWidget);
+    expect(
+      find.text('Active session directory · /tmp/runtime-probe'),
+      findsOneWidget,
+    );
   });
 }

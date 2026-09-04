@@ -3744,69 +3744,71 @@ void main() {
     );
   });
 
-  testWidgets('composer divider doubles as the context window meter', (
-    tester,
-  ) async {
-    final api = _FakeOpenCodeApi()
-      ..messagesHandler = (_) async => [
-        _message(
-          'assistant-1',
-          'assistant',
-          [Part(type: 'text', text: 'done')],
-          providerID: 'p',
-          modelID: 'm',
-          tokens: Tokens(input: 70000, output: 5000),
-        ),
-      ];
-    final controller = await _controller(api);
-    controller.catalog = const CatalogSnapshot(
-      providers: [CatalogProvider(id: 'p', name: 'Provider', enabled: true)],
-      models: [
-        CatalogModel(
-          id: 'm',
-          providerID: 'p',
-          name: 'Model',
-          enabled: true,
-          status: 'active',
-          contextLimit: 100000,
-          outputLimit: 8192,
-          reasoning: false,
-          attachments: false,
-          tools: false,
-          variants: [],
-        ),
-      ],
-      agents: [],
-    );
-    await _pumpChat(tester, api, controller: controller);
+  testWidgets(
+    'composer shows known context usage below the warning threshold',
+    (tester) async {
+      final api = _FakeOpenCodeApi()
+        ..messagesHandler = (_) async => [
+          _message(
+            'assistant-1',
+            'assistant',
+            [Part(type: 'text', text: 'done')],
+            providerID: 'p',
+            modelID: 'm',
+            tokens: Tokens(input: 20000, output: 5000),
+          ),
+        ];
+      final controller = await _controller(api);
+      controller.catalog = const CatalogSnapshot(
+        providers: [CatalogProvider(id: 'p', name: 'Provider', enabled: true)],
+        models: [
+          CatalogModel(
+            id: 'm',
+            providerID: 'p',
+            name: 'Model',
+            enabled: true,
+            status: 'active',
+            contextLimit: 100000,
+            outputLimit: 8192,
+            reasoning: false,
+            attachments: false,
+            tools: false,
+            variants: [],
+          ),
+        ],
+        agents: [],
+      );
+      await _pumpChat(tester, api, controller: controller);
 
-    final semantics = tester.ensureSemantics();
-    expect(
-      find.byKey(const ValueKey('composer-context-meter')),
-      findsOneWidget,
-    );
-    expect(
-      find.bySemanticsLabel('Context window 75 percent used'),
-      findsOneWidget,
-    );
+      final semantics = tester.ensureSemantics();
+      expect(
+        find.byKey(const ValueKey('composer-context-meter')),
+        findsOneWidget,
+      );
+      expect(
+        find.bySemanticsLabel('Context window 25 percent used'),
+        findsOneWidget,
+      );
 
-    // The warning meter must paint at full height with the actual usage.
-    await tester.pumpAndSettle();
-    final fillSize = tester.getSize(
-      find.byKey(const ValueKey('composer-context-meter-fill')),
-    );
-    final trackSize = tester.getSize(
-      find.byKey(const ValueKey('composer-context-meter')),
-    );
-    expect(fillSize.height, trackSize.height);
-    expect(
-      fillSize.width / trackSize.width,
-      moreOrLessEquals(.75, epsilon: .01),
-    );
-    semantics.dispose();
-  });
+      expect(find.text('25%'), findsOneWidget);
+      // The meter must paint at full height with the actual usage.
+      await tester.pumpAndSettle();
+      final fillSize = tester.getSize(
+        find.byKey(const ValueKey('composer-context-meter-fill')),
+      );
+      final trackSize = tester.getSize(
+        find.byKey(const ValueKey('composer-context-meter')),
+      );
+      expect(fillSize.height, trackSize.height);
+      expect(
+        fillSize.width / trackSize.width,
+        moreOrLessEquals(.25, epsilon: .01),
+      );
+      semantics.dispose();
+    },
+  );
 
-  testWidgets('composer meter stays a plain divider without a known limit', (
+  testWidgets('composer hides the context meter without a known limit', (
     tester,
   ) async {
     final api = _FakeOpenCodeApi();

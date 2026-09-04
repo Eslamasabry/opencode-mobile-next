@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/sse.dart';
+import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/termux/bridge.dart';
@@ -43,6 +44,9 @@ class _MemoryProfileStore extends ProfileStore {
 class _LocalConnectionController extends ConnectionController {
   _LocalConnectionController(super.store);
 
+  int retryCalls = 0;
+  int retriesToFail = 0;
+
   @override
   Future<void> connect(
     ServerProfile profile, {
@@ -65,6 +69,22 @@ class _LocalConnectionController extends ConnectionController {
     status = StreamStatus.disconnected;
     if (!keepActive) await store.setActiveId(null);
     if (!silent) notifyListeners();
+  }
+
+  @override
+  Future<void> retryConnection() async {
+    retryCalls++;
+    if (retryCalls <= retriesToFail) {
+      api = null;
+      status = StreamStatus.disconnected;
+      lastError = 'Server unavailable during lifecycle resume.';
+      notifyListeners();
+      return;
+    }
+    api = OpenCodeApi(baseUrl: TermuxBridge.managedServerUrl);
+    version = '1.18.21';
+    status = StreamStatus.connected;
+    notifyListeners();
   }
 }
 
@@ -107,7 +127,11 @@ void main() {
           bootstrapProvider.overrideWithValue(AppBootstrap(store)),
           connProvider.overrideWithValue(connection),
         ],
-        child: const MaterialApp(home: TermuxSetupScreen()),
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: TermuxSetupScreen(),
+        ),
       ),
     );
     await tester.pump();
@@ -136,6 +160,10 @@ void main() {
     addTearDown(connection.dispose);
     var launched = false;
     var launchCalls = 0;
+    var restartCalls = 0;
+    var restartShouldFail = false;
+    var restartOperation = '';
+    var restartResult = '';
     var stopCalls = 0;
 
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -164,6 +192,8 @@ port=4096
 runner=proot
 version=1.18.21
 pid=321
+operation=$restartOperation
+operation_result=$restartResult
 __OC_SETUP_OUTPUT__
 [oc] authenticated server ready
 '''
@@ -182,7 +212,26 @@ __OC_SETUP_OUTPUT__
             stopCalls++;
             return _commandResult(stdout: '[oc] server stopped');
           }
+          if (script.contains("\"\$MANAGER\" restart '4096' ")) {
+            restartCalls++;
+            restartOperation = RegExp(
+              r"restart '4096' '([^']+)'",
+            ).firstMatch(script)!.group(1)!;
+            if (restartShouldFail) {
+              restartResult = 'not_performed';
+              return {
+                ..._commandResult(),
+                'stderr': 'The installed OpenCode command is unavailable',
+                'exitCode': 1,
+              };
+            }
+            restartResult = 'completed';
+            launched = true;
+            return _commandResult(stdout: '[oc] authenticated server ready');
+          }
           if (script.contains('manager_tmp=')) {
+            restartOperation = '';
+            restartResult = '';
             launched = true;
             launchCalls++;
             return _commandResult(stdout: 'manager-started:123');
@@ -220,6 +269,8 @@ pid=
           connProvider.overrideWithValue(connection),
         ],
         child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: const TermuxSetupScreen(),
           routes: {'/home': (_) => const Scaffold(body: Text('Home'))},
         ),
@@ -237,7 +288,24 @@ pid=
     expect(find.text('OpenCode is running on this phone.'), findsOneWidget);
     expect(find.text('Continue to app'), findsOneWidget);
     expect(find.text('Stop local server'), findsOneWidget);
+    expect(find.text('Restart local server'), findsOneWidget);
     expect(find.textContaining('Version 1.18.21'), findsOneWidget);
+
+    await tester.ensureVisible(
+      find.byKey(const Key('restart-managed-opencode')),
+    );
+    connection.busySessions.add('busy-session');
+    await tester.tap(find.byKey(const Key('restart-managed-opencode')));
+    await tester.pumpAndSettle();
+    expect(find.text('Restart the local server?'), findsOneWidget);
+    expect(
+      find.textContaining(
+        '1 session is generating. Restarting will interrupt it.',
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await tester.pumpAndSettle();
 
     await tester.ensureVisible(
       find.byKey(const Key('update-managed-opencode')),
@@ -251,6 +319,29 @@ pid=
     );
     expect(launchCalls, 1);
     connection.busySessions.clear();
+
+    await tester.ensureVisible(
+      find.byKey(const Key('restart-managed-opencode')),
+    );
+    connection.retriesToFail = 1;
+    await tester.tap(find.byKey(const Key('restart-managed-opencode')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Restart'));
+    await tester.pumpAndSettle();
+    expect(restartCalls, 1);
+    expect(connection.retryCalls, 2);
+    expect(launchCalls, 1);
+    expect(find.text('OpenCode is running on this phone.'), findsOneWidget);
+
+    restartShouldFail = true;
+    await tester.tap(find.byKey(const Key('restart-managed-opencode')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Restart'));
+    await tester.pumpAndSettle();
+    expect(restartCalls, 2);
+    expect(connection.retryCalls, 2);
+    expect(find.text('OpenCode is running on this phone.'), findsOneWidget);
+    restartShouldFail = false;
 
     await tester.tap(find.byKey(const Key('update-managed-opencode')));
     await tester.pumpAndSettle();
@@ -280,6 +371,128 @@ pid=
     expect(find.textContaining('local server is stopped'), findsOneWidget);
     expect(find.text('Install & start'), findsOneWidget);
   });
+
+  for (final staleReady in [true, false]) {
+    testWidgets(
+      staleReady
+          ? 'restart timeout does not accept a previous ready operation'
+          : 'restart timeout follows matching preflight until completion',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        final store = _MemoryProfileStore(
+          prefs: await SharedPreferences.getInstance(),
+        );
+        final profile = ServerProfile(
+          id: 'local',
+          name: 'Local',
+          baseUrl: TermuxBridge.managedServerUrl,
+          username: 'opencode',
+          password: 'test-password',
+        );
+        await store.upsert(profile);
+        final connection = _LocalConnectionController(store);
+        await connection.connect(profile);
+        addTearDown(connection.dispose);
+        String? operation;
+        var completed = false;
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, (call) async {
+              if (call.method == 'getCapabilities') {
+                return <String, Object>{
+                  'installed': true,
+                  'version': '0.118',
+                  'serviceAvailable': true,
+                  'protocolSupported': true,
+                  'permissionGranted': true,
+                };
+              }
+              if (call.method != 'runInTermux') return true;
+              final script = (call.arguments as Map)['script'] as String;
+              if (script.contains("printf 'opencode-bridge-ok'")) {
+                return _commandResult(stdout: 'opencode-bridge-ok');
+              }
+              if (script.contains("\"\$MANAGER\" restart '4096' ")) {
+                operation = RegExp(
+                  r"restart '4096' '([^']+)'",
+                ).firstMatch(script)!.group(1)!;
+                throw PlatformException(code: 'command_timeout');
+              }
+              if (script.contains('__OC_SETUP_OUTPUT__')) {
+                final preflight =
+                    operation != null && !staleReady && !completed;
+                return _commandResult(
+                  stdout:
+                      '''phase=${preflight ? 'restarting' : 'ready'}
+message=${preflight ? 'Checking the local server before restart' : 'OpenCode is ready'}
+port=4096
+runner=proot
+version=1.18.21
+pid=321
+operation=${staleReady ? 'prior-restart' : operation ?? ''}
+operation_result=${preflight ? '' : 'completed'}
+__OC_SETUP_OUTPUT__
+''',
+                );
+              }
+              return _commandResult();
+            });
+        addTearDown(
+          () => TestDefaultBinaryMessengerBinding
+              .instance
+              .defaultBinaryMessenger
+              .setMockMethodCallHandler(channel, null),
+        );
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              bootstrapProvider.overrideWithValue(AppBootstrap(store)),
+              connProvider.overrideWithValue(connection),
+            ],
+            child: const MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: TermuxSetupScreen(),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(
+          find.byKey(const Key('restart-managed-opencode')),
+        );
+        await tester.tap(find.byKey(const Key('restart-managed-opencode')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilledButton, 'Restart'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+        expect(operation, isNotNull);
+        expect(connection.retryCalls, 0);
+        expect(
+          find.text('Local server restarted and reconnected.'),
+          findsNothing,
+        );
+        if (staleReady) {
+          expect(
+            find.textContaining('Could not restart the local server'),
+            findsOneWidget,
+          );
+        } else {
+          expect(
+            find.textContaining('Checking the local server before restart'),
+            findsOneWidget,
+          );
+          completed = true;
+          await tester.pump(const Duration(seconds: 1));
+          await tester.pumpAndSettle();
+          expect(connection.retryCalls, 1);
+          expect(
+            find.text('OpenCode is running on this phone.'),
+            findsOneWidget,
+          );
+        }
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+  }
 
   testWidgets('launch timeout recovers the persisted phase and root cause', (
     tester,
@@ -352,7 +565,11 @@ __OC_SETUP_OUTPUT__
           bootstrapProvider.overrideWithValue(AppBootstrap(store)),
           connProvider.overrideWithValue(connection),
         ],
-        child: const MaterialApp(home: TermuxSetupScreen()),
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: TermuxSetupScreen(),
+        ),
       ),
     );
     await tester.pump();
@@ -370,9 +587,6 @@ __OC_SETUP_OUTPUT__
       find.textContaining('SSL_set_quic_tls_transport_params'),
       findsWidgets,
     );
-    expect(
-      find.text('Retry — resumes where setup left off'),
-      findsOneWidget,
-    );
+    expect(find.text('Retry — resumes where setup left off'), findsOneWidget);
   });
 }

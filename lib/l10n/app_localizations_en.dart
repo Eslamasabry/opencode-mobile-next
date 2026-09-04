@@ -317,4 +317,53 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get chatAttachmentUnsupported =>
+      'Only PNG, JPEG, GIF, WebP, PDF, and text files can be attached.';
+
+  @override
+  String get termuxRestartServer => 'Restart local server';
+
+  @override
+  String get termuxRestartTitle => 'Restart the local server?';
+
+  @override
+  String get termuxRestartMessage =>
+      'OpenCode will be briefly unavailable. The app will keep your current workspace and reconnect automatically.';
+
+  @override
+  String termuxRestartBusyMessage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sessions are generating. Restarting will interrupt them.',
+      one: '1 session is generating. Restarting will interrupt it.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get termuxRestartConfirm => 'Restart';
+
+  @override
+  String get termuxRestarting => 'Restarting local server...';
+
+  @override
+  String get termuxRestartProgress =>
+      'The installed OpenCode version and saved credential are unchanged. The app will reconnect when the server is ready.';
+
+  @override
+  String get termuxRestartSucceeded =>
+      'Local server restarted and reconnected.';
+
+  @override
+  String get termuxRestartNotPerformed =>
+      'Restart was not performed. The existing local server is still running.';
+
+  @override
+  String get chatCopyCompleteReply => 'Copy complete reply';
+
+  @override
+  String get chatCopyReplySoFar => 'Copy reply so far';
 }

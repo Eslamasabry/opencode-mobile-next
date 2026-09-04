@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -5,6 +6,7 @@ import 'package:cross_file/cross_file.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
+import 'package:opencode_mobile/domain/prompt_attachment.dart';
 
 base class _TestPlatformFile extends PlatformFile {
   _TestPlatformFile({
@@ -57,6 +59,123 @@ base class _TestPlatformFile extends PlatformFile {
 }
 
 void main() {
+  group('prompt attachment MIME', () {
+    final text = Uint8List.fromList('hello'.codeUnits);
+
+    test('normalizes Markdown and HTML to text/plain', () {
+      expect(
+        promptAttachmentMime(
+          filename: 'notes.md',
+          bytes: text,
+          declaredMime: 'text/markdown',
+        ),
+        'text/plain',
+      );
+      expect(
+        promptAttachmentMime(
+          filename: 'report.html',
+          bytes: text,
+          declaredMime: 'application/octet-stream',
+        ),
+        'text/plain',
+      );
+    });
+
+    test('keeps Unicode source and configuration attachments readable', () {
+      final bytes = Uint8List.fromList(utf8.encode('title: "مرحبا 👋"\n'));
+      for (final filename in ['settings.yaml', 'app.kt', 'Dockerfile']) {
+        expect(
+          promptAttachmentMime(filename: filename, bytes: bytes),
+          'text/plain',
+          reason: filename,
+        );
+      }
+      expect(
+        promptAttachmentMime(
+          filename: 'corrupt.txt',
+          bytes: Uint8List.fromList([0xc3, 0x28]),
+        ),
+        isNull,
+      );
+    });
+
+    test('detects generic textual bytes and rejects unknown binary bytes', () {
+      expect(
+        promptAttachmentMime(
+          filename: 'README',
+          bytes: text,
+          declaredMime: 'application/octet-stream',
+        ),
+        'text/plain',
+      );
+      expect(
+        promptAttachmentMime(
+          filename: 'archive.bin',
+          bytes: Uint8List.fromList([0, 1, 2, 255]),
+          declaredMime: 'application/octet-stream',
+        ),
+        isNull,
+      );
+      expect(
+        promptAttachmentMime(
+          filename: 'disguised.txt',
+          bytes: Uint8List.fromList([0, 1, 2, 255]),
+          declaredMime: 'application/octet-stream',
+        ),
+        isNull,
+      );
+      expect(
+        promptAttachmentMime(
+          filename: 'declared.txt',
+          bytes: Uint8List.fromList([0, 1, 2, 255]),
+          declaredMime: 'text/plain',
+        ),
+        isNull,
+      );
+      expect(
+        promptAttachmentMime(
+          filename: 'declared.json',
+          bytes: Uint8List.fromList([0, 1, 2, 255]),
+          declaredMime: 'application/json',
+        ),
+        isNull,
+      );
+    });
+
+    test('preserves supported images and PDFs', () {
+      expect(
+        promptAttachmentMime(
+          filename: 'photo.jpg',
+          bytes: Uint8List.fromList([0, 1]),
+        ),
+        'image/jpeg',
+      );
+      expect(
+        promptAttachmentMime(
+          filename: 'document.pdf',
+          bytes: Uint8List.fromList([0, 1]),
+        ),
+        'application/pdf',
+      );
+      expect(
+        promptAttachmentMime(
+          filename: 'legacy.bmp',
+          bytes: Uint8List.fromList([0x42, 0x4D, 0, 1]),
+          declaredMime: 'image/bmp',
+        ),
+        isNull,
+      );
+      expect(
+        promptAttachmentMime(
+          filename: 'misnamed.png',
+          bytes: Uint8List.fromList([0x42, 0x4D, 0, 1]),
+          declaredMime: 'image/bmp',
+        ),
+        isNull,
+      );
+    });
+  });
+
   test('reads a streamed attachment at the exact byte limit', () async {
     final file = _TestPlatformFile(
       name: 'exact.txt',

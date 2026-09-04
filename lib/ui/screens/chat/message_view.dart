@@ -834,7 +834,12 @@ String _toolRunSentence(List<Part> parts) {
   var web = 0;
   var agents = 0;
   var other = 0;
+  var notRun = 0;
   for (final part in parts) {
+    if (!part.toolState.executed) {
+      notRun++;
+      continue;
+    }
     switch (part.toolName?.trim().toLowerCase() ?? '') {
       case 'read':
         reads++;
@@ -867,6 +872,7 @@ String _toolRunSentence(List<Part> parts) {
     if (web > 0) 'fetched ${plural(web, 'page', 'pages')}',
     if (agents > 0) 'delegated ${plural(agents, 'task', 'tasks')}',
     if (other > 0) 'made ${plural(other, 'other call', 'other calls')}',
+    if (notRun > 0) '${plural(notRun, 'step was', 'steps were')} not run',
   ];
   if (segments.isEmpty) return '';
   final sentence = segments.join(', ');
@@ -939,20 +945,24 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
 
   bool _shouldOpen(List<Part> parts) => parts.any(
     (part) =>
-        part.toolState.status == 'pending' ||
-        part.toolState.status == 'running' ||
+        (part.toolState.executed &&
+            (part.toolState.status == 'pending' ||
+                part.toolState.status == 'running')) ||
         part.toolState.status == 'error' ||
         part.toolState.outputFiles.isNotEmpty,
   );
 
   bool get _running => widget.parts.any(
     (part) =>
-        part.toolState.status == 'pending' ||
-        part.toolState.status == 'running',
+        part.toolState.executed &&
+        (part.toolState.status == 'pending' ||
+            part.toolState.status == 'running'),
   );
 
   bool get _failed =>
       widget.parts.any((part) => part.toolState.status == 'error');
+
+  bool get _notRun => widget.parts.any((part) => !part.toolState.executed);
 
   @override
   Widget build(BuildContext context) {
@@ -963,7 +973,8 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
     Part? runningPart;
     for (final part in widget.parts.reversed) {
       final status = part.toolState.status;
-      if (status == 'running' || status == 'pending') {
+      if (part.toolState.executed &&
+          (status == 'running' || status == 'pending')) {
         runningPart = part;
         break;
       }
@@ -977,9 +988,16 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
     final allContext = widget.parts.every(
       (part) => _contextToolNames.contains(part.toolName?.trim().toLowerCase()),
     );
-    final title = allContext
+    final title = allContext && !_notRun
         ? (_running ? 'Exploring' : 'Explored')
         : (_running ? 'Running tools' : 'Tools');
+    final status = _failed
+        ? 'failed'
+        : _running
+        ? 'running'
+        : _notRun
+        ? 'includes steps not run'
+        : 'complete';
     return Container(
       key: const Key('tool-call-group'),
       margin: const EdgeInsets.symmetric(vertical: 3),
@@ -993,7 +1011,7 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
           Semantics(
             button: true,
             expanded: _expanded,
-            label: '$title, ${widget.parts.length} tools',
+            label: '$title, ${widget.parts.length} steps, $status',
             child: InkWell(
               key: const Key('tool-call-group-header'),
               onTap: _toggle,
@@ -1010,10 +1028,14 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        title,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w600,
+                      Flexible(
+                        child: Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -1042,10 +1064,14 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
                               ? Icons.error_outline_rounded
                               : _running
                               ? Icons.hourglass_top_rounded
+                              : _notRun
+                              ? Icons.block_rounded
                               : Icons.check_circle_outline_rounded,
                           size: 14,
                           color: _failed
                               ? theme.colorScheme.error
+                              : _notRun
+                              ? theme.colorScheme.onSurfaceVariant
                               : theme.colorScheme.primary,
                         ),
                       const SizedBox(width: 4),
@@ -1326,7 +1352,9 @@ class _MessageView extends StatelessWidget {
         // remount would kill this fade and reset per-part expansion state.
         key: ValueKey('message-highlight-${m.info.id}'),
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.fromLTRB(6, 4, 6, 10),
+        padding: isUser
+            ? const EdgeInsets.fromLTRB(6, 4, 6, 10)
+            : const EdgeInsets.fromLTRB(6, 0, 6, 4),
         decoration: BoxDecoration(
           color: highlighted
               ? theme.colorScheme.primaryContainer.withValues(alpha: .24)
@@ -1346,7 +1374,7 @@ class _MessageView extends StatelessWidget {
               ),
               padding: isUser
                   ? const EdgeInsets.symmetric(horizontal: 10, vertical: 10)
-                  : const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                  : const EdgeInsets.symmetric(horizontal: 4),
               decoration: isUser
                   ? BoxDecoration(
                       color: theme.colorScheme.primaryContainer.withValues(
