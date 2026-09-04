@@ -178,6 +178,10 @@ class OfflineQueueEviction {
 /// Persists queued prompts alongside the app's other preferences. Entries
 /// survive restarts; the composer's existing attachment caps bound each
 /// entry's size before it ever reaches the queue.
+class OfflineQueueWriteException implements Exception {
+  const OfflineQueueWriteException();
+}
+
 class OfflineQueueStore {
   static const _key = 'oc.offlineQueue';
 
@@ -230,8 +234,7 @@ class OfflineQueueStore {
 
     final fresh = [
       for (final entry in ordered)
-        if (entry.createdAt < _plausibleEpochFloor ||
-            entry.createdAt >= cutoff)
+        if (entry.createdAt < _plausibleEpochFloor || entry.createdAt >= cutoff)
           entry,
     ];
     final expired = ordered.length - fresh.length;
@@ -263,9 +266,7 @@ class OfflineQueueStore {
     try {
       final decoded = jsonDecode(raw);
       if (decoded is! List) return [];
-      return [
-        for (final entry in decoded) ?QueuedPrompt.fromJson(entry),
-      ];
+      return [for (final entry in decoded) ?QueuedPrompt.fromJson(entry)];
     } catch (_) {
       return [];
     }

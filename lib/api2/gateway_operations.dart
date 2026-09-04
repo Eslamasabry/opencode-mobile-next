@@ -32,6 +32,133 @@ class Api2OperationsGateway extends ProductRepository {
 
   Api2OperationsGateway({required this.client});
 
+  @override
+  Future<ManagedShellList> loadRunningShells() =>
+      _guard('Could not load running commands', () async {
+        try {
+          final json = await _transport.getJson(
+            '/shell',
+            query: _loc(),
+            receiveTimeout: const Duration(seconds: 8),
+          );
+          return ManagedShellList(
+            supported: true,
+            shells: [for (final item in _dataMaps(json)) _managedShell(item)],
+          );
+        } on Api2Error catch (error) {
+          if ([404, 405, 501].contains(error.statusCode)) {
+            return const ManagedShellList(supported: false);
+          }
+          rethrow;
+        }
+      });
+
+  @override
+  Future<String?> managedShellServerIdentity() =>
+      _guard('Could not identify the server', () async {
+        final health = await _transport.getJson(
+          '/health',
+          receiveTimeout: const Duration(seconds: 8),
+        );
+        return health is Map && health['pid'] is num
+            ? health['pid'].toString()
+            : null;
+      });
+
+  @override
+  Future<ManagedShell?> getManagedShell(String id) =>
+      _guard('Could not load the command', () async {
+        try {
+          final json = await _transport.getJson(
+            '/shell/${Uri.encodeComponent(id)}',
+            query: _loc(),
+            receiveTimeout: const Duration(seconds: 8),
+          );
+          return _managedShell(_dataMap(json));
+        } on Api2Error catch (error) {
+          if (error.isNotFound) return null;
+          rethrow;
+        }
+      });
+
+  @override
+  Future<ManagedShellOutput> readManagedShellOutput(
+    String id, {
+    required int cursor,
+    int limit = 65536,
+  }) => _guard('Could not read command output', () async {
+    final json = _dataMap(
+      await _transport.getJson(
+        '/shell/${Uri.encodeComponent(id)}/output',
+        query: _loc({'cursor': cursor, 'limit': limit.clamp(1, 65536)}),
+        receiveTimeout: const Duration(seconds: 8),
+      ),
+    );
+    return ManagedShellOutput(
+      text: json['output'] as String? ?? '',
+      cursor: (json['cursor'] as num).toInt(),
+      size: (json['size'] as num).toInt(),
+      truncated: json['truncated'] == true,
+    );
+  });
+
+  @override
+  Future<void> stopManagedShell(String id) =>
+      _guard('Could not stop the command', () async {
+        await _transport.deleteJson(
+          '/shell/${Uri.encodeComponent(id)}',
+          query: _loc(),
+        );
+      });
+
+  @override
+  Future<ManagedShell> setManagedShellTimeout(String id, Duration? timeout) =>
+      _guard('Could not change the timeout', () async {
+        final json = await _transport.patchJson(
+          '/shell/${Uri.encodeComponent(id)}/timeout',
+          query: _loc(),
+          body: {'timeout': timeout?.inMilliseconds ?? 0},
+        );
+        return _managedShell(_dataMap(json));
+      });
+
+  static ManagedShell _managedShell(Map<String, dynamic> json) {
+    final time = json['time'] as Map? ?? const {};
+    final metadata = json['metadata'] as Map? ?? const {};
+    return ManagedShell(
+      id: json['id'] as String,
+      command: json['command'] as String? ?? '',
+      status: ManagedShellStatus.values.firstWhere(
+        (status) => status.name == json['status'],
+        orElse: () => ManagedShellStatus.unknown,
+      ),
+      startedAt: DateTime.fromMillisecondsSinceEpoch(
+        (time['started'] as num).toInt(),
+      ),
+      completedAt: time['completed'] is num
+          ? DateTime.fromMillisecondsSinceEpoch(
+              (time['completed'] as num).toInt(),
+            )
+          : null,
+      exitCode: (json['exit'] as num?)?.toInt(),
+      sessionID: metadata['sessionID'] as String?,
+    );
+  }
+
+  @override
+  Future<BackgroundWorkSupport> loadBackgroundWorkSupport() async =>
+      BackgroundWorkSupport.subagentsAndShells;
+
+  @override
+  Future<BackgroundWorkResult> backgroundSession(String sessionID) =>
+      _guard('Could not background running work', () async {
+        await _transport.postJson(
+          '/session/${Uri.encodeComponent(sessionID)}/background',
+          query: _loc(),
+        );
+        return BackgroundWorkResult.requested;
+      });
+
   Api2Transport get _transport => client.transport;
 
   String? get _directory => client.directory;
@@ -193,14 +320,11 @@ class Api2OperationsGateway extends ProductRepository {
   Future<List<WorkspaceProject>> listProjects() =>
       _guard('Could not load projects', () async {
         final json = await _transport.getJson('/project');
-        return [
-          for (final item in _dataMaps(json)) _project(item),
-        ];
+        return [for (final item in _dataMaps(json)) _project(item)];
       });
 
   WorkspaceProject _project(Map<String, dynamic> json) {
-    final directory =
-        (json['directory'] ?? json['canonical'] ?? '').toString();
+    final directory = (json['directory'] ?? json['canonical'] ?? '').toString();
     final time = json['time'];
     final worktrees = json['worktrees'];
     return WorkspaceProject(
@@ -252,25 +376,22 @@ class Api2OperationsGateway extends ProductRepository {
     final json = await _transport.getJson('/project/current', query: _loc());
     final enveloped = _dataMap(json);
     if (enveloped.isNotEmpty) return enveloped;
-    return json is Map<String, dynamic> && json['id'] != null
-        ? json
-        : const {};
+    return json is Map<String, dynamic> && json['id'] != null ? json : const {};
   }
 
   @override
-  Future<List<ProjectDirectoryInfo>> listProjectDirectories(
-    String projectID,
-  ) => _guard('Could not load project directories', () async {
-    final json = await _transport.getJson('/worktree/$projectID');
-    return [
-      for (final item in _dataMaps(json))
-        if ((item['directory'] ?? '').toString().isNotEmpty)
-          ProjectDirectoryInfo(
-            directory: item['directory'].toString(),
-            strategy: item['strategy']?.toString(),
-          ),
-    ];
-  });
+  Future<List<ProjectDirectoryInfo>> listProjectDirectories(String projectID) =>
+      _guard('Could not load project directories', () async {
+        final json = await _transport.getJson('/worktree/$projectID');
+        return [
+          for (final item in _dataMaps(json))
+            if ((item['directory'] ?? '').toString().isNotEmpty)
+              ProjectDirectoryInfo(
+                directory: item['directory'].toString(),
+                strategy: item['strategy']?.toString(),
+              ),
+        ];
+      });
 
   Future<String> _resolveProjectID(
     String projectDirectory,
@@ -332,15 +453,14 @@ class Api2OperationsGateway extends ProductRepository {
   });
 
   @override
-  Future<List<VersionControlFile>> listWorktreeFileStatuses(
-    String directory,
-  ) => _guard('Could not load worktree changes', () async {
-    final json = await _transport.getJson(
-      '/vcs/status',
-      query: {'location[directory]': directory},
-    );
-    return [for (final item in _dataMaps(json)) mapVcsStatusJson(item)];
-  });
+  Future<List<VersionControlFile>> listWorktreeFileStatuses(String directory) =>
+      _guard('Could not load worktree changes', () async {
+        final json = await _transport.getJson(
+          '/vcs/status',
+          query: {'location[directory]': directory},
+        );
+        return [for (final item in _dataMaps(json)) mapVcsStatusJson(item)];
+      });
 
   @override
   Future<void> removeWorktree({
@@ -407,7 +527,7 @@ class Api2OperationsGateway extends ProductRepository {
     // non-null cursor reports the end of the list.
     if (cursor != null) return const <GlobalSessionResult>[];
     final page = await client.sessions(
-      directory: null,
+      unscoped: true,
       search: search?.trim().isNotEmpty == true ? search!.trim() : null,
       limit: limit,
       rootsOnly: true,
@@ -621,19 +741,19 @@ class Api2OperationsGateway extends ProductRepository {
   // ---------------- Catalog ----------------
 
   @override
-  Future<CatalogSnapshot> loadCatalog() =>
-      _guard('Could not load models and agents', () async {
-        final providersFuture = client.providers();
-        final modelsFuture = client.models();
-        final agentsFuture = client.agents();
-        return CatalogSnapshot(
-          providers: (await providersFuture)
-              .map(mapApi2CatalogProvider)
-              .toList(),
-          models: (await modelsFuture).map(mapApi2CatalogModel).toList(),
-          agents: (await agentsFuture).map(mapApi2CatalogAgent).toList(),
-        );
-      });
+  Future<CatalogSnapshot> loadCatalog() => _guard(
+    'Could not load models and agents',
+    () async {
+      final providersFuture = client.providers();
+      final modelsFuture = client.models();
+      final agentsFuture = client.agents();
+      return CatalogSnapshot(
+        providers: (await providersFuture).map(mapApi2CatalogProvider).toList(),
+        models: (await modelsFuture).map(mapApi2CatalogModel).toList(),
+        agents: (await agentsFuture).map(mapApi2CatalogAgent).toList(),
+      );
+    },
+  );
 
   @override
   Future<ChatDefaults> loadChatDefaults() =>
@@ -712,24 +832,25 @@ class Api2OperationsGateway extends ProductRepository {
   // ---------------- MCP ----------------
 
   @override
-  Future<List<McpServerInfo>> listMcpServers() =>
-      _guard('Could not load MCP servers', () async {
-        final json = await _transport.getJson('/mcp', query: _loc());
-        return [
-          for (final item in _dataMaps(json))
-            if ((item['name'] ?? '').toString().isNotEmpty)
-              McpServerInfo(
-                name: item['name'].toString(),
-                status: item['status'] is Map
-                    ? ((item['status'] as Map)['status'] ?? 'unknown')
-                          .toString()
-                    : (item['status'] ?? 'unknown').toString(),
-                error: item['status'] is Map
-                    ? (item['status'] as Map)['error']?.toString()
-                    : null,
-              ),
-        ];
-      });
+  Future<List<McpServerInfo>> listMcpServers() => _guard(
+    'Could not load MCP servers',
+    () async {
+      final json = await _transport.getJson('/mcp', query: _loc());
+      return [
+        for (final item in _dataMaps(json))
+          if ((item['name'] ?? '').toString().isNotEmpty)
+            McpServerInfo(
+              name: item['name'].toString(),
+              status: item['status'] is Map
+                  ? ((item['status'] as Map)['status'] ?? 'unknown').toString()
+                  : (item['status'] ?? 'unknown').toString(),
+              error: item['status'] is Map
+                  ? (item['status'] as Map)['error']?.toString()
+                  : null,
+            ),
+      ];
+    },
+  );
 
   @override
   Future<List<McpResourceInfo>> listMcpResources() =>
@@ -789,8 +910,7 @@ class Api2OperationsGateway extends ProductRepository {
         final json = await _transport.getJson('/integration', query: _loc());
         return [
           for (final item in _dataMaps(json))
-            if ((item['id'] ?? '').toString().isNotEmpty)
-              _integration(item),
+            if ((item['id'] ?? '').toString().isNotEmpty) _integration(item),
         ];
       });
 
@@ -832,8 +952,8 @@ class Api2OperationsGateway extends ProductRepository {
           IntegrationConnectionInfo(
             type: type,
             id: connection['id']?.toString(),
-            label:
-                (connection['label'] ?? connection['name'] ?? type).toString(),
+            label: (connection['label'] ?? connection['name'] ?? type)
+                .toString(),
           ),
         );
       }
@@ -1062,7 +1182,7 @@ class _Api2TerminalChannel implements TerminalChannel {
         ? utf8.decode(data, allowMalformed: true)
         : data.toString();
     if (text.isEmpty) return;
-    _cursor += text.length;
+    _cursor += data is List<int> ? data.length : utf8.encode(text).length;
     yield text;
   }
 

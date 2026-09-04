@@ -105,6 +105,9 @@ jobs:
             flutter test --concurrency=1 "${chunk[@]}"
           done
 
+      - name: Test theme goldens on Linux
+        run: flutter test --concurrency=1 test/goldens
+
       - name: Configure CI signing identity
         env:
           CI_KEYSTORE: ${{ runner.temp }}/opencode-ci-release.jks

@@ -82,7 +82,9 @@ class Api2Client {
 
   Future<Api2ServerInfo> serverInfo() async {
     final json = await transport.getJson('/server');
-    return Api2ServerInfo.fromJson(json is Map<String, dynamic> ? json : const {});
+    return Api2ServerInfo.fromJson(
+      json is Map<String, dynamic> ? json : const {},
+    );
   }
 
   /// Resolves the pinned location to its project.
@@ -103,6 +105,7 @@ class Api2Client {
     String? search,
     String? parentID,
     bool rootsOnly = false,
+    bool unscoped = false,
     String? cursor,
     CancelToken? cancelToken,
   }) async {
@@ -111,10 +114,12 @@ class Api2Client {
       query: cursor != null
           ? {'cursor': cursor}
           : {
-              'directory': directory ?? (project == null ? _directory : null),
+              'directory':
+                  directory ??
+                  (unscoped || project != null ? null : _directory),
               'project': project,
               'subpath': subpath,
-              'workspace': workspace ?? _workspace,
+              'workspace': workspace ?? (unscoped ? null : _workspace),
               'limit': limit,
               'order': order,
               'search': search,
@@ -257,10 +262,8 @@ class Api2Client {
         'id': ?id,
         'text': text,
         if (files.isNotEmpty) 'files': files.map((f) => f.toJson()).toList(),
-        if (agents.isNotEmpty)
-          'agents': agents.map((a) => a.toJson()).toList(),
-        if (skills.isNotEmpty)
-          'skills': skills.map((s) => s.toJson()).toList(),
+        if (agents.isNotEmpty) 'agents': agents.map((a) => a.toJson()).toList(),
+        if (skills.isNotEmpty) 'skills': skills.map((s) => s.toJson()).toList(),
         'metadata': ?metadata,
         if (delivery != null) 'delivery': delivery.wire,
         'resume': ?resume,
@@ -419,10 +422,7 @@ class Api2Client {
 
   /// Raw bytes of a file relative to the pinned location.
   Future<List<int>> fsReadBytes(String relativePath) {
-    final encoded = relativePath
-        .split('/')
-        .map(Uri.encodeComponent)
-        .join('/');
+    final encoded = relativePath.split('/').map(Uri.encodeComponent).join('/');
     return transport.getBytes('/fs/read/$encoded', query: _loc());
   }
 
@@ -469,9 +469,7 @@ class Api2Client {
     if (entries is List) {
       for (final item in entries) {
         if (item is! Map) continue;
-        final entry = Api2ConfigEntry.fromJson(
-          Map<String, dynamic>.from(item),
-        );
+        final entry = Api2ConfigEntry.fromJson(Map<String, dynamic>.from(item));
         if (entry != null) out.add(entry);
       }
     }

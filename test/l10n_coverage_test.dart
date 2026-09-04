@@ -69,7 +69,7 @@ Map<String, int> scan() {
   ]..sort();
   for (final path in paths) {
     final n = countHardcodedStrings(File(path).readAsStringSync());
-    if (n > 0) results[path] = n;
+    if (n > 0) results[path.replaceAll('\\', '/')] = n;
   }
   return results;
 }
@@ -93,7 +93,7 @@ const _baseline = <String, int>{
   'lib/ui/screens/chat/sessions_tab.dart': 9,
   'lib/ui/screens/chat/timeline_sheet.dart': 4,
   'lib/ui/screens/chat_screen.dart': 29,
-  'lib/ui/screens/files_screen.dart': 23,
+  'lib/ui/screens/files_screen.dart': 18,
   'lib/ui/screens/global_sessions_screen.dart': 10,
   'lib/ui/screens/guide_screen.dart': 15,
   'lib/ui/screens/home_screen.dart': 4,
@@ -135,7 +135,7 @@ const _baseline = <String, int>{
   'lib/ui/widgets/form_renderer.dart': 7,
   'lib/ui/widgets/info_label.dart': 1,
   'lib/ui/widgets/markdown.dart': 2,
-  'lib/ui/widgets/pickers.dart': 15,
+  'lib/ui/widgets/pickers.dart': 12,
   'lib/ui/widgets/product_states.dart': 3,
   'lib/ui/widgets/question_options.dart': 2,
   'lib/ui/widgets/saved_server_connection_card.dart': 7,

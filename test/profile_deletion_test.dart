@@ -58,6 +58,18 @@ Map<String, Object> _seed() => {
   'oc.agent.doomed': 'build',
   'oc.variant.doomed': 'high',
   'oc.sessionModels.doomed': jsonEncode({'ses_1': 'anthropic|opus|'}),
+  'oc.modelLibrary.doomed': jsonEncode({
+    'favorites': [],
+    'recent': [
+      {'providerID': 'anthropic', 'modelID': 'opus'},
+    ],
+  }),
+  'oc.modelLibrary.keeper': jsonEncode({
+    'favorites': [
+      {'providerID': 'openai', 'modelID': 'gpt'},
+    ],
+    'recent': [],
+  }),
   'oc.location.doomed': jsonEncode({
     'directory': '/home/dev/code',
     'workspace': 'main',
@@ -205,6 +217,7 @@ void main() {
         'oc.agent.doomed',
         'oc.variant.doomed',
         'oc.sessionModels.doomed',
+        'oc.modelLibrary.doomed',
         'oc.location.doomed',
         'oc.providerRuntimeRefresh.v1.doomed.%2Fhome%2Fdev%2Fcode%0Amain',
       });
@@ -223,7 +236,7 @@ void main() {
     final result = await controller.deleteProfileAndLocalData('doomed');
 
     // Reported truthfully: the UI copy depends on these numbers.
-    expect(result.removedPreferenceKeys, hasLength(7));
+    expect(result.removedPreferenceKeys, hasLength(8));
     expect(result.removedQueuedPrompts, 2);
     expect(result.removedDrafts, 2); // owned + unattributable
     expect(result.clearedWidgetSnapshot, isTrue);
@@ -245,6 +258,7 @@ void main() {
       'oc.agent.doomed',
       'oc.variant.doomed',
       'oc.sessionModels.doomed',
+      'oc.modelLibrary.doomed',
       'oc.location.doomed',
       'oc.providerRuntimeRefresh.v1.doomed.%2Fhome%2Fdev%2Fcode%0Amain',
     ]) {
@@ -426,8 +440,8 @@ void main() {
 
       expect(result.removedProfile, isFalse);
       expect(result.failures, ['1 saved setting']);
-      // The six keys that did go are reported; the seventh is not claimed.
-      expect(result.removedPreferenceKeys, hasLength(6));
+      // The seven keys that did go are reported; the eighth is not claimed.
+      expect(result.removedPreferenceKeys, hasLength(7));
       expect(result.removedPreferenceKeys, isNot(contains('oc.agent.doomed')));
       expect(await onDisk('oc.agent.doomed'), 'build');
       expect(controller.store.profiles.map((p) => p.id), ['doomed', 'keeper']);

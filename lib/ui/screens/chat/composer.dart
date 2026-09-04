@@ -2,7 +2,7 @@ part of '../chat_screen.dart';
 
 /// UX-P0-03: the three secondary prompt tools that used to sit as equal
 /// icons around the field. They now live behind one leading affordance.
-enum _PromptTool { commands, attach, voice }
+enum _PromptTool { commands, attach, voice, history, clearText }
 
 class _ChatComposer extends StatelessWidget {
   const _ChatComposer({
@@ -17,6 +17,8 @@ class _ChatComposer extends StatelessWidget {
     required this.onOpenCommands,
     required this.onOpenAgents,
     required this.onOpenEditor,
+    this.onReusePrompt,
+    this.onClearText,
     required this.attachments,
     required this.busy,
     required this.sending,
@@ -32,7 +34,6 @@ class _ChatComposer extends StatelessWidget {
     this.selectedCatalogModel,
     required this.selectedVariant,
     this.showAttachmentNote = true,
-    this.pulse = 0,
     required this.onAttach,
     required this.onContentInserted,
     required this.onVoice,
@@ -45,6 +46,7 @@ class _ChatComposer extends StatelessWidget {
     this.onRemoveReference,
     // UX-103 review handoff (end).
     this.contextUsage,
+    this.modelSwitch,
   });
 
   final bool compact;
@@ -58,6 +60,8 @@ class _ChatComposer extends StatelessWidget {
   final VoidCallback onOpenCommands;
   final VoidCallback onOpenAgents;
   final VoidCallback onOpenEditor;
+  final VoidCallback? onReusePrompt;
+  final VoidCallback? onClearText;
   final List<PromptAttachment> attachments;
   final bool busy;
   final bool sending;
@@ -102,9 +106,6 @@ class _ChatComposer extends StatelessWidget {
   /// screen decides when it applies.
   final bool showAttachmentNote;
 
-  /// Incremented by the screen when a run finishes; each change plays a
-  /// 300 ms primary pulse on the border.
-  final int pulse;
   final VoidCallback onAttach;
 
   /// Receives images committed by the IME (keyboard image insertions and
@@ -127,6 +128,23 @@ class _ChatComposer extends StatelessWidget {
   /// Fraction of the model's context window the session has consumed, or
   /// null when the limit is unknown.
   final double? contextUsage;
+  final Widget? modelSwitch;
+
+  Widget _modelControls(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Flexible(
+        child: _ModelContextChip(
+          label: _contextLabel,
+          tooltip: _rawContextLabel,
+          costLine: _costLine,
+          trailing: _contextPercent(context),
+          onPressed: onChooseModel,
+        ),
+      ),
+      ?modelSwitch,
+    ],
+  );
 
   bool get _hasPrompt =>
       controller.text.trim().isNotEmpty ||
@@ -149,60 +167,44 @@ class _ChatComposer extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
         child: ListenableBuilder(
-          listenable: Listenable.merge([focusNode, controller]),
-          // The run-finished pulse: a fresh key per finished run restarts a
-          // 300 ms fade of a primary border and halo. Reduced motion (and
-          // the initial build) get no animation at all.
-          builder: (context, _) => TweenAnimationBuilder<double>(
-            key: ValueKey('composer-pulse-$pulse'),
-            tween: Tween(begin: pulse == 0 ? 0.0 : 1.0, end: 0.0),
-            duration: disableAnimations || pulse == 0
-                ? Duration.zero
-                : const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-            builder: (context, glow, child) {
-              final focused = focusNode.hasFocus;
-              final radius = BorderRadius.circular(compact ? 20 : 24);
-              final restingBorder = focused
-                  ? scheme.primary.withValues(alpha: .8)
-                  : scheme.outlineVariant.withValues(alpha: .85);
-              // While a run is active the activity ring paints the border
-              // and breathes the glow, so the surface underneath keeps only
-              // a faint primary base line for the sweep to travel over.
-              return _ComposerActivity(
-                active: busy,
-                radius: radius,
-                child: AnimatedContainer(
-                  key: const Key('chat-composer-surface'),
-                  duration: disableAnimations
-                      ? Duration.zero
-                      : const Duration(milliseconds: 180),
-                  curve: Curves.easeOutCubic,
-                  decoration: BoxDecoration(
-                    color: scheme.surfaceContainerLow,
-                    borderRadius: radius,
-                    border: Border.all(
-                      color: busy
-                          ? scheme.primary.withValues(alpha: .3)
-                          : Color.lerp(restingBorder, scheme.primary, glow)!,
-                      width: busy || focused || glow > 0 ? 1.4 : 1,
-                    ),
-                    // One raised recipe; focus adds a faint halo so the
-                    // field reads as lifted only while it is being typed
-                    // into.
-                    boxShadow: [
-                      ...AppTheme.raised(theme),
-                      if (!busy && focused && glow == 0)
-                        ...AppTheme.glow(scheme.primary, strength: .12),
-                      if (!busy && glow > 0)
-                        ...AppTheme.glow(scheme.primary, strength: .35 * glow),
-                    ],
+          listenable: focusNode,
+          // Keep the editor mounted when a run finishes. A changing pulse
+          // key used to discard its input connection mid-draft.
+          builder: (context, child) {
+            final focused = focusNode.hasFocus;
+            final radius = BorderRadius.circular(20);
+            final restingBorder = focused
+                ? scheme.primary.withValues(alpha: .8)
+                : scheme.outlineVariant.withValues(alpha: .65);
+            // While a run is active the activity ring paints the border
+            // and breathes the glow, so the surface underneath keeps only
+            // a faint primary base line for the sweep to travel over.
+            return _ComposerActivity(
+              active: busy,
+              radius: radius,
+              child: AnimatedContainer(
+                key: const Key('chat-composer-surface'),
+                duration: disableAnimations
+                    ? Duration.zero
+                    : const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerLow,
+                  borderRadius: radius,
+                  border: Border.all(
+                    color: busy
+                        ? scheme.primary.withValues(alpha: .3)
+                        : restingBorder,
+                    width: busy || focused ? 1.4 : 1,
                   ),
-                  child: child,
                 ),
-              );
-            },
-            child: Column(
+                child: child,
+              ),
+            );
+          },
+          child: ValueListenableBuilder<TextEditingValue>(
+            valueListenable: controller,
+            builder: (context, value, _) => Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -221,26 +223,6 @@ class _ChatComposer extends StatelessWidget {
                     compact: compact,
                     onSelected: onSelectAgent,
                     onShowAll: onOpenAgents,
-                  ),
-                // UX-P0-03: on the compact (short) layout the field shares
-                // its row with the leading tools button and Send, so the
-                // model/agent context sits above the field as a header chip
-                // instead of competing for that row's width. The wide layout
-                // keeps it on the action row under the field, where it is
-                // already secondary to the full-width field.
-                if (compact)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                    child: Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: _ModelContextChip(
-                        label: _contextLabel,
-                        tooltip: _rawContextLabel,
-                        costLine: _costLine,
-                        trailing: _contextPercent(context),
-                        onPressed: onChooseModel,
-                      ),
-                    ),
                   ),
                 // UX-P0-04: while a run is active the consequence of Send
                 // changes, so the choice is stated in words rather than
@@ -334,10 +316,7 @@ class _ChatComposer extends StatelessWidget {
                       ),
                     ),
                 ],
-                if (compact)
-                  _compactComposer(context)
-                else
-                  _standardComposer(context),
+                _composerBody(context),
               ],
             ),
           ),
@@ -346,22 +325,25 @@ class _ChatComposer extends StatelessWidget {
     );
   }
 
-  Widget _standardComposer(BuildContext context) {
+  // One structure at every height keeps the editor and its input connection
+  // in place as the keyboard opens. Only its line budget changes.
+  Widget _composerBody(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         _ComposerField(
           controller: controller,
           focusNode: focusNode,
-          onOpenEditor: onOpenEditor,
           onContentInserted: onContentInserted,
-          maxLines: 6,
-          contentPadding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+          minLines: compact ? 1 : 2,
+          maxLines: compact ? 3 : 6,
+          contentPadding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
           onSubmitShortcut: _submitFromKeyboard,
         ),
-        _ContextMeterLine(usage: contextUsage),
+        if (contextUsage case final usage? when usage >= .7)
+          _ContextMeterLine(usage: usage),
         Padding(
-          padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+          padding: const EdgeInsets.fromLTRB(6, 0, 6, 6),
           child: Row(
             children: [
               _PromptToolsButton(
@@ -369,23 +351,28 @@ class _ChatComposer extends StatelessWidget {
                 onSelected: _openTool,
                 onAttach: _attachBlocked ? null : onAttach,
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 2),
               // The model/agent reads as context, not as a fifth equal
               // action: it flexes and ellipsizes so the row never pushes
               // Send off the edge at large text scales.
               Expanded(
                 child: Align(
                   alignment: AlignmentDirectional.centerStart,
-                  child: _ModelContextChip(
-                    label: _contextLabel,
-                    tooltip: _rawContextLabel,
-                    costLine: _costLine,
-                    trailing: _contextPercent(context),
-                    onPressed: onChooseModel,
-                  ),
+                  child: _modelControls(context),
                 ),
               ),
-              const SizedBox(width: 6),
+              IconButton(
+                key: const Key('prompt-editor-button'),
+                tooltip: 'Open full-screen prompt editor',
+                onPressed: onOpenEditor,
+                icon: const Icon(Icons.open_in_full_rounded, size: 19),
+                style: IconButton.styleFrom(
+                  foregroundColor: Theme.of(
+                    context,
+                  ).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: 2),
               _ComposerSubmit(
                 busy: busy,
                 sending: sending,
@@ -401,49 +388,6 @@ class _ChatComposer extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _compactComposer(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          _PromptToolsButton(
-            voiceOpening: voiceOpening,
-            onSelected: _openTool,
-            onAttach: _attachBlocked ? null : onAttach,
-          ),
-          const SizedBox(width: 4),
-          Expanded(
-            child: _ComposerField(
-              controller: controller,
-              focusNode: focusNode,
-              onOpenEditor: onOpenEditor,
-              onContentInserted: onContentInserted,
-              onSubmitShortcut: _submitFromKeyboard,
-              maxLines: 3,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 12,
-              ),
-            ),
-          ),
-          const SizedBox(width: 4),
-          _ComposerSubmit(
-            busy: busy,
-            sending: sending,
-            enabled: _hasPrompt,
-            canSendWhileBusy: canSendWhileBusy,
-            delivery: delivery,
-            onDeliveryChanged: onDeliveryChanged,
-            onSend: onSend,
-            canChooseDelivery: canChooseDelivery,
-            onStop: onStop,
-          ),
-        ],
-      ),
     );
   }
 
@@ -463,6 +407,8 @@ class _ChatComposer extends StatelessWidget {
         attachBlocked: _attachBlocked,
         voiceBlocked: busy || sending,
         attachmentCount: attachments.length,
+        canReusePrompt: onReusePrompt != null,
+        canClearText: controller.text.isNotEmpty && onClearText != null,
       ),
     );
     switch (tool) {
@@ -474,6 +420,10 @@ class _ChatComposer extends StatelessWidget {
         onAttach();
       case _PromptTool.voice:
         onVoice();
+      case _PromptTool.history:
+        onReusePrompt?.call();
+      case _PromptTool.clearText:
+        onClearText?.call();
     }
   }
 
@@ -526,8 +476,8 @@ class _ChatComposer extends StatelessWidget {
         _ => false,
       };
 
-  /// Below 70 % the hairline meter is signal enough; from there the chip
-  /// carries the number, escalating in colour as the window fills.
+  /// Context becomes a visible warning at 70 %, leaving everyday prompts
+  /// free of a progress-like line that does not represent the current run.
   Widget? _contextPercent(BuildContext context) {
     final usage = contextUsage;
     if (usage == null || usage < .7) return null;
@@ -547,8 +497,8 @@ class _ComposerField extends StatelessWidget {
   const _ComposerField({
     required this.controller,
     required this.focusNode,
-    required this.onOpenEditor,
     required this.onContentInserted,
+    required this.minLines,
     required this.maxLines,
     required this.contentPadding,
     this.onSubmitShortcut,
@@ -556,8 +506,8 @@ class _ComposerField extends StatelessWidget {
 
   final TextEditingController controller;
   final FocusNode focusNode;
-  final VoidCallback onOpenEditor;
   final ValueChanged<KeyboardInsertedContent> onContentInserted;
+  final int minLines;
   final int maxLines;
   final EdgeInsets contentPadding;
 
@@ -572,7 +522,7 @@ class _ComposerField extends StatelessWidget {
       key: const Key('chat-composer-field'),
       controller: controller,
       focusNode: focusNode,
-      minLines: 1,
+      minLines: minLines,
       maxLines: maxLines,
       // Accepts images committed by the IME (Android commitContent): the
       // default allowed mime types cover the common raster image formats.
@@ -582,12 +532,6 @@ class _ComposerField extends StatelessWidget {
       textCapitalization: TextCapitalization.sentences,
       decoration: InputDecoration(
         hintText: 'Ask OpenCode…',
-        suffixIcon: IconButton(
-          key: const Key('prompt-editor-button'),
-          tooltip: 'Open full-screen prompt editor',
-          onPressed: onOpenEditor,
-          icon: const Icon(Icons.open_in_full_rounded, size: 19),
-        ),
         filled: false,
         border: InputBorder.none,
         enabledBorder: InputBorder.none,
@@ -650,10 +594,7 @@ class _PromptToolsButton extends StatelessWidget {
         child: IconButton(
           key: const Key('composer-tools-button'),
           onPressed: () => unawaited(onSelected(context)),
-          style: IconButton.styleFrom(
-            backgroundColor: scheme.surfaceContainerHigh,
-            foregroundColor: scheme.onSurfaceVariant,
-          ),
+          style: IconButton.styleFrom(foregroundColor: scheme.onSurfaceVariant),
           // The label rides on the icon so it merges into the button's own
           // semantics node, where TalkBack and the tap-target guideline
           // look for it.
@@ -680,6 +621,8 @@ class _PromptToolsSheet extends StatelessWidget {
     required this.attachBlocked,
     required this.voiceBlocked,
     required this.attachmentCount,
+    this.canReusePrompt = false,
+    this.canClearText = false,
   });
 
   /// Voice stays unavailable while a turn is in flight; Attach only where
@@ -687,6 +630,8 @@ class _PromptToolsSheet extends StatelessWidget {
   final bool attachBlocked;
   final bool voiceBlocked;
   final int attachmentCount;
+  final bool canReusePrompt;
+  final bool canClearText;
 
   @override
   Widget build(BuildContext context) {
@@ -745,6 +690,22 @@ class _PromptToolsSheet extends StatelessWidget {
                     ? null
                     : () => Navigator.pop(context, _PromptTool.voice),
               ),
+            if (canReusePrompt)
+              ListTile(
+                key: const Key('composer-tool-history'),
+                leading: const Icon(Icons.history_rounded),
+                title: Text(_chatL10n(context).composerReuseTitle),
+                subtitle: Text(_chatL10n(context).composerReuseSubtitle),
+                onTap: () => Navigator.pop(context, _PromptTool.history),
+              ),
+            if (canClearText)
+              ListTile(
+                key: const Key('composer-tool-clear'),
+                leading: const Icon(Icons.text_snippet_outlined),
+                title: Text(_chatL10n(context).composerClearTextTitle),
+                subtitle: Text(_chatL10n(context).composerClearTextSubtitle),
+                onTap: () => Navigator.pop(context, _PromptTool.clearText),
+              ),
             const SizedBox(height: 8),
           ],
         ),
@@ -785,34 +746,29 @@ class _ModelContextChip extends StatelessWidget {
       message:
           'Model and agent: $tooltip. Tap to change.'
           '${costLine == null ? '' : '\n$costLine'}',
-      child: ActionChip(
+      child: TextButton(
         key: const Key('composer-model-context'),
-        avatar: Icon(
-          Icons.tune_rounded,
-          size: 16,
-          color: scheme.onSurfaceVariant,
+        style: TextButton.styleFrom(
+          foregroundColor: scheme.onSurfaceVariant,
+          minimumSize: const Size(48, 48),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+          textStyle: theme.textTheme.labelLarge,
         ),
-        label: Row(
+        onPressed: onPressed,
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Flexible(
               child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
+            const SizedBox(width: 2),
+            const Icon(Icons.keyboard_arrow_down_rounded, size: 18),
             if (trailing case final trailing?) ...[
               const SizedBox(width: 8),
               trailing,
             ],
           ],
         ),
-        labelStyle: theme.textTheme.labelLarge?.copyWith(
-          color: scheme.onSurfaceVariant,
-        ),
-        backgroundColor: Colors.transparent,
-        side: BorderSide(color: scheme.outlineVariant),
-        // The chip reads as chrome, but its target still has to clear the
-        // 48 dp Android minimum, so the tap area stays padded.
-        materialTapTargetSize: MaterialTapTargetSize.padded,
-        onPressed: onPressed,
       ),
     );
   }
@@ -946,8 +902,7 @@ class _ComposerSubmit extends StatelessWidget {
   }
 }
 
-/// The context-window percentage the model chip carries from 70 % on. The
-/// hairline meter stays; this is the number for when the number matters.
+/// The context-window percentage shown with the warning meter from 70 % on.
 class _ContextPercentBadge extends StatelessWidget {
   const _ContextPercentBadge({required this.usage});
 
@@ -1082,6 +1037,74 @@ class _QueueHint extends StatelessWidget {
   }
 }
 
+/// Decode the bounded local attachment once, not on every keystroke. Remote
+/// URLs retain an icon; previewing is always an explicit action.
+class _AttachmentGlyph extends StatefulWidget {
+  const _AttachmentGlyph({required this.attachment});
+  final PromptAttachment attachment;
+
+  @override
+  State<_AttachmentGlyph> createState() => _AttachmentGlyphState();
+}
+
+class _AttachmentGlyphState extends State<_AttachmentGlyph> {
+  Uint8List? _bytes;
+
+  void _load() {
+    _bytes = null;
+    final attachment = widget.attachment;
+    if (!attachment.mime.startsWith('image/') ||
+        !attachment.url.startsWith('data:')) {
+      return;
+    }
+    try {
+      _bytes = Uri.parse(attachment.url).data?.contentAsBytes();
+    } on FormatException {
+      /* Fall back to the file icon. */
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void didUpdateWidget(covariant _AttachmentGlyph oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.attachment.url != widget.attachment.url ||
+        oldWidget.attachment.mime != widget.attachment.mime) {
+      _load();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = Icon(
+      widget.attachment.isDirectoryReference
+          ? Icons.bookmark_outline_rounded
+          : Icons.attach_file_rounded,
+      size: 18,
+    );
+    final bytes = _bytes;
+    if (bytes == null) return icon;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(6),
+      child: Image.memory(
+        bytes,
+        key: const Key('attachment-thumbnail'),
+        width: 32,
+        height: 32,
+        cacheWidth: 96,
+        fit: BoxFit.cover,
+        excludeFromSemantics: true,
+        errorBuilder: (_, _, _) => icon,
+      ),
+    );
+  }
+}
+
 class _PendingAttachmentChip extends StatelessWidget {
   const _PendingAttachmentChip({
     required this.attachment,
@@ -1136,12 +1159,7 @@ class _PendingAttachmentChip extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          reference
-                              ? Icons.bookmark_outline_rounded
-                              : Icons.attach_file_rounded,
-                          size: 16,
-                        ),
+                        _AttachmentGlyph(attachment: attachment),
                         const SizedBox(width: 6),
                         ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 180),
@@ -1272,10 +1290,8 @@ class _StagedReferenceChip extends StatelessWidget {
   }
 }
 
-/// The hairline between the prompt field and the composer actions doubles as
-/// an ambient context-window meter: it fills from the left as the session
-/// consumes the model's context, staying a plain divider when no limit is
-/// known. Colors escalate as the window approaches full.
+/// A context-window warning meter, shown only once usage reaches 70 %.
+/// Colors escalate as the window approaches full.
 class _ContextMeterLine extends StatelessWidget {
   const _ContextMeterLine({required this.usage});
 

@@ -415,7 +415,12 @@ void main() {
       expect(find.byKey(const Key('message-stopped')), findsOneWidget);
       expect(find.text('Stopped'), findsOneWidget);
       expect(find.text('aborted'), findsNothing);
-      expect(find.byType(TextButton), findsNothing);
+      final message = find.byKey(const ValueKey('message-highlight-a1'));
+      expect(message, findsOneWidget);
+      expect(
+        find.descendant(of: message, matching: find.byType(TextButton)),
+        findsNothing,
+      );
     });
 
     testWidgets('model not found shows one line, Details, and Choose model', (

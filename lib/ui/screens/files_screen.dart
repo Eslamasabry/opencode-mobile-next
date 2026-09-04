@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 import '../../api/models.dart';
 import '../../api/product_repository.dart';
+import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
 import '../../state/review_handoff.dart';
 import '../desktop/context_menu.dart';
@@ -71,7 +72,7 @@ class _FilesScreenState extends State<FilesScreen> {
   double _treeWidth = 340;
   final _search = TextEditingController();
   final _searchFocus = FocusNode(debugLabel: 'files-search');
-  Timer? _symbolSearchDebounce;
+  Timer? _searchDebounce;
   ServerOperationsGateway? _repository;
   int _locationRevision = -1;
   int _controllerLocationRevision = -1;
@@ -138,6 +139,7 @@ class _FilesScreenState extends State<FilesScreen> {
     _controllerLocationRevision = widget.controller.locationRevision;
     _dataRefreshRevision = widget.controller.dataRefreshRevision;
     _requestGeneration++;
+    _searchDebounce?.cancel();
     _fileStatusesGeneration++;
     if (widget.controller.lifecycleSuspended) {
       setState(() {
@@ -199,6 +201,7 @@ class _FilesScreenState extends State<FilesScreen> {
       path.split('/').where((component) => component.isNotEmpty).join('/');
 
   void _navigateTo(String path) {
+    _searchDebounce?.cancel();
     _searchOriginPath = null;
     _search.clear();
     _load(path);
@@ -206,9 +209,10 @@ class _FilesScreenState extends State<FilesScreen> {
 
   void _selectSurface(_FileSurface surface) {
     if (_surface == surface) return;
-    _symbolSearchDebounce?.cancel();
-    _symbolSearchDebounce = null;
+    _searchDebounce?.cancel();
+    _searchDebounce = null;
     _requestGeneration++;
+    final origin = _searchOriginPath ?? _path;
     _search.clear();
     _searchOriginPath = null;
     setState(() {
@@ -217,11 +221,12 @@ class _FilesScreenState extends State<FilesScreen> {
       _error = null;
       if (surface == _FileSurface.symbols) _symbols = null;
     });
+    if (surface == _FileSurface.files) unawaited(_load(origin));
   }
 
   void _clearSearch() {
-    _symbolSearchDebounce?.cancel();
-    _symbolSearchDebounce = null;
+    _searchDebounce?.cancel();
+    _searchDebounce = null;
     _search.clear();
     if (_surface == _FileSurface.symbols) {
       _requestGeneration++;
@@ -279,6 +284,8 @@ class _FilesScreenState extends State<FilesScreen> {
   }
 
   Future<void> _searchFiles(String q) async {
+    _searchDebounce?.cancel();
+    _searchDebounce = null;
     if (q.trim().isEmpty) {
       final origin = _searchOriginPath ?? _path;
       _searchOriginPath = null;
@@ -332,6 +339,28 @@ class _FilesScreenState extends State<FilesScreen> {
     await _loadFileStatuses(repository);
   }
 
+  Future<void> _refreshFiles() => _searchFiles(_search.text);
+
+  void _scheduleFileSearch(String query) {
+    _searchDebounce?.cancel();
+    _requestGeneration++;
+    if (query.trim().isEmpty) {
+      unawaited(_searchFiles(query));
+      return;
+    }
+    setState(() {
+      _entries = null;
+      _loading = true;
+      _error = null;
+    });
+    _searchDebounce = Timer(const Duration(milliseconds: 350), () {
+      _searchDebounce = null;
+      if (mounted && _surface == _FileSurface.files && _search.text == query) {
+        unawaited(_searchFiles(query));
+      }
+    });
+  }
+
   Future<void> _loadFileStatuses(ServerOperationsGateway repository) async {
     final generation = ++_fileStatusesGeneration;
     setState(() {
@@ -367,8 +396,8 @@ class _FilesScreenState extends State<FilesScreen> {
   }
 
   Future<void> _searchSymbols(String query) async {
-    _symbolSearchDebounce?.cancel();
-    _symbolSearchDebounce = null;
+    _searchDebounce?.cancel();
+    _searchDebounce = null;
     final value = query.trim();
     if (value.isEmpty) {
       setState(() {
@@ -404,8 +433,8 @@ class _FilesScreenState extends State<FilesScreen> {
   }
 
   void _scheduleSymbolSearch(String query) {
-    _symbolSearchDebounce?.cancel();
-    _symbolSearchDebounce = null;
+    _searchDebounce?.cancel();
+    _searchDebounce = null;
     final value = query.trim();
     _requestGeneration++;
     if (value.isEmpty) {
@@ -421,8 +450,8 @@ class _FilesScreenState extends State<FilesScreen> {
       _loading = true;
       _error = null;
     });
-    _symbolSearchDebounce = Timer(const Duration(milliseconds: 350), () {
-      _symbolSearchDebounce = null;
+    _searchDebounce = Timer(const Duration(milliseconds: 350), () {
+      _searchDebounce = null;
       if (!mounted ||
           _surface != _FileSurface.symbols ||
           _search.text.trim() != value) {
@@ -689,7 +718,7 @@ class _FilesScreenState extends State<FilesScreen> {
                 : _searchFiles,
             onChanged: _surface == _FileSurface.symbols
                 ? _scheduleSymbolSearch
-                : null,
+                : _scheduleFileSearch,
             textInputAction: TextInputAction.search,
           ),
         ),
@@ -804,13 +833,13 @@ class _FilesScreenState extends State<FilesScreen> {
     }
     if (_error != null) {
       return RefreshIndicator(
-        onRefresh: () => _load(_path),
-        child: ProductErrorState(message: _error!, onRetry: () => _load(_path)),
+        onRefresh: _refreshFiles,
+        child: ProductErrorState(message: _error!, onRetry: _refreshFiles),
       );
     }
     if (_entries != null && entries.isEmpty) {
       return RefreshIndicator(
-        onRefresh: () => _load(_path),
+        onRefresh: _refreshFiles,
         child: ProductEmptyState(
           icon: Icons.folder_off_outlined,
           title: _search.text.isEmpty ? 'Folder is empty' : 'No files found',
@@ -821,81 +850,81 @@ class _FilesScreenState extends State<FilesScreen> {
       );
     }
     return RefreshIndicator(
-      onRefresh: () => _load(_path),
+      onRefresh: _refreshFiles,
       child: DesktopScrollbarArea(
         builder: (scrollController) => ListView.builder(
-        controller: scrollController,
-        physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: entries.length,
-        itemBuilder: (context, i) {
-          final node = entries[i];
-          final change = node.isDir ? null : _fileStatuses[node.path];
-          final descendantChanges = node.isDir
-              ? _fileStatuses.keys
-                    .where((path) => path.startsWith('${node.path}/'))
-                    .length
-              : 0;
-          final detail = _fileDetail(node, change, descendantChanges);
-          return ContextMenuRegion(
-            actions: () => _fileRowActions(node, change),
-            child: ListTile(
-              key: ValueKey('project-file-${node.path}'),
-              dense: true,
-              selected: node.path == _selectedPath,
-              leading: Icon(
-                node.isDir
-                    ? Icons.folder_rounded
-                    : change?.status == 'deleted'
-                    ? Icons.remove_circle_outline_rounded
-                    : _fileTypeIcon(node.name),
-                size: 20,
-                color: node.isDir
-                    ? theme.colorScheme.primary
-                    : change?.status == 'deleted'
-                    ? theme.colorScheme.error
-                    : AppTheme.mutedOf(theme),
-              ),
-              title: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      node.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  if (change != null)
-                    _FileChangeBadge(change: change)
-                  else if (descendantChanges > 0)
-                    _FolderStatusMark(count: descendantChanges),
-                ],
-              ),
-              subtitle: detail == null
-                  ? null
-                  : Text(
-                      detail,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: AppTheme.captionFontSize,
+          controller: scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          itemCount: entries.length,
+          itemBuilder: (context, i) {
+            final node = entries[i];
+            final change = node.isDir ? null : _fileStatuses[node.path];
+            final descendantChanges = node.isDir
+                ? _fileStatuses.keys
+                      .where((path) => path.startsWith('${node.path}/'))
+                      .length
+                : 0;
+            final detail = _fileDetail(node, change, descendantChanges);
+            return ContextMenuRegion(
+              actions: () => _fileRowActions(node, change),
+              child: ListTile(
+                key: ValueKey('project-file-${node.path}'),
+                dense: true,
+                selected: node.path == _selectedPath,
+                leading: Icon(
+                  node.isDir
+                      ? Icons.folder_rounded
+                      : change?.status == 'deleted'
+                      ? Icons.remove_circle_outline_rounded
+                      : _fileTypeIcon(node.name),
+                  size: 20,
+                  color: node.isDir
+                      ? theme.colorScheme.primary
+                      : change?.status == 'deleted'
+                      ? theme.colorScheme.error
+                      : AppTheme.mutedOf(theme),
+                ),
+                title: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        node.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-              onTap: change?.status == 'deleted'
-                  ? null
-                  : () {
-                      if (node.isDir) {
-                        _navigateTo(node.path);
-                      } else {
-                        _openFile(node);
-                      }
-                    },
-              // Touch counterpart of the right-click menu: every row action,
-              // Review included, without a second control crammed into a
-              // 40px row.
-              onLongPress: () => unawaited(_showFileRowActions(node, change)),
-            ),
-          );
-        },
+                    if (change != null)
+                      _FileChangeBadge(change: change)
+                    else if (descendantChanges > 0)
+                      _FolderStatusMark(count: descendantChanges),
+                  ],
+                ),
+                subtitle: detail == null
+                    ? null
+                    : Text(
+                        detail,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: AppTheme.captionFontSize,
+                        ),
+                      ),
+                onTap: change?.status == 'deleted'
+                    ? null
+                    : () {
+                        if (node.isDir) {
+                          _navigateTo(node.path);
+                        } else {
+                          _openFile(node);
+                        }
+                      },
+                // Touch counterpart of the right-click menu: every row action,
+                // Review included, without a second control crammed into a
+                // 40px row.
+                onLongPress: () => unawaited(_showFileRowActions(node, change)),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -923,7 +952,9 @@ class _FilesScreenState extends State<FilesScreen> {
                   key: const ValueKey('file-row-actions-sheet'),
                   dense: true,
                   leading: Icon(
-                    node.isDir ? Icons.folder_rounded : _fileTypeIcon(node.name),
+                    node.isDir
+                        ? Icons.folder_rounded
+                        : _fileTypeIcon(node.name),
                   ),
                   title: Text(
                     node.name,
@@ -1202,32 +1233,32 @@ class _FilesScreenState extends State<FilesScreen> {
       onRefresh: () => _searchSymbols(_search.text),
       child: DesktopScrollbarArea(
         builder: (scrollController) => ListView.builder(
-        controller: scrollController,
-        physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: _symbols?.length ?? 0,
-        itemBuilder: (context, index) {
-          final symbol = _symbols![index];
-          return ListTile(
-            key: ValueKey('workspace-symbol-${symbol.path}-${symbol.line}'),
-            minTileHeight: 58,
-            leading: Icon(
-              _symbolIcon(symbol.kind),
-              color: theme.colorScheme.primary,
-            ),
-            title: Text(
-              symbol.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: Text(
-              '${_symbolKind(symbol.kind)} · ${symbol.path}:${symbol.line}:${symbol.column}',
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => _openSymbol(symbol),
-          );
-        },
+          controller: scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          itemCount: _symbols?.length ?? 0,
+          itemBuilder: (context, index) {
+            final symbol = _symbols![index];
+            return ListTile(
+              key: ValueKey('workspace-symbol-${symbol.path}-${symbol.line}'),
+              minTileHeight: 58,
+              leading: Icon(
+                _symbolIcon(symbol.kind),
+                color: theme.colorScheme.primary,
+              ),
+              title: Text(
+                symbol.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Text(
+                '${_symbolKind(symbol.kind)} · ${symbol.path}:${symbol.line}:${symbol.column}',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => _openSymbol(symbol),
+            );
+          },
         ),
       ),
     );
@@ -1266,7 +1297,7 @@ class _FilesScreenState extends State<FilesScreen> {
 
   @override
   void dispose() {
-    _symbolSearchDebounce?.cancel();
+    _searchDebounce?.cancel();
     widget.controller.removeListener(_controllerChanged);
     widget.focusSearchSignal?.removeListener(_focusSearch);
     _search.removeListener(_searchChanged);
@@ -1766,6 +1797,7 @@ class __FileViewerState extends State<_FileViewer> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     return SafeArea(
       child: SizedBox(
         height: widget.embedded
@@ -1779,19 +1811,46 @@ class __FileViewerState extends State<_FileViewer> {
               child: Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      widget.path.split('/').last,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.path.split('/').last,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleMedium,
+                        ),
+                        Text(
+                          widget.initialLine == null
+                              ? widget.path
+                              : '${widget.path} · Line ${widget.initialLine}',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppTheme.mutedOf(theme),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  IconButton(
-                    tooltip: 'Copy file contents',
+                  if (!widget.embedded)
+                    CloseButton(onPressed: () => Navigator.pop(context)),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Wrap(
+                spacing: 4,
+                children: [
+                  TextButton.icon(
+                    label: Text(l10n.fileCopy),
                     icon: const Icon(AppIcons.copy, size: 18),
-                    onPressed: _content?.isBinary == true
+                    onPressed: _content == null || _content!.isBinary
                         ? null
                         : () async {
                             await Clipboard.setData(
-                              ClipboardData(text: _displayText),
+                              ClipboardData(text: _content!.content),
                             );
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -1804,18 +1863,18 @@ class __FileViewerState extends State<_FileViewer> {
                           },
                   ),
                   if (widget.onAddReference != null)
-                    IconButton(
+                    TextButton.icon(
                       key: const Key('project-file-add-reference'),
-                      tooltip: 'Add to prompt',
+                      label: Text(l10n.fileReference),
                       onPressed: widget.onAddReference,
                       icon: const Icon(Icons.add_comment_outlined, size: 19),
                     ),
                   if (widget.onAttachFile != null)
-                    IconButton(
+                    TextButton.icon(
                       key: const Key('project-file-attach'),
                       // Named apart from "Add to prompt": this one uploads
                       // the file's contents with the message.
-                      tooltip: 'Attach file to prompt',
+                      label: Text(l10n.fileAttach),
                       onPressed: _content == null || _attaching
                           ? null
                           : _attach,
@@ -1826,9 +1885,9 @@ class __FileViewerState extends State<_FileViewer> {
                             )
                           : const Icon(Icons.attach_file_rounded, size: 19),
                     ),
-                  IconButton(
+                  TextButton.icon(
                     key: const Key('project-file-download'),
-                    tooltip: 'Save to device',
+                    label: Text(l10n.fileSave),
                     onPressed: _content == null || _downloading
                         ? null
                         : _download,
@@ -1839,23 +1898,12 @@ class __FileViewerState extends State<_FileViewer> {
                           )
                         : const Icon(Icons.download_rounded, size: 19),
                   ),
-                  IconButton(
-                    tooltip: 'Reload file',
+                  TextButton.icon(
+                    label: Text(l10n.fileReload),
                     icon: const Icon(Icons.refresh_rounded, size: 18),
                     onPressed: _fetch,
                   ),
                 ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                widget.initialLine == null
-                    ? widget.path
-                    : '${widget.path} · Line ${widget.initialLine}',
-                style: theme.textTheme.labelSmall!.copyWith(
-                  color: AppTheme.mutedOf(theme),
-                ),
               ),
             ),
             const Divider(),

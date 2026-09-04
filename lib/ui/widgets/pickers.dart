@@ -7,6 +7,8 @@ import '../../api/models.dart';
 import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
+import '../../state/model_library.dart';
+import '../../l10n/app_localizations.dart';
 import '../app_theme.dart';
 import 'agent_color.dart';
 import 'provider_logo.dart';
@@ -60,28 +62,33 @@ class _ModelAgentSheet extends ConsumerWidget {
   final String? sessionID;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => DraggableScrollableSheet(
-    expand: false,
-    minChildSize: .56,
-    initialChildSize: .88,
-    maxChildSize: .96,
-    snap: true,
-    snapSizes: const [.88, .96],
-    builder: (context, scrollController) => Material(
-      color: Theme.of(context).colorScheme.surfaceContainerLow,
-      child: ModelCatalogView(
-        controller: ref.watch(connProvider),
-        scrollController: scrollController,
-        onApplied: () => Navigator.maybePop(context),
-        onClose: () => Navigator.maybePop(context),
-        applyScope: applyScope,
-        sessionID: sessionID,
+  Widget build(BuildContext context, WidgetRef ref) => Padding(
+    padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+    child: DraggableScrollableSheet(
+      expand: false,
+      minChildSize: .56,
+      initialChildSize: .88,
+      maxChildSize: .96,
+      snap: true,
+      snapSizes: const [.88, .96],
+      builder: (context, scrollController) => Material(
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
+        child: ModelCatalogView(
+          controller: ref.watch(connProvider),
+          scrollController: scrollController,
+          onApplied: () => Navigator.maybePop(context),
+          onClose: () => Navigator.maybePop(context),
+          applyScope: applyScope,
+          sessionID: sessionID,
+        ),
       ),
     ),
   );
 }
 
 enum _ModelIntent { all, fast, reasoning, context }
+
+enum _ModelCollection { all, favorites, recent }
 
 /// The single model, mode, provider, and agent selector used throughout the app.
 class ModelCatalogView extends StatefulWidget {
@@ -109,16 +116,23 @@ class ModelCatalogView extends StatefulWidget {
 }
 
 class _ModelCatalogViewState extends State<ModelCatalogView> {
+  AppLocalizations get _strings =>
+      lookupAppLocalizations(Localizations.localeOf(context));
+
   final _search = TextEditingController();
+  // Preserve the search's focus and input connection when keyboard/large-text
+  // layout moves the controls between the pinned header and scrollable list.
+  final _controlsKey = GlobalKey();
   String _query = '';
   String _provider = '*';
   _ModelIntent _intent = _ModelIntent.all;
+  _ModelCollection _collection = _ModelCollection.all;
+  bool _showFilters = false;
   ModelRef? _draftModel;
   String _draftVariant = '';
+  bool _applying = false;
+  String? _saveError;
 
-  /// True once the catalog has scrolled: the header drops its tagline and
-  /// icon tile to a single line so the list keeps the room.
-  bool _collapsed = false;
   ScrollController? _ownedScroll;
 
   ScrollController get _listScroll =>
@@ -128,16 +142,15 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
   void initState() {
     super.initState();
     _syncDraft();
-    _listScroll.addListener(_scrolled);
   }
 
   @override
   void didUpdateWidget(covariant ModelCatalogView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.controller != widget.controller) _syncDraft();
-    if (oldWidget.scrollController != widget.scrollController) {
-      (oldWidget.scrollController ?? _ownedScroll)?.removeListener(_scrolled);
-      _listScroll.addListener(_scrolled);
+    if (oldWidget.controller != widget.controller ||
+        oldWidget.sessionID != widget.sessionID ||
+        oldWidget.applyScope != widget.applyScope) {
+      _syncDraft();
     }
   }
 
@@ -146,6 +159,14 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
       widget.applyScope == ModelPickerApplyScope.session
       ? widget.sessionID
       : null;
+
+  ModelRef? get _currentModel => _scopedSessionID == null
+      ? widget.controller.selectedModel
+      : widget.controller.modelForSession(_scopedSessionID!);
+
+  String get _currentVariant => _scopedSessionID == null
+      ? widget.controller.selectedVariant
+      : widget.controller.variantForSession(_scopedSessionID!);
 
   void _syncDraft() {
     final sessionID = _scopedSessionID;
@@ -158,14 +179,8 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
     }
   }
 
-  void _scrolled() {
-    final collapsed = _listScroll.hasClients && _listScroll.offset > 12;
-    if (collapsed != _collapsed) setState(() => _collapsed = collapsed);
-  }
-
   @override
   void dispose() {
-    _listScroll.removeListener(_scrolled);
     _ownedScroll?.dispose();
     _search.dispose();
     super.dispose();
@@ -177,44 +192,34 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
     builder: (context, _) {
       final catalog = widget.controller.catalog;
       final drafted = catalog == null ? null : _draftedModel(catalog);
-      // Both pinned regions cap at a share of the available height and
-      // scroll internally, so extreme accessibility text scales degrade
-      // gracefully instead of overflowing. Together they never take more
-      // than half: the list keeps at least 50% even on a small phone at 2x.
       return LayoutBuilder(
-        builder: (context, constraints) => Column(
-          children: [
-            ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: constraints.maxHeight * (_collapsed ? .18 : .26),
+        builder: (context, constraints) {
+          // At large text sizes or with the keyboard open, let the controls
+          // scroll with the models. The apply action always remains in view.
+          final compact =
+              AppTheme.stackedActions(context) || constraints.maxHeight < 460;
+          return Column(
+            children: [
+              if (!compact) ...[
+                if (widget.showHeader) _header(context),
+                if (catalog != null && catalog.models.isNotEmpty)
+                  _pinnedControls(context),
+              ],
+              Expanded(
+                child: catalog == null
+                    ? Column(
+                        children: [
+                          if (compact && widget.showHeader) _header(context),
+                          Expanded(child: _catalogState()),
+                        ],
+                      )
+                    : _catalog(context, catalog, compact: compact),
               ),
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    if (widget.showHeader) _header(context),
-                    if (widget.showHeader) const Divider(height: 1),
-                    if (catalog != null && catalog.models.isNotEmpty)
-                      _pinnedControls(context),
-                  ],
-                ),
-              ),
-            ),
-            Expanded(
-              child: catalog == null
-                  ? _catalogState()
-                  : _catalog(context, catalog),
-            ),
-            if (drafted != null)
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: constraints.maxHeight * .24,
-                ),
-                child: SingleChildScrollView(
-                  child: _applyBar(context, catalog!, drafted),
-                ),
-              ),
-          ],
-        ),
+              if (drafted != null)
+                _applyBar(context, catalog!, drafted, compact: compact),
+            ],
+          );
+        },
       );
     },
   );
@@ -223,136 +228,99 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
     final draft = _draftModel;
     if (draft == null) return null;
     for (final model in catalog.models) {
-      if (model.providerID == draft.providerID && model.id == draft.modelID) {
+      if (ModelLibrary.sameModel(
+        draft,
+        ModelRef(providerID: model.providerID, modelID: model.id),
+      )) {
         return model.enabled ? model : null;
       }
     }
     return null;
   }
 
-  /// The search field stays fixed above the list so it never scrolls out of
-  /// reach while browsing a large catalog.
-  Widget _pinnedControls(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
-      child: TextField(
-        key: const Key('model-picker-search'),
-        controller: _search,
-        textInputAction: TextInputAction.search,
-        onChanged: (value) => setState(() => _query = value),
-        decoration: InputDecoration(
-          hintText: 'Search models or providers',
-          prefixIcon: const Icon(Icons.search_rounded),
-          isDense: true,
-          suffixIcon: _query.isEmpty
-              ? null
-              : IconButton(
-                  tooltip: 'Clear model search',
-                  onPressed: () {
-                    _search.clear();
-                    setState(() => _query = '');
-                  },
-                  icon: const Icon(Icons.close_rounded),
-                ),
-        ),
-      ),
-    );
-  }
-
-  List<Widget> _headerActions() => [
-    if (widget.onClose != null)
-      IconButton(
-        key: const Key('model-picker-refresh'),
-        tooltip: 'Refresh models',
-        onPressed: widget.controller.catalogLoading
-            ? null
-            : widget.controller.refreshCatalog,
-        icon: widget.controller.catalogLoading
-            ? const SizedBox.square(
-                dimension: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Icon(Icons.refresh_rounded),
-      ),
-    if (widget.onClose != null)
-      IconButton(
-        tooltip: 'Close model selector',
-        onPressed: widget.onClose,
-        icon: const Icon(Icons.close_rounded),
-      ),
-  ];
-
-  Widget _header(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    if (_collapsed) {
-      return Padding(
-        key: const Key('model-picker-header-compact'),
-        padding: const EdgeInsets.fromLTRB(20, 4, 12, 2),
-        child: Row(
-          children: [
-            Icon(Icons.tune_rounded, size: 20, color: scheme.primary),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Model, mode & agent',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleMedium,
-              ),
-            ),
-            ..._headerActions(),
-          ],
-        ),
-      );
-    }
-    final selected = widget.controller.selectedModel;
-    final selectedProviderName = selected == null
-        ? null
-        : presentedProviderName(
-            selected.providerID,
-            widget.controller.catalog?.providers ?? const [],
-          );
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 14, 12, 12),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: scheme.primaryContainer,
-              borderRadius: BorderRadius.circular(AppTheme.radiusCard),
-            ),
-            child: Icon(Icons.tune_rounded, color: scheme.onPrimaryContainer),
+  Widget _header(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(20, 8, 8, 8),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(
+            AppTheme.stackedActions(context)
+                ? _strings.modelTitleCompact
+                : _strings.modelChooseTitle,
+            style: Theme.of(context).textTheme.titleLarge,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Model, mode & agent', style: theme.textTheme.titleLarge),
-                const SizedBox(height: 2),
-                Text(
-                  selected == null
-                      ? 'Choose how new prompts run'
-                      : [
-                          '$selectedProviderName · ${selected.modelID}',
-                          if (widget.controller.selectedVariant.isNotEmpty)
-                            widget.controller.selectedVariant,
-                        ].join(' · '),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
+        ),
+        if (widget.onClose != null)
+          IconButton(
+            tooltip: 'Close model selector',
+            onPressed: widget.onClose,
+            icon: const Icon(Icons.close_rounded),
+          ),
+      ],
+    ),
+  );
+
+  Widget _pinnedControls(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      key: _controlsKey,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: TextField(
+            key: const Key('model-picker-search'),
+            controller: _search,
+            textInputAction: TextInputAction.search,
+            onChanged: (value) => setState(() => _query = value),
+            decoration: InputDecoration(
+              hintText: _strings.modelSearchHint,
+              prefixIcon: const Icon(Icons.search_rounded),
+              isDense: true,
+              suffixIcon: _query.isEmpty
+                  ? null
+                  : IconButton(
+                      tooltip: 'Clear model search',
+                      onPressed: () {
+                        _search.clear();
+                        setState(() => _query = '');
+                      },
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+            ),
+          ),
+        ),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              for (final section in _ModelCollection.values)
+                Semantics(
+                  selected: _collection == section,
+                  child: TextButton(
+                    key: ValueKey('model-collection-${section.name}'),
+                    onPressed: () => setState(() => _collection = section),
+                    style: TextButton.styleFrom(
+                      foregroundColor: _collection == section
+                          ? scheme.primary
+                          : scheme.onSurfaceVariant,
+                      backgroundColor: _collection == section
+                          ? scheme.primary.withValues(alpha: .09)
+                          : null,
+                    ),
+                    child: Text(switch (section) {
+                      _ModelCollection.all => _strings.modelAll,
+                      _ModelCollection.favorites => _strings.modelFavorites,
+                      _ModelCollection.recent => _strings.modelRecent,
+                    }),
                   ),
                 ),
-              ],
-            ),
+            ],
           ),
-          ..._headerActions(),
-        ],
-      ),
+        ),
+        const SizedBox(height: 8),
+        const Divider(height: 1),
+      ],
     );
   }
 
@@ -375,49 +343,70 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
     return const _CatalogLoading();
   }
 
-  Widget _catalog(BuildContext context, CatalogSnapshot catalog) {
-    if (catalog.models.isEmpty) {
-      return const _PickerState(
-        icon: Icons.inventory_2_outlined,
-        title: 'No models available',
-        message: 'Configure a provider on the OpenCode server, then refresh.',
-      );
-    }
+  Widget _catalog(
+    BuildContext context,
+    CatalogSnapshot catalog, {
+    required bool compact,
+  }) {
     final normalized = _query.trim().toLowerCase();
-    final providers = presentProviders(catalog.providers);
-    final models =
-        presentModels(
-          catalog.models,
-          selected: widget.controller.selectedModel,
-        ).where((model) {
-          final presentation = presentProvider(model.providerID);
-          final providerName = presentedProviderName(
-            model.providerID,
-            catalog.providers,
-          );
-          final matchesProvider =
-              _provider == '*' || presentation.groupID == _provider;
-          final matchesQuery =
-              normalized.isEmpty ||
-              model.name.toLowerCase().contains(normalized) ||
-              model.id.toLowerCase().contains(normalized) ||
-              model.providerID.toLowerCase().contains(normalized) ||
-              providerName.toLowerCase().contains(normalized);
-          final matchesIntent = switch (_intent) {
-            _ModelIntent.all || _ModelIntent.context => true,
-            _ModelIntent.fast => model.variants.any(
-              (variant) => !variant.disabled && variant.isFast,
-            ),
-            _ModelIntent.reasoning => model.reasoning,
-          };
-          return matchesProvider && matchesQuery && matchesIntent;
-        }).toList();
+    final library = widget.controller.modelLibrary;
+    final saved = switch (_collection) {
+      _ModelCollection.all => null,
+      _ModelCollection.favorites => library.favorites,
+      _ModelCollection.recent => library.recent,
+    };
+    final models = presentModels(catalog.models, selected: _currentModel).where(
+      (model) {
+        final reference = ModelRef(
+          providerID: model.providerID,
+          modelID: model.id,
+        );
+        final providerName = presentedProviderName(
+          model.providerID,
+          catalog.providers,
+        );
+        return (saved == null ||
+                (model.enabled &&
+                    saved.any(
+                      (ref) => ModelLibrary.sameModel(ref, reference),
+                    ))) &&
+            (_provider == '*' ||
+                presentProvider(model.providerID).groupID == _provider) &&
+            (normalized.isEmpty ||
+                model.name.toLowerCase().contains(normalized) ||
+                model.id.toLowerCase().contains(normalized) ||
+                model.providerID.toLowerCase().contains(normalized) ||
+                providerName.toLowerCase().contains(normalized)) &&
+            switch (_intent) {
+              _ModelIntent.all || _ModelIntent.context => true,
+              _ModelIntent.fast => model.variants.any(
+                (v) => !v.disabled && v.isFast,
+              ),
+              _ModelIntent.reasoning => model.reasoning,
+            };
+      },
+    ).toList();
     if (_intent == _ModelIntent.context) {
       models.sort((a, b) => b.contextLimit.compareTo(a.contextLimit));
+    } else if (saved != null) {
+      int rank(CatalogModel model) => saved.indexWhere(
+        (ref) => ModelLibrary.sameModel(
+          ref,
+          ModelRef(providerID: model.providerID, modelID: model.id),
+        ),
+      );
+      models.sort((a, b) => rank(a).compareTo(rank(b)));
     }
-
     final unloaded = widget.controller.unloadedProviderIDs;
+    final filtered =
+        normalized.isNotEmpty ||
+        _provider != '*' ||
+        _intent != _ModelIntent.all;
     final leadItems = <Widget>[
+      if (compact) ...[
+        if (widget.showHeader) _header(context),
+        if (catalog.models.isNotEmpty) _pinnedControls(context),
+      ],
       if (!widget.controller.catalogDetailed)
         const _Notice(
           icon: Icons.info_outline_rounded,
@@ -442,58 +431,131 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
             label: const Text('Reload providers'),
           ),
         ),
-      _agentPicker(catalog),
-      const SizedBox(height: 12),
-      _providerPicker(providers),
-      const SizedBox(height: 12),
-      SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            _intentChip('All', _ModelIntent.all),
-            _intentChip('Fast modes', _ModelIntent.fast),
-            _intentChip('Reasoning', _ModelIntent.reasoning),
-            _intentChip('Largest context', _ModelIntent.context),
-          ],
+      if (catalog.models.isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${models.length} ${models.length == 1 ? 'model' : 'models'}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+              if (AppTheme.stackedActions(context))
+                IconButton(
+                  key: const Key('model-picker-filters'),
+                  tooltip: filtered ? 'Edit model filters' : 'Filter models',
+                  isSelected: _showFilters || filtered,
+                  onPressed: () => setState(() => _showFilters = !_showFilters),
+                  icon: const Icon(Icons.tune_rounded),
+                )
+              else
+                TextButton.icon(
+                  key: const Key('model-picker-filters'),
+                  onPressed: () => setState(() => _showFilters = !_showFilters),
+                  icon: Icon(
+                    _showFilters
+                        ? Icons.expand_less_rounded
+                        : Icons.tune_rounded,
+                    size: 18,
+                  ),
+                  label: Text(filtered ? 'Filtered' : 'Filters'),
+                ),
+              IconButton(
+                key: const Key('model-picker-refresh'),
+                tooltip: 'Refresh models',
+                onPressed: widget.controller.catalogLoading
+                    ? null
+                    : widget.controller.refreshCatalog,
+                icon: widget.controller.catalogLoading
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh_rounded, size: 20),
+              ),
+            ],
+          ),
         ),
-      ),
-      const SizedBox(height: 14),
-      Row(
-        children: [
-          Text('Models', style: Theme.of(context).textTheme.titleSmall),
-          const SizedBox(width: 8),
-          Text('${models.length}'),
-        ],
-      ),
-      const SizedBox(height: 4),
+      if (_showFilters)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: Column(
+            children: [
+              _providerPicker(presentProviders(catalog.providers)),
+              const SizedBox(height: 8),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _intentChip('Any capability', _ModelIntent.all),
+                    _intentChip('Fast modes', _ModelIntent.fast),
+                    _intentChip('Reasoning', _ModelIntent.reasoning),
+                    _intentChip('Largest context', _ModelIntent.context),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      if (compact)
+        if (_draftedModel(catalog) case final selected?)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _selectionSummary(context, catalog, selected),
+          ),
       if (models.isEmpty)
         _PickerState(
-          icon: Icons.search_off_rounded,
-          title: 'No matching models',
-          message: _intent == _ModelIntent.fast
+          icon: catalog.models.isEmpty
+              ? Icons.inventory_2_outlined
+              : !filtered && _collection == _ModelCollection.favorites
+              ? Icons.star_outline_rounded
+              : !filtered && _collection == _ModelCollection.recent
+              ? Icons.history_rounded
+              : Icons.search_off_rounded,
+          title: catalog.models.isEmpty
+              ? 'No models available'
+              : !filtered && _collection == _ModelCollection.favorites
+              ? 'Keep your go-to models here'
+              : !filtered && _collection == _ModelCollection.recent
+              ? 'Your next choice starts here'
+              : 'No matching models',
+          message: catalog.models.isEmpty
+              ? 'Configure a provider on the OpenCode server, then refresh.'
+              : !filtered && _collection == _ModelCollection.favorites
+              ? 'Tap the star beside any model to find it here.'
+              : !filtered && _collection == _ModelCollection.recent
+              ? 'Models you use will appear here, most recent first.'
+              : _intent == _ModelIntent.fast
               ? 'No model reports an explicit fast or low-effort mode.'
               : 'Try another search, provider, or capability filter.',
+          action: TextButton(
+            onPressed: () => setState(() {
+              _search.clear();
+              _query = '';
+              _provider = '*';
+              _intent = _ModelIntent.all;
+              _collection = _ModelCollection.all;
+              _showFilters = false;
+            }),
+            child: Text(filtered ? 'Clear filters' : 'Browse all models'),
+          ),
         ),
     ];
-
-    // The catalog can hold hundreds of models; rows must build lazily.
+    // Build only visible rows even with hundreds of server models.
     return ListView.builder(
       controller: _listScroll,
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 16),
+      padding: const EdgeInsets.only(bottom: 16),
       itemCount: leadItems.length + models.length,
       itemBuilder: (context, index) {
         if (index < leadItems.length) return leadItems[index];
         final model = models[index - leadItems.length];
-        return Column(
-          children: [
-            _modelRow(
-              context,
-              model,
-              presentedProviderName(model.providerID, catalog.providers),
-            ),
-            const Divider(height: 1),
-          ],
+        return _modelRow(
+          context,
+          model,
+          presentedProviderName(model.providerID, catalog.providers),
         );
       },
     );
@@ -604,227 +666,341 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
     CatalogModel model,
     String providerName,
   ) {
-    final scheme = Theme.of(context).colorScheme;
-    final current =
-        widget.controller.selectedModel?.providerID == model.providerID &&
-        widget.controller.selectedModel?.modelID == model.id;
-    final draft =
-        _draftModel?.providerID == model.providerID &&
-        _draftModel?.modelID == model.id;
-    final enabled = model.enabled;
-    return Semantics(
-      selected: current,
-      button: true,
-      label: '${model.name}, $providerName${current ? ', current model' : ''}',
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final reference = ModelRef(providerID: model.providerID, modelID: model.id);
+    final current = ModelLibrary.sameModel(_currentModel, reference);
+    final draft = ModelLibrary.sameModel(_draftModel, reference);
+    final favorite = widget.controller.modelLibrary.isFavorite(reference);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       child: Material(
         color: draft
-            ? scheme.primary.withValues(alpha: .07)
+            ? scheme.primary.withValues(alpha: .08)
             : Colors.transparent,
-        child: ListTile(
-          key: ValueKey('model-option-${model.providerID}-${model.id}'),
-          enabled: enabled,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-          title: Text(
-            model.name,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontWeight: current ? FontWeight.w700 : FontWeight.w500,
+        borderRadius: BorderRadius.circular(14),
+        clipBehavior: Clip.antiAlias,
+        child: Semantics(
+          selected: draft,
+          button: true,
+          label: current ? 'Current model' : null,
+          child: InkWell(
+            key: ValueKey('model-option-${model.providerID}-${model.id}'),
+            onTap: model.enabled ? () => _draft(reference) : null,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 14, 4, 14),
+              child: Row(
+                children: [
+                  SizedBox.square(
+                    dimension: 28,
+                    child: draft
+                        ? Icon(Icons.check_rounded, color: scheme.primary)
+                        : ProviderLogo(model.providerID, size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          model.name,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            color: model.enabled
+                                ? scheme.onSurface
+                                : scheme.onSurfaceVariant,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          [
+                            providerName,
+                            if (model.contextLimit > 0)
+                              '${_compactNumber(model.contextLimit)} context',
+                            if (!model.enabled)
+                              'Unavailable'
+                            else if (model.deprecated)
+                              'Deprecated'
+                            else if (model.preview)
+                              'Preview',
+                          ].join(' · '),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: favorite
+                        ? 'Remove ${model.name} from favorites'
+                        : 'Favorite ${model.name}',
+                    onPressed: model.enabled
+                        ? () => _toggleFavorite(reference)
+                        : null,
+                    icon: Icon(
+                      favorite
+                          ? Icons.star_rounded
+                          : Icons.star_outline_rounded,
+                      color: favorite ? scheme.primary : scheme.outline,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          subtitle: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 1),
-                child: ProviderLogo(model.providerID, size: 18),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  [
-                    '$providerName · ${model.id}',
-                    if (model.contextLimit > 0)
-                      '${_number(model.contextLimit)} context',
-                    if (model.outputLimit > 0)
-                      '${_number(model.outputLimit)} output',
-                    // Price per million tokens, straight from the catalog, so
-                    // the trade-off between models is visible where the
-                    // choice is made.
-                    ?modelCostLabel(model),
-                    if (model.deprecated)
-                      'Deprecated'
-                    else if (model.preview)
-                      'Preview',
-                  ].join(' · '),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          trailing: Icon(
-            draft
-                ? Icons.radio_button_checked_rounded
-                : current
-                ? Icons.check_circle_rounded
-                : Icons.radio_button_off_rounded,
-            color: draft || current ? scheme.primary : scheme.outline,
-          ),
-          onTap: enabled
-              ? () => setState(() {
-                  _draftModel = ModelRef(
-                    providerID: model.providerID,
-                    modelID: model.id,
-                  );
-                  _draftVariant = current
-                      ? widget.controller.selectedVariant
-                      : '';
-                })
-              : null,
         ),
       ),
     );
   }
 
-  /// The drafted model's identity, thinking modes, and single apply action,
-  /// pinned to the sheet bottom so applying never requires scrolling.
-  Widget _applyBar(
+  static String _compactNumber(int value) => value >= 1000000
+      ? '${(value / 1000000).toStringAsFixed(value % 1000000 == 0 ? 0 : 1)}M'
+      : value >= 1000
+      ? '${(value / 1000).round()}K'
+      : '$value';
+  void _draft(ModelRef model) => setState(() {
+    _saveError = null;
+    _draftModel = model;
+    _draftVariant = ModelLibrary.sameModel(model, _currentModel)
+        ? _currentVariant
+        : '';
+  });
+
+  Future<void> _toggleFavorite(ModelRef model) async {
+    try {
+      await widget.controller.toggleModelFavorite(model);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _saveError = 'Could not save favorites. Try again.');
+      }
+    }
+  }
+
+  Widget _selectionSummary(
     BuildContext context,
     CatalogSnapshot catalog,
     CatalogModel model,
-  ) {
-    final theme = Theme.of(context);
-    final variants = model.variants
-        .where((variant) => !variant.disabled)
-        .toList();
-    final providerName = presentedProviderName(
-      model.providerID,
-      catalog.providers,
-    );
-    final capabilities = <String>[
-      if (model.reasoning) 'Reasoning',
-      if (model.tools) 'Tools',
-      if (model.attachments) 'Attachments',
-    ];
-    // Past the stacked-actions text scale the bar keeps only what the tap
-    // needs — name, mode, button — so the button stays inside its cap.
-    final compact = AppTheme.stackedActions(context);
-    return Material(
-      key: const Key('model-picker-apply-bar'),
-      color: theme.colorScheme.surfaceContainerHigh,
-      elevation: 6,
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: compact
-              ? const EdgeInsets.fromLTRB(16, 6, 16, 6)
-              : const EdgeInsets.fromLTRB(16, 10, 16, 10),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                model.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleSmall,
-              ),
-              if (!compact)
-                Text(
-                  [
-                    '$providerName · ${model.id}',
-                    if (capabilities.isNotEmpty) capabilities.join(' · '),
-                  ].join('  —  '),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              SizedBox(height: compact ? 4 : 8),
-              if (variants.isEmpty)
-                Text(
-                  'This provider exposes only its default mode.',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppTheme.mutedOf(theme),
-                  ),
-                )
-              else
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: ChoiceChip(
-                          key: ValueKey('model-variant-${model.id}-default'),
-                          label: const Text('Default'),
-                          selected: _draftVariant.isEmpty,
-                          onSelected: (_) => setState(() => _draftVariant = ''),
-                        ),
-                      ),
-                      for (final variant in variants)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: ChoiceChip(
-                            key: ValueKey(
-                              'model-variant-${model.id}-${variant.id}',
-                            ),
-                            label: Text(_variantLabel(variant)),
-                            selected: _draftVariant == variant.id,
-                            onSelected: (_) =>
-                                setState(() => _draftVariant = variant.id),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              const SizedBox(height: 10),
-              if (widget.applyScope == ModelPickerApplyScope.session)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
+  ) => Row(
+    children: [
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              model.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            Text(
+              _draftVariant.isEmpty ? _strings.modelDefaultMode : _draftVariant,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
+      TextButton(
+        key: const Key('model-picker-options'),
+        onPressed: () => _showModelOptions(context, catalog, model),
+        child: Text(_strings.modelOptions),
+      ),
+    ],
+  );
+
+  Widget _applyBar(
+    BuildContext context,
+    CatalogSnapshot catalog,
+    CatalogModel model, {
+    required bool compact,
+  }) => Material(
+    key: const Key('model-picker-apply-bar'),
+    color: Theme.of(context).colorScheme.surfaceContainerLow,
+    child: SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (!compact) ...[
+              _selectionSummary(context, catalog, model),
+              const SizedBox(height: 8),
+            ],
+            if (_saveError case final error?)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Semantics(
+                  liveRegion: true,
                   child: Text(
-                    "Applies to this session's next turns.",
-                    key: const Key('model-picker-session-scope-note'),
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                    error,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.error,
                     ),
                   ),
                 ),
-              FilledButton.icon(
-                key: ValueKey('use-model-${model.providerID}-${model.id}'),
-                onPressed: () async {
-                  final sessionID = _scopedSessionID;
-                  if (sessionID != null) {
-                    await widget.controller.selectModelForSession(
-                      sessionID,
-                      _draftModel!,
-                      variant: _draftVariant,
-                    );
-                  } else {
-                    await widget.controller.selectModel(
-                      _draftModel!,
-                      variant: _draftVariant,
-                    );
-                  }
-                  widget.onApplied?.call();
-                  if (mounted && widget.onApplied == null) {
-                    setState(_syncDraft);
-                  }
-                },
-                icon: const Icon(Icons.check_rounded),
-                label: Text(switch (widget.applyScope) {
-                  ModelPickerApplyScope.classic => 'Use model and mode',
-                  ModelPickerApplyScope.session => 'Use for this session',
-                  ModelPickerApplyScope.newSessions => 'Use for new sessions',
-                }),
               ),
-            ],
-          ),
+            FilledButton(
+              key: ValueKey('use-model-${model.providerID}-${model.id}'),
+              onPressed: _applying ? null : _applyDraft,
+              child: _applying
+                  ? const SizedBox.square(
+                      dimension: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(switch (widget.applyScope) {
+                      ModelPickerApplyScope.classic => 'Use model and mode',
+                      ModelPickerApplyScope.session => 'Use for this session',
+                      ModelPickerApplyScope.newSessions =>
+                        'Use for new sessions',
+                    }, textAlign: TextAlign.center),
+            ),
+          ],
         ),
       ),
+    ),
+  );
+
+  Future<void> _showModelOptions(
+    BuildContext context,
+    CatalogSnapshot catalog,
+    CatalogModel model,
+  ) => showDialog<void>(
+    context: context,
+    builder: (context) => StatefulBuilder(
+      builder: (context, updateDialog) => AlertDialog(
+        title: Text(model.name),
+        scrollable: true,
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${presentedProviderName(model.providerID, catalog.providers)} · ${model.id}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              [
+                if (model.contextLimit > 0)
+                  '${_number(model.contextLimit)} context',
+                if (model.outputLimit > 0)
+                  '${_number(model.outputLimit)} output',
+                if (model.reasoning) 'Reasoning',
+                if (model.tools) 'Tools',
+                if (model.attachments) 'Attachments',
+                ?modelCostLabel(model),
+              ].join(' · '),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              _strings.modelThinkingMode,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            _variantSelector(
+              context,
+              model,
+              onChanged: (value) {
+                setState(() => _draftVariant = value);
+                updateDialog(() {});
+              },
+            ),
+            const SizedBox(height: 20),
+            _agentPicker(catalog),
+            if (widget.applyScope == ModelPickerApplyScope.session) ...[
+              const SizedBox(height: 16),
+              Text(
+                _strings.modelSessionScopeNote,
+                key: const Key('model-picker-session-scope-note'),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Done'),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _variantSelector(
+    BuildContext context,
+    CatalogModel model, {
+    required ValueChanged<String> onChanged,
+  }) {
+    final variants = model.variants
+        .where((variant) => !variant.disabled)
+        .toList();
+    if (variants.isEmpty) return Text(_strings.modelDefaultMode);
+    return Wrap(
+      spacing: 8,
+      runSpacing: 4,
+      children: [
+        ChoiceChip(
+          key: ValueKey('model-variant-${model.id}-default'),
+          label: const Text('Default'),
+          selected: _draftVariant.isEmpty,
+          onSelected: (_) => onChanged(''),
+        ),
+        for (final variant in variants)
+          ChoiceChip(
+            key: ValueKey('model-variant-${model.id}-${variant.id}'),
+            label: Text(_variantLabel(variant)),
+            selected: _draftVariant == variant.id,
+            onSelected: (_) => onChanged(variant.id),
+          ),
+      ],
     );
+  }
+
+  Future<void> _applyDraft() async {
+    final model = _draftModel;
+    if (model == null || _applying) return;
+    final variant = _draftVariant;
+    setState(() {
+      _applying = true;
+      _saveError = null;
+    });
+    try {
+      final sessionID = _scopedSessionID;
+      if (sessionID != null) {
+        await widget.controller.selectModelForSession(
+          sessionID,
+          model,
+          variant: variant,
+        );
+      } else {
+        await widget.controller.selectModel(model, variant: variant);
+      }
+      if (!mounted) return;
+      if (!ModelLibrary.sameModel(_currentModel, model) ||
+          _currentVariant != variant) {
+        setState(
+          () => _saveError =
+              'This choice is no longer available. Refresh models and try again.',
+        );
+        return;
+      }
+      widget.onApplied?.call();
+      if (mounted && widget.onApplied == null) setState(_syncDraft);
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _saveError = 'Could not save the model choice. Try again.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _applying = false);
+    }
   }
 
   static String _variantLabel(CatalogVariant variant) {

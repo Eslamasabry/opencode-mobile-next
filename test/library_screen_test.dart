@@ -38,7 +38,64 @@ Widget _app(ConnectionController controller) => MaterialApp(
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('More hub leads the Browse grid with Models & agents', (
+  testWidgets('search finds aliases, recovers from no results, and clears', (
+    tester,
+  ) async {
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+    final search = find.byKey(const Key('library-search'));
+    await tester.enterText(search, 'shell');
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('library-terminal')), findsOneWidget);
+    expect(find.text('Providers'), findsNothing);
+    await tester.enterText(search, 'not-a-real-tool');
+    await tester.pumpAndSettle();
+    expect(find.textContaining('No matching tools'), findsOneWidget);
+    await tester.tap(find.byTooltip('Clear search'));
+    await tester.pumpAndSettle();
+    expect(find.text('Providers'), findsOneWidget);
+    expect(find.byKey(const ValueKey('library-active-setup')), findsOneWidget);
+  });
+
+  testWidgets(
+    'the default model uses the catalog name and explains its scope',
+    (tester) async {
+      final controller = await _controller();
+      addTearDown(controller.dispose);
+      controller.selectedModel = ModelRef(
+        providerID: 'opencode',
+        modelID: 'nemotron-free',
+      );
+      controller.catalog = const CatalogSnapshot(
+        providers: [],
+        agents: [],
+        models: [
+          CatalogModel(
+            id: 'nemotron-free',
+            providerID: 'opencode',
+            name: 'Nemotron Ultra',
+            enabled: true,
+            status: 'active',
+            contextLimit: 100000,
+            outputLimit: 8000,
+            reasoning: true,
+            attachments: false,
+            tools: true,
+            variants: [],
+          ),
+        ],
+      );
+      await tester.pumpWidget(_app(controller));
+      await tester.pumpAndSettle();
+      expect(find.text('Nemotron Ultra'), findsOneWidget);
+      expect(find.text('opencode/nemotron-free'), findsNothing);
+      expect(find.textContaining('Default for new chats'), findsOneWidget);
+    },
+  );
+
+  testWidgets('More uses compact rows with Models & agents first', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 844);
@@ -57,14 +114,14 @@ void main() {
     expect(find.text('Requests'), findsNothing);
     expect(find.byKey(const ValueKey('library-mission-control')), findsNothing);
 
-    // First slot of the grid: no destination card sits above or to its left.
-    final card = find.widgetWithText(Card, 'Models & agents');
+    final card = find.widgetWithText(ListTile, 'Models & agents');
     final cardRect = tester.getRect(card);
     final providersRect = tester.getRect(
-      find.widgetWithText(Card, 'Providers'),
+      find.widgetWithText(ListTile, 'Providers'),
     );
-    expect(cardRect.top, lessThanOrEqualTo(providersRect.top));
-    expect(cardRect.left, lessThan(providersRect.left));
+    expect(cardRect.bottom, lessThanOrEqualTo(providersRect.top));
+    expect(cardRect.height, lessThanOrEqualTo(72));
+    expect(cardRect.left, providersRect.left);
   });
 
   testWidgets('the hub carries no pending badge of its own', (tester) async {

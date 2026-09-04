@@ -929,6 +929,7 @@ void main() {
 
     expect(find.byTooltip('Clear file search'), findsOneWidget);
     expect(find.bySemanticsLabel(RegExp('Clear file search')), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
     semantics.dispose();
   });
 
@@ -965,9 +966,16 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), 'result');
-    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pump(const Duration(milliseconds: 350));
     await tester.pumpAndSettle();
     expect(find.text('result.dart'), findsOneWidget);
+
+    await tester
+        .widget<RefreshIndicator>(find.byType(RefreshIndicator).first)
+        .onRefresh();
+    await tester.pumpAndSettle();
+    expect(find.text('result.dart'), findsOneWidget);
+    expect(find.text('local.dart'), findsNothing);
 
     await tester.tap(find.byTooltip('Clear file search'));
     await tester.pumpAndSettle();

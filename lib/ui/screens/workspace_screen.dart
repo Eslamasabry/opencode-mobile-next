@@ -60,6 +60,12 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     if (shouldReload) unawaited(_load());
   }
 
+  Future<void> _refreshWorkspace() async {
+    await _load();
+    if (!mounted) return;
+    await widget.controller.refreshSessions();
+  }
+
   Future<void> _load() async {
     final generation = ++_loadGeneration;
     final repository = await widget.controller.prepareActionRepository();
@@ -196,7 +202,11 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             : workspace.name,
       );
     }
-    final directory = _selectedProject?.directory ?? _selectedDirectory;
+    final directory =
+        widget.controller.directory ??
+        _selectedWorkspace?.directory ??
+        _selectedDirectory ??
+        _selectedProject?.directory;
     parts.add(
       directory?.isNotEmpty == true ? directory! : 'Server’s default directory',
     );
@@ -204,11 +214,17 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   }
 
   Future<void> _selectWorkspace(WorkspaceInfo? workspace) async {
-    setState(() => _selectedWorkspaceID = workspace?.id);
     await widget.controller.selectLocation(
       directory: workspace?.directory ?? _selectedDirectory,
       workspace: workspace?.id,
     );
+    if (!mounted) return;
+    setState(() {
+      _selectedWorkspaceID = widget.controller.workspace;
+      _selectedDirectory = widget.controller.directory;
+    });
+    final error = widget.controller.locationError;
+    if (error != null) _showError(error);
   }
 
   static String _basename(String path) {
@@ -248,7 +264,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       return const LoadingList(rows: 6);
     }
     if (_projectError != null && _projects == null) {
-      return ProductErrorState(message: _projectError!, onRetry: _load);
+      return ProductErrorState(
+        message: _projectError!,
+        onRetry: _refreshWorkspace,
+      );
     }
     if (_projects?.isEmpty == true) {
       // A fresh server has no projects yet, but it can still host a session:
@@ -266,7 +285,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 'or ask below to start a session in the server’s default '
                 'directory.',
             actionLabel: 'Refresh',
-            onAction: _load,
+            onAction: _refreshWorkspace,
           ),
           Positioned(
             left: 12,
@@ -300,7 +319,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     return Stack(
       children: [
         RefreshIndicator(
-          onRefresh: _load,
+          onRefresh: _refreshWorkspace,
           child: DesktopScrollbarArea(
             builder: (scrollController) => CustomScrollView(
               controller: scrollController,

@@ -19,6 +19,7 @@ import '../background/live_background.dart';
 import '../background/widget_snapshot.dart';
 import '../diagnostics/app_diagnostics.dart';
 import '../termux/bridge.dart';
+import 'model_library.dart';
 import 'offline_queue.dart';
 import 'profiles.dart';
 import 'session_drafts.dart';
@@ -209,6 +210,7 @@ class ConnectionController extends ChangeNotifier {
   /// Prompts drafted while the server was unreachable, waiting to flush.
   /// Loaded lazily from [OfflineQueueStore] and kept in memory afterward.
   List<QueuedPrompt>? _offlineQueue;
+  Future<void> _queueChanges = Future<void>.value();
   OfflineQueueStore? _offlineQueueStore;
   bool _flushingOfflineQueue = false;
 
@@ -264,6 +266,9 @@ class ConnectionController extends ChangeNotifier {
   /// [selectedModel]. Restored per profile on connect and dropped with the
   /// session.
   Map<String, SessionModelChoice> sessionModels = {};
+  ModelLibrary _modelLibrary = const ModelLibrary();
+  ModelLibrary get modelLibrary => _modelLibrary;
+  Future<void> _modelLibraryWrite = Future.value();
   bool transcriptReasoningExpanded = false;
   bool transcriptTimestampsVisible = false;
 
@@ -1102,6 +1107,7 @@ class ConnectionController extends ChangeNotifier {
     selectedAgent = store.agentFor(profile.id);
     selectedVariant = store.variantFor(profile.id);
     sessionModels = store.sessionModelsFor(profile.id);
+    _modelLibrary = store.modelLibraryFor(profile.id);
 
     final savedLocation = await _validatedSavedLocation(
       profile,
@@ -1434,6 +1440,23 @@ class ConnectionController extends ChangeNotifier {
       providers = nextProviders;
       agents = nextAgents;
       catalog = nextCatalog;
+      // A temporarily unloaded provider is not a removed model. Keep its
+      // shortcuts until a successful runtime reload can confirm membership.
+      final retainedLibrary = _modelLibrary.retainWhere(
+        (model) => unloaded.contains(model.providerID) || modelAvailable(model),
+      );
+      if (!listEquals(retainedLibrary.favorites, _modelLibrary.favorites) ||
+          !listEquals(retainedLibrary.recent, _modelLibrary.recent)) {
+        _modelLibrary = retainedLibrary;
+        await _persistModelLibrary();
+      }
+      if (!_isCurrentCatalogRefresh(
+        generation,
+        currentApi,
+        refreshGeneration,
+      )) {
+        return;
+      }
       unloadedProviderIDs = unloaded;
       catalogDetailed =
           detailedCatalog?.models.isNotEmpty == true ||
@@ -3107,6 +3130,12 @@ class ConnectionController extends ChangeNotifier {
   OfflineQueueStore get _queueStore =>
       _offlineQueueStore ??= OfflineQueueStore(prefs: store.prefs);
 
+  Future<T> _serializeQueueChange<T>(Future<T> Function() change) {
+    final operation = _queueChanges.then((_) => change());
+    _queueChanges = operation.then<void>((_) {}, onError: (Object _) {});
+    return operation;
+  }
+
   /// Set when the queue dropped entries on its own — expiry or a limit —
   /// and cleared once a screen has shown it. A prompt the user asked to send
   /// never disappears silently.
@@ -3144,13 +3173,13 @@ class ConnectionController extends ChangeNotifier {
   /// Drops every queued prompt, for every profile. Returns whether the
   /// store accepted the write; a refusal leaves the queue intact rather
   /// than reporting a clear that did not happen.
-  Future<bool> clearAllQueuedPrompts() async {
+  Future<bool> clearAllQueuedPrompts() => _serializeQueueChange(() async {
     if (_queue.isEmpty) return true;
     if (!await _queueStore.save(const [])) return false;
     _offlineQueue = [];
     notifyListeners();
     return true;
-  }
+  });
 
   /// Drops every saved composer draft, for every session.
   Future<bool> clearAllSessionDrafts() async {
@@ -3212,26 +3241,34 @@ class ConnectionController extends ChangeNotifier {
 
   /// Adds a drafted prompt to the offline queue. Returns false when the
   /// entry exceeds the composer's aggregate attachment cap and was not
-  /// queued; the caller keeps its existing limits messaging.
-  Future<bool> queuePrompt(QueuedPrompt prompt) async {
-    if (prompt.payloadBytes > OfflineQueueStore.maxEntryBytes) return false;
-    final eviction = OfflineQueueStore.enforceLimits([..._queue, prompt]);
-    // The new entry losing its own eviction pass means the queue could not
-    // make room for it; say so rather than reporting a queue that silently
-    // dropped what the user just wrote.
-    if (!eviction.kept.any((entry) => entry.id == prompt.id)) return false;
-    _offlineQueue = eviction.kept;
-    await _queueStore.save(eviction.kept);
-    if (eviction.removed > 0) _queueEvictionNotice = eviction.notice;
-    notifyListeners();
-    return true;
-  }
+  /// queued. A storage failure throws [OfflineQueueWriteException], so the
+  /// caller can keep the composer and explain why it was not saved.
+  Future<bool> queuePrompt(QueuedPrompt prompt) =>
+      _serializeQueueChange(() async {
+        if (prompt.payloadBytes > OfflineQueueStore.maxEntryBytes) return false;
+        final eviction = OfflineQueueStore.enforceLimits([..._queue, prompt]);
+        // The new entry losing its own eviction pass means the queue could not
+        // make room for it; say so rather than reporting a queue that silently
+        // dropped what the user just wrote.
+        if (!eviction.kept.any((entry) => entry.id == prompt.id)) return false;
+        if (!await _queueStore.save(eviction.kept)) {
+          throw const OfflineQueueWriteException();
+        }
+        _offlineQueue = eviction.kept;
+        if (eviction.removed > 0) _queueEvictionNotice = eviction.notice;
+        notifyListeners();
+        return true;
+      });
 
-  Future<void> removeQueuedPrompt(String id) async {
-    _queue.removeWhere((entry) => entry.id == id);
-    await _queueStore.save(_queue);
+  Future<void> removeQueuedPrompt(String id) => _serializeQueueChange(() async {
+    final kept = _queue.where((entry) => entry.id != id).toList();
+    if (kept.length == _queue.length) return;
+    if (!await _queueStore.save(kept)) {
+      throw const OfflineQueueWriteException();
+    }
+    _offlineQueue = kept;
     notifyListeners();
-  }
+  });
 
   SessionDraftStore get _draftStore =>
       _sessionDraftStore ??= SessionDraftStore(prefs: store.prefs);
@@ -3299,6 +3336,11 @@ class ConnectionController extends ChangeNotifier {
   Future<DeleteProfileResult> deleteProfileAndLocalData(
     String profileId,
   ) async {
+    // Drain shortcut writes before the deletion sweep discovers its keys.
+    // A failed write must not prevent the user from removing a profile.
+    try {
+      await _modelLibraryWrite;
+    } catch (_) {}
     final scopedKeys = store.profileScopedPreferenceKeys(profileId);
     final failures = <String>[];
 
@@ -3398,6 +3440,7 @@ class ConnectionController extends ChangeNotifier {
     if (_flushingOfflineQueue || _disposed) return;
     final profileID = profile?.id;
     if (profileID == null) return;
+    final origin = (profileID, profile?.baseUrl, directory, workspace);
     if (!_queue.any((entry) => entry.profileID == profileID)) return;
     _flushingOfflineQueue = true;
     var mutated = false;
@@ -3406,7 +3449,15 @@ class ConnectionController extends ChangeNotifier {
       for (final entry in List.of(_queue)) {
         if (entry.profileID != profileID) continue;
         final currentApi = await prepareActionTransport();
-        if (currentApi == null || status != StreamStatus.connected) break;
+        await _queueChanges;
+        if (_disposed ||
+            currentApi == null ||
+            !identical(currentApi, api) ||
+            status != StreamStatus.connected ||
+            origin != (profile?.id, profile?.baseUrl, directory, workspace)) {
+          break;
+        }
+        if (!_queue.any((queued) => queued.id == entry.id)) continue;
         try {
           await currentApi.promptAsync(
             entry.sessionID,
@@ -3417,16 +3468,20 @@ class ConnectionController extends ChangeNotifier {
             attachments: entry.attachments,
             agentMentions: entry.mentions,
           );
-          _queue.removeWhere((queued) => queued.id == entry.id);
-          mutated = true;
+          await _serializeQueueChange(() async {
+            _queue.removeWhere((queued) => queued.id == entry.id);
+            mutated = true;
+          });
           sent += 1;
         } on ApiException catch (error) {
           if (error.statusCode == null) break;
-          final index = _queue.indexWhere((queued) => queued.id == entry.id);
-          if (index >= 0) {
-            _queue[index] = entry.withError(error.message);
-            mutated = true;
-          }
+          await _serializeQueueChange(() async {
+            final index = _queue.indexWhere((queued) => queued.id == entry.id);
+            if (index >= 0) {
+              _queue[index] = entry.withError(error.message);
+              mutated = true;
+            }
+          });
         } catch (_) {
           break;
         }
@@ -3439,8 +3494,10 @@ class ConnectionController extends ChangeNotifier {
         offlineFlushRevision += 1;
       }
       if (mutated) {
-        await _queueStore.save(_queue);
-        notifyListeners();
+        await _serializeQueueChange(() async {
+          await _queueStore.save(_queue);
+          if (!_disposed) notifyListeners();
+        });
       }
     }
   }
@@ -3741,7 +3798,11 @@ class ConnectionController extends ChangeNotifier {
     locationLoading = true;
     locationError = null;
     lastError = null;
+    final savedLibrary = _modelLibrary;
+    final savedSessionModels = sessionModels;
     _clearLocationData();
+    _modelLibrary = savedLibrary;
+    sessionModels = savedSessionModels;
     status = StreamStatus.connecting;
     notifyListeners();
     enablePollingFallback();
@@ -3882,8 +3943,11 @@ class ConnectionController extends ChangeNotifier {
     String sessionID,
     ModelRef ref, {
     String? variant,
+    bool recordRecent = true,
   }) async {
+    ref = ref.normalized;
     final nextVariant = variant ?? '';
+    if (catalog != null && !modelAvailable(ref)) return;
     if (!_variantAllowed(ref, nextVariant)) return;
     sessionModels[sessionID] = SessionModelChoice(
       model: ref,
@@ -3891,6 +3955,8 @@ class ConnectionController extends ChangeNotifier {
     );
     final p = profile;
     final generation = _generation;
+    if (recordRecent) await _rememberModel(ref);
+    if (_disposed || generation != _generation) return;
     if (p != null) await store.setSessionModels(p.id, sessionModels);
     if (_disposed || generation != _generation) return;
     notifyListeners();
@@ -3903,12 +3969,16 @@ class ConnectionController extends ChangeNotifier {
   }
 
   Future<void> selectModel(ModelRef ref, {String? variant}) async {
+    ref = ref.normalized;
     final nextVariant = variant ?? '';
+    if (catalog != null && !modelAvailable(ref)) return;
     if (!_variantAllowed(ref, nextVariant)) return;
     selectedModel = ref;
     selectedVariant = nextVariant;
     final p = profile;
     final generation = _generation;
+    await _rememberModel(ref);
+    if (_disposed || generation != _generation) return;
     if (p != null) {
       await store.setModel(p.id, ref.providerID, ref.modelID, explicit: true);
       await store.setVariant(p.id, nextVariant);
@@ -3933,6 +4003,75 @@ class ConnectionController extends ChangeNotifier {
   }
 
   Future<void> refreshCatalog() => _loadCatalog();
+
+  bool modelAvailable(ModelRef ref) =>
+      catalog?.models.any(
+        (model) =>
+            model.enabled &&
+            ModelLibrary.sameModel(
+              ref,
+              ModelRef(providerID: model.providerID, modelID: model.id),
+            ),
+      ) ??
+      false;
+
+  Future<void> _persistModelLibrary() {
+    final id = _connectedProfile?.id ?? profile?.id;
+    if (id == null) return Future.value();
+    final snapshot = _modelLibrary;
+    final previous = _modelLibraryWrite;
+    final write = () async {
+      try {
+        await previous;
+      } catch (_) {}
+      // The snapshot belongs to the captured profile, even when the user
+      // changes workspace or server while storage is busy. Profile deletion
+      // drains this queue before sweeping its keys.
+      await store.setModelLibrary(id, snapshot);
+    }();
+    _modelLibraryWrite = write;
+    return write;
+  }
+
+  Future<void> _rememberModel(ModelRef model) {
+    _modelLibrary = _modelLibrary.remember(model);
+    return _persistModelLibrary();
+  }
+
+  Future<void> toggleModelFavorite(ModelRef model) async {
+    if (!modelAvailable(model) && !_modelLibrary.isFavorite(model)) return;
+    final before = _modelLibrary;
+    final next = before.toggleFavorite(model);
+    _modelLibrary = next;
+    notifyListeners();
+    try {
+      await _persistModelLibrary();
+    } catch (_) {
+      if (!_disposed && identical(_modelLibrary, next)) {
+        _modelLibrary = before;
+        notifyListeners();
+      }
+      rethrow;
+    }
+  }
+
+  /// Cycles only this chat's next-turn selection. Recent cycling keeps the
+  /// MRU order stable, otherwise repeated taps just bounce between two models.
+  Future<ModelRef?> cycleModelForSession(
+    String sessionID, {
+    bool reverse = false,
+    bool favoritesOnly = false,
+  }) async {
+    final next = _modelLibrary.next(
+      modelForSession(sessionID),
+      reverse: reverse,
+      favoritesOnly: favoritesOnly,
+      available: modelAvailable,
+    );
+    if (next == null) return null;
+    await selectModelForSession(sessionID, next, recordRecent: favoritesOnly);
+    return next;
+  }
 
   /// Ask the server to rebuild its provider runtime, then reload the catalog.
   ///
@@ -4108,6 +4247,7 @@ class ConnectionController extends ChangeNotifier {
     _sessionRevisions.clear();
     sessionsById = {};
     sessionModels = {};
+    _modelLibrary = const ModelLibrary();
     busySessions = {};
     retryStates = {};
     permissions = {};

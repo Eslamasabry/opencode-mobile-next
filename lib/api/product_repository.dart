@@ -28,6 +28,41 @@ extension on VcsDiffMode {
 
 abstract class ProductRepository implements ServerOperationsGateway {
   @override
+  Future<ManagedShellList> loadRunningShells() async =>
+      const ManagedShellList(supported: false);
+
+  @override
+  Future<ManagedShell?> getManagedShell(String id) async => null;
+
+  @override
+  Future<String?> managedShellServerIdentity() async => null;
+
+  @override
+  Future<ManagedShellOutput> readManagedShellOutput(
+    String id, {
+    required int cursor,
+    int limit = 65536,
+  }) => Future.error(const ProductException('Shell management is unavailable'));
+
+  @override
+  Future<void> stopManagedShell(String id) =>
+      Future.error(const ProductException('Shell management is unavailable'));
+
+  @override
+  Future<ManagedShell> setManagedShellTimeout(String id, Duration? timeout) =>
+      Future.error(const ProductException('Shell management is unavailable'));
+
+  @override
+  Future<BackgroundWorkSupport> loadBackgroundWorkSupport() async =>
+      BackgroundWorkSupport.unavailable;
+
+  @override
+  Future<BackgroundWorkResult> backgroundSession(String sessionID) =>
+      Future.error(
+        const ProductException('Background work is unavailable on this server'),
+      );
+
+  @override
   void setLocation({String? directory, String? workspace});
   @override
   Future<String> upgradeServer(String target) => Future.error(
@@ -368,8 +403,8 @@ abstract class ProductRepository implements ServerOperationsGateway {
   });
 }
 
-class SdkProductRepository
-    implements ProductRepository, LocationAwareProductRepository {
+class SdkProductRepository extends ProductRepository
+    implements LocationAwareProductRepository {
   static const _providerOAuthAttemptPrefix = 'provider-oauth-';
 
   final sdk.OpencodeSdk _client;
@@ -932,19 +967,21 @@ class SdkProductRepository
       });
 
   @override
-  Future<String> stealSessionIntoWorkspace(String sessionID) =>
-      _guardWorktree('Could not steal the session into this workspace', () async {
-        final response = await _client.getSyncApi().syncSteal(
-          directory: _directory,
-          workspace: _workspace,
-          syncStealRequest: sdk.SyncStealRequest(sessionID: sessionID),
-        );
-        final stolen = response.data;
-        if (stolen == null) {
-          throw const ProductException('Server confirmed no stolen session');
-        }
-        return stolen.sessionID;
-      });
+  Future<String> stealSessionIntoWorkspace(String sessionID) => _guardWorktree(
+    'Could not steal the session into this workspace',
+    () async {
+      final response = await _client.getSyncApi().syncSteal(
+        directory: _directory,
+        workspace: _workspace,
+        syncStealRequest: sdk.SyncStealRequest(sessionID: sessionID),
+      );
+      final stolen = response.data;
+      if (stolen == null) {
+        throw const ProductException('Server confirmed no stolen session');
+      }
+      return stolen.sessionID;
+    },
+  );
 
   @override
   Future<List<ConsoleOrganization>> listConsoleOrganizations() =>
@@ -1403,9 +1440,7 @@ class SdkProductRepository
                 hidden: agent.hidden,
                 maxSteps: agent.steps,
                 color: color is String && color.isNotEmpty ? color : null,
-                model: model == null
-                    ? null
-                    : '${model.providerID}/${model.id}',
+                model: model == null ? null : '${model.providerID}/${model.id}',
               );
             })
             .where((agent) => agent.id.isNotEmpty)
@@ -1432,6 +1467,27 @@ class SdkProductRepository
       cacheWritePerMillion: base.cache.write.toDouble(),
     );
   }
+
+  @override
+  Future<BackgroundWorkSupport> loadBackgroundWorkSupport() async =>
+      (await loadExperimentalCapabilities()).backgroundSubagents
+      ? BackgroundWorkSupport.subagents
+      : BackgroundWorkSupport.unavailable;
+
+  @override
+  Future<BackgroundWorkResult> backgroundSession(String sessionID) =>
+      _guard('Could not background subagents', () async {
+        final response = await _client
+            .getExperimentalApi()
+            .experimentalSessionBackground(
+              sessionID: sessionID,
+              directory: _directory,
+              workspace: _workspace,
+            );
+        return response.data == true
+            ? BackgroundWorkResult.promoted
+            : BackgroundWorkResult.unchanged;
+      });
 
   static DateTime? _catalogReleased(num released) => released <= 0
       ? null
@@ -2386,7 +2442,8 @@ class SdkProductRepository
     final uri = Uri.tryParse(value);
     if (uri?.scheme == 'file') {
       try {
-        path = uri!.toFilePath();
+        // Server URIs use forward slashes, regardless of the client's OS.
+        path = uri!.toFilePath(windows: false);
       } on UnsupportedError {
         path = Uri.decodeComponent(uri!.path);
       }
@@ -2564,7 +2621,7 @@ class _IoTerminalChannel implements TerminalChannel {
         ? utf8.decode(data, allowMalformed: true)
         : data.toString();
     if (text.isEmpty) return;
-    _cursor += text.length;
+    _cursor += data is List<int> ? data.length : utf8.encode(text).length;
     yield text;
   }
 
