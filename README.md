@@ -4,21 +4,23 @@
 [![Linux desktop](https://github.com/Eslamasabry/opencode-mobile-next/actions/workflows/desktop-linux.yml/badge.svg?branch=master)](https://github.com/Eslamasabry/opencode-mobile-next/actions/workflows/desktop-linux.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-55D187.svg)](LICENSE)
 
-**An unofficial Android client for the OpenCode server you control.**
+**Your coding agent, in your pocket. Your server, under your control.**
 
-OpenCode Mobile is an Android app for [OpenCode](https://opencode.ai), the
-open-source coding agent. You keep OpenCode running on your computer, or on
-the phone itself, and this app is the screen you talk to it through: start a
-task on the train, approve an edit from the sofa, read the diff while the
-kettle boils.
+Start coding tasks, follow streaming answers, approve requests, and review
+changes from your Android phone. OpenCode Mobile connects to
+[OpenCode](https://opencode.ai) running on your computer or on the phone
+itself through Termux.
 
-> **A word before you install.** OpenCode Mobile is an independent community
-> project. It is not built, maintained, endorsed by, or affiliated with the
-> official OpenCode team. It is one person's project, built heavily with AI
-> assistance, and it is in **public alpha**. Things will be rough in places.
-> When they are, the **Report a bug** button inside the app (More → Report a
-> bug) sends the details straight here:
-> [open an issue](https://github.com/Eslamasabry/opencode-mobile-next/issues/new?template=bug_report.yml).
+**[Download for Android](https://github.com/Eslamasabry/opencode-mobile-next/releases)**
+· [Set up your connection](#getting-started)
+· [Watch the demo](video/public/opencode-mobile-demo.mp4)
+· [Get help](SUPPORT.md)
+
+> **Public alpha.** Android is the primary target; desktop builds are experimental.
+> OpenCode Mobile is an independent community project. It is not built,
+> maintained, endorsed by, or affiliated with the official OpenCode team.
+> It is built heavily with AI assistance. See [compatibility](#compatibility) and the release notes
+> before installing. Report problems from **More → Report a bug** in the app.
 
 ## What it is like to use
 
@@ -40,7 +42,13 @@ you can tap, not a list you have to retype.
 
 **Your providers, recognisable.** Providers show a favicon where available,
 with a monogram fallback, a clear connected state, and server-supplied model
-pricing right where you pick one.
+pricing in each model's options.
+
+**Your go-to models, a tap away.** Star models in the picker and revisit your
+eight most recent choices in the Favorites and Recent tabs. These are saved for
+each server. The switch button beside the chat's model opens quick cycling;
+hardware keyboards can use **F2** and **Shift+F2**. Changes made in a chat
+apply to that session's next turns.
 
 **Stay connected while Android permits.** Turn on background mode and the
 notification becomes a live view of the run: which session, what the agent
@@ -63,6 +71,15 @@ home-screen widget that shows your sessions.
 | --- | --- | --- | --- |
 | ![Welcome](video/public/shots/01-welcome.png) | ![Chat, answer streaming](video/public/shots/03-chat-streaming.png) | ![Permission card above the composer](video/public/shots/04-permission-card.png) | ![Diff view](video/public/shots/05-diff.png) |
 
+### Model selection on Android
+
+One searchable list, saved favorites, and quick switching inside each chat.
+These captures come from the installed app on an Android 16 emulator connected
+to a local OpenCode server.
+
+| Browse models | Saved favorites | Switch this chat's model |
+| --- | --- | --- |
+| ![Android model picker](docs/qa/model-picker/android-models.png) | ![Saved model favorites](docs/qa/model-picker/android-favorites.png) | ![Session model switching](docs/qa/model-picker/android-switching.png) |
 <a id="linux-desktop-screenshots"></a>
 
 | Linux desktop: Workspace | Linux desktop: Permission card | Linux desktop: Review |
@@ -77,16 +94,25 @@ The same demo as a video: [video/public/demo.webm](video/public/demo.webm).
 
 ## Getting started
 
+You need an **Android arm64 device** and either an **OpenCode server you can
+reach** or **Termux on the same phone**. Configure a model provider on your
+server before starting a task. The app supplies the interface; your server
+and provider do the work.
+
+### Connect to your computer
+
 1. **Install the app.** Grab the arm64 APK from the
-   [latest release](https://github.com/Eslamasabry/opencode-mobile-next/releases/latest).
+   [latest release](https://github.com/Eslamasabry/opencode-mobile-next/releases).
    Android will warn that it is not from the Play Store. That is expected.
-2. **On your computer, run one command.**
+2. **With OpenCode 2 installed on your computer, start pairing.**
    ```bash
    opencode2 pair
    ```
    It prints a QR code.
 3. **Scan it in the app.** Address, username and password fill in by
    themselves. Start talking.
+
+### Run on your phone
 
 No computer nearby? Tap **Run OpenCode on this phone** on the welcome screen
 and the app sets up OpenCode inside Termux for you. It takes ten to fifteen
@@ -96,6 +122,18 @@ Connecting over the internet, using an older OpenCode 1 server, or running
 the server as a service on a Linux box are all covered in
 [the guide inside the app](lib/ui/screens/guide_screen.dart) and in
 [docs/technical-overview.md](docs/technical-overview.md).
+
+### If you cannot connect
+
+- **OpenCode 1:** use manual setup in the app; `opencode2 pair` is for
+  OpenCode 2. Follow the [connection guide](docs/technical-overview.md).
+- **The address is `localhost`:** on a phone, that means the phone itself.
+  For a computer-hosted server, use an HTTPS address reachable from the phone.
+- **No models appear:** configure a provider on the server, then use
+  **Refresh models** in the model picker. If a connected provider is listed
+  as unloaded, use **Reload providers** there.
+- **An APK will not update:** check the signer notes below. Keep a copy of
+  your connection details before uninstalling; uninstalling erases local data.
 
 ## Compatibility
 

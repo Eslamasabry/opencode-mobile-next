@@ -45,6 +45,7 @@ class _ChatComposer extends StatelessWidget {
     this.onRemoveReference,
     // UX-103 review handoff (end).
     this.contextUsage,
+    this.modelSwitch,
   });
 
   final bool compact;
@@ -127,6 +128,23 @@ class _ChatComposer extends StatelessWidget {
   /// Fraction of the model's context window the session has consumed, or
   /// null when the limit is unknown.
   final double? contextUsage;
+  final Widget? modelSwitch;
+
+  Widget _modelControls(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Flexible(
+        child: _ModelContextChip(
+          label: _contextLabel,
+          tooltip: _rawContextLabel,
+          costLine: _costLine,
+          trailing: _contextPercent(context),
+          onPressed: onChooseModel,
+        ),
+      ),
+      ?modelSwitch,
+    ],
+  );
 
   bool get _hasPrompt =>
       controller.text.trim().isNotEmpty ||
@@ -233,13 +251,7 @@ class _ChatComposer extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
                     child: Align(
                       alignment: AlignmentDirectional.centerStart,
-                      child: _ModelContextChip(
-                        label: _contextLabel,
-                        tooltip: _rawContextLabel,
-                        costLine: _costLine,
-                        trailing: _contextPercent(context),
-                        onPressed: onChooseModel,
-                      ),
+                      child: _modelControls(context),
                     ),
                   ),
                 // UX-P0-04: while a run is active the consequence of Send
@@ -376,13 +388,7 @@ class _ChatComposer extends StatelessWidget {
               Expanded(
                 child: Align(
                   alignment: AlignmentDirectional.centerStart,
-                  child: _ModelContextChip(
-                    label: _contextLabel,
-                    tooltip: _rawContextLabel,
-                    costLine: _costLine,
-                    trailing: _contextPercent(context),
-                    onPressed: onChooseModel,
-                  ),
+                  child: _modelControls(context),
                 ),
               ),
               const SizedBox(width: 6),

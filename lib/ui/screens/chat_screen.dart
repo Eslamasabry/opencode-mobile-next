@@ -35,6 +35,7 @@ import '../widgets/file_preview.dart';
 import '../widgets/info_label.dart';
 import '../widgets/markdown.dart';
 import '../widgets/pickers.dart';
+import '../widgets/model_shortcuts.dart';
 import '../widgets/product_states.dart';
 import '../widgets/question_options.dart';
 import '../widgets/session_title.dart';
@@ -2790,6 +2791,54 @@ class _ChatScreenState extends State<ChatScreen>
     return true;
   }
 
+  Future<void> _cycleModel({
+    bool reverse = false,
+    bool favoritesOnly = false,
+  }) async {
+    final revision = _conn.connectionRevision;
+    try {
+      final next = await _conn.cycleModelForSession(
+        widget.sessionID,
+        reverse: reverse,
+        favoritesOnly: favoritesOnly,
+      );
+      if (!mounted || revision != _conn.connectionRevision) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              next == null
+                  ? 'Choose another model in the picker to build your recent list.'
+                  : 'Next turns in this session use $_presentedModelLabel.',
+            ),
+          ),
+        );
+    } catch (error) {
+      if (mounted) _showActionError(error);
+    }
+  }
+
+  Widget? _modelCycleButton() {
+    final library = _conn.modelLibrary;
+    final current = _conn.modelForSession(widget.sessionID);
+    final hasRecent =
+        library.next(current, available: _conn.modelAvailable) != null;
+    final hasFavorites =
+        library.next(
+          current,
+          favoritesOnly: true,
+          available: _conn.modelAvailable,
+        ) !=
+        null;
+    if (!hasRecent && !hasFavorites) return null;
+    return ModelCycleButton(
+      onCycle: _cycleModel,
+      hasRecent: hasRecent,
+      hasFavorites: hasFavorites,
+    );
+  }
+
   Future<void> _openCommandLauncher({
     _ComposerToolTab initialTab = _ComposerToolTab.commands,
   }) async {
@@ -3859,7 +3908,7 @@ class _ChatScreenState extends State<ChatScreen>
       busy: _conn.busySessions,
     );
 
-    return PopScope(
+    final screen = PopScope(
       canPop: _allowRoutePop,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) unawaited(_leaveChat());
@@ -4239,6 +4288,7 @@ class _ChatScreenState extends State<ChatScreen>
                                       sessionID: widget.sessionID,
                                     ),
                                     contextUsage: _contextWindowUsage(),
+                                    modelSwitch: _modelCycleButton(),
                                     onRemoveAttachment: (attachment) =>
                                         setState(
                                           () => _attachments.remove(attachment),
@@ -4260,6 +4310,7 @@ class _ChatScreenState extends State<ChatScreen>
         ),
       ),
     );
+    return ModelShortcuts(onCycle: _cycleModel, child: screen);
   }
 
   @override

@@ -42,4 +42,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aboutSigningCertificate => 'Signing certificate SHA-256';
+
+  @override
+  String get modelSwitchSession => 'Switch model for this session';
+
+  @override
+  String get modelNextRecent => 'Next recent model · F2';
+
+  @override
+  String get modelPreviousRecent => 'Previous recent model · Shift+F2';
+
+  @override
+  String get modelNextFavorite => 'Next favorite model';
+
+  @override
+  String get modelChooseTitle => 'Choose a model';
+
+  @override
+  String get modelTitleCompact => 'Models';
+
+  @override
+  String get modelSearchHint => 'Search models';
+
+  @override
+  String get modelAll => 'All models';
+
+  @override
+  String get modelFavorites => 'Favorites';
+
+  @override
+  String get modelRecent => 'Recent';
+
+  @override
+  String get modelOptions => 'Options';
+
+  @override
+  String get modelThinkingMode => 'Thinking mode';
+
+  @override
+  String get modelDefaultMode => 'Default mode';
+
+  @override
+  String get modelSessionScopeNote => 'Applies to this session\'s next turns.';
 }

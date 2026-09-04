@@ -159,6 +159,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Signing certificate SHA-256'**
   String get aboutSigningCertificate;
+
+  /// Tooltip for the chat model cycling menu
+  ///
+  /// In en, this message translates to:
+  /// **'Switch model for this session'**
+  String get modelSwitchSession;
+
+  /// Cycle forward through recent models
+  ///
+  /// In en, this message translates to:
+  /// **'Next recent model · F2'**
+  String get modelNextRecent;
+
+  /// Cycle backward through recent models
+  ///
+  /// In en, this message translates to:
+  /// **'Previous recent model · Shift+F2'**
+  String get modelPreviousRecent;
+
+  /// Cycle through the server profile's favorite models
+  ///
+  /// In en, this message translates to:
+  /// **'Next favorite model'**
+  String get modelNextFavorite;
+
+  /// No description provided for @modelChooseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a model'**
+  String get modelChooseTitle;
+
+  /// No description provided for @modelTitleCompact.
+  ///
+  /// In en, this message translates to:
+  /// **'Models'**
+  String get modelTitleCompact;
+
+  /// No description provided for @modelSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search models'**
+  String get modelSearchHint;
+
+  /// No description provided for @modelAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All models'**
+  String get modelAll;
+
+  /// No description provided for @modelFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get modelFavorites;
+
+  /// No description provided for @modelRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get modelRecent;
+
+  /// No description provided for @modelOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Options'**
+  String get modelOptions;
+
+  /// No description provided for @modelThinkingMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking mode'**
+  String get modelThinkingMode;
+
+  /// No description provided for @modelDefaultMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Default mode'**
+  String get modelDefaultMode;
+
+  /// No description provided for @modelSessionScopeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies to this session\'s next turns.'**
+  String get modelSessionScopeNote;
 }
 
 class _AppLocalizationsDelegate

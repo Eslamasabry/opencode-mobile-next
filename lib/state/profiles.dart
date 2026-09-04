@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../api/models.dart' show ModelRef;
 import '../api/server_probe.dart' show ServerFlavor;
 import '../platform/platform_capabilities.dart';
+import 'model_library.dart';
 
 /// A model (and variant) chosen for one session from inside its chat.
 class SessionModelChoice {
@@ -282,6 +283,7 @@ class ProfileStore {
   // + profileId -> JSON {sessionID: "providerID|modelID|variant"}
   static const _sessionModelsKey = 'oc.sessionModels.';
   static const _sessionModelsCap = 200;
+  static const _modelLibraryKey = 'oc.modelLibrary.';
   static const _locationKey = 'oc.location.'; // + profileId -> JSON
   static const _transcriptReasoningKey = 'oc.transcript.reasoningExpanded';
   static const _transcriptTimestampsKey = 'oc.transcript.timestampsVisible';
@@ -602,6 +604,24 @@ class ProfileStore {
   }
 
   // ----- per-profile model/agent selection -----
+
+  ModelLibrary modelLibraryFor(String profileId) {
+    final raw = prefs.getString('$_modelLibraryKey$profileId');
+    if (raw == null) return const ModelLibrary();
+    try {
+      return ModelLibrary.fromJson(jsonDecode(raw));
+    } on FormatException {
+      return const ModelLibrary();
+    }
+  }
+
+  Future<void> setModelLibrary(String profileId, ModelLibrary library) async {
+    final key = '$_modelLibraryKey$profileId';
+    final saved = library.favorites.isEmpty && library.recent.isEmpty
+        ? await prefs.remove(key)
+        : await prefs.setString(key, jsonEncode(library.toJson()));
+    if (!saved) throw StateError('Could not save model shortcuts');
+  }
 
   (String?, String?) modelFor(String profileId) {
     final v = prefs.getString('$_modelKey$profileId');

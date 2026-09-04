@@ -4,6 +4,18 @@ This project is in public alpha. Only the newest preview is supported.
 
 ## 1.0.34+35 - Unreleased
 
+- Save model favorites and eight recent models per server profile. Cycle
+  models from the chat's switch menu or with F2 / Shift+F2 on a keyboard.
+- Simplify model selection into one searchable list with All, Favorites, and
+  Recent tabs. Move detailed options out of the list and keep Apply reachable
+  with the keyboard open or large accessibility text.
+- Show the active chat's model and reasoning mode consistently in the picker,
+  preserve model choices across workspace changes, and offer a clear-filters
+  action when model searches have no results.
+- Put downloads, setup requirements, and connection troubleshooting at the
+  front of the README.
+- Keep server symbol paths readable on Windows clients and make the
+  localization check recognize Windows paths.
 - Keep model and reasoning-mode choices scoped to the conversation where they
   were selected; other active and new sessions retain their own/default model.
 - Update the generated OpenCode SDK to upstream `f12e14cf`, including support

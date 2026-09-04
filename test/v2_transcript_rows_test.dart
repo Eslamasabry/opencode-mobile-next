@@ -421,6 +421,8 @@ void main() {
       );
       await tester.pump();
       expect(find.text('Use for this session'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('model-picker-options')));
+      await tester.pumpAndSettle();
       expect(
         find.byKey(const Key('model-picker-session-scope-note')),
         findsOneWidget,

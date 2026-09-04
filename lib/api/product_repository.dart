@@ -2386,7 +2386,8 @@ class SdkProductRepository
     final uri = Uri.tryParse(value);
     if (uri?.scheme == 'file') {
       try {
-        path = uri!.toFilePath();
+        // Server URIs use forward slashes, regardless of the client's OS.
+        path = uri!.toFilePath(windows: false);
       } on UnsupportedError {
         path = Uri.decodeComponent(uri!.path);
       }

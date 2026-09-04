@@ -47,5 +47,23 @@
   "aboutSigningCertificate": "Signing certificate SHA-256",
   "@aboutSigningCertificate": {
     "description": "Label for the installed Android APK signer fingerprint"
-  }
+  },
+  "modelSwitchSession": "Switch model for this session",
+  "@modelSwitchSession": {"description": "Tooltip for the chat model cycling menu"},
+  "modelNextRecent": "Next recent model · F2",
+  "@modelNextRecent": {"description": "Cycle forward through recent models"},
+  "modelPreviousRecent": "Previous recent model · Shift+F2",
+  "@modelPreviousRecent": {"description": "Cycle backward through recent models"},
+  "modelNextFavorite": "Next favorite model",
+  "@modelNextFavorite": {"description": "Cycle through the server profile's favorite models"},
+  "modelChooseTitle": "Choose a model",
+  "modelTitleCompact": "Models",
+  "modelSearchHint": "Search models",
+  "modelAll": "All models",
+  "modelFavorites": "Favorites",
+  "modelRecent": "Recent",
+  "modelOptions": "Options",
+  "modelThinkingMode": "Thinking mode",
+  "modelDefaultMode": "Default mode",
+  "modelSessionScopeNote": "Applies to this session's next turns."
 }

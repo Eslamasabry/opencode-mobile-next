@@ -35,6 +35,7 @@ class _V2Api extends OpenCodeApi {
   final ProvidersResponse? providersResult;
   final ProvidersResponse? configuredProvidersResult;
   final List<AgentInfo> agentsResult;
+  bool catalogUnavailable = false;
   Completer<List<Session>>? sessionsCompleter;
   Completer<Map<String, String>>? statusesCompleter;
   Completer<Health>? healthCompleter;
@@ -78,8 +79,10 @@ class _V2Api extends OpenCodeApi {
       statusesCompleter?.future ?? Future.value(const {});
 
   @override
-  Future<ProvidersResponse> providers() async =>
-      providersResult ?? ProvidersResponse(providers: const []);
+  Future<ProvidersResponse> providers() async {
+    if (catalogUnavailable) throw ApiException('Catalog unavailable');
+    return providersResult ?? ProvidersResponse(providers: const []);
+  }
 
   @override
   Future<ProvidersResponse> configuredProviders() async =>
@@ -935,6 +938,16 @@ void main() {
     final store = await _store({
       'oc.model.server': 'removed-provider|removed-model',
       'oc.agent.server': 'removed-agent',
+      'oc.modelLibrary.server': jsonEncode({
+        'favorites': [
+          {'providerID': 'provider-1', 'modelID': 'model-1'},
+          {'providerID': 'removed-provider', 'modelID': 'removed-model'},
+        ],
+        'recent': [
+          {'providerID': 'removed-provider', 'modelID': 'removed-model'},
+          {'providerID': 'provider-1', 'modelID': 'model-1'},
+        ],
+      }),
     });
     final api = _V2Api(
       providersResult: ProvidersResponse(
@@ -980,8 +993,103 @@ void main() {
     expect(controller.selectedAgent, 'build');
     expect(store.modelFor('server'), ('provider-1', 'model-1'));
     expect(store.agentFor('server'), 'build');
+    expect(
+      controller.modelLibrary.favorites.single.wireName,
+      'provider-1/model-1',
+    );
+    expect(
+      store.modelLibraryFor('server').recent.single.wireName,
+      'provider-1/model-1',
+    );
+    api.catalogUnavailable = true;
+    await controller.refreshCatalog();
+    expect(controller.catalogError, isNotNull);
+    expect(
+      controller.modelLibrary.favorites.single.wireName,
+      'provider-1/model-1',
+    );
+    expect(
+      store.modelLibraryFor('server').recent.single.wireName,
+      'provider-1/model-1',
+    );
     controller.dispose();
   });
+
+  testWidgets(
+    'model shortcuts and chat choices survive location changes and isolate profiles',
+    (tester) async {
+      final store = await _store({
+        'oc.modelLibrary.server': jsonEncode({
+          'favorites': [
+            {'providerID': 'p', 'modelID': 'a'},
+          ],
+          'recent': [],
+        }),
+        'oc.modelLibrary.other': jsonEncode({
+          'favorites': [
+            {'providerID': 'p', 'modelID': 'b'},
+          ],
+          'recent': [],
+        }),
+      });
+      final controller = ConnectionController(
+        store,
+        apiFactory: (_) => _V2Api(
+          providersResult: ProvidersResponse(
+            providers: [
+              ProviderInfo(
+                id: 'p',
+                name: 'Provider',
+                modelIDs: const ['a', 'b'],
+              ),
+            ],
+          ),
+        ),
+        repositoryFactory: (_) => _QuestionRepository(legacyUnavailable: false),
+        eventStreamFactory:
+            ({required api, required onEvent, required onStatus, onError}) =>
+                _FakeEventStream(
+                  api: api,
+                  onEvent: onEvent,
+                  onStatus: onStatus,
+                  onError: onError,
+                ),
+      );
+      addTearDown(controller.dispose);
+      await controller.connect(
+        ServerProfile(
+          id: 'server',
+          name: 'First',
+          baseUrl: 'http://127.0.0.1:1',
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      await controller.selectModelForSession(
+        'chat',
+        ModelRef(providerID: 'p', modelID: 'b'),
+      );
+      await controller.selectLocation(directory: '/another-project');
+      expect(controller.modelLibrary.favorites.single.modelID, 'a');
+      expect(controller.modelLibrary.recent.first.modelID, 'b');
+      expect(controller.modelForSession('chat')?.modelID, 'b');
+      await controller.connect(
+        ServerProfile(
+          id: 'other',
+          name: 'Second',
+          baseUrl: 'http://127.0.0.1:1',
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      expect(controller.modelLibrary.favorites.single.modelID, 'b');
+      expect(controller.modelLibrary.recent, isEmpty);
+      expect(controller.sessionModels, isEmpty);
+      expect(store.modelLibraryFor('server').favorites.single.modelID, 'a');
+      await controller.disconnect();
+      expect(controller.modelLibrary.favorites, isEmpty);
+    },
+  );
 
   testWidgets(
     'fresh catalog follows project chat defaults, not provider order',

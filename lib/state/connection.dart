@@ -19,6 +19,7 @@ import '../background/live_background.dart';
 import '../background/widget_snapshot.dart';
 import '../diagnostics/app_diagnostics.dart';
 import '../termux/bridge.dart';
+import 'model_library.dart';
 import 'offline_queue.dart';
 import 'profiles.dart';
 import 'session_drafts.dart';
@@ -264,6 +265,9 @@ class ConnectionController extends ChangeNotifier {
   /// [selectedModel]. Restored per profile on connect and dropped with the
   /// session.
   Map<String, SessionModelChoice> sessionModels = {};
+  ModelLibrary _modelLibrary = const ModelLibrary();
+  ModelLibrary get modelLibrary => _modelLibrary;
+  Future<void> _modelLibraryWrite = Future.value();
   bool transcriptReasoningExpanded = false;
   bool transcriptTimestampsVisible = false;
 
@@ -1102,6 +1106,7 @@ class ConnectionController extends ChangeNotifier {
     selectedAgent = store.agentFor(profile.id);
     selectedVariant = store.variantFor(profile.id);
     sessionModels = store.sessionModelsFor(profile.id);
+    _modelLibrary = store.modelLibraryFor(profile.id);
 
     final savedLocation = await _validatedSavedLocation(
       profile,
@@ -1434,6 +1439,23 @@ class ConnectionController extends ChangeNotifier {
       providers = nextProviders;
       agents = nextAgents;
       catalog = nextCatalog;
+      // A temporarily unloaded provider is not a removed model. Keep its
+      // shortcuts until a successful runtime reload can confirm membership.
+      final retainedLibrary = _modelLibrary.retainWhere(
+        (model) => unloaded.contains(model.providerID) || modelAvailable(model),
+      );
+      if (!listEquals(retainedLibrary.favorites, _modelLibrary.favorites) ||
+          !listEquals(retainedLibrary.recent, _modelLibrary.recent)) {
+        _modelLibrary = retainedLibrary;
+        await _persistModelLibrary();
+      }
+      if (!_isCurrentCatalogRefresh(
+        generation,
+        currentApi,
+        refreshGeneration,
+      )) {
+        return;
+      }
       unloadedProviderIDs = unloaded;
       catalogDetailed =
           detailedCatalog?.models.isNotEmpty == true ||
@@ -3299,6 +3321,11 @@ class ConnectionController extends ChangeNotifier {
   Future<DeleteProfileResult> deleteProfileAndLocalData(
     String profileId,
   ) async {
+    // Drain shortcut writes before the deletion sweep discovers its keys.
+    // A failed write must not prevent the user from removing a profile.
+    try {
+      await _modelLibraryWrite;
+    } catch (_) {}
     final scopedKeys = store.profileScopedPreferenceKeys(profileId);
     final failures = <String>[];
 
@@ -3741,7 +3768,11 @@ class ConnectionController extends ChangeNotifier {
     locationLoading = true;
     locationError = null;
     lastError = null;
+    final savedLibrary = _modelLibrary;
+    final savedSessionModels = sessionModels;
     _clearLocationData();
+    _modelLibrary = savedLibrary;
+    sessionModels = savedSessionModels;
     status = StreamStatus.connecting;
     notifyListeners();
     enablePollingFallback();
@@ -3882,8 +3913,11 @@ class ConnectionController extends ChangeNotifier {
     String sessionID,
     ModelRef ref, {
     String? variant,
+    bool recordRecent = true,
   }) async {
+    ref = ref.normalized;
     final nextVariant = variant ?? '';
+    if (catalog != null && !modelAvailable(ref)) return;
     if (!_variantAllowed(ref, nextVariant)) return;
     sessionModels[sessionID] = SessionModelChoice(
       model: ref,
@@ -3891,6 +3925,8 @@ class ConnectionController extends ChangeNotifier {
     );
     final p = profile;
     final generation = _generation;
+    if (recordRecent) await _rememberModel(ref);
+    if (_disposed || generation != _generation) return;
     if (p != null) await store.setSessionModels(p.id, sessionModels);
     if (_disposed || generation != _generation) return;
     notifyListeners();
@@ -3903,12 +3939,16 @@ class ConnectionController extends ChangeNotifier {
   }
 
   Future<void> selectModel(ModelRef ref, {String? variant}) async {
+    ref = ref.normalized;
     final nextVariant = variant ?? '';
+    if (catalog != null && !modelAvailable(ref)) return;
     if (!_variantAllowed(ref, nextVariant)) return;
     selectedModel = ref;
     selectedVariant = nextVariant;
     final p = profile;
     final generation = _generation;
+    await _rememberModel(ref);
+    if (_disposed || generation != _generation) return;
     if (p != null) {
       await store.setModel(p.id, ref.providerID, ref.modelID, explicit: true);
       await store.setVariant(p.id, nextVariant);
@@ -3933,6 +3973,75 @@ class ConnectionController extends ChangeNotifier {
   }
 
   Future<void> refreshCatalog() => _loadCatalog();
+
+  bool modelAvailable(ModelRef ref) =>
+      catalog?.models.any(
+        (model) =>
+            model.enabled &&
+            ModelLibrary.sameModel(
+              ref,
+              ModelRef(providerID: model.providerID, modelID: model.id),
+            ),
+      ) ??
+      false;
+
+  Future<void> _persistModelLibrary() {
+    final id = _connectedProfile?.id ?? profile?.id;
+    if (id == null) return Future.value();
+    final snapshot = _modelLibrary;
+    final previous = _modelLibraryWrite;
+    final write = () async {
+      try {
+        await previous;
+      } catch (_) {}
+      // The snapshot belongs to the captured profile, even when the user
+      // changes workspace or server while storage is busy. Profile deletion
+      // drains this queue before sweeping its keys.
+      await store.setModelLibrary(id, snapshot);
+    }();
+    _modelLibraryWrite = write;
+    return write;
+  }
+
+  Future<void> _rememberModel(ModelRef model) {
+    _modelLibrary = _modelLibrary.remember(model);
+    return _persistModelLibrary();
+  }
+
+  Future<void> toggleModelFavorite(ModelRef model) async {
+    if (!modelAvailable(model) && !_modelLibrary.isFavorite(model)) return;
+    final before = _modelLibrary;
+    final next = before.toggleFavorite(model);
+    _modelLibrary = next;
+    notifyListeners();
+    try {
+      await _persistModelLibrary();
+    } catch (_) {
+      if (!_disposed && identical(_modelLibrary, next)) {
+        _modelLibrary = before;
+        notifyListeners();
+      }
+      rethrow;
+    }
+  }
+
+  /// Cycles only this chat's next-turn selection. Recent cycling keeps the
+  /// MRU order stable, otherwise repeated taps just bounce between two models.
+  Future<ModelRef?> cycleModelForSession(
+    String sessionID, {
+    bool reverse = false,
+    bool favoritesOnly = false,
+  }) async {
+    final next = _modelLibrary.next(
+      modelForSession(sessionID),
+      reverse: reverse,
+      favoritesOnly: favoritesOnly,
+      available: modelAvailable,
+    );
+    if (next == null) return null;
+    await selectModelForSession(sessionID, next, recordRecent: favoritesOnly);
+    return next;
+  }
 
   /// Ask the server to rebuild its provider runtime, then reload the catalog.
   ///
@@ -4108,6 +4217,7 @@ class ConnectionController extends ChangeNotifier {
     _sessionRevisions.clear();
     sessionsById = {};
     sessionModels = {};
+    _modelLibrary = const ModelLibrary();
     busySessions = {};
     retryStates = {};
     permissions = {};
