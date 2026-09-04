@@ -243,6 +243,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Applies to this session\'s next turns.'**
   String get modelSessionScopeNote;
+
+  /// No description provided for @commonClearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get commonClearSearch;
+
+  /// No description provided for @commonUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get commonUndo;
+
+  /// No description provided for @composerClearTextTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear draft text'**
+  String get composerClearTextTitle;
+
+  /// No description provided for @composerClearTextSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps attachments · Undo available'**
+  String get composerClearTextSubtitle;
+
+  /// No description provided for @composerDraftCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft text cleared'**
+  String get composerDraftCleared;
+
+  /// No description provided for @composerReuseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reuse a prompt'**
+  String get composerReuseTitle;
+
+  /// No description provided for @composerReuseSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add text from this conversation'**
+  String get composerReuseSubtitle;
+
+  /// No description provided for @composerReuseDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Adds text to your draft. Attachments aren’t copied.'**
+  String get composerReuseDescription;
+
+  /// No description provided for @composerReuseSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search recent prompts'**
+  String get composerReuseSearch;
+
+  /// No description provided for @composerReuseEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching prompts'**
+  String get composerReuseEmpty;
+
+  /// No description provided for @backgroundSubagentsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Background subagents'**
+  String get backgroundSubagentsTitle;
+
+  /// No description provided for @backgroundWorkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Move running work to background'**
+  String get backgroundWorkTitle;
+
+  /// No description provided for @backgroundWorkShortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue this work while you use the chat · Ctrl+B'**
+  String get backgroundWorkShortcut;
+
+  /// No description provided for @backgroundWorkNoop.
+  ///
+  /// In en, this message translates to:
+  /// **'No foreground subagents to background.'**
+  String get backgroundWorkNoop;
+
+  /// No description provided for @backgroundWorkPromoted.
+  ///
+  /// In en, this message translates to:
+  /// **'Subagents are continuing in the background.'**
+  String get backgroundWorkPromoted;
+
+  /// No description provided for @librarySearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Find settings, tools, and help'**
+  String get librarySearchHint;
+
+  /// No description provided for @libraryDefaultModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Default for new chats'**
+  String get libraryDefaultModel;
+
+  /// No description provided for @libraryNoModel.
+  ///
+  /// In en, this message translates to:
+  /// **'No model selected'**
+  String get libraryNoModel;
+
+  /// Number of matching destinations in More
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0 {No matching tools for “{query}”.} one {1 result for “{query}”.} other {{count} results for “{query}”.}}'**
+  String librarySearchResults(int count, String query);
 }
 
 class _AppLocalizationsDelegate

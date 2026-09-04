@@ -121,7 +121,7 @@ class RunningAgentsStrip extends StatelessWidget {
         key: const ValueKey('running-agents-strip'),
         padding: const EdgeInsets.fromLTRB(8, 4, 8, 6),
         child: SizedBox(
-          height: 36,
+          height: 48,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 2),

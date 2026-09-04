@@ -4,6 +4,18 @@ This project is in public alpha. Only the newest preview is supported.
 
 ## 1.0.34+35 - Unreleased
 
+- Give the composer a full-width editor and a quieter action row. Keep the
+  input connection and selection intact when the keyboard opens or a run ends.
+- Save draft text after pauses in typing. Add Clear draft text with Undo,
+  searchable prompt reuse, and local image thumbnails in the attachment strip.
+- Replace More's oversized tiles with grouped rows, search tools and settings
+  by name or related terms, and label the catalog-named model as the default
+  for new chats.
+- Offer a touch-sized Background action for eligible running work, with Ctrl+B
+  as an optional shortcut. Respect v1's runtime subagent capability and v2's
+  session background endpoint; idle acknowledgements do not claim promotion.
+- Keep context usage quiet below 70%, enlarge agent-switch touch targets,
+  and let prompt history scroll with large text and an open keyboard.
 - Save model favorites and eight recent models per server profile. Cycle
   models from the chat's switch menu or with F2 / Shift+F2 on a keyboard.
 - Simplify model selection into one searchable list with All, Favorites, and

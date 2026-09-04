@@ -3758,7 +3758,7 @@ void main() {
           [Part(type: 'text', text: 'done')],
           providerID: 'p',
           modelID: 'm',
-          tokens: Tokens(input: 45000, output: 5000),
+          tokens: Tokens(input: 70000, output: 5000),
         ),
       ];
     final controller = await _controller(api);
@@ -3789,11 +3789,11 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.bySemanticsLabel('Context window 50 percent used'),
+      find.bySemanticsLabel('Context window 75 percent used'),
       findsOneWidget,
     );
 
-    // The fill must actually paint: half the track's width at full height.
+    // The warning meter must paint at full height with the actual usage.
     await tester.pumpAndSettle();
     final fillSize = tester.getSize(
       find.byKey(const ValueKey('composer-context-meter-fill')),
@@ -3804,7 +3804,7 @@ void main() {
     expect(fillSize.height, trackSize.height);
     expect(
       fillSize.width / trackSize.width,
-      moreOrLessEquals(.5, epsilon: .01),
+      moreOrLessEquals(.75, epsilon: .01),
     );
     semantics.dispose();
   });

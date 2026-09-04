@@ -84,4 +84,73 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get modelSessionScopeNote => 'Applies to this session\'s next turns.';
+
+  @override
+  String get commonClearSearch => 'Clear search';
+
+  @override
+  String get commonUndo => 'Undo';
+
+  @override
+  String get composerClearTextTitle => 'Clear draft text';
+
+  @override
+  String get composerClearTextSubtitle => 'Keeps attachments · Undo available';
+
+  @override
+  String get composerDraftCleared => 'Draft text cleared';
+
+  @override
+  String get composerReuseTitle => 'Reuse a prompt';
+
+  @override
+  String get composerReuseSubtitle => 'Add text from this conversation';
+
+  @override
+  String get composerReuseDescription =>
+      'Adds text to your draft. Attachments aren’t copied.';
+
+  @override
+  String get composerReuseSearch => 'Search recent prompts';
+
+  @override
+  String get composerReuseEmpty => 'No matching prompts';
+
+  @override
+  String get backgroundSubagentsTitle => 'Background subagents';
+
+  @override
+  String get backgroundWorkTitle => 'Move running work to background';
+
+  @override
+  String get backgroundWorkShortcut =>
+      'Continue this work while you use the chat · Ctrl+B';
+
+  @override
+  String get backgroundWorkNoop => 'No foreground subagents to background.';
+
+  @override
+  String get backgroundWorkPromoted =>
+      'Subagents are continuing in the background.';
+
+  @override
+  String get librarySearchHint => 'Find settings, tools, and help';
+
+  @override
+  String get libraryDefaultModel => 'Default for new chats';
+
+  @override
+  String get libraryNoModel => 'No model selected';
+
+  @override
+  String librarySearchResults(int count, String query) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count results for “$query”.',
+      one: '1 result for “$query”.',
+      zero: 'No matching tools for “$query”.',
+    );
+    return '$_temp0';
+  }
 }

@@ -13,6 +13,8 @@ import '../../api/models.dart';
 import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../api/sse.dart';
+import '../../domain/background_work.dart';
+import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
 import '../../state/offline_queue.dart';
 import '../../state/connection.dart';
@@ -65,6 +67,7 @@ part 'chat/sessions_tab.dart';
 part 'chat/timeline_sheet.dart';
 part 'chat/command_launcher.dart';
 part 'chat/prompt_editor.dart';
+part 'chat/prompt_history.dart';
 part 'chat/composer.dart';
 part 'chat/message_view.dart';
 part 'chat/session_sheets.dart';
@@ -73,6 +76,9 @@ part 'chat/attention_card.dart';
 const _maxAttachmentCount = 5;
 const _maxAttachmentBytes = 10 * 1024 * 1024;
 const _maxAggregateAttachmentBytes = 20 * 1024 * 1024;
+
+AppLocalizations _chatL10n(BuildContext context) =>
+    lookupAppLocalizations(Localizations.localeOf(context));
 
 @visibleForTesting
 Future<Uint8List?> readAttachmentBytesWithinLimit(
@@ -314,12 +320,18 @@ class _ChatScreenState extends State<ChatScreen>
   /// busy→idle edge is the "run finished" moment.
   bool _wasBusy = false;
 
-  /// Bumped once per finished run; the composer pulses its border when it
-  /// changes.
-  int _composerPulse = 0;
+  /// Temporary feedback kept beside the composer without replacing its editor.
   String? _composerNote;
   Key? _composerNoteKey;
   Timer? _composerNoteTimer;
+  Timer? _draftSaveTimer;
+  String _lastDraftText = '';
+  BackgroundWorkSupport _backgroundSupport = BackgroundWorkSupport.unavailable;
+  ServerOperationsGateway? _backgroundRepository;
+  int _backgroundSupportRevision = 0;
+  int _backgroundLocationRevision = -1;
+  bool _backgrounding = false;
+  final Set<String> _backgroundRequestedParts = {};
 
   /// Ticks once a second while this session sits in a provider-retry
   /// backoff so the banner's countdown stays live; null otherwise.
@@ -370,12 +382,15 @@ class _ChatScreenState extends State<ChatScreen>
         _composer.selection = TextSelection.collapsed(offset: draft.length);
       }
     }
+    _lastDraftText = _composer.text;
+    _composer.addListener(_scheduleDraftSave);
     _dataRefreshRevision = _conn.dataRefreshRevision;
     _conn.addListener(_onConnectionChanged);
     _syncRetryTicker();
     _handoff.store.addListener(_onHandoffChanged); // UX-103 review handoff
     _load();
     unawaited(_loadServerCommands());
+    unawaited(_loadBackgroundSupport());
     _sub = _conn.events.listen(_onEvent);
     _wasBusy = _conn.busySessions.contains(widget.sessionID);
     final injectedVoice = widget.voiceController;
@@ -404,7 +419,148 @@ class _ChatScreenState extends State<ChatScreen>
   /// when the composer is empty). Runs on navigation away, app pause, and
   /// after sends so the persisted draft always mirrors the composer.
   void _persistDraft() {
+    _draftSaveTimer?.cancel();
     unawaited(_conn.saveSessionDraft(widget.sessionID, _composer.text));
+  }
+
+  // Save pauses in typing too: Android may kill a process without a final
+  // lifecycle callback. Selection changes alone must not trigger a write.
+  void _scheduleDraftSave() {
+    if (_composer.text == _lastDraftText) return;
+    _lastDraftText = _composer.text;
+    _draftSaveTimer?.cancel();
+    _draftSaveTimer = Timer(const Duration(milliseconds: 600), _persistDraft);
+  }
+
+  List<String> get _recentPrompts => {
+    for (final message in _messages.reversed)
+      if (message.info.role == 'user' && !message.info.id.startsWith('local-'))
+        if (_messageText(message).trim() case final text when text.isNotEmpty)
+          text,
+  }.take(30).toList();
+
+  Future<void> _reusePrompt() async {
+    final text = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (_) => _PromptHistorySheet(prompts: _recentPrompts),
+    );
+    if (!mounted || text == null) return;
+    final draft = _composer.text.trimRight();
+    final next = draft.isEmpty ? text : '$draft\n\n$text';
+    _composer.value = TextEditingValue(
+      text: next,
+      selection: TextSelection.collapsed(offset: next.length),
+    );
+    _focus.requestFocus();
+  }
+
+  void _clearDraftText() {
+    final previous = _composer.value;
+    _composer.clear();
+    _persistDraft();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(_chatL10n(context).composerDraftCleared),
+        action: SnackBarAction(
+          label: _chatL10n(context).commonUndo,
+          onPressed: () {
+            if (!mounted) return;
+            // Never overwrite text entered since Clear. Keep both drafts.
+            final current = _composer.text;
+            _composer.value = current.isEmpty
+                ? previous
+                : TextEditingValue(
+                    text: '${previous.text}\n\n$current',
+                    selection: TextSelection.collapsed(
+                      offset: previous.text.length + 2 + current.length,
+                    ),
+                  );
+            _persistDraft();
+            _focus.requestFocus();
+          },
+        ),
+      ),
+    );
+    _focus.requestFocus();
+  }
+
+  Future<void> _loadBackgroundSupport() async {
+    final repository = _conn.repository;
+    _backgroundRepository = repository;
+    _backgroundLocationRevision = _conn.locationRevision;
+    final location = _conn.locationRevision;
+    final revision = ++_backgroundSupportRevision;
+    _backgroundSupport = BackgroundWorkSupport.unavailable;
+    _backgroundRequestedParts.clear();
+    if (repository == null) return;
+    try {
+      final support = await repository.loadBackgroundWorkSupport().timeout(
+        const Duration(seconds: 8),
+      );
+      if (!mounted ||
+          revision != _backgroundSupportRevision ||
+          location != _conn.locationRevision ||
+          repository != _conn.repository) {
+        return;
+      }
+      setState(() => _backgroundSupport = support);
+    } catch (_) {
+      // Unknown/older v1 servers must not advertise an experimental action.
+      // Retry capability discovery after the next reconnect, not every event.
+    }
+  }
+
+  String _backgroundPartKey(Part part) =>
+      '${part.messageID}/${part.id ?? part.callID}';
+
+  bool get _canBackgroundWork =>
+      !_backgrounding &&
+      _backgroundLocationRevision == _conn.locationRevision &&
+      _conn.status == StreamStatus.connected &&
+      _conn.busySessions.contains(widget.sessionID) &&
+      foregroundBackgroundableParts(_messages, _backgroundSupport).any(
+        (part) => !_backgroundRequestedParts.contains(_backgroundPartKey(part)),
+      );
+
+  Future<void> _backgroundRunningWork() async {
+    if (!_canBackgroundWork) return;
+    final repository = _conn.repository;
+    if (repository == null) return;
+    final connection = _conn.connectionRevision;
+    final location = _conn.locationRevision;
+    final parts = foregroundBackgroundableParts(
+      _messages,
+      _backgroundSupport,
+    ).map(_backgroundPartKey).toSet();
+    setState(() => _backgrounding = true);
+    try {
+      final result = await repository.backgroundSession(widget.sessionID);
+      if (!mounted ||
+          repository != _conn.repository ||
+          connection != _conn.connectionRevision ||
+          location != _conn.locationRevision) {
+        return;
+      }
+      if (result != BackgroundWorkResult.unchanged) {
+        _backgroundRequestedParts.addAll(parts);
+      }
+      // Acknowledgement is not a job record. Reconcile the transcript and
+      // family status, including the v2 204/idle race, before reporting state.
+      await Future.wait([_load(), _conn.refreshSessions()]);
+      if (!mounted) return;
+      if (result == BackgroundWorkResult.unchanged) {
+        _showComposerNote(_chatL10n(context).backgroundWorkNoop);
+      } else if (result == BackgroundWorkResult.promoted) {
+        _showComposerNote(_chatL10n(context).backgroundWorkPromoted);
+      }
+    } catch (error) {
+      if (mounted) _showActionError(error);
+    } finally {
+      if (mounted) setState(() => _backgrounding = false);
+    }
   }
 
   ConnectionController _readConn() {
@@ -2178,6 +2334,11 @@ class _ChatScreenState extends State<ChatScreen>
     _noteRunFinished();
     setState(() {});
     if (shouldRehydrate) unawaited(_load());
+    if (shouldRehydrate ||
+        _backgroundRepository != _conn.repository ||
+        _backgroundLocationRevision != _conn.locationRevision) {
+      unawaited(_loadBackgroundSupport());
+    }
   }
 
   SessionRetryState? get _retryState => _conn.retryStates[widget.sessionID];
@@ -2202,9 +2363,8 @@ class _ChatScreenState extends State<ChatScreen>
     });
   }
 
-  /// The run-finished moment: one light haptic and a 300 ms primary pulse on
-  /// the composer border when this session goes from busy to idle. Both are
-  /// skipped under reduced motion.
+  /// A light haptic when this session goes from busy to idle. Keep the
+  /// editor in place and respect reduced motion.
   void _noteRunFinished() {
     final busy = _conn.busySessions.contains(widget.sessionID);
     final finished = _wasBusy && !busy;
@@ -2212,7 +2372,6 @@ class _ChatScreenState extends State<ChatScreen>
     if (!finished) return;
     if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) return;
     unawaited(HapticFeedback.lightImpact());
-    _composerPulse++;
   }
 
   /// Shows a composer-local note above the field for three seconds. Used
@@ -3992,14 +4151,12 @@ class _ChatScreenState extends State<ChatScreen>
                     )
                   : LayoutBuilder(
                       builder: (context, bodyConstraints) {
-                        // Keyboard insets reduce [bodyConstraints] but do not
-                        // change the device's layout class. Deriving compact
-                        // mode from those shrinking constraints replaces the
-                        // focused TextField and immediately dismisses Android's
-                        // keyboard. Keep one composer structure for the lifetime
-                        // of the focus interaction instead.
+                        // The composer keeps one editor structure. A keyboard
+                        // or short window reduces its line budget without
+                        // reparenting the focused field or moving its controls.
                         final compactComposer =
-                            MediaQuery.sizeOf(context).height < 520;
+                            MediaQuery.viewInsetsOf(context).bottom > 0 ||
+                            bodyConstraints.maxHeight < 420;
                         return Column(
                           children: [
                             Expanded(
@@ -4216,6 +4373,50 @@ class _ChatScreenState extends State<ChatScreen>
                                       text: _composerNote!,
                                     ),
                             ),
+                            if (_canBackgroundWork || _backgrounding)
+                              Align(
+                                alignment: AlignmentDirectional.centerStart,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  child: Tooltip(
+                                    message: _chatL10n(
+                                      context,
+                                    ).backgroundWorkShortcut,
+                                    child: TextButton.icon(
+                                      key: const Key('background-running-work'),
+                                      style: TextButton.styleFrom(
+                                        minimumSize: const Size(48, 48),
+                                      ),
+                                      onPressed: _backgrounding
+                                          ? null
+                                          : _backgroundRunningWork,
+                                      icon: _backgrounding
+                                          ? const SizedBox.square(
+                                              dimension: 18,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : const Icon(
+                                              Icons.low_priority_rounded,
+                                              size: 20,
+                                            ),
+                                      label: Text(
+                                        _backgroundSupport ==
+                                                BackgroundWorkSupport.subagents
+                                            ? _chatL10n(
+                                                context,
+                                              ).backgroundSubagentsTitle
+                                            : _chatL10n(
+                                                context,
+                                              ).backgroundWorkTitle,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                             if (runningAgents.isNotEmpty)
                               Center(
                                 child: ConstrainedBox(
@@ -4251,6 +4452,10 @@ class _ChatScreenState extends State<ChatScreen>
                                       initialTab: _ComposerToolTab.agents,
                                     ),
                                     onOpenEditor: _openPromptEditor,
+                                    onReusePrompt: _recentPrompts.isEmpty
+                                        ? null
+                                        : _reusePrompt,
+                                    onClearText: _clearDraftText,
                                     attachments: _attachments,
                                     busy: busy,
                                     sending: _sending,
@@ -4274,7 +4479,6 @@ class _ChatScreenState extends State<ChatScreen>
                                       widget.sessionID,
                                     ),
                                     showAttachmentNote: showAttachmentNote,
-                                    pulse: _composerPulse,
                                     onAttach: _pickAttachment,
                                     onContentInserted: (content) => unawaited(
                                       _handleInsertedContent(content),
@@ -4310,12 +4514,17 @@ class _ChatScreenState extends State<ChatScreen>
         ),
       ),
     );
-    return ModelShortcuts(onCycle: _cycleModel, child: screen);
+    return ModelShortcuts(
+      onCycle: _cycleModel,
+      onBackground: _canBackgroundWork ? _backgroundRunningWork : null,
+      child: screen,
+    );
   }
 
   @override
   void dispose() {
     _persistDraft();
+    _composer.removeListener(_scheduleDraftSave);
     WidgetsBinding.instance.removeObserver(this);
     _conn.removeListener(_onConnectionChanged);
     _handoff.store.removeListener(_onHandoffChanged); // UX-103 review handoff

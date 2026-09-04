@@ -55,6 +55,20 @@ notification becomes a live view of the run: which session, what the agent
 is doing right now, how many things need you. On Android 16 it shows as a
 live update. There is a Pause button in the shade.
 
+**Keep your next thought.** Draft text saves as you type. The composer's **+**
+menu can reuse text from earlier prompts or clear the draft with Undo. Image
+attachments show thumbnails before sending; attachments themselves are not
+saved with the draft.
+
+**Let independent work continue.** When the server supports it, a Background
+button appears for foreground subagents (and supported shells on OpenCode 2).
+**Ctrl+B** triggers the same action from a hardware keyboard. Running agents
+stay accessible above the composer. This work runs on the server and depends
+on that server remaining alive.
+
+**Find the tool you need.** More groups destinations into compact rows and
+searches settings, models, providers, integrations, terminal, and help.
+
 **Share text into it.** A stack trace, a link, a message. Share from any
 app and it opens a new session with that as your first prompt.
 

@@ -8,10 +8,16 @@ import '../../l10n/app_localizations.dart';
 /// Chat-local shortcuts also work with a hardware keyboard on Android.
 /// A sheet or dialog above the chat must keep ownership of the keyboard.
 class ModelShortcuts extends StatelessWidget {
-  const ModelShortcuts({super.key, required this.onCycle, required this.child});
+  const ModelShortcuts({
+    super.key,
+    required this.onCycle,
+    this.onBackground,
+    required this.child,
+  });
 
   final Future<void> Function({bool reverse, bool favoritesOnly}) onCycle;
   final Widget child;
+  final Future<void> Function()? onBackground;
 
   @override
   Widget build(BuildContext context) => Focus(
@@ -22,6 +28,16 @@ class ModelShortcuts extends StatelessWidget {
     onKeyEvent: (_, event) {
       if (!(ModalRoute.of(context)?.isCurrent ?? true)) {
         return KeyEventResult.ignored;
+      }
+      final background = onBackground;
+      if (background != null &&
+          const SingleActivator(
+            LogicalKeyboardKey.keyB,
+            control: true,
+            includeRepeats: false,
+          ).accepts(event, HardwareKeyboard.instance)) {
+        unawaited(background());
+        return KeyEventResult.handled;
       }
       const next = SingleActivator(
         LogicalKeyboardKey.f2,

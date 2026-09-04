@@ -65,5 +65,28 @@
   "modelOptions": "Options",
   "modelThinkingMode": "Thinking mode",
   "modelDefaultMode": "Default mode",
-  "modelSessionScopeNote": "Applies to this session's next turns."
+  "modelSessionScopeNote": "Applies to this session's next turns.",
+  "commonClearSearch": "Clear search",
+  "commonUndo": "Undo",
+  "composerClearTextTitle": "Clear draft text",
+  "composerClearTextSubtitle": "Keeps attachments · Undo available",
+  "composerDraftCleared": "Draft text cleared",
+  "composerReuseTitle": "Reuse a prompt",
+  "composerReuseSubtitle": "Add text from this conversation",
+  "composerReuseDescription": "Adds text to your draft. Attachments aren’t copied.",
+  "composerReuseSearch": "Search recent prompts",
+  "composerReuseEmpty": "No matching prompts",
+  "backgroundSubagentsTitle": "Background subagents",
+  "backgroundWorkTitle": "Move running work to background",
+  "backgroundWorkShortcut": "Continue this work while you use the chat · Ctrl+B",
+  "backgroundWorkNoop": "No foreground subagents to background.",
+  "backgroundWorkPromoted": "Subagents are continuing in the background.",
+  "librarySearchHint": "Find settings, tools, and help",
+  "libraryDefaultModel": "Default for new chats",
+  "libraryNoModel": "No model selected",
+  "librarySearchResults": "{count, plural, =0 {No matching tools for “{query}”.} one {1 result for “{query}”.} other {{count} results for “{query}”.}}",
+  "@librarySearchResults": {
+    "description": "Number of matching destinations in More",
+    "placeholders": {"count": {"type": "int"}, "query": {"type": "String"}}
+  }
 }

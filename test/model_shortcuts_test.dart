@@ -4,6 +4,54 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/ui/widgets/model_shortcuts.dart';
 
 void main() {
+  testWidgets(
+    'Ctrl+B preserves typing and only runs an available background action',
+    (tester) async {
+      var calls = 0;
+      final text = TextEditingController(text: 'Draft');
+      addTearDown(text.dispose);
+      final navigator = GlobalKey<NavigatorState>();
+      Future<void> press() async {
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.keyB);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      }
+
+      Widget app({required bool enabled}) => MaterialApp(
+        navigatorKey: navigator,
+        home: Scaffold(
+          body: ModelShortcuts(
+            onCycle:
+                ({bool reverse = false, bool favoritesOnly = false}) async {},
+            onBackground: enabled
+                ? () async {
+                    calls++;
+                  }
+                : null,
+            child: TextField(controller: text, autofocus: true),
+          ),
+        ),
+      );
+      await tester.pumpWidget(app(enabled: false));
+      await tester.pump();
+      await press();
+      expect(calls, 0);
+      await tester.pumpWidget(app(enabled: true));
+      await tester.pump();
+      await press();
+      expect(calls, 1);
+      expect(text.text, 'Draft');
+      showDialog<void>(
+        context: navigator.currentContext!,
+        builder: (_) => const AlertDialog(content: TextField(autofocus: true)),
+      );
+      await tester.pumpAndSettle();
+      await press();
+      expect(calls, 1);
+      navigator.currentState!.pop();
+      await tester.pumpAndSettle();
+    },
+  );
   testWidgets('F2 cycles from a focused composer without changing its draft', (
     tester,
   ) async {

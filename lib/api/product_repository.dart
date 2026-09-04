@@ -28,6 +28,16 @@ extension on VcsDiffMode {
 
 abstract class ProductRepository implements ServerOperationsGateway {
   @override
+  Future<BackgroundWorkSupport> loadBackgroundWorkSupport() async =>
+      BackgroundWorkSupport.unavailable;
+
+  @override
+  Future<BackgroundWorkResult> backgroundSession(String sessionID) =>
+      Future.error(
+        const ProductException('Background work is unavailable on this server'),
+      );
+
+  @override
   void setLocation({String? directory, String? workspace});
   @override
   Future<String> upgradeServer(String target) => Future.error(
@@ -932,19 +942,21 @@ class SdkProductRepository
       });
 
   @override
-  Future<String> stealSessionIntoWorkspace(String sessionID) =>
-      _guardWorktree('Could not steal the session into this workspace', () async {
-        final response = await _client.getSyncApi().syncSteal(
-          directory: _directory,
-          workspace: _workspace,
-          syncStealRequest: sdk.SyncStealRequest(sessionID: sessionID),
-        );
-        final stolen = response.data;
-        if (stolen == null) {
-          throw const ProductException('Server confirmed no stolen session');
-        }
-        return stolen.sessionID;
-      });
+  Future<String> stealSessionIntoWorkspace(String sessionID) => _guardWorktree(
+    'Could not steal the session into this workspace',
+    () async {
+      final response = await _client.getSyncApi().syncSteal(
+        directory: _directory,
+        workspace: _workspace,
+        syncStealRequest: sdk.SyncStealRequest(sessionID: sessionID),
+      );
+      final stolen = response.data;
+      if (stolen == null) {
+        throw const ProductException('Server confirmed no stolen session');
+      }
+      return stolen.sessionID;
+    },
+  );
 
   @override
   Future<List<ConsoleOrganization>> listConsoleOrganizations() =>
@@ -1403,9 +1415,7 @@ class SdkProductRepository
                 hidden: agent.hidden,
                 maxSteps: agent.steps,
                 color: color is String && color.isNotEmpty ? color : null,
-                model: model == null
-                    ? null
-                    : '${model.providerID}/${model.id}',
+                model: model == null ? null : '${model.providerID}/${model.id}',
               );
             })
             .where((agent) => agent.id.isNotEmpty)
@@ -1432,6 +1442,27 @@ class SdkProductRepository
       cacheWritePerMillion: base.cache.write.toDouble(),
     );
   }
+
+  @override
+  Future<BackgroundWorkSupport> loadBackgroundWorkSupport() async =>
+      (await loadExperimentalCapabilities()).backgroundSubagents
+      ? BackgroundWorkSupport.subagents
+      : BackgroundWorkSupport.unavailable;
+
+  @override
+  Future<BackgroundWorkResult> backgroundSession(String sessionID) =>
+      _guard('Could not background subagents', () async {
+        final response = await _client
+            .getExperimentalApi()
+            .experimentalSessionBackground(
+              sessionID: sessionID,
+              directory: _directory,
+              workspace: _workspace,
+            );
+        return response.data == true
+            ? BackgroundWorkResult.promoted
+            : BackgroundWorkResult.unchanged;
+      });
 
   static DateTime? _catalogReleased(num released) => released <= 0
       ? null

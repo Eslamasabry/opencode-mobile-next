@@ -418,6 +418,13 @@ class ExperimentalServerCapabilities {
   const ExperimentalServerCapabilities({required this.backgroundSubagents});
 }
 
+/// Runtime permission on v1; the v2 session protocol supports both kinds.
+enum BackgroundWorkSupport { unavailable, subagents, subagentsAndShells }
+
+/// v2 acknowledges the request with 204, which can also mean an idle no-op.
+/// Only v1's true response confirms that something was promoted.
+enum BackgroundWorkResult { promoted, unchanged, requested }
+
 class CodingToolInfo {
   final String id;
   final String description;
@@ -751,6 +758,7 @@ abstract class TerminalChannel {
 abstract interface class LocationAwareProductRepository {
   int get locationRevision;
 }
+
 class ProductException implements Exception {
   final String message;
   final Object? cause;
@@ -1020,6 +1028,8 @@ abstract class ServerGateway
 
 /// Stored-session lifecycle operations beyond the live transport reads.
 abstract class SessionOperationsGateway {
+  Future<BackgroundWorkSupport> loadBackgroundWorkSupport();
+  Future<BackgroundWorkResult> backgroundSession(String sessionID);
   Future<Session> getSessionDetails(String id);
   Future<List<Session>> listSessionChildren(String id);
   Future<String?> shareSession(String id);
@@ -1130,7 +1140,11 @@ abstract class TerminalGateway {
   Future<void> selectTerminalShell(String value);
   Future<TerminalProcess> createTerminal({String? title});
   Future<void> renameTerminal(String id, String title);
-  Future<void> resizeTerminal(String id, {required int rows, required int cols});
+  Future<void> resizeTerminal(
+    String id, {
+    required int rows,
+    required int cols,
+  });
   Future<void> removeTerminal(String id);
   Future<TerminalChannel> connectTerminal(String id, {int? cursor});
 }
@@ -1159,7 +1173,10 @@ abstract class McpGateway {
   Future<McpAuthLaunch> startMcpAuthentication(String name);
   Future<McpServerInfo> completeMcpAuthentication(String name, String code);
   Future<void> cancelMcpAuthentication(String name);
-  Future<void> addMcpServer(McpServerDraft draft, {required McpConfigScope scope});
+  Future<void> addMcpServer(
+    McpServerDraft draft, {
+    required McpConfigScope scope,
+  });
 }
 
 /// Provider integrations: keys, OAuth attempts, and runtime refresh.

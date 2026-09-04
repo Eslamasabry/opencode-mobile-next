@@ -32,6 +32,20 @@ class Api2OperationsGateway extends ProductRepository {
 
   Api2OperationsGateway({required this.client});
 
+  @override
+  Future<BackgroundWorkSupport> loadBackgroundWorkSupport() async =>
+      BackgroundWorkSupport.subagentsAndShells;
+
+  @override
+  Future<BackgroundWorkResult> backgroundSession(String sessionID) =>
+      _guard('Could not background running work', () async {
+        await _transport.postJson(
+          '/session/${Uri.encodeComponent(sessionID)}/background',
+          query: _loc(),
+        );
+        return BackgroundWorkResult.requested;
+      });
+
   Api2Transport get _transport => client.transport;
 
   String? get _directory => client.directory;
@@ -193,14 +207,11 @@ class Api2OperationsGateway extends ProductRepository {
   Future<List<WorkspaceProject>> listProjects() =>
       _guard('Could not load projects', () async {
         final json = await _transport.getJson('/project');
-        return [
-          for (final item in _dataMaps(json)) _project(item),
-        ];
+        return [for (final item in _dataMaps(json)) _project(item)];
       });
 
   WorkspaceProject _project(Map<String, dynamic> json) {
-    final directory =
-        (json['directory'] ?? json['canonical'] ?? '').toString();
+    final directory = (json['directory'] ?? json['canonical'] ?? '').toString();
     final time = json['time'];
     final worktrees = json['worktrees'];
     return WorkspaceProject(
@@ -252,25 +263,22 @@ class Api2OperationsGateway extends ProductRepository {
     final json = await _transport.getJson('/project/current', query: _loc());
     final enveloped = _dataMap(json);
     if (enveloped.isNotEmpty) return enveloped;
-    return json is Map<String, dynamic> && json['id'] != null
-        ? json
-        : const {};
+    return json is Map<String, dynamic> && json['id'] != null ? json : const {};
   }
 
   @override
-  Future<List<ProjectDirectoryInfo>> listProjectDirectories(
-    String projectID,
-  ) => _guard('Could not load project directories', () async {
-    final json = await _transport.getJson('/worktree/$projectID');
-    return [
-      for (final item in _dataMaps(json))
-        if ((item['directory'] ?? '').toString().isNotEmpty)
-          ProjectDirectoryInfo(
-            directory: item['directory'].toString(),
-            strategy: item['strategy']?.toString(),
-          ),
-    ];
-  });
+  Future<List<ProjectDirectoryInfo>> listProjectDirectories(String projectID) =>
+      _guard('Could not load project directories', () async {
+        final json = await _transport.getJson('/worktree/$projectID');
+        return [
+          for (final item in _dataMaps(json))
+            if ((item['directory'] ?? '').toString().isNotEmpty)
+              ProjectDirectoryInfo(
+                directory: item['directory'].toString(),
+                strategy: item['strategy']?.toString(),
+              ),
+        ];
+      });
 
   Future<String> _resolveProjectID(
     String projectDirectory,
@@ -332,15 +340,14 @@ class Api2OperationsGateway extends ProductRepository {
   });
 
   @override
-  Future<List<VersionControlFile>> listWorktreeFileStatuses(
-    String directory,
-  ) => _guard('Could not load worktree changes', () async {
-    final json = await _transport.getJson(
-      '/vcs/status',
-      query: {'location[directory]': directory},
-    );
-    return [for (final item in _dataMaps(json)) mapVcsStatusJson(item)];
-  });
+  Future<List<VersionControlFile>> listWorktreeFileStatuses(String directory) =>
+      _guard('Could not load worktree changes', () async {
+        final json = await _transport.getJson(
+          '/vcs/status',
+          query: {'location[directory]': directory},
+        );
+        return [for (final item in _dataMaps(json)) mapVcsStatusJson(item)];
+      });
 
   @override
   Future<void> removeWorktree({
@@ -621,19 +628,19 @@ class Api2OperationsGateway extends ProductRepository {
   // ---------------- Catalog ----------------
 
   @override
-  Future<CatalogSnapshot> loadCatalog() =>
-      _guard('Could not load models and agents', () async {
-        final providersFuture = client.providers();
-        final modelsFuture = client.models();
-        final agentsFuture = client.agents();
-        return CatalogSnapshot(
-          providers: (await providersFuture)
-              .map(mapApi2CatalogProvider)
-              .toList(),
-          models: (await modelsFuture).map(mapApi2CatalogModel).toList(),
-          agents: (await agentsFuture).map(mapApi2CatalogAgent).toList(),
-        );
-      });
+  Future<CatalogSnapshot> loadCatalog() => _guard(
+    'Could not load models and agents',
+    () async {
+      final providersFuture = client.providers();
+      final modelsFuture = client.models();
+      final agentsFuture = client.agents();
+      return CatalogSnapshot(
+        providers: (await providersFuture).map(mapApi2CatalogProvider).toList(),
+        models: (await modelsFuture).map(mapApi2CatalogModel).toList(),
+        agents: (await agentsFuture).map(mapApi2CatalogAgent).toList(),
+      );
+    },
+  );
 
   @override
   Future<ChatDefaults> loadChatDefaults() =>
@@ -712,24 +719,25 @@ class Api2OperationsGateway extends ProductRepository {
   // ---------------- MCP ----------------
 
   @override
-  Future<List<McpServerInfo>> listMcpServers() =>
-      _guard('Could not load MCP servers', () async {
-        final json = await _transport.getJson('/mcp', query: _loc());
-        return [
-          for (final item in _dataMaps(json))
-            if ((item['name'] ?? '').toString().isNotEmpty)
-              McpServerInfo(
-                name: item['name'].toString(),
-                status: item['status'] is Map
-                    ? ((item['status'] as Map)['status'] ?? 'unknown')
-                          .toString()
-                    : (item['status'] ?? 'unknown').toString(),
-                error: item['status'] is Map
-                    ? (item['status'] as Map)['error']?.toString()
-                    : null,
-              ),
-        ];
-      });
+  Future<List<McpServerInfo>> listMcpServers() => _guard(
+    'Could not load MCP servers',
+    () async {
+      final json = await _transport.getJson('/mcp', query: _loc());
+      return [
+        for (final item in _dataMaps(json))
+          if ((item['name'] ?? '').toString().isNotEmpty)
+            McpServerInfo(
+              name: item['name'].toString(),
+              status: item['status'] is Map
+                  ? ((item['status'] as Map)['status'] ?? 'unknown').toString()
+                  : (item['status'] ?? 'unknown').toString(),
+              error: item['status'] is Map
+                  ? (item['status'] as Map)['error']?.toString()
+                  : null,
+            ),
+      ];
+    },
+  );
 
   @override
   Future<List<McpResourceInfo>> listMcpResources() =>
@@ -789,8 +797,7 @@ class Api2OperationsGateway extends ProductRepository {
         final json = await _transport.getJson('/integration', query: _loc());
         return [
           for (final item in _dataMaps(json))
-            if ((item['id'] ?? '').toString().isNotEmpty)
-              _integration(item),
+            if ((item['id'] ?? '').toString().isNotEmpty) _integration(item),
         ];
       });
 
@@ -832,8 +839,8 @@ class Api2OperationsGateway extends ProductRepository {
           IntegrationConnectionInfo(
             type: type,
             id: connection['id']?.toString(),
-            label:
-                (connection['label'] ?? connection['name'] ?? type).toString(),
+            label: (connection['label'] ?? connection['name'] ?? type)
+                .toString(),
           ),
         );
       }
