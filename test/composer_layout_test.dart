@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -104,6 +105,7 @@ void main() {
   testWidgets('the prompt field stays dominant on a 360dp phone at 2.5x text', (
     tester,
   ) async {
+    final semantics = tester.ensureSemantics();
     final controller = await _controller();
     addTearDown(controller.dispose);
     await _pumpChat(tester, controller, size: const Size(360, 760));
@@ -116,8 +118,17 @@ void main() {
     expect(find.byIcon(Icons.attach_file_rounded), findsNothing);
     expect(find.byIcon(Icons.mic_none_rounded), findsNothing);
 
-    expect(_fieldShare(tester), greaterThanOrEqualTo(0.9));
+    final modelSemantics = tester.getSemantics(
+      find.bySemanticsLabel(RegExp('Model and agent:')),
+    );
+    expect(
+      modelSemantics.getSemanticsData().hasAction(ui.SemanticsAction.tap),
+      isTrue,
+    );
+
+    expect(_fieldShare(tester), greaterThanOrEqualTo(0.55));
     expect(tester.takeException(), isNull);
+    semantics.dispose();
   });
 
   testWidgets('the compact composer keeps most of its width for the field', (
@@ -265,6 +276,29 @@ void main() {
     expect(find.byKey(const ValueKey('composer-activity')), findsNothing);
     expect(find.bySemanticsLabel('Assistant is working'), findsNothing);
     semantics.dispose();
+  });
+
+  testWidgets('an empty busy composer stays compact with one Stop action', (
+    tester,
+  ) async {
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    controller.busySessions.add('session-1');
+    await _pumpChat(
+      tester,
+      controller,
+      size: const Size(360, 760),
+      textScale: 1,
+    );
+
+    expect(find.byKey(const Key('chat-stop-button')), findsOneWidget);
+    expect(find.text('Stop'), findsOneWidget);
+    expect(
+      tester.getSize(find.byKey(const Key('chat-composer-frame'))).height,
+      lessThanOrEqualTo(136),
+    );
+    expect(find.byKey(const Key('composer-delivery-control')), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('reduced motion keeps a still activity ring while busy', (

@@ -149,13 +149,14 @@ void main() {
     final api = _ComposerApi();
     final controller = await _pump(tester, api, busy: true);
 
-    // Stop has its own button next to a live Send while the run is active.
+    // Stop has its own labelled header action while the run is active.
     final stop = find.byKey(const Key('chat-stop-button'));
-    expect(tester.widget<IconButton>(stop).tooltip, 'Stop');
+    final stopTooltip = find.ancestor(of: stop, matching: find.byType(Tooltip));
+    expect(tester.widget<Tooltip>(stopTooltip).message, 'Stop');
     // Long-press shows the tooltip the way a touch user would see it.
     await tester.longPress(stop);
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text('Stop'), findsOneWidget);
+    expect(find.text('Stop'), findsNWidgets(2));
 
     await tester.tap(stop);
     await tester.pump();

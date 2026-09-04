@@ -182,6 +182,9 @@ void _serverStateTests() {
     expect(find.text('12.4s'), findsOneWidget);
     expect(find.byKey(const Key('tool-pruned')), findsNothing);
     expect(find.byKey(const Key('tool-not-run')), findsNothing);
+    final headerHeight = tester.getSize(find.byType(InkWell).first).height;
+    expect(headerHeight, inInclusiveRange(48, 56));
+    expect(find.byIcon(Icons.check_circle_outline_rounded), findsNothing);
   });
 
   testWidgets('running tools show no duration yet', (tester) async {

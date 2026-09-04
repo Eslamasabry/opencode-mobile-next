@@ -23,7 +23,8 @@ import 'transport.dart';
 /// server has no equivalent endpoint the method returns an inert empty
 /// result or throws a typed [ProductException], and the matching
 /// [ServerCapabilities] flag is false (see [api2ServerCapabilities]).
-class Api2Gateway implements ServerGateway {
+class Api2Gateway
+    implements ServerGateway, BackgroundWorkGateway, ShellJobGateway {
   final Api2Client client;
 
   Api2Gateway({required this.client});
@@ -249,6 +250,68 @@ class Api2Gateway implements ServerGateway {
   @override
   Future<void> abort(String sessionID) =>
       _run(() => client.interrupt(sessionID));
+
+  @override
+  Future<BackgroundWorkCapabilities> loadBackgroundWorkCapabilities() async =>
+      const BackgroundWorkCapabilities(
+        subagents: true,
+        shells: true,
+        shellManagement: true,
+      );
+
+  @override
+  Future<bool> moveSessionWorkToBackground(String sessionID) => _run(() async {
+    // OpenCode 2 returns 204 for both promotion and an idle no-op. The
+    // transcript and shell inventory remain the source of truth.
+    await transport.postJson('/session/$sessionID/background', query: _loc());
+    return true;
+  });
+
+  @override
+  Future<List<ShellJob>> listShellJobs() => _run(() async {
+    final json = await transport.getJson('/shell', query: _loc());
+    return _dataList(json, _shellJob);
+  });
+
+  @override
+  Future<ShellJob> getShellJob(String id) => _run(() async {
+    final json = await transport.getJson('/shell/$id', query: _loc());
+    return _shellJob(_dataMap(json, 'GET /shell/$id'));
+  });
+
+  @override
+  Future<ShellOutputPage> readShellOutput(
+    String id, {
+    int? cursor,
+    int? limit,
+  }) => _run(() async {
+    final json = await transport.getJson(
+      '/shell/$id/output',
+      query: _loc({'cursor': cursor, 'limit': limit}),
+    );
+    final data = _dataMap(json, 'GET /shell/$id/output');
+    return ShellOutputPage(
+      output: data['output']?.toString() ?? '',
+      cursor: (data['cursor'] as num?)?.toInt() ?? 0,
+      size: (data['size'] as num?)?.toInt() ?? 0,
+      truncated: data['truncated'] == true,
+    );
+  });
+
+  @override
+  Future<ShellJob> updateShellTimeout(String id, Duration? timeout) =>
+      _run(() async {
+        final json = await transport.patchJson(
+          '/shell/$id/timeout',
+          query: _loc(),
+          body: {'timeout': timeout?.inMilliseconds ?? 0},
+        );
+        return _shellJob(_dataMap(json, 'PATCH /shell/$id/timeout'));
+      });
+
+  @override
+  Future<void> stopShellJob(String id) =>
+      _run(() => transport.deleteJson('/shell/$id', query: _loc()));
 
   Future<void> _applySelection(
     String sessionID, {
@@ -510,6 +573,32 @@ class Api2Gateway implements ServerGateway {
       }
     }
     return out;
+  }
+
+  static Map<String, dynamic> _dataMap(dynamic json, String operation) {
+    final data = json is Map<String, dynamic> ? json['data'] : null;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    throw Api2RequestError('$operation returned no data');
+  }
+
+  static ShellJob _shellJob(Map<String, dynamic> json) {
+    final time = json['time'] is Map
+        ? Map<String, dynamic>.from(json['time'] as Map)
+        : const <String, dynamic>{};
+    final metadata = json['metadata'] is Map
+        ? Map<String, dynamic>.from(json['metadata'] as Map)
+        : const <String, dynamic>{};
+    return ShellJob(
+      id: json['id']?.toString() ?? '',
+      status: json['status']?.toString() ?? 'running',
+      command: json['command']?.toString() ?? '',
+      directory: json['cwd']?.toString() ?? '',
+      pid: (json['pid'] as num?)?.toInt(),
+      exitCode: json['exit'] as num?,
+      startedAt: (time['started'] as num?)?.toInt() ?? 0,
+      completedAt: (time['completed'] as num?)?.toInt(),
+      metadata: metadata,
+    );
   }
 
   static String? _mimeForPath(String path) {

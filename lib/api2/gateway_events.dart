@@ -207,7 +207,11 @@ class Api2EventAdapter {
           case Api2Phase.ended:
             return [
               _env('message.updated', {
-                'info': _assistantInfo(event, created: created, completed: created),
+                'info': _assistantInfo(
+                  event,
+                  created: created,
+                  completed: created,
+                ),
               }),
             ];
           case Api2Phase.failed:
@@ -256,14 +260,14 @@ class Api2EventAdapter {
         final key = _callKey(event.assistantMessageID, event.callID);
         switch (event.phase) {
           case Api2Phase.started:
-            _remember(
-              _toolCalls,
-              key,
-              _ToolCall(name: event.name ?? ''),
-            );
+            _remember(_toolCalls, key, _ToolCall(name: event.name ?? ''));
             return [
-              _toolPart(event.sessionID, event.assistantMessageID,
-                  event.callID, {'status': 'pending', 'raw': ''}),
+              _toolPart(
+                event.sessionID,
+                event.assistantMessageID,
+                event.callID,
+                {'status': 'pending', 'raw': ''},
+              ),
             ];
           case Api2Phase.delta:
             return [
@@ -277,8 +281,12 @@ class Api2EventAdapter {
             ];
           case Api2Phase.ended:
             return [
-              _toolPart(event.sessionID, event.assistantMessageID,
-                  event.callID, {'status': 'pending', 'raw': event.text ?? ''}),
+              _toolPart(
+                event.sessionID,
+                event.assistantMessageID,
+                event.callID,
+                {'status': 'pending', 'raw': event.text ?? ''},
+              ),
             ];
           default:
             return const [];
@@ -287,7 +295,11 @@ class Api2EventAdapter {
       case Api2SessionToolCalledEvent():
         final key = _callKey(event.assistantMessageID, event.callID);
         final call = _toolCalls[key] ?? const _ToolCall(name: '');
-        _remember(_toolCalls, key, _ToolCall(name: call.name, input: event.input));
+        _remember(
+          _toolCalls,
+          key,
+          _ToolCall(name: call.name, input: event.input),
+        );
         return [
           _toolPart(event.sessionID, event.assistantMessageID, event.callID, {
             'status': 'running',
@@ -386,6 +398,12 @@ class Api2EventAdapter {
         }
         return out;
 
+      case Api2SessionShellEvent():
+        // Shell transcript events do not contain a complete v1 message.
+        // Forward the typed hint so Chat can rehydrate canonical messages and
+        // refresh the OpenCode 2 running-shell inventory.
+        return [_env(envelope.type, envelope.data)];
+
       case Api2PermissionAskedEvent():
         final request = event.request;
         return [
@@ -472,6 +490,9 @@ class Api2EventAdapter {
           case 'worktree.failed':
           case 'workspace.ready':
           case 'workspace.failed':
+          case 'shell.created':
+          case 'shell.exited':
+          case 'shell.deleted':
             return [_env(envelope.type, envelope.data)];
           default:
             return const [];
@@ -512,10 +533,7 @@ class Api2EventAdapter {
       'completed': ?completed,
     },
     if (errorMessage != null)
-      'error': {
-        'message': errorMessage,
-        'name': ?errorName,
-      },
+      'error': {'message': errorMessage, 'name': ?errorName},
   };
 
   Map<String, dynamic> _tokensJson(Api2Tokens tokens) => {

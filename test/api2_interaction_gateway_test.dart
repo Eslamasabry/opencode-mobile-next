@@ -78,130 +78,147 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('FormGateway (v2)', () {
-    test('lists a session\'s pending forms from the captured payload',
-        () async {
-      await withServer(handler: (request) async {
-        expect(request.uri.path, '/api/session/$_session/form');
-        await writeJson(request, fixture('forms_session.json'));
-      }, (server, requests) async {
-        final gateway = gatewayFor(server);
-        final forms = await gateway.sessionForms(_session);
-        expect(forms, hasLength(1));
-        final form = forms.single;
-        expect(form.id, _form);
-        expect(form.sessionID, _session);
-        expect(form.title, 'Connect to Sentry');
-        expect(form.fields, hasLength(4));
-        expect(form.fields.first.options, hasLength(2));
-        // The conditional field parses its `when` clause.
-        final reason = form.fields.last;
-        expect(reason.key, 'reason');
-        expect(reason.when.single.key, 'confirm');
-        expect(reason.activeFor({'confirm': true}), isTrue);
-        expect(reason.activeFor({'confirm': false}), isFalse);
-        gateway.close();
-      });
-    });
+    test(
+      'lists a session\'s pending forms from the captured payload',
+      () async {
+        await withServer(
+          handler: (request) async {
+            expect(request.uri.path, '/api/session/$_session/form');
+            await writeJson(request, fixture('forms_session.json'));
+          },
+          (server, requests) async {
+            final gateway = gatewayFor(server);
+            final forms = await gateway.sessionForms(_session);
+            expect(forms, hasLength(1));
+            final form = forms.single;
+            expect(form.id, _form);
+            expect(form.sessionID, _session);
+            expect(form.title, 'Connect to Sentry');
+            expect(form.fields, hasLength(4));
+            expect(form.fields.first.options, hasLength(2));
+            // The conditional field parses its `when` clause.
+            final reason = form.fields.last;
+            expect(reason.key, 'reason');
+            expect(reason.when.single.key, 'confirm');
+            expect(reason.activeFor({'confirm': true}), isTrue);
+            expect(reason.activeFor({'confirm': false}), isFalse);
+            gateway.close();
+          },
+        );
+      },
+    );
 
-    test('reads form state and replies through the session-scoped routes',
-        () async {
-      await withServer(handler: (request) async {
-        if (request.uri.path.endsWith('/state')) {
-          await writeJson(request, fixture('form_state_pending.json'));
-          return;
-        }
-        await writeNoContent(request);
-      }, (server, requests) async {
-        final gateway = gatewayFor(server);
-        final state = await gateway.formState(_session, _form);
-        expect(state.status, Api2FormStatus.pending);
-        await gateway.replyForm(_session, _form, {'env': 'prod'});
-        await gateway.cancelForm(_session, _form);
-        expect(requests[0].method, 'GET');
-        expect(
-          requests[0].uri.path,
-          '/api/session/$_session/form/$_form/state',
+    test(
+      'reads form state and replies through the session-scoped routes',
+      () async {
+        await withServer(
+          handler: (request) async {
+            if (request.uri.path.endsWith('/state')) {
+              await writeJson(request, fixture('form_state_pending.json'));
+              return;
+            }
+            await writeNoContent(request);
+          },
+          (server, requests) async {
+            final gateway = gatewayFor(server);
+            final state = await gateway.formState(_session, _form);
+            expect(state.status, Api2FormStatus.pending);
+            await gateway.replyForm(_session, _form, {'env': 'prod'});
+            await gateway.cancelForm(_session, _form);
+            expect(requests[0].method, 'GET');
+            expect(
+              requests[0].uri.path,
+              '/api/session/$_session/form/$_form/state',
+            );
+            expect(requests[1].method, 'POST');
+            expect(
+              requests[1].uri.path,
+              '/api/session/$_session/form/$_form/reply',
+            );
+            expect(requests[1].body, {
+              'answer': {'env': 'prod'},
+            });
+            expect(requests[2].method, 'POST');
+            expect(
+              requests[2].uri.path,
+              '/api/session/$_session/form/$_form/cancel',
+            );
+            gateway.close();
+          },
         );
-        expect(requests[1].method, 'POST');
-        expect(
-          requests[1].uri.path,
-          '/api/session/$_session/form/$_form/reply',
-        );
-        expect(requests[1].body, {
-          'answer': {'env': 'prod'},
-        });
-        expect(requests[2].method, 'POST');
-        expect(
-          requests[2].uri.path,
-          '/api/session/$_session/form/$_form/cancel',
-        );
-        gateway.close();
-      });
-    });
+      },
+    );
 
-    test('surfaces 400 FormInvalidAnswerError as a tagged ApiException',
-        () async {
-      await withServer(handler: (request) async {
-        await writeJson(
-          request,
-          fixture('error_form_invalid_answer.json'),
-          status: 400,
+    test(
+      'surfaces 400 FormInvalidAnswerError as a tagged ApiException',
+      () async {
+        await withServer(
+          handler: (request) async {
+            await writeJson(
+              request,
+              fixture('error_form_invalid_answer.json'),
+              status: 400,
+            );
+          },
+          (server, requests) async {
+            final gateway = gatewayFor(server);
+            try {
+              await gateway.replyForm(_session, _form, {'env': 'nope'});
+              fail('expected an ApiException');
+            } on ApiException catch (error) {
+              expect(error.statusCode, 400);
+              expect(error.errorTag, 'FormInvalidAnswerError');
+              expect(error.message, contains('Invalid option'));
+            }
+            gateway.close();
+          },
         );
-      }, (server, requests) async {
-        final gateway = gatewayFor(server);
-        try {
-          await gateway.replyForm(_session, _form, {'env': 'nope'});
-          fail('expected an ApiException');
-        } on ApiException catch (error) {
-          expect(error.statusCode, 400);
-          expect(error.errorTag, 'FormInvalidAnswerError');
-          expect(error.message, contains('Invalid option'));
-        }
-        gateway.close();
-      });
-    });
+      },
+    );
 
     test('surfaces 409 FormAlreadySettledError with its tag', () async {
-      await withServer(handler: (request) async {
-        await writeJson(
-          request,
-          {
+      await withServer(
+        handler: (request) async {
+          await writeJson(request, {
             '_tag': 'FormAlreadySettledError',
             'id': _form,
             'message': 'Form already settled',
-          },
-          status: 409,
-        );
-      }, (server, requests) async {
-        final gateway = gatewayFor(server);
-        try {
-          await gateway.replyForm(_session, _form, {'env': 'prod'});
-          fail('expected an ApiException');
-        } on ApiException catch (error) {
-          expect(error.statusCode, 409);
-          expect(error.errorTag, 'FormAlreadySettledError');
-        }
-        gateway.close();
-      });
+          }, status: 409);
+        },
+        (server, requests) async {
+          final gateway = gatewayFor(server);
+          try {
+            await gateway.replyForm(_session, _form, {'env': 'prod'});
+            fail('expected an ApiException');
+          } on ApiException catch (error) {
+            expect(error.statusCode, 409);
+            expect(error.errorTag, 'FormAlreadySettledError');
+          }
+          gateway.close();
+        },
+      );
     });
   });
 
   group('InboxGateway (v2)', () {
     test('lists pending inbox items from the captured payload', () async {
-      await withServer(handler: (request) async {
-        expect(request.uri.path, '/api/session/$_session/inbox');
-        await writeJson(request, fixture('inbox_list.json'));
-      }, (server, requests) async {
-        final gateway = gatewayFor(server);
-        final items = await gateway.inboxItems(_session);
-        expect(items, hasLength(1));
-        final item = items.single;
-        expect(item.id, _inboxID);
-        expect(item.type, 'user');
-        expect(item.promptText, 'queued while form pending');
-        expect(item.delivery, Api2Delivery.queue);
-        gateway.close();
-      });
+      await withServer(
+        handler: (request) async {
+          expect(request.uri.path, '/api/session/$_session/inbox');
+          await writeJson(request, fixture('inbox_list.json'));
+        },
+        (server, requests) async {
+          final gateway = gatewayFor(server);
+          final items = await gateway.inboxItems(_session);
+          expect(items, hasLength(1));
+          final item = items.single;
+          expect(item.id, _inboxID);
+          expect(item.type, 'user');
+          expect(item.promptText, 'queued while form pending');
+          expect(item.delivery, Api2Delivery.queue);
+          gateway.close();
+        },
+      );
     });
 
     test('steer, queue, and cancel address the item routes', () async {
@@ -221,69 +238,75 @@ void main() {
           '/api/session/$_session/inbox/$_inboxID/queue',
         );
         expect(requests[2].method, 'DELETE');
-        expect(
-          requests[2].uri.path,
-          '/api/session/$_session/inbox/$_inboxID',
-        );
+        expect(requests[2].uri.path, '/api/session/$_session/inbox/$_inboxID');
         gateway.close();
       });
     });
 
-    test('surfaces 409 ConflictError when an item was already delivered',
-        () async {
-      await withServer(handler: (request) async {
-        await writeJson(
-          request,
-          {
-            '_tag': 'ConflictError',
-            'message': 'Pending input can no longer be cancelled: $_inboxID',
-            'resource': _inboxID,
+    test(
+      'surfaces 409 ConflictError when an item was already delivered',
+      () async {
+        await withServer(
+          handler: (request) async {
+            await writeJson(request, {
+              '_tag': 'ConflictError',
+              'message': 'Pending input can no longer be cancelled: $_inboxID',
+              'resource': _inboxID,
+            }, status: 409);
           },
-          status: 409,
+          (server, requests) async {
+            final gateway = gatewayFor(server);
+            try {
+              await gateway.cancelInboxItem(_session, _inboxID);
+              fail('expected an ApiException');
+            } on ApiException catch (error) {
+              expect(error.statusCode, 409);
+              expect(error.errorTag, 'ConflictError');
+            }
+            gateway.close();
+          },
         );
-      }, (server, requests) async {
-        final gateway = gatewayFor(server);
-        try {
-          await gateway.cancelInboxItem(_session, _inboxID);
-          fail('expected an ApiException');
-        } on ApiException catch (error) {
-          expect(error.statusCode, 409);
-          expect(error.errorTag, 'ConflictError');
-        }
-        gateway.close();
-      });
-    });
+      },
+    );
   });
 
   group('prompt delivery + permission message (v2)', () {
     test('promptAsync carries the queue delivery to the wire', () async {
-      await withServer(handler: (request) async {
-        await writeJson(request, fixture('prompt_receipt.json'));
-      }, (server, requests) async {
-        final gateway = gatewayFor(server);
-        await gateway.promptAsync(
-          _session,
-          text: 'later please',
-          delivery: PromptDelivery.queue,
-        );
-        final body = requests.single.body as Map;
-        expect(body['delivery'], 'queue');
-        gateway.close();
-      });
+      await withServer(
+        handler: (request) async {
+          await writeJson(request, fixture('prompt_receipt.json'));
+        },
+        (server, requests) async {
+          final gateway = gatewayFor(server);
+          await gateway.promptAsync(
+            _session,
+            text: 'later please',
+            delivery: PromptDelivery.queue,
+          );
+          final body = requests.single.body as Map;
+          expect(body['delivery'], 'queue');
+          gateway.close();
+        },
+      );
     });
 
-    test('promptAsync omits delivery when unspecified (server default steer)',
-        () async {
-      await withServer(handler: (request) async {
-        await writeJson(request, fixture('prompt_receipt.json'));
-      }, (server, requests) async {
-        final gateway = gatewayFor(server);
-        await gateway.promptAsync(_session, text: 'now');
-        final body = requests.single.body as Map;
-        expect(body.containsKey('delivery'), isFalse);
-        gateway.close();
-      });
-    });
+    test(
+      'promptAsync omits delivery when unspecified (server default steer)',
+      () async {
+        await withServer(
+          handler: (request) async {
+            await writeJson(request, fixture('prompt_receipt.json'));
+          },
+          (server, requests) async {
+            final gateway = gatewayFor(server);
+            await gateway.promptAsync(_session, text: 'now');
+            final body = requests.single.body as Map;
+            expect(body.containsKey('delivery'), isFalse);
+            gateway.close();
+          },
+        );
+      },
+    );
 
     test('respondPermissionV2 forwards the reject message', () async {
       await withServer(handler: writeNoContent, (server, requests) async {
@@ -314,6 +337,155 @@ void main() {
         gateway.close();
       });
     });
+  });
+
+  group('background work', () {
+    test('OpenCode 2 promotes the session with location context', () async {
+      await withServer(handler: writeNoContent, (server, requests) async {
+        final gateway = gatewayFor(server);
+        final capabilities = await gateway.loadBackgroundWorkCapabilities();
+        expect(capabilities.subagents, isTrue);
+        expect(capabilities.shells, isTrue);
+        expect(capabilities.shellManagement, isTrue);
+        expect(await gateway.moveSessionWorkToBackground(_session), isTrue);
+        expect(requests.single.method, 'POST');
+        expect(requests.single.uri.path, '/api/session/$_session/background');
+        expect(
+          requests.single.uri.queryParameters['location[directory]'],
+          '/home/dev/projects/oc_app',
+        );
+        gateway.close();
+      });
+    });
+
+    test(
+      'OpenCode 2 lists, reads, updates, and stops managed shells',
+      () async {
+        const shellID = 'sh_01';
+        var listReads = 0;
+        await withServer(
+          handler: (request) async {
+            switch ((request.method, request.uri.path)) {
+              case ('GET', '/api/shell'):
+                listReads += 1;
+                await writeJson(request, {
+                  'data': [
+                    {
+                      'id': shellID,
+                      'status': 'running',
+                      'command': 'flutter test',
+                      'cwd': '/repo',
+                      'shell': '/bin/bash',
+                      'file': '/private/output',
+                      'pid': 42,
+                      'metadata': {'sessionID': _session},
+                      'time': {'started': 1788000000000},
+                    },
+                  ],
+                });
+              case ('GET', '/api/shell/$shellID'):
+              case ('PATCH', '/api/shell/$shellID/timeout'):
+                await writeJson(request, {
+                  'data': {
+                    'id': shellID,
+                    'status': 'running',
+                    'command': 'flutter test',
+                    'cwd': '/repo',
+                    'metadata': {'sessionID': _session},
+                    'time': {'started': 1788000000000},
+                  },
+                });
+              case ('GET', '/api/shell/$shellID/output'):
+                await writeJson(request, {
+                  'data': {
+                    'output': 'passing\n',
+                    'cursor': 8,
+                    'size': 8,
+                    'truncated': false,
+                  },
+                });
+              case ('DELETE', '/api/shell/$shellID'):
+                await writeNoContent(request);
+              default:
+                fail(
+                  'Unexpected request ${request.method} ${request.uri.path}',
+                );
+            }
+          },
+          (server, requests) async {
+            final gateway = gatewayFor(server);
+            final shells = await gateway.listShellJobs();
+            expect(listReads, 1);
+            expect(shells.single.id, shellID);
+            expect(shells.single.sessionID, _session);
+            expect(shells.single.command, 'flutter test');
+            expect(shells.single.pid, 42);
+
+            expect((await gateway.getShellJob(shellID)).running, isTrue);
+            final output = await gateway.readShellOutput(
+              shellID,
+              cursor: 0,
+              limit: 65536,
+            );
+            expect(output.output, 'passing\n');
+            expect(output.hasMore, isFalse);
+            await gateway.updateShellTimeout(
+              shellID,
+              const Duration(minutes: 5),
+            );
+            await gateway.stopShellJob(shellID);
+
+            final timeout = requests.singleWhere(
+              (request) => request.method == 'PATCH',
+            );
+            expect(timeout.body, {'timeout': 300000});
+            final outputRequest = requests.singleWhere(
+              (request) => request.uri.path.endsWith('/output'),
+            );
+            expect(outputRequest.uri.queryParameters['cursor'], '0');
+            expect(outputRequest.uri.queryParameters['limit'], '65536');
+            gateway.close();
+          },
+        );
+      },
+    );
+
+    test(
+      'OpenCode 1 capability and promotion retain boolean semantics',
+      () async {
+        await withServer(
+          handler: (request) async {
+            if (request.uri.path == '/experimental/capabilities') {
+              await writeJson(request, {'backgroundSubagents': true});
+              return;
+            }
+            expect(
+              request.uri.path,
+              '/experimental/session/$_session/background',
+            );
+            await writeJson(request, false);
+          },
+          (server, requests) async {
+            final api = BackgroundOpenCodeApi(
+              baseUrl: 'http://${server.address.host}:${server.port}',
+            )..setLocation(directory: '/repo');
+            final capabilities = await api.loadBackgroundWorkCapabilities();
+            expect(capabilities.subagents, isTrue);
+            expect(capabilities.shells, isFalse);
+            expect(await api.moveSessionWorkToBackground(_session), isFalse);
+            expect(requests, hasLength(2));
+            expect(
+              requests.every(
+                (request) =>
+                    request.uri.queryParameters['directory'] == '/repo',
+              ),
+              isTrue,
+            );
+            api.close();
+          },
+        );
+      },
+    );
   });
 
   group('v1 gateway stays inert', () {
@@ -361,6 +533,27 @@ void main() {
   });
 
   group('event adaptation', () {
+    test('shell lifecycle hints are forwarded for reconciliation', () {
+      final adapter = Api2EventAdapter();
+      final started = adaptApi2EventJson(adapter, {
+        'type': 'session.shell.started',
+        'data': {
+          'sessionID': _session,
+          'shell': {'id': 'sh_01', 'command': 'flutter test'},
+        },
+      });
+      expect(started.single.type, 'session.shell.started');
+      expect(started.single.properties['sessionID'], _session);
+
+      final created = adaptApi2EventJson(adapter, {
+        'type': 'shell.created',
+        'data': {
+          'info': {'id': 'sh_01', 'status': 'running'},
+        },
+      });
+      expect(created.single.type, 'shell.created');
+    });
+
     test('inbox events pass through under their v2 types', () {
       final adapter = Api2EventAdapter();
       final enqueued = adaptApi2EventJson(adapter, {
@@ -380,13 +573,11 @@ void main() {
         enqueued.map((event) => event.type),
         containsAll(['session.inbox.enqueued', 'message.updated']),
       );
-      final passthrough = enqueued
-          .singleWhere((event) => event.type == 'session.inbox.enqueued');
-      expect(passthrough.properties['inboxID'], _inboxID);
-      expect(
-        (passthrough.properties['item'] as Map)['delivery'],
-        'queue',
+      final passthrough = enqueued.singleWhere(
+        (event) => event.type == 'session.inbox.enqueued',
       );
+      expect(passthrough.properties['inboxID'], _inboxID);
+      expect((passthrough.properties['item'] as Map)['delivery'], 'queue');
 
       final delivered = adaptApi2EventJson(adapter, {
         'type': 'session.inbox.delivered',
@@ -420,7 +611,10 @@ void main() {
         'data': {
           'sessionID': _session,
           'inboxID': 'msg_synth',
-          'item': {'type': 'synthetic', 'payload': {'text': 'ctx'}},
+          'item': {
+            'type': 'synthetic',
+            'payload': {'text': 'ctx'},
+          },
         },
       });
       expect(events.single.type, 'session.inbox.enqueued');
@@ -428,8 +622,7 @@ void main() {
 
     test('form events surface as form.v2.* envelopes', () {
       final adapter = Api2EventAdapter();
-      final formJson =
-          (fixture('forms_session.json') as Map)['data'][0] as Map;
+      final formJson = (fixture('forms_session.json') as Map)['data'][0] as Map;
       final created = adaptApi2EventJson(adapter, {
         'type': 'form.created',
         'data': {'form': formJson},
@@ -450,10 +643,7 @@ void main() {
         },
       });
       expect(replied.single.type, 'form.v2.replied');
-      expect(replied.single.properties, {
-        'id': _form,
-        'sessionID': _session,
-      });
+      expect(replied.single.properties, {'id': _form, 'sessionID': _session});
 
       final cancelledForm = adaptApi2EventJson(adapter, {
         'type': 'form.cancelled',

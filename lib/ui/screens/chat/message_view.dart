@@ -755,6 +755,59 @@ List<List<Part>> _timelineDisplayParts(List<MessageWithParts> messages) {
   return display;
 }
 
+Map<int, List<int>> _assistantActionRuns(
+  List<MessageWithParts> messages,
+  List<List<Part>> displayParts, {
+  required int renderedCount,
+  required bool busy,
+}) {
+  final runs = <int, List<int>>{};
+  var activeAssistant = -1;
+  if (busy) {
+    for (var index = messages.length - 1; index >= 0; index -= 1) {
+      if (messages[index].info.role == 'assistant' &&
+          messages[index].info.time?.isDone != true) {
+        activeAssistant = index;
+        break;
+      }
+    }
+  }
+
+  var index = 0;
+  while (index < renderedCount) {
+    if (messages[index].info.role != 'assistant') {
+      index += 1;
+      continue;
+    }
+    final start = index;
+    while (index + 1 < renderedCount &&
+        messages[index + 1].info.role == 'assistant') {
+      index += 1;
+    }
+    final end = index;
+    final continuesOffscreen =
+        end == renderedCount - 1 &&
+        renderedCount < messages.length &&
+        messages[renderedCount].info.role == 'assistant';
+    final isActive = activeAssistant >= start && activeAssistant <= end;
+    if (!continuesOffscreen && !isActive) {
+      for (var owner = end; owner >= start; owner -= 1) {
+        final message = messages[owner];
+        if (displayParts[owner].isNotEmpty ||
+            message.info.errorText != null ||
+            message.info.finish == 'length') {
+          runs[owner] = [
+            for (var member = start; member <= end; member++) member,
+          ];
+          break;
+        }
+      }
+    }
+    index += 1;
+  }
+  return runs;
+}
+
 Part _mergeTextParts(List<Part> parts) {
   assert(parts.isNotEmpty);
   if (parts.length == 1) return parts.single;
@@ -834,7 +887,12 @@ String _toolRunSentence(List<Part> parts) {
   var web = 0;
   var agents = 0;
   var other = 0;
+  var notRun = 0;
   for (final part in parts) {
+    if (!part.toolState.executed) {
+      notRun++;
+      continue;
+    }
     switch (part.toolName?.trim().toLowerCase() ?? '') {
       case 'read':
         reads++;
@@ -867,6 +925,7 @@ String _toolRunSentence(List<Part> parts) {
     if (web > 0) 'fetched ${plural(web, 'page', 'pages')}',
     if (agents > 0) 'delegated ${plural(agents, 'task', 'tasks')}',
     if (other > 0) 'made ${plural(other, 'other call', 'other calls')}',
+    if (notRun > 0) '${plural(notRun, 'step was', 'steps were')} not run',
   ];
   if (segments.isEmpty) return '';
   final sentence = segments.join(', ');
@@ -939,20 +998,24 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
 
   bool _shouldOpen(List<Part> parts) => parts.any(
     (part) =>
-        part.toolState.status == 'pending' ||
-        part.toolState.status == 'running' ||
+        (part.toolState.executed &&
+            (part.toolState.status == 'pending' ||
+                part.toolState.status == 'running')) ||
         part.toolState.status == 'error' ||
         part.toolState.outputFiles.isNotEmpty,
   );
 
   bool get _running => widget.parts.any(
     (part) =>
-        part.toolState.status == 'pending' ||
-        part.toolState.status == 'running',
+        part.toolState.executed &&
+        (part.toolState.status == 'pending' ||
+            part.toolState.status == 'running'),
   );
 
   bool get _failed =>
       widget.parts.any((part) => part.toolState.status == 'error');
+
+  bool get _notRun => widget.parts.any((part) => !part.toolState.executed);
 
   @override
   Widget build(BuildContext context) {
@@ -963,7 +1026,8 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
     Part? runningPart;
     for (final part in widget.parts.reversed) {
       final status = part.toolState.status;
-      if (status == 'running' || status == 'pending') {
+      if (part.toolState.executed &&
+          (status == 'running' || status == 'pending')) {
         runningPart = part;
         break;
       }
@@ -980,6 +1044,13 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
     final title = allContext
         ? (_running ? 'Exploring' : 'Explored')
         : (_running ? 'Running tools' : 'Tools');
+    final status = _failed
+        ? 'failed'
+        : _running
+        ? 'running'
+        : _notRun
+        ? 'not run'
+        : 'complete';
     return Container(
       key: const Key('tool-call-group'),
       margin: const EdgeInsets.symmetric(vertical: 3),
@@ -993,7 +1064,7 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
           Semantics(
             button: true,
             expanded: _expanded,
-            label: '$title, ${widget.parts.length} tools',
+            label: '$title, ${widget.parts.length} steps, $status',
             child: InkWell(
               key: const Key('tool-call-group-header'),
               onTap: _toggle,
@@ -1001,7 +1072,7 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(minHeight: 48),
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
+                  padding: const EdgeInsets.fromLTRB(10, 4, 8, 4),
                   child: Row(
                     children: [
                       Icon(
@@ -1010,10 +1081,14 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        title,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w600,
+                      Flexible(
+                        child: Text(
+                          '$title · ${widget.parts.length} ${widget.parts.length == 1 ? 'step' : 'steps'}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -1036,16 +1111,21 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
                             color: theme.colorScheme.primary,
                           ),
                         )
-                      else
+                      else if (_failed || _running || _notRun)
                         Icon(
                           _failed
                               ? Icons.error_outline_rounded
                               : _running
                               ? Icons.hourglass_top_rounded
-                              : Icons.check_circle_outline_rounded,
+                              : Icons.block_rounded,
                           size: 14,
                           color: _failed
                               ? theme.colorScheme.error
+                              : _notRun
+                              ? AppTheme.statusColor(
+                                  theme,
+                                  AppStatusTone.neutral,
+                                )
                               : theme.colorScheme.primary,
                         ),
                       const SizedBox(width: 4),
@@ -1231,6 +1311,7 @@ class _MessageView extends StatelessWidget {
   final Map<String, bool> expansionStore;
   final bool showTimestamp;
   final bool highlighted;
+  final bool showAssistantActions;
   final VoidCallback? onLongPress;
 
   /// Desktop right-click menu for this message. Built on click so it reflects
@@ -1261,6 +1342,7 @@ class _MessageView extends StatelessWidget {
     required this.expansionStore,
     required this.showTimestamp,
     this.highlighted = false,
+    this.showAssistantActions = false,
     this.onLongPress,
     this.contextActions,
     required this.filePreviewLoader,
@@ -1339,6 +1421,7 @@ class _MessageView extends StatelessWidget {
               : CrossAxisAlignment.start,
           children: [
             Container(
+              key: isUser ? ValueKey('user-message-bubble-${m.info.id}') : null,
               constraints: BoxConstraints(
                 // Keep prompts readable on wide screens instead of stretching a
                 // bubble across a tablet.
@@ -1361,36 +1444,35 @@ class _MessageView extends StatelessWidget {
                     )
                   : null,
               child: isUser
-                  ? _UserMessageContent(parts: visibleParts)
+                  ? Stack(
+                      alignment: AlignmentDirectional.bottomEnd,
+                      children: [
+                        Padding(
+                          padding: EdgeInsetsDirectional.only(
+                            end: onLongPress == null ? 0 : 44,
+                          ),
+                          child: _UserMessageContent(parts: visibleParts),
+                        ),
+                        if (onLongPress case final onPressed?)
+                          _MessageActionsButton(
+                            messageID: m.info.id,
+                            onPressed: onPressed,
+                          ),
+                      ],
+                    )
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        for (final run in assistantRuns)
-                          if (run.grouped)
-                            _ToolCallGroup(
-                              key: ValueKey(
-                                'tools:${run.parts.first.id ?? run.parts.first.callID}',
-                              ),
-                              parts: run.parts,
-                              expansionStore: expansionStore,
-                              filePreviewLoader: filePreviewLoader,
-                              onAttachFile: onAttachFile,
-                              onDownloadFile: onDownloadFile,
-                              onOpenSession: onOpenSession,
-                            )
-                          else
-                            _AssistantMessagePart(
-                              part: run.parts.single,
-                              reasoningExpanded: reasoningExpanded,
-                              expansionStore: expansionStore,
-                              filePreviewLoader: filePreviewLoader,
-                              onAttachFile: onAttachFile,
-                              onDownloadFile: onDownloadFile,
-                              onOpenSession: onOpenSession,
-                              streaming:
-                                  streaming &&
-                                  identical(run, assistantRuns.last),
-                            ),
+                        for (
+                          var index = 0;
+                          index < assistantRuns.length;
+                          index++
+                        )
+                          _assistantRun(
+                            assistantRuns[index],
+                            index == assistantRuns.length - 1,
+                            streaming,
+                          ),
                       ],
                     ),
             ),
@@ -1416,7 +1498,7 @@ class _MessageView extends StatelessWidget {
                   ],
                 ),
               ),
-            if (metaParts.isNotEmpty || onLongPress != null)
+            if (metaParts.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 1, left: 6, right: 6),
                 child: Row(
@@ -1432,59 +1514,69 @@ class _MessageView extends StatelessWidget {
                           ),
                         ),
                       ),
-                    if (onLongPress != null)
-                      Semantics(
-                        button: true,
-                        label: 'Message actions',
-                        child: Tooltip(
-                          message: 'Message actions',
-                          child: InkWell(
-                            key: ValueKey('message-actions-${m.info.id}'),
-                            customBorder: const StadiumBorder(),
-                            onTap: onLongPress,
-                            // The glyph stays quiet in the meta row, but the
-                            // target itself meets the 44dp floor the rest of
-                            // the product enforces.
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(
-                                minWidth: 44,
-                                minHeight: 44,
-                              ),
-                              child: Icon(
-                                Icons.more_horiz_rounded,
-                                size: 16,
-                                color: theme.colorScheme.onSurfaceVariant
-                                    .withValues(alpha: .8),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
                   ],
                 ),
               ),
             if (m.info.errorText != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 3),
-                child: _AssistantErrorRow(
-                  info: m.info,
-                  onCompact: onCompact,
-                  onOpenProviders: onOpenProviders,
-                  onContinue: onContinue,
-                  onChooseModel: onChooseModel,
-                ),
+              Stack(
+                alignment: AlignmentDirectional.bottomEnd,
+                children: [
+                  Padding(
+                    padding: EdgeInsetsDirectional.only(
+                      top: 3,
+                      end: showAssistantActions && assistantRuns.isEmpty
+                          ? 48
+                          : 0,
+                    ),
+                    child: _AssistantErrorRow(
+                      info: m.info,
+                      onCompact: onCompact,
+                      onOpenProviders: onOpenProviders,
+                      onContinue: onContinue,
+                      onChooseModel: onChooseModel,
+                    ),
+                  ),
+                  if (showAssistantActions &&
+                      assistantRuns.isEmpty &&
+                      onLongPress != null)
+                    _MessageActionsButton(
+                      messageID: m.info.id,
+                      onPressed: onLongPress!,
+                    ),
+                ],
               ),
             if (m.info.finish == 'length' &&
                 m.info.errorKind != MessageErrorKind.outputLength)
-              Padding(
-                padding: const EdgeInsets.only(top: 3),
-                child: Text(
-                  'Answer was cut off by the length limit',
-                  key: const Key('message-length-footer'),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: AppTheme.mutedOf(theme),
+              Stack(
+                alignment: AlignmentDirectional.bottomEnd,
+                children: [
+                  Padding(
+                    padding: EdgeInsetsDirectional.only(
+                      top: 3,
+                      end:
+                          showAssistantActions &&
+                              assistantRuns.isEmpty &&
+                              m.info.errorText == null
+                          ? 48
+                          : 0,
+                    ),
+                    child: Text(
+                      'Answer was cut off by the length limit',
+                      key: const Key('message-length-footer'),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: AppTheme.mutedOf(theme),
+                      ),
+                    ),
                   ),
-                ),
+                  if (showAssistantActions &&
+                      assistantRuns.isEmpty &&
+                      m.info.errorText == null &&
+                      onLongPress != null)
+                    _MessageActionsButton(
+                      messageID: m.info.id,
+                      onPressed: onLongPress!,
+                    ),
+                ],
               ),
           ],
         ),
@@ -1493,6 +1585,42 @@ class _MessageView extends StatelessWidget {
     final menu = contextActions;
     if (menu == null) return body;
     return ContextMenuRegion(actions: menu, child: body);
+  }
+
+  Widget _assistantRun(_AssistantPartRun run, bool isLast, bool streaming) {
+    final content = run.grouped
+        ? _ToolCallGroup(
+            key: ValueKey(
+              'tools:${run.parts.first.id ?? run.parts.first.callID}',
+            ),
+            parts: run.parts,
+            expansionStore: expansionStore,
+            filePreviewLoader: filePreviewLoader,
+            onAttachFile: onAttachFile,
+            onDownloadFile: onDownloadFile,
+            onOpenSession: onOpenSession,
+          )
+        : _AssistantMessagePart(
+            part: run.parts.single,
+            reasoningExpanded: reasoningExpanded,
+            expansionStore: expansionStore,
+            filePreviewLoader: filePreviewLoader,
+            onAttachFile: onAttachFile,
+            onDownloadFile: onDownloadFile,
+            onOpenSession: onOpenSession,
+            streaming: streaming && isLast,
+          );
+    if (!isLast || !showAssistantActions || onLongPress == null) return content;
+    return Stack(
+      alignment: AlignmentDirectional.bottomEnd,
+      children: [
+        Padding(
+          padding: const EdgeInsetsDirectional.only(end: 48),
+          child: content,
+        ),
+        _MessageActionsButton(messageID: m.info.id, onPressed: onLongPress!),
+      ],
+    );
   }
 
   static String _fmtTokens(int n) {
@@ -1505,6 +1633,40 @@ class _MessageView extends StatelessWidget {
   /// "essentially free" rather than a string of zeros.
   static String _fmtCost(double cost) =>
       cost < .001 ? '< \$0.001' : '\$${cost.toStringAsFixed(3)}';
+}
+
+class _MessageActionsButton extends StatelessWidget {
+  const _MessageActionsButton({
+    required this.messageID,
+    required this.onPressed,
+  });
+
+  final String messageID;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(
+      context,
+    ).colorScheme.onSurfaceVariant.withValues(alpha: .8);
+    final label = _chatL10n(context).chatMessageActions;
+    return Semantics(
+      button: true,
+      label: label,
+      child: Tooltip(
+        message: label,
+        child: InkWell(
+          key: ValueKey('message-actions-$messageID'),
+          customBorder: const StadiumBorder(),
+          onTap: onPressed,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            child: Icon(Icons.more_horiz_rounded, size: 16, color: color),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// The assistant error row, keyed on the server's typed error: overflow,
@@ -2009,17 +2171,10 @@ class _ReasoningState extends State<_Reasoning> {
           Directionality.of(context),
           constraints.maxWidth - 14,
         );
+        final collapsible = !short;
         return Container(
           key: const Key('assistant-reasoning-block'),
-          margin: const EdgeInsets.only(bottom: 6),
-          decoration: BoxDecoration(
-            border: Border(
-              left: BorderSide(
-                color: theme.colorScheme.secondary.withValues(alpha: .5),
-                width: 2,
-              ),
-            ),
-          ),
+          margin: EdgeInsets.only(bottom: collapsible && !_open ? 0 : 6),
           child: short
               ? KeyedSubtree(
                   key: const Key('reasoning-inline'),
@@ -2056,40 +2211,30 @@ class _ReasoningState extends State<_Reasoning> {
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(minHeight: 48),
                           child: Padding(
-                            padding: const EdgeInsets.fromLTRB(8, 4, 4, 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
                             child: Row(
-                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  Icons.psychology_alt_outlined,
-                                  size: 13,
+                                  Icons.route_outlined,
+                                  size: 16,
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
-                                const SizedBox(width: 5),
-                                InfoLabel.glossary(
-                                  Glossary.reasoning,
-                                  key: const Key('reasoning-glossary'),
-                                  iconSize: 13,
+                                const SizedBox(width: 8),
+                                Text(
+                                  _chatL10n(context).chatReasoningLabel,
                                   style: theme.textTheme.labelSmall!.copyWith(
                                     color: theme.colorScheme.onSurfaceVariant,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                if (!_open) ...[
-                                  const SizedBox(width: 4),
-                                  Flexible(
-                                    child: Text(
-                                      '(tap to expand)',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: theme.textTheme.labelSmall!
-                                          .copyWith(
-                                            color: theme
-                                                .colorScheme
-                                                .onSurfaceVariant,
-                                          ),
-                                    ),
-                                  ),
-                                ],
+                                const Spacer(),
+                                Icon(
+                                  _open
+                                      ? Icons.expand_less_rounded
+                                      : Icons.chevron_right_rounded,
+                                  size: 18,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
                               ],
                             ),
                           ),
@@ -2097,7 +2242,17 @@ class _ReasoningState extends State<_Reasoning> {
                       ),
                     ),
                     if (_open)
-                      Padding(
+                      Container(
+                        decoration: BoxDecoration(
+                          border: Border(
+                            left: BorderSide(
+                              color: theme.colorScheme.secondary.withValues(
+                                alpha: .5,
+                              ),
+                              width: 2,
+                            ),
+                          ),
+                        ),
                         padding: const EdgeInsets.fromLTRB(8, 4, 4, 4),
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(

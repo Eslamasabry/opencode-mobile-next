@@ -1,0 +1,17 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "mobile-lead",
+  "instructions": ["AGENTS.md"],
+  "share": "manual",
+  "permission": {
+    "task": "allow",
+    "bash": {
+      "*": "allow",
+      "git push*": "ask",
+      "git tag*": "ask",
+      "gh release*": "ask",
+      "shorebird release*": "ask",
+      "shorebird patch*": "ask"
+    }
+  }
+}

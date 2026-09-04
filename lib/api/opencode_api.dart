@@ -1299,3 +1299,58 @@ class OpenCodeApi
     }
   }
 }
+
+/// Production OpenCode 1 transport with the optional experimental background
+/// surface. Keeping this separate leaves base [OpenCodeApi] test doubles and
+/// older embedders inert unless they explicitly opt into the capability.
+class BackgroundOpenCodeApi extends OpenCodeApi
+    implements BackgroundWorkGateway {
+  BackgroundOpenCodeApi({
+    required super.baseUrl,
+    super.username,
+    super.password,
+  });
+
+  @override
+  Future<BackgroundWorkCapabilities> loadBackgroundWorkCapabilities() async {
+    try {
+      final response = await sdkClient
+          .getExperimentalApi()
+          .experimentalCapabilitiesGet(
+            directory: _directory,
+            workspace: _workspace,
+          );
+      return BackgroundWorkCapabilities(
+        subagents: response.data?.backgroundSubagents == true,
+      );
+    } on sdk.OpenCodeApiException catch (e) {
+      if (e.statusCode == 404) {
+        return const BackgroundWorkCapabilities(subagents: false);
+      }
+      _failGenerated(e, 'Load background-work capabilities');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return const BackgroundWorkCapabilities(subagents: false);
+      }
+      _fail(e, 'Load background-work capabilities');
+    }
+  }
+
+  @override
+  Future<bool> moveSessionWorkToBackground(String sessionID) async {
+    try {
+      final response = await sdkClient
+          .getExperimentalApi()
+          .experimentalSessionBackground(
+            sessionID: sessionID,
+            directory: _directory,
+            workspace: _workspace,
+          );
+      return response.data == true;
+    } on sdk.OpenCodeApiException catch (e) {
+      _failGenerated(e, 'Background subagents');
+    } on DioException catch (e) {
+      _fail(e, 'Background subagents');
+    }
+  }
+}

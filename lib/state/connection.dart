@@ -687,7 +687,7 @@ class ConnectionController extends ChangeNotifier {
     return uri != null && isLoopbackHost(uri.host);
   }
 
-  static OpenCodeApi _createApi(ServerProfile profile) => OpenCodeApi(
+  static OpenCodeApi _createApi(ServerProfile profile) => BackgroundOpenCodeApi(
     baseUrl: profile.baseUrl,
     username: profile.username,
     password: profile.password,

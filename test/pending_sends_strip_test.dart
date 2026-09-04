@@ -300,8 +300,9 @@ void main() {
 
   // The busy chat runs a looping typing indicator, so these use pump() with
   // explicit frames rather than pumpAndSettle (which would never settle).
-  testWidgets('while busy on v2 Stop and Send sit side by side; the toggle '
-      'queues', (tester) async {
+  testWidgets('while busy on v2 Stop stays in the header and the toggle queues', (
+    tester,
+  ) async {
     final api = _V2ChatApi();
     final controller = await _controller(api);
     addTearDown(controller.dispose);
@@ -313,16 +314,17 @@ void main() {
 
     expect(find.byKey(const Key('chat-stop-button')), findsOneWidget);
     expect(find.byKey(const Key('chat-send-button')), findsOneWidget);
-    // UX-P0-04: the choice is stated in words while the run is active.
-    expect(find.byKey(const Key('composer-delivery-control')), findsOneWidget);
-    expect(find.text('Steer'), findsOneWidget);
-    expect(find.text('Queue'), findsOneWidget);
+    // The empty busy composer keeps only the current-mode status in its header.
+    expect(find.byKey(const Key('composer-delivery-control')), findsNothing);
 
     await tester.enterText(
       find.byKey(const Key('chat-composer-field')),
       'interject now',
     );
     await tester.pump();
+    expect(find.byKey(const Key('composer-delivery-control')), findsOneWidget);
+    expect(find.text('Steer'), findsOneWidget);
+    expect(find.text('Queue'), findsOneWidget);
 
     // Steer is the selected default, and now rides explicitly so the sent
     // delivery always matches the label the user can see.
@@ -417,7 +419,7 @@ void main() {
     expect(find.byKey(const Key('composer-queue-hint')), findsNothing);
   });
 
-  testWidgets('the delivery control is absent until a run is active', (
+  testWidgets('the delivery control is absent until a busy draft needs it', (
     tester,
   ) async {
     final api = _V2ChatApi();
@@ -432,6 +434,13 @@ void main() {
     controller.notifyListeners();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
+    expect(find.byKey(const Key('composer-delivery-control')), findsNothing);
+
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      'steer this run',
+    );
+    await tester.pump();
     expect(find.byKey(const Key('composer-delivery-control')), findsOneWidget);
 
     controller.busySessions.remove('session-1');
@@ -452,12 +461,12 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
-    await tester.tap(find.byKey(const Key('composer-delivery-queue')));
-    await tester.pump();
     await tester.enterText(
       find.byKey(const Key('chat-composer-field')),
       'after this run',
     );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('composer-delivery-queue')));
     await tester.pump();
     await tester.tap(find.byKey(const Key('chat-send-button')));
     await tester.pump();
@@ -503,6 +512,11 @@ void main() {
     controller.busySessions.add('session-1');
     controller.notifyListeners();
     await _settle(tester);
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      'scaled steer',
+    );
+    await _settle(tester);
 
     expect(find.byKey(const Key('composer-delivery-control')), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -520,19 +534,24 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
-    await tester.tap(find.byKey(const Key('composer-delivery-queue')));
-    await tester.pump();
-    expect(find.text('Send waits for this run to finish'), findsOneWidget);
     await tester.enterText(
       find.byKey(const Key('chat-composer-field')),
       'queued through the toggle',
     );
     await tester.pump();
+    await tester.tap(find.byKey(const Key('composer-delivery-queue')));
+    await tester.pump();
+    expect(find.text('Send waits for this run to finish'), findsOneWidget);
     await tester.tap(find.byKey(const Key('chat-send-button')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(api.prompts.single.delivery, PromptDelivery.queue);
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      'another queued prompt',
+    );
+    await tester.pump();
     final toggle = tester.widget<SegmentedButton<PromptDelivery>>(
       find.byType(SegmentedButton<PromptDelivery>),
     );

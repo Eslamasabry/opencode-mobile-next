@@ -3,6 +3,7 @@
 // assistant long-press actions, and earlier-messages pill gating.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
@@ -60,14 +61,23 @@ Future<ConnectionController> _controller(_TranscriptApi api) async {
 
 Future<ConnectionController> _pumpChat(
   WidgetTester tester,
-  _TranscriptApi api,
-) async {
+  _TranscriptApi api, {
+  double textScale = 1,
+}) async {
   final controller = await _controller(api);
   addTearDown(controller.dispose);
   await tester.pumpWidget(
     ProviderScope(
       overrides: [connProvider.overrideWithValue(controller)],
-      child: const MaterialApp(home: ChatScreen(sessionID: 'session-1')),
+      child: MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
+        home: const ChatScreen(sessionID: 'session-1'),
+      ),
     ),
   );
   await tester.pump();
@@ -133,14 +143,8 @@ void main() {
 
     // The whole burst coalesced into one setState, and only the streaming
     // message re-parsed its markdown — the settled message stayed cached.
-    expect(
-      find.textContaining('tok0', findRichText: true),
-      findsOneWidget,
-    );
-    expect(
-      find.textContaining('tok19', findRichText: true),
-      findsOneWidget,
-    );
+    expect(find.textContaining('tok0', findRichText: true), findsOneWidget);
+    expect(find.textContaining('tok19', findRichText: true), findsOneWidget);
     expect(debugChatStreamFlushes - flushesBefore, 1);
     expect(MarkdownText.debugParseCount - parsesBefore, lessThanOrEqualTo(2));
 
@@ -299,7 +303,7 @@ void main() {
     expect(find.byKey(const ValueKey('message-action-delete')), findsOneWidget);
   });
 
-  testWidgets('the meta-row affordance opens the same actions menu', (
+  testWidgets('the user-bubble affordance opens the same actions menu', (
     tester,
   ) async {
     final api = _TranscriptApi()
@@ -318,11 +322,192 @@ void main() {
 
     final affordance = find.byKey(const ValueKey('message-actions-user-1'));
     expect(affordance, findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('user-message-bubble-user-1')),
+        matching: affordance,
+      ),
+      findsOneWidget,
+      reason: 'message actions must not consume a standalone transcript row',
+    );
     await tester.tap(affordance);
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('message-action-copy')), findsOneWidget);
     expect(find.byKey(const ValueKey('message-action-fork')), findsOneWidget);
+  });
+
+  testWidgets('one action affordance owns each completed assistant run', (
+    tester,
+  ) async {
+    final api = _TranscriptApi()
+      ..messagesBuilder = () => [
+        _message('user-1', 'user', [Part(type: 'text', text: 'First prompt')]),
+        _message('assistant-1', 'assistant', [
+          Part(type: 'reasoning', text: 'A sufficiently long reasoning line.'),
+        ], created: 2),
+        _message('assistant-2', 'assistant', [
+          Part(type: 'text', text: 'First answer'),
+        ], created: 3),
+        _message('user-2', 'user', [
+          Part(type: 'text', text: 'Second prompt'),
+        ], created: 4),
+        _message('assistant-3', 'assistant', [
+          Part(type: 'text', text: 'Second answer'),
+        ], created: 5),
+      ];
+    final controller = await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('message-actions-assistant-1')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const ValueKey('message-actions-assistant-2')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('message-actions-assistant-3')),
+      findsOneWidget,
+    );
+
+    controller.busySessions = {'session-1'};
+    controller.notifyListeners();
+    await tester.pump();
+
+    expect(
+      find.byKey(const ValueKey('message-actions-assistant-2')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('message-actions-assistant-3')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('the grouped assistant action copies the complete visible turn', (
+    tester,
+  ) async {
+    final copied = <String>[];
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+          if (call.method == 'Clipboard.setData') {
+            copied.add((call.arguments as Map)['text'] as String);
+          }
+          return null;
+        });
+    addTearDown(
+      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, null),
+    );
+    final api = _TranscriptApi()
+      ..messagesBuilder = () => [
+        _message('assistant-copy-1', 'assistant', [
+          Part(type: 'text', text: 'First paragraph.'),
+        ]),
+        _message('assistant-copy-2', 'assistant', [
+          Part(type: 'text', text: 'Second paragraph.'),
+        ], created: 2),
+      ];
+    await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byKey(const ValueKey('message-actions-assistant-copy-1')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('message-action-copy')));
+    await tester.pumpAndSettle();
+
+    expect(copied, ['First paragraph.\n\nSecond paragraph.']);
+  });
+
+  testWidgets('the active assistant run alone withholds its action', (
+    tester,
+  ) async {
+    final api = _TranscriptApi()
+      ..messagesBuilder = () => [
+        _message('assistant-done', 'assistant', [
+          Part(type: 'text', text: 'Completed answer'),
+        ]),
+        MessageWithParts(
+          info: MessageInfo(
+            id: 'assistant-live',
+            sessionID: 'session-1',
+            role: 'assistant',
+            time: MsgTime(created: 2),
+          ),
+          parts: [Part(type: 'text', text: 'Streaming answer')],
+        ),
+      ];
+    final controller = await _pumpChat(tester, api);
+    controller.busySessions = {'session-1'};
+    controller.notifyListeners();
+    await tester.pump();
+
+    expect(
+      find.byKey(const ValueKey('message-actions-assistant-live')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('an error-only assistant turn keeps an accessible action', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    final api = _TranscriptApi()
+      ..messagesBuilder = () => [
+        MessageWithParts(
+          info: MessageInfo(
+            id: 'assistant-error',
+            sessionID: 'session-1',
+            role: 'assistant',
+            errorText: 'Provider request failed',
+            time: MsgTime(created: 1, completed: 2),
+          ),
+          parts: const [],
+        ),
+      ];
+
+    await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+
+    final action = find.byKey(
+      const ValueKey('message-actions-assistant-error'),
+    );
+    expect(action, findsOneWidget);
+    expect(tester.getSemantics(action).label, contains('Message actions'));
+    semantics.dispose();
+  });
+
+  testWidgets('grouped tool headers fit a 360dp phone at 2.5x text', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(360, 740));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final api = _TranscriptApi()
+      ..messagesBuilder = () => [
+        _message('assistant-tools', 'assistant', [
+          for (var index = 0; index < 12; index++)
+            Part(
+              id: 'tool-$index',
+              type: 'tool',
+              toolName: 'read',
+              toolState: ToolState.fromJson({
+                'status': 'completed',
+                'input': {'filePath': '/very/long/path/file-$index.txt'},
+                'output': 'done',
+              }, toolName: 'read'),
+            ),
+        ]),
+      ];
+
+    await _pumpChat(tester, api, textScale: 2.5);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('tool-call-group-header')), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('earlier-messages pill gates on scroll and excludes visible '

@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
 import '../../state/profiles.dart';
@@ -44,6 +45,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
   bool _refreshing = false;
   bool _polling = false;
   bool _monitoringFailed = false;
+  bool _restarting = false;
   int _snapshotFailures = 0;
   int _elapsedSeconds = 0;
   String? _error;
@@ -247,6 +249,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       _snapshotFailures = 0;
       _setupOutput = '';
       _lastLaunchOutput = null;
+      _restarting = false;
     });
     try {
       await TermuxBridge.verifyBridge();
@@ -341,6 +344,111 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
     if (confirmed && mounted) await _installAndStart();
   }
 
+  Future<void> _confirmRestart() async {
+    final profile = _localProfile();
+    if (profile == null) {
+      setState(() {
+        _phase = _Phase.ready;
+        _error =
+            'The saved credential for this managed server is unavailable. '
+            'Run setup again to replace it safely.';
+      });
+      return;
+    }
+    final l10n = AppLocalizations.of(context);
+    final busyCount = ref.read(connProvider).busySessions.length;
+    final confirmed = await showConfirmSheet(
+      context,
+      title: l10n.termuxRestartTitle,
+      message: [
+        l10n.termuxRestartMessage,
+        if (busyCount > 0) l10n.termuxRestartBusyMessage(busyCount),
+      ].join('\n\n'),
+      confirmLabel: l10n.termuxRestartConfirm,
+      icon: Icons.restart_alt_rounded,
+    );
+    if (confirmed && mounted) await _restartServer(profile);
+  }
+
+  Future<void> _restartServer(ServerProfile profile) async {
+    if (_busy || _phase != _Phase.connected) return;
+    _stopPolling();
+    setState(() {
+      _busy = true;
+      _restarting = true;
+      _phase = _Phase.installing;
+      _error = null;
+      _elapsedSeconds = 0;
+      _monitoringFailed = false;
+      _snapshotFailures = 0;
+      _setupOutput = '';
+      _status = const TermuxSetupStatus(
+        phase: 'restarting',
+        message: 'Restarting the local server',
+        port: port,
+        runner: 'proot',
+        version: '',
+        pid: null,
+      );
+    });
+    try {
+      await TermuxBridge.run(
+        TermuxBridge.restartScript(port: port),
+        timeout: const Duration(seconds: 45),
+      );
+      if (!mounted) return;
+      final snapshot = await TermuxBridge.setupSnapshot();
+      _status = snapshot.status;
+      _setupOutput = snapshot.output;
+      if (snapshot.status.isReady) {
+        await _finishRestart(profile);
+      } else if (snapshot.status.isRunning) {
+        _startPolling();
+      } else {
+        setState(() {
+          _restarting = false;
+          _phase = _Phase.failed;
+          _error = _persistedFailureMessage(snapshot.status, snapshot.output);
+        });
+      }
+    } on TermuxBridgeException catch (error) {
+      if (!mounted) return;
+      if (error.code == 'command_timeout' &&
+          await _recoverPersistedSetupAfterTimeout()) {
+        return;
+      }
+      if (await _recoverReadyServerAfterRestartFailure()) return;
+      setState(() {
+        _restarting = false;
+        _phase = _Phase.failed;
+        _error = 'Could not restart the local server: ${error.message}';
+      });
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<bool> _recoverReadyServerAfterRestartFailure() async {
+    try {
+      final snapshot = await TermuxBridge.setupSnapshot();
+      if (!mounted || !snapshot.status.isReady) return false;
+      _status = snapshot.status;
+      _setupOutput = snapshot.output;
+      setState(() {
+        _restarting = false;
+        _phase = _Phase.connected;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).termuxRestartNotPerformed),
+        ),
+      );
+      return true;
+    } on TermuxBridgeException {
+      return false;
+    }
+  }
+
   Future<bool> _recoverPersistedSetupAfterTimeout() async {
     try {
       final snapshot = await TermuxBridge.setupSnapshot();
@@ -349,6 +457,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       _setupOutput = snapshot.output;
       if (snapshot.status.isRunning) {
         setState(() {
+          if (snapshot.status.phase == 'restarting') _restarting = true;
           _phase = _Phase.installing;
           _error = null;
         });
@@ -361,7 +470,11 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       } else if (snapshot.status.isReady) {
         final profile = _localProfile();
         if (profile == null) return false;
-        await _finishConnect(profile);
+        if (_restarting) {
+          await _finishRestart(profile);
+        } else {
+          await _finishConnect(profile);
+        }
       } else {
         setState(() => _phase = _Phase.ready);
       }
@@ -440,7 +553,10 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
         });
       }
       if (status.isRunning) {
-        setState(() => _phase = _Phase.installing);
+        setState(() {
+          if (status.phase == 'restarting') _restarting = true;
+          _phase = _Phase.installing;
+        });
         if (_poll == null) _startPolling();
         return;
       }
@@ -465,7 +581,11 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
           });
           return;
         }
-        await _finishConnect(profile);
+        if (_restarting) {
+          await _finishRestart(profile);
+        } else {
+          await _finishConnect(profile);
+        }
         return;
       }
       setState(() {
@@ -578,7 +698,51 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       });
       return;
     }
-    setState(() => _phase = _Phase.connected);
+    setState(() {
+      _restarting = false;
+      _phase = _Phase.connected;
+    });
+  }
+
+  Future<void> _finishRestart(ServerProfile profile) async {
+    final store = ref.read(bootstrapProvider).store;
+    if (store.activeId != profile.id) {
+      setState(() {
+        _restarting = false;
+        _phase = _Phase.ready;
+        _error =
+            'The local server restarted, but the active server changed. '
+            'Reconnect when you are ready.';
+      });
+      return;
+    }
+    final connection = ref.read(connProvider);
+    await connection.retryConnection();
+    if (!mounted) return;
+    // A lifecycle resume may already have owned the first retry while the
+    // server was still down. Once it completes, make one fresh attempt
+    // against the manager's authenticated-ready server.
+    if (connection.api == null) await connection.retryConnection();
+    if (!mounted) return;
+    if (connection.api == null) {
+      setState(() {
+        _restarting = false;
+        _phase = _Phase.failed;
+        _error =
+            connection.lastError ??
+            'The local server restarted, but the app could not reconnect.';
+      });
+      return;
+    }
+    setState(() {
+      _restarting = false;
+      _phase = _Phase.connected;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context).termuxRestartSucceeded),
+      ),
+    );
   }
 
   void _continueToApp() {
@@ -590,6 +754,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
     _stopPolling();
     setState(() {
       _busy = true;
+      _restarting = false;
       _error = null;
     });
     try {
@@ -679,6 +844,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
         ),
       );
     }
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: const Text('On-device setup')),
       body: Center(
@@ -876,9 +1042,11 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'The first install downloads Ubuntu and typically '
-                        'takes 10–15 minutes. You can leave this screen and '
-                        'return — setup keeps running.',
+                        _restarting
+                            ? l10n.termuxRestartProgress
+                            : 'The first install downloads Ubuntu and typically '
+                                  'takes 10–15 minutes. You can leave this screen and '
+                                  'return — setup keeps running.',
                         style: theme.textTheme.bodySmall!.copyWith(
                           color: AppTheme.mutedOf(theme),
                         ),
@@ -929,6 +1097,16 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                             onPressed: _busy ? null : _continueToApp,
                             icon: const Icon(Icons.arrow_forward_rounded),
                             label: const Text('Continue to app'),
+                          ),
+                          OutlinedButton.icon(
+                            key: const Key('restart-managed-opencode'),
+                            onPressed: _busy ? null : _confirmRestart,
+                            icon: const Icon(Icons.restart_alt_rounded),
+                            label: Text(
+                              _restarting
+                                  ? l10n.termuxRestarting
+                                  : l10n.termuxRestartServer,
+                            ),
                           ),
                           OutlinedButton.icon(
                             key: const Key('update-managed-opencode'),

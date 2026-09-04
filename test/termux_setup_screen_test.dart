@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/sse.dart';
+import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/termux/bridge.dart';
@@ -43,6 +44,9 @@ class _MemoryProfileStore extends ProfileStore {
 class _LocalConnectionController extends ConnectionController {
   _LocalConnectionController(super.store);
 
+  int retryCalls = 0;
+  int retriesToFail = 0;
+
   @override
   Future<void> connect(
     ServerProfile profile, {
@@ -65,6 +69,22 @@ class _LocalConnectionController extends ConnectionController {
     status = StreamStatus.disconnected;
     if (!keepActive) await store.setActiveId(null);
     if (!silent) notifyListeners();
+  }
+
+  @override
+  Future<void> retryConnection() async {
+    retryCalls++;
+    if (retryCalls <= retriesToFail) {
+      api = null;
+      status = StreamStatus.disconnected;
+      lastError = 'Server unavailable during lifecycle resume.';
+      notifyListeners();
+      return;
+    }
+    api = OpenCodeApi(baseUrl: TermuxBridge.managedServerUrl);
+    version = '1.18.21';
+    status = StreamStatus.connected;
+    notifyListeners();
   }
 }
 
@@ -107,7 +127,11 @@ void main() {
           bootstrapProvider.overrideWithValue(AppBootstrap(store)),
           connProvider.overrideWithValue(connection),
         ],
-        child: const MaterialApp(home: TermuxSetupScreen()),
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: TermuxSetupScreen(),
+        ),
       ),
     );
     await tester.pump();
@@ -136,6 +160,8 @@ void main() {
     addTearDown(connection.dispose);
     var launched = false;
     var launchCalls = 0;
+    var restartCalls = 0;
+    var restartShouldFail = false;
     var stopCalls = 0;
 
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -182,6 +208,18 @@ __OC_SETUP_OUTPUT__
             stopCalls++;
             return _commandResult(stdout: '[oc] server stopped');
           }
+          if (script.contains("\"\$MANAGER\" restart '4096' &")) {
+            restartCalls++;
+            if (restartShouldFail) {
+              return {
+                ..._commandResult(),
+                'stderr': 'The installed OpenCode command is unavailable',
+                'exitCode': 1,
+              };
+            }
+            launched = true;
+            return _commandResult(stdout: '[oc] authenticated server ready');
+          }
           if (script.contains('manager_tmp=')) {
             launched = true;
             launchCalls++;
@@ -220,6 +258,8 @@ pid=
           connProvider.overrideWithValue(connection),
         ],
         child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: const TermuxSetupScreen(),
           routes: {'/home': (_) => const Scaffold(body: Text('Home'))},
         ),
@@ -237,7 +277,24 @@ pid=
     expect(find.text('OpenCode is running on this phone.'), findsOneWidget);
     expect(find.text('Continue to app'), findsOneWidget);
     expect(find.text('Stop local server'), findsOneWidget);
+    expect(find.text('Restart local server'), findsOneWidget);
     expect(find.textContaining('Version 1.18.21'), findsOneWidget);
+
+    await tester.ensureVisible(
+      find.byKey(const Key('restart-managed-opencode')),
+    );
+    connection.busySessions.add('busy-session');
+    await tester.tap(find.byKey(const Key('restart-managed-opencode')));
+    await tester.pumpAndSettle();
+    expect(find.text('Restart the local server?'), findsOneWidget);
+    expect(
+      find.textContaining(
+        '1 session is generating. Restarting will interrupt it.',
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await tester.pumpAndSettle();
 
     await tester.ensureVisible(
       find.byKey(const Key('update-managed-opencode')),
@@ -251,6 +308,29 @@ pid=
     );
     expect(launchCalls, 1);
     connection.busySessions.clear();
+
+    await tester.ensureVisible(
+      find.byKey(const Key('restart-managed-opencode')),
+    );
+    connection.retriesToFail = 1;
+    await tester.tap(find.byKey(const Key('restart-managed-opencode')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Restart'));
+    await tester.pumpAndSettle();
+    expect(restartCalls, 1);
+    expect(connection.retryCalls, 2);
+    expect(launchCalls, 1);
+    expect(find.text('OpenCode is running on this phone.'), findsOneWidget);
+
+    restartShouldFail = true;
+    await tester.tap(find.byKey(const Key('restart-managed-opencode')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Restart'));
+    await tester.pumpAndSettle();
+    expect(restartCalls, 2);
+    expect(connection.retryCalls, 2);
+    expect(find.text('OpenCode is running on this phone.'), findsOneWidget);
+    restartShouldFail = false;
 
     await tester.tap(find.byKey(const Key('update-managed-opencode')));
     await tester.pumpAndSettle();
@@ -352,7 +432,11 @@ __OC_SETUP_OUTPUT__
           bootstrapProvider.overrideWithValue(AppBootstrap(store)),
           connProvider.overrideWithValue(connection),
         ],
-        child: const MaterialApp(home: TermuxSetupScreen()),
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: TermuxSetupScreen(),
+        ),
       ),
     );
     await tester.pump();
@@ -370,9 +454,6 @@ __OC_SETUP_OUTPUT__
       find.textContaining('SSL_set_quic_tls_transport_params'),
       findsWidgets,
     );
-    expect(
-      find.text('Retry — resumes where setup left off'),
-      findsOneWidget,
-    );
+    expect(find.text('Retry — resumes where setup left off'), findsOneWidget);
   });
 }

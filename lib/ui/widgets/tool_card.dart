@@ -519,6 +519,10 @@ class _ToolCardState extends State<ToolCard> {
         widget.state.input.isNotEmpty ||
         widget.state.metadata?.isNotEmpty == true ||
         _files.isNotEmpty;
+    final trailingMetadata = <String>[
+      ...contract.details,
+      if (!widget.state.executed) 'Not run' else ?_durationLabel,
+    ].join(' · ');
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
     return Container(
@@ -553,7 +557,7 @@ class _ToolCardState extends State<ToolCard> {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(minHeight: 48),
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
+                    padding: const EdgeInsets.fromLTRB(10, 4, 8, 4),
                     child: Row(
                       children: [
                         Icon(
@@ -604,39 +608,22 @@ class _ToolCardState extends State<ToolCard> {
                             ],
                           ),
                         ),
-                        if (contract.details.isNotEmpty) ...[
+                        if (trailingMetadata.isNotEmpty) ...[
                           const SizedBox(width: 6),
                           ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 92),
+                            constraints: const BoxConstraints(maxWidth: 132),
                             child: Text(
-                              contract.details.join(' · '),
+                              trailingMetadata,
+                              key: !widget.state.executed
+                                  ? const Key('tool-not-run')
+                                  : _durationLabel != null
+                                  ? const Key('tool-duration')
+                                  : null,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.labelSmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
-                            ),
-                          ),
-                        ],
-                        if (!widget.state.executed) ...[
-                          const SizedBox(width: 6),
-                          Text(
-                            'Not run',
-                            key: const Key('tool-not-run'),
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: AppTheme.mutedOf(theme),
-                            ),
-                          ),
-                        ] else if (_durationLabel case final duration?) ...[
-                          const SizedBox(width: 6),
-                          Text(
-                            duration,
-                            key: const Key('tool-duration'),
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: AppTheme.mutedOf(theme),
-                              fontFeatures: const [
-                                FontFeature.tabularFigures(),
-                              ],
                             ),
                           ),
                         ],
@@ -659,7 +646,7 @@ class _ToolCardState extends State<ToolCard> {
                               AppStatusTone.neutral,
                             ),
                           )
-                        else
+                        else if (widget.state.status == 'error' || _running)
                           Icon(
                             _running
                                 ? Icons.hourglass_top_rounded

@@ -54,8 +54,8 @@ saying why is a fine answer.
 
 <!--
 Required if any of those boxes are ticked. What data moves, what is stored,
-what a hostile server could do with this, whether this needs a full APK or
-can ride a Shorebird patch.
+what a hostile server could do with this, whether this needs a new Shorebird
+baseline or is eligible for a Shorebird patch.
 -->
 
 ## Anything a reviewer should push back on

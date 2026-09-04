@@ -214,7 +214,7 @@ mv "\$manager_tmp" "\$MANAGER"
 
 process_start() {
   stat_line=\$(cat "/proc/\$1/stat" 2>/dev/null) || return 1
-  stat_line=\${stat_line#*) }
+  stat_line=\${stat_line##*) }
   set -- \$stat_line
   printf '%s' "\${20:-}"
 }
@@ -278,15 +278,16 @@ printf 'phase=queued\nmessage=Setup queued\nport=$port\nrunner=proot\nversion=\n
 trap - EXIT
 rm -f "\$OC_DIR/server-log.active"
 "\$MANAGER" rotate-log install
+set -m
 nohup "\$MANAGER" setup '$port' '$version' "\$\$" "\$self_start" > >("\$MANAGER" write-log install) 2>&1 </dev/null &
 manager_pid=\$!
-printf '%s\n' "\$manager_pid" > "\$OC_DIR/manager.pid"
 manager_start=\$(process_start "\$manager_pid" || true)
 [ -n "\$manager_start" ] || {
   wait "\$manager_pid" 2>/dev/null || true
   echo 'manager-exited-before-start' >&2
   exit 70
 }
+printf '%s %s\n' "\$manager_pid" "\$manager_start" > "\$OC_DIR/manager.pid"
 claimed=0
 for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
   lock_pid=''
@@ -393,6 +394,64 @@ echo '===== server.log (last 80 lines) ====='
 tail -n 80 "\$OC_DIR/server.log" 2>/dev/null || true
 ''';
 
+  static String restartScript({int port = managedServerPort}) {
+    if (port < 1024 || port > 65535) {
+      throw ArgumentError.value(
+        port,
+        'port',
+        'Must be between 1024 and 65535.',
+      );
+    }
+    return '''
+set -eu
+OC_DIR="$termuxHome/.oc"
+MANAGER="$_managerPath"
+LOCK="\$OC_DIR/setup.lock"
+mkdir -p "\$OC_DIR"
+umask 077
+
+process_start() {
+  stat_line=\$(cat "/proc/\$1/stat" 2>/dev/null) || return 1
+  stat_line=\${stat_line##*) }
+  set -- \$stat_line
+  printf '%s' "\${20:-}"
+}
+
+owner_pid=''
+owner_start=''
+if [ -f "\$LOCK" ]; then
+  read -r owner_pid owner_start < "\$LOCK" 2>/dev/null || true
+elif [ -f "\$LOCK/owner" ]; then
+  read -r owner_pid owner_start < "\$LOCK/owner" 2>/dev/null || true
+fi
+live_start=\$(process_start "\$owner_pid" 2>/dev/null || true)
+if [ -n "\$owner_pid" ] && [ -n "\$owner_start" ] &&
+   [ "\$owner_start" = "\$live_start" ] && kill -0 "\$owner_pid" 2>/dev/null; then
+  echo 'another-managed-operation-is-running' >&2
+  exit 75
+fi
+if [ -e "\$LOCK" ]; then
+  echo 'managed-operation-lock-is-stale; use Stop then retry' >&2
+  exit 75
+fi
+
+manager_tmp="\$MANAGER.tmp.\$\$"
+cat > "\$manager_tmp" <<'OC_MANAGER_EOF'
+$_managerScript
+OC_MANAGER_EOF
+chmod 700 "\$manager_tmp"
+mv "\$manager_tmp" "\$MANAGER"
+[ -x "\$MANAGER" ] || {
+  echo 'manager-install-failed' >&2
+  exit 74
+}
+set -m
+"\$MANAGER" restart '$port' &
+operation_pid=\$!
+wait "\$operation_pid"
+''';
+  }
+
   static String stopScript({int port = 4096}) =>
       '''
 if [ -x "$_managerPath" ]; then
@@ -401,24 +460,9 @@ fi
 OC_DIR="$termuxHome/.oc"
 process_start() {
   stat_line=\$(cat "/proc/\$1/stat" 2>/dev/null) || return 1
-  stat_line=\${stat_line#*) }
+  stat_line=\${stat_line##*) }
   set -- \$stat_line
   printf '%s' "\${20:-}"
-}
-kill_tree() {
-  local root="\$1"
-  kill -STOP "\$root" 2>/dev/null || return 0
-  local stat_file stat_line child
-  for stat_file in /proc/[0-9]*/stat; do
-    stat_line=\$(cat "\$stat_file" 2>/dev/null || true)
-    [ -n "\$stat_line" ] || continue
-    child=\${stat_file#/proc/}
-    child=\${child%/stat}
-    stat_line=\${stat_line#*) }
-    set -- \$stat_line
-    [ "\${2:-}" = "\$root" ] && kill_tree "\$child"
-  done
-  kill -KILL "\$root" 2>/dev/null || true
 }
 read_lock() {
   if [ -f "\$OC_DIR/setup.lock" ]; then
@@ -426,6 +470,18 @@ read_lock() {
   else
     cat "\$OC_DIR/setup.lock/owner" 2>/dev/null
   fi
+}
+setup_process() {
+  local -a args=()
+  mapfile -d '' -t args < "/proc/\$1/cmdline" 2>/dev/null || return 1
+  [ "\${args[1]:-}" = "\$OC_DIR/manager.sh" ] || return 1
+  [ "\${args[2]:-}" = setup ] || [ "\${args[2]:-}" = restart ]
+}
+process_group() {
+  stat_line=\$(cat "/proc/\$1/stat" 2>/dev/null) || return 1
+  stat_line=\${stat_line##*) }
+  set -- \$stat_line
+  printf '%s' "\${3:-}"
 }
 lock_pid=''
 lock_start=''
@@ -441,23 +497,41 @@ if [ -n "\$lock_pid" ] && [ -n "\$lock_start" ] && [ "\$lock_start" = "\$live_st
   pid="\$lock_pid"
 else
   lock_owned=0
-  pid=\$(cat "\$OC_DIR/manager.pid" 2>/dev/null || true)
+  manager_start=''
+  read -r pid manager_start < "\$OC_DIR/manager.pid" 2>/dev/null || true
 fi
 case "\$pid" in
   ''|*[!0-9]*) ;;
   *)
-    command=\$(tr '\\0' ' ' < "/proc/\$pid/cmdline" 2>/dev/null || true)
-    case "\$command" in
-      *"\$OC_DIR/manager.sh setup "*)
-        kill_tree "\$pid"
-        ;;
-      *)
-        if [ "\$lock_owned" = 1 ] && kill -0 "\$pid" 2>/dev/null; then
-          echo 'bootstrap-owner-is-still-active' >&2
-          exit 75
-        fi
-        ;;
-    esac
+    if setup_process "\$pid"; then
+      if [ "\$lock_owned" != 1 ]; then
+        echo 'bootstrap-owner-is-unverified' >&2
+        exit 75
+      fi
+      kill -STOP "\$pid" 2>/dev/null || true
+      stopped_start=\$(process_start "\$pid" 2>/dev/null || true)
+      if [ "\$stopped_start" != "\$lock_start" ] || ! setup_process "\$pid"; then
+        [ -z "\$stopped_start" ] || kill -CONT "\$pid" 2>/dev/null || true
+        echo 'bootstrap-owner-changed-before-stop' >&2
+        exit 75
+      fi
+      [ "\$(process_group "\$pid" 2>/dev/null || true)" = "\$pid" ] || {
+        kill -CONT "\$pid" 2>/dev/null || true
+        echo 'bootstrap-owner-is-not-isolated' >&2
+        exit 75
+      }
+      kill -STOP -- "-\$pid" 2>/dev/null || true
+      if [ "\$(process_start "\$pid" 2>/dev/null || true)" != "\$lock_start" ] ||
+         ! setup_process "\$pid"; then
+        kill -CONT -- "-\$pid" 2>/dev/null || true
+        echo 'bootstrap-owner-changed-before-stop' >&2
+        exit 75
+      fi
+      kill -KILL -- "-\$pid" 2>/dev/null || true
+    elif [ "\$lock_owned" = 1 ] && kill -0 "\$pid" 2>/dev/null; then
+      echo 'bootstrap-owner-is-still-active' >&2
+      exit 75
+    fi
     ;;
 esac
 current_pid=''
@@ -606,6 +680,16 @@ fail_setup() {
   exit 1
 }
 
+fail_restart_preflight() {
+  local message="$1"
+  if [ "${OLD_SERVER_LIVE:-0}" = 1 ]; then
+    trap - ERR
+    printf '[oc] ERROR: %s\n' "$message"
+    exit 1
+  fi
+  fail_setup "$message" "$CURRENT_PORT"
+}
+
 on_setup_error() {
   local code=$?
   local line="${BASH_LINENO[0]:-unknown}"
@@ -638,7 +722,7 @@ process_command() {
 process_start() {
   local stat_line
   stat_line=$(cat "/proc/$1/stat" 2>/dev/null) || return 1
-  stat_line=${stat_line#*) }
+  stat_line=${stat_line##*) }
   set -- $stat_line
   printf '%s' "${20:-}"
 }
@@ -687,56 +771,161 @@ clear_setup_lock_if_owner() {
   return 75
 }
 
-kill_tree() {
+process_group() {
+  local stat_line
+  stat_line=$(cat "/proc/$1/stat" 2>/dev/null) || return 1
+  stat_line=${stat_line##*) }
+  set -- $stat_line
+  printf '%s' "${3:-}"
+}
+
+process_parent() {
+  local stat_line
+  stat_line=$(cat "/proc/$1/stat" 2>/dev/null) || return 1
+  stat_line=${stat_line##*) }
+  set -- $stat_line
+  printf '%s' "${2:-}"
+}
+
+group_is_managed_tree() {
   local root="$1"
-  kill -STOP "$root" 2>/dev/null || return 0
-  local stat_file stat_line child
+  local group="$2"
+  local stat_file stat_line member member_group current parent found_root=0 depth
   for stat_file in /proc/[0-9]*/stat; do
     stat_line=$(cat "$stat_file" 2>/dev/null || true)
     [ -n "$stat_line" ] || continue
-    child=${stat_file#/proc/}
-    child=${child%/stat}
-    stat_line=${stat_line#*) }
+    member=${stat_file#/proc/}
+    member=${member%/stat}
+    stat_line=${stat_line##*) }
     set -- $stat_line
-    if [ "${2:-}" = "$root" ]; then
-      kill_tree "$child"
-    fi
+    member_group="${3:-}"
+    [ "$member_group" = "$group" ] || continue
+    current="$member"
+    depth=0
+    while [ "$current" != "$root" ]; do
+      parent=$(process_parent "$current" 2>/dev/null || true)
+      case "$parent" in ''|0|1|*[!0-9]*) return 1 ;; esac
+      current="$parent"
+      depth=$((depth + 1))
+      [ "$depth" -le 64 ] || return 1
+    done
+    [ "$member" != "$root" ] || found_root=1
   done
-  kill -KILL "$root" 2>/dev/null || true
+  [ "$found_root" = 1 ]
 }
 
 setup_process() {
   local pid="$1"
-  local command
-  command=$(process_command "$pid" || true)
-  case "$command" in
-    *"$MANAGER setup "*) return 0 ;;
-    *) return 1 ;;
-  esac
+  local -a args=()
+  mapfile -d '' -t args < "/proc/$pid/cmdline" 2>/dev/null || return 1
+  [ "${args[1]:-}" = "$MANAGER" ] || return 1
+  [ "${args[2]:-}" = setup ] || [ "${args[2]:-}" = restart ]
+}
+
+claim_direct_lock() {
+  local owner_pid=""
+  local owner_start=""
+  local live_start=""
+  if mkdir "$LOCK_DIR" 2>/dev/null; then
+    :
+  else
+    read -r owner_pid owner_start < <(read_setup_lock) || true
+    live_start=$(process_start "$owner_pid" 2>/dev/null || true)
+    if [ -n "$owner_pid" ] && [ -n "$owner_start" ] &&
+       [ "$owner_start" = "$live_start" ] && kill -0 "$owner_pid" 2>/dev/null; then
+      echo 'another-managed-operation-is-running' >&2
+      return 75
+    fi
+    echo 'managed-operation-lock-is-stale; use Stop then retry' >&2
+    return 75
+  fi
+  local self_start
+  self_start=$(process_start "$$") || return 75
+  printf '%s %s\n' "$$" "$self_start" > "$LOCK_DIR/owner.tmp.$$"
+  mv "$LOCK_DIR/owner.tmp.$$" "$LOCK_DIR/owner"
 }
 
 server_process() {
   local pid="$1"
   local port="$2"
-  local command
-  command=$(process_command "$pid" || true)
-  case "$command" in
-    *"$SERVER_RUNNER $port "*) return 0 ;;
-    *) return 1 ;;
-  esac
+  local -a args=()
+  mapfile -d '' -t args < "/proc/$pid/cmdline" 2>/dev/null || return 1
+  [ "${args[1]:-}" = "$SERVER_RUNNER" ] &&
+    [ "${args[2]:-}" = "$port" ] &&
+    [ "${args[3]:-}" = "$PASSWORD_FILE" ] &&
+    [ "${args[4]:-}" = "$MANAGER" ]
+}
+
+stop_verified_server_process() {
+  local pid="$1"
+  local expected_start="$2"
+  local port="$3"
+  [ -n "$expected_start" ] || return 75
+  [ "$(process_start "$pid" 2>/dev/null || true)" = "$expected_start" ] || return 0
+  server_process "$pid" "$port" || return 75
+  kill -STOP "$pid" 2>/dev/null || return 0
+  local group
+  group=$(process_group "$pid" 2>/dev/null || true)
+  if [ "$(process_start "$pid" 2>/dev/null || true)" != "$expected_start" ] ||
+     ! server_process "$pid" "$port" || ! group_is_managed_tree "$pid" "$group"; then
+    if [ "$(process_start "$pid" 2>/dev/null || true)" = "$expected_start" ]; then
+      kill -CONT "$pid" 2>/dev/null || true
+    fi
+    return 75
+  fi
+  kill -STOP -- "-$group" 2>/dev/null || true
+  if [ "$(process_start "$pid" 2>/dev/null || true)" != "$expected_start" ] ||
+     ! server_process "$pid" "$port" || ! group_is_managed_tree "$pid" "$group"; then
+    kill -CONT -- "-$group" 2>/dev/null || true
+    return 75
+  fi
+  kill -KILL -- "-$group" 2>/dev/null || true
+}
+
+stop_verified_setup_process() {
+  local pid="$1"
+  local expected_start="$2"
+  [ -n "$expected_start" ] || return 75
+  [ "$(process_start "$pid" 2>/dev/null || true)" = "$expected_start" ] || return 0
+  setup_process "$pid" || return 75
+  kill -STOP "$pid" 2>/dev/null || return 0
+  local group
+  group=$(process_group "$pid" 2>/dev/null || true)
+  if [ "$(process_start "$pid" 2>/dev/null || true)" != "$expected_start" ] ||
+     ! setup_process "$pid" || ! group_is_managed_tree "$pid" "$group"; then
+    if [ "$(process_start "$pid" 2>/dev/null || true)" = "$expected_start" ]; then
+      kill -CONT "$pid" 2>/dev/null || true
+    fi
+    return 75
+  fi
+  kill -STOP -- "-$group" 2>/dev/null || true
+  if [ "$(process_start "$pid" 2>/dev/null || true)" != "$expected_start" ] ||
+     ! setup_process "$pid" || ! group_is_managed_tree "$pid" "$group"; then
+    kill -CONT -- "-$group" 2>/dev/null || true
+    return 75
+  fi
+  kill -KILL -- "-$group" 2>/dev/null || true
 }
 
 stop_server() {
   local port="${1:-4096}"
   local pid=""
+  local saved_start=""
   if [ -f "$SERVER_PID" ]; then
-    pid=$(cat "$SERVER_PID" 2>/dev/null || true)
+    read -r pid saved_start < "$SERVER_PID" 2>/dev/null || true
   fi
   case "$pid" in
     ''|*[!0-9]*) ;;
     *)
-      if kill -0 "$pid" 2>/dev/null && server_process "$pid" "$port"; then
-        kill_tree "$pid"
+      if kill -0 "$pid" 2>/dev/null; then
+        local current_start
+        current_start=$(process_start "$pid" 2>/dev/null || true)
+        if [ -n "$saved_start" ] && [ "$saved_start" != "$current_start" ]; then
+          : # The recorded process exited and its PID was reused. Never kill it.
+        else
+          server_process "$pid" "$port" || return 75
+          stop_verified_server_process "$pid" "$current_start" "$port" || return 75
+        fi
       fi
       ;;
   esac
@@ -771,21 +960,28 @@ stop_setup() {
   local live_start
   read -r lock_pid lock_start < <(read_setup_lock) || true
   live_start=$(process_start "$lock_pid" 2>/dev/null || true)
-  local pid lock_owned
+  local pid=""
+  local lock_owned=0
   if [ -n "$lock_pid" ] && [ -n "$lock_start" ] && [ "$lock_start" = "$live_start" ] &&
      kill -0 "$lock_pid" 2>/dev/null; then
     lock_owned=1
     pid="$lock_pid"
   else
     lock_owned=0
-    pid=$(cat "$MANAGER_PID" 2>/dev/null || true)
+    local recorded_start=""
+    read -r pid recorded_start < "$MANAGER_PID" 2>/dev/null || true
+    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null && setup_process "$pid"; then
+      echo 'bootstrap-owner-is-unverified' >&2
+      return 75
+    fi
+    pid=""
   fi
   case "$pid" in
     ''|*[!0-9]*) ;;
     *)
       if [ "$pid" != "$$" ] && kill -0 "$pid" 2>/dev/null; then
         if setup_process "$pid"; then
-          kill_tree "$pid"
+          stop_verified_setup_process "$pid" "$lock_start" || return 75
         elif [ "$lock_owned" = 1 ]; then
           echo 'bootstrap-owner-is-still-active' >&2
           return 75
@@ -805,7 +1001,9 @@ cleanup_setup() {
     if [ "${SERVER_STARTED:-0}" = 1 ]; then
       stop_server "$CURRENT_PORT"
     fi
-    termux-wake-unlock >/dev/null 2>&1 || true
+    if [ "${KEEP_WAKE_LOCK_ON_FAILURE:-0}" != 1 ]; then
+      termux-wake-unlock >/dev/null 2>&1 || true
+    fi
   fi
 }
 
@@ -1002,6 +1200,8 @@ setup() {
   fi
   trap on_setup_error ERR
   trap cleanup_setup EXIT
+  [ "$(process_group "$$" 2>/dev/null || true)" = "$$" ] ||
+    fail_setup 'Setup manager did not start in an isolated process group' "$CURRENT_PORT"
   termux-wake-lock >/dev/null 2>&1 || true
   write_state preparing 'Preparing Termux' "$CURRENT_PORT"
   printf '\n[oc] setup started at %s\n' "$(date -Iseconds 2>/dev/null || date)"
@@ -1059,19 +1259,40 @@ OC_PROOT_SETUP
   proot-distro login "$PROOT_NAME" -- opencode models --refresh >/dev/null ||
     fail_setup 'OpenCode updated, but its model catalog could not be refreshed' "$CURRENT_PORT"
   [ -s "$PASSWORD_FILE" ] || fail_setup 'The local server password is missing' "$CURRENT_PORT"
-  local password
-  password=$(cat "$PASSWORD_FILE")
 
   stop_legacy_server "$CURRENT_PORT"
   stop_server "$CURRENT_PORT"
+  start_server "$installed_version"
+}
+
+start_server() {
+  local installed_version="$1"
+  local starting_phase="${2:-starting_server}"
+  local password
+  password=$(cat "$PASSWORD_FILE")
   install_server_runner
   : > "$SERVER_LOG_ACTIVE"
-  write_state starting_server 'Starting the local server' "$CURRENT_PORT" proot "$installed_version"
+  if [ "$starting_phase" = restarting ]; then
+    write_state restarting 'Restarting the local server' "$CURRENT_PORT" proot "$installed_version"
+  else
+    write_state starting_server 'Starting the local server' "$CURRENT_PORT" proot "$installed_version"
+  fi
+  set -m
   nohup "$SERVER_RUNNER" "$CURRENT_PORT" "$PASSWORD_FILE" "$MANAGER" \
     >/dev/null 2>&1 </dev/null &
   local server_pid=$!
   SERVER_STARTED=1
-  printf '%s\n' "$server_pid" > "$SERVER_PID"
+  local server_start
+  server_start=$(process_start "$server_pid") ||
+    fail_setup 'Could not record the managed server process identity' "$CURRENT_PORT"
+  if [ "$(process_group "$server_pid" 2>/dev/null || true)" != "$server_pid" ]; then
+    kill -STOP "$server_pid" 2>/dev/null || true
+    if [ "$(process_start "$server_pid" 2>/dev/null || true)" = "$server_start" ]; then
+      kill -KILL "$server_pid" 2>/dev/null || true
+    fi
+    fail_setup 'Managed server did not start in an isolated process group' "$CURRENT_PORT"
+  fi
+  printf '%s %s\n' "$server_pid" "$server_start" > "$SERVER_PID"
 
   for _ in {1..30}; do
     if ! kill -0 "$server_pid" 2>/dev/null; then
@@ -1102,6 +1323,66 @@ OC_AUTH_CHECK
   fail_setup 'OpenCode server did not become authenticated and ready within 30 seconds' "$CURRENT_PORT"
 }
 
+restart() {
+  CURRENT_PORT="${1:-4096}"
+  SETUP_SUCCEEDED=0
+  SERVER_STARTED=0
+  KEEP_WAKE_LOCK_ON_FAILURE=0
+  OLD_SERVER_LIVE=0
+  if ! claim_direct_lock; then
+    echo 'another-managed-operation-is-running' >&2
+    return 75
+  fi
+  printf '%s %s\n' "$$" "$(process_start "$$")" > "$MANAGER_PID"
+  trap on_setup_error ERR
+  trap cleanup_setup EXIT
+  local old_pid=""
+  local old_start=""
+  local live_start=""
+  read -r old_pid old_start < "$SERVER_PID" 2>/dev/null || true
+  live_start=$(process_start "$old_pid" 2>/dev/null || true)
+  if [ -n "$old_pid" ] && [ -n "$live_start" ] && kill -0 "$old_pid" 2>/dev/null &&
+     { [ -z "$old_start" ] || [ "$old_start" = "$live_start" ]; } &&
+     server_process "$old_pid" "$CURRENT_PORT"; then
+    OLD_SERVER_LIVE=1
+    KEEP_WAKE_LOCK_ON_FAILURE=1
+  fi
+  [ "$(process_group "$$" 2>/dev/null || true)" = "$$" ] ||
+    fail_restart_preflight 'Restart manager did not start in an isolated process group'
+  printf '\n[oc] server restart started at %s\n' "$(date -Iseconds 2>/dev/null || date)"
+
+  ubuntu_usable || fail_restart_preflight 'The managed Ubuntu environment is unavailable'
+  [ -s "$PASSWORD_FILE" ] || fail_restart_preflight 'The local server password is missing'
+  local installed_version
+  if ! installed_version=$(proot-distro login "$PROOT_NAME" -- opencode --version 2>/dev/null | tr -d '\r\n'); then
+    fail_restart_preflight 'The installed OpenCode command is unavailable'
+  fi
+  [ -n "$installed_version" ] || fail_restart_preflight 'The installed OpenCode command is unavailable'
+
+  stop_server "$CURRENT_PORT" ||
+    fail_restart_preflight 'The tracked process is not the managed OpenCode server'
+  OLD_SERVER_LIVE=0
+  KEEP_WAKE_LOCK_ON_FAILURE=0
+  termux-wake-lock >/dev/null 2>&1 || true
+  write_state restarting 'Restarting the local server' "$CURRENT_PORT"
+  rm -f "$SERVER_LOG_ACTIVE"
+
+  local port_released=0
+  for _ in {1..30}; do
+    if ! (exec 3<>"/dev/tcp/127.0.0.1/$CURRENT_PORT") 2>/dev/null; then
+      port_released=1
+      break
+    fi
+    exec 3>&- 2>/dev/null || true
+    exec 3<&- 2>/dev/null || true
+    sleep 0.2
+  done
+  [ "$port_released" = 1 ] ||
+    fail_setup 'The local server port is still in use; no replacement was started' "$CURRENT_PORT"
+
+  start_server "$installed_version" restarting
+}
+
 status() {
   if [ ! -f "$STATE" ]; then
     printf 'phase=idle\nmessage=No setup has been started\nport=4096\nrunner=\nversion=\npid=\n'
@@ -1110,20 +1391,35 @@ status() {
   local phase
   phase=$(read_state_value phase)
   if [ "$phase" = ready ]; then
-    local pid
-    pid=$(cat "$SERVER_PID" 2>/dev/null || true)
-    if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null || ! server_process "$pid" "$(read_state_value port)"; then
+    local pid saved_start current_start
+    pid=""
+    saved_start=""
+    read -r pid saved_start < "$SERVER_PID" 2>/dev/null || true
+    current_start=$(process_start "$pid" 2>/dev/null || true)
+    if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null ||
+       { [ -n "$saved_start" ] && [ "$saved_start" != "$current_start" ]; } ||
+       ! server_process "$pid" "$(read_state_value port)"; then
       write_state failed 'The local OpenCode server stopped unexpectedly' "$(read_state_value port)"
       rm -f "$SERVER_PID" "$SERVER_LOG_ACTIVE"
       termux-wake-unlock >/dev/null 2>&1 || true
+    elif [ -z "$saved_start" ] && [ -n "$current_start" ]; then
+      printf '%s %s\n' "$pid" "$current_start" > "$SERVER_PID"
     fi
   fi
   case "$phase" in
-    queued|preparing|installing_dependencies|installing_ubuntu|installing_opencode|refreshing_models|starting_server)
-      local manager_pid
-      manager_pid=$(cat "$MANAGER_PID" 2>/dev/null || true)
-      if [ -z "$manager_pid" ] || ! kill -0 "$manager_pid" 2>/dev/null || ! setup_process "$manager_pid"; then
-        write_state failed 'Setup stopped unexpectedly; see live output for details' "$(read_state_value port)"
+    queued|preparing|installing_dependencies|installing_ubuntu|installing_opencode|refreshing_models|restarting|starting_server)
+      local manager_pid manager_start live_start latest_phase
+      manager_pid=""
+      manager_start=""
+      read -r manager_pid manager_start < "$MANAGER_PID" 2>/dev/null || true
+      live_start=$(process_start "$manager_pid" 2>/dev/null || true)
+      if [ -z "$manager_pid" ] || [ -z "$manager_start" ] ||
+         [ "$manager_start" != "$live_start" ] || ! kill -0 "$manager_pid" 2>/dev/null ||
+         ! setup_process "$manager_pid"; then
+        latest_phase=$(read_state_value phase)
+        if [ "$latest_phase" = "$phase" ]; then
+          write_state failed 'Setup stopped unexpectedly; see live output for details' "$(read_state_value port)"
+        fi
       fi
       ;;
   esac
@@ -1134,8 +1430,10 @@ server_exited() {
   local port="${1:-4096}"
   local runner_pid="${2:-}"
   local code="${3:-1}"
-  local current_pid
-  current_pid=$(cat "$SERVER_PID" 2>/dev/null || true)
+  local current_pid current_start
+  current_pid=""
+  current_start=""
+  read -r current_pid current_start < "$SERVER_PID" 2>/dev/null || true
   [ -n "$runner_pid" ] && [ "$current_pid" = "$runner_pid" ] || return 0
   rm -f "$SERVER_PID" "$SERVER_LOG_ACTIVE"
   write_state failed "OpenCode server exited (code $code)" "$port"
@@ -1173,13 +1471,14 @@ stop() {
 
 case "${1:-status}" in
   setup) shift; setup "$@" ;;
+  restart) shift; restart "$@" ;;
   status) status ;;
   diagnostics) diagnostics ;;
   stop) shift; stop "$@" ;;
   server-exited) shift; server_exited "$@" ;;
   rotate-log) shift; rotate_log "$@" ;;
   write-log) shift; write_log "$@" ;;
-  *) echo "usage: $0 {setup|status|diagnostics|stop}" >&2; exit 64 ;;
+  *) echo "usage: $0 {setup|restart|status|diagnostics|stop}" >&2; exit 64 ;;
 esac
 ''';
 }
@@ -1286,6 +1585,8 @@ class TermuxSetupStatus {
     'installing_dependencies',
     'installing_ubuntu',
     'installing_opencode',
+    'refreshing_models',
+    'restarting',
     'starting_server',
   }.contains(phase);
   bool get isReady => phase == 'ready';

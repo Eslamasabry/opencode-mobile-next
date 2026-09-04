@@ -211,6 +211,9 @@ MessageWithParts mapApi2Message(String sessionID, Api2Message message) {
                 'truncated': message.outputTruncated,
                 if (message.shellID != null) 'shellID': message.shellID,
                 'shellStatus': message.status,
+                // Session shell messages are already detached jobs. Keep them
+                // out of the foreground-promotion eligibility scan.
+                'background': true,
               },
             }, toolName: 'shell'),
           ),
@@ -510,11 +513,7 @@ Map<String, dynamic> v1ToolStateJson(
     Api2ToolStateUnknown() => {'status': 'pending'},
   };
   final v1Time = v1ToolTimeJson(time);
-  return {
-    ...base,
-    'time': ?v1Time,
-    'executed': ?executed,
-  };
+  return {...base, 'time': ?v1Time, 'executed': ?executed};
 }
 
 /// v2 `time{created,ran,completed,pruned}` → v1 `time{start,end,compacted}`.
@@ -525,29 +524,24 @@ Map<String, dynamic>? v1ToolTimeJson(Api2ContentTime? time) {
   if (start == null && time.completed == null && time.pruned == null) {
     return null;
   }
-  return {
-    'start': ?start,
-    'end': ?time.completed,
-    'compacted': ?time.pruned,
-  };
+  return {'start': ?start, 'end': ?time.completed, 'compacted': ?time.pruned};
 }
 
 /// Preserves the v2 content array's text/file interleaving as the ordered
 /// `contentSegments` list [ToolState.segments] parses.
-List<Map<String, dynamic>> _contentSegments(
-  List<Api2ToolResultItem> content,
-) => [
-  for (final item in content)
-    if (item is Api2ToolResultText && item.text.isNotEmpty)
-      {'type': 'text', 'text': item.text}
-    else if (item is Api2ToolResultFile)
-      {
-        'type': 'file',
-        'url': item.uri,
-        if (item.mime != null) 'mime': item.mime,
-        if (item.name != null) 'name': item.name,
-      },
-];
+List<Map<String, dynamic>> _contentSegments(List<Api2ToolResultItem> content) =>
+    [
+      for (final item in content)
+        if (item is Api2ToolResultText && item.text.isNotEmpty)
+          {'type': 'text', 'text': item.text}
+        else if (item is Api2ToolResultFile)
+          {
+            'type': 'file',
+            'url': item.uri,
+            if (item.mime != null) 'mime': item.mime,
+            if (item.name != null) 'name': item.name,
+          },
+    ];
 
 String _joinedToolText(List<Api2ToolResultItem> content) => content
     .whereType<Api2ToolResultText>()
@@ -555,16 +549,15 @@ String _joinedToolText(List<Api2ToolResultItem> content) => content
     .where((text) => text.isNotEmpty)
     .join('\n');
 
-List<Map<String, dynamic>> _toolAttachments(
-  List<Api2ToolResultItem> content,
-) => [
-  for (final item in content.whereType<Api2ToolResultFile>())
-    {
-      'url': item.uri,
-      if (item.mime != null) 'mime': item.mime,
-      if (item.name != null) 'name': item.name,
-    },
-];
+List<Map<String, dynamic>> _toolAttachments(List<Api2ToolResultItem> content) =>
+    [
+      for (final item in content.whereType<Api2ToolResultFile>())
+        {
+          'url': item.uri,
+          if (item.mime != null) 'mime': item.mime,
+          if (item.name != null) 'name': item.name,
+        },
+    ];
 
 // ---------------- Permissions ----------------
 

@@ -62,10 +62,8 @@ class _ChatComposer extends StatelessWidget {
   final bool busy;
   final bool sending;
 
-  /// OpenCode 2 only (§5): Send stays live while a turn runs. The delivery
-  /// control above the field says — and sets — what Send will do; long press
-  /// on Send remains a shortcut to the same choice. On v1 the busy composer
-  /// keeps its lone Stop button and no delivery control appears.
+  /// Send stays live while a turn runs. OpenCode 2 can choose steer or queue;
+  /// OpenCode 1 always queues the prompt after the active run.
   final bool canSendWhileBusy;
 
   /// OpenCode 2 only: the server has an inbox, so a send made while a turn
@@ -147,7 +145,8 @@ class _ChatComposer extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
+        key: const Key('chat-composer-frame'),
+        padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
         child: ListenableBuilder(
           listenable: Listenable.merge([focusNode, controller]),
           // The run-finished pulse: a fresh key per finished run restarts a
@@ -162,7 +161,7 @@ class _ChatComposer extends StatelessWidget {
             curve: Curves.easeOut,
             builder: (context, glow, child) {
               final focused = focusNode.hasFocus;
-              final radius = BorderRadius.circular(compact ? 20 : 24);
+              final radius = BorderRadius.circular(18);
               final restingBorder = focused
                   ? scheme.primary.withValues(alpha: .8)
                   : scheme.outlineVariant.withValues(alpha: .85);
@@ -187,16 +186,6 @@ class _ChatComposer extends StatelessWidget {
                           : Color.lerp(restingBorder, scheme.primary, glow)!,
                       width: busy || focused || glow > 0 ? 1.4 : 1,
                     ),
-                    // One raised recipe; focus adds a faint halo so the
-                    // field reads as lifted only while it is being typed
-                    // into.
-                    boxShadow: [
-                      ...AppTheme.raised(theme),
-                      if (!busy && focused && glow == 0)
-                        ...AppTheme.glow(scheme.primary, strength: .12),
-                      if (!busy && glow > 0)
-                        ...AppTheme.glow(scheme.primary, strength: .35 * glow),
-                    ],
                   ),
                   child: child,
                 ),
@@ -222,39 +211,30 @@ class _ChatComposer extends StatelessWidget {
                     onSelected: onSelectAgent,
                     onShowAll: onOpenAgents,
                   ),
-                // UX-P0-03: on the compact (short) layout the field shares
-                // its row with the leading tools button and Send, so the
-                // model/agent context sits above the field as a header chip
-                // instead of competing for that row's width. The wide layout
-                // keeps it on the action row under the field, where it is
-                // already secondary to the full-width field.
-                if (compact)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                    child: Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: _ModelContextChip(
-                        label: _contextLabel,
-                        tooltip: _rawContextLabel,
-                        costLine: _costLine,
-                        trailing: _contextPercent(context),
-                        onPressed: onChooseModel,
-                      ),
-                    ),
+                _ComposerHeader(
+                  model: _ModelContextChip(
+                    label: _contextLabel,
+                    tooltip: _rawContextLabel,
+                    costLine: _costLine,
+                    trailing: _contextPercent(context),
+                    onPressed: onChooseModel,
                   ),
-                // UX-P0-04: while a run is active the consequence of Send
-                // changes, so the choice is stated in words rather than
-                // hidden behind a long press on an unchanged arrow. The
-                // strip only exists while it applies, so the idle composer
-                // gains no density from it.
-                if (busy && canSendWhileBusy)
-                  if (canChooseDelivery && onDeliveryChanged != null)
-                    _DeliveryControl(
-                      delivery: delivery,
-                      onChanged: onDeliveryChanged!,
-                    )
-                  else
-                    const _QueueHint(),
+                  busy: busy,
+                  status: !canChooseDelivery || delivery == PromptDelivery.queue
+                      ? _chatL10n(context).chatComposerQueuedAfterRun
+                      : _chatL10n(context).chatComposerSteersCurrentRun,
+                  queueStatus: !canChooseDelivery,
+                  onStop: onStop,
+                ),
+                if (busy &&
+                    _hasPrompt &&
+                    canSendWhileBusy &&
+                    canChooseDelivery &&
+                    onDeliveryChanged != null)
+                  _DeliveryControl(
+                    delivery: delivery,
+                    onChanged: onDeliveryChanged!,
+                  ),
                 // UX-103 review handoff (start): staged references ride
                 // above the attachment strip so the two never read as one
                 // kind of thing.
@@ -334,6 +314,7 @@ class _ChatComposer extends StatelessWidget {
                       ),
                     ),
                 ],
+                _ContextMeterLine(usage: contextUsage),
                 if (compact)
                   _compactComposer(context)
                 else
@@ -347,66 +328,49 @@ class _ChatComposer extends StatelessWidget {
   }
 
   Widget _standardComposer(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _ComposerField(
-          controller: controller,
-          focusNode: focusNode,
-          onOpenEditor: onOpenEditor,
-          onContentInserted: onContentInserted,
-          maxLines: 6,
-          contentPadding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-          onSubmitShortcut: _submitFromKeyboard,
-        ),
-        _ContextMeterLine(usage: contextUsage),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-          child: Row(
-            children: [
-              _PromptToolsButton(
-                voiceOpening: voiceOpening,
-                onSelected: _openTool,
-                onAttach: _attachBlocked ? null : onAttach,
-              ),
-              const SizedBox(width: 6),
-              // The model/agent reads as context, not as a fifth equal
-              // action: it flexes and ellipsizes so the row never pushes
-              // Send off the edge at large text scales.
-              Expanded(
-                child: Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: _ModelContextChip(
-                    label: _contextLabel,
-                    tooltip: _rawContextLabel,
-                    costLine: _costLine,
-                    trailing: _contextPercent(context),
-                    onPressed: onChooseModel,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-              _ComposerSubmit(
-                busy: busy,
-                sending: sending,
-                enabled: _hasPrompt,
-                canSendWhileBusy: canSendWhileBusy,
-                delivery: delivery,
-                onDeliveryChanged: onDeliveryChanged,
-                onSend: onSend,
-                canChooseDelivery: canChooseDelivery,
-                onStop: onStop,
-              ),
-            ],
+    return Padding(
+      padding: const EdgeInsets.all(4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          _PromptToolsButton(
+            voiceOpening: voiceOpening,
+            onSelected: _openTool,
+            onAttach: _attachBlocked ? null : onAttach,
           ),
-        ),
-      ],
+          const SizedBox(width: 4),
+          Expanded(
+            child: _ComposerField(
+              controller: controller,
+              focusNode: focusNode,
+              onOpenEditor: onOpenEditor,
+              onContentInserted: onContentInserted,
+              maxLines: 6,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 4,
+              ),
+              onSubmitShortcut: _submitFromKeyboard,
+            ),
+          ),
+          const SizedBox(width: 4),
+          _ComposerSubmit(
+            busy: busy,
+            sending: sending,
+            enabled: _hasPrompt,
+            canSendWhileBusy: canSendWhileBusy,
+            delivery: delivery,
+            onSend: onSend,
+            canChooseDelivery: canChooseDelivery,
+          ),
+        ],
+      ),
     );
   }
 
   Widget _compactComposer(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(6),
+      padding: const EdgeInsets.all(4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
@@ -426,7 +390,7 @@ class _ChatComposer extends StatelessWidget {
               maxLines: 3,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 10,
-                vertical: 12,
+                vertical: 4,
               ),
             ),
           ),
@@ -437,10 +401,8 @@ class _ChatComposer extends StatelessWidget {
             enabled: _hasPrompt,
             canSendWhileBusy: canSendWhileBusy,
             delivery: delivery,
-            onDeliveryChanged: onDeliveryChanged,
             onSend: onSend,
             canChooseDelivery: canChooseDelivery,
-            onStop: onStop,
           ),
         ],
       ),
@@ -756,6 +718,71 @@ class _PromptToolsSheet extends StatelessWidget {
 /// UX-P0-03: the model/agent/variant reads as context chrome — a chip that
 /// states the current selection and opens the picker — rather than another
 /// icon button with the same weight as Send.
+class _ComposerHeader extends StatelessWidget {
+  const _ComposerHeader({
+    required this.model,
+    required this.busy,
+    required this.status,
+    required this.queueStatus,
+    required this.onStop,
+  });
+
+  final Widget model;
+  final bool busy;
+  final String status;
+  final bool queueStatus;
+  final VoidCallback onStop;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = _chatL10n(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Row(
+          children: [
+            Flexible(child: model),
+            if (busy) ...[
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  status,
+                  key: queueStatus ? const Key('composer-queue-hint') : null,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: AppTheme.mutedOf(theme),
+                  ),
+                ),
+              ),
+              Tooltip(
+                message: l10n.chatStop,
+                child: TextButton(
+                  key: const Key('chat-stop-button'),
+                  onPressed: () {
+                    Tooltip.dismissAllToolTips();
+                    onStop();
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: theme.colorScheme.error,
+                    minimumSize: const Size(48, 48),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  child: Text(l10n.chatStop),
+                ),
+              ),
+            ] else
+              const Spacer(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _ModelContextChip extends StatelessWidget {
   const _ModelContextChip({
     required this.label,
@@ -781,38 +808,68 @@ class _ModelContextChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    return Tooltip(
-      message:
-          'Model and agent: $tooltip. Tap to change.'
-          '${costLine == null ? '' : '\n$costLine'}',
-      child: ActionChip(
-        key: const Key('composer-model-context'),
-        avatar: Icon(
-          Icons.tune_rounded,
-          size: 16,
-          color: scheme.onSurfaceVariant,
-        ),
-        label: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+    final semanticLabel =
+        'Model and agent: $tooltip. Tap to change.'
+        '${costLine == null ? '' : ' $costLine'}';
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      onTap: onPressed,
+      excludeSemantics: true,
+      child: Tooltip(
+        message:
+            'Model and agent: $tooltip. Tap to change.'
+            '${costLine == null ? '' : '\n$costLine'}',
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            key: const Key('composer-model-context'),
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(18),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 36),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: scheme.outlineVariant),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.tune_rounded,
+                        size: 16,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                      if (trailing case final trailing?) ...[
+                        const SizedBox(width: 8),
+                        trailing,
+                      ],
+                    ],
+                  ),
+                ),
+              ),
             ),
-            if (trailing case final trailing?) ...[
-              const SizedBox(width: 8),
-              trailing,
-            ],
-          ],
+          ),
         ),
-        labelStyle: theme.textTheme.labelLarge?.copyWith(
-          color: scheme.onSurfaceVariant,
-        ),
-        backgroundColor: Colors.transparent,
-        side: BorderSide(color: scheme.outlineVariant),
-        // The chip reads as chrome, but its target still has to clear the
-        // 48 dp Android minimum, so the tap area stays padded.
-        materialTapTargetSize: MaterialTapTargetSize.padded,
-        onPressed: onPressed,
       ),
     );
   }
@@ -826,9 +883,7 @@ class _ComposerSubmit extends StatelessWidget {
     this.canSendWhileBusy = false,
     this.canChooseDelivery = false,
     this.delivery = PromptDelivery.steer,
-    this.onDeliveryChanged,
     required this.onSend,
-    required this.onStop,
   });
 
   final bool busy;
@@ -837,9 +892,7 @@ class _ComposerSubmit extends StatelessWidget {
   final bool canSendWhileBusy;
   final bool canChooseDelivery;
   final PromptDelivery delivery;
-  final ValueChanged<PromptDelivery>? onDeliveryChanged;
   final VoidCallback onSend;
-  final VoidCallback onStop;
 
   @override
   Widget build(BuildContext context) {
@@ -864,84 +917,34 @@ class _ComposerSubmit extends StatelessWidget {
     return IconButton.styleFrom(
       backgroundColor: scheme.primary,
       foregroundColor: scheme.onPrimary,
-      disabledBackgroundColor: scheme.surfaceContainerHigh,
-      disabledForegroundColor: scheme.onSurfaceVariant.withValues(alpha: .7),
+      disabledBackgroundColor: Colors.transparent,
+      disabledForegroundColor: scheme.onSurfaceVariant.withValues(alpha: .5),
       animationDuration: reduceMotion
           ? Duration.zero
           : const Duration(milliseconds: 150),
     );
   }
 
-  /// The Stop tooltip is shown by hover or long-press, and the button it
-  /// belongs to is swapped for Send the moment the run ends — so the tooltip
-  /// is told to go before the swap, instead of outliving its button.
-  void _stop() {
-    Tooltip.dismissAllToolTips();
-    onStop();
-  }
-
   Widget _slot(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    if (busy && !canSendWhileBusy) {
-      // v1 semantics unchanged: sending is impossible while a turn runs.
-      return IconButton.filledTonal(
-        key: const Key('chat-send-button'),
-        tooltip: 'Stop',
-        onPressed: _stop,
-        style: IconButton.styleFrom(
-          foregroundColor: scheme.error,
-          backgroundColor: scheme.errorContainer.withValues(alpha: .55),
-        ),
-        icon: const Icon(AppIcons.stop),
-      );
-    }
     final icon = sending
         ? const SizedBox.square(
             dimension: 18,
             child: CircularProgressIndicator(strokeWidth: 2),
           )
         : const Icon(Icons.arrow_upward_rounded);
-    if (!busy) {
-      return IconButton(
-        key: const Key('chat-send-button'),
-        tooltip: 'Send',
-        onPressed: sending || !enabled ? null : onSend,
-        style: _sendStyle(context),
-        icon: icon,
-      );
-    }
-    // While a turn runs, Send keeps working: OpenCode 2 steers or queues
-    // per the visible toggle above the field, OpenCode 1 queues after the
-    // run. Stop keeps its own adjacent button so neither action hides the
-    // other.
     final sendHint = !canChooseDelivery
         ? 'Send after this run'
         : delivery == PromptDelivery.queue
         ? 'Queue after this run'
         : 'Send now and steer this run';
-    return Row(
-      key: const Key('chat-busy-submit-row'),
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton.filledTonal(
-          key: const Key('chat-stop-button'),
-          tooltip: 'Stop',
-          onPressed: _stop,
-          style: IconButton.styleFrom(
-            foregroundColor: scheme.error,
-            backgroundColor: scheme.errorContainer.withValues(alpha: .55),
-          ),
-          icon: const Icon(AppIcons.stop),
-        ),
-        const SizedBox(width: 4),
-        IconButton(
-          key: const Key('chat-send-button'),
-          tooltip: sendHint,
-          onPressed: sending || !enabled ? null : onSend,
-          style: _sendStyle(context),
-          icon: icon,
-        ),
-      ],
+    return IconButton(
+      key: const Key('chat-send-button'),
+      tooltip: busy ? sendHint : 'Send',
+      onPressed: sending || !enabled || (busy && !canSendWhileBusy)
+          ? null
+          : onSend,
+      style: _sendStyle(context),
+      icon: icon,
     );
   }
 }
@@ -1044,37 +1047,6 @@ class _DeliveryControl extends StatelessWidget {
             ],
             selected: {delivery},
             onSelectionChanged: (selection) => onChanged(selection.single),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// OpenCode 1 while a run is active: the server accepts the send and runs
-/// it after the current turn, so the composer says so instead of hiding
-/// Send behind Stop.
-class _QueueHint extends StatelessWidget {
-  const _QueueHint();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final muted = AppTheme.mutedOf(theme);
-    return Padding(
-      key: const Key('composer-queue-hint'),
-      padding: const EdgeInsets.fromLTRB(14, 8, 12, 0),
-      child: Row(
-        children: [
-          Icon(AppIcons.queue, size: 14, color: muted),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              'Sends after this run finishes',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.labelSmall?.copyWith(color: muted),
-            ),
           ),
         ],
       ),
@@ -1272,10 +1244,9 @@ class _StagedReferenceChip extends StatelessWidget {
   }
 }
 
-/// The hairline between the prompt field and the composer actions doubles as
-/// an ambient context-window meter: it fills from the left as the session
-/// consumes the model's context, staying a plain divider when no limit is
-/// known. Colors escalate as the window approaches full.
+/// A context-window meter appears only once usage needs attention. Keeping the
+/// normal composer free of an ambient divider saves space and avoids implying
+/// precision when the server does not report a limit.
 class _ContextMeterLine extends StatelessWidget {
   const _ContextMeterLine({required this.usage});
 
@@ -1284,16 +1255,12 @@ class _ContextMeterLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final track = scheme.outlineVariant.withValues(alpha: .55);
     final value = usage?.clamp(0.0, 1.0);
-    if (value == null) {
-      return Divider(height: 1, indent: 14, endIndent: 14, color: track);
+    if (value == null || value < .7) {
+      return const SizedBox.shrink();
     }
-    final fill = value >= .9
-        ? scheme.error
-        : value >= .7
-        ? scheme.tertiary
-        : scheme.primary;
+    final track = scheme.outlineVariant.withValues(alpha: .55);
+    final fill = value >= .9 ? scheme.error : scheme.tertiary;
     final percent = (value * 100).round();
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return Semantics(
@@ -1336,18 +1303,10 @@ class _ContextMeterLine extends StatelessWidget {
   }
 }
 
-/// The composer's "alive" treatment while a run is active. A primary-to-
-/// tertiary gradient sweeps slowly around the rounded border and a soft
-/// glow breathes underneath, so the surface that holds Stop is the one
-/// thing on screen saying the assistant is working — the transcript no
-/// longer carries a blinking row for it.
-///
-/// The tree shape is identical whether or not [active] is set: the ring is
-/// an extra overlay in a [Stack] and the glow decoration is always present
-/// (empty when idle), so toggling busy never re-parents the prompt field
-/// and never drops the keyboard. Reduced motion gets a still primary ring
-/// and a steady glow instead of the sweep and the breathing.
-class _ComposerActivity extends StatefulWidget {
+/// A quiet top accent carries the live state without turning the entire
+/// composer into an animated focal point. Its full-size paint box preserves
+/// the stable tree and the existing TalkBack live-region announcement.
+class _ComposerActivity extends StatelessWidget {
   const _ComposerActivity({
     required this.active,
     required this.radius,
@@ -1359,157 +1318,52 @@ class _ComposerActivity extends StatefulWidget {
   final Widget child;
 
   @override
-  State<_ComposerActivity> createState() => _ComposerActivityState();
-}
-
-class _ComposerActivityState extends State<_ComposerActivity>
-    with SingleTickerProviderStateMixin {
-  /// One cycle: the sweep turns once while the glow breathes twice, so the
-  /// breath sits at the 1.8 s the rest of the app uses for "working" motion.
-  static const _cycle = Duration(milliseconds: 3600);
-  static const _glowFloor = .15;
-  static const _glowCeiling = .35;
-
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: _cycle,
-  );
-  bool _running = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _sync();
-  }
-
-  @override
-  void didUpdateWidget(_ComposerActivity oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _sync();
-  }
-
-  void _sync() {
-    final run = widget.active && !MediaQuery.disableAnimationsOf(context);
-    if (run == _running) return;
-    _running = run;
-    if (run) {
-      _controller.repeat();
-    } else {
-      _controller.stop();
-      _controller.value = 0;
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final active = widget.active;
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        final t = _controller.value;
-        // Breath: floor → ceiling → floor twice per cycle. The still
-        // (reduced-motion) ring holds the midpoint so it reads as lit,
-        // not as a frozen frame of the animation.
-        final glow = !active
-            ? 0.0
-            : _running
-            ? (_glowFloor + _glowCeiling) / 2 -
-                  (_glowCeiling - _glowFloor) / 2 * math.cos(4 * math.pi * t)
-            : (_glowFloor + _glowCeiling) / 2;
-        return DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: widget.radius,
-            boxShadow: active
-                ? AppTheme.glow(scheme.primary, strength: glow)
-                : const [],
-          ),
-          child: Stack(
-            fit: StackFit.passthrough,
-            children: [
-              child!,
-              // The ring is its own semantics node so the announcement the
-              // transcript blip used to make survives, without merging into
-              // the prompt field's or the context meter's labels.
-              if (active)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: Semantics(
-                      container: true,
-                      liveRegion: true,
-                      label: 'Assistant is working',
-                      child: CustomPaint(
-                        key: const ValueKey('composer-activity'),
-                        painter: _ActivityRingPainter(
-                          radius: widget.radius,
-                          primary: scheme.primary,
-                          tertiary: scheme.tertiary,
-                          sweep: _running ? t : null,
-                        ),
-                      ),
-                    ),
+    final l10n = _chatL10n(context);
+    return Stack(
+      fit: StackFit.passthrough,
+      children: [
+        child,
+        if (active)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Semantics(
+                container: true,
+                liveRegion: true,
+                label: l10n.chatAssistantWorking,
+                child: CustomPaint(
+                  key: const ValueKey('composer-activity'),
+                  painter: _ActivityAccentPainter(
+                    radius: radius,
+                    color: scheme.primary,
                   ),
                 ),
-            ],
+              ),
+            ),
           ),
-        );
-      },
-      child: widget.child,
+      ],
     );
   }
 }
 
-/// Strokes the composer's rounded border with a gradient that carries one
-/// bright primary-to-tertiary highlight around the ring; [sweep] is the
-/// highlight's position around the loop, or null for a still primary ring.
-class _ActivityRingPainter extends CustomPainter {
-  const _ActivityRingPainter({
-    required this.radius,
-    required this.primary,
-    required this.tertiary,
-    required this.sweep,
-  });
+class _ActivityAccentPainter extends CustomPainter {
+  const _ActivityAccentPainter({required this.radius, required this.color});
 
   final BorderRadius radius;
-  final Color primary;
-  final Color tertiary;
-  final double? sweep;
-
-  static const _strokeWidth = 1.6;
+  final Color color;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final ring = radius.toRRect(rect).deflate(_strokeWidth / 2);
     final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = _strokeWidth;
-    final sweep = this.sweep;
-    if (sweep == null) {
-      paint.color = primary;
-    } else {
-      final base = primary.withValues(alpha: .28);
-      // A dim primary ring with one soft highlight: primary brightening
-      // into tertiary and fading back out over about a third of the loop.
-      paint.shader = SweepGradient(
-        colors: [base, primary, tertiary, primary, base, base],
-        stops: const [0, .1, .18, .26, .38, 1],
-        transform: GradientRotation(2 * math.pi * sweep),
-      ).createShader(rect);
-    }
-    canvas.drawRRect(ring, paint);
+      ..color = color
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+    final inset = radius.topLeft.x.clamp(8.0, size.width / 3);
+    canvas.drawLine(Offset(inset, 1), Offset(size.width - inset, 1), paint);
   }
 
   @override
-  bool shouldRepaint(_ActivityRingPainter old) =>
-      old.sweep != sweep ||
-      old.primary != primary ||
-      old.tertiary != tertiary ||
-      old.radius != radius;
+  bool shouldRepaint(_ActivityAccentPainter old) =>
+      old.color != color || old.radius != radius;
 }

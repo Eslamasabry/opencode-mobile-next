@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/sse.dart';
-import 'package:opencode_mobile/domain/server_gateway.dart' show PromptDelivery;
+import 'package:opencode_mobile/domain/server_gateway.dart'
+    show
+        BackgroundWorkCapabilities,
+        BackgroundWorkGateway,
+        PromptDelivery,
+        ShellJob,
+        ShellJobGateway,
+        ShellOutputPage;
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/state/review_handoff.dart';
@@ -15,11 +23,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Covers the chat UI built on the widened server data: the retry banner,
 /// typed assistant error cards, the length footer, and session-row chips.
-class _Api extends OpenCodeApi {
+class _Api extends OpenCodeApi implements BackgroundWorkGateway {
   _Api() : super(baseUrl: 'http://localhost');
 
   List<MessageWithParts> messagesResult = const [];
   int abortCalls = 0;
+  int backgroundCalls = 0;
+  BackgroundWorkCapabilities backgroundCapabilities =
+      const BackgroundWorkCapabilities(subagents: false);
   final List<String> prompts = [];
 
   @override
@@ -53,6 +64,16 @@ class _Api extends OpenCodeApi {
   }
 
   @override
+  Future<BackgroundWorkCapabilities> loadBackgroundWorkCapabilities() async =>
+      backgroundCapabilities;
+
+  @override
+  Future<bool> moveSessionWorkToBackground(String sessionID) async {
+    backgroundCalls += 1;
+    return true;
+  }
+
+  @override
   Future<void> promptAsync(
     String sessionID, {
     required String text,
@@ -64,6 +85,43 @@ class _Api extends OpenCodeApi {
     PromptDelivery? delivery,
   }) async {
     prompts.add(text);
+  }
+}
+
+class _ShellApi extends _Api implements ShellJobGateway {
+  List<ShellJob> shellJobs = const [];
+  int stopCalls = 0;
+  Duration? lastTimeout;
+
+  @override
+  Future<List<ShellJob>> listShellJobs() async => List.of(shellJobs);
+
+  @override
+  Future<ShellJob> getShellJob(String id) async =>
+      shellJobs.singleWhere((shell) => shell.id == id);
+
+  @override
+  Future<ShellOutputPage> readShellOutput(
+    String id, {
+    int? cursor,
+    int? limit,
+  }) async => const ShellOutputPage(
+    output: 'tests passing\n',
+    cursor: 14,
+    size: 14,
+    truncated: false,
+  );
+
+  @override
+  Future<ShellJob> updateShellTimeout(String id, Duration? timeout) async {
+    lastTimeout = timeout;
+    return getShellJob(id);
+  }
+
+  @override
+  Future<void> stopShellJob(String id) async {
+    stopCalls += 1;
+    shellJobs = shellJobs.where((shell) => shell.id != id).toList();
   }
 }
 
@@ -343,7 +401,7 @@ void main() {
           ),
         ];
       await _pumpChat(tester, api);
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 200));
       expect(
         find.byKey(const Key('error-card-context-overflow')),
         findsOneWidget,
@@ -490,5 +548,158 @@ void main() {
         );
       },
     );
+  });
+
+  group('background work', () {
+    testWidgets('offers a touch action only for a running foreground task', (
+      tester,
+    ) async {
+      final api = _Api()
+        ..backgroundCapabilities = const BackgroundWorkCapabilities(
+          subagents: true,
+        )
+        ..messagesResult = [
+          _assistant(
+            'a1',
+            parts: [
+              Part(
+                id: 'task-1',
+                messageID: 'a1',
+                type: 'tool',
+                toolName: 'task',
+                toolState: ToolState(
+                  status: 'running',
+                  input: const {'description': 'Audit the project'},
+                ),
+              ),
+            ],
+          ),
+        ];
+      await _pumpChat(tester, api);
+      await tester.pump(const Duration(milliseconds: 200));
+
+      expect(find.text('Background subagents'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('move-work-to-background')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(api.backgroundCalls, 1);
+      expect(find.text('Running work moved to background.'), findsOneWidget);
+    });
+
+    testWidgets('hides promotion for an already-background task', (
+      tester,
+    ) async {
+      final api = _Api()
+        ..backgroundCapabilities = const BackgroundWorkCapabilities(
+          subagents: true,
+        )
+        ..messagesResult = [
+          _assistant(
+            'a1',
+            parts: [
+              Part(
+                id: 'task-1',
+                messageID: 'a1',
+                type: 'tool',
+                toolName: 'task',
+                toolState: ToolState(
+                  status: 'running',
+                  metadata: const {'background': true},
+                ),
+              ),
+            ],
+          ),
+        ];
+      await _pumpChat(tester, api);
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(find.byKey(const Key('move-work-to-background')), findsNothing);
+    });
+
+    testWidgets('Ctrl+B is contextual and does not fire without eligibility', (
+      tester,
+    ) async {
+      final api = _Api()
+        ..backgroundCapabilities = const BackgroundWorkCapabilities(
+          subagents: true,
+        );
+      await _pumpChat(tester, api);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyB);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      expect(api.backgroundCalls, 0);
+    });
+
+    testWidgets('Ctrl+B promotes eligible foreground work', (tester) async {
+      final api = _Api()
+        ..backgroundCapabilities = const BackgroundWorkCapabilities(
+          subagents: true,
+        )
+        ..messagesResult = [
+          _assistant(
+            'a1',
+            parts: [
+              Part(
+                id: 'task-1',
+                messageID: 'a1',
+                type: 'tool',
+                toolName: 'task',
+                toolState: ToolState(status: 'running'),
+              ),
+            ],
+          ),
+        ];
+      await _pumpChat(tester, api);
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyB);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(api.backgroundCalls, 1);
+    });
+
+    testWidgets('manages OpenCode 2 shells from the Running work sheet', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(800, 1000);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final api = _ShellApi()
+        ..backgroundCapabilities = const BackgroundWorkCapabilities(
+          subagents: true,
+          shells: true,
+          shellManagement: true,
+        )
+        ..shellJobs = const [
+          ShellJob(
+            id: 'sh_01',
+            status: 'running',
+            command: 'flutter test',
+            directory: '/repo',
+            startedAt: 1,
+            metadata: {'sessionID': 'session-1'},
+          ),
+        ];
+      await _pumpChat(tester, api);
+      await tester.pump(const Duration(milliseconds: 200));
+
+      expect(find.text('1 running'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('open-running-work')));
+      await tester.pumpAndSettle();
+      expect(find.text('Running work'), findsOneWidget);
+      expect(find.text('flutter test'), findsOneWidget);
+
+      final shellRow = find.byKey(const Key('running-work-shell-sh_01'));
+      await tester.ensureVisible(shellRow);
+      await tester.tap(shellRow);
+      await tester.pumpAndSettle();
+      expect(find.textContaining('tests passing'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('stop-shell-job')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Stop command').last);
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(api.stopCalls, 1);
+    });
   });
 }

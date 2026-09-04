@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
@@ -13,6 +12,7 @@ import '../../api/models.dart';
 import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../api/sse.dart';
+import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
 import '../../state/offline_queue.dart';
 import '../../state/connection.dart';
@@ -32,7 +32,6 @@ import '../widgets/entrance.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/diff_view.dart';
 import '../widgets/file_preview.dart';
-import '../widgets/info_label.dart';
 import '../widgets/markdown.dart';
 import '../widgets/pickers.dart';
 import '../widgets/product_states.dart';
@@ -68,10 +67,17 @@ part 'chat/composer.dart';
 part 'chat/message_view.dart';
 part 'chat/session_sheets.dart';
 part 'chat/attention_card.dart';
+part 'chat/running_work.dart';
 
 const _maxAttachmentCount = 5;
 const _maxAttachmentBytes = 10 * 1024 * 1024;
 const _maxAggregateAttachmentBytes = 20 * 1024 * 1024;
+
+AppLocalizations _chatL10n(BuildContext context) =>
+    Localizations.of<AppLocalizations>(context, AppLocalizations) ??
+    lookupAppLocalizations(
+      Localizations.maybeLocaleOf(context) ?? const Locale('en'),
+    );
 
 @visibleForTesting
 Future<Uint8List?> readAttachmentBytesWithinLimit(
@@ -111,6 +117,116 @@ Future<Uint8List?> readAttachmentBytesWithinLimit(
     return bytes.takeBytes();
   } finally {
     await iterator.cancel();
+  }
+}
+
+/// Returns the provider-facing MIME for a prompt attachment, or null for an
+/// unsupported binary format. OpenCode expands exact `text/plain` data URLs
+/// into text instead of sending them to a model as arbitrary file parts.
+@visibleForTesting
+String? promptAttachmentMime({
+  required String filename,
+  required Uint8List bytes,
+  String? declaredMime,
+}) {
+  final declared = declaredMime?.split(';').first.trim().toLowerCase() ?? '';
+  final normalizedMedia = switch (declared) {
+    'image/png' => 'image/png',
+    'image/jpeg' || 'image/jpg' => 'image/jpeg',
+    'image/gif' => 'image/gif',
+    'image/webp' => 'image/webp',
+    'application/pdf' => 'application/pdf',
+    _ => null,
+  };
+  if (normalizedMedia != null) return normalizedMedia;
+  if (_isPromptTextMime(declared)) {
+    if (bytes.isNotEmpty && !_looksLikePromptText(bytes)) return null;
+    return 'text/plain';
+  }
+  if (declared.startsWith('image/')) return null;
+
+  final extension = filename.contains('.')
+      ? filename.split('.').last.toLowerCase()
+      : '';
+  final inferred = switch (extension) {
+    'png' => 'image/png',
+    'jpg' || 'jpeg' => 'image/jpeg',
+    'gif' => 'image/gif',
+    'webp' => 'image/webp',
+    'pdf' => 'application/pdf',
+    'md' ||
+    'markdown' ||
+    'txt' ||
+    'log' ||
+    'html' ||
+    'htm' ||
+    'css' ||
+    'csv' ||
+    'json' ||
+    'xml' ||
+    'yaml' ||
+    'yml' ||
+    'toml' ||
+    'dart' ||
+    'js' ||
+    'ts' ||
+    'tsx' ||
+    'jsx' ||
+    'py' ||
+    'go' ||
+    'rs' ||
+    'java' ||
+    'kt' ||
+    'kts' ||
+    'c' ||
+    'cc' ||
+    'cpp' ||
+    'h' ||
+    'hpp' ||
+    'sh' ||
+    'sql' => 'text/plain',
+    _ => null,
+  };
+  if (inferred != null) {
+    if (inferred == 'text/plain' &&
+        bytes.isNotEmpty &&
+        !_looksLikePromptText(bytes)) {
+      return null;
+    }
+    return inferred;
+  }
+  if ((declared.isEmpty || declared == 'application/octet-stream') &&
+      _looksLikePromptText(bytes)) {
+    return 'text/plain';
+  }
+  return null;
+}
+
+bool _isPromptTextMime(String mime) =>
+    mime.startsWith('text/') ||
+    mime == 'application/json' ||
+    mime == 'application/javascript' ||
+    mime == 'application/x-javascript' ||
+    mime == 'application/xml' ||
+    mime == 'application/yaml' ||
+    mime == 'application/x-yaml' ||
+    mime == 'application/toml' ||
+    mime == 'application/x-sh' ||
+    mime == 'application/sql' ||
+    mime == 'application/graphql' ||
+    mime == 'application/x-ndjson' ||
+    mime.endsWith('+json') ||
+    mime.endsWith('+xml');
+
+bool _looksLikePromptText(Uint8List bytes) {
+  if (bytes.isEmpty || bytes.contains(0)) return false;
+  try {
+    final text = utf8.decode(bytes, allowMalformed: false);
+    return !text.runes.any(
+      (rune) => rune < 0x09 || (rune > 0x0D && rune < 0x20),
+    );
+  } on FormatException {
+    return false;
   }
 }
 
@@ -302,6 +418,11 @@ class _ChatScreenState extends State<ChatScreen>
   int _offlineFlushRevision = 0;
   bool _sending = false;
   bool _aborting = false;
+  bool _movingWorkToBackground = false;
+  Object? _backgroundGateway;
+  BackgroundWorkCapabilities? _backgroundWorkCapabilities;
+  List<ShellJob> _runningShellJobs = const [];
+  int _backgroundWorkLoadGeneration = 0;
   bool _permissionDismissScheduled = false;
   String? _activePermissionID;
   Route<void>? _activePermissionRoute;
@@ -358,6 +479,7 @@ class _ChatScreenState extends State<ChatScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    HardwareKeyboard.instance.addHandler(_handleBackgroundWorkShortcut);
     _composer.text = widget.initialText;
     _attachments.addAll(widget.initialAttachments);
     _conn = _readConn();
@@ -374,6 +496,7 @@ class _ChatScreenState extends State<ChatScreen>
     _syncRetryTicker();
     _handoff.store.addListener(_onHandoffChanged); // UX-103 review handoff
     _load();
+    unawaited(_loadBackgroundWork());
     unawaited(_loadServerCommands());
     _sub = _conn.events.listen(_onEvent);
     _wasBusy = _conn.busySessions.contains(widget.sessionID);
@@ -415,6 +538,19 @@ class _ChatScreenState extends State<ChatScreen>
   void _onEvent(EventEnvelope env) {
     if (!mounted) return;
     switch (env.type) {
+      case 'shell.created':
+      case 'shell.exited':
+      case 'shell.deleted':
+        unawaited(_loadBackgroundWork());
+        break;
+      case 'session.shell.started':
+      case 'session.shell.ended':
+        if (env.properties['sessionID']?.toString() != widget.sessionID) {
+          break;
+        }
+        unawaited(_load());
+        unawaited(_loadBackgroundWork());
+        break;
       case 'message.part.updated':
         if (env.properties['sessionID']?.toString() != widget.sessionID) {
           break;
@@ -1450,6 +1586,7 @@ class _ChatScreenState extends State<ChatScreen>
   Future<PromptAttachment?> _chooseAttachment(
     List<PromptAttachment> current,
   ) async {
+    final unsupportedAttachment = _chatL10n(context).chatAttachmentUnsupported;
     if (current.length >= _maxAttachmentCount) {
       throw ProductException(
         'You can attach up to $_maxAttachmentCount files.',
@@ -1491,7 +1628,10 @@ class _ChatScreenState extends State<ChatScreen>
     if (bytes == null) {
       throw const ProductException('Each attachment must be 10 MB or smaller.');
     }
-    final mime = _mimeForFilename(file.name);
+    final mime = promptAttachmentMime(filename: file.name, bytes: bytes);
+    if (mime == null) {
+      throw ProductException(unsupportedAttachment);
+    }
     final attachment = PromptAttachment(
       mime: mime,
       filename: file.name,
@@ -1536,28 +1676,8 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   String _mimeForFilename(String filename) {
-    final extension = filename.contains('.')
-        ? filename.split('.').last.toLowerCase()
-        : '';
-    return switch (extension) {
-      'png' => 'image/png',
-      'jpg' || 'jpeg' => 'image/jpeg',
-      'gif' => 'image/gif',
-      'webp' => 'image/webp',
-      'svg' => 'image/svg+xml',
-      'pdf' => 'application/pdf',
-      'json' => 'application/json',
-      'md' || 'txt' || 'log' => 'text/plain',
-      'dart' ||
-      'js' ||
-      'ts' ||
-      'tsx' ||
-      'jsx' ||
-      'py' ||
-      'go' ||
-      'rs' => 'text/plain',
-      _ => 'application/octet-stream',
-    };
+    return promptAttachmentMime(filename: filename, bytes: Uint8List(0)) ??
+        'application/octet-stream';
   }
 
   Future<void> _abort() async {
@@ -1580,6 +1700,149 @@ class _ChatScreenState extends State<ChatScreen>
     } finally {
       if (mounted) setState(() => _aborting = false);
     }
+  }
+
+  Iterable<Part> get _foregroundBackgroundableParts sync* {
+    final capabilities = _backgroundWorkCapabilities;
+    if (capabilities?.canMove != true) return;
+    for (final message in _messages) {
+      for (final part in message.parts) {
+        if (part.type != 'tool' ||
+            !part.toolState.executed ||
+            part.toolState.status != 'running') {
+          continue;
+        }
+        final name = part.toolName?.trim().toLowerCase();
+        final supportsKind = capabilities!.shells
+            ? name == 'task' || name == 'subagent' || name == 'shell'
+            : name == 'task';
+        if (!supportsKind) continue;
+        final metadata = part.toolState.metadata ?? const <String, dynamic>{};
+        if (metadata['background'] == true ||
+            part.toolState.input['background'] == true) {
+          continue;
+        }
+        yield part;
+      }
+    }
+  }
+
+  Future<void> _loadBackgroundWork() async {
+    final gateway = _conn.api;
+    if (gateway is! BackgroundWorkGateway) {
+      if (!mounted) return;
+      setState(() {
+        _backgroundGateway = null;
+        _backgroundWorkCapabilities = null;
+        _runningShellJobs = const [];
+      });
+      return;
+    }
+    final backgroundGateway = gateway as BackgroundWorkGateway;
+    final generation = ++_backgroundWorkLoadGeneration;
+    try {
+      final capabilities =
+          identical(_backgroundGateway, gateway) &&
+              _backgroundWorkCapabilities != null
+          ? _backgroundWorkCapabilities!
+          : await backgroundGateway.loadBackgroundWorkCapabilities();
+      var shells = const <ShellJob>[];
+      if (capabilities.shellManagement && gateway is ShellJobGateway) {
+        final shellGateway = gateway as ShellJobGateway;
+        try {
+          shells = (await shellGateway.listShellJobs())
+              .where(
+                (shell) => shell.running && shell.sessionID == widget.sessionID,
+              )
+              .toList();
+        } catch (_) {
+          // Promotion remains useful when a beta server has the session route
+          // but not the newer shell-management surface.
+        }
+      }
+      if (!mounted || generation != _backgroundWorkLoadGeneration) return;
+      setState(() {
+        _backgroundGateway = gateway;
+        _backgroundWorkCapabilities = capabilities;
+        _runningShellJobs = shells;
+      });
+    } catch (_) {
+      if (!mounted || generation != _backgroundWorkLoadGeneration) return;
+      setState(() {
+        _backgroundGateway = gateway;
+        _backgroundWorkCapabilities = const BackgroundWorkCapabilities(
+          subagents: false,
+        );
+        _runningShellJobs = const [];
+      });
+    }
+  }
+
+  Future<void> _moveRunningWorkToBackground() async {
+    if (_movingWorkToBackground || _foregroundBackgroundableParts.isEmpty) {
+      return;
+    }
+    unawaited(HapticFeedback.mediumImpact());
+    setState(() => _movingWorkToBackground = true);
+    try {
+      final api = await _conn.prepareActionTransport();
+      if (!mounted) return;
+      if (api is! BackgroundWorkGateway) {
+        throw ProductException(_chatL10n(context).backgroundWorkUnsupported);
+      }
+      final moved = await (api as BackgroundWorkGateway)
+          .moveSessionWorkToBackground(widget.sessionID);
+      if (!mounted) return;
+      _showComposerNote(
+        moved
+            ? _chatL10n(context).backgroundWorkMoved
+            : _chatL10n(context).backgroundSubagentsUnavailable,
+        key: const ValueKey('background-work-result'),
+      );
+      await Future.wait([_load(), _loadBackgroundWork()]);
+    } catch (error) {
+      if (mounted) _showActionError(error);
+    } finally {
+      if (mounted) setState(() => _movingWorkToBackground = false);
+    }
+  }
+
+  bool _handleBackgroundWorkShortcut(KeyEvent event) {
+    if (event is! KeyDownEvent ||
+        event.logicalKey != LogicalKeyboardKey.keyB ||
+        !HardwareKeyboard.instance.isControlPressed ||
+        _movingWorkToBackground ||
+        _foregroundBackgroundableParts.isEmpty ||
+        ModalRoute.of(context)?.isCurrent != true) {
+      return false;
+    }
+    unawaited(_moveRunningWorkToBackground());
+    return true;
+  }
+
+  Future<void> _openRunningWork(List<RunningAgentEntry> agents) async {
+    final gateway = _conn.api;
+    if (gateway is! ShellJobGateway && agents.isEmpty) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      constraints: const BoxConstraints(maxWidth: 720),
+      builder: (context) => _RunningWorkSheet(
+        shellGateway: gateway is ShellJobGateway
+            ? gateway as ShellJobGateway
+            : null,
+        sessionID: widget.sessionID,
+        initialShells: _runningShellJobs,
+        agents: agents,
+        onOpenAgent: (session) {
+          Navigator.pop(context);
+          unawaited(_openRelatedSession(session));
+        },
+      ),
+    );
+    unawaited(_loadBackgroundWork());
   }
 
   Future<void> _share() async {
@@ -1834,14 +2097,15 @@ class _ChatScreenState extends State<ChatScreen>
     });
   }
 
-  static String _messageText(MessageWithParts message) => message.parts
+  static String _messageText(Iterable<MessageWithParts> messages) => messages
+      .expand((message) => message.parts)
       .where((part) => part.type == 'text' && !part.synthetic)
       .map((part) => part.text)
       .where((value) => value.trim().isNotEmpty)
       .join('\n\n');
 
-  Future<void> _copyMessageText(MessageWithParts message) async {
-    await Clipboard.setData(ClipboardData(text: _messageText(message)));
+  Future<void> _copyMessageText(List<MessageWithParts> messages) async {
+    await Clipboard.setData(ClipboardData(text: _messageText(messages)));
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,
@@ -1851,34 +2115,45 @@ class _ChatScreenState extends State<ChatScreen>
   /// The desktop right-click menu for a transcript message. Same three
   /// actions, same gates, same handlers as the long-press sheet below —
   /// mouse users simply reach them with the button they already use.
-  List<ContextMenuAction> _messageContextActions(MessageWithParts message) => [
-    if (_messageText(message).isNotEmpty)
+  List<ContextMenuAction> _messageContextActions(
+    List<MessageWithParts> messages,
+  ) => [
+    if (_messageText(messages).isNotEmpty)
       ContextMenuAction(
         menuKey: const ValueKey('message-menu-copy'),
         label: 'Copy message text',
         icon: AppIcons.copy,
-        onSelected: () => unawaited(_copyMessageText(message)),
+        onSelected: () => unawaited(_copyMessageText(messages)),
       ),
-    if (message.info.role == 'user')
+    if (messages.length == 1 &&
+        messages.single.info.role == 'user' &&
+        !messages.single.info.id.startsWith('local-'))
       ContextMenuAction(
         menuKey: const ValueKey('message-menu-fork'),
         label: 'Fork from this prompt',
         icon: Icons.fork_right_rounded,
-        onSelected: () => unawaited(_forkFromMessage(message)),
+        onSelected: () => unawaited(_forkFromMessage(messages.single)),
       ),
-    if (_conn.capabilities.messageDelete)
+    if (_conn.capabilities.messageDelete &&
+        messages.every((message) => !message.info.id.startsWith('local-')))
       ContextMenuAction(
         menuKey: const ValueKey('message-menu-delete'),
         label: 'Delete message',
         icon: Icons.delete_outline_rounded,
         destructive: true,
-        onSelected: () => unawaited(_deleteMessage(message)),
+        onSelected: () => unawaited(_deleteMessages(messages)),
       ),
   ];
 
-  Future<void> _showMessageActions(MessageWithParts message) async {
-    final text = _messageText(message);
-    final canFork = message.info.role == 'user';
+  Future<void> _showMessageActions(List<MessageWithParts> messages) async {
+    final text = _messageText(messages);
+    final serverBacked = messages.every(
+      (message) => !message.info.id.startsWith('local-'),
+    );
+    final canFork =
+        messages.length == 1 &&
+        messages.single.info.role == 'user' &&
+        serverBacked;
     final theme = Theme.of(context);
     final action = await showModalBottomSheet<String>(
       context: context,
@@ -1905,7 +2180,7 @@ class _ChatScreenState extends State<ChatScreen>
               ),
             // §7 row 14: v2 has no message delete, and PATCH edit is not the
             // same promise — do not fake it.
-            if (_conn.capabilities.messageDelete)
+            if (_conn.capabilities.messageDelete && serverBacked)
               ListTile(
                 key: const ValueKey('message-action-delete'),
                 leading: Icon(
@@ -1926,12 +2201,16 @@ class _ChatScreenState extends State<ChatScreen>
       ),
     );
     if (!mounted || action == null) return;
-    if (action == 'copy') await _copyMessageText(message);
-    if (action == 'fork') await _forkFromMessage(message);
-    if (action == 'delete') await _deleteMessage(message);
+    if (action == 'copy') await _copyMessageText(messages);
+    if (action == 'fork') await _forkFromMessage(messages.single);
+    if (action == 'delete') await _deleteMessages(messages);
   }
 
-  Future<void> _deleteMessage(MessageWithParts message) async {
+  Future<void> _deleteMessages(List<MessageWithParts> messages) async {
+    if (messages.isEmpty ||
+        messages.any((message) => message.info.id.startsWith('local-'))) {
+      return;
+    }
     final confirmed = await showConfirmSheet(
       context,
       icon: Icons.delete_outline_rounded,
@@ -1946,14 +2225,17 @@ class _ChatScreenState extends State<ChatScreen>
     if (!confirmed || !mounted) return;
     try {
       final repository = await _requireActionRepository();
-      await repository.deleteMessage(
-        sessionID: widget.sessionID,
-        messageID: message.info.id,
-      );
+      for (final message in messages) {
+        await repository.deleteMessage(
+          sessionID: widget.sessionID,
+          messageID: message.info.id,
+        );
+        if (!mounted) return;
+        setState(() {
+          _messages.removeWhere((entry) => entry.info.id == message.info.id);
+        });
+      }
       if (!mounted) return;
-      setState(() {
-        _messages.removeWhere((entry) => entry.info.id == message.info.id);
-      });
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Message deleted')));
@@ -1964,7 +2246,9 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _forkFromMessage(MessageWithParts message) async {
-    if (message.info.role != 'user') return;
+    if (message.info.role != 'user' || message.info.id.startsWith('local-')) {
+      return;
+    }
     final text = message.parts
         .where((part) => part.type == 'text' && !part.synthetic)
         .map((part) => part.text)
@@ -2177,6 +2461,7 @@ class _ChatScreenState extends State<ChatScreen>
     _noteRunFinished();
     setState(() {});
     if (shouldRehydrate) unawaited(_load());
+    if (shouldRehydrate) unawaited(_loadBackgroundWork());
   }
 
   SessionRetryState? get _retryState => _conn.retryStates[widget.sessionID];
@@ -3623,7 +3908,14 @@ class _ChatScreenState extends State<ChatScreen>
         'Attachments must total no more than 20 MB.',
       );
     }
-    final mime = mimeType ?? 'application/octet-stream';
+    final mime = promptAttachmentMime(
+      filename: filename,
+      bytes: bytes,
+      declaredMime: mimeType,
+    );
+    if (mime == null) {
+      throw ProductException(_chatL10n(context).chatAttachmentUnsupported);
+    }
     final attachment = PromptAttachment(
       mime: mime,
       filename: filename,
@@ -3827,7 +4119,6 @@ class _ChatScreenState extends State<ChatScreen>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final busy = _conn.busySessions.contains(widget.sessionID);
     // OpenCode 1 runs a prompt sent mid-turn after that turn: every user
@@ -3835,7 +4126,18 @@ class _ChatScreenState extends State<ChatScreen>
     final queuedAfterIndex = busy && !_conn.supportsInbox
         ? _queuedAfterIndex(_messages)
         : -1;
-    final displayParts = _timelineDisplayParts(_messages);
+    final renderedMessages = _messages.take(_renderedMessageCount).toList();
+    final displayParts = _timelineDisplayParts(renderedMessages);
+    final assistantActionRuns = _assistantActionRuns(
+      _messages,
+      displayParts,
+      renderedCount: _renderedMessageCount,
+      busy: busy,
+    );
+    final assistantActionMembers = <int, List<int>>{
+      for (final run in assistantActionRuns.entries)
+        for (final member in run.value) member: run.value,
+    };
     final showAttachmentNote = _attachmentNoteVisible();
     final pendingPermissions = _conn.permissionsForSession(widget.sessionID);
 
@@ -3858,6 +4160,10 @@ class _ChatScreenState extends State<ChatScreen>
       sessions: _conn.sessionsById,
       busy: _conn.busySessions,
     );
+    final blockingWork = _foregroundBackgroundableParts.toList();
+    final runningWorkCount =
+        _runningShellJobs.length +
+        runningAgents.where((entry) => entry.busy && !entry.current).length;
 
     return PopScope(
       canPop: _allowRoutePop,
@@ -3871,12 +4177,6 @@ class _ChatScreenState extends State<ChatScreen>
             overflow: TextOverflow.ellipsis,
           ),
           actions: [
-            if (busy)
-              IconButton(
-                tooltip: 'Stop',
-                icon: Icon(AppIcons.stop, color: theme.colorScheme.error),
-                onPressed: _aborting ? null : _abort,
-              ),
             IconButton(
               key: const ValueKey('session-actions-button'),
               tooltip: 'Session menu',
@@ -3996,6 +4296,14 @@ class _ChatScreenState extends State<ChatScreen>
                                                         1 -
                                                         i;
                                                     final m = _messages[index];
+                                                    final actionMessages =
+                                                        assistantActionMembers[index]
+                                                            ?.map(
+                                                              (messageIndex) =>
+                                                                  _messages[messageIndex],
+                                                            )
+                                                            .toList() ??
+                                                        [m];
                                                     if (v2VariantPart(m)
                                                         case final tagged?) {
                                                       return V2TranscriptRow(
@@ -4041,15 +4349,20 @@ class _ChatScreenState extends State<ChatScreen>
                                                       highlighted:
                                                           _highlightedMessageID ==
                                                           m.info.id,
+                                                      showAssistantActions:
+                                                          assistantActionRuns
+                                                              .containsKey(
+                                                                index,
+                                                              ),
                                                       onLongPress: () =>
                                                           unawaited(
                                                             _showMessageActions(
-                                                              m,
+                                                              actionMessages,
                                                             ),
                                                           ),
                                                       contextActions: () =>
                                                           _messageContextActions(
-                                                            m,
+                                                            actionMessages,
                                                           ),
                                                       filePreviewLoader:
                                                           _loadToolOutputFile,
@@ -4180,6 +4493,29 @@ class _ChatScreenState extends State<ChatScreen>
                                   ),
                                 ),
                               ),
+                            if (blockingWork.isNotEmpty || runningWorkCount > 0)
+                              Center(
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 860,
+                                  ),
+                                  child: _BackgroundWorkBar(
+                                    canMove: blockingWork.isNotEmpty,
+                                    moving: _movingWorkToBackground,
+                                    moveLabel:
+                                        _backgroundWorkCapabilities?.shells ==
+                                            true
+                                        ? _chatL10n(context).backgroundWorkMove
+                                        : _chatL10n(
+                                            context,
+                                          ).backgroundSubagents,
+                                    runningCount: runningWorkCount,
+                                    onMove: _moveRunningWorkToBackground,
+                                    onOpenRunning: () =>
+                                        _openRunningWork(runningAgents),
+                                  ),
+                                ),
+                              ),
                             Center(
                               child: ConstrainedBox(
                                 constraints: const BoxConstraints(
@@ -4266,6 +4602,7 @@ class _ChatScreenState extends State<ChatScreen>
   void dispose() {
     _persistDraft();
     WidgetsBinding.instance.removeObserver(this);
+    HardwareKeyboard.instance.removeHandler(_handleBackgroundWorkShortcut);
     _conn.removeListener(_onConnectionChanged);
     _handoff.store.removeListener(_onHandoffChanged); // UX-103 review handoff
     _sub.cancel();

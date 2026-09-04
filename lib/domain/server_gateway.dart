@@ -418,6 +418,65 @@ class ExperimentalServerCapabilities {
   const ExperimentalServerCapabilities({required this.backgroundSubagents});
 }
 
+/// Work the connected server can detach from the active session turn.
+class BackgroundWorkCapabilities {
+  final bool subagents;
+  final bool shells;
+  final bool shellManagement;
+
+  const BackgroundWorkCapabilities({
+    required this.subagents,
+    this.shells = false,
+    this.shellManagement = false,
+  });
+
+  bool get canMove => subagents || shells;
+}
+
+/// One OpenCode 2 managed, non-interactive shell command.
+class ShellJob {
+  final String id;
+  final String status;
+  final String command;
+  final String directory;
+  final int? pid;
+  final num? exitCode;
+  final int startedAt;
+  final int? completedAt;
+  final Map<String, dynamic> metadata;
+
+  const ShellJob({
+    required this.id,
+    required this.status,
+    required this.command,
+    required this.directory,
+    this.pid,
+    this.exitCode,
+    required this.startedAt,
+    this.completedAt,
+    this.metadata = const {},
+  });
+
+  bool get running => status == 'running';
+  String? get sessionID => metadata['sessionID']?.toString();
+}
+
+class ShellOutputPage {
+  final String output;
+  final int cursor;
+  final int size;
+  final bool truncated;
+
+  const ShellOutputPage({
+    required this.output,
+    required this.cursor,
+    required this.size,
+    required this.truncated,
+  });
+
+  bool get hasMore => cursor < size;
+}
+
 class CodingToolInfo {
   final String id;
   final String description;
@@ -751,6 +810,7 @@ abstract class TerminalChannel {
 abstract interface class LocationAwareProductRepository {
   int get locationRevision;
 }
+
 class ProductException implements Exception {
   final String message;
   final Object? cause;
@@ -891,6 +951,24 @@ abstract class PromptGateway {
     String? variant,
   });
   Future<void> abort(String sessionID);
+}
+
+/// Optional session control implemented only by servers with a background
+/// execution contract. OpenCode 1 can expose the route while its experiment
+/// is disabled, so callers must use the runtime capability result.
+abstract interface class BackgroundWorkGateway {
+  Future<BackgroundWorkCapabilities> loadBackgroundWorkCapabilities();
+  Future<bool> moveSessionWorkToBackground(String sessionID);
+}
+
+/// OpenCode 2's managed shell resource. OpenCode 1 deliberately does not
+/// implement this interface; its Bash calls have no detachable job identity.
+abstract interface class ShellJobGateway {
+  Future<List<ShellJob>> listShellJobs();
+  Future<ShellJob> getShellJob(String id);
+  Future<ShellOutputPage> readShellOutput(String id, {int? cursor, int? limit});
+  Future<ShellJob> updateShellTimeout(String id, Duration? timeout);
+  Future<void> stopShellJob(String id);
 }
 
 /// Pending permission requests and replies.
@@ -1130,7 +1208,11 @@ abstract class TerminalGateway {
   Future<void> selectTerminalShell(String value);
   Future<TerminalProcess> createTerminal({String? title});
   Future<void> renameTerminal(String id, String title);
-  Future<void> resizeTerminal(String id, {required int rows, required int cols});
+  Future<void> resizeTerminal(
+    String id, {
+    required int rows,
+    required int cols,
+  });
   Future<void> removeTerminal(String id);
   Future<TerminalChannel> connectTerminal(String id, {int? cursor});
 }
@@ -1159,7 +1241,10 @@ abstract class McpGateway {
   Future<McpAuthLaunch> startMcpAuthentication(String name);
   Future<McpServerInfo> completeMcpAuthentication(String name, String code);
   Future<void> cancelMcpAuthentication(String name);
-  Future<void> addMcpServer(McpServerDraft draft, {required McpConfigScope scope});
+  Future<void> addMcpServer(
+    McpServerDraft draft, {
+    required McpConfigScope scope,
+  });
 }
 
 /// Provider integrations: keys, OAuth attempts, and runtime refresh.

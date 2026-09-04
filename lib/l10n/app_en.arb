@@ -47,5 +47,102 @@
   "aboutSigningCertificate": "Signing certificate SHA-256",
   "@aboutSigningCertificate": {
     "description": "Label for the installed Android APK signer fingerprint"
+  },
+  "backgroundWorkMove": "Move running work to background",
+  "backgroundSubagents": "Background subagents",
+  "backgroundWorkMoved": "Running work moved to background.",
+  "backgroundSubagentsUnavailable": "No foreground subagents were available to background.",
+  "backgroundWorkUnsupported": "This OpenCode server cannot move running work to background.",
+  "backgroundWorkRunningCount": "{count} running",
+  "@backgroundWorkRunningCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "backgroundWorkTitle": "Running work",
+  "backgroundWorkEmptyDescription": "Nothing is running for this session.",
+  "backgroundWorkItemCount": "{count, plural, =1{1 item still running} other{{count} items still running}}",
+  "@backgroundWorkItemCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "backgroundWorkEmpty": "No running work",
+  "backgroundWorkRunning": "Running",
+  "backgroundSubagentRunning": "Subagent - running",
+  "backgroundShellRunning": "Shell - {elapsed}",
+  "@backgroundShellRunning": {
+    "placeholders": {"elapsed": {"type": "String"}}
+  },
+  "backgroundShellActions": "Shell actions",
+  "backgroundShellTimeoutMinute": "Timeout in 1 minute",
+  "backgroundShellTimeoutFiveMinutes": "Timeout in 5 minutes",
+  "backgroundShellTimeoutClear": "Clear timeout",
+  "backgroundShellStop": "Stop command",
+  "backgroundShellStopTitle": "Stop this shell command?",
+  "backgroundShellOutput": "Live output",
+  "backgroundShellOutputTruncated": "Live output - earlier bytes truncated",
+  "backgroundShellOutputWaiting": "Waiting for output...",
+  "refresh": "Refresh",
+  "chatComposerQueuedAfterRun": "Queued after run",
+  "@chatComposerQueuedAfterRun": {
+    "description": "Composer status while a prompt will wait for the active assistant run"
+  },
+  "chatComposerSteersCurrentRun": "Steers current run",
+  "@chatComposerSteersCurrentRun": {
+    "description": "Composer status while sending a prompt will steer the active assistant run"
+  },
+  "chatStop": "Stop",
+  "@chatStop": {
+    "description": "Composer action that stops the active assistant run"
+  },
+  "chatAssistantWorking": "Assistant is working",
+  "@chatAssistantWorking": {
+    "description": "Live-region announcement while the assistant is generating"
+  },
+  "chatMessageActions": "Message actions",
+  "@chatMessageActions": {
+    "description": "Tooltip and accessibility label for transcript message actions"
+  },
+  "chatReasoningLabel": "Reasoning",
+  "@chatReasoningLabel": {
+    "description": "Collapsed transcript disclosure label for assistant reasoning"
+  },
+  "chatAttachmentUnsupported": "Only PNG, JPEG, GIF, WebP, PDF, and text files can be attached.",
+  "@chatAttachmentUnsupported": {
+    "description": "Error shown when a prompt attachment is an unsupported binary format"
+  },
+  "termuxRestartServer": "Restart local server",
+  "@termuxRestartServer": {
+    "description": "Action that restarts the app-managed OpenCode server running in Termux"
+  },
+  "termuxRestartTitle": "Restart the local server?",
+  "@termuxRestartTitle": {
+    "description": "Confirmation title before restarting the managed Termux server"
+  },
+  "termuxRestartMessage": "OpenCode will be briefly unavailable. The app will keep your current workspace and reconnect automatically.",
+  "@termuxRestartMessage": {
+    "description": "Confirmation explanation before restarting the managed Termux server"
+  },
+  "termuxRestartBusyMessage": "{count, plural, =1{1 session is generating. Restarting will interrupt it.} other{{count} sessions are generating. Restarting will interrupt them.}}",
+  "@termuxRestartBusyMessage": {
+    "description": "Additional restart warning when one or more sessions are generating",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "termuxRestartConfirm": "Restart",
+  "@termuxRestartConfirm": {
+    "description": "Confirmation button that starts a managed Termux server restart"
+  },
+  "termuxRestarting": "Restarting local server...",
+  "@termuxRestarting": {
+    "description": "Progress label while the managed Termux server restarts"
+  },
+  "termuxRestartProgress": "The installed OpenCode version and saved credential are unchanged. The app will reconnect when the server is ready.",
+  "@termuxRestartProgress": {
+    "description": "Progress explanation while the managed Termux server restarts"
+  },
+  "termuxRestartSucceeded": "Local server restarted and reconnected.",
+  "@termuxRestartSucceeded": {
+    "description": "Success message after a managed Termux server restart"
+  },
+  "termuxRestartNotPerformed": "Restart was not performed. The existing local server is still running.",
+  "@termuxRestartNotPerformed": {
+    "description": "Message after restart preflight fails while the existing managed server remains healthy"
   }
 }

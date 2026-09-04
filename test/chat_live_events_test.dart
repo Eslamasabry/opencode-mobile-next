@@ -325,13 +325,17 @@ class _MessageDeleteRepository extends _FakeProductRepository {
   final List<MessageWithParts> serverMessages;
   final List<(String, String)> deleted = [];
   Object? failure;
+  String? failingMessageID;
 
   @override
   Future<void> deleteMessage({
     required String sessionID,
     required String messageID,
   }) async {
-    if (failure case final error?) throw error;
+    if (failure case final error?
+        when failingMessageID == null || failingMessageID == messageID) {
+      throw error;
+    }
     deleted.add((sessionID, messageID));
     serverMessages.removeWhere((message) => message.info.id == messageID);
   }
@@ -1405,7 +1409,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('tool-call-group')), findsNWidgets(2));
-    expect(find.text('Tools'), findsNWidgets(2));
+    expect(find.textContaining('Tools ·'), findsNWidgets(2));
     expect(
       find.text('Read 1 file, searched once, ran 1 command'),
       findsOneWidget,
@@ -1707,6 +1711,10 @@ void main() {
     expect(find.byKey(const Key('assistant-reasoning-block')), findsOneWidget);
     expect(find.byKey(const Key('assistant-text-block')), findsOneWidget);
     expect(find.byKey(const Key('reasoning-toggle')), findsOneWidget);
+    expect(
+      tester.getSize(find.byKey(const Key('reasoning-toggle'))).height,
+      lessThanOrEqualTo(48),
+    );
     await tester.tap(find.byKey(const Key('reasoning-toggle')));
     await tester.pumpAndSettle();
     expect(find.textContaining('First reasoning fragment'), findsOneWidget);
@@ -3082,12 +3090,20 @@ void main() {
     await tester.pump();
     expect(find.text('hello server'), findsOneWidget);
 
+    await tester.tap(find.byTooltip('Message actions'));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byKey(const ValueKey('message-action-copy')), findsOneWidget);
+    expect(find.byKey(const ValueKey('message-action-fork')), findsNothing);
+    expect(find.byKey(const ValueKey('message-action-delete')), findsNothing);
+    tester.state<NavigatorState>(find.byType(Navigator)).pop();
+    await tester.pump(const Duration(milliseconds: 400));
+
     controller.handleEventForTesting(
       _event('message.part.updated', {
         'sessionID': 'session-1',
         'part': _partJson(
           id: 'part-1',
-          messageID: 'user-1',
+          messageID: 'msg_user_1',
           type: 'text',
           text: 'hello server',
         ),
@@ -3096,7 +3112,7 @@ void main() {
     controller.handleEventForTesting(
       _event('message.updated', {
         'info': {
-          'id': 'user-1',
+          'id': 'msg_user_1',
           'sessionID': 'session-1',
           'role': 'user',
           'time': {'created': DateTime.now().millisecondsSinceEpoch},
@@ -3106,6 +3122,12 @@ void main() {
     await tester.pump();
 
     expect(find.text('hello server'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('message-actions-msg_user_1')));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byKey(const ValueKey('message-action-fork')), findsOneWidget);
+    expect(find.byKey(const ValueKey('message-action-delete')), findsOneWidget);
+    tester.state<NavigatorState>(find.byType(Navigator)).pop();
+    await tester.pump(const Duration(milliseconds: 400));
     prompt.complete();
     await tester.pump();
   });
@@ -3747,7 +3769,45 @@ void main() {
     );
   });
 
-  testWidgets('composer divider doubles as the context window meter', (
+  testWidgets('a partial grouped delete prunes each successful message', (
+    tester,
+  ) async {
+    final serverMessages = <MessageWithParts>[
+      _message('assistant-1', 'assistant', [
+        Part(type: 'reasoning', text: 'First reasoning block'),
+      ]),
+      _message('assistant-2', 'assistant', [
+        Part(type: 'text', text: 'Final answer'),
+      ], created: 2),
+    ];
+    final repository = _MessageDeleteRepository(serverMessages)
+      ..failure = const ProductException('Second deletion failed')
+      ..failingMessageID = 'assistant-2';
+    final api = _FakeOpenCodeApi()
+      ..messagesHandler = (_) async => List.of(serverMessages);
+    await _pumpChat(tester, api, repository: repository);
+
+    await tester.tap(find.byKey(const ValueKey('message-actions-assistant-2')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('message-action-delete')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete message'));
+    await tester.pumpAndSettle();
+
+    expect(repository.deleted, [('session-1', 'assistant-1')]);
+    expect(serverMessages.map((message) => message.info.id), ['assistant-2']);
+    expect(
+      find.byKey(const ValueKey('message-highlight-assistant-1')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const ValueKey('message-highlight-assistant-2')),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Second deletion failed'), findsOneWidget);
+  });
+
+  testWidgets('composer shows the context window meter above 70 percent', (
     tester,
   ) async {
     final api = _FakeOpenCodeApi()
@@ -3758,7 +3818,7 @@ void main() {
           [Part(type: 'text', text: 'done')],
           providerID: 'p',
           modelID: 'm',
-          tokens: Tokens(input: 45000, output: 5000),
+          tokens: Tokens(input: 70000, output: 5000),
         ),
       ];
     final controller = await _controller(api);
@@ -3789,11 +3849,11 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.bySemanticsLabel('Context window 50 percent used'),
+      find.bySemanticsLabel('Context window 75 percent used'),
       findsOneWidget,
     );
 
-    // The fill must actually paint: half the track's width at full height.
+    // The fill must actually paint at the reported share of the track.
     await tester.pumpAndSettle();
     final fillSize = tester.getSize(
       find.byKey(const ValueKey('composer-context-meter-fill')),
@@ -3804,7 +3864,7 @@ void main() {
     expect(fillSize.height, trackSize.height);
     expect(
       fillSize.width / trackSize.width,
-      moreOrLessEquals(.5, epsilon: .01),
+      moreOrLessEquals(.75, epsilon: .01),
     );
     semantics.dispose();
   });

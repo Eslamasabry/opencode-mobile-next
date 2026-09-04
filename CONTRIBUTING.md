@@ -17,6 +17,17 @@ validated against 3.47.2; other local Flutters may fail to resolve packages or
 produce different analyzer results. Use the pinned binary for anything you
 intend to submit.
 
+## Branch workflow
+
+- All normal development happens on `dev`.
+- `master` is the reviewed milestone and production-source branch.
+- Promote `dev` to `master` only for an explicitly approved major milestone.
+- Do not create release, APK, or freeze branches, and do not stop development on
+  `dev` while a milestone is being prepared.
+- Tags and public delivery start only from a clean, synchronized `master`.
+- Prefer Shorebird for public Android baselines and eligible Dart-only patches.
+  Raw Flutter and CI APKs are build checks, not public release artifacts.
+
 ## The gates a change must pass
 
 ```bash
