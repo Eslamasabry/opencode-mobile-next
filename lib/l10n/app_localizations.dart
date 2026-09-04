@@ -538,6 +538,48 @@ abstract class AppLocalizations {
   /// **'Reuse a prompt'**
   String get composerReuseTitle;
 
+  /// No description provided for @queueSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the queued draft on this device. Your text is still here. Check available storage and try again.'**
+  String get queueSaveFailed;
+
+  /// No description provided for @fileCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get fileCopy;
+
+  /// No description provided for @fileReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference'**
+  String get fileReference;
+
+  /// No description provided for @fileAttach.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach'**
+  String get fileAttach;
+
+  /// No description provided for @fileSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get fileSave;
+
+  /// No description provided for @fileReload.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload'**
+  String get fileReload;
+
+  /// No description provided for @queueRemoveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not remove this draft from device storage. It is still queued. Check available storage and try again.'**
+  String get queueRemoveFailed;
+
   /// No description provided for @composerReuseSubtitle.
   ///
   /// In en, this message translates to:

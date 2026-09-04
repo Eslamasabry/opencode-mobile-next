@@ -4,6 +4,15 @@ This project is in public alpha. Only the newest preview is supported.
 
 ## 1.0.34+35 - Unreleased
 
+- Preserve queued drafts when device storage fails, and prevent queued sends
+  after their server/workspace changes or the draft is discarded.
+- Search all projects in OpenCode 2 All chats, and resume terminal output with
+  correct byte offsets for Arabic, emoji, and other multibyte text.
+- Refresh sessions with the Workspace pull gesture and show the active execution
+  directory. Search files as you type and preserve results on refresh.
+- Give file previews a separate wrapping action row and visible Close control;
+  Copy uses the full loaded text instead of the shortened preview.
+
 - Add a unified Running work sheet for related agents and supported OpenCode 2
   commands, with paged output, Copy/Follow, timeout controls, and confirmed Stop.
 - Reconcile command state after reconnect, pause output polling when hidden,

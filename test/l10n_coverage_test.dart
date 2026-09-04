@@ -93,7 +93,7 @@ const _baseline = <String, int>{
   'lib/ui/screens/chat/sessions_tab.dart': 9,
   'lib/ui/screens/chat/timeline_sheet.dart': 4,
   'lib/ui/screens/chat_screen.dart': 29,
-  'lib/ui/screens/files_screen.dart': 23,
+  'lib/ui/screens/files_screen.dart': 18,
   'lib/ui/screens/global_sessions_screen.dart': 10,
   'lib/ui/screens/guide_screen.dart': 15,
   'lib/ui/screens/home_screen.dart': 4,

@@ -2621,7 +2621,7 @@ class _IoTerminalChannel implements TerminalChannel {
         ? utf8.decode(data, allowMalformed: true)
         : data.toString();
     if (text.isEmpty) return;
-    _cursor += text.length;
+    _cursor += data is List<int> ? data.length : utf8.encode(text).length;
     yield text;
   }
 

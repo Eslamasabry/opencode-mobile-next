@@ -2649,7 +2649,7 @@ void main() {
             0,
             ...utf8.encode(jsonEncode({'cursor': 42})),
           ]);
-          socket.add('ready');
+          socket.add('ready مرحبا 👋');
         });
 
         try {
@@ -2665,13 +2665,13 @@ void main() {
           final output = channel.output.first;
           channel.write('pwd\r');
 
-          expect(await output, 'ready');
+          expect(await output, 'ready مرحبا 👋');
           expect(await receivedInput.future, 'pwd\r');
           expect(tokenHeader, '1');
           expect(tokenDirectory, '/work/acme');
           expect(socketDirectory, '/work/acme');
           expect(socketCursor, '17');
-          expect(channel.cursor, 47);
+          expect(channel.cursor, 42 + utf8.encode('ready مرحبا 👋').length);
           await channel.close();
         } finally {
           await server.close(force: true);

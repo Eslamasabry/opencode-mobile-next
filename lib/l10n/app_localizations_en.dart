@@ -245,6 +245,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get composerReuseTitle => 'Reuse a prompt';
 
   @override
+  String get queueSaveFailed =>
+      'Could not save the queued draft on this device. Your text is still here. Check available storage and try again.';
+
+  @override
+  String get fileCopy => 'Copy';
+
+  @override
+  String get fileReference => 'Reference';
+
+  @override
+  String get fileAttach => 'Attach';
+
+  @override
+  String get fileSave => 'Save';
+
+  @override
+  String get fileReload => 'Reload';
+
+  @override
+  String get queueRemoveFailed =>
+      'Could not remove this draft from device storage. It is still queued. Check available storage and try again.';
+
+  @override
   String get composerReuseSubtitle => 'Add text from this conversation';
 
   @override

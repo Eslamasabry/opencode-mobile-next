@@ -210,6 +210,7 @@ class ConnectionController extends ChangeNotifier {
   /// Prompts drafted while the server was unreachable, waiting to flush.
   /// Loaded lazily from [OfflineQueueStore] and kept in memory afterward.
   List<QueuedPrompt>? _offlineQueue;
+  Future<void> _queueChanges = Future<void>.value();
   OfflineQueueStore? _offlineQueueStore;
   bool _flushingOfflineQueue = false;
 
@@ -3129,6 +3130,12 @@ class ConnectionController extends ChangeNotifier {
   OfflineQueueStore get _queueStore =>
       _offlineQueueStore ??= OfflineQueueStore(prefs: store.prefs);
 
+  Future<T> _serializeQueueChange<T>(Future<T> Function() change) {
+    final operation = _queueChanges.then((_) => change());
+    _queueChanges = operation.then<void>((_) {}, onError: (Object _) {});
+    return operation;
+  }
+
   /// Set when the queue dropped entries on its own — expiry or a limit —
   /// and cleared once a screen has shown it. A prompt the user asked to send
   /// never disappears silently.
@@ -3166,13 +3173,13 @@ class ConnectionController extends ChangeNotifier {
   /// Drops every queued prompt, for every profile. Returns whether the
   /// store accepted the write; a refusal leaves the queue intact rather
   /// than reporting a clear that did not happen.
-  Future<bool> clearAllQueuedPrompts() async {
+  Future<bool> clearAllQueuedPrompts() => _serializeQueueChange(() async {
     if (_queue.isEmpty) return true;
     if (!await _queueStore.save(const [])) return false;
     _offlineQueue = [];
     notifyListeners();
     return true;
-  }
+  });
 
   /// Drops every saved composer draft, for every session.
   Future<bool> clearAllSessionDrafts() async {
@@ -3234,26 +3241,34 @@ class ConnectionController extends ChangeNotifier {
 
   /// Adds a drafted prompt to the offline queue. Returns false when the
   /// entry exceeds the composer's aggregate attachment cap and was not
-  /// queued; the caller keeps its existing limits messaging.
-  Future<bool> queuePrompt(QueuedPrompt prompt) async {
-    if (prompt.payloadBytes > OfflineQueueStore.maxEntryBytes) return false;
-    final eviction = OfflineQueueStore.enforceLimits([..._queue, prompt]);
-    // The new entry losing its own eviction pass means the queue could not
-    // make room for it; say so rather than reporting a queue that silently
-    // dropped what the user just wrote.
-    if (!eviction.kept.any((entry) => entry.id == prompt.id)) return false;
-    _offlineQueue = eviction.kept;
-    await _queueStore.save(eviction.kept);
-    if (eviction.removed > 0) _queueEvictionNotice = eviction.notice;
-    notifyListeners();
-    return true;
-  }
+  /// queued. A storage failure throws [OfflineQueueWriteException], so the
+  /// caller can keep the composer and explain why it was not saved.
+  Future<bool> queuePrompt(QueuedPrompt prompt) =>
+      _serializeQueueChange(() async {
+        if (prompt.payloadBytes > OfflineQueueStore.maxEntryBytes) return false;
+        final eviction = OfflineQueueStore.enforceLimits([..._queue, prompt]);
+        // The new entry losing its own eviction pass means the queue could not
+        // make room for it; say so rather than reporting a queue that silently
+        // dropped what the user just wrote.
+        if (!eviction.kept.any((entry) => entry.id == prompt.id)) return false;
+        if (!await _queueStore.save(eviction.kept)) {
+          throw const OfflineQueueWriteException();
+        }
+        _offlineQueue = eviction.kept;
+        if (eviction.removed > 0) _queueEvictionNotice = eviction.notice;
+        notifyListeners();
+        return true;
+      });
 
-  Future<void> removeQueuedPrompt(String id) async {
-    _queue.removeWhere((entry) => entry.id == id);
-    await _queueStore.save(_queue);
+  Future<void> removeQueuedPrompt(String id) => _serializeQueueChange(() async {
+    final kept = _queue.where((entry) => entry.id != id).toList();
+    if (kept.length == _queue.length) return;
+    if (!await _queueStore.save(kept)) {
+      throw const OfflineQueueWriteException();
+    }
+    _offlineQueue = kept;
     notifyListeners();
-  }
+  });
 
   SessionDraftStore get _draftStore =>
       _sessionDraftStore ??= SessionDraftStore(prefs: store.prefs);
@@ -3425,6 +3440,7 @@ class ConnectionController extends ChangeNotifier {
     if (_flushingOfflineQueue || _disposed) return;
     final profileID = profile?.id;
     if (profileID == null) return;
+    final origin = (profileID, profile?.baseUrl, directory, workspace);
     if (!_queue.any((entry) => entry.profileID == profileID)) return;
     _flushingOfflineQueue = true;
     var mutated = false;
@@ -3433,7 +3449,15 @@ class ConnectionController extends ChangeNotifier {
       for (final entry in List.of(_queue)) {
         if (entry.profileID != profileID) continue;
         final currentApi = await prepareActionTransport();
-        if (currentApi == null || status != StreamStatus.connected) break;
+        await _queueChanges;
+        if (_disposed ||
+            currentApi == null ||
+            !identical(currentApi, api) ||
+            status != StreamStatus.connected ||
+            origin != (profile?.id, profile?.baseUrl, directory, workspace)) {
+          break;
+        }
+        if (!_queue.any((queued) => queued.id == entry.id)) continue;
         try {
           await currentApi.promptAsync(
             entry.sessionID,
@@ -3444,16 +3468,20 @@ class ConnectionController extends ChangeNotifier {
             attachments: entry.attachments,
             agentMentions: entry.mentions,
           );
-          _queue.removeWhere((queued) => queued.id == entry.id);
-          mutated = true;
+          await _serializeQueueChange(() async {
+            _queue.removeWhere((queued) => queued.id == entry.id);
+            mutated = true;
+          });
           sent += 1;
         } on ApiException catch (error) {
           if (error.statusCode == null) break;
-          final index = _queue.indexWhere((queued) => queued.id == entry.id);
-          if (index >= 0) {
-            _queue[index] = entry.withError(error.message);
-            mutated = true;
-          }
+          await _serializeQueueChange(() async {
+            final index = _queue.indexWhere((queued) => queued.id == entry.id);
+            if (index >= 0) {
+              _queue[index] = entry.withError(error.message);
+              mutated = true;
+            }
+          });
         } catch (_) {
           break;
         }
@@ -3466,8 +3494,10 @@ class ConnectionController extends ChangeNotifier {
         offlineFlushRevision += 1;
       }
       if (mutated) {
-        await _queueStore.save(_queue);
-        notifyListeners();
+        await _serializeQueueChange(() async {
+          await _queueStore.save(_queue);
+          if (!_disposed) notifyListeners();
+        });
       }
     }
   }

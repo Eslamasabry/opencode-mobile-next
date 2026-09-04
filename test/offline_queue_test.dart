@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -6,13 +7,35 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
-import 'package:opencode_mobile/domain/server_gateway.dart' show PromptDelivery;
+import 'package:opencode_mobile/domain/server_gateway.dart'
+    show PromptDelivery, ServerGateway;
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/offline_queue.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
+
+class _QueueController extends ConnectionController {
+  _QueueController(super.store);
+  Completer<ServerGateway?>? pendingTransport;
+
+  @override
+  Future<ServerGateway?> prepareActionTransport() =>
+      pendingTransport?.future ?? super.prepareActionTransport();
+}
+
+class _RefusingQueueStore extends InMemorySharedPreferencesStore {
+  _RefusingQueueStore(super.data) : super.withData();
+  bool _blocks(String key) => key.endsWith('oc.offlineQueue');
+  @override
+  Future<bool> setValue(String type, String key, Object value) async =>
+      _blocks(key) ? false : super.setValue(type, key, value);
+  @override
+  Future<bool> remove(String key) async =>
+      _blocks(key) ? false : super.remove(key);
+}
 
 class _FakeApi extends OpenCodeApi {
   _FakeApi() : super(baseUrl: 'http://localhost');
@@ -54,7 +77,7 @@ class _FakeApi extends OpenCodeApi {
   }
 }
 
-Future<ConnectionController> _controller(
+Future<_QueueController> _controller(
   _FakeApi api, {
   StreamStatus status = StreamStatus.connected,
 }) async {
@@ -72,7 +95,7 @@ Future<ConnectionController> _controller(
   final prefs = await SharedPreferences.getInstance();
   final store = ProfileStore(prefs: prefs);
   await store.load();
-  final controller = ConnectionController(store)
+  final controller = _QueueController(store)
     ..api = api
     ..status = status;
   return controller;
@@ -172,6 +195,59 @@ void main() {
 
     expect(await controller.queuePrompt(_entry('ok')), isTrue);
     expect(controller.queuedPromptCount, 1);
+  });
+
+  test('failed queue writes preserve the existing queued prompts', () async {
+    final controller = await _controller(_FakeApi());
+    addTearDown(controller.dispose);
+    await controller.queuePrompt(_entry('saved'));
+    final platform = SharedPreferencesStorePlatform.instance;
+    SharedPreferencesStorePlatform.instance = _RefusingQueueStore(
+      await platform.getAll(),
+    );
+    addTearDown(() => SharedPreferencesStorePlatform.instance = platform);
+    await expectLater(
+      controller.queuePrompt(_entry('new')),
+      throwsA(isA<OfflineQueueWriteException>()),
+    );
+    await expectLater(
+      controller.removeQueuedPrompt('saved'),
+      throwsA(isA<OfflineQueueWriteException>()),
+    );
+    expect(controller.queuedPromptsFor('session-1').map((entry) => entry.id), [
+      'saved',
+    ]);
+  });
+
+  test(
+    'a queued send rechecks its location after transport preparation',
+    () async {
+      final api = _FakeApi();
+      final controller = await _controller(api);
+      addTearDown(controller.dispose);
+      await controller.queuePrompt(_entry('saved'));
+      controller.pendingTransport = Completer<ServerGateway?>();
+      final flush = controller.flushOfflineQueue();
+      controller.directory = '/another-project';
+      controller.pendingTransport!.complete(api);
+      await flush;
+      expect(api.prompts, isEmpty);
+      expect(controller.queuedPromptCount, 1);
+    },
+  );
+
+  test('a draft discarded while transport wakes is never sent', () async {
+    final api = _FakeApi();
+    final controller = await _controller(api);
+    addTearDown(controller.dispose);
+    await controller.queuePrompt(_entry('discarded'));
+    controller.pendingTransport = Completer<ServerGateway?>();
+    final flush = controller.flushOfflineQueue();
+    await controller.removeQueuedPrompt('discarded');
+    controller.pendingTransport!.complete(api);
+    await flush;
+    expect(api.prompts, isEmpty);
+    expect(controller.queuedPromptCount, 0);
   });
 
   test('flush sends queued prompts oldest first', () async {

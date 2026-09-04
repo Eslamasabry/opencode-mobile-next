@@ -527,7 +527,7 @@ class Api2OperationsGateway extends ProductRepository {
     // non-null cursor reports the end of the list.
     if (cursor != null) return const <GlobalSessionResult>[];
     final page = await client.sessions(
-      directory: null,
+      unscoped: true,
       search: search?.trim().isNotEmpty == true ? search!.trim() : null,
       limit: limit,
       rootsOnly: true,
@@ -1182,7 +1182,7 @@ class _Api2TerminalChannel implements TerminalChannel {
         ? utf8.decode(data, allowMalformed: true)
         : data.toString();
     if (text.isEmpty) return;
-    _cursor += text.length;
+    _cursor += data is List<int> ? data.length : utf8.encode(text).length;
     yield text;
   }
 

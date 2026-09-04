@@ -1210,21 +1210,27 @@ class _ChatScreenState extends State<ChatScreen>
     final profileID = _conn.profile?.id;
     if (profileID == null) return false;
     final now = DateTime.now();
-    final queued = await _conn.queuePrompt(
-      QueuedPrompt(
-        id: 'queued-${now.microsecondsSinceEpoch}',
-        profileID: profileID,
-        sessionID: widget.sessionID,
-        text: text,
-        attachments: attachments,
-        mentions: mentions,
-        modelProviderID: _conn.modelForSession(widget.sessionID)?.providerID,
-        modelID: _conn.modelForSession(widget.sessionID)?.modelID,
-        agent: _conn.selectedAgent,
-        variant: _conn.variantForSession(widget.sessionID),
-        createdAt: now.millisecondsSinceEpoch,
-      ),
-    );
+    final bool queued;
+    try {
+      queued = await _conn.queuePrompt(
+        QueuedPrompt(
+          id: 'queued-${now.microsecondsSinceEpoch}',
+          profileID: profileID,
+          sessionID: widget.sessionID,
+          text: text,
+          attachments: attachments,
+          mentions: mentions,
+          modelProviderID: _conn.modelForSession(widget.sessionID)?.providerID,
+          modelID: _conn.modelForSession(widget.sessionID)?.modelID,
+          agent: _conn.selectedAgent,
+          variant: _conn.variantForSession(widget.sessionID),
+          createdAt: now.millisecondsSinceEpoch,
+        ),
+      );
+    } on OfflineQueueWriteException {
+      if (mounted) _showActionError(_chatL10n(context).queueSaveFailed);
+      return false;
+    }
     if (!mounted) return queued;
     if (queued) {
       // The queue evicts on age and size. Whatever it dropped to make room
@@ -1246,8 +1252,18 @@ class _ChatScreenState extends State<ChatScreen>
     return queued;
   }
 
+  Future<bool> _removeQueuedDraft(String id) async {
+    try {
+      await _conn.removeQueuedPrompt(id);
+      return true;
+    } on OfflineQueueWriteException {
+      if (mounted) _showActionError(_chatL10n(context).queueRemoveFailed);
+      return false;
+    }
+  }
+
   Future<void> _editQueuedPrompt(QueuedPrompt entry) async {
-    await _conn.removeQueuedPrompt(entry.id);
+    if (!await _removeQueuedDraft(entry.id)) return;
     if (!mounted) return;
     setState(() {
       _attachments
@@ -1274,7 +1290,7 @@ class _ChatScreenState extends State<ChatScreen>
       cancelLabel: 'Keep it queued',
       destructive: true,
     );
-    if (confirmed) await _conn.removeQueuedPrompt(entry.id);
+    if (confirmed) await _removeQueuedDraft(entry.id);
   }
 
   /// Cancels a pending server send; its text returns to the composer as a
