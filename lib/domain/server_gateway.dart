@@ -1,6 +1,9 @@
 import '../api/mcp_oauth.dart';
 import '../api/models.dart';
 import '../api2/models.dart' show Api2FormInfo, Api2FormState, Api2InboxItem;
+import 'managed_shell.dart';
+
+export 'managed_shell.dart';
 
 /// Connection lifecycle surfaced to the UI.
 enum StreamStatus { connecting, connected, reconnecting, disconnected }
@@ -1213,6 +1216,7 @@ abstract class ServerOperationsGateway
         HostGateway,
         VcsGateway,
         TerminalGateway,
+        ManagedShellGateway,
         CatalogGateway,
         McpGateway,
         IntegrationGateway,

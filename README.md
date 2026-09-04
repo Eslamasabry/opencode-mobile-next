@@ -66,6 +66,11 @@ button appears for foreground subagents (and supported shells on OpenCode 2).
 stay accessible above the composer. This work runs on the server and depends
 on that server remaining alive.
 
+Open **Running work** to switch to a related agent or inspect a supported
+OpenCode 2 command. Read and copy its output, change its remaining timeout, or
+stop it with confirmation. Output follows while the viewer is visible; scrolling
+back pauses Follow so new output does not pull you away from what you are reading.
+
 **Find the tool you need.** More groups destinations into compact rows and
 searches settings, models, providers, integrations, terminal, and help.
 

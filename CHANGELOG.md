@@ -4,6 +4,10 @@ This project is in public alpha. Only the newest preview is supported.
 
 ## 1.0.34+35 - Unreleased
 
+- Add a unified Running work sheet for related agents and supported OpenCode 2
+  commands, with paged output, Copy/Follow, timeout controls, and confirmed Stop.
+- Reconcile command state after reconnect, pause output polling when hidden,
+  and preserve loaded output when a command disappears or a read fails.
 - Give the composer a full-width editor and a quieter action row. Keep the
   input connection and selection intact when the keyboard opens or a run ends.
 - Save draft text after pauses in typing. Add Clear draft text with Undo,

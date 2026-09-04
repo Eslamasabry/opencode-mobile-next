@@ -119,6 +119,10 @@ sealed class Api2Event {
     switch (type) {
       case 'server.connected':
         return const Api2ServerConnectedEvent();
+      case 'shell.created':
+      case 'shell.exited':
+      case 'shell.deleted':
+        return Api2ManagedShellEvent(type: type, data: d);
       case 'log.synced':
         return Api2LogSyncedEvent(
           aggregateID: _asString(d['aggregateID']),
@@ -143,7 +147,9 @@ sealed class Api2Event {
           title: _asString(d['title']) ?? '',
         );
       case 'session.deleted':
-        return Api2SessionDeletedEvent(sessionID: _asString(d['sessionID']) ?? '');
+        return Api2SessionDeletedEvent(
+          sessionID: _asString(d['sessionID']) ?? '',
+        );
       case 'session.moved':
         return Api2SessionMovedEvent(
           sessionID: _asString(d['sessionID']) ?? '',
@@ -359,14 +365,20 @@ sealed class Api2Event {
           sessionID: _asString(d['sessionID']) ?? '',
         );
       case 'mcp.status.changed':
-        return Api2McpChangedEvent(kind: 'status', server: _asString(d['server']));
+        return Api2McpChangedEvent(
+          kind: 'status',
+          server: _asString(d['server']),
+        );
       case 'mcp.resources.changed':
         return Api2McpChangedEvent(
           kind: 'resources',
           server: _asString(d['server']),
         );
       case 'mcp.tools.changed':
-        return Api2McpChangedEvent(kind: 'tools', server: _asString(d['server']));
+        return Api2McpChangedEvent(
+          kind: 'tools',
+          server: _asString(d['server']),
+        );
       case 'vcs.branch.updated':
         return Api2VcsBranchUpdatedEvent(branch: _asString(d['branch']));
       case 'filesystem.changed':
@@ -502,6 +514,13 @@ sealed class Api2Event {
     text: _asString(d['text']),
     error: Api2StructuredError.fromJson(d['error']),
   );
+}
+
+/// Freshness only: shell lifecycle events are not a durable job log.
+class Api2ManagedShellEvent extends Api2Event {
+  const Api2ManagedShellEvent({required this.type, required this.data});
+  final String type;
+  final Map<String, dynamic> data;
 }
 
 class Api2ServerConnectedEvent extends Api2Event {
@@ -886,12 +905,13 @@ enum Api2SessionRunStatus {
   retry,
   unknown;
 
-  static Api2SessionRunStatus parse(dynamic v) => switch (v is String ? v : null) {
-    'idle' => idle,
-    'busy' => busy,
-    'retry' => retry,
-    _ => unknown,
-  };
+  static Api2SessionRunStatus parse(dynamic v) =>
+      switch (v is String ? v : null) {
+        'idle' => idle,
+        'busy' => busy,
+        'retry' => retry,
+        _ => unknown,
+      };
 }
 
 /// `session.status` (and the deprecated `session.idle`).

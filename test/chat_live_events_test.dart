@@ -713,17 +713,14 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.byKey(const ValueKey('running-agents-strip')), findsOneWidget);
-    // The running sibling leads, the current session follows, the parent
-    // (idle) trails.
-    expect(
-      find.byKey(const ValueKey('running-agent-session-2')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('running-agent-session-1')),
-      findsOneWidget,
-    );
+    final work = find.byKey(const ValueKey('running-work-indicator'));
+    expect(work, findsOneWidget);
+    await tester.tap(work);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byKey(const ValueKey('work-agent-session-2')), findsOneWidget);
+    expect(find.byKey(const ValueKey('work-agent-session-1')), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
     expect(tester.takeException(), isNull);
   });
 

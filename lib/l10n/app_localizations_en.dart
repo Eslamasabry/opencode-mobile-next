@@ -92,6 +92,147 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonUndo => 'Undo';
 
   @override
+  String get workTitle => 'Running work';
+
+  @override
+  String get workDescription => 'Agents and commands related to this chat.';
+
+  @override
+  String get workAgents => 'Agents';
+
+  @override
+  String get workCommands => 'Commands';
+
+  @override
+  String get workEmpty => 'Nothing running';
+
+  @override
+  String get workEmptyDescription => 'Finished work stays in the conversation.';
+
+  @override
+  String get workRefresh => 'Refresh';
+
+  @override
+  String get workClose => 'Close';
+
+  @override
+  String get workRetry => 'Try again';
+
+  @override
+  String get workCancel => 'Cancel';
+
+  @override
+  String get workRunning => 'Running';
+
+  @override
+  String get workFinished => 'Finished';
+
+  @override
+  String get workTimedOut => 'Timed out';
+
+  @override
+  String get workStopped => 'Stopped';
+
+  @override
+  String get workUnknown => 'Status unavailable';
+
+  @override
+  String get workOutput => 'Command output';
+
+  @override
+  String get workViewOutput => 'View output';
+
+  @override
+  String get workNoOutput => 'Waiting for output…';
+
+  @override
+  String get workNoFinalOutput => 'This command produced no output.';
+
+  @override
+  String get workCopyOutput => 'Copy output';
+
+  @override
+  String get workCopied => 'Output copied';
+
+  @override
+  String get workFollow => 'Follow output';
+
+  @override
+  String get workMoreOutput => 'Load more output';
+
+  @override
+  String get workTrimmed =>
+      'Showing the most recent output. Earlier text was trimmed.';
+
+  @override
+  String get workStop => 'Stop command';
+
+  @override
+  String get workStopTitle => 'Stop this command?';
+
+  @override
+  String get workStopDescription =>
+      'This stops the command and removes its saved output from the server. Text already loaded here stays visible until you close it.';
+
+  @override
+  String get workTimeout => 'Change timeout';
+
+  @override
+  String get workTimeoutTitle => 'Time remaining';
+
+  @override
+  String get workTimeoutDescription => 'The new timeout starts now.';
+
+  @override
+  String get workTimeoutOneMinute => '1 minute';
+
+  @override
+  String get workTimeoutFiveMinutes => '5 minutes';
+
+  @override
+  String get workTimeoutFifteenMinutes => '15 minutes';
+
+  @override
+  String get workTimeoutOneHour => '1 hour';
+
+  @override
+  String get workTimeoutNone => 'No timeout';
+
+  @override
+  String get workTimeoutSaved => 'Timeout updated';
+
+  @override
+  String get workUnavailable =>
+      'This command is no longer available. It may have been removed or cancelled when the server restarted.';
+
+  @override
+  String get workRestarted =>
+      'The server restarted and this command is no longer available. Its loaded output is shown below.';
+
+  @override
+  String get workDisconnected =>
+      'Reconnecting. Output will refresh when the server is available.';
+
+  @override
+  String get workContextChanged =>
+      'The server or workspace changed. Close this view and reopen Running work.';
+
+  @override
+  String workCount(int count) {
+    return 'Running work · $count';
+  }
+
+  @override
+  String workExitCode(int code) {
+    return 'Exit code $code';
+  }
+
+  @override
+  String workStatusElapsed(String status, String elapsed) {
+    return '$status · $elapsed';
+  }
+
+  @override
   String get composerClearTextTitle => 'Clear draft text';
 
   @override

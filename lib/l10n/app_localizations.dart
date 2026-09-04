@@ -256,6 +256,264 @@ abstract class AppLocalizations {
   /// **'Undo'**
   String get commonUndo;
 
+  /// No description provided for @workTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Running work'**
+  String get workTitle;
+
+  /// No description provided for @workDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Agents and commands related to this chat.'**
+  String get workDescription;
+
+  /// No description provided for @workAgents.
+  ///
+  /// In en, this message translates to:
+  /// **'Agents'**
+  String get workAgents;
+
+  /// No description provided for @workCommands.
+  ///
+  /// In en, this message translates to:
+  /// **'Commands'**
+  String get workCommands;
+
+  /// No description provided for @workEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing running'**
+  String get workEmpty;
+
+  /// No description provided for @workEmptyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished work stays in the conversation.'**
+  String get workEmptyDescription;
+
+  /// No description provided for @workRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get workRefresh;
+
+  /// No description provided for @workClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get workClose;
+
+  /// No description provided for @workRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get workRetry;
+
+  /// No description provided for @workCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get workCancel;
+
+  /// No description provided for @workRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get workRunning;
+
+  /// No description provided for @workFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished'**
+  String get workFinished;
+
+  /// No description provided for @workTimedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Timed out'**
+  String get workTimedOut;
+
+  /// No description provided for @workStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get workStopped;
+
+  /// No description provided for @workUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Status unavailable'**
+  String get workUnknown;
+
+  /// No description provided for @workOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Command output'**
+  String get workOutput;
+
+  /// No description provided for @workViewOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'View output'**
+  String get workViewOutput;
+
+  /// No description provided for @workNoOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for output…'**
+  String get workNoOutput;
+
+  /// No description provided for @workNoFinalOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'This command produced no output.'**
+  String get workNoFinalOutput;
+
+  /// No description provided for @workCopyOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy output'**
+  String get workCopyOutput;
+
+  /// No description provided for @workCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Output copied'**
+  String get workCopied;
+
+  /// No description provided for @workFollow.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow output'**
+  String get workFollow;
+
+  /// No description provided for @workMoreOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more output'**
+  String get workMoreOutput;
+
+  /// No description provided for @workTrimmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing the most recent output. Earlier text was trimmed.'**
+  String get workTrimmed;
+
+  /// No description provided for @workStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop command'**
+  String get workStop;
+
+  /// No description provided for @workStopTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop this command?'**
+  String get workStopTitle;
+
+  /// No description provided for @workStopDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This stops the command and removes its saved output from the server. Text already loaded here stays visible until you close it.'**
+  String get workStopDescription;
+
+  /// No description provided for @workTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Change timeout'**
+  String get workTimeout;
+
+  /// No description provided for @workTimeoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Time remaining'**
+  String get workTimeoutTitle;
+
+  /// No description provided for @workTimeoutDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The new timeout starts now.'**
+  String get workTimeoutDescription;
+
+  /// No description provided for @workTimeoutOneMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'1 minute'**
+  String get workTimeoutOneMinute;
+
+  /// No description provided for @workTimeoutFiveMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'5 minutes'**
+  String get workTimeoutFiveMinutes;
+
+  /// No description provided for @workTimeoutFifteenMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'15 minutes'**
+  String get workTimeoutFifteenMinutes;
+
+  /// No description provided for @workTimeoutOneHour.
+  ///
+  /// In en, this message translates to:
+  /// **'1 hour'**
+  String get workTimeoutOneHour;
+
+  /// No description provided for @workTimeoutNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No timeout'**
+  String get workTimeoutNone;
+
+  /// No description provided for @workTimeoutSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeout updated'**
+  String get workTimeoutSaved;
+
+  /// No description provided for @workUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This command is no longer available. It may have been removed or cancelled when the server restarted.'**
+  String get workUnavailable;
+
+  /// No description provided for @workRestarted.
+  ///
+  /// In en, this message translates to:
+  /// **'The server restarted and this command is no longer available. Its loaded output is shown below.'**
+  String get workRestarted;
+
+  /// No description provided for @workDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnecting. Output will refresh when the server is available.'**
+  String get workDisconnected;
+
+  /// No description provided for @workContextChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The server or workspace changed. Close this view and reopen Running work.'**
+  String get workContextChanged;
+
+  /// No description provided for @workCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Running work · {count}'**
+  String workCount(int count);
+
+  /// No description provided for @workExitCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit code {code}'**
+  String workExitCode(int code);
+
+  /// No description provided for @workStatusElapsed.
+  ///
+  /// In en, this message translates to:
+  /// **'{status} · {elapsed}'**
+  String workStatusElapsed(String status, String elapsed);
+
   /// No description provided for @composerClearTextTitle.
   ///
   /// In en, this message translates to:

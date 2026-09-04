@@ -28,6 +28,31 @@ extension on VcsDiffMode {
 
 abstract class ProductRepository implements ServerOperationsGateway {
   @override
+  Future<ManagedShellList> loadRunningShells() async =>
+      const ManagedShellList(supported: false);
+
+  @override
+  Future<ManagedShell?> getManagedShell(String id) async => null;
+
+  @override
+  Future<String?> managedShellServerIdentity() async => null;
+
+  @override
+  Future<ManagedShellOutput> readManagedShellOutput(
+    String id, {
+    required int cursor,
+    int limit = 65536,
+  }) => Future.error(const ProductException('Shell management is unavailable'));
+
+  @override
+  Future<void> stopManagedShell(String id) =>
+      Future.error(const ProductException('Shell management is unavailable'));
+
+  @override
+  Future<ManagedShell> setManagedShellTimeout(String id, Duration? timeout) =>
+      Future.error(const ProductException('Shell management is unavailable'));
+
+  @override
   Future<BackgroundWorkSupport> loadBackgroundWorkSupport() async =>
       BackgroundWorkSupport.unavailable;
 
@@ -378,8 +403,8 @@ abstract class ProductRepository implements ServerOperationsGateway {
   });
 }
 
-class SdkProductRepository
-    implements ProductRepository, LocationAwareProductRepository {
+class SdkProductRepository extends ProductRepository
+    implements LocationAwareProductRepository {
   static const _providerOAuthAttemptPrefix = 'provider-oauth-';
 
   final sdk.OpencodeSdk _client;

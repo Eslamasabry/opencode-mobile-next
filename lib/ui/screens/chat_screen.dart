@@ -14,6 +14,7 @@ import '../../api/provider_presentation.dart';
 import '../../api/product_repository.dart';
 import '../../api/sse.dart';
 import '../../domain/background_work.dart';
+import 'running_work_sheet.dart';
 import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
 import '../../state/offline_queue.dart';
@@ -332,6 +333,11 @@ class _ChatScreenState extends State<ChatScreen>
   int _backgroundLocationRevision = -1;
   bool _backgrounding = false;
   final Set<String> _backgroundRequestedParts = {};
+  List<ManagedShell> _runningShells = [];
+  bool _readingShells = false;
+  ServerOperationsGateway? _shellReadRepository;
+  int _shellReadLocation = -1;
+  int _shellReadRevision = 0;
 
   /// Ticks once a second while this session sits in a provider-retry
   /// backoff so the banner's countdown stays live; null otherwise.
@@ -391,6 +397,7 @@ class _ChatScreenState extends State<ChatScreen>
     _load();
     unawaited(_loadServerCommands());
     unawaited(_loadBackgroundSupport());
+    unawaited(_loadRunningShells());
     _sub = _conn.events.listen(_onEvent);
     _wasBusy = _conn.busySessions.contains(widget.sessionID);
     final injectedVoice = widget.voiceController;
@@ -438,6 +445,55 @@ class _ChatScreenState extends State<ChatScreen>
         if (_messageText(message).trim() case final text when text.isNotEmpty)
           text,
   }.take(30).toList();
+
+  Set<String> get _shellIDs => {
+    for (final message in _messages)
+      for (final part in message.parts)
+        if (part.type == 'tool')
+          if (part.toolState.metadata?['shellID'] case final String id) id,
+  };
+
+  Future<void> _loadRunningShells() async {
+    if (_conn.status != StreamStatus.connected) return;
+    final repo = _conn.repository;
+    if (repo == null) return;
+    final location = _conn.locationRevision;
+    if (_readingShells &&
+        repo == _shellReadRepository &&
+        location == _shellReadLocation) {
+      return;
+    }
+    final revision = ++_shellReadRevision;
+    _shellReadRepository = repo;
+    _shellReadLocation = location;
+    _readingShells = true;
+    try {
+      final result = await repo.loadRunningShells();
+      if (!mounted ||
+          repo != _conn.repository ||
+          location != _conn.locationRevision) {
+        return;
+      }
+      setState(() => _runningShells = result.supported ? result.shells : []);
+    } catch (_) {
+      // Discovery must succeed before a shell-only entry is advertised.
+    } finally {
+      if (revision == _shellReadRevision) _readingShells = false;
+    }
+  }
+
+  Future<void> _openRunningWork() async {
+    final targetID = await showRunningWorkSheet(
+      context,
+      controller: _conn,
+      sessionID: widget.sessionID,
+      shellIDs: _shellIDs,
+    );
+    if (!mounted) return;
+    final target = _conn.sessionsById[targetID];
+    if (target != null) await _openRelatedSession(target);
+    if (mounted) unawaited(_loadRunningShells());
+  }
 
   Future<void> _reusePrompt() async {
     final text = await showModalBottomSheet<String>(
@@ -549,7 +605,11 @@ class _ChatScreenState extends State<ChatScreen>
       }
       // Acknowledgement is not a job record. Reconcile the transcript and
       // family status, including the v2 204/idle race, before reporting state.
-      await Future.wait([_load(), _conn.refreshSessions()]);
+      await Future.wait([
+        _load(),
+        _conn.refreshSessions(),
+        _loadRunningShells(),
+      ]);
       if (!mounted) return;
       if (result == BackgroundWorkResult.unchanged) {
         _showComposerNote(_chatL10n(context).backgroundWorkNoop);
@@ -571,6 +631,14 @@ class _ChatScreenState extends State<ChatScreen>
 
   void _onEvent(EventEnvelope env) {
     if (!mounted) return;
+    if (env.type.startsWith('shell.')) {
+      unawaited(_loadRunningShells());
+    }
+    if (env.type == 'session.shell.changed' &&
+        env.properties['sessionID'] == widget.sessionID) {
+      unawaited(_load());
+      unawaited(_loadRunningShells());
+    }
     switch (env.type) {
       case 'message.part.updated':
         if (env.properties['sessionID']?.toString() != widget.sessionID) {
@@ -2338,6 +2406,8 @@ class _ChatScreenState extends State<ChatScreen>
         _backgroundRepository != _conn.repository ||
         _backgroundLocationRevision != _conn.locationRevision) {
       unawaited(_loadBackgroundSupport());
+      _runningShells = [];
+      unawaited(_loadRunningShells());
     }
   }
 
@@ -4066,6 +4136,21 @@ class _ChatScreenState extends State<ChatScreen>
       sessions: _conn.sessionsById,
       busy: _conn.busySessions,
     );
+    final relatedSessionIDs = {
+      widget.sessionID,
+      for (final session in _conn.sessionsById.values)
+        if (session.parentID == widget.sessionID) session.id,
+    };
+    final runningWorkCount =
+        runningAgents.where((entry) => entry.busy && !entry.current).length +
+        _runningShells
+            .where(
+              (shell) =>
+                  shell.running &&
+                  (relatedSessionIDs.contains(shell.sessionID) ||
+                      _shellIDs.contains(shell.id)),
+            )
+            .length;
 
     final screen = PopScope(
       canPop: _allowRoutePop,
@@ -4417,16 +4502,37 @@ class _ChatScreenState extends State<ChatScreen>
                                   ),
                                 ),
                               ),
-                            if (runningAgents.isNotEmpty)
+                            if (runningWorkCount > 0)
                               Center(
                                 child: ConstrainedBox(
                                   constraints: const BoxConstraints(
                                     maxWidth: 860,
                                   ),
-                                  child: RunningAgentsStrip(
-                                    entries: runningAgents,
-                                    onOpen: (target) =>
-                                        unawaited(_openRelatedSession(target)),
+                                  child: Align(
+                                    alignment: AlignmentDirectional.centerStart,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                      ),
+                                      child: TextButton.icon(
+                                        key: const Key(
+                                          'running-work-indicator',
+                                        ),
+                                        onPressed: _openRunningWork,
+                                        style: TextButton.styleFrom(
+                                          minimumSize: const Size(48, 48),
+                                        ),
+                                        icon: const Icon(
+                                          Icons.account_tree_outlined,
+                                          size: 20,
+                                        ),
+                                        label: Text(
+                                          _chatL10n(
+                                            context,
+                                          ).workCount(runningWorkCount),
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),

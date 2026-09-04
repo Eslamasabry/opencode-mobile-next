@@ -6,9 +6,9 @@
 /// adapter rebuilds the v1 `message.updated` / `message.part.updated` /
 /// `message.part.delta` shapes from the fine-grained `session.step/text/
 /// reasoning/tool.*` events. Event types with no v1 analogue (forms, inbox
-/// management, compaction deltas, shells, revert staging, filesystem/vcs
-/// pings, TUI control) are dropped on purpose — the dispatcher would ignore
-/// them anyway, and inventing envelopes would create phantom UI state.
+/// management, shells, and other v2 surfaces keep explicit event names when
+/// a product screen consumes them. Shell events are freshness hints, never
+/// synthetic messages or a retained job history. Unused control events are ignored.
 library;
 
 import '../api/models.dart';
@@ -36,6 +36,16 @@ class Api2EventAdapter {
     switch (event) {
       case Api2ServerConnectedEvent():
         return [_env('server.connected', const {})];
+
+      case Api2ManagedShellEvent():
+        // Visible running-work surfaces reconcile from the scoped shell API.
+        // Never turn these hints into synthetic messages or retained jobs.
+        return [_env(event.type, event.data)];
+
+      case Api2SessionShellEvent():
+        return [
+          _env('session.shell.changed', {'sessionID': event.sessionID}),
+        ];
 
       case Api2SessionCreatedEvent():
         return [
@@ -207,7 +217,11 @@ class Api2EventAdapter {
           case Api2Phase.ended:
             return [
               _env('message.updated', {
-                'info': _assistantInfo(event, created: created, completed: created),
+                'info': _assistantInfo(
+                  event,
+                  created: created,
+                  completed: created,
+                ),
               }),
             ];
           case Api2Phase.failed:
@@ -256,14 +270,14 @@ class Api2EventAdapter {
         final key = _callKey(event.assistantMessageID, event.callID);
         switch (event.phase) {
           case Api2Phase.started:
-            _remember(
-              _toolCalls,
-              key,
-              _ToolCall(name: event.name ?? ''),
-            );
+            _remember(_toolCalls, key, _ToolCall(name: event.name ?? ''));
             return [
-              _toolPart(event.sessionID, event.assistantMessageID,
-                  event.callID, {'status': 'pending', 'raw': ''}),
+              _toolPart(
+                event.sessionID,
+                event.assistantMessageID,
+                event.callID,
+                {'status': 'pending', 'raw': ''},
+              ),
             ];
           case Api2Phase.delta:
             return [
@@ -277,8 +291,12 @@ class Api2EventAdapter {
             ];
           case Api2Phase.ended:
             return [
-              _toolPart(event.sessionID, event.assistantMessageID,
-                  event.callID, {'status': 'pending', 'raw': event.text ?? ''}),
+              _toolPart(
+                event.sessionID,
+                event.assistantMessageID,
+                event.callID,
+                {'status': 'pending', 'raw': event.text ?? ''},
+              ),
             ];
           default:
             return const [];
@@ -287,7 +305,11 @@ class Api2EventAdapter {
       case Api2SessionToolCalledEvent():
         final key = _callKey(event.assistantMessageID, event.callID);
         final call = _toolCalls[key] ?? const _ToolCall(name: '');
-        _remember(_toolCalls, key, _ToolCall(name: call.name, input: event.input));
+        _remember(
+          _toolCalls,
+          key,
+          _ToolCall(name: call.name, input: event.input),
+        );
         return [
           _toolPart(event.sessionID, event.assistantMessageID, event.callID, {
             'status': 'running',
@@ -512,10 +534,7 @@ class Api2EventAdapter {
       'completed': ?completed,
     },
     if (errorMessage != null)
-      'error': {
-        'message': errorMessage,
-        'name': ?errorName,
-      },
+      'error': {'message': errorMessage, 'name': ?errorName},
   };
 
   Map<String, dynamic> _tokensJson(Api2Tokens tokens) => {
