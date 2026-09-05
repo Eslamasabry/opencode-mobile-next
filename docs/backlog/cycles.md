@@ -324,3 +324,40 @@ none increased. This is the observed CI failure, not evidence of a new platform
 build. #10 stays open for final native multi-session, keyboard and notification
 verification. No emulator, release APK, tag or publication was created. The hourly
 automation remains paused; dev will be aligned with master after merge.
+
+## 2026-09-05 — Cycle 10: unread completions and private read state
+
+Implemented #57's client workflow in an isolated checkout from clean dev/master.
+V2 session hydration retains idle and viewed watermarks; session.viewed events
+update matching cached sessions without rewinding newer state. The optional
+SessionReadStateGateway posts exactly {idle} to the scoped /session/{id}/view
+endpoint and accepts its bodyless 204 response.
+
+Recent, Sessions and All sessions show Unread result text with spoken semantics.
+A visible, loaded ChatScreen owns acknowledgement. Covered/backgrounded routes,
+loading/error states and pinned older transcript reading do not mark a result
+viewed. The deferred callback captures session, location and completion; wake
+rechecks visibility, scope, busy state and privacy. An old receipt cannot clear
+a newer completed run. A new viewer can finish after a disposed viewer's wake;
+foreground reconnect retries sync without a background replay queue.
+
+Privacy adds Sync read state on v2 only. Opt-out keeps local read history and
+ignores remote receipts when deciding local unread status. Local watermarks are
+persisted per saved server/location, capped at 2048 entries per profile, and
+survive a server sync failure. Opting in waits for the preference to save;
+failed preference writes leave sharing off in this process and show an error.
+Profile deletion blocks new receipts, drains local writes and clears its cache.
+
+Verification: clean analysis. 17 focused read-state checks passed, alongside 28
+related session-row/global-finder/profile-cleanup checks and 56 HTTP, mapper,
+event and localization checks. The HTTP fixture verifies the exact timestamp,
+location query and 204 handling; widget checks cover route coverage, background
+resume, reconnect, local persistence, privacy gating and spoken unread status.
+The initial widget run needed the existing English fallback for standalone
+surfaces without a localization delegate; both failures were corrected.
+
+PR #72's Android, Linux and Windows CI were still running at the one initial
+check. No native/device run, release APK, tag or public release was created.
+#57 remains linked for final live/device verification. The broader release
+checklist remains open. The hourly automation remains paused; dev will be
+realigned with master after merge.

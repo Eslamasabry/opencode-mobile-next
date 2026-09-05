@@ -1131,6 +1131,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Review the staged revert, then clear it or make it permanent before sending. Your draft is kept.'**
   String get revertResolveBeforeSending;
+
+  /// No description provided for @sessionUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread result'**
+  String get sessionUnread;
+
+  /// No description provided for @shareSessionViewsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync read state'**
+  String get shareSessionViewsTitle;
+
+  /// No description provided for @shareSessionViewsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Let your other OpenCode clients know which completed results you have viewed.'**
+  String get shareSessionViewsOn;
+
+  /// No description provided for @shareSessionViewsOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading stays private to this device. Unread results use local read history.'**
+  String get shareSessionViewsOff;
+
+  /// No description provided for @shareSessionViewsSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save this preference. Read-state sharing is off on this device for now.'**
+  String get shareSessionViewsSaveError;
 }
 
 class _AppLocalizationsDelegate

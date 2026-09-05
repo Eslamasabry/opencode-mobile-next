@@ -22,10 +22,30 @@ class SessionTime {
   final int? updated;
   final int? archived;
 
+  /// v2 completion and acknowledged-completion watermarks (server epoch ms).
+  final int? idle;
+  final int? viewed;
+
   /// Epoch millis at which the server started compacting the session's
   /// context (v1 `time.compacting`); null when no compaction is running.
   final int? compacting;
-  SessionTime({this.created, this.updated, this.archived, this.compacting});
+  SessionTime({
+    this.created,
+    this.updated,
+    this.archived,
+    this.compacting,
+    this.idle,
+    this.viewed,
+  });
+
+  SessionTime withReadState({int? idle, int? viewed}) => SessionTime(
+    created: created,
+    updated: updated,
+    archived: archived,
+    compacting: compacting,
+    idle: idle ?? this.idle,
+    viewed: viewed ?? this.viewed,
+  );
 
   factory SessionTime.fromJson(dynamic v) {
     if (v is Map<String, dynamic>) {
@@ -34,6 +54,8 @@ class SessionTime {
         updated: _asInt(v['updated']),
         archived: _asInt(v['archived']),
         compacting: _asInt(v['compacting']),
+        idle: _asInt(v['idle']),
+        viewed: _asInt(v['viewed']),
       );
     }
     return SessionTime();

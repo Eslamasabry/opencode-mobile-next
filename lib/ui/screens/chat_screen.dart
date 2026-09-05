@@ -44,6 +44,7 @@ import '../widgets/model_shortcuts.dart';
 import '../widgets/product_states.dart';
 import '../widgets/question_options.dart';
 import '../widgets/session_title.dart';
+import '../widgets/session_read_state.dart';
 import '../widgets/running_agents_strip.dart';
 import '../widgets/tool_card.dart';
 import '../widgets/transcript_display_toggles.dart';
@@ -5176,7 +5177,12 @@ class _ChatScreenState extends State<ChatScreen>
     return ModelShortcuts(
       onCycle: _cycleModel,
       onBackground: _canBackgroundWork ? _backgroundRunningWork : null,
-      child: screen,
+      child: SessionViewObserver(
+        controller: _conn,
+        sessionID: widget.sessionID,
+        ready: !_loading && _error == null && !_awayFromLatest,
+        child: screen,
+      ),
     );
   }
 

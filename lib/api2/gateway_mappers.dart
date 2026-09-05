@@ -85,6 +85,8 @@ Session mapApi2Session(Api2Session session) => Session(
   time: SessionTime(
     created: session.time.created,
     updated: session.time.updated,
+    idle: session.time.idle,
+    viewed: session.time.viewed,
     archived: (session.time.archived ?? 0) > 0 ? session.time.archived : null,
   ),
   cost: session.cost,

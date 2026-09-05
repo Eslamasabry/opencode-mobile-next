@@ -597,4 +597,22 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get revertResolveBeforeSending =>
       'Review the staged revert, then clear it or make it permanent before sending. Your draft is kept.';
+
+  @override
+  String get sessionUnread => 'Unread result';
+
+  @override
+  String get shareSessionViewsTitle => 'Sync read state';
+
+  @override
+  String get shareSessionViewsOn =>
+      'Let your other OpenCode clients know which completed results you have viewed.';
+
+  @override
+  String get shareSessionViewsOff =>
+      'Reading stays private to this device. Unread results use local read history.';
+
+  @override
+  String get shareSessionViewsSaveError =>
+      'Could not save this preference. Read-state sharing is off on this device for now.';
 }

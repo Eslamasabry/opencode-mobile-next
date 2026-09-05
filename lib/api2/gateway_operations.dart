@@ -24,7 +24,7 @@ import 'models.dart';
 import 'transport.dart';
 
 class Api2OperationsGateway extends ProductRepository
-    implements StagedRevertGateway {
+    implements StagedRevertGateway, SessionReadStateGateway {
   final Api2Client client;
 
   /// v2 OAuth attempt routes are integration-scoped, but the domain contract
@@ -277,6 +277,16 @@ class Api2OperationsGateway extends ProductRepository
 
   @override
   Future<void> restoreSession(String id) => clearSessionRevert(id);
+
+  @override
+  Future<void> viewSession(String sessionID, int idle) =>
+      _guard('Could not synchronize read state', () async {
+        await _transport.postJson(
+          '/session/${Uri.encodeComponent(sessionID)}/view',
+          query: _loc(),
+          body: {'idle': idle},
+        );
+      });
 
   @override
   Future<String?> sessionRevertPrompt(String sessionID, String messageID) =>
