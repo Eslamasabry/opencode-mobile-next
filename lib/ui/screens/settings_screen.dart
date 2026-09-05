@@ -26,6 +26,7 @@ import 'app_diagnostics_screen.dart';
 import 'guide_screen.dart';
 import 'host_management_screen.dart';
 import 'saved_permissions_screen.dart';
+import 'usage_screen.dart';
 
 part 'settings/server_settings_screen.dart';
 part 'settings/coding_settings_screen.dart';
@@ -88,8 +89,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return live.active ? 'On · running now' : 'On · starting';
   }
 
-  void _open(Widget screen) {
-    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen));
+  Future<void> _open(Widget screen) async {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => screen));
+    if (mounted) setState(() {});
   }
 
   /// What disconnecting actually costs, counted rather than described in the
@@ -229,6 +233,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: 'Privacy & permissions',
               onTap: () => _open(PrivacySettingsScreen(controller: controller)),
             ),
+            if (controller.supportsUsageStatistics)
+              _CategoryRow(
+                rowKey: 'settings-category-usage',
+                icon: Icons.bar_chart_rounded,
+                title: lookupAppLocalizations(
+                  Localizations.localeOf(context),
+                ).usageTitle,
+                onTap: () => _open(UsageScreen(controller: controller)),
+              ),
             _CategoryRow(
               rowKey: 'settings-category-diagnostics',
               icon: Icons.health_and_safety_outlined,

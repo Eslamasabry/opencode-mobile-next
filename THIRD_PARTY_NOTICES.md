@@ -219,6 +219,7 @@ lives in `packages/opencode_sdk/`, and is covered by this project's
 | `flutter_secure_storage_platform_interface` | 2.0.3 | BSD-3-Clause | Copyright 2017 German Saprykin | runtime |
 | `flutter_secure_storage_web` | 2.1.1 | BSD-3-Clause | Copyright 2017 German Saprykin | runtime |
 | `flutter_secure_storage_windows` | 4.2.2 | BSD-3-Clause | Copyright 2017 German Saprykin | runtime |
+| `flutter_timezone` | 5.1.0 | Apache-2.0 | — | runtime |
 | `frontend_server_client` | 4.0.0 | BSD-3-Clause | Copyright 2020, the Dart project authors | runtime |
 | `glob` | 2.2.0 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |
 | `highlight` | 0.7.0 | MIT | Copyright (c) 2019 Rongjian Zhang | runtime |

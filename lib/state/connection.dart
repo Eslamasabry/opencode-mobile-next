@@ -2901,6 +2901,10 @@ class ConnectionController extends ChangeNotifier {
   // ---------------- Forms (OpenCode 2) ----------------
 
   /// True when the connected server speaks the v2 forms contract.
+  bool get supportsUsageStatistics =>
+      repository is UsageStatisticsGateway &&
+      (repository as UsageStatisticsGateway).usageStatisticsSupported;
+
   bool get supportsSessionNotes =>
       repository is SessionNoteGateway &&
       (repository as SessionNoteGateway).sessionNotesSupported;

@@ -680,6 +680,189 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get usageTitle => 'Usage and cost';
+
+  @override
+  String get usageDescription =>
+      'Activity recorded by this OpenCode server across your sessions.';
+
+  @override
+  String get usageRefresh => 'Refresh usage';
+
+  @override
+  String get usageToday => 'Today';
+
+  @override
+  String get usageThirtyDays => '30 days';
+
+  @override
+  String get usageYear => 'This year';
+
+  @override
+  String get usageAllTime => 'All time';
+
+  @override
+  String get usageScope => 'Project scope';
+
+  @override
+  String get usageAllProjects => 'All projects';
+
+  @override
+  String get usageCurrentProject => 'Current project';
+
+  @override
+  String get usageLoading => 'Loading usage';
+
+  @override
+  String get usageUnsupported =>
+      'This server does not support aggregate usage.';
+
+  @override
+  String get usageProjectUnavailable =>
+      'No current project could be identified. Choose All projects or open a project first.';
+
+  @override
+  String get usageTimezoneUnavailable =>
+      'Could not read this device\'s timezone. Retry to load correctly dated usage.';
+
+  @override
+  String get usageRefreshInterrupted =>
+      'The connection changed while loading usage. Refresh to try again.';
+
+  @override
+  String get usageInvalidResponse =>
+      'The server returned incomplete usage data. Refresh to try again.';
+
+  @override
+  String get usageAuthorization =>
+      'Check this server\'s password and permissions, then refresh.';
+
+  @override
+  String get usagePreviousResult =>
+      'Showing the previous result for these filters.';
+
+  @override
+  String get usageLocationChanged =>
+      'The active server or location changed. Reopen Usage from Settings.';
+
+  @override
+  String get usageTinyCost => 'Less than \$0.000001';
+
+  @override
+  String get usageReportedCost => 'Reported cost · USD';
+
+  @override
+  String get usageSessions => 'Sessions';
+
+  @override
+  String get usageSubagents => 'Subagent sessions';
+
+  @override
+  String get usagePrompts => 'Prompts';
+
+  @override
+  String get usageSteps => 'Agent steps';
+
+  @override
+  String get usageActiveDays => 'Active days';
+
+  @override
+  String get usageStreak => 'Longest streak · days';
+
+  @override
+  String get usageEmpty =>
+      'No activity in this range. Try a wider range or All projects.';
+
+  @override
+  String get usageTokens => 'Tokens';
+
+  @override
+  String get usageTotalTokens => 'Total';
+
+  @override
+  String get usageInput => 'Input';
+
+  @override
+  String get usageOutput => 'Output';
+
+  @override
+  String get usageReasoning => 'Reasoning';
+
+  @override
+  String get usageCacheRead => 'Cache read';
+
+  @override
+  String get usageCacheWrite => 'Cache write';
+
+  @override
+  String get usageModels => 'Model usage';
+
+  @override
+  String get usageNoModels => 'No model usage was recorded in this range.';
+
+  @override
+  String get usageCostShare => 'Share of reported cost';
+
+  @override
+  String get usageToolReliability => 'Tool reliability';
+
+  @override
+  String get usageToolsUnavailable =>
+      'This response does not include tool reliability.';
+
+  @override
+  String get usageNoTools => 'No tool calls were recorded in this range.';
+
+  @override
+  String get usageNoFinishedTools => 'No finished tool calls yet.';
+
+  @override
+  String get usageToolCalls => 'Calls';
+
+  @override
+  String get usageSucceeded => 'Succeeded';
+
+  @override
+  String get usageFailed => 'Failed';
+
+  @override
+  String get usageUnfinished => 'Unfinished';
+
+  @override
+  String get usageCostDisclosure =>
+      'Costs are estimates reported by OpenCode, not a provider invoice. Unfinished tool calls are excluded from the success rate.';
+
+  @override
+  String usagePeriod(String from, String to) {
+    return '$from – $to';
+  }
+
+  @override
+  String usageTimezone(String timezone) {
+    return 'Timezone: $timezone';
+  }
+
+  @override
+  String usageModelSteps(String steps) {
+    return '$steps steps';
+  }
+
+  @override
+  String usageModelTokens(String tokens) {
+    return '$tokens tokens';
+  }
+
+  @override
+  String usageSuccessRate(String rate) {
+    return '$rate of finished calls succeeded';
+  }
+
+  @override
+  String usageUpdated(String time) {
+    return 'Updated at $time';
+  }
+
+  @override
   String get sessionUnread => 'Unread result';
 
   @override

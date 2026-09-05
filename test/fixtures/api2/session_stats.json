@@ -1,0 +1,84 @@
+{
+  "data": {
+    "range": {
+      "from": 1788307200000,
+      "to": 1788652800000
+    },
+    "sessions": 12,
+    "subagents": 4,
+    "prompts": 38,
+    "steps": 96,
+    "tokens": {
+      "input": 124000,
+      "output": 18200,
+      "reasoning": 4600,
+      "cache": {
+        "read": 62000,
+        "write": 8000
+      }
+    },
+    "cost": 3.42,
+    "tools": {
+      "mode": "summary",
+      "totals": {
+        "calls": 80,
+        "succeeded": 72,
+        "failed": 5,
+        "unfinished": 3
+      }
+    },
+    "activeDays": 3,
+    "streak": 3,
+    "activity": [
+      {
+        "date": "2026-09-03",
+        "steps": 40
+      },
+      {
+        "date": "2026-09-04",
+        "steps": 32
+      },
+      {
+        "date": "2026-09-05",
+        "steps": 24
+      }
+    ],
+    "models": [
+      {
+        "model": {
+          "providerID": "openai",
+          "id": "gpt-5.6-sol",
+          "variant": "high"
+        },
+        "steps": 70,
+        "tokens": {
+          "input": 100000,
+          "output": 16000,
+          "reasoning": 4000,
+          "cache": {
+            "read": 40000,
+            "write": 8000
+          }
+        },
+        "cost": 2.71
+      },
+      {
+        "model": {
+          "providerID": "openai",
+          "id": "gpt-5.4-mini"
+        },
+        "steps": 26,
+        "tokens": {
+          "input": 24000,
+          "output": 2200,
+          "reasoning": 600,
+          "cache": {
+            "read": 22000,
+            "write": 0
+          }
+        },
+        "cost": 0.71
+      }
+    ]
+  }
+}

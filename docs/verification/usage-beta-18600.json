@@ -1,0 +1,190 @@
+{
+  "verifiedAt": "2026-09-05T05:12:28.9462980+00:00",
+  "serverVersion": "0.0.0-beta-18600",
+  "binarySha256": "29443AC011DC37896A650A7267C8FA232533B9410E8185EA099C1D5214E658E0",
+  "projectIDs": [
+    "a06d10537ccfe33bfb00fb55f06d3e41cbdd0e57",
+    "47b5e30ccccb32fa0d8d7db26fc422b6538115fe"
+  ],
+  "sessionIDs": [
+    "ses_5fc45c927674459da775af95080e6c30_0",
+    "ses_5fc45c927674459da775af95080e6c30_1"
+  ],
+  "queryFrom": 1327449600000,
+  "queryTo": 1327622400000,
+  "allProjects": {
+    "range": {
+      "from": 1327449600000,
+      "to": 1327622400000
+    },
+    "sessions": 2,
+    "subagents": 0,
+    "prompts": 2,
+    "steps": 2,
+    "tokens": {
+      "input": 200,
+      "output": 40,
+      "reasoning": 10,
+      "cache": {
+        "read": 20,
+        "write": 6
+      }
+    },
+    "cost": 1.75,
+    "tools": {
+      "mode": "summary",
+      "totals": {
+        "calls": 3,
+        "succeeded": 1,
+        "failed": 1,
+        "unfinished": 1
+      }
+    },
+    "activeDays": 1,
+    "streak": 1,
+    "activity": [
+      {
+        "date": "2012-01-26",
+        "steps": 2
+      }
+    ],
+    "models": [
+      {
+        "model": {
+          "id": "usage-model-0",
+          "providerID": "fixture"
+        },
+        "steps": 1,
+        "tokens": {
+          "input": 100,
+          "output": 20,
+          "reasoning": 5,
+          "cache": {
+            "read": 10,
+            "write": 3
+          }
+        },
+        "cost": 1.25
+      },
+      {
+        "model": {
+          "id": "usage-model-1",
+          "providerID": "fixture"
+        },
+        "steps": 1,
+        "tokens": {
+          "input": 100,
+          "output": 20,
+          "reasoning": 5,
+          "cache": {
+            "read": 10,
+            "write": 3
+          }
+        },
+        "cost": 0.5
+      }
+    ]
+  },
+  "currentProject": {
+    "range": {
+      "from": 1327449600000,
+      "to": 1327622400000
+    },
+    "sessions": 1,
+    "subagents": 0,
+    "prompts": 1,
+    "steps": 1,
+    "tokens": {
+      "input": 100,
+      "output": 20,
+      "reasoning": 5,
+      "cache": {
+        "read": 10,
+        "write": 3
+      }
+    },
+    "cost": 1.25,
+    "tools": {
+      "mode": "summary",
+      "totals": {
+        "calls": 3,
+        "succeeded": 1,
+        "failed": 1,
+        "unfinished": 1
+      }
+    },
+    "activeDays": 1,
+    "streak": 1,
+    "activity": [
+      {
+        "date": "2012-01-26",
+        "steps": 1
+      }
+    ],
+    "models": [
+      {
+        "model": {
+          "id": "usage-model-0",
+          "providerID": "fixture"
+        },
+        "steps": 1,
+        "tokens": {
+          "input": 100,
+          "output": 20,
+          "reasoning": 5,
+          "cache": {
+            "read": 10,
+            "write": 3
+          }
+        },
+        "cost": 1.25
+      }
+    ]
+  },
+  "utcActivity": [
+    {
+      "date": "2012-01-25",
+      "steps": 1
+    },
+    {
+      "date": "2012-01-26",
+      "steps": 1
+    }
+  ],
+  "emptyRange": {
+    "range": {
+      "from": 1327622401000,
+      "to": 1327622402000
+    },
+    "sessions": 0,
+    "subagents": 0,
+    "prompts": 0,
+    "steps": 0,
+    "tokens": {
+      "input": 0,
+      "output": 0,
+      "reasoning": 0,
+      "cache": {
+        "read": 0,
+        "write": 0
+      }
+    },
+    "cost": 0,
+    "tools": {
+      "mode": "summary",
+      "totals": {
+        "calls": 0,
+        "succeeded": 0,
+        "failed": 0,
+        "unfinished": 0
+      }
+    },
+    "activeDays": 0,
+    "streak": 0,
+    "activity": [],
+    "models": []
+  },
+  "invalidRangeStatus": 400,
+  "unauthorizedStatus": 401,
+  "providerRunStarted": false
+}

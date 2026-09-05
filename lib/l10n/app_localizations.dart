@@ -1270,6 +1270,324 @@ abstract class AppLocalizations {
   /// **'{used} / {limit} bytes'**
   String sessionNoteBytes(int used, int limit);
 
+  /// No description provided for @usageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage and cost'**
+  String get usageTitle;
+
+  /// No description provided for @usageDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity recorded by this OpenCode server across your sessions.'**
+  String get usageDescription;
+
+  /// No description provided for @usageRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh usage'**
+  String get usageRefresh;
+
+  /// No description provided for @usageToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get usageToday;
+
+  /// No description provided for @usageThirtyDays.
+  ///
+  /// In en, this message translates to:
+  /// **'30 days'**
+  String get usageThirtyDays;
+
+  /// No description provided for @usageYear.
+  ///
+  /// In en, this message translates to:
+  /// **'This year'**
+  String get usageYear;
+
+  /// No description provided for @usageAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'All time'**
+  String get usageAllTime;
+
+  /// No description provided for @usageScope.
+  ///
+  /// In en, this message translates to:
+  /// **'Project scope'**
+  String get usageScope;
+
+  /// No description provided for @usageAllProjects.
+  ///
+  /// In en, this message translates to:
+  /// **'All projects'**
+  String get usageAllProjects;
+
+  /// No description provided for @usageCurrentProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Current project'**
+  String get usageCurrentProject;
+
+  /// No description provided for @usageLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading usage'**
+  String get usageLoading;
+
+  /// No description provided for @usageUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This server does not support aggregate usage.'**
+  String get usageUnsupported;
+
+  /// No description provided for @usageProjectUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No current project could be identified. Choose All projects or open a project first.'**
+  String get usageProjectUnavailable;
+
+  /// No description provided for @usageTimezoneUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read this device\'s timezone. Retry to load correctly dated usage.'**
+  String get usageTimezoneUnavailable;
+
+  /// No description provided for @usageRefreshInterrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection changed while loading usage. Refresh to try again.'**
+  String get usageRefreshInterrupted;
+
+  /// No description provided for @usageInvalidResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'The server returned incomplete usage data. Refresh to try again.'**
+  String get usageInvalidResponse;
+
+  /// No description provided for @usageAuthorization.
+  ///
+  /// In en, this message translates to:
+  /// **'Check this server\'s password and permissions, then refresh.'**
+  String get usageAuthorization;
+
+  /// No description provided for @usagePreviousResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing the previous result for these filters.'**
+  String get usagePreviousResult;
+
+  /// No description provided for @usageLocationChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The active server or location changed. Reopen Usage from Settings.'**
+  String get usageLocationChanged;
+
+  /// No description provided for @usageTinyCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Less than \$0.000001'**
+  String get usageTinyCost;
+
+  /// No description provided for @usageReportedCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported cost · USD'**
+  String get usageReportedCost;
+
+  /// No description provided for @usageSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions'**
+  String get usageSessions;
+
+  /// No description provided for @usageSubagents.
+  ///
+  /// In en, this message translates to:
+  /// **'Subagent sessions'**
+  String get usageSubagents;
+
+  /// No description provided for @usagePrompts.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompts'**
+  String get usagePrompts;
+
+  /// No description provided for @usageSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent steps'**
+  String get usageSteps;
+
+  /// No description provided for @usageActiveDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Active days'**
+  String get usageActiveDays;
+
+  /// No description provided for @usageStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Longest streak · days'**
+  String get usageStreak;
+
+  /// No description provided for @usageEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity in this range. Try a wider range or All projects.'**
+  String get usageEmpty;
+
+  /// No description provided for @usageTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'Tokens'**
+  String get usageTokens;
+
+  /// No description provided for @usageTotalTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get usageTotalTokens;
+
+  /// No description provided for @usageInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Input'**
+  String get usageInput;
+
+  /// No description provided for @usageOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Output'**
+  String get usageOutput;
+
+  /// No description provided for @usageReasoning.
+  ///
+  /// In en, this message translates to:
+  /// **'Reasoning'**
+  String get usageReasoning;
+
+  /// No description provided for @usageCacheRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache read'**
+  String get usageCacheRead;
+
+  /// No description provided for @usageCacheWrite.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache write'**
+  String get usageCacheWrite;
+
+  /// No description provided for @usageModels.
+  ///
+  /// In en, this message translates to:
+  /// **'Model usage'**
+  String get usageModels;
+
+  /// No description provided for @usageNoModels.
+  ///
+  /// In en, this message translates to:
+  /// **'No model usage was recorded in this range.'**
+  String get usageNoModels;
+
+  /// No description provided for @usageCostShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share of reported cost'**
+  String get usageCostShare;
+
+  /// No description provided for @usageToolReliability.
+  ///
+  /// In en, this message translates to:
+  /// **'Tool reliability'**
+  String get usageToolReliability;
+
+  /// No description provided for @usageToolsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This response does not include tool reliability.'**
+  String get usageToolsUnavailable;
+
+  /// No description provided for @usageNoTools.
+  ///
+  /// In en, this message translates to:
+  /// **'No tool calls were recorded in this range.'**
+  String get usageNoTools;
+
+  /// No description provided for @usageNoFinishedTools.
+  ///
+  /// In en, this message translates to:
+  /// **'No finished tool calls yet.'**
+  String get usageNoFinishedTools;
+
+  /// No description provided for @usageToolCalls.
+  ///
+  /// In en, this message translates to:
+  /// **'Calls'**
+  String get usageToolCalls;
+
+  /// No description provided for @usageSucceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Succeeded'**
+  String get usageSucceeded;
+
+  /// No description provided for @usageFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get usageFailed;
+
+  /// No description provided for @usageUnfinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Unfinished'**
+  String get usageUnfinished;
+
+  /// No description provided for @usageCostDisclosure.
+  ///
+  /// In en, this message translates to:
+  /// **'Costs are estimates reported by OpenCode, not a provider invoice. Unfinished tool calls are excluded from the success rate.'**
+  String get usageCostDisclosure;
+
+  /// No description provided for @usagePeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} – {to}'**
+  String usagePeriod(String from, String to);
+
+  /// No description provided for @usageTimezone.
+  ///
+  /// In en, this message translates to:
+  /// **'Timezone: {timezone}'**
+  String usageTimezone(String timezone);
+
+  /// No description provided for @usageModelSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'{steps} steps'**
+  String usageModelSteps(String steps);
+
+  /// No description provided for @usageModelTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'{tokens} tokens'**
+  String usageModelTokens(String tokens);
+
+  /// No description provided for @usageSuccessRate.
+  ///
+  /// In en, this message translates to:
+  /// **'{rate} of finished calls succeeded'**
+  String usageSuccessRate(String rate);
+
+  /// No description provided for @usageUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated at {time}'**
+  String usageUpdated(String time);
+
   /// No description provided for @sessionUnread.
   ///
   /// In en, this message translates to:
