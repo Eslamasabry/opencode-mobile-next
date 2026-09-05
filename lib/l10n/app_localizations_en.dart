@@ -1491,4 +1491,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get draftUnsaved => 'Unsaved';
+
+  @override
+  String get draftAttachmentsLocal =>
+      'Attachments save with this draft on this device.';
+
+  @override
+  String get draftAttachmentsFailed =>
+      'Attachments need recovery or could not be saved. Retry before sending.';
+
+  @override
+  String get draftAttachmentRecoveryTitle => 'Some attachments need attention';
+
+  @override
+  String draftAttachmentRecoveryDetail(String names) {
+    return 'These saved attachments are missing, unreadable, or belong to another project: $names. Use the available attachments and remove these from the draft, or keep the saved draft and retry later.';
+  }
+
+  @override
+  String get draftUseAvailableAttachments => 'Use available attachments';
+
+  @override
+  String get draftKeepSavedAttachments => 'Keep saved draft';
 }

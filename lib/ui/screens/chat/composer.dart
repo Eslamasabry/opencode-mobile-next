@@ -23,6 +23,7 @@ class _ChatComposer extends StatelessWidget {
     this.onOpenStash,
     this.onRestoreHistoryDraft,
     this.shelfBusy = false,
+    this.shelfLoading = true,
     required this.attachments,
     required this.busy,
     required this.sending,
@@ -71,6 +72,7 @@ class _ChatComposer extends StatelessWidget {
   final VoidCallback? onOpenStash;
   final VoidCallback? onRestoreHistoryDraft;
   final bool shelfBusy;
+  final bool shelfLoading;
   final List<PromptAttachment> attachments;
   final bool busy;
   final bool sending;
@@ -313,15 +315,13 @@ class _ChatComposer extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // §7.4: draft text is persisted per session, attachment
-                  // bytes are not. Say so the first time one is staged in
-                  // this session rather than on every attachment.
+                  // Explain local recovery once per attachment draft.
                   if (showAttachmentNote)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(14, 6, 14, 0),
                       child: Text(
                         key: const Key('composer-attachment-draft-note'),
-                        'Attachments are not saved with your draft.',
+                        _chatL10n(context).draftAttachmentsLocal,
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: AppTheme.mutedOf(theme),
                         ),
@@ -353,7 +353,8 @@ class _ChatComposer extends StatelessWidget {
               label: Text(_chatL10n(context).promptOriginalDraft),
             ),
           ),
-        if (shelfBusy) const LinearProgressIndicator(minHeight: 2),
+        if (shelfBusy && shelfLoading)
+          const LinearProgressIndicator(minHeight: 2),
         _ComposerField(
           controller: controller,
           focusNode: focusNode,
@@ -398,8 +399,8 @@ class _ChatComposer extends StatelessWidget {
               const SizedBox(width: 2),
               _ComposerSubmit(
                 busy: busy,
-                sending: sending || shelfBusy,
-                enabled: _hasPrompt,
+                sending: sending || (shelfBusy && shelfLoading),
+                enabled: _hasPrompt && !shelfBusy,
                 canSendWhileBusy: canSendWhileBusy,
                 delivery: delivery,
                 onDeliveryChanged: onDeliveryChanged,

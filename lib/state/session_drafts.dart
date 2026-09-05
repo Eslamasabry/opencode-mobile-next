@@ -1,8 +1,9 @@
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'draft_attachments.dart';
 
-enum SessionDraftFailure { storage, full, profileRemoved }
+enum SessionDraftFailure { storage, full, profileRemoved, attachments }
 
 class SessionDraftWriteException implements Exception {
   const SessionDraftWriteException(this.failure);
@@ -25,12 +26,18 @@ class SessionDraft {
   final String profileID;
   final String text;
   final int updatedAt;
+  final List<DraftAttachmentRef> attachments;
+  final String? directory;
+  final String? workspace;
 
   const SessionDraft({
     required this.sessionID,
     this.profileID = '',
     required this.text,
     required this.updatedAt,
+    this.attachments = const [],
+    this.directory,
+    this.workspace,
   });
 
   String get storageKey => keyFor(profileID, sessionID);
@@ -42,18 +49,29 @@ class SessionDraft {
     if (profileID.isNotEmpty) 'profileID': profileID,
     'text': text,
     'updatedAt': updatedAt,
+    if (attachments.isNotEmpty)
+      'attachments': [for (final a in attachments) a.toJson()],
+    if (attachments.isNotEmpty) 'directory': directory,
+    if (attachments.isNotEmpty) 'workspace': workspace,
   };
 
   static SessionDraft? fromJson(Object? value) {
     if (value is! Map) return null;
     final sessionID = value['sessionID']?.toString() ?? '';
     final text = value['text']?.toString() ?? '';
-    if (sessionID.isEmpty || text.isEmpty) return null;
+    final attachments = <DraftAttachmentRef>[
+      for (final a in value['attachments'] as List? ?? const [])
+        DraftAttachmentRef.fromJson(Map<String, dynamic>.from(a as Map)),
+    ];
+    if (sessionID.isEmpty || (text.isEmpty && attachments.isEmpty)) return null;
     return SessionDraft(
       sessionID: sessionID,
       profileID: value['profileID']?.toString() ?? '',
       text: text,
       updatedAt: (value['updatedAt'] as num?)?.toInt() ?? 0,
+      attachments: attachments,
+      directory: value['directory'] as String?,
+      workspace: value['workspace'] as String?,
     );
   }
 }
@@ -68,25 +86,46 @@ class SessionDraftStore {
   static const maxDrafts = 50;
 
   final SharedPreferences prefs;
+  bool _readFailed = false;
+  bool get readable {
+    load();
+    return !_readFailed;
+  }
 
   SessionDraftStore({required this.prefs});
 
   /// Bytes the persisted drafts occupy, for the storage readout in settings.
-  int storedBytes() => prefs.getString(_key)?.length ?? 0;
+  int storedBytes() {
+    final payloads = <String, int>{};
+    for (final draft in load().values) {
+      for (final ref in draft.attachments) {
+        if (ref.blob != null) {
+          payloads['${draft.profileID}/${ref.blob}'] = ref.bytes;
+        }
+      }
+    }
+    return utf8.encode(prefs.getString(_key) ?? '').length +
+        payloads.values.fold(0, (a, b) => a + b);
+  }
 
   Map<String, SessionDraft> load() {
+    _readFailed = false;
     final raw = prefs.getString(_key);
     if (raw == null || raw.isEmpty) return {};
     try {
       final decoded = jsonDecode(raw);
-      if (decoded is! List) return {};
+      if (decoded is! List) throw const FormatException('Invalid draft index');
       final drafts = <String, SessionDraft>{};
       for (final entry in decoded) {
         final draft = SessionDraft.fromJson(entry);
-        if (draft != null) drafts[draft.storageKey] = draft;
+        if (draft == null || drafts.containsKey(draft.storageKey)) {
+          throw const FormatException('Invalid draft entry');
+        }
+        drafts[draft.storageKey] = draft;
       }
       return drafts;
     } catch (_) {
+      _readFailed = true;
       return {};
     }
   }
@@ -110,6 +149,7 @@ class SessionDraftStore {
 
   Future<bool> save(Map<String, SessionDraft> drafts) async {
     try {
+      if (!readable) return false;
       if (drafts.length > maxDrafts) return false;
       final entries = drafts.values.toList()
         ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));

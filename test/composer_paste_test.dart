@@ -62,9 +62,7 @@ Future<TextField> _pumpChatField(
   );
   await tester.pump();
   await tester.pump();
-  return tester.widget<TextField>(
-    find.byKey(const Key('chat-composer-field')),
-  );
+  return tester.widget<TextField>(find.byKey(const Key('chat-composer-field')));
 }
 
 void main() {
@@ -102,14 +100,13 @@ void main() {
 
     expect(find.textContaining('pasted-image-'), findsOneWidget);
     expect(find.textContaining('.png'), findsOneWidget);
-    // Audit 7.4: draft text survives navigation but attachment bytes do
-    // not, so the composer says so the moment one is staged.
+    // Explain local draft recovery as soon as an attachment is staged.
     expect(
       find.byKey(const Key('composer-attachment-draft-note')),
       findsOneWidget,
     );
     expect(
-      find.text('Attachments are not saved with your draft.'),
+      find.text('Attachments save with this draft on this device.'),
       findsOneWidget,
     );
   });

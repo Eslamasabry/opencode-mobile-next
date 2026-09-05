@@ -499,5 +499,12 @@
   "draftLeaveMessage": "Keep editing to copy your text or retry saving. Leaving now may lose your unsaved changes.",
   "draftLeaveAction": "Leave without saving",
   "draftKeepEditing": "Keep editing",
-  "draftUnsaved": "Unsaved"
+  "draftUnsaved": "Unsaved",
+  "draftAttachmentsLocal": "Attachments save with this draft on this device.",
+  "draftAttachmentsFailed": "Attachments need recovery or could not be saved. Retry before sending.",
+  "draftAttachmentRecoveryTitle": "Some attachments need attention",
+  "draftAttachmentRecoveryDetail": "These saved attachments are missing, unreadable, or belong to another project: {names}. Use the available attachments and remove these from the draft, or keep the saved draft and retry later.",
+  "@draftAttachmentRecoveryDetail": {"placeholders":{"names":{"type":"String"}}},
+  "draftUseAvailableAttachments": "Use available attachments",
+  "draftKeepSavedAttachments": "Keep saved draft"
 }

@@ -26,6 +26,7 @@ import '../../state/connection.dart';
 import '../../state/review_handoff.dart';
 import '../../state/prompt_shelf.dart';
 import '../../state/session_drafts.dart';
+import '../../state/draft_attachments.dart';
 import '../../voice/controller.dart';
 import '../../voice/voice_ui.dart';
 import '../navigation/chat_route.dart';
@@ -308,9 +309,23 @@ class _ChatScreenState extends State<ChatScreen>
   /// Session-scoped expansion state for tool cards, tool groups, and
   /// reasoning blocks, so list recycling does not collapse them.
   final Map<String, bool> _transcriptExpansion = {};
-  final List<PromptAttachment> _attachments = [];
+  late final List<PromptAttachment> _attachments = DraftAttachmentList(
+    _scheduleDraftSave,
+  );
   final _promptHistory = PromptHistoryNavigation();
-  bool _promptShelfBusy = false;
+  bool _promptShelfOperationBusy = false;
+  bool get _promptShelfBusy =>
+      _promptShelfOperationBusy ||
+      _restoringDraftAttachments ||
+      _draftRecoveryBlocked;
+  bool _draftTrackingEnabled = false;
+  bool _restoringDraftAttachments = false;
+  bool _draftRecoveryBlocked = false;
+  Future<void>? _draftRecoveryFuture;
+  List<PromptAttachment> _lastDraftAttachments = const [];
+  late final int _draftLocation;
+  late final String? _draftDirectory;
+  late final String? _draftWorkspace;
 
   // UX-103 review handoff (start) — Files, Changes, and Review stage
   // structured references here; the composer renders them as chips and
@@ -380,7 +395,7 @@ class _ChatScreenState extends State<ChatScreen>
   /// backoff so the banner's countdown stays live; null otherwise.
   Timer? _retryTicker;
 
-  /// The "attachments are not saved" note shows once per session, not on
+  /// The local attachment recovery note shows once per session, not on
   /// every attachment. [_attachmentNoteActive] keeps it up while the first
   /// batch is staged; the static set remembers sessions that have seen it.
   bool _attachmentNoteActive = false;
@@ -431,6 +446,9 @@ class _ChatScreenState extends State<ChatScreen>
     _attachments.addAll(widget.initialAttachments);
     _conn = _readConn();
     _draftProfileID = _conn.profile?.id ?? _conn.store.activeId ?? '';
+    _draftLocation = _conn.locationRevision;
+    _draftDirectory = _conn.directory;
+    _draftWorkspace = _conn.workspace;
     _offlineFlushRevision = _conn.offlineFlushRevision;
     if (widget.initialText.isEmpty) {
       final draft = _conn.sessionDraft(widget.sessionID);
@@ -440,6 +458,14 @@ class _ChatScreenState extends State<ChatScreen>
       }
     }
     _lastDraftText = _composer.text;
+    _lastDraftAttachments = List.of(_attachments);
+    _draftTrackingEnabled = true;
+    if (widget.initialText.isEmpty &&
+        widget.initialAttachments.isEmpty &&
+        (_conn.savedSessionDraft(widget.sessionID)?.attachments.isNotEmpty ??
+            false)) {
+      _draftRecoveryFuture = _recoverDraftAttachments();
+    }
     _composer.addListener(_scheduleDraftSave);
     _focus.onKeyEvent = (_, event) => _navigatePromptHistory(event);
     _dataRefreshRevision = _conn.dataRefreshRevision;
@@ -459,6 +485,9 @@ class _ChatScreenState extends State<ChatScreen>
     if (injectedVoice != null) {
       _voice = injectedVoice;
       _voiceFuture = Future.value(injectedVoice);
+    }
+    if (widget.initialText.isNotEmpty || widget.initialAttachments.isNotEmpty) {
+      _draftSaveTimer = Timer(const Duration(milliseconds: 600), _persistDraft);
     }
   }
 
@@ -483,11 +512,19 @@ class _ChatScreenState extends State<ChatScreen>
   Future<bool> _persistDraft() async {
     _draftSaveTimer?.cancel();
     final generation = ++_draftWriteGeneration;
+    final text = _promptHistory.original?.text ?? _composer.text;
+    final attachments = List<PromptAttachment>.of(_attachments);
+    final wasRecovering = _draftRecoveryBlocked;
     try {
+      await _draftRecoveryFuture;
+      if (_draftRecoveryBlocked) return false;
       await _conn.saveSessionDraft(
         widget.sessionID,
-        _promptHistory.original?.text ?? _composer.text,
+        text,
         profileID: _draftProfileID,
+        attachments: wasRecovering ? _attachments : attachments,
+        attachmentDirectory: _draftDirectory,
+        attachmentWorkspace: _draftWorkspace,
       );
       if (mounted &&
           generation == _draftWriteGeneration &&
@@ -510,13 +547,79 @@ class _ChatScreenState extends State<ChatScreen>
   // Save pauses in typing too: Android may kill a process without a final
   // lifecycle callback. Selection changes alone must not trigger a write.
   void _scheduleDraftSave() {
-    if (_composer.text == _lastDraftText) return;
+    if (!_draftTrackingEnabled) return;
+    if (_composer.text == _lastDraftText &&
+        listEquals(_attachments, _lastDraftAttachments)) {
+      return;
+    }
     _lastDraftText = _composer.text;
+    _lastDraftAttachments = List.of(_attachments);
     _draftSaveTimer?.cancel();
     _draftSaveTimer = Timer(const Duration(milliseconds: 600), _persistDraft);
   }
 
+  Future<void> _recoverDraftAttachments() async {
+    setState(() {
+      _restoringDraftAttachments = true;
+      _draftRecoveryBlocked = true;
+    });
+    try {
+      final recovered = await _conn.restoreDraftAttachments(
+        widget.sessionID,
+        profileID: _draftProfileID,
+        directory: _draftDirectory,
+        workspace: _draftWorkspace,
+      );
+      if (!mounted || _draftLocation != _conn.locationRevision) return;
+      setState(() => _restoringDraftAttachments = false);
+      if (recovered.unavailable.isNotEmpty) {
+        final accept = await showConfirmSheet(
+          context,
+          title: _chatL10n(context).draftAttachmentRecoveryTitle,
+          message: _chatL10n(
+            context,
+          ).draftAttachmentRecoveryDetail(recovered.unavailable.join(', ')),
+          confirmLabel: _chatL10n(context).draftUseAvailableAttachments,
+          cancelLabel: _chatL10n(context).draftKeepSavedAttachments,
+        );
+        if (!mounted || !accept || _draftLocation != _conn.locationRevision) {
+          return;
+        }
+      }
+      setState(() {
+        _attachments
+          ..clear()
+          ..addAll(recovered.attachments);
+        _draftRecoveryBlocked = false;
+        _draftSaveFailure = null;
+      });
+      _draftSaveTimer?.cancel();
+      _draftSaveTimer = Timer(const Duration(milliseconds: 600), _persistDraft);
+    } catch (_) {
+      // Keep the stored snapshot intact until the user explicitly recovers it.
+    } finally {
+      if (mounted) {
+        setState(() {
+          _restoringDraftAttachments = false;
+          if (_draftRecoveryBlocked) {
+            _draftSaveFailure = SessionDraftFailure.attachments;
+          }
+        });
+      }
+    }
+  }
+
+  Future<void> _retryDraftPersistence() async {
+    if (_draftRecoveryBlocked) {
+      _draftRecoveryFuture = _recoverDraftAttachments();
+    }
+    await _persistDraft();
+  }
+
   String _draftFailureText(SessionDraftFailure failure) => switch (failure) {
+    SessionDraftFailure.attachments => _chatL10n(
+      context,
+    ).draftAttachmentsFailed,
     SessionDraftFailure.storage =>
       _composer.text.trim().isEmpty
           ? _chatL10n(context).draftClearFailed
@@ -673,7 +776,7 @@ class _ChatScreenState extends State<ChatScreen>
     final snapshot = _snapshotPrompt();
     if (snapshot.isEmpty) return;
     final location = _conn.locationRevision;
-    setState(() => _promptShelfBusy = true);
+    setState(() => _promptShelfOperationBusy = true);
     try {
       if (_conn.promptStash.length >= PromptShelfStore.capacity) {
         _showComposerNote(_chatL10n(context).promptStashFull);
@@ -692,7 +795,7 @@ class _ChatScreenState extends State<ChatScreen>
     } catch (_) {
       if (mounted) _showActionError(_chatL10n(context).promptStashSaveFailed);
     } finally {
-      if (mounted) setState(() => _promptShelfBusy = false);
+      if (mounted) setState(() => _promptShelfOperationBusy = false);
     }
   }
 
@@ -743,7 +846,7 @@ class _ChatScreenState extends State<ChatScreen>
       );
       if (!mounted || !accepted || !_promptUnchanged(current, location)) return;
     }
-    setState(() => _promptShelfBusy = true);
+    setState(() => _promptShelfOperationBusy = true);
     try {
       if (!current.isEmpty) {
         if (_conn.promptStash.length >= PromptShelfStore.capacity) {
@@ -801,7 +904,7 @@ class _ChatScreenState extends State<ChatScreen>
         _showActionError(_chatL10n(context).promptStashRestoreFailed);
       }
     } finally {
-      if (mounted) setState(() => _promptShelfBusy = false);
+      if (mounted) setState(() => _promptShelfOperationBusy = false);
     }
   }
 
@@ -2065,7 +2168,6 @@ class _ChatScreenState extends State<ChatScreen>
       createdAt: createdAt,
     );
     _composer.clear();
-    _persistDraft();
     _focus.requestFocus();
 
     // Optimistic user bubble.
@@ -2094,6 +2196,7 @@ class _ChatScreenState extends State<ChatScreen>
       );
       _attachments.clear();
     });
+    _persistDraft();
     try {
       await _conn.waitForSessionSelection(
         widget.sessionID,
@@ -4069,11 +4172,7 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _executeMobileCommand(_ChatCommandAction action) async {
     switch (action) {
       case _ChatCommandAction.newSession:
-        if (_attachments.isNotEmpty) {
-          final discard = await _confirmDiscardDraft();
-          if (!mounted || !discard) return;
-        }
-        _persistDraft();
+        if (!await _persistDraft() || !mounted) return;
         final session = await _conn.createSession();
         if (mounted) {
           final cleanupWarning = await _discardUntouchedMobileSession();
@@ -4924,23 +5023,6 @@ class _ChatScreenState extends State<ChatScreen>
     setState(() => _attachments.add(attachment));
   }
 
-  // Composer text needs no leave-time confirmation: it persists as a
-  // per-session draft and is restored when the chat reopens. Attachments
-  // are not persisted (their bytes are too heavy for the draft store), so
-  // losing them still asks first.
-  Future<bool> _confirmDiscardDraft() => showConfirmSheet(
-    context,
-    sheetKey: const ValueKey('discard-chat-draft-dialog'),
-    icon: Icons.delete_sweep_outlined,
-    title: 'Discard unsent attachments?',
-    message:
-        'Attachments are not kept with your draft text and have not been '
-        'sent to OpenCode.',
-    confirmLabel: 'Discard attachments',
-    cancelLabel: 'Keep editing',
-    destructive: true,
-  );
-
   Future<String?> _discardUntouchedMobileSession() async {
     if (!widget.discardIfUntouched ||
         _messages.isNotEmpty ||
@@ -4949,6 +5031,8 @@ class _ChatScreenState extends State<ChatScreen>
         // A typed draft persists per session, so the session must survive
         // to give that draft a home to be restored into.
         _composer.text.trim().isNotEmpty ||
+        _attachments.isNotEmpty ||
+        _draftRecoveryBlocked ||
         _conn.busySessions.contains(widget.sessionID)) {
       return null;
     }
@@ -4976,10 +5060,6 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<void> _leaveChat() async {
     if (_leavingProvisionalSession) return;
-    if (_attachments.isNotEmpty) {
-      final discard = await _confirmDiscardDraft();
-      if (!mounted || !discard) return;
-    }
     final textBeforeSave = _composer.text;
     final attachmentsBeforeSave = List.of(_attachments);
     final saved = await _persistDraft();
@@ -5670,7 +5750,9 @@ class _ChatScreenState extends State<ChatScreen>
                                       tooltip: _chatL10n(
                                         context,
                                       ).draftRetrySave,
-                                      onPressed: _persistDraft,
+                                      onPressed: _restoringDraftAttachments
+                                          ? null
+                                          : _retryDraftPersistence,
                                       icon: const Icon(Icons.refresh_rounded),
                                     ),
                                   ],
@@ -5809,6 +5891,9 @@ class _ChatScreenState extends State<ChatScreen>
                                         ? null
                                         : _restoreHistoryDraft,
                                     shelfBusy: _promptShelfBusy,
+                                    shelfLoading:
+                                        _promptShelfOperationBusy ||
+                                        _restoringDraftAttachments,
                                     attachments: _attachments,
                                     busy: busy,
                                     sending: _sending,
@@ -5923,6 +6008,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   @override
   void dispose() {
+    _draftTrackingEnabled = false;
     _persistDraft();
     _composer.removeListener(_scheduleDraftSave);
     WidgetsBinding.instance.removeObserver(this);

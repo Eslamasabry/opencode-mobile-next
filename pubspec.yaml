@@ -86,6 +86,7 @@ dependencies:
   # restored window to a display that is actually attached.
   screen_retriever: ^0.2.0
 
+  path: ^1.9.1
 dev_dependencies:
   cross_file: 0.3.5+5
   flutter_test:

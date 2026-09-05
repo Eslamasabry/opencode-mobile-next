@@ -2607,6 +2607,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unsaved'**
   String get draftUnsaved;
+
+  /// No description provided for @draftAttachmentsLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachments save with this draft on this device.'**
+  String get draftAttachmentsLocal;
+
+  /// No description provided for @draftAttachmentsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachments need recovery or could not be saved. Retry before sending.'**
+  String get draftAttachmentsFailed;
+
+  /// No description provided for @draftAttachmentRecoveryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Some attachments need attention'**
+  String get draftAttachmentRecoveryTitle;
+
+  /// No description provided for @draftAttachmentRecoveryDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'These saved attachments are missing, unreadable, or belong to another project: {names}. Use the available attachments and remove these from the draft, or keep the saved draft and retry later.'**
+  String draftAttachmentRecoveryDetail(String names);
+
+  /// No description provided for @draftUseAvailableAttachments.
+  ///
+  /// In en, this message translates to:
+  /// **'Use available attachments'**
+  String get draftUseAvailableAttachments;
+
+  /// No description provided for @draftKeepSavedAttachments.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep saved draft'**
+  String get draftKeepSavedAttachments;
 }
 
 class _AppLocalizationsDelegate

@@ -1190,7 +1190,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('mobile new command cannot silently drop unsent attachments', (
+  testWidgets('mobile new command stays when an attachment cannot persist', (
     tester,
   ) async {
     final api = _FakeOpenCodeApi()..messagesHandler = (_) async => [];
@@ -1201,7 +1201,7 @@ void main() {
         PromptAttachment(
           mime: 'text/plain',
           filename: 'notes.txt',
-          url: 'data:text/plain;base64,bm90ZXM=',
+          url: 'content://temporary/notes.txt',
         ),
       ],
     );
@@ -1211,12 +1211,7 @@ void main() {
     await tester.tap(find.byKey(const Key('command-mobile-new')));
     await tester.pumpAndSettle();
 
-    expect(
-      find.byKey(const ValueKey('discard-chat-draft-dialog')),
-      findsOneWidget,
-    );
-    await tester.tap(find.text('Keep editing'));
-    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('draft-save-error')), findsOneWidget);
 
     expect(api.createCalls, 0);
     expect(api.deleteCalls, isEmpty);

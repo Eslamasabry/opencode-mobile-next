@@ -667,3 +667,27 @@ Focused recovery and existing profile deletion, queue, settings, prompt shelf,
 context and localization checks were exercised. See verification/draft-recovery.md
 for exact evidence and limits. Ordinary attachment persistence, camera/gallery,
 ambiguous legacy draft recovery and final device/install verification remain.
+
+## Cycle 22 — retain ordinary draft attachments
+
+Added app-private payload files with small profile/session-scoped metadata,
+checksum verification and bounded storage. Attachment-only drafts survive;
+picker/paste/editor/removal mutations autosave. Save and restore share the draft
+transaction queue. Failed metadata writes preserve the previous draft and
+collect orphaned new payloads; profile removal collects its own attachment data.
+
+Opening a draft restores available attachments. Missing/unreadable payloads and
+file references from another project require an explicit recovery choice, with
+the stored snapshot preserved when declined. Progress stops while waiting for
+that choice. Back and New session wait for persistence; a failed save keeps New
+session on the current composer with a visible recovery action.
+
+Sixteen draft checks and the focused New session check passed after corrections;
+vault, paste, profile deletion and localization checks passed, and static analysis
+is clean. See verification/draft-recovery.md for the broader run and remaining
+device limits. All six CI jobs for preceding commit 9b1ecb1 succeeded.
+
+Camera/gallery input, large-payload stash migration, ambiguous legacy recovery,
+remaining server parity and final Android interruption/install/upgrade checks
+remain in the release scope. Public APK publication must identify its actual
+source commit and signing identity.

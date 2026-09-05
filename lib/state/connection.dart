@@ -24,6 +24,7 @@ import 'model_library.dart';
 import 'offline_queue.dart';
 import 'profiles.dart';
 import 'session_drafts.dart';
+import 'draft_attachments.dart';
 import 'session_pins.dart';
 import 'prompt_shelf.dart';
 import 'session_read_state.dart';
@@ -297,6 +298,7 @@ class ConnectionController extends ChangeNotifier {
   Map<String, SessionDraft>? _sessionDrafts;
   SessionDraftStore? _sessionDraftStore;
   Future<void> _draftChanges = Future.value();
+  final DraftAttachmentVault _draftAttachmentVault;
   int locationRevision = 0;
   String? directory;
   String? workspace;
@@ -448,7 +450,9 @@ class ConnectionController extends ChangeNotifier {
     BackgroundLiveController? backgroundLive,
     AppDiagnosticsController? diagnostics,
     LocalWakeLockEnsurer? localWakeLockEnsurer,
-  }) : _apiFactory = apiFactory ?? _createApi,
+    DraftAttachmentVault? draftAttachmentVault,
+  }) : _draftAttachmentVault = draftAttachmentVault ?? DraftAttachmentVault(),
+       _apiFactory = apiFactory ?? _createApi,
        _repositoryFactory = repositoryFactory ?? _createRepository,
        _v2GatewayFactory = v2GatewayFactory ?? _createV2GatewayPair,
        _eventStreamFactory = eventStreamFactory ?? _createEventStream,
@@ -4056,11 +4060,10 @@ class ConnectionController extends ChangeNotifier {
 
   /// Drops every saved composer draft, for every session.
   Future<bool> clearAllSessionDrafts() => _serializeDraftChange(() async {
-    if (_drafts.isEmpty) return true;
     if (!await _draftStore.save(const {})) return false;
     _sessionDrafts = {};
     notifyListeners();
-    return true;
+    return _collectDraftAttachments();
   });
 
   /// Queued prompts across every profile, for the settings readout.
@@ -4158,11 +4161,40 @@ class ConnectionController extends ChangeNotifier {
   /// The unsent composer text for this server and session. Old unattributed
   /// drafts can be recovered automatically only with an unambiguous server.
   String? sessionDraft(String sessionID) {
-    final owner = profile?.id ?? store.activeId ?? '';
-    return (_drafts[SessionDraft.keyFor(owner, sessionID)] ??
-            (store.profiles.length <= 1 ? _drafts[sessionID] : null))
-        ?.text;
+    return savedSessionDraft(sessionID)?.text;
   }
+
+  SessionDraft? savedSessionDraft(String sessionID, {String? profileID}) {
+    final owner = profileID ?? profile?.id ?? store.activeId ?? '';
+    return (_drafts[SessionDraft.keyFor(owner, sessionID)] ??
+        (store.profiles.length <= 1 ? _drafts[sessionID] : null));
+  }
+
+  Future<bool> _collectDraftAttachments({String? owner}) async {
+    if (!_draftStore.readable) return false;
+    if (!(store.prefs.getBool('oc.draftAttachmentVault') ?? false)) return true;
+    final retained = <String, List<DraftAttachmentRef>>{};
+    for (final draft in _drafts.values) {
+      retained.putIfAbsent(draft.profileID, () => []).addAll(draft.attachments);
+    }
+    return _draftAttachmentVault.collect(retained, owner: owner);
+  }
+
+  Future<DraftAttachmentRecovery> restoreDraftAttachments(
+    String sessionID, {
+    required String profileID,
+    required String? directory,
+    required String? workspace,
+  }) => _serializeDraftChange(() async {
+    final draft = savedSessionDraft(sessionID, profileID: profileID);
+    if (draft == null) return const DraftAttachmentRecovery([], []);
+    return _draftAttachmentVault.restore(
+      draft.profileID,
+      draft.attachments,
+      sameLocation:
+          draft.directory == directory && draft.workspace == workspace,
+    );
+  });
 
   /// Remembers (or, when [text] is blank, forgets) the composer draft for
   /// one session. No [notifyListeners]: drafts drive nothing outside the
@@ -4171,26 +4203,60 @@ class ConnectionController extends ChangeNotifier {
     String sessionID,
     String text, {
     String? profileID,
+    List<PromptAttachment>? attachments,
+    String? attachmentDirectory,
+    String? attachmentWorkspace,
   }) {
     final owner = profileID ?? profile?.id ?? store.activeId ?? '';
+    final snapshot = attachments == null
+        ? null
+        : List<PromptAttachment>.of(attachments);
     return _serializeDraftChange(() async {
+      if (!_draftStore.readable) {
+        throw const SessionDraftWriteException(SessionDraftFailure.storage);
+      }
       if (_deletingReadProfiles.contains(owner) ||
           (owner.isNotEmpty && !store.profiles.any((p) => p.id == owner))) {
-        if (text.trim().isEmpty) return;
+        if (text.trim().isEmpty && (snapshot?.isEmpty ?? true)) return;
         throw const SessionDraftWriteException(
           SessionDraftFailure.profileRemoved,
         );
       }
       final key = SessionDraft.keyFor(owner, sessionID);
-      if (_drafts[key]?.text == text ||
-          (text.trim().isEmpty &&
-              !_drafts.containsKey(key) &&
-              (store.profiles.length > 1 || !_drafts.containsKey(sessionID)))) {
+      if (snapshot == null &&
+          (_drafts[key]?.text == text ||
+              (text.trim().isEmpty &&
+                  !_drafts.containsKey(key) &&
+                  (store.profiles.length > 1 ||
+                      !_drafts.containsKey(sessionID))))) {
         return;
+      }
+      var refs = text.trim().isEmpty
+          ? <DraftAttachmentRef>[]
+          : (_drafts[key]?.attachments ?? const <DraftAttachmentRef>[]);
+      if (snapshot != null) {
+        try {
+          if (snapshot.any((a) => a.url.startsWith('data:'))) {
+            if (!(store.prefs.getBool('oc.draftAttachmentVault') ?? false) &&
+                !await store.prefs.setBool('oc.draftAttachmentVault', true)) {
+              await store.prefs.reload();
+              throw const SessionDraftWriteException(
+                SessionDraftFailure.attachments,
+              );
+            }
+            await _collectDraftAttachments();
+          }
+          refs = await _draftAttachmentVault.store(owner, snapshot);
+        } catch (_) {
+          await _collectDraftAttachments();
+          throw const SessionDraftWriteException(
+            SessionDraftFailure.attachments,
+          );
+        }
       }
       final next = Map<String, SessionDraft>.of(_drafts);
       if (store.profiles.length <= 1) next.remove(sessionID);
-      if (text.trim().isEmpty) {
+      if (text.trim().isEmpty && refs.isEmpty) {
         next.remove(key);
       } else {
         next[key] = SessionDraft(
@@ -4198,15 +4264,25 @@ class ConnectionController extends ChangeNotifier {
           profileID: owner,
           text: text,
           updatedAt: DateTime.now().millisecondsSinceEpoch,
+          attachments: refs,
+          directory: snapshot == null
+              ? _drafts[key]?.directory
+              : attachmentDirectory,
+          workspace: snapshot == null
+              ? _drafts[key]?.workspace
+              : attachmentWorkspace,
         );
       }
       if (next.length > SessionDraftStore.maxDrafts) {
+        await _collectDraftAttachments();
         throw const SessionDraftWriteException(SessionDraftFailure.full);
       }
       if (!await _draftStore.save(next)) {
+        await _collectDraftAttachments();
         throw const SessionDraftWriteException(SessionDraftFailure.storage);
       }
       _sessionDrafts = next;
+      await _collectDraftAttachments();
     });
   }
 
@@ -4300,6 +4376,12 @@ class ConnectionController extends ChangeNotifier {
               '$removedDrafts unsent ${removedDrafts == 1 ? 'draft' : 'drafts'}',
             );
           }
+        }
+        if (!await _collectDraftAttachments(owner: profileId)) {
+          failures.add('draft attachments');
+        }
+        if (!await _collectDraftAttachments(owner: '')) {
+          failures.add('unattributed draft attachments');
         }
       });
 
