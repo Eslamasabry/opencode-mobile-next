@@ -155,7 +155,7 @@ class _RunCommandDialog extends StatefulWidget {
 
 class _RunCommandDialogState extends State<_RunCommandDialog> {
   final _arguments = TextEditingController();
-  late final List<Session> _sessions;
+  late List<Session> _sessions;
   late final int _locationRevision;
   late final String? _profileID;
   late final String? _directory;
@@ -175,6 +175,20 @@ class _RunCommandDialogState extends State<_RunCommandDialog> {
     _directory = controller.directory;
     _workspace = controller.workspace;
     _destination = _sessions.isEmpty ? '' : _sessions.first.id;
+    controller.addListener(_sessionsChanged);
+  }
+
+  void _sessionsChanged() {
+    if (!_sameLocation) return;
+    final current = widget.controller.sortedSessions();
+    // Keep a selected destination visible while a refreshed page is partial.
+    final selected = _sessions.where((session) => session.id == _destination);
+    setState(
+      () => _sessions = [
+        ...current,
+        if (!current.any((session) => session.id == _destination)) ...selected,
+      ],
+    );
   }
 
   bool get _sameLocation =>
@@ -227,6 +241,7 @@ class _RunCommandDialogState extends State<_RunCommandDialog> {
 
   @override
   void dispose() {
+    widget.controller.removeListener(_sessionsChanged);
     _arguments.dispose();
     super.dispose();
   }
@@ -268,6 +283,8 @@ class _RunCommandDialogState extends State<_RunCommandDialog> {
                     },
             ),
             const SizedBox(height: 14),
+            if (_sameLocation)
+              SessionInventoryFooter(controller: widget.controller),
             TextField(
               key: const ValueKey('command-arguments'),
               controller: _arguments,

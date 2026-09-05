@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../api2/models.dart' show Api2FormInfo;
+import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
 import '../app_theme.dart';
@@ -173,8 +174,39 @@ class _ActivityScreenState extends State<ActivityScreen> {
     return count;
   }
 
-  void _openChat(String sessionID) {
-    Navigator.of(context).pushNamed('/chat/$sessionID');
+  Future<void> _openChat(String sessionID) async {
+    final controller = widget.controller;
+    final location = controller.locationRevision;
+    final profile = controller.profile?.id;
+    final missing = lookupAppLocalizations(
+      Localizations.localeOf(context),
+    ).sessionsDetailsUnavailable;
+    try {
+      if (!controller.sessionsById.containsKey(sessionID)) {
+        await controller.ensureSession(sessionID);
+      }
+      if (!mounted ||
+          controller.locationRevision != location ||
+          controller.profile?.id != profile)
+        return;
+      final session = controller.sessionsById[sessionID];
+      if (session == null)
+        throw ProductException(
+          controller.sessionDetailsErrors[sessionID] ?? missing,
+        );
+      if (session.directory != null &&
+          (session.directory != controller.directory ||
+              session.workspaceID != controller.workspace)) {
+        await controller.selectLocation(
+          directory: session.directory,
+          workspace: session.workspaceID,
+        );
+      }
+      if (mounted && controller.profile?.id == profile)
+        Navigator.of(context).pushNamed('/chat/$sessionID');
+    } catch (error) {
+      if (mounted) showProductError(context, error);
+    }
   }
 
   static String _place(Session session) {
@@ -215,9 +247,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
               .where((form) => form.sessionID == 'global')
               .toList();
 
-    final roots = controller.sortedSessions();
-    final running = roots
-        .where((session) => controller.busySessions.contains(session.id))
+    final running = controller.busySessions
+        .map((id) => controller.sessionsById[id] ?? Session(id: id, title: id))
+        .where((session) => session.parentID == null)
         .toList();
 
     final loading =
@@ -324,7 +356,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
                         session: session,
                         running: true,
                         subagents: _subagentCount(session.id),
-                        detail: _place(session),
+                        detail:
+                            controller.sessionDetailsErrors[session.id] ??
+                            _place(session),
                         onTap: () => _openChat(session.id),
                       ),
                 ],

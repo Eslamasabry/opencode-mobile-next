@@ -449,4 +449,30 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get historyServerTotalsNote =>
       'Rows marked reported by server cover the session. Message counts and other estimates cover loaded history.';
+
+  @override
+  String get sessionsLoadedOnly =>
+      'Showing loaded sessions. Load more to include older conversations.';
+
+  @override
+  String get sessionsDetailsUnavailable =>
+      'Session details could not be loaded. Try again.';
+
+  @override
+  String get sessionsLoadMore => 'Load more sessions';
+
+  @override
+  String get sessionsReload => 'Reload recent sessions';
+
+  @override
+  String get sessionsNoLoadedRecent => 'No recent sessions in loaded results';
+
+  @override
+  String get sessionsNoLoadedArchived =>
+      'No archived sessions in loaded results';
+
+  @override
+  String sessionsLoadedCount(int count) {
+    return '$count loaded';
+  }
 }

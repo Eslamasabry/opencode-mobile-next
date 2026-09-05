@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../../api/models.dart';
 import '../../api/product_repository.dart';
+import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
 import '../desktop/context_menu.dart';
@@ -14,6 +15,7 @@ import '../widgets/confirm_sheet.dart';
 import '../widgets/entrance.dart';
 import '../widgets/product_states.dart';
 import '../widgets/session_title.dart';
+import '../widgets/session_inventory_footer.dart';
 import 'global_sessions_screen.dart';
 import 'manage_project_screen.dart';
 import 'projects_screen.dart';
@@ -315,6 +317,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         )
         .toList();
     final archived = widget.controller.archivedSessions();
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    final partial =
+        widget.controller.hasMoreSessions || widget.controller.sessionsLoading;
 
     return Stack(
       children: [
@@ -416,7 +421,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                         ),
                         IconButton(
                           tooltip: 'Refresh sessions',
-                          onPressed: widget.controller.refreshSessions,
+                          onPressed: widget.controller.sessionsLoading
+                              ? null
+                              : widget.controller.refreshSessions,
                           icon: const Icon(Icons.refresh_rounded, size: 19),
                         ),
                         // Terminal gave its navigation slot to Activity; this
@@ -453,10 +460,14 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 26),
-                      child: ProductEmptyState(
+                      child: ProductInlineEmpty(
                         icon: Icons.chat_bubble_outline_rounded,
-                        title: 'No recent sessions',
-                        message: 'Start a session in the selected workspace.',
+                        title: partial
+                            ? l10n.sessionsNoLoadedRecent
+                            : 'No recent sessions',
+                        message: partial
+                            ? l10n.sessionsLoadedOnly
+                            : 'Start a session in the selected workspace.',
                         actionLabel: 'New session',
                         onAction: _createSession,
                       ),
@@ -480,14 +491,21 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       ),
                     ),
                   ),
-                if (archived.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: SessionInventoryFooter(controller: widget.controller),
+                ),
+                if (archived.isNotEmpty || partial)
                   SliverToBoxAdapter(
                     child: ListTile(
                       leading: const Icon(Icons.archive_outlined),
                       title: const Text('Archived sessions'),
-                      subtitle: Text('${archived.length} hidden from recents'),
+                      subtitle: Text(
+                        partial
+                            ? l10n.sessionsLoadedCount(archived.length)
+                            : '${archived.length} hidden from recents',
+                      ),
                       trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: () => _showArchived(archived),
+                      onTap: _showArchived,
                     ),
                   ),
                 // 5. Everything management sits below the sessions, behind one
@@ -816,84 +834,105 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   /// (it stamps `time.archived`; the SDK drops a null timestamp), so there is
   /// no unarchive to offer. Rows still lead somewhere: open, or delete for
   /// good, through the same confirm flow as the recent list.
-  void _showArchived(List<Session> sessions) {
+  void _showArchived() {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
-      builder: (sheetContext) {
-        final theme = Theme.of(sheetContext);
-        return SafeArea(
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: sessions.length,
-            itemBuilder: (context, index) {
-              final session = sessions[index];
-              final title = session.title?.isNotEmpty == true
-                  ? session.title!
-                  : 'Untitled session';
-              void run(String action) {
-                Navigator.pop(sheetContext);
-                unawaited(_sessionAction(action, session));
-              }
+      builder: (sheetContext) => ListenableBuilder(
+        listenable: widget.controller,
+        builder: (sheetContext, _) {
+          final sessions = widget.controller.archivedSessions();
+          final theme = Theme.of(sheetContext);
+          return SafeArea(
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: sessions.length + 1,
+              itemBuilder: (context, index) {
+                if (index == sessions.length) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (sessions.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Text(
+                            lookupAppLocalizations(
+                              Localizations.localeOf(context),
+                            ).sessionsNoLoadedArchived,
+                          ),
+                        ),
+                      SessionInventoryFooter(controller: widget.controller),
+                    ],
+                  );
+                }
+                final session = sessions[index];
+                final title = session.title?.isNotEmpty == true
+                    ? session.title!
+                    : 'Untitled session';
+                void run(String action) {
+                  Navigator.pop(sheetContext);
+                  unawaited(_sessionAction(action, session));
+                }
 
-              return ContextMenuRegion(
-                actions: () => [
-                  ContextMenuAction(
-                    label: 'Open',
-                    icon: Icons.open_in_new_rounded,
-                    onSelected: () {
+                return ContextMenuRegion(
+                  actions: () => [
+                    ContextMenuAction(
+                      label: 'Open',
+                      icon: Icons.open_in_new_rounded,
+                      onSelected: () {
+                        Navigator.pop(sheetContext);
+                        _openSession(session);
+                      },
+                    ),
+                    ContextMenuAction(
+                      label: 'Delete',
+                      icon: Icons.delete_outline_rounded,
+                      destructive: true,
+                      onSelected: () => run('delete'),
+                    ),
+                  ],
+                  child: ListTile(
+                    key: ValueKey('archived-session-${session.id}'),
+                    leading: const Icon(Icons.inventory_2_outlined, size: 21),
+                    title: Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      session.directory ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: PopupMenuButton<String>(
+                      key: ValueKey('archived-session-actions-${session.id}'),
+                      tooltip: 'Archived session actions',
+                      onSelected: run,
+                      itemBuilder: (_) => [
+                        const PopupMenuItem(
+                          value: 'rename',
+                          child: Text('Rename'),
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Text(
+                            'Delete',
+                            style: TextStyle(color: theme.colorScheme.error),
+                          ),
+                        ),
+                      ],
+                    ),
+                    onTap: () {
                       Navigator.pop(sheetContext);
                       _openSession(session);
                     },
                   ),
-                  ContextMenuAction(
-                    label: 'Delete',
-                    icon: Icons.delete_outline_rounded,
-                    destructive: true,
-                    onSelected: () => run('delete'),
-                  ),
-                ],
-                child: ListTile(
-                  key: ValueKey('archived-session-${session.id}'),
-                  leading: const Icon(Icons.inventory_2_outlined, size: 21),
-                  title: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  subtitle: Text(
-                    session.directory ?? '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: PopupMenuButton<String>(
-                    key: ValueKey('archived-session-actions-${session.id}'),
-                    tooltip: 'Archived session actions',
-                    onSelected: run,
-                    itemBuilder: (_) => [
-                      const PopupMenuItem(
-                        value: 'rename',
-                        child: Text('Rename'),
-                      ),
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: Text(
-                          'Delete',
-                          style: TextStyle(color: theme.colorScheme.error),
-                        ),
-                      ),
-                    ],
-                  ),
-                  onTap: () {
-                    Navigator.pop(sheetContext);
-                    _openSession(session);
-                  },
-                ),
-              );
-            },
-          ),
-        );
-      },
+                );
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 

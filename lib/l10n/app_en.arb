@@ -189,5 +189,13 @@
   "historyCopyLoadedReply": "Copy loaded reply",
   "historyLoadedMessages": "Loaded messages",
   "historyLoadedCost": "Cost of loaded messages",
-  "historyServerTotalsNote": "Rows marked reported by server cover the session. Message counts and other estimates cover loaded history."
+  "historyServerTotalsNote": "Rows marked reported by server cover the session. Message counts and other estimates cover loaded history.",
+  "sessionsLoadedOnly": "Showing loaded sessions. Load more to include older conversations.",
+  "sessionsDetailsUnavailable": "Session details could not be loaded. Try again.",
+  "sessionsLoadMore": "Load more sessions",
+  "sessionsReload": "Reload recent sessions",
+  "sessionsNoLoadedRecent": "No recent sessions in loaded results",
+  "sessionsNoLoadedArchived": "No archived sessions in loaded results",
+  "sessionsLoadedCount": "{count} loaded",
+  "@sessionsLoadedCount": {"placeholders": {"count": {"type": "int"}}}
 }
