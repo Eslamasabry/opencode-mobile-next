@@ -424,5 +424,22 @@
   "@promptStashLocation": {"placeholders":{"directory":{"type":"String"}}},
   "@promptAttachmentsUnavailableDetail": {"placeholders":{"names":{"type":"String"}}},
   "@promptStashAttachments": {"placeholders":{"count":{"type":"int"}}},
-  "@promptStashReferences": {"placeholders":{"count":{"type":"int"}}}
+  "@promptStashReferences": {"placeholders":{"count":{"type":"int"}}},
+  "transcriptFindTitle": "Find in conversation",
+  "transcriptFindHint": "Search conversation",
+  "transcriptFindScope": "Messages, reasoning and tool data",
+  "transcriptFindClose": "Close search",
+  "transcriptFindPrevious": "Previous match",
+  "transcriptFindNext": "Next match",
+  "transcriptFindNone": "No matches",
+  "transcriptFindCount": "{total, plural, =1{1 match} other{{current} of {total} matches}}",
+  "@transcriptFindCount": {"placeholders":{"current":{"type":"int"},"total":{"type":"int"}}},
+  "transcriptFindTotal": "{count, plural, =1{1 match in message text} other{{count} matches in message text}}",
+  "@transcriptFindTotal": {"placeholders":{"count":{"type":"int"}}},
+  "transcriptFindPartial": "Loaded messages only. Load older messages to search further.",
+  "transcriptFindComplete": "All available message content searched.",
+  "transcriptFindReasoning": "Reasoning",
+  "transcriptFindTool": "Tool data",
+  "transcriptFindFile": "File name",
+  "transcriptFindAll": "Search all history"
 }

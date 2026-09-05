@@ -1151,9 +1151,11 @@ class _AssistantMessagePart extends StatelessWidget {
     required this.onDownloadFile,
     this.streaming = false,
     this.onOpenSession,
+    this.searchQuery = '',
   });
 
   final Part part;
+  final String searchQuery;
   final bool reasoningExpanded;
 
   /// Opens a subagent's child session from a `task` card; null hides it.
@@ -1191,10 +1193,13 @@ class _AssistantMessagePart extends StatelessWidget {
             // ⋯ button in the meta row, so prose no longer has to give up
             // selection for the long-press. Desktop keeps the transcript-wide
             // SelectionArea instead of nesting a second selection surface.
-            child: MarkdownText(
-              part.text,
-              selectable: !desktopInteractions,
-              onChoice: (option) => _insertChoice(context, option),
+            child: TranscriptHighlight(
+              query: searchQuery,
+              child: MarkdownText(
+                part.text,
+                selectable: !desktopInteractions,
+                onChoice: (option) => _insertChoice(context, option),
+              ),
             ),
           ),
         ),
@@ -1267,6 +1272,10 @@ class _MessageView extends StatelessWidget {
   final Map<String, bool> expansionStore;
   final bool showTimestamp;
   final bool highlighted;
+  final String searchQuery;
+  final TranscriptMatch? searchMatch;
+  final String searchLabel;
+  final ValueChanged<BuildContext>? onSearchExcerptContext;
   final VoidCallback? onLongPress;
 
   /// Desktop right-click menu for this message. Built on click so it reflects
@@ -1297,6 +1306,10 @@ class _MessageView extends StatelessWidget {
     required this.expansionStore,
     required this.showTimestamp,
     this.highlighted = false,
+    this.searchQuery = '',
+    this.searchMatch,
+    this.searchLabel = '',
+    this.onSearchExcerptContext,
     this.onLongPress,
     this.contextActions,
     required this.filePreviewLoader,
@@ -1376,6 +1389,16 @@ class _MessageView extends StatelessWidget {
               ? CrossAxisAlignment.end
               : CrossAxisAlignment.start,
           children: [
+            if (searchMatch case final match?)
+              Builder(
+                builder: (context) {
+                  onSearchExcerptContext?.call(context);
+                  return TranscriptMatchExcerpt(
+                    match: match,
+                    label: searchLabel,
+                  );
+                },
+              ),
             Container(
               constraints: BoxConstraints(
                 // Keep prompts readable on wide screens instead of stretching a
@@ -1399,7 +1422,10 @@ class _MessageView extends StatelessWidget {
                     )
                   : null,
               child: isUser
-                  ? _UserMessageContent(parts: visibleParts)
+                  ? _UserMessageContent(
+                      parts: visibleParts,
+                      searchQuery: searchQuery,
+                    )
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1419,6 +1445,7 @@ class _MessageView extends StatelessWidget {
                           else
                             _AssistantMessagePart(
                               part: run.parts.single,
+                              searchQuery: searchQuery,
                               reasoningExpanded: reasoningExpanded,
                               expansionStore: expansionStore,
                               filePreviewLoader: filePreviewLoader,
@@ -1529,8 +1556,9 @@ class _MessageView extends StatelessWidget {
       ),
     );
     final menu = contextActions;
-    if (menu == null) return body;
-    return ContextMenuRegion(actions: menu, child: body);
+    final content = TranscriptHighlight(query: searchQuery, child: body);
+    if (menu == null) return content;
+    return ContextMenuRegion(actions: menu, child: content);
   }
 
   static String _fmtTokens(int n) {
@@ -1800,8 +1828,9 @@ _MessageMeta _messageMeta(List<MessageWithParts> messages, int index) {
 
 class _UserMessageContent extends StatelessWidget {
   final List<Part> parts;
+  final String searchQuery;
 
-  const _UserMessageContent({required this.parts});
+  const _UserMessageContent({required this.parts, this.searchQuery = ''});
 
   @override
   Widget build(BuildContext context) {
@@ -1815,7 +1844,11 @@ class _UserMessageContent extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (text.isNotEmpty) MarkdownText(text, selectable: false),
+        if (text.isNotEmpty)
+          TranscriptHighlight(
+            query: searchQuery,
+            child: MarkdownText(text, selectable: false),
+          ),
         if (text.isNotEmpty && files.isNotEmpty) const SizedBox(height: 8),
         for (final file in files) _AttachmentPart(part: file),
       ],

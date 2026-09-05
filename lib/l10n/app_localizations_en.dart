@@ -1239,4 +1239,67 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get promptStashScopeChanged =>
       'The server or location changed. Close and reopen Saved prompts.';
+
+  @override
+  String get transcriptFindTitle => 'Find in conversation';
+
+  @override
+  String get transcriptFindHint => 'Search conversation';
+
+  @override
+  String get transcriptFindScope => 'Messages, reasoning and tool data';
+
+  @override
+  String get transcriptFindClose => 'Close search';
+
+  @override
+  String get transcriptFindPrevious => 'Previous match';
+
+  @override
+  String get transcriptFindNext => 'Next match';
+
+  @override
+  String get transcriptFindNone => 'No matches';
+
+  @override
+  String transcriptFindCount(int current, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$current of $total matches',
+      one: '1 match',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String transcriptFindTotal(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count matches in message text',
+      one: '1 match in message text',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transcriptFindPartial =>
+      'Loaded messages only. Load older messages to search further.';
+
+  @override
+  String get transcriptFindComplete =>
+      'All available message content searched.';
+
+  @override
+  String get transcriptFindReasoning => 'Reasoning';
+
+  @override
+  String get transcriptFindTool => 'Tool data';
+
+  @override
+  String get transcriptFindFile => 'File name';
+
+  @override
+  String get transcriptFindAll => 'Search all history';
 }

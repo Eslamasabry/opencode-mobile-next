@@ -9,6 +9,7 @@ import '../desktop/desktop_interaction.dart';
 import 'agent_blocks.dart';
 import 'code_highlight.dart';
 import 'external_link.dart';
+import 'transcript_highlight.dart';
 
 // The chat transcript (a `part` of chat_screen.dart) reaches the glossary
 // through this library, which it already imports.
@@ -410,8 +411,8 @@ class _Heading extends StatelessWidget {
       ),
       _ => textTheme.titleSmall,
     };
-    return Text(
-      text,
+    return Text.rich(
+      TranscriptHighlight.decorate(context, TextSpan(text: text)),
       style: (style ?? textTheme.titleMedium!).copyWith(
         fontWeight: FontWeight.w700,
       ),
@@ -539,9 +540,13 @@ class _RichLines extends StatelessWidget {
     final spans = <InlineSpan>[];
     for (var i = 0; i < lines.length; i++) {
       if (i > 0) spans.add(const TextSpan(text: '\n'));
-      spans.addAll(_InlineParser(lines[i]).parse(context).children!);
+      spans.addAll(_InlineParser(lines[i])._spans(context));
     }
-    final span = TextSpan(children: spans);
+    final span = TranscriptHighlight.decorate(
+      context,
+      TextSpan(children: spans),
+      source: lines.join('\n'),
+    );
     return selectable ? SelectableText.rich(span) : Text.rich(span);
   }
 }
@@ -565,7 +570,11 @@ class _InlineParser {
 
   _InlineParser(this.src);
 
-  TextSpan parse(BuildContext context) => TextSpan(children: _spans(context));
+  TextSpan parse(BuildContext context) => TranscriptHighlight.decorate(
+    context,
+    TextSpan(children: _spans(context)),
+    source: src,
+  );
 
   List<InlineSpan> _spans(BuildContext context) {
     final spans = <InlineSpan>[];
@@ -728,22 +737,25 @@ class _PathCodeChipState extends State<_PathCodeChip> {
         ),
       ),
       child: Text.rich(
-        TextSpan(
-          text: widget.code,
-          children: [
-            if (_readable)
-              WidgetSpan(
-                alignment: PlaceholderAlignment.middle,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 3),
-                  child: Icon(
-                    Icons.open_in_new_rounded,
-                    size: (widget.base.fontSize ?? 14) - 2,
-                    color: theme.colorScheme.primary,
+        TranscriptHighlight.decorate(
+          context,
+          TextSpan(
+            text: widget.code,
+            children: [
+              if (_readable)
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.middle,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 3),
+                    child: Icon(
+                      Icons.open_in_new_rounded,
+                      size: (widget.base.fontSize ?? 14) - 2,
+                      color: theme.colorScheme.primary,
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
         style: widget.base.copyWith(
           fontFamily: AppTheme.monoFamily,
@@ -787,8 +799,8 @@ class _CodeSpan extends WidgetSpan {
                width: .5,
              ),
            ),
-           child: Text(
-             code,
+           child: Text.rich(
+             TranscriptHighlight.decorate(context, TextSpan(text: code)),
              style: base.copyWith(
                fontFamily: AppTheme.monoFamily,
                fontSize: (base.fontSize ?? 14) - 1.5,
@@ -913,13 +925,16 @@ class CodeBlock extends StatelessWidget {
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: SelectableText.rich(
-                highlightEnabled
-                    ? highlightedCode(
-                        display,
-                        language,
-                        CodeHighlightTheme.of(context),
-                      )
-                    : TextSpan(text: display),
+                TranscriptHighlight.decorate(
+                  context,
+                  highlightEnabled
+                      ? highlightedCode(
+                          display,
+                          language,
+                          CodeHighlightTheme.of(context),
+                        )
+                      : TextSpan(text: display),
+                ),
                 style: theme.textTheme.bodySmall!.copyWith(
                   fontFamily: AppTheme.monoFamily,
                   fontSize: AppTheme.codeFontSize,

@@ -17,6 +17,7 @@ import '../../api/sse.dart';
 import '../../domain/prompt_attachment.dart';
 import '../../domain/background_work.dart';
 import '../../domain/session_history.dart';
+import '../../domain/transcript_search.dart';
 import 'running_work_sheet.dart';
 import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
@@ -45,6 +46,7 @@ import '../widgets/pickers.dart';
 import '../widgets/model_shortcuts.dart';
 import '../widgets/product_states.dart';
 import '../widgets/prompt_history_navigation.dart';
+import '../widgets/transcript_highlight.dart';
 import '../widgets/question_options.dart';
 import '../widgets/session_title.dart';
 import '../widgets/session_read_state.dart';
@@ -75,6 +77,7 @@ import 'tools_screen.dart';
 
 part 'chat/sessions_tab.dart';
 part 'chat/timeline_sheet.dart';
+part 'chat/transcript_find.dart';
 part 'chat/command_launcher.dart';
 part 'chat/prompt_editor.dart';
 part 'chat/prompt_history.dart';
@@ -391,6 +394,19 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void>? _serverCommandsRequest;
   String? _highlightedMessageID;
   Timer? _highlightTimer;
+  final _findController = TextEditingController();
+  final _findFocus = FocusNode();
+  final _findNavigationFocus = FocusNode(skipTraversal: true);
+  BuildContext? _findExcerptContext;
+  final _findIndex = TranscriptSearchIndex();
+  Timer? _findDebounce;
+  bool _findOpen = false;
+  String _findQuery = '';
+  List<TranscriptMatch> _findHits = [];
+  int _findCursor = 0;
+  String? _findKey;
+  int? _findLocation;
+  bool _findAllLoading = false;
 
   String? get _shareUrl =>
       _conn.sessionsById[widget.sessionID]?.shareUrl ?? _localShareUrl;
@@ -2529,7 +2545,128 @@ class _ChatScreenState extends State<ChatScreen>
       await _forkFromMessage(selection.message);
       return;
     }
-    _jumpToMessage(selection.message.info.id);
+    if (selection.query.isNotEmpty) {
+      _openFind(query: selection.query, messageID: selection.message.info.id);
+    } else {
+      _jumpToMessage(selection.message.info.id);
+    }
+  }
+
+  void _syncFind() {
+    _findHits = _findOpen ? _findIndex.search(_visibleHistory, _findQuery) : [];
+    final retained = _findHits.indexWhere((match) => match.key == _findKey);
+    _findCursor = retained >= 0
+        ? retained
+        : _findCursor.clamp(0, math.max(0, _findHits.length - 1));
+    _findKey = _findHits.isEmpty ? null : _findHits[_findCursor].key;
+  }
+
+  void _openFind({String? query, String? messageID}) {
+    setState(() {
+      _findOpen = true;
+      _findLocation = _conn.locationRevision;
+      if (query != null) {
+        _findController.text = query;
+        _findQuery = query.trim();
+        _findKey = null;
+        _findCursor = 0;
+      }
+      _syncFind();
+      if (messageID != null) {
+        final index = _findHits.indexWhere(
+          (match) => match.messageID == messageID,
+        );
+        if (index >= 0) {
+          _findCursor = index;
+          _findKey = _findHits[index].key;
+        }
+      }
+    });
+    if (messageID != null) {
+      _jumpToMessage(messageID, alignment: .85);
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_findOpen) return;
+        _findFocus.requestFocus();
+        _findController.selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: _findController.text.length,
+        );
+      });
+    }
+  }
+
+  void _changeFind(String query) {
+    _findDebounce?.cancel();
+    _findDebounce = Timer(const Duration(milliseconds: 220), () {
+      if (!mounted || !_findOpen) return;
+      setState(() {
+        _findQuery = query.trim();
+        _findKey = null;
+        _findCursor = 0;
+        _syncFind();
+      });
+      if (_findHits.isNotEmpty) {
+        _jumpToMessage(_findHits.first.messageID, alignment: .85);
+      }
+    });
+  }
+
+  void _navigateFind(int step) {
+    _findDebounce?.cancel();
+    if (_findQuery != _findController.text.trim()) {
+      setState(() {
+        _findQuery = _findController.text.trim();
+        _findCursor = 0;
+        _findKey = null;
+        _syncFind();
+      });
+      step = 0;
+    }
+    if (_findHits.isEmpty) return;
+    _findFocus.unfocus();
+    _findNavigationFocus.requestFocus();
+    _findExcerptContext = null;
+    setState(() {
+      _findCursor = (_findCursor + step) % _findHits.length;
+      _findKey = _findHits[_findCursor].key;
+    });
+    _jumpToMessage(_findHits[_findCursor].messageID, alignment: .85);
+  }
+
+  void _closeFind() {
+    _findAllLoading = false;
+    _findDebounce?.cancel();
+    _findFocus.unfocus();
+    _findNavigationFocus.unfocus();
+    _findExcerptContext = null;
+    setState(() {
+      _findOpen = false;
+      _findQuery = '';
+      _findController.clear();
+      _findHits = [];
+      _findKey = null;
+    });
+  }
+
+  Future<void> _searchAllHistory() async {
+    if (_findAllLoading || _loading || _loadingOlder) return;
+    _findNavigationFocus.requestFocus();
+    final location = _conn.locationRevision;
+    setState(() => _findAllLoading = true);
+    try {
+      while (mounted &&
+          _findOpen &&
+          _findAllLoading &&
+          location == _conn.locationRevision &&
+          _olderCursor != null) {
+        final before = _olderCursor;
+        await _loadOlder();
+        if (_olderError != null || _olderCursor == before) break;
+      }
+    } finally {
+      if (mounted) setState(() => _findAllLoading = false);
+    }
   }
 
   Future<void> _toggleReasoningDisplay() async {
@@ -2666,7 +2803,7 @@ class _ChatScreenState extends State<ChatScreen>
     _focus.requestFocus();
   }
 
-  void _jumpToMessage(String messageID) {
+  void _jumpToMessage(String messageID, {double alignment = .5}) {
     final chronologicalIndex = _messages.indexWhere(
       (message) => message.info.id == messageID,
     );
@@ -2683,13 +2820,37 @@ class _ChatScreenState extends State<ChatScreen>
       _pinnedMessageCount = null;
       _highlightedMessageID = messageID;
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_messageScroll.isAttached) return;
-      _messageScroll.scrollTo(
+    final findKey = _findOpen ? _findKey : null;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted ||
+          !_messageScroll.isAttached ||
+          _highlightedMessageID != messageID) {
+        return;
+      }
+      await _messageScroll.scrollTo(
         index: listIndex,
-        alignment: .5,
-        duration: const Duration(milliseconds: 360),
+        alignment: alignment,
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 360),
         curve: Curves.easeOutCubic,
+      );
+      if (findKey == null) return;
+      await WidgetsBinding.instance.endOfFrame;
+      final target = _findExcerptContext;
+      if (!mounted ||
+          !_findOpen ||
+          _findKey != findKey ||
+          target == null ||
+          !target.mounted) {
+        return;
+      }
+      await Scrollable.ensureVisible(
+        target,
+        alignment: .3,
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 160),
       );
     });
     _highlightTimer = Timer(const Duration(seconds: 2), () {
@@ -3144,6 +3305,7 @@ class _ChatScreenState extends State<ChatScreen>
   // ----- dialogs -----
 
   void _onConnectionChanged() {
+    if (_findOpen && _findLocation != _conn.locationRevision) _closeFind();
     if (!mounted) return;
     _announceCompletedFlush();
     _syncRetryTicker();
@@ -4266,6 +4428,8 @@ class _ChatScreenState extends State<ChatScreen>
         if (mounted) setState(() {});
       case 'timeline':
         await _openTimeline();
+      case 'find':
+        _openFind();
       case 'context':
         await _showContext();
       case 'changes':
@@ -4869,6 +5033,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   @override
   Widget build(BuildContext context) {
+    _syncFind();
     final theme = Theme.of(context);
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final busy = _conn.busySessions.contains(widget.sessionID);
@@ -5029,6 +5194,34 @@ class _ChatScreenState extends State<ChatScreen>
                             bodyConstraints.maxHeight < 420;
                         return Column(
                           children: [
+                            if (_findOpen)
+                              ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxHeight: bodyConstraints.maxHeight * .38,
+                                ),
+                                child: _TranscriptFindBar(
+                                  controller: _findController,
+                                  focusNode: _findFocus,
+                                  count: _findHits.length,
+                                  current: _findCursor,
+                                  hasOlder: _olderCursor != null,
+                                  loading:
+                                      _loading ||
+                                      _loadingOlder ||
+                                      _findAllLoading,
+                                  searchingAll: _findAllLoading,
+                                  onCancelLoading: () =>
+                                      setState(() => _findAllLoading = false),
+                                  error: _olderError,
+                                  needsReload:
+                                      _olderNeedsReload || _resetHistoryOnLoad,
+                                  onChanged: _changeFind,
+                                  onNext: () => _navigateFind(1),
+                                  onPrevious: () => _navigateFind(-1),
+                                  onClose: _closeFind,
+                                  onLoadOlder: _searchAllHistory,
+                                ),
+                              ),
                             Expanded(
                               child:
                                   _visibleHistory.isEmpty &&
@@ -5124,8 +5317,41 @@ class _ChatScreenState extends State<ChatScreen>
                                                       showTimestamp: _conn
                                                           .transcriptTimestampsVisible,
                                                       highlighted:
+                                                          (_findHits
+                                                                  .isNotEmpty &&
+                                                              _findHits[_findCursor]
+                                                                      .messageID ==
+                                                                  m.info.id) ||
                                                           _highlightedMessageID ==
-                                                          m.info.id,
+                                                              m.info.id,
+                                                      searchQuery: _findQuery,
+                                                      onSearchExcerptContext: (context) {
+                                                        if (_findHits
+                                                                .isNotEmpty &&
+                                                            _findHits[_findCursor]
+                                                                    .messageID ==
+                                                                m.info.id) {
+                                                          _findExcerptContext =
+                                                              context;
+                                                        }
+                                                      },
+                                                      searchMatch:
+                                                          _findHits
+                                                                  .isNotEmpty &&
+                                                              _findHits[_findCursor]
+                                                                      .messageID ==
+                                                                  m.info.id
+                                                          ? _findHits[_findCursor]
+                                                          : null,
+                                                      searchLabel:
+                                                          _findHits.isEmpty
+                                                          ? ''
+                                                          : _chatL10n(
+                                                              context,
+                                                            ).transcriptFindCount(
+                                                              _findCursor + 1,
+                                                              _findHits.length,
+                                                            ),
                                                       onLongPress: () =>
                                                           unawaited(
                                                             _showMessageActions(
@@ -5491,14 +5717,39 @@ class _ChatScreenState extends State<ChatScreen>
         ),
       ),
     );
-    return ModelShortcuts(
-      onCycle: _cycleModel,
-      onBackground: _canBackgroundWork ? _backgroundRunningWork : null,
-      child: SessionViewObserver(
-        controller: _conn,
-        sessionID: widget.sessionID,
-        ready: !_loading && _error == null && !_awayFromLatest,
-        child: screen,
+    return Actions(
+      actions: {
+        FindInSurfaceIntent: CallbackAction<FindInSurfaceIntent>(
+          onInvoke: (_) {
+            _openFind();
+            return null;
+          },
+        ),
+      },
+      child: CallbackShortcuts(
+        bindings: {
+          if (_findOpen)
+            const SingleActivator(LogicalKeyboardKey.escape): _closeFind,
+          if (_findOpen)
+            const SingleActivator(LogicalKeyboardKey.f3): () =>
+                _navigateFind(1),
+          if (_findOpen)
+            const SingleActivator(LogicalKeyboardKey.f3, shift: true): () =>
+                _navigateFind(-1),
+        },
+        child: Focus(
+          focusNode: _findNavigationFocus,
+          child: ModelShortcuts(
+            onCycle: _cycleModel,
+            onBackground: _canBackgroundWork ? _backgroundRunningWork : null,
+            child: SessionViewObserver(
+              controller: _conn,
+              sessionID: widget.sessionID,
+              ready: !_loading && _error == null && !_awayFromLatest,
+              child: screen,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -5513,6 +5764,10 @@ class _ChatScreenState extends State<ChatScreen>
     _sub.cancel();
     _streamFlushTimer?.cancel();
     _highlightTimer?.cancel();
+    _findDebounce?.cancel();
+    _findController.dispose();
+    _findFocus.dispose();
+    _findNavigationFocus.dispose();
     _composerNoteTimer?.cancel();
     _retryTicker?.cancel();
     unawaited(_voice?.cancel());

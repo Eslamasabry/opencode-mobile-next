@@ -2193,6 +2193,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The server or location changed. Close and reopen Saved prompts.'**
   String get promptStashScopeChanged;
+
+  /// No description provided for @transcriptFindTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Find in conversation'**
+  String get transcriptFindTitle;
+
+  /// No description provided for @transcriptFindHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search conversation'**
+  String get transcriptFindHint;
+
+  /// No description provided for @transcriptFindScope.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages, reasoning and tool data'**
+  String get transcriptFindScope;
+
+  /// No description provided for @transcriptFindClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close search'**
+  String get transcriptFindClose;
+
+  /// No description provided for @transcriptFindPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous match'**
+  String get transcriptFindPrevious;
+
+  /// No description provided for @transcriptFindNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next match'**
+  String get transcriptFindNext;
+
+  /// No description provided for @transcriptFindNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get transcriptFindNone;
+
+  /// No description provided for @transcriptFindCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{total, plural, =1{1 match} other{{current} of {total} matches}}'**
+  String transcriptFindCount(int current, int total);
+
+  /// No description provided for @transcriptFindTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 match in message text} other{{count} matches in message text}}'**
+  String transcriptFindTotal(int count);
+
+  /// No description provided for @transcriptFindPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Loaded messages only. Load older messages to search further.'**
+  String get transcriptFindPartial;
+
+  /// No description provided for @transcriptFindComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'All available message content searched.'**
+  String get transcriptFindComplete;
+
+  /// No description provided for @transcriptFindReasoning.
+  ///
+  /// In en, this message translates to:
+  /// **'Reasoning'**
+  String get transcriptFindReasoning;
+
+  /// No description provided for @transcriptFindTool.
+  ///
+  /// In en, this message translates to:
+  /// **'Tool data'**
+  String get transcriptFindTool;
+
+  /// No description provided for @transcriptFindFile.
+  ///
+  /// In en, this message translates to:
+  /// **'File name'**
+  String get transcriptFindFile;
+
+  /// No description provided for @transcriptFindAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Search all history'**
+  String get transcriptFindAll;
 }
 
 class _AppLocalizationsDelegate

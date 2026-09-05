@@ -1,10 +1,15 @@
 part of '../chat_screen.dart';
 
 class _TimelineSelection {
-  const _TimelineSelection({required this.message, required this.fork});
+  const _TimelineSelection({
+    required this.message,
+    required this.fork,
+    this.query = '',
+  });
 
   final MessageWithParts message;
   final bool fork;
+  final String query;
 }
 
 class _SessionSheetRow extends StatelessWidget {
@@ -51,6 +56,7 @@ class _TimelineSheet extends StatefulWidget {
 
 class _TimelineSheetState extends State<_TimelineSheet> {
   final _search = TextEditingController();
+  final _index = TranscriptSearchIndex();
 
   String _preview(MessageWithParts message) {
     final text = message.parts
@@ -101,9 +107,16 @@ class _TimelineSheetState extends State<_TimelineSheet> {
     final theme = Theme.of(context);
     final largeText = MediaQuery.textScalerOf(context).scale(1) >= 1.5;
     final query = _search.text.trim().toLowerCase();
+    final hits = _index.search(widget.messages, query);
+    final firstHits = <String, TranscriptMatch>{};
+    for (final hit in hits) {
+      firstHits.putIfAbsent(hit.messageID, () => hit);
+    }
+    final matchingIDs = hits.map((match) => match.messageID).toSet();
     final visible = widget.messages.reversed.where((message) {
       if (widget.forkMode && !_isForkable(message)) return false;
       if (query.isEmpty) return true;
+      if (!widget.forkMode) return matchingIDs.contains(message.info.id);
       final role = message.info.role == 'user'
           ? 'you user'
           : 'opencode assistant';
@@ -171,6 +184,13 @@ class _TimelineSheetState extends State<_TimelineSheet> {
                 ),
               ),
             ),
+            if (!widget.forkMode && query.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  _chatL10n(context).transcriptFindTotal(hits.length),
+                ),
+              ),
             if (widget.hasOlder)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -229,10 +249,22 @@ class _TimelineSheetState extends State<_TimelineSheet> {
                             size: 20,
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
-                          title: Text(
-                            _preview(message),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                          title: TranscriptHighlight(
+                            query: query,
+                            child: Builder(
+                              builder: (context) => Text.rich(
+                                TranscriptHighlight.decorate(
+                                  context,
+                                  TextSpan(
+                                    text:
+                                        firstHits[message.info.id]?.preview ??
+                                        _preview(message),
+                                  ),
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
                           ),
                           subtitle: Text(footer),
                           trailing: _isForkable(message)
@@ -260,6 +292,7 @@ class _TimelineSheetState extends State<_TimelineSheet> {
                             _TimelineSelection(
                               message: message,
                               fork: widget.forkMode,
+                              query: widget.forkMode ? '' : _search.text.trim(),
                             ),
                           ),
                         );

@@ -556,3 +556,26 @@ verification/prompt-stash-and-history.md for the exact behavior and limits.
 
 Worked directly on dev, fast-forwarded master and pushed both for this batch.
 No feature branch or PR was created.
+
+## Cycle 18 — inline transcript search
+
+Added Find in conversation to the session menu and existing Find shortcut.
+Timeline selection carries its query into the same inline occurrence navigator.
+Available text, reasoning, tool data and filenames are searched literally;
+prose/code highlights and an active source excerpt make matches discoverable
+without changing clipboard content or tool expansion choices. Counts, wrapped
+Previous/Next, F3/Shift+F3 and Escape work together. Long-reply navigation now
+scrolls the active excerpt into view after materializing its message.
+
+Search all history follows empty intermediate pages and preserves the selected
+occurrence. Cancellation stops further requests; errors preserve results and
+offer recovery. Loaded-only/full coverage remains explicit. A per-message
+index avoids rescanning unchanged text during streaming.
+
+Nine search checks and 25 existing transcript/Markdown regression checks pass;
+static analysis is clean. Reviewed the 411px render; compact 320px, 1.7x text
+with a simulated keyboard inset retains usable navigation. Native keyboard,
+TalkBack and final candidate checks remain. See verification/transcript-search.md.
+
+The prior 33bb657 dev/master Android, Linux and Windows builds all completed
+successfully. This batch follows the same direct dev → master workflow.

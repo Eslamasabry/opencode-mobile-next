@@ -548,6 +548,11 @@ class _SessionMenuSheet extends StatelessWidget {
                 runSpacing: 8,
                 children: [
                   _SessionMenuChip(
+                    icon: Icons.search_rounded,
+                    label: _chatL10n(context).transcriptFindTitle,
+                    value: 'find',
+                  ),
+                  _SessionMenuChip(
                     icon: Icons.view_timeline_outlined,
                     label: 'Timeline',
                     value: 'timeline',
