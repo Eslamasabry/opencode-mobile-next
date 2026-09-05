@@ -119,6 +119,62 @@ class SessionSelection {
 
 const _unchangedSessionField = Object();
 
+/// A server-owned staged boundary and its optional, fixed file preview.
+class SessionRevert {
+  final String messageID;
+  final String? partID;
+  final String? snapshot;
+  final List<FileDiff>? files;
+
+  SessionRevert({
+    required this.messageID,
+    this.partID,
+    this.snapshot,
+    List<FileDiff>? files,
+  }) : files = files == null ? null : List.unmodifiable(files);
+
+  static SessionRevert? fromJson(dynamic value) {
+    if (value is! Map ||
+        value['messageID'] is! String ||
+        (value['messageID'] as String).isEmpty) {
+      return null;
+    }
+    return SessionRevert(
+      messageID: value['messageID'],
+      partID: value['partID'] as String?,
+      snapshot: value['snapshot'] as String?,
+      files: value['files'] is List
+          ? [
+              for (final file in value['files'] as List)
+                if (file is Map)
+                  FileDiff.fromJson(Map<String, dynamic>.from(file)),
+            ]
+          : null,
+    );
+  }
+
+  /// Includes the reviewed content, not just the message ID: another client
+  /// can stage the same boundary with different file behavior.
+  String get fingerprint => jsonEncode([
+    messageID,
+    partID,
+    snapshot,
+    files
+        ?.map(
+          (f) => [
+            f.file,
+            f.before,
+            f.after,
+            f.patch,
+            f.additions,
+            f.deletions,
+            f.status,
+          ],
+        )
+        .toList(),
+  ]);
+}
+
 class Session {
   final String id;
   final String? title;
@@ -128,6 +184,7 @@ class Session {
   final String? directory;
   final String? path;
   final bool reverted;
+  final SessionRevert? stagedRevert;
   final String? shareUrl;
   final SessionTime? time;
 
@@ -161,6 +218,7 @@ class Session {
     this.directory,
     this.path,
     this.reverted = false,
+    this.stagedRevert,
     this.shareUrl,
     this.time,
     this.cost,
@@ -183,6 +241,7 @@ class Session {
       directory: j['directory'] as String?,
       path: j['path'] as String?,
       reverted: j['revert'] != null,
+      stagedRevert: SessionRevert.fromJson(j['revert']),
       shareUrl: j['share'] is Map
           ? (j['share'] as Map)['url']?.toString()
           : null,
@@ -216,6 +275,7 @@ class Session {
     Object? workspaceID = _unchangedSessionField,
     Object? projectID = _unchangedSessionField,
     Object? path = _unchangedSessionField,
+    Object? stagedRevert = _unchangedSessionField,
     SessionSelection? selection,
     SessionTime? time,
   }) => Session(
@@ -232,7 +292,12 @@ class Session {
         ? this.directory
         : directory as String?,
     path: identical(path, _unchangedSessionField) ? this.path : path as String?,
-    reverted: reverted,
+    reverted: identical(stagedRevert, _unchangedSessionField)
+        ? reverted
+        : stagedRevert != null,
+    stagedRevert: identical(stagedRevert, _unchangedSessionField)
+        ? this.stagedRevert
+        : stagedRevert as SessionRevert?,
     shareUrl: shareUrl,
     time: time ?? this.time,
     cost: cost ?? this.cost,

@@ -64,6 +64,13 @@ const ServerCapabilities api2ServerCapabilities = ServerCapabilities(
 Health mapApi2Health(Api2Health health) =>
     Health(healthy: health.healthy, version: health.version);
 
+SessionRevert mapApi2Revert(Api2SessionRevert revert) => SessionRevert(
+  messageID: revert.messageID,
+  partID: revert.partID,
+  snapshot: revert.snapshot,
+  files: revert.files?.map(FileDiff.fromJson).toList(),
+);
+
 Session mapApi2Session(Api2Session session) => Session(
   id: session.id,
   title: session.title,
@@ -73,6 +80,7 @@ Session mapApi2Session(Api2Session session) => Session(
   directory: session.location?.directory,
   path: session.subpath?.isNotEmpty == true ? session.subpath : null,
   reverted: session.reverted,
+  stagedRevert: session.revert == null ? null : mapApi2Revert(session.revert!),
   shareUrl: null, // v2 has no session sharing.
   time: SessionTime(
     created: session.time.created,

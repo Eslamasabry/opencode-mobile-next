@@ -112,6 +112,15 @@ class Api2EventAdapter {
           }),
         ];
 
+      case Api2SessionRevertEvent():
+        return [
+          _env('session.revert.${event.phase.name}', {
+            'sessionID': event.sessionID,
+            if (event.revert != null) 'revert': event.revert,
+            if (event.toMessageID != null) 'to': event.toMessageID,
+          }),
+        ];
+
       case Api2SessionStatusEvent():
         if (envelope.type == 'session.idle' ||
             (envelope.type == 'session.status' &&

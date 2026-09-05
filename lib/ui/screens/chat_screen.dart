@@ -15,6 +15,7 @@ import '../../api/product_repository.dart';
 import '../../api/sse.dart';
 import '../../domain/prompt_attachment.dart';
 import '../../domain/background_work.dart';
+import '../../domain/session_history.dart';
 import 'running_work_sheet.dart';
 import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
@@ -59,6 +60,7 @@ import 'library_screen.dart';
 import 'project_health_screen.dart';
 import 'review_workspace.dart';
 import 'session_context_screen.dart';
+import 'staged_revert_screen.dart';
 import 'session_destination_sheet.dart';
 import 'session_relations_screen.dart';
 import 'settings_screen.dart';
@@ -464,7 +466,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   List<String> get _recentPrompts => {
-    for (final message in _messages.reversed)
+    for (final message in _visibleHistory.toList().reversed)
       if (message.info.role == 'user' && !message.info.id.startsWith('local-'))
         if (_messageText(message).trim() case final text when text.isNotEmpty)
           text,
@@ -655,8 +657,23 @@ class _ChatScreenState extends State<ChatScreen>
 
   void _onEvent(EventEnvelope env) {
     if (!mounted) return;
-    if (env.type == 'session.compacted' &&
+    if ((env.type == 'session.compacted' ||
+            env.type == 'session.history.reset') &&
         env.properties['sessionID'] == widget.sessionID) {
+      if (env.type == 'session.history.reset' &&
+          _conn.sessionsById[widget.sessionID]?.stagedRevert == null) {
+        final removedFrom = env.properties['removedFrom'] as String?;
+        // A cleared boundary may mean commit, clear, or an ambiguous response.
+        // Never reveal the cached staged tail before authoritative hydration.
+        _messages.removeWhere(
+          (message) =>
+              removedFrom == null ||
+              message.info.id.compareTo(removedFrom) >= 0,
+        );
+        _deferredMessages.clear();
+        _deferredParts.clear();
+        _deferredPartDeltas.clear();
+      }
       unawaited(_load(resetHistory: true));
     }
     if (env.type.startsWith('shell.')) {
@@ -1205,7 +1222,14 @@ class _ChatScreenState extends State<ChatScreen>
       if (api == null) {
         throw const ProductException('OpenCode is reconnecting.');
       }
-      final page = await api.messagePage(scope.session);
+      final page = await readHistoryAtStagedBoundary(
+        api,
+        scope.session,
+        boundary: _conn.supportsStagedRevert
+            ? _conn.sessionsById[scope.session]?.stagedRevert?.messageID
+            : null,
+        isCurrent: () => _currentHistory(generation, scope),
+      );
       if (!_currentHistory(generation, scope)) return;
       final anchor = _historyAnchor();
       final pinnedEnd = _renderedMessageCount == 0
@@ -1683,6 +1707,7 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _send({PromptDelivery? delivery}) async {
     delivery ??= _activeDelivery;
     await _voice?.cancel();
+    if (!mounted) return;
     // UX-103 review handoff: the command grammar is matched against the text
     // the *user* typed, before any staged reference is folded in. Folding
     // first appended a multi-line reference block that `_typedChatCommand`
@@ -1711,6 +1736,12 @@ class _ChatScreenState extends State<ChatScreen>
       // is told, so nothing looks lost.
       if (hasStagedReferences) _noteReferencesKeptForNextPrompt();
       await _submitTypedCommand(typedCommand);
+      return;
+    }
+    if (_conn.supportsStagedRevert &&
+        (_conn.sessionsById[widget.sessionID]?.reverted == true ||
+            _conn.sessionRevertSaving(widget.sessionID))) {
+      _showComposerNote(_chatL10n(context).revertResolveBeforeSending);
       return;
     }
     _applyStagedReferences(); // UX-103 review handoff
@@ -1839,6 +1870,9 @@ class _ChatScreenState extends State<ChatScreen>
         }
       }
       if (!mounted) return;
+      if (e is ApiException && e.errorTag == 'SessionRevertPending') {
+        unawaited(_conn.ensureSession(widget.sessionID));
+      }
       setState(() => _attachments.insertAll(0, attachments));
       final currentText = _composer.text;
       if (text.isNotEmpty && currentText.trim() != text) {
@@ -1906,6 +1940,12 @@ class _ChatScreenState extends State<ChatScreen>
       await _runMobileCommand(command.action!);
       return;
     }
+    if (_conn.supportsStagedRevert &&
+        (_conn.sessionsById[widget.sessionID]?.reverted == true ||
+            _conn.sessionRevertSaving(widget.sessionID))) {
+      _showComposerNote(_chatL10n(context).revertResolveBeforeSending);
+      return;
+    }
     setState(() => _sending = true);
     final actionApi = await _conn.prepareActionTransport();
     if (!mounted) return;
@@ -1937,6 +1977,9 @@ class _ChatScreenState extends State<ChatScreen>
       setState(() => _sending = false);
     } catch (error) {
       if (!mounted) return;
+      if (error is ApiException && error.errorTag == 'SessionRevertPending') {
+        unawaited(_conn.ensureSession(widget.sessionID));
+      }
       _composer.text = original;
       _composer.selection = TextSelection.collapsed(offset: original.length);
       setState(() => _sending = false);
@@ -2249,7 +2292,7 @@ class _ChatScreenState extends State<ChatScreen>
       builder: (context) => ListenableBuilder(
         listenable: _historyChanges,
         builder: (context, _) => _TimelineSheet(
-          messages: List.of(_messages),
+          messages: List.of(_visibleHistory),
           forkMode: forkMode,
           hasOlder: _olderCursor != null,
           loadingOlder: _loading || _loadingOlder,
@@ -2311,7 +2354,7 @@ class _ChatScreenState extends State<ChatScreen>
   double? _contextWindowUsage() {
     final catalog = _conn.catalog;
     if (catalog == null) return null;
-    for (var index = _messages.length - 1; index >= 0; index -= 1) {
+    for (var index = _visibleHistory.length - 1; index >= 0; index -= 1) {
       final info = _messages[index].info;
       if (info.role != 'assistant' || info.tokens.total <= 0) continue;
       for (final model in catalog.models) {
@@ -2343,8 +2386,22 @@ class _ChatScreenState extends State<ChatScreen>
   /// the pinned count while the reader is scrolled away from the live end.
   int get _renderedMessageCount {
     final pinned = _pinnedMessageCount;
-    if (!_awayFromLatest || pinned == null) return _messages.length;
-    return pinned < _messages.length ? pinned : _messages.length;
+    final count = _visibleHistory.length;
+    if (!_awayFromLatest || pinned == null) return count;
+    return pinned < count ? pinned : count;
+  }
+
+  /// The pinned v2 API returns staged-away rows until commit. Keep them in
+  /// the hydration cache, but apply the server's boundary to every chat view.
+  Iterable<MessageWithParts> get _visibleHistory {
+    final boundary = _conn.supportsStagedRevert
+        ? _conn.sessionsById[widget.sessionID]?.stagedRevert?.messageID
+        : null;
+    return boundary == null
+        ? _messages
+        : _messages.takeWhile(
+            (message) => message.info.id.compareTo(boundary) < 0,
+          );
   }
 
   /// Messages sitting entirely above the viewport: the transcript's list
@@ -2391,11 +2448,12 @@ class _ChatScreenState extends State<ChatScreen>
     final chronologicalIndex = _messages.indexWhere(
       (message) => message.info.id == messageID,
     );
-    if (chronologicalIndex < 0) {
+    if (chronologicalIndex < 0 ||
+        chronologicalIndex >= _visibleHistory.length) {
       _showActionError('That message is no longer in this session.');
       return;
     }
-    final listIndex = _messages.length - 1 - chronologicalIndex;
+    final listIndex = _visibleHistory.length - 1 - chronologicalIndex;
     _highlightTimer?.cancel();
     setState(() {
       // Materialize any messages deferred while scrolled away so the target
@@ -2489,6 +2547,13 @@ class _ChatScreenState extends State<ChatScreen>
         icon: Icons.fork_right_rounded,
         onSelected: () => unawaited(_forkFromMessage(message)),
       ),
+    if (_canStageFrom(message))
+      ContextMenuAction(
+        menuKey: const ValueKey('message-menu-revert'),
+        label: _chatL10n(context).revertFromHere,
+        icon: Icons.history_rounded,
+        onSelected: () => unawaited(_stageFromMessage(message)),
+      ),
     if (_conn.capabilities.messageDelete)
       ContextMenuAction(
         menuKey: const ValueKey('message-menu-delete'),
@@ -2528,6 +2593,13 @@ class _ChatScreenState extends State<ChatScreen>
               ),
             // §7 row 14: v2 has no message delete, and PATCH edit is not the
             // same promise — do not fake it.
+            if (_canStageFrom(message))
+              ListTile(
+                key: const ValueKey('message-action-revert'),
+                leading: const Icon(Icons.history_rounded),
+                title: Text(_chatL10n(context).revertFromHere),
+                onTap: () => Navigator.pop(context, 'revert'),
+              ),
             if (_conn.capabilities.messageDelete)
               ListTile(
                 key: const ValueKey('message-action-delete'),
@@ -2551,6 +2623,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (!mounted || action == null) return;
     if (action == 'copy') await _copyMessageText(message);
     if (action == 'fork') await _forkFromMessage(message);
+    if (action == 'revert') await _stageFromMessage(message);
     if (action == 'delete') await _deleteMessage(message);
   }
 
@@ -2685,14 +2758,21 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<void> _revertLast() async {
     MessageWithParts? target;
-    for (final message in _messages.reversed) {
+    for (final message in _visibleHistory.toList().reversed) {
       if (message.info.role == 'user' &&
-          !message.info.id.startsWith('local-')) {
+          !message.info.id.startsWith('local-') &&
+          !_conn
+              .inboxItemsFor(widget.sessionID)
+              .any((item) => item.id == message.info.id)) {
         target = message;
         break;
       }
     }
     if (target == null) return;
+    if (_conn.supportsStagedRevert) {
+      await _stageFromMessage(target);
+      return;
+    }
     final confirmed = await showConfirmSheet(
       context,
       icon: Icons.history_rounded,
@@ -2712,6 +2792,10 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _restore() async {
+    if (_conn.supportsStagedRevert) {
+      await _reviewStagedRevert();
+      return;
+    }
     try {
       final repository = await _requireActionRepository();
       await repository.restoreSession(widget.sessionID);
@@ -2721,10 +2805,55 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
+  bool _canStageFrom(MessageWithParts message) =>
+      _conn.supportsStagedRevert &&
+      !_conn.sessionRevertSaving(widget.sessionID) &&
+      !_conn.busySessions.contains(widget.sessionID) &&
+      message.info.role == 'user' &&
+      !message.info.id.startsWith('local-') &&
+      !_conn
+          .inboxItemsFor(widget.sessionID)
+          .any((item) => item.id == message.info.id);
+
+  Future<void> _stageFromMessage(MessageWithParts message) async {
+    if (!_canStageFrom(message)) return;
+    final review = _conn.reviewSessionRevert(widget.sessionID);
+    final applyFiles = await showStageRevertSheet(
+      context,
+      controller: _conn,
+      review: review,
+      prompt: message.parts
+          .where((part) => part.type == 'text')
+          .map((part) => part.text)
+          .join('\n'),
+    );
+    if (!mounted || applyFiles == null) return;
+    try {
+      await _conn.stageSessionRevert(
+        review,
+        message.info.id,
+        applyFiles: applyFiles,
+      );
+      if (mounted &&
+          review.scope == _conn.reviewSessionRevert(widget.sessionID).scope) {
+        await _reviewStagedRevert();
+      }
+    } catch (error) {
+      if (mounted) _showActionError(error);
+    }
+  }
+
+  Future<void> _reviewStagedRevert() => Navigator.of(context).push<void>(
+    MaterialPageRoute<void>(
+      builder: (_) =>
+          StagedRevertScreen(controller: _conn, sessionID: widget.sessionID),
+    ),
+  );
+
   Future<void> _retryLast() async {
     if (_sending) return;
     MessageWithParts? target;
-    for (final message in _messages.reversed) {
+    for (final message in _visibleHistory.toList().reversed) {
       if (message.info.role == 'user' &&
           !message.info.id.startsWith('local-')) {
         target = message;
@@ -3114,7 +3243,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   List<_ChatCommand> get _chatCommands {
     final session = _conn.sessionsById[widget.sessionID];
-    final hasUserMessage = _messages.any(
+    final hasUserMessage = _visibleHistory.any(
       (message) =>
           message.info.role == 'user' && !message.info.id.startsWith('local-'),
     );
@@ -3378,15 +3507,25 @@ class _ChatScreenState extends State<ChatScreen>
       _ChatCommand.mobile(
         slash: 'undo',
         title: 'Revert last prompt',
-        description: 'Roll back messages and file changes after the prompt',
+        description: _conn.supportsStagedRevert
+            ? _chatL10n(context).revertUndoDescription
+            : 'Roll back messages and file changes after the prompt',
         group: 'Current session',
         action: _ChatCommandAction.undo,
-        enabled: hasUserMessage && session?.reverted != true,
+        enabled:
+            hasUserMessage &&
+            session?.reverted != true &&
+            !_conn.sessionRevertSaving(widget.sessionID) &&
+            !_conn.busySessions.contains(widget.sessionID),
       ),
       _ChatCommand.mobile(
         slash: 'redo',
-        title: 'Restore reverted prompt',
-        description: 'Restore the currently reverted session state',
+        title: _conn.supportsStagedRevert
+            ? _chatL10n(context).revertClearAction
+            : 'Restore reverted prompt',
+        description: _conn.supportsStagedRevert
+            ? _chatL10n(context).revertClearShortDescription
+            : 'Restore the currently reverted session state',
         group: 'Current session',
         action: _ChatCommandAction.redo,
         enabled: session?.reverted == true,
@@ -3844,7 +3983,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (_olderCursor != null) {
       out.write('\n> ${_chatL10n(context).historyLoadedOnly}\n');
     }
-    for (final message in _messages) {
+    for (final message in _visibleHistory) {
       if (message.info.id.startsWith('local-')) continue;
       out.write(
         '\n## ${message.info.role == 'assistant' ? 'Assistant' : 'User'}\n\n',
@@ -3915,6 +4054,7 @@ class _ChatScreenState extends State<ChatScreen>
             timestampsVisible: _conn.transcriptTimestampsVisible,
             todosAvailable: _conn.capabilities.sessionTodos,
             reverted: reverted,
+            stagedRevert: _conn.supportsStagedRevert,
             shared: shared,
             sharingAvailable: _conn.capabilities.sessionShare,
           ),
@@ -3974,7 +4114,7 @@ class _ChatScreenState extends State<ChatScreen>
         builder: (_) => SessionContextScreen(
           controller: _conn,
           sessionID: widget.sessionID,
-          initialMessages: List.unmodifiable(_messages),
+          initialMessages: List.unmodifiable(_visibleHistory),
           initialHasOlder: _olderCursor != null,
         ),
       ),
@@ -4633,6 +4773,27 @@ class _ChatScreenState extends State<ChatScreen>
               )
             else if (shareUrl != null)
               _SharedSessionBanner(url: shareUrl, onStop: _stopSharing),
+            if (_conn.supportsStagedRevert && session?.reverted == true)
+              Material(
+                color: theme.colorScheme.secondaryContainer,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.history_rounded, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(_chatL10n(context).revertStaged)),
+                      TextButton(
+                        onPressed: _reviewStagedRevert,
+                        child: Text(_chatL10n(context).revertReview),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             Expanded(
               // Rehydrates and refreshes must not flash a skeleton or a
               // full-screen error over an already-visible transcript.
@@ -4668,7 +4829,9 @@ class _ChatScreenState extends State<ChatScreen>
                         return Column(
                           children: [
                             Expanded(
-                              child: _messages.isEmpty && _olderCursor == null
+                              child:
+                                  _visibleHistory.isEmpty &&
+                                      _olderCursor == null
                                   ? _EmptyTranscript(
                                       onSuggestion: _insertSuggestion,
                                     )

@@ -83,7 +83,11 @@ void main() {
     'ordinary v2 prompt command and shell preserve server selection',
     () async {
       await withServer(
-        handler: (request) => request.uri.path.endsWith('/prompt')
+        handler: (request) => request.method == 'GET'
+            ? writeJson(request, {
+                'data': {'id': _session},
+              })
+            : request.uri.path.endsWith('/prompt')
             ? writeJson(request, fixture('prompt_receipt.json'))
             : writeNoContent(request),
         (server, requests) async {
@@ -111,14 +115,52 @@ void main() {
             model: model,
           );
           expect(requests.map((r) => r.uri.path), [
+            '/api/session/$_session',
             '/api/session/$_session/prompt',
+            '/api/session/$_session',
             '/api/session/$_session/command',
             '/api/session/$_session/shell',
           ]);
-          for (final request in requests) {
+          for (final request in requests.where((r) => r.method == 'POST')) {
             expect((request.body as Map).containsKey('model'), isFalse);
             expect((request.body as Map).containsKey('agent'), isFalse);
           }
+        },
+      );
+    },
+  );
+
+  test(
+    'staged revert blocks prompt and commands before implicit server commit',
+    () async {
+      await withServer(
+        handler: (request) => writeJson(request, {
+          'data': {
+            'id': _session,
+            'revert': {'messageID': 'msg_boundary'},
+          },
+        }),
+        (server, requests) async {
+          final gateway = gatewayFor(server);
+          addTearDown(gateway.close);
+          for (final send in [
+            () => gateway.promptAsync(_session, text: 'must remain a draft'),
+            () =>
+                gateway.slashCommand(_session, 'review', 'must remain a draft'),
+          ]) {
+            await expectLater(
+              send(),
+              throwsA(
+                isA<ApiException>().having(
+                  (error) => error.errorTag,
+                  'tag',
+                  'SessionRevertPending',
+                ),
+              ),
+            );
+          }
+          expect(requests, hasLength(2));
+          expect(requests.every((r) => r.method == 'GET'), isTrue);
         },
       );
     },
@@ -366,7 +408,14 @@ void main() {
     test('promptAsync carries the queue delivery to the wire', () async {
       await withServer(
         handler: (request) async {
-          await writeJson(request, fixture('prompt_receipt.json'));
+          await writeJson(
+            request,
+            request.method == 'GET'
+                ? {
+                    'data': {'id': _session},
+                  }
+                : fixture('prompt_receipt.json'),
+          );
         },
         (server, requests) async {
           final gateway = gatewayFor(server);
@@ -375,7 +424,7 @@ void main() {
             text: 'later please',
             delivery: PromptDelivery.queue,
           );
-          final body = requests.single.body as Map;
+          final body = requests.last.body as Map;
           expect(body['delivery'], 'queue');
           gateway.close();
         },
@@ -387,12 +436,19 @@ void main() {
       () async {
         await withServer(
           handler: (request) async {
-            await writeJson(request, fixture('prompt_receipt.json'));
+            await writeJson(
+              request,
+              request.method == 'GET'
+                  ? {
+                      'data': {'id': _session},
+                    }
+                  : fixture('prompt_receipt.json'),
+            );
           },
           (server, requests) async {
             final gateway = gatewayFor(server);
             await gateway.promptAsync(_session, text: 'now');
-            final body = requests.single.body as Map;
+            final body = requests.last.body as Map;
             expect(body.containsKey('delivery'), isFalse);
             gateway.close();
           },

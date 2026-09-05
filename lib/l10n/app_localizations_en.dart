@@ -495,4 +495,106 @@ class AppLocalizationsEn extends AppLocalizations {
   String sessionsLoadedCount(int count) {
     return '$count loaded';
   }
+
+  @override
+  String get revertStageTitle => 'Stage a revert from this prompt?';
+
+  @override
+  String get revertStageDescription =>
+      'This prompt and the conversation after it will be hidden while the revert is staged. Review the result before making it permanent.';
+
+  @override
+  String get revertApplyFiles => 'Revert file changes too';
+
+  @override
+  String get revertApplyFilesHint =>
+      'Applies file changes immediately when staging. Clear can restore the staged files from the saved snapshot.';
+
+  @override
+  String get revertStageAction => 'Stage and review';
+
+  @override
+  String get revertReviewTitle => 'Review staged revert';
+
+  @override
+  String get revertReviewChanged =>
+      'This session or its staged revert changed. Review the latest state before continuing.';
+
+  @override
+  String get revertReviewLatest => 'Review latest state';
+
+  @override
+  String get revertBusy => 'Wait for the current session action to finish.';
+
+  @override
+  String get revertCancel => 'Cancel';
+
+  @override
+  String get revertCommitTitle => 'Make this revert permanent?';
+
+  @override
+  String get revertCommitDescription =>
+      'Removes the staged conversation history permanently. File changes already applied during staging will remain. You cannot clear this revert afterward.';
+
+  @override
+  String get revertCommitAction => 'Make revert permanent';
+
+  @override
+  String get revertClearTitle => 'Clear this staged revert?';
+
+  @override
+  String get revertClearDescription =>
+      'Restores the hidden conversation and the files included in this stage from the saved snapshot. Changes made to those files since staging may be replaced. Queued work may resume.';
+
+  @override
+  String get revertClearAction => 'Clear staged revert';
+
+  @override
+  String get revertNoStage => 'There is no staged revert to review.';
+
+  @override
+  String get revertBoundaryLabel => 'Staged from prompt';
+
+  @override
+  String get revertPreviewDescription =>
+      'These are the file changes reported for this stage. Staging may already have applied them.';
+
+  @override
+  String get revertPreviewUnavailable =>
+      'The server did not provide a file preview. This does not establish whether files changed.';
+
+  @override
+  String get revertPreviewEmpty =>
+      'No file changes were reported for this stage.';
+
+  @override
+  String get revertStaged => 'Revert staged';
+
+  @override
+  String get revertReview => 'Review';
+
+  @override
+  String get revertFromHere => 'Revert from this prompt';
+
+  @override
+  String get revertUndoDescription =>
+      'Stage a revert and review the affected files';
+
+  @override
+  String get revertClearShortDescription =>
+      'Review and clear the staged revert';
+
+  @override
+  String get revertPromptUnavailable =>
+      'The boundary prompt could not be loaded.';
+
+  @override
+  String get revertPromptLoading => 'Loading the boundary prompt…';
+
+  @override
+  String get revertAttachmentPrompt => 'Attachment-only prompt';
+
+  @override
+  String get revertResolveBeforeSending =>
+      'Review the staged revert, then clear it or make it permanent before sending. Your draft is kept.';
 }

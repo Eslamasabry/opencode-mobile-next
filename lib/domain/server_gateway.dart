@@ -37,6 +37,19 @@ abstract interface class SessionSelectionGateway {
   Future<void> setSessionAgent(String sessionID, String agent);
 }
 
+/// V2's explicit stage/review/commit lifecycle; v1 retains revert/restore.
+abstract interface class StagedRevertGateway {
+  /// Null for a non-user message; empty text is a valid attachment-only prompt.
+  Future<String?> sessionRevertPrompt(String sessionID, String messageID);
+  Future<SessionRevert> stageSessionRevert(
+    String sessionID,
+    String messageID, {
+    required bool applyFiles,
+  });
+  Future<void> clearSessionRevert(String sessionID);
+  Future<void> commitSessionRevert(String sessionID);
+}
+
 class WorkspaceProject {
   final String id;
   final String name;

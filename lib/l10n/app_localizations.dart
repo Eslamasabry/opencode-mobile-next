@@ -951,6 +951,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} loaded'**
   String sessionsLoadedCount(int count);
+
+  /// No description provided for @revertStageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stage a revert from this prompt?'**
+  String get revertStageTitle;
+
+  /// No description provided for @revertStageDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This prompt and the conversation after it will be hidden while the revert is staged. Review the result before making it permanent.'**
+  String get revertStageDescription;
+
+  /// No description provided for @revertApplyFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Revert file changes too'**
+  String get revertApplyFiles;
+
+  /// No description provided for @revertApplyFilesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies file changes immediately when staging. Clear can restore the staged files from the saved snapshot.'**
+  String get revertApplyFilesHint;
+
+  /// No description provided for @revertStageAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Stage and review'**
+  String get revertStageAction;
+
+  /// No description provided for @revertReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review staged revert'**
+  String get revertReviewTitle;
+
+  /// No description provided for @revertReviewChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'This session or its staged revert changed. Review the latest state before continuing.'**
+  String get revertReviewChanged;
+
+  /// No description provided for @revertReviewLatest.
+  ///
+  /// In en, this message translates to:
+  /// **'Review latest state'**
+  String get revertReviewLatest;
+
+  /// No description provided for @revertBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for the current session action to finish.'**
+  String get revertBusy;
+
+  /// No description provided for @revertCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get revertCancel;
+
+  /// No description provided for @revertCommitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Make this revert permanent?'**
+  String get revertCommitTitle;
+
+  /// No description provided for @revertCommitDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Removes the staged conversation history permanently. File changes already applied during staging will remain. You cannot clear this revert afterward.'**
+  String get revertCommitDescription;
+
+  /// No description provided for @revertCommitAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Make revert permanent'**
+  String get revertCommitAction;
+
+  /// No description provided for @revertClearTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear this staged revert?'**
+  String get revertClearTitle;
+
+  /// No description provided for @revertClearDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Restores the hidden conversation and the files included in this stage from the saved snapshot. Changes made to those files since staging may be replaced. Queued work may resume.'**
+  String get revertClearDescription;
+
+  /// No description provided for @revertClearAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear staged revert'**
+  String get revertClearAction;
+
+  /// No description provided for @revertNoStage.
+  ///
+  /// In en, this message translates to:
+  /// **'There is no staged revert to review.'**
+  String get revertNoStage;
+
+  /// No description provided for @revertBoundaryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Staged from prompt'**
+  String get revertBoundaryLabel;
+
+  /// No description provided for @revertPreviewDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'These are the file changes reported for this stage. Staging may already have applied them.'**
+  String get revertPreviewDescription;
+
+  /// No description provided for @revertPreviewUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The server did not provide a file preview. This does not establish whether files changed.'**
+  String get revertPreviewUnavailable;
+
+  /// No description provided for @revertPreviewEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No file changes were reported for this stage.'**
+  String get revertPreviewEmpty;
+
+  /// No description provided for @revertStaged.
+  ///
+  /// In en, this message translates to:
+  /// **'Revert staged'**
+  String get revertStaged;
+
+  /// No description provided for @revertReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get revertReview;
+
+  /// No description provided for @revertFromHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Revert from this prompt'**
+  String get revertFromHere;
+
+  /// No description provided for @revertUndoDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Stage a revert and review the affected files'**
+  String get revertUndoDescription;
+
+  /// No description provided for @revertClearShortDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Review and clear the staged revert'**
+  String get revertClearShortDescription;
+
+  /// No description provided for @revertPromptUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The boundary prompt could not be loaded.'**
+  String get revertPromptUnavailable;
+
+  /// No description provided for @revertPromptLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading the boundary prompt…'**
+  String get revertPromptLoading;
+
+  /// No description provided for @revertAttachmentPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachment-only prompt'**
+  String get revertAttachmentPrompt;
+
+  /// No description provided for @revertResolveBeforeSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Review the staged revert, then clear it or make it permanent before sending. Your draft is kept.'**
+  String get revertResolveBeforeSending;
 }
 
 class _AppLocalizationsDelegate

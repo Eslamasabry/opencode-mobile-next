@@ -8,6 +8,7 @@ import '../../api/product_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../api/provider_presentation.dart';
 import '../../state/connection.dart';
+import '../../domain/session_history.dart';
 import '../widgets/product_states.dart';
 import '../app_theme.dart';
 
@@ -196,6 +197,7 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
   int _generation = 0;
   late int _refreshRevision;
   late int _locationRevision;
+  late int _historyRevision;
   late bool _wasBusy;
   String? _olderCursor;
   bool _hasOlder = false;
@@ -210,6 +212,9 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
     _hasOlder = widget.initialHasOlder;
     _refreshRevision = widget.controller.dataRefreshRevision;
     _locationRevision = widget.controller.locationRevision;
+    _historyRevision = widget.controller.sessionHistoryRevision(
+      widget.sessionID,
+    );
     _wasBusy = widget.controller.busySessions.contains(widget.sessionID);
     widget.controller.addListener(_handleControllerChange);
     unawaited(_load());
@@ -227,11 +232,23 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
     final locationChanged =
         widget.controller.locationRevision != _locationRevision;
     final busy = widget.controller.busySessions.contains(widget.sessionID);
+    final historyRevision = widget.controller.sessionHistoryRevision(
+      widget.sessionID,
+    );
+    final historyChanged = _historyRevision != historyRevision;
+    _historyRevision = historyRevision;
     final completed = _wasBusy && !busy;
     _refreshRevision = widget.controller.dataRefreshRevision;
     _locationRevision = widget.controller.locationRevision;
     _wasBusy = busy;
-    if (refreshChanged || locationChanged || completed) unawaited(_load());
+    if (refreshChanged || locationChanged || completed || historyChanged) {
+      if (historyChanged &&
+          widget.controller.sessionsById[widget.sessionID]?.stagedRevert ==
+              null) {
+        _messages = [];
+      }
+      unawaited(_load());
+    }
   }
 
   Future<void> _load({bool older = false}) async {
@@ -251,7 +268,19 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
       if (api == null) {
         throw const ProductException('OpenCode is reconnecting. Try again.');
       }
-      final page = await api.messagePage(widget.sessionID, cursor: cursor);
+      final page = await readHistoryAtStagedBoundary(
+        api,
+        widget.sessionID,
+        cursor: cursor,
+        boundary: widget.controller.supportsStagedRevert
+            ? widget
+                  .controller
+                  .sessionsById[widget.sessionID]
+                  ?.stagedRevert
+                  ?.messageID
+            : null,
+        isCurrent: () => mounted && generation == _generation,
+      );
       if (!mounted || generation != _generation) return;
       if (older &&
           page.hasMore &&
@@ -301,8 +330,19 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final boundary = widget.controller.supportsStagedRevert
+        ? widget
+              .controller
+              .sessionsById[widget.sessionID]
+              ?.stagedRevert
+              ?.messageID
+        : null;
     final metrics = calculateSessionContextMetrics(
-      _messages,
+      boundary == null
+          ? _messages
+          : _messages
+                .where((message) => message.info.id.compareTo(boundary) < 0)
+                .toList(),
       widget.controller.catalog,
       session: widget.controller.sessionsById[widget.sessionID],
     );

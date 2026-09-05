@@ -515,6 +515,7 @@ class _SessionMenuSheet extends StatelessWidget {
     required this.reverted,
     required this.shared,
     required this.sharingAvailable,
+    this.stagedRevert = false,
   });
 
   final bool reasoningExpanded;
@@ -523,6 +524,7 @@ class _SessionMenuSheet extends StatelessWidget {
   final bool reverted;
   final bool shared;
   final bool sharingAvailable;
+  final bool stagedRevert;
 
   @override
   Widget build(BuildContext context) {
@@ -588,7 +590,11 @@ class _SessionMenuSheet extends StatelessWidget {
               icon: reverted
                   ? Icons.settings_backup_restore_rounded
                   : Icons.history_rounded,
-              label: reverted ? 'Restore messages' : 'Revert last prompt',
+              label: reverted
+                  ? (stagedRevert
+                        ? _chatL10n(context).revertReviewTitle
+                        : 'Restore messages')
+                  : 'Revert last prompt',
               value: reverted ? 'restore' : 'revert',
             ),
             _SessionSheetRow(

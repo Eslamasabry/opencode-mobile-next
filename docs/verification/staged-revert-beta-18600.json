@@ -1,0 +1,30 @@
+{
+  "stageFile": "before",
+  "commitFile": "before",
+  "stagedMessages": 2,
+  "historyOnlyFile": "after",
+  "version": "0.0.0-beta-18600",
+  "stagedPreview": {
+    "messageID": "msg_4e117f932b6f4a539560e79541610666_01",
+    "snapshot": "17b8c03888cb9df79066eebb4187260243b0f9d9",
+    "files": [
+      {
+        "file": "fixture.txt",
+        "patch": "diff --git a/fixture.txt b/fixture.txt\nindex 5c80f32..ee2363a 100644\n--- a/fixture.txt\n+++ b/fixture.txt\n@@ -1 +1 @@\n-after\n\\ No newline at end of file\n+before\n\\ No newline at end of file\n",
+        "additions": 1,
+        "deletions": 1,
+        "status": "modified"
+      }
+    ]
+  },
+  "replacementHistoryOnlyFile": "after",
+  "initialMessages": 2,
+  "checkedAt": "2026-09-05T03:02:21.5721391+00:00",
+  "baselineTree": "d11414c5c1078b82fec4e113f5bd1eee5873c2f0",
+  "sessionID": "ses_4e117f932b6f4a539560e79541610666",
+  "success": true,
+  "binarySha256": "29443AC011DC37896A650A7267C8FA232533B9410E8185EA099C1D5214E658E0",
+  "clearFile": "after",
+  "committedMessages": 0,
+  "anchor": "msg_4e117f932b6f4a539560e79541610666_01"
+}
