@@ -132,18 +132,25 @@ class Api2Gateway implements ServerGateway {
   });
 
   @override
-  Future<List<MessageWithParts>> messages(String id) => _run(() async {
-    final all = <Api2Message>[];
-    String? cursor;
-    for (var page = 0; page < maxPages; page += 1) {
-      final result = cursor == null
-          ? await client.messages(id, limit: pageLimit, order: 'asc')
-          : await client.messages(id, cursor: cursor);
-      all.addAll(result.data);
-      cursor = result.nextCursor;
-      if (cursor == null) break;
-    }
-    return mapApi2Messages(id, all);
+  Future<List<MessageWithParts>> messages(String id) async =>
+      (await messagePage(id)).items;
+
+  @override
+  Future<ServerPage<MessageWithParts>> messagePage(
+    String id, {
+    String? cursor,
+    int limit = 100,
+  }) => _run(() async {
+    final page = await client.messages(
+      id,
+      limit: limit,
+      order: 'desc',
+      cursor: cursor,
+    );
+    return ServerPage(
+      items: mapApi2Messages(id, page.data.reversed.toList()),
+      nextCursor: page.nextCursor?.isNotEmpty == true ? page.nextCursor : null,
+    );
   });
 
   @override

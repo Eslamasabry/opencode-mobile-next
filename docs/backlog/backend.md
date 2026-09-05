@@ -86,7 +86,7 @@ Read-only reviews of the Flutter client's API adapters, domain and persisted sta
 
 ## BE-010 — Keep the newest messages reachable in long v2 sessions
 
-- **Status:** Ready
+- **Status:** Message history implemented — cycle 2026-09-05-05. Scoped session inventory remains separate and incomplete.
 - **Priority / confidence:** High / high
 - **Evidence:** `lib/api2/gateway.dart`, `messages`, starts with `order: 'asc'`, follows at most `maxPages = 20` pages of `pageLimit = 200`, and returns without exposing the remaining cursor. Captured `GET /api/session/{sessionID}/message` explicitly supports newest-first `desc` and opaque continuation tokens. `SessionGateway.messages` currently returns only a list. The gateway's own pagination TODO acknowledges this interface gap.
 - **User impact:** Above 4,000 server message records, opening or refreshing a session can omit its newest response. Search, context estimates, and Markdown export also operate on an incomplete history without telling the user. Raising the cap only moves the failure point.
@@ -111,7 +111,7 @@ This is a source/contract inventory, not a release sign-off. Open GitHub issues 
 
 | Priority | Requirement and current evidence | Concrete completion requirement |
 |---|---|---|
-| High | **Reach every conversation and recent reply:** BE-005 and BE-010 remain incomplete. | Carry real cursors through gateway, state, and UI; load more with recoverable errors. Do not declare history coverage from short fixtures. |
+| High | **Reach every conversation and recent reply:** BE-005 global finder and BE-010 message history are implemented; scoped session inventory still has a page cap. | Add scoped inventory cursor/state merging and direct-session hydration. Do not declare full coverage from the two completed pagers. |
 | High | **Server-authoritative model, variant, and agent:** [#53](https://github.com/Eslamasabry/opencode-mobile-next/issues/53). `mapApi2Session` reads model/agent but drops model variant; `ConnectionController.modelForSession` uses local choices/profile defaults; `_applySelection` writes them before each send. Selected events are parsed in `events.dart` but not forwarded by `Api2EventAdapter`. `Api2Client.createSession` supports defaults; the gateway does not pass them. | Hydrate and merge matching-session selections on connect/reconnect and events, including variant. Persist intentional picker changes through the v2 selection APIs; do not overwrite another client's choice on ordinary sends. Keep v1 per-prompt selections and new-session fallback behavior. |
 | High | **Truthful revert workflow:** [#55](https://github.com/Eslamasabry/opencode-mobile-next/issues/55). The current v2 adapter exposes stage/clear through the one-shot v1 interface; commit is absent and the domain retains only `reverted: bool`. Revert events are parsed but not forwarded. | Add stage, preview, explicit commit, and clear, with persistent staged state and busy/conflict recovery. Confirm actual file effects on the pinned server. Preserve the existing undoable v1 workflow. |
 | High | **Provider setup and MCP correctness:** BE-006–009, then BE-011. Key/OAuth setup exists; this is correction of shipped flows, not a missing integrations screen. | Complete root's scoped requests/OAuth/timeout work, then correct scope presentation. A failed/retried setup must leave a usable recoverable state. |
@@ -147,7 +147,7 @@ These routes are present in `contracts/opencode2-openapi-beta-18600.json`; absen
 
 ## BE-005 / BE-010 — implementation-ready pagination plan
 
-**Status:** BE-005 global finder implemented in cycle 04 with `ServerPage`, exact v1 response-header continuation, and v2 opaque tokens. BE-010 message history and the separate scoped-session inventory follow-through remain ready for implementation. The plan preserves the pinned v1 HTTP contract and captured v2 beta-18600 contract; no SDK regeneration or new transport is necessary.
+**Status:** BE-005 global finder implemented in cycle 04; BE-010 message history implemented in cycle 05. Both retain `ServerPage` continuation. Scoped-session inventory follow-through remains ready for implementation. The plan preserves the pinned v1 HTTP contract and captured v2 beta-18600 contract; no SDK regeneration or new transport is necessary.
 
 ### Verified direction and cursor contracts
 

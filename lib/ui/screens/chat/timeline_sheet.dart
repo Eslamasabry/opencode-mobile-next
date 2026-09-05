@@ -27,10 +27,23 @@ class _SessionSheetRow extends StatelessWidget {
 }
 
 class _TimelineSheet extends StatefulWidget {
-  const _TimelineSheet({required this.messages, required this.forkMode});
+  const _TimelineSheet({
+    required this.messages,
+    required this.forkMode,
+    this.hasOlder = false,
+    this.loadingOlder = false,
+    this.olderNeedsReload = false,
+    this.olderError,
+    this.loadOlder,
+  });
 
   final List<MessageWithParts> messages;
   final bool forkMode;
+  final bool hasOlder;
+  final bool loadingOlder;
+  final bool olderNeedsReload;
+  final Object? olderError;
+  final Future<void> Function()? loadOlder;
 
   @override
   State<_TimelineSheet> createState() => _TimelineSheetState();
@@ -158,6 +171,29 @@ class _TimelineSheetState extends State<_TimelineSheet> {
                 ),
               ),
             ),
+            if (widget.hasOlder)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      widget.olderError == null
+                          ? _chatL10n(context).historyLoadedOnly
+                          : productErrorText(widget.olderError!),
+                    ),
+                    TextButton(
+                      key: const ValueKey('timeline-load-older'),
+                      onPressed: widget.loadingOlder ? null : widget.loadOlder,
+                      child: Text(
+                        widget.olderNeedsReload
+                            ? _chatL10n(context).historyReload
+                            : _chatL10n(context).historyLoadOlder,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             Expanded(
               child: visible.isEmpty
                   ? Center(

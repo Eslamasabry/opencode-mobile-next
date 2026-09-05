@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,7 +10,7 @@ import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class _TranscriptApi extends OpenCodeApi {
+class _TranscriptApi extends OpenCodeApi with CompleteMessageHistory {
   _TranscriptApi(this.transcript) : super(baseUrl: 'http://localhost');
 
   final List<MessageWithParts> transcript;

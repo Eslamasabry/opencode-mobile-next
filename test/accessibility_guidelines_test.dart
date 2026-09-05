@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -29,7 +30,7 @@ import 'package:opencode_mobile/ui/screens/manage_project_screen.dart';
 /// tap targets, and text contrast across the critical flows, so a shrinking
 /// affordance or an unlabelled icon button fails here rather than on a
 /// device. Runs in both brightnesses.
-class _Api extends OpenCodeApi {
+class _Api extends OpenCodeApi with CompleteMessageHistory {
   _Api() : super(baseUrl: 'http://localhost');
 
   @override

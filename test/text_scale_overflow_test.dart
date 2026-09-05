@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -32,7 +33,7 @@ const _textScale = AppTheme.maxTextScale;
 /// A 360x740 logical phone, the narrowest shape the product supports.
 const _phone = Size(360, 740);
 
-class _Api extends OpenCodeApi {
+class _Api extends OpenCodeApi with CompleteMessageHistory {
   _Api() : super(baseUrl: 'http://localhost');
 
   @override

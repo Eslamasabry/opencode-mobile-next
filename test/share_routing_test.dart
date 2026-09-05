@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,7 +33,7 @@ class _MemoryProfileStore extends ProfileStore {
   }
 }
 
-class _ShareApi extends OpenCodeApi {
+class _ShareApi extends OpenCodeApi with CompleteMessageHistory {
   _ShareApi() : super(baseUrl: 'http://localhost:4096');
 
   int created = 0;

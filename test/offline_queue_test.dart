@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -37,7 +38,7 @@ class _RefusingQueueStore extends InMemorySharedPreferencesStore {
       _blocks(key) ? false : super.remove(key);
 }
 
-class _FakeApi extends OpenCodeApi {
+class _FakeApi extends OpenCodeApi with CompleteMessageHistory {
   _FakeApi() : super(baseUrl: 'http://localhost');
 
   final List<({String sessionID, String text, ModelRef? model})> prompts = [];

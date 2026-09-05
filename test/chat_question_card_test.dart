@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,7 +13,7 @@ import 'package:opencode_mobile/ui/widgets/question_options.dart';
 import 'package:opencode_mobile/ui/widgets/tool_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class _ChatApi extends OpenCodeApi {
+class _ChatApi extends OpenCodeApi with CompleteMessageHistory {
   _ChatApi() : super(baseUrl: 'http://localhost');
 
   @override

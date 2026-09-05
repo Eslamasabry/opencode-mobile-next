@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
@@ -9,12 +10,22 @@ import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/session_context_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class _ContextApi extends OpenCodeApi {
+class _ContextApi extends OpenCodeApi with CompleteMessageHistory {
   _ContextApi() : super(baseUrl: 'http://localhost');
 
   List<MessageWithParts> messagesResult = const [];
   Object? messagesError;
   int messagesCalls = 0;
+  Future<ServerPage<MessageWithParts>> Function(String? cursor)? pageHandler;
+
+  @override
+  Future<ServerPage<MessageWithParts>> messagePage(
+    String id, {
+    String? cursor,
+    int limit = 100,
+  }) =>
+      pageHandler?.call(cursor) ??
+      super.messagePage(id, cursor: cursor, limit: limit);
 
   @override
   Future<List<MessageWithParts>> messages(String id) async {
@@ -311,6 +322,39 @@ void main() {
     expect(api.messagesCalls, greaterThanOrEqualTo(2));
     expect(controller.prepareCalls, greaterThanOrEqualTo(2));
   });
+
+  testWidgets(
+    'expired context cursor reloads recent history and retains usage',
+    (tester) async {
+      final cursors = <String?>[];
+      final api = _ContextApi()
+        ..pageHandler = (cursor) async {
+          cursors.add(cursor);
+          if (cursor != null) {
+            throw ApiException('Cursor expired', statusCode: 410);
+          }
+          return ServerPage(items: _messages(), nextCursor: 'older');
+        };
+      final controller = await _controller(api);
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        _app(
+          SessionContextScreen(controller: controller, sessionID: 'session-1'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Load older messages'));
+      await tester.pumpAndSettle();
+      expect(find.text('200 of 1,000 tokens'), findsOneWidget);
+      await tester.tap(find.text('Reload recent history'));
+      await tester.pumpAndSettle();
+      expect(cursors, [null, 'older', null]);
+      expect(
+        find.byKey(const ValueKey('session-context-inline-error')),
+        findsNothing,
+      );
+    },
+  );
 
   testWidgets('empty session explains how context becomes available', (
     tester,

@@ -415,4 +415,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get globalSessionsLoadMore => 'Load more sessions';
+
+  @override
+  String get historyLoadOlder => 'Load older messages';
+
+  @override
+  String get historyReload => 'Reload recent history';
+
+  @override
+  String get historyCursorExpired =>
+      'Older history changed or expired. Reload recent history to continue.';
+
+  @override
+  String get historyRefreshed =>
+      'History refreshed. Older messages remain available above.';
+
+  @override
+  String get historyLoadedOnly =>
+      'Only loaded messages are included. Load older history to include more.';
+
+  @override
+  String get historyLoadedTotals => 'Usage and loaded history';
+
+  @override
+  String get historyCopyLoadedReply => 'Copy loaded reply';
+
+  @override
+  String get historyLoadedMessages => 'Loaded messages';
+
+  @override
+  String get historyLoadedCost => 'Cost of loaded messages';
+
+  @override
+  String get historyServerTotalsNote =>
+      'Rows marked reported by server cover the session. Message counts and other estimates cover loaded history.';
 }

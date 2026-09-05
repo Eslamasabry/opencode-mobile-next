@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -30,7 +31,7 @@ void desktopTest(
   });
 }
 
-class _ChatApi extends OpenCodeApi {
+class _ChatApi extends OpenCodeApi with CompleteMessageHistory {
   _ChatApi() : super(baseUrl: 'http://localhost');
 
   @override

@@ -873,7 +873,16 @@ abstract class SessionGateway {
   Future<void> renameSession(String id, String title);
   Future<Session> session(String id);
   Future<Map<String, String>> sessionStatuses();
+  /// Compatibility read of the latest page only. UI callers must use
+  /// [messagePage] to retain older-history continuation and coverage.
   Future<List<MessageWithParts>> messages(String id);
+
+  /// Chronological items; the opaque continuation always requests older rows.
+  Future<ServerPage<MessageWithParts>> messagePage(
+    String id, {
+    String? cursor,
+    int limit = 100,
+  });
   Future<List<Todo>> todos(String id);
   Future<List<FileDiff>> diff(String id);
 }

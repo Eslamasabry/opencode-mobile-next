@@ -259,6 +259,13 @@ List<PromptAgentMention> _promptAgentMentions(
   return mentions;
 }
 
+typedef _HistoryScope = ({
+  ServerGateway? api,
+  int location,
+  String? profile,
+  String session,
+});
+
 class _ChatScreenState extends State<ChatScreen>
     with WidgetsBindingObserver, AppShortcutSurface {
   late final ConnectionController _conn;
@@ -270,6 +277,7 @@ class _ChatScreenState extends State<ChatScreen>
   final _focus = FocusNode();
   final _messageScroll = ItemScrollController();
   final _messagePositions = ItemPositionsListener.create();
+  final _historyChanges = ValueNotifier<int>(0);
   bool _awayFromLatest = false;
 
   /// What Send does while a turn is running, on servers that support the
@@ -303,10 +311,22 @@ class _ChatScreenState extends State<ChatScreen>
   final List<_PendingSend> _pendingSends = [];
   final Map<String, int> _messageVersions = {};
   final Map<String, int> _partVersions = {};
+  final Map<String, Map<String, Part>> _deferredParts = {};
+  final Map<String, MessageInfo> _deferredMessages = {};
+  Timer? _historyRefreshTimer;
+  bool _historyRefreshPending = false;
   final Map<String, List<({String field, String delta})>> _deferredPartDeltas =
       {};
   int _eventVersion = 0;
   int _loadGeneration = 0;
+  String? _olderCursor;
+  Object? _olderError;
+  bool _loadingOlder = false;
+  bool _resetHistoryOnLoad = true;
+  bool _olderNeedsReload = false;
+  final Set<String> _usedOlderCursors = {};
+  _HistoryScope? _loadedHistoryScope;
+  _HistoryScope? _requestedHistoryScope;
   int _dataRefreshRevision = 0;
   int _offlineFlushRevision = 0;
   bool _sending = false;
@@ -632,6 +652,10 @@ class _ChatScreenState extends State<ChatScreen>
 
   void _onEvent(EventEnvelope env) {
     if (!mounted) return;
+    if (env.type == 'session.compacted' &&
+        env.properties['sessionID'] == widget.sessionID) {
+      unawaited(_load(resetHistory: true));
+    }
     if (env.type.startsWith('shell.')) {
       unawaited(_loadRunningShells());
     }
@@ -700,6 +724,7 @@ class _ChatScreenState extends State<ChatScreen>
             final key = _partKey(messageID, partID);
             _partVersions[key] = ++_eventVersion;
             _deferredPartDeltas.remove(key);
+            _deferredParts[messageID]?.remove(partID);
             final message = _messageByID(messageID);
             message?.parts.removeWhere(
               (part) => part.id == partID || part.callID == partID,
@@ -715,7 +740,11 @@ class _ChatScreenState extends State<ChatScreen>
         if (messageID != null && messageID.isNotEmpty) {
           setState(() {
             _messageVersions[messageID] = ++_eventVersion;
+            _resetHistoryOnLoad = true;
+            _olderNeedsReload = true;
             _messages.removeWhere((message) => message.info.id == messageID);
+            _deferredParts.remove(messageID);
+            _deferredMessages.remove(messageID);
             _deferredPartDeltas.removeWhere(
               (key, _) => key.startsWith('$messageID\u0000'),
             );
@@ -738,7 +767,10 @@ class _ChatScreenState extends State<ChatScreen>
               _recoverFromPromptError(msg.errorText);
             }
             _messageVersions[msg.id] = ++_eventVersion;
-            if (!_reconcilePendingMessage(msg)) {
+            if (!_reconcilePendingMessage(
+              msg,
+              canonicalParts: _deferredParts[msg.id]?.values.toList(),
+            )) {
               final idx = _messages.indexWhere((m) => m.info.id == msg.id);
               if (idx >= 0) {
                 _messages[idx] = MessageWithParts(
@@ -746,8 +778,31 @@ class _ChatScreenState extends State<ChatScreen>
                   parts: _messages[idx].parts,
                 );
               } else {
+                final knownTimes = _messages
+                    .where((m) => !m.info.id.startsWith('local-'))
+                    .map((m) => m.info.time?.created)
+                    .whereType<int>();
+                final created = msg.time?.created;
+                if (_olderCursor != null &&
+                    (created == null ||
+                        knownTimes.isEmpty ||
+                        created <= knownTimes.last)) {
+                  _deferredMessages[msg.id] = msg;
+                  // A late edit/completion is not a new row. If it might be in
+                  // the recent window, ask the server to establish its order.
+                  if (created == null ||
+                      knownTimes.isEmpty ||
+                      created >= knownTimes.first) {
+                    _scheduleRecentHistoryRefresh();
+                  }
+                  return;
+                }
                 _messages.add(MessageWithParts(info: msg));
               }
+            }
+            final deferred = _deferredParts.remove(msg.id);
+            for (final part in deferred?.values ?? const <Part>[]) {
+              _upsertPart(msg.id, part);
             }
           });
         }
@@ -769,6 +824,7 @@ class _ChatScreenState extends State<ChatScreen>
         }
         break;
     }
+    _historyChanges.value++;
   }
 
   String _partKey(String messageID, String partID) => '$messageID\u0000$partID';
@@ -801,6 +857,7 @@ class _ChatScreenState extends State<ChatScreen>
     debugChatStreamFlushes++;
     _streamDirty = false;
     setState(() {});
+    _historyChanges.value++;
     _streamFlushTimer?.cancel();
     _streamFlushTimer = Timer(_streamFlushInterval, () {
       _streamFlushTimer = null;
@@ -919,20 +976,21 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   void _upsertPart(String messageID, Part part) {
-    var bundle = _messages.firstWhere(
-      (m) => m.info.id == messageID,
-      orElse: () {
-        final b = MessageWithParts(
-          info: MessageInfo(
-            id: messageID,
-            sessionID: widget.sessionID,
-            role: 'assistant',
-          ),
-        );
-        _messages.add(b);
-        return b;
-      },
-    );
+    final bundle = _messageByID(messageID);
+    if (bundle == null) {
+      // An edit or tool update may belong to unloaded history. A part alone
+      // cannot establish the message's role or its place in the transcript.
+      final partID = part.id ?? part.callID ?? '';
+      var deferred = part;
+      for (final delta
+          in _deferredPartDeltas.remove(_partKey(messageID, partID)) ??
+              const <({String field, String delta})>[]) {
+        deferred =
+            _partWithDelta(deferred, delta.field, delta.delta) ?? deferred;
+      }
+      _deferredParts.putIfAbsent(messageID, () => {})[partID] = deferred;
+      return;
+    }
     final idx = bundle.parts.indexWhere(
       (p) =>
           (part.callID != null && p.callID == part.callID) ||
@@ -986,7 +1044,14 @@ class _ChatScreenState extends State<ChatScreen>
     String delta,
   ) {
     final bundle = _messageByID(messageID);
-    if (bundle == null) return false;
+    if (bundle == null) {
+      final part = _deferredParts[messageID]?[partID];
+      if (part == null) return false;
+      final updated = _partWithDelta(part, field, delta);
+      if (updated == null) return false;
+      _deferredParts[messageID]![partID] = updated;
+      return true;
+    }
     final index = bundle.parts.indexWhere(
       (part) => part.id == partID || part.callID == partID,
     );
@@ -1037,43 +1102,270 @@ class _ChatScreenState extends State<ChatScreen>
     synthetic: part.synthetic,
   );
 
-  Future<void> _load() async {
+  _HistoryScope get _historyScope => (
+    api: _conn.api,
+    location: _conn.locationRevision,
+    profile: _conn.profile?.id,
+    session: widget.sessionID,
+  );
+
+  void _scheduleRecentHistoryRefresh() {
+    _historyRefreshPending = true;
+    if (_historyRefreshTimer != null) return;
+    _historyRefreshTimer = Timer(const Duration(milliseconds: 150), () {
+      _historyRefreshTimer = null;
+      if (!mounted || _loading || _loadingOlder) return;
+      _historyRefreshPending = false;
+      unawaited(_load());
+    });
+  }
+
+  bool _currentHistory(int generation, _HistoryScope scope) =>
+      mounted && generation == _loadGeneration && scope == _historyScope;
+
+  ({String id, int index, double alignment})? _historyAnchor() {
+    final count = _renderedMessageCount;
+    final positions =
+        _messagePositions.itemPositions.value
+            .where(
+              (position) =>
+                  position.index < count &&
+                  position.itemTrailingEdge > 0 &&
+                  position.itemLeadingEdge < 1,
+            )
+            .toList()
+          ..sort((a, b) => a.itemLeadingEdge.compareTo(b.itemLeadingEdge));
+    if (positions.isEmpty) return null;
+    final position = positions.firstWhere(
+      (item) => item.itemLeadingEdge >= 0,
+      orElse: () => positions.first,
+    );
+    return (
+      id: _messages[count - 1 - position.index].info.id,
+      index: position.index,
+      alignment: position.itemLeadingEdge.clamp(0.0, 1.0),
+    );
+  }
+
+  void _restoreHistoryAnchor(
+    ({String id, int index, double alignment})? anchor,
+    int generation,
+  ) {
+    if (anchor == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted ||
+          generation != _loadGeneration ||
+          !_messageScroll.isAttached) {
+        return;
+      }
+      final chronological = _messages.indexWhere(
+        (message) => message.info.id == anchor.id,
+      );
+      if (chronological < 0) {
+        if (_renderedMessageCount > 0) _messageScroll.jumpTo(index: 0);
+        return;
+      }
+      final index = _renderedMessageCount - 1 - chronological;
+      if (index >= 0 && index != anchor.index) {
+        _messageScroll.jumpTo(index: index, alignment: anchor.alignment);
+      }
+    });
+  }
+
+  void _retainPinnedEnd(String? lastVisibleID) {
+    if (!_awayFromLatest || lastVisibleID == null) return;
+    final index = _messages.indexWhere(
+      (message) => message.info.id == lastVisibleID,
+    );
+    _pinnedMessageCount = index < 0 ? _messages.length : index + 1;
+  }
+
+  Future<void> _load({bool resetHistory = false}) async {
     final generation = ++_loadGeneration;
     final versionAtStart = _eventVersion;
+    final scope = _historyScope;
+    _requestedHistoryScope = scope;
+    if (resetHistory || _loadedHistoryScope != scope) {
+      _resetHistoryOnLoad = true;
+    }
     setState(() {
       _loading = true;
+      _loadingOlder = false;
       _error = null;
     });
+    _historyChanges.value++;
     // Inbox events are volatile: reconcile this session's pending sends
     // from REST whenever the transcript (re)hydrates. No-op on v1.
     unawaited(_conn.refreshInbox(widget.sessionID));
     try {
-      final api = _conn.api;
+      final api = scope.api;
       if (api == null) {
         throw const ProductException('OpenCode is reconnecting.');
       }
-      final msgs = await api.messages(widget.sessionID);
-      msgs.sort(
-        (a, b) =>
-            (a.info.time?.created ?? 0).compareTo(b.info.time?.created ?? 0),
+      final page = await api.messagePage(scope.session);
+      if (!_currentHistory(generation, scope)) return;
+      final anchor = _historyAnchor();
+      final pinnedEnd = _renderedMessageCount == 0
+          ? null
+          : _messages[_renderedMessageCount - 1].info.id;
+      final incomingIDs = page.items.map((message) => message.info.id).toSet();
+      final overlap = _messages.indexWhere(
+        (message) => incomingIDs.contains(message.info.id),
       );
-      if (!mounted || generation != _loadGeneration) return;
-      setState(() => _messages = _mergeHydratedMessages(msgs, versionAtStart));
+      final retainPrefix = !_resetHistoryOnLoad && page.hasMore && overlap >= 0;
+      final prefix = retainPrefix
+          ? _messages.take(overlap).toList()
+          : <MessageWithParts>[];
+      setState(() {
+        _messages = _mergeHydratedMessages(
+          page.items,
+          versionAtStart,
+          prefix: prefix,
+        );
+        if (!retainPrefix) {
+          _olderCursor = page.hasMore ? page.nextCursor : null;
+          _usedOlderCursors.clear();
+        }
+        _loadedHistoryScope = scope;
+        _resetHistoryOnLoad = false;
+        _olderNeedsReload = false;
+        _olderError = null;
+        _retainPinnedEnd(pinnedEnd);
+        if (anchor != null &&
+            !_messages.any((message) => message.info.id == anchor.id)) {
+          _awayFromLatest = false;
+          _pinnedMessageCount = null;
+          _composerNote = _chatL10n(context).historyRefreshed;
+        }
+      });
+      _restoreHistoryAnchor(anchor, generation);
     } catch (e) {
-      if (!mounted || generation != _loadGeneration) return;
+      if (!_currentHistory(generation, scope)) return;
       setState(() => _error = e);
+      if (_messages.isNotEmpty) _showComposerNote(productErrorText(e));
     } finally {
       if (mounted && generation == _loadGeneration) {
         setState(() => _loading = false);
+        _historyChanges.value++;
+        if (_historyRefreshPending) _scheduleRecentHistoryRefresh();
       }
     }
   }
 
+  Future<void> _loadOlder() async {
+    final cursor = _olderCursor;
+    if (_loading || _loadingOlder || cursor == null) return;
+    if (_olderNeedsReload || _resetHistoryOnLoad) {
+      await _load(resetHistory: true);
+      if (mounted) {
+        setState(() => _olderError = _error);
+        _historyChanges.value++;
+      }
+      return;
+    }
+    final generation = ++_loadGeneration;
+    final scope = _historyScope;
+    final versionAtStart = _eventVersion;
+    setState(() {
+      _loadingOlder = true;
+      _olderError = null;
+    });
+    _historyChanges.value++;
+    final expiredMessage = _chatL10n(context).historyCursorExpired;
+    try {
+      final api = scope.api;
+      if (api == null) {
+        throw const ProductException('OpenCode is reconnecting.');
+      }
+      final page = await api.messagePage(scope.session, cursor: cursor);
+      if (!_currentHistory(generation, scope)) return;
+      final next = page.hasMore ? page.nextCursor : null;
+      if (next != null &&
+          (next == cursor || _usedOlderCursors.contains(next))) {
+        _olderNeedsReload = true;
+        throw ProductException(expiredMessage);
+      }
+      final anchor = _historyAnchor();
+      final pinnedEnd = _renderedMessageCount == 0
+          ? null
+          : _messages[_renderedMessageCount - 1].info.id;
+      setState(() {
+        _messages = _mergeHydratedMessages(
+          page.items,
+          versionAtStart,
+          preserveUnseen: true,
+          reconcilePending: false,
+        );
+        _usedOlderCursors.add(cursor);
+        _olderCursor = next;
+        _retainPinnedEnd(pinnedEnd);
+      });
+      _restoreHistoryAnchor(anchor, generation);
+    } catch (error) {
+      if (!_currentHistory(generation, scope)) return;
+      setState(() {
+        _olderError = error;
+        if (error is ApiException &&
+            (error.statusCode == 400 || error.statusCode == 410)) {
+          _olderNeedsReload = true;
+        }
+      });
+    } finally {
+      if (mounted && generation == _loadGeneration) {
+        setState(() => _loadingOlder = false);
+        _historyChanges.value++;
+        if (_historyRefreshPending) _scheduleRecentHistoryRefresh();
+      }
+    }
+  }
+
+  Widget _olderHistoryRow() {
+    final l10n = _chatL10n(context);
+    return Padding(
+      key: const ValueKey('chat-older-history'),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_olderError != null) Text(productErrorText(_olderError!)),
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              OutlinedButton(
+                key: const ValueKey('chat-load-older'),
+                onPressed: _loading || _loadingOlder ? null : _loadOlder,
+                child: Opacity(
+                  opacity: _loadingOlder ? 0 : 1,
+                  child: Text(
+                    _olderNeedsReload
+                        ? l10n.historyReload
+                        : _olderError != null
+                        ? l10n.refreshRetry
+                        : l10n.historyLoadOlder,
+                  ),
+                ),
+              ),
+              if (_loadingOlder)
+                const SizedBox.square(
+                  dimension: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   List<MessageWithParts> _mergeHydratedMessages(
     List<MessageWithParts> hydrated,
-    int versionAtStart,
-  ) {
+    int versionAtStart, {
+    List<MessageWithParts> prefix = const [],
+    bool preserveUnseen = false,
+    bool reconcilePending = true,
+  }) {
     for (final message in hydrated) {
+      if (!reconcilePending) break;
       if (message.info.role != 'user') continue;
       for (final pending in List<_PendingSend>.from(_pendingSends)) {
         if (pending.canonicalID != null) continue;
@@ -1089,19 +1381,23 @@ class _ChatScreenState extends State<ChatScreen>
     }
 
     final currentByID = {
+      for (final entry in _deferredMessages.entries)
+        entry.key: MessageWithParts(info: entry.value),
       for (final message in _messages) message.info.id: message,
     };
     final merged = <MessageWithParts>[];
     final hydratedIDs = <String>{};
     for (final snapshot in hydrated) {
       final messageID = snapshot.info.id;
-      hydratedIDs.add(messageID);
+      if (!hydratedIDs.add(messageID)) continue;
       final current = currentByID[messageID];
+      _deferredMessages.remove(messageID);
       final messageChanged =
           (_messageVersions[messageID] ?? 0) > versionAtStart;
       if (messageChanged && current == null) continue;
 
       final currentParts = {
+        ...?_deferredParts.remove(messageID),
         for (final part in current?.parts ?? const <Part>[])
           if ((part.id ?? part.callID)?.isNotEmpty == true)
             (part.id ?? part.callID)!: part,
@@ -1155,8 +1451,14 @@ class _ChatScreenState extends State<ChatScreen>
           parts: parts,
         ),
       );
+      _deferredPartDeltas.removeWhere(
+        (key, _) =>
+            key.startsWith('$messageID\u0000') &&
+            (_partVersions[key] ?? 0) <= versionAtStart,
+      );
     }
 
+    final prefixIDs = prefix.map((message) => message.info.id).toSet();
     for (final current in _messages) {
       if (hydratedIDs.contains(current.info.id)) continue;
       final isPending = _pendingSends.any(
@@ -1172,9 +1474,14 @@ class _ChatScreenState extends State<ChatScreen>
             (_partVersions[_partKey(current.info.id, partID)] ?? 0) >
                 versionAtStart;
       });
-      if (isPending || hasNewMessage || hasNewPart) merged.add(current);
+      if (preserveUnseen || isPending || hasNewMessage || hasNewPart) {
+        if (!prefixIDs.contains(current.info.id)) merged.add(current);
+      }
     }
-    return merged;
+    return [
+      ...prefix.where((message) => !hydratedIDs.contains(message.info.id)),
+      ...merged,
+    ];
   }
 
   bool _matchesPendingPrompt(List<Part> parts, _PendingSend pending) {
@@ -1914,8 +2221,18 @@ class _ChatScreenState extends State<ChatScreen>
       isScrollControlled: true,
       useSafeArea: true,
       constraints: const BoxConstraints(maxWidth: 720),
-      builder: (context) =>
-          _TimelineSheet(messages: _messages, forkMode: forkMode),
+      builder: (context) => ListenableBuilder(
+        listenable: _historyChanges,
+        builder: (context, _) => _TimelineSheet(
+          messages: List.of(_messages),
+          forkMode: forkMode,
+          hasOlder: _olderCursor != null,
+          loadingOlder: _loading || _loadingOlder,
+          olderError: _olderError,
+          olderNeedsReload: _olderNeedsReload || _resetHistoryOnLoad,
+          loadOlder: _loadOlder,
+        ),
+      ),
     );
     if (!mounted || selection == null) return;
     if (selection.fork) {
@@ -2011,6 +2328,7 @@ class _ChatScreenState extends State<ChatScreen>
   int _earlierMessageCount(Iterable<ItemPosition> positions) {
     var oldestVisible = -1;
     for (final position in positions) {
+      if (position.index >= _renderedMessageCount) continue;
       if (position.itemTrailingEdge <= 0 || position.itemLeadingEdge >= 1) {
         continue;
       }
@@ -2052,11 +2370,7 @@ class _ChatScreenState extends State<ChatScreen>
       _showActionError('That message is no longer in this session.');
       return;
     }
-    final listIndex =
-        _messages.length -
-        1 -
-        chronologicalIndex +
-        (_conn.busySessions.contains(widget.sessionID) ? 1 : 0);
+    final listIndex = _messages.length - 1 - chronologicalIndex;
     _highlightTimer?.cancel();
     setState(() {
       // Materialize any messages deferred while scrolled away so the target
@@ -2114,6 +2428,8 @@ class _ChatScreenState extends State<ChatScreen>
           ? 'Copy message text'
           : unfinished
           ? _chatL10n(context).chatCopyReplySoFar
+          : start == 0 && _olderCursor != null
+          ? _chatL10n(context).historyCopyLoadedReply
           : _chatL10n(context).chatCopyCompleteReply,
       text: reply
           .map(_messageText)
@@ -2239,7 +2555,7 @@ class _ChatScreenState extends State<ChatScreen>
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Message deleted')));
-      await _load();
+      await _load(resetHistory: true);
     } catch (error) {
       if (mounted) _showActionError(error);
     }
@@ -2364,7 +2680,7 @@ class _ChatScreenState extends State<ChatScreen>
     try {
       final repository = await _requireActionRepository();
       await repository.revertSession(widget.sessionID, target.info.id);
-      await _load();
+      await _load(resetHistory: true);
     } catch (error) {
       if (mounted) _showActionError(error);
     }
@@ -2374,7 +2690,7 @@ class _ChatScreenState extends State<ChatScreen>
     try {
       final repository = await _requireActionRepository();
       await repository.restoreSession(widget.sessionID);
-      await _load();
+      await _load(resetHistory: true);
     } catch (error) {
       if (mounted) _showActionError(error);
     }
@@ -2458,7 +2774,10 @@ class _ChatScreenState extends State<ChatScreen>
     _dismissResolvedPermissionDialog();
     _noteRunFinished();
     setState(() {});
-    if (shouldRehydrate) unawaited(_load());
+    final scopeChanged =
+        _requestedHistoryScope != null &&
+        _requestedHistoryScope != _historyScope;
+    if (shouldRehydrate || scopeChanged) unawaited(_load(resetHistory: true));
     if (shouldRehydrate ||
         _backgroundRepository != _conn.repository ||
         _backgroundLocationRevision != _conn.locationRevision) {
@@ -3488,6 +3807,9 @@ class _ChatScreenState extends State<ChatScreen>
     final out = StringBuffer(
       '# ${title?.isNotEmpty == true ? title : 'OpenCode session'}\n',
     );
+    if (_olderCursor != null) {
+      out.write('\n> ${_chatL10n(context).historyLoadedOnly}\n');
+    }
     for (final message in _messages) {
       if (message.info.id.startsWith('local-')) continue;
       out.write(
@@ -3619,6 +3941,7 @@ class _ChatScreenState extends State<ChatScreen>
           controller: _conn,
           sessionID: widget.sessionID,
           initialMessages: List.unmodifiable(_messages),
+          initialHasOlder: _olderCursor != null,
         ),
       ),
     );
@@ -4008,8 +4331,10 @@ class _ChatScreenState extends State<ChatScreen>
       if (api == null) {
         throw const ProductException('OpenCode is reconnecting.');
       }
-      final currentMessages = await api.messages(widget.sessionID);
-      if (currentMessages.isNotEmpty) return null;
+      final currentMessages = await api.messagePage(widget.sessionID, limit: 1);
+      if (currentMessages.items.isNotEmpty || currentMessages.hasMore) {
+        return null;
+      }
       await api.deleteSession(widget.sessionID);
       try {
         await _conn.refreshSessions();
@@ -4309,7 +4634,7 @@ class _ChatScreenState extends State<ChatScreen>
                         return Column(
                           children: [
                             Expanded(
-                              child: _messages.isEmpty
+                              child: _messages.isEmpty && _olderCursor == null
                                   ? _EmptyTranscript(
                                       onSuggestion: _insertSuggestion,
                                     )
@@ -4339,8 +4664,15 @@ class _ChatScreenState extends State<ChatScreen>
                                                         vertical: 10,
                                                       ),
                                                   itemCount:
-                                                      _renderedMessageCount,
+                                                      _renderedMessageCount +
+                                                      (_olderCursor == null
+                                                          ? 0
+                                                          : 1),
                                                   itemBuilder: (context, i) {
+                                                    if (i ==
+                                                        _renderedMessageCount) {
+                                                      return _olderHistoryRow();
+                                                    }
                                                     // Reversed list: item 0 is
                                                     // the newest turn. The
                                                     // composer, not a
@@ -4707,6 +5039,8 @@ class _ChatScreenState extends State<ChatScreen>
     if (widget.voiceController == null) _voice?.dispose();
     _composer.dispose();
     _focus.dispose();
+    _historyRefreshTimer?.cancel();
+    _historyChanges.dispose();
     super.dispose();
   }
 }

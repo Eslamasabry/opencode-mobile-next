@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 // Tests for the chat-transcript lens fixes (C1–C14, T1):
 // streaming delta batching, expansion survival across list recycling,
 // assistant long-press actions, and earlier-messages pill gating.
@@ -18,10 +19,18 @@ import 'package:opencode_mobile/ui/widgets/tool_card.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class _TranscriptApi extends OpenCodeApi {
+class _TranscriptApi extends OpenCodeApi with CompleteMessageHistory {
   _TranscriptApi() : super(baseUrl: 'http://localhost');
 
   List<MessageWithParts> Function()? messagesBuilder;
+  String? olderCursor;
+
+  @override
+  Future<ServerPage<MessageWithParts>> messagePage(
+    String id, {
+    String? cursor,
+    int limit = 100,
+  }) async => ServerPage(items: await messages(id), nextCursor: olderCursor);
 
   @override
   Future<List<Session>> sessions() async => const [];
@@ -428,6 +437,27 @@ void main() {
     },
   );
 
+  testWidgets('a reply split by the loaded boundary is not labeled complete', (
+    tester,
+  ) async {
+    final api = _TranscriptApi()
+      ..olderCursor = 'older'
+      ..messagesBuilder = () => [
+        _message('assistant-1', 'assistant', [
+          Part(type: 'text', text: 'Middle of reply'),
+        ]),
+        _message('assistant-2', 'assistant', [
+          Part(type: 'text', text: 'End of reply'),
+        ]),
+      ];
+    await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('message-actions-assistant-1')));
+    await tester.pumpAndSettle();
+    expect(find.text('Copy loaded reply'), findsOneWidget);
+    expect(find.text('Copy complete reply'), findsNothing);
+  });
+
   testWidgets(
     'an unfinished assistant reply does not promise a complete copy',
     (tester) async {
@@ -550,6 +580,19 @@ void main() {
 
     // C14: a turn completing while scrolled up does not shift the viewport —
     // the new message stays deferred until jump-to-latest.
+    controller.handleEventForTesting(
+      EventEnvelope(
+        type: 'message.updated',
+        properties: {
+          'info': {
+            'id': 'assistant-new',
+            'sessionID': 'session-1',
+            'role': 'assistant',
+            'time': {'created': 41, 'completed': 42},
+          },
+        },
+      ),
+    );
     controller.handleEventForTesting(
       EventEnvelope(
         type: 'message.part.updated',

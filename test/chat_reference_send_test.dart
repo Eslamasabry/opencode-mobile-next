@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -17,7 +18,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Records what the composer actually asked the server to do, so a test can
 /// tell a slash command apart from a plain prompt that merely starts with a
 /// slash.
-class _RecordingApi extends OpenCodeApi {
+class _RecordingApi extends OpenCodeApi with CompleteMessageHistory {
   _RecordingApi() : super(baseUrl: 'http://localhost');
 
   final List<String> prompts = [];

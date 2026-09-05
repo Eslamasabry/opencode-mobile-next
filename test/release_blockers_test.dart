@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -19,7 +20,7 @@ import 'package:opencode_mobile/ui/widgets/external_link.dart';
 import 'package:opencode_mobile/ui/widgets/tool_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class _ReleaseApi extends OpenCodeApi {
+class _ReleaseApi extends OpenCodeApi with CompleteMessageHistory {
   _ReleaseApi() : super(baseUrl: 'http://localhost');
 
   @override

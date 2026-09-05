@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart' show kSecondaryMouseButton;
@@ -61,7 +62,7 @@ Future<void> _rightClick(WidgetTester tester, Finder target) async {
   await tester.pumpAndSettle();
 }
 
-class _MenuApi extends OpenCodeApi {
+class _MenuApi extends OpenCodeApi with CompleteMessageHistory {
   _MenuApi({this.sessionList = const [], this.messageList = const []})
     : super(baseUrl: 'http://localhost');
 
