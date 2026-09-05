@@ -1,0 +1,18 @@
+{
+  "verifiedAt": "2026-09-05T06:49:08.6373410+00:00",
+  "serverVersion": "0.0.0-beta-18600",
+  "binarySha256": "29443AC011DC37896A650A7267C8FA232533B9410E8185EA099C1D5214E658E0",
+  "sourceSessionID": "ses_export_9d5c8640233045dc82f571df66a68ea0",
+  "destinationProjectID": "52c1019a15dab85045c73c95bd56b8ebd5740962",
+  "destinationDirectoryApplied": true,
+  "sourceUnchanged": true,
+  "sourceMessageCount": 2,
+  "destinationMessageCount": 2,
+  "sourceMessageIDsPreserved": true,
+  "unicodeAndAssistantContentPreserved": true,
+  "duplicateImportStatus": 409,
+  "unauthorizedStatus": 401,
+  "missingParentStatus": 404,
+  "parentThenChildSucceeded": true,
+  "providerRunStarted": false
+}

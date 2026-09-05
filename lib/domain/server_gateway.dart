@@ -6,6 +6,7 @@ import 'managed_shell.dart';
 export 'managed_shell.dart';
 export 'session_note.dart';
 export 'session_export.dart';
+export 'session_import.dart';
 export 'usage_statistics.dart';
 
 /// Connection lifecycle surfaced to the UI.

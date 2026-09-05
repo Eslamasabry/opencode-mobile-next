@@ -484,3 +484,29 @@ pending as a separate parity workflow. See the export verification document.
 No feature branch or PR was created. No release tag or stable release was
 published. The prior 06447b6 dev/master Android, Linux and Windows builds all
 completed successfully; its dev APK artifact is 9964432494 (test-signed).
+
+## Cycle 15 — conversation import and a working dev APK link
+
+Added More → Import conversation on v2: streamed JSON parsing, envelope/bare
+payload support, identifying-structure validation, message count/title review,
+redaction/parent/archive notices, and explicit destination selection. Import
+preserves source IDs and nested message fields, retains files on failures and
+never automatically retries an uncertain upload. Confirmed success can open the
+returned session location. The mobile reader transparently rejects files above
+128 MiB without upload or truncation. V1 hides the unsupported action.
+
+Fifteen focused tests passed. Static analysis and a 411px rendered inspection
+cover this batch; 320px with 1.7x text is checked. The two-server pinned fixture
+preserved source export bytes, message IDs, Arabic text and assistant content,
+applied the reviewed destination, returned 409/401 as declared and verified
+parent-before-child ordering. Both owned servers were stopped. Native file
+picker, Arabic font/device rendering and final release checks remain pending.
+
+The user reported the Actions APK link broken. Published the unchanged,
+checksum/signer-verified 06447b6 APK as development prerelease dev-06447b6 and
+verified its direct APK URL anonymously (200 and actual APK bytes). Its CI test
+signer cannot update a release-signed installation. This is not the stable v1
+release and excludes the export/import changes in cycles 14–15.
+
+Worked on dev directly; master is fast-forwarded and both pushed for the batch.
+No additional feature branch or PR was created.

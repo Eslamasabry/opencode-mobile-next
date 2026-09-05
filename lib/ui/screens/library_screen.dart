@@ -26,6 +26,7 @@ import 'capabilities_screen.dart';
 import 'guide_screen.dart';
 import 'mcp_setup_screen.dart';
 import 'settings_screen.dart';
+import 'session_import_screen.dart';
 import 'terminal_screen.dart';
 
 part 'library/catalog_screen.dart';
@@ -109,6 +110,15 @@ class _LibraryScreenState extends State<LibraryScreen> {
           ),
         ].where((card) => card.matches(_query)).toList();
         final group1 = <_DestinationRow>[
+          if (controller.repository is SessionImportGateway &&
+              (controller.repository as SessionImportGateway).sessionImportSupported)
+            _DestinationRow(
+              key: const ValueKey('library-import-session'),
+              icon: Icons.upload_file_outlined,
+              title: l10n.importTitle,
+              keywords: 'backup restore transfer JSON conversation',
+              onTap: () => _open(context, SessionImportScreen(controller: controller)),
+            ),
           _DestinationRow(
             icon: Icons.settings_outlined,
             title: l10n.librarySettingsTitle,

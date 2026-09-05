@@ -981,4 +981,113 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get exportFailed =>
       'Could not export the conversation. Check your connection and storage, then try again.';
+
+  @override
+  String get importTitle => 'Import conversation';
+
+  @override
+  String get importDescription =>
+      'Restore a JSON export to this OpenCode server. Choose a file, then review where it will be imported.';
+
+  @override
+  String get importChoose => 'Choose JSON file';
+
+  @override
+  String get importChooseAnother => 'Choose another file';
+
+  @override
+  String get importAction => 'Import conversation';
+
+  @override
+  String get importUntitled => 'Untitled conversation';
+
+  @override
+  String importMessageCount(int count) {
+    return '$count message records';
+  }
+
+  @override
+  String get importRedacted =>
+      'This file contains redacted placeholders. Import cannot recover the original text; use an unredacted export if you need it.';
+
+  @override
+  String importParent(String id) {
+    return 'Parent conversation $id must already exist on this server. Import the parent first.';
+  }
+
+  @override
+  String get importArchived =>
+      'This conversation is archived. Import will keep its archived status.';
+
+  @override
+  String get importDestination => 'Import into';
+
+  @override
+  String get importChooseDestination => 'Choose a directory on this server';
+
+  @override
+  String get importChangeDestination => 'Change destination';
+
+  @override
+  String get importNoDestinations =>
+      'No project directories are available. Open a project on this server, then try again.';
+
+  @override
+  String get importDestinationFailed =>
+      'Could not load destination projects or workspaces. Try again; your file is still selected.';
+
+  @override
+  String get importPreserves =>
+      'Your source file stays unchanged. Existing conversations are never replaced, and importing does not start an agent run.';
+
+  @override
+  String get importReading => 'Preparing import…';
+
+  @override
+  String get importSending => 'Importing conversation…';
+
+  @override
+  String get importSucceeded => 'Conversation imported';
+
+  @override
+  String get importOpen => 'Open conversation';
+
+  @override
+  String get importOpenFailed =>
+      'The conversation was imported, but could not be opened. Find it in All sessions on the destination server.';
+
+  @override
+  String get importChanged =>
+      'The connection or location changed. Your file is still here. Reopen import on the intended server before continuing.';
+
+  @override
+  String get importUnsupported => 'This server does not support JSON import.';
+
+  @override
+  String get importInvalidFile =>
+      'Choose a valid OpenCode JSON export with session information and message records. Markdown transcripts cannot be imported.';
+
+  @override
+  String get importTooLarge =>
+      'This file exceeds the mobile import limit of 128 MiB. It has not been uploaded or truncated. Use a desktop or server transfer for this file.';
+
+  @override
+  String get importConflict =>
+      'A conversation with this ID already exists on this server. Nothing was replaced. Find it in All sessions, or import this file on another server.';
+
+  @override
+  String get importAuthorization =>
+      'The server denied access. Check your connection credentials. Your file is still selected.';
+
+  @override
+  String get importParentMissing =>
+      'The parent conversation is missing from this server. Import the parent first, then retry this file.';
+
+  @override
+  String get importRejected =>
+      'The server rejected this export format. Your file is still selected; check that it came from a compatible OpenCode server.';
+
+  @override
+  String get importUnconfirmed =>
+      'Import could not be confirmed. Check All sessions before retrying: the server may have received it. Your source file is unchanged.';
 }

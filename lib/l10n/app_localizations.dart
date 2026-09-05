@@ -1791,6 +1791,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not export the conversation. Check your connection and storage, then try again.'**
   String get exportFailed;
+
+  /// No description provided for @importTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import conversation'**
+  String get importTitle;
+
+  /// No description provided for @importDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore a JSON export to this OpenCode server. Choose a file, then review where it will be imported.'**
+  String get importDescription;
+
+  /// No description provided for @importChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose JSON file'**
+  String get importChoose;
+
+  /// No description provided for @importChooseAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose another file'**
+  String get importChooseAnother;
+
+  /// No description provided for @importAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Import conversation'**
+  String get importAction;
+
+  /// No description provided for @importUntitled.
+  ///
+  /// In en, this message translates to:
+  /// **'Untitled conversation'**
+  String get importUntitled;
+
+  /// No description provided for @importMessageCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} message records'**
+  String importMessageCount(int count);
+
+  /// No description provided for @importRedacted.
+  ///
+  /// In en, this message translates to:
+  /// **'This file contains redacted placeholders. Import cannot recover the original text; use an unredacted export if you need it.'**
+  String get importRedacted;
+
+  /// No description provided for @importParent.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent conversation {id} must already exist on this server. Import the parent first.'**
+  String importParent(String id);
+
+  /// No description provided for @importArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'This conversation is archived. Import will keep its archived status.'**
+  String get importArchived;
+
+  /// No description provided for @importDestination.
+  ///
+  /// In en, this message translates to:
+  /// **'Import into'**
+  String get importDestination;
+
+  /// No description provided for @importChooseDestination.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a directory on this server'**
+  String get importChooseDestination;
+
+  /// No description provided for @importChangeDestination.
+  ///
+  /// In en, this message translates to:
+  /// **'Change destination'**
+  String get importChangeDestination;
+
+  /// No description provided for @importNoDestinations.
+  ///
+  /// In en, this message translates to:
+  /// **'No project directories are available. Open a project on this server, then try again.'**
+  String get importNoDestinations;
+
+  /// No description provided for @importDestinationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load destination projects or workspaces. Try again; your file is still selected.'**
+  String get importDestinationFailed;
+
+  /// No description provided for @importPreserves.
+  ///
+  /// In en, this message translates to:
+  /// **'Your source file stays unchanged. Existing conversations are never replaced, and importing does not start an agent run.'**
+  String get importPreserves;
+
+  /// No description provided for @importReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing import…'**
+  String get importReading;
+
+  /// No description provided for @importSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing conversation…'**
+  String get importSending;
+
+  /// No description provided for @importSucceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation imported'**
+  String get importSucceeded;
+
+  /// No description provided for @importOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open conversation'**
+  String get importOpen;
+
+  /// No description provided for @importOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The conversation was imported, but could not be opened. Find it in All sessions on the destination server.'**
+  String get importOpenFailed;
+
+  /// No description provided for @importChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection or location changed. Your file is still here. Reopen import on the intended server before continuing.'**
+  String get importChanged;
+
+  /// No description provided for @importUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This server does not support JSON import.'**
+  String get importUnsupported;
+
+  /// No description provided for @importInvalidFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a valid OpenCode JSON export with session information and message records. Markdown transcripts cannot be imported.'**
+  String get importInvalidFile;
+
+  /// No description provided for @importTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'This file exceeds the mobile import limit of 128 MiB. It has not been uploaded or truncated. Use a desktop or server transfer for this file.'**
+  String get importTooLarge;
+
+  /// No description provided for @importConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'A conversation with this ID already exists on this server. Nothing was replaced. Find it in All sessions, or import this file on another server.'**
+  String get importConflict;
+
+  /// No description provided for @importAuthorization.
+  ///
+  /// In en, this message translates to:
+  /// **'The server denied access. Check your connection credentials. Your file is still selected.'**
+  String get importAuthorization;
+
+  /// No description provided for @importParentMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The parent conversation is missing from this server. Import the parent first, then retry this file.'**
+  String get importParentMissing;
+
+  /// No description provided for @importRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'The server rejected this export format. Your file is still selected; check that it came from a compatible OpenCode server.'**
+  String get importRejected;
+
+  /// No description provided for @importUnconfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Import could not be confirmed. Check All sessions before retrying: the server may have received it. Your source file is unchanged.'**
+  String get importUnconfirmed;
 }
 
 class _AppLocalizationsDelegate

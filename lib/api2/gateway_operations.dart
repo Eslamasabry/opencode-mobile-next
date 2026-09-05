@@ -30,8 +30,40 @@ class Api2OperationsGateway extends ProductRepository
         SessionReadStateGateway,
         SessionNoteGateway,
         SessionExportGateway,
+        SessionImportGateway,
         UsageStatisticsGateway {
   final Api2Client client;
+
+  bool _importSupported = true;
+  @override
+  bool get sessionImportSupported => _importSupported;
+
+  @override
+  Future<Session> importSession(
+    SessionImportDocument document,
+    SessionImportDestination destination,
+  ) async {
+    if (!_importSupported) throw const SessionImportUnsupported();
+    try {
+      final json = await _transport.postJson(
+        '/session/import',
+        body: document.requestBody(destination),
+      );
+      final session = Api2Session.fromJson(_dataMap(json));
+      if (session == null || session.id != document.id || session.directory?.isNotEmpty != true) {
+        throw const Api2RequestError('Import returned an invalid session');
+      }
+      return mapApi2Session(session);
+    } on Api2Error catch (error) {
+      // 404 can mean the source's parent session needs importing first.
+      if ([405, 501].contains(error.statusCode) ||
+          (error.statusCode == 404 && error.tag != 'SessionNotFoundError')) {
+        _importSupported = false;
+        throw const SessionImportUnsupported();
+      }
+      rethrow;
+    }
+  }
 
   bool _exportSupported = true;
   @override
