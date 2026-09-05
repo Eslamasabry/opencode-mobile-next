@@ -2910,6 +2910,76 @@ class ConnectionController extends ChangeNotifier {
   bool get supportsSessionNotes =>
       repository is SessionNoteGateway &&
       (repository as SessionNoteGateway).sessionNotesSupported;
+
+  bool get supportsSessionSkills =>
+      repository is SessionSkillGateway &&
+      (repository as SessionSkillGateway).sessionSkillsSupported;
+  final _skillWrites = <(int, String)>{};
+
+  Future<void> activateSessionSkill(
+    String sessionID,
+    String skillID, {
+    required bool resume,
+    required int expectedLocation,
+  }) async {
+    bool current() =>
+        !_disposed &&
+        locationRevision == expectedLocation &&
+        !_deletedSessionIDs.contains(sessionID);
+    if (!current()) {
+      throw const SessionSkillException(SessionSkillFailure.changed);
+    }
+    final key = (expectedLocation, sessionID);
+    if (!_skillWrites.add(key)) {
+      throw const SessionSkillException(SessionSkillFailure.busy);
+    }
+    try {
+      final transport = await prepareActionRepository();
+      final currentApi = api;
+      if (!current()) {
+        throw const SessionSkillException(SessionSkillFailure.changed);
+      }
+      if (transport == null ||
+          transport is! SessionSkillGateway ||
+          !(transport as SessionSkillGateway).sessionSkillsSupported) {
+        throw const SessionSkillException(SessionSkillFailure.unsupported);
+      }
+      await waitForSessionSelection(sessionID, expectedApi: currentApi);
+      if (!current() || !identical(transport, repository)) {
+        throw const SessionSkillException(SessionSkillFailure.changed);
+      }
+      final revision = sessionHistoryRevision(sessionID);
+      final fresh = await transport.getSessionDetails(sessionID);
+      if (!current() ||
+          !identical(transport, repository) ||
+          !identical(currentApi, api) ||
+          revision != sessionHistoryRevision(sessionID)) {
+        throw const SessionSkillException(SessionSkillFailure.changed);
+      }
+      if (fresh.reverted ||
+          fresh.stagedRevert != null ||
+          sessionsById[sessionID]?.stagedRevert != null ||
+          sessionRevertSaving(sessionID)) {
+        throw const SessionSkillException(SessionSkillFailure.staged);
+      }
+      await (transport as SessionSkillGateway).activateSessionSkill(
+        sessionID,
+        skillID,
+        resume: resume,
+      );
+      if (current() && identical(transport, repository)) {
+        _eventBus.add(
+          EventEnvelope(
+            type: 'session.skill.changed',
+            properties: {'sessionID': sessionID},
+          ),
+        );
+      }
+    } finally {
+      _skillWrites.remove(key);
+    }
+  }
+
   final _noteWrites = <(int, String)>{};
   final _noteRevisions = <(int, String), int>{};
   final _noteReceipts = <(int, String), bool>{};

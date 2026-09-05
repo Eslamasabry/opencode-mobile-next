@@ -1302,4 +1302,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get transcriptFindAll => 'Search all history';
+
+  @override
+  String get skillMenu => 'Use a skill';
+
+  @override
+  String get skillUse => 'Add to conversation';
+
+  @override
+  String get skillActivationHelp =>
+      'Adds these skill instructions to this conversation. Your unsent draft stays in the composer.';
+
+  @override
+  String get skillRunNow => 'Run agent now';
+
+  @override
+  String get skillRunHelp =>
+      'Turn off to add the skill without starting another response.';
+
+  @override
+  String get skillLocationChanged =>
+      'The connection or project changed. Reopen Skills from the conversation.';
+
+  @override
+  String get skillUnsupported =>
+      'Skill activation is unavailable on this server. You can still preview skills.';
+
+  @override
+  String get skillStaged =>
+      'Resolve the staged revert in the conversation before adding a skill.';
+
+  @override
+  String get skillBusy =>
+      'A skill is already being added to this conversation.';
+
+  @override
+  String get skillUncertain =>
+      'The server did not confirm the result. The skill may have been added. Close this sheet and check the conversation before trying again.';
+
+  @override
+  String get skillApplied => 'Skill added to this conversation.';
+
+  @override
+  String get skillAppliedOriginal =>
+      'Skill added to the original conversation. Close this sheet to return.';
 }

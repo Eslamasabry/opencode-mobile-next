@@ -48,3 +48,20 @@ staged-revert visibility boundary remains in effect.
 These are local rendering and gateway-fixture checks. Native keyboard,
 TalkBack, final device performance and release-candidate validation remain
 pending; this document does not certify the final v1 release.
+
+## Cycle 19 CI follow-up
+
+Cycle 18 Windows CI passed; Android/Linux failed two existing tests. One assumed
+that timeline selection renders only one copy of a matching string, before the
+active source excerpt existed. It now checks the unchanged Markdown body and
+visible excerpt independently. The other identified a permission announcement
+merged with composer semantics. The announcement now has its own live-region
+node, and the search navigation focus node does not expose semantics. The
+original exact-label assertion remains unchanged. The context meter likewise
+keeps its own accessible label.
+
+The stronger timeline check exposed a distant-match visibility bug. Search now
+materializes the target directly, waits for layout and measures the excerpt
+relative to its viewport before moving it into view. Flutter's generic sliver
+reveal offset was unreliable for this list's centered slivers. Both a distant
+timeline target and the 180-line reply now pass explicit hit-testable checks.

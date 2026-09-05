@@ -643,8 +643,8 @@ class _SmartTextPreviewState extends State<SmartTextPreview> {
                 color: theme.colorScheme.surfaceContainerHigh,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+              child: Wrap(
+                alignment: WrapAlignment.end,
                 children: [
                   TextButton(
                     key: const Key('file-preview-rendered-mode'),

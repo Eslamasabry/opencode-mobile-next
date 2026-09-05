@@ -441,5 +441,17 @@
   "transcriptFindReasoning": "Reasoning",
   "transcriptFindTool": "Tool data",
   "transcriptFindFile": "File name",
-  "transcriptFindAll": "Search all history"
+  "transcriptFindAll": "Search all history",
+  "skillMenu": "Use a skill",
+  "skillUse": "Add to conversation",
+  "skillActivationHelp": "Adds these skill instructions to this conversation. Your unsent draft stays in the composer.",
+  "skillRunNow": "Run agent now",
+  "skillRunHelp": "Turn off to add the skill without starting another response.",
+  "skillLocationChanged": "The connection or project changed. Reopen Skills from the conversation.",
+  "skillUnsupported": "Skill activation is unavailable on this server. You can still preview skills.",
+  "skillStaged": "Resolve the staged revert in the conversation before adding a skill.",
+  "skillBusy": "A skill is already being added to this conversation.",
+  "skillUncertain": "The server did not confirm the result. The skill may have been added. Close this sheet and check the conversation before trying again.",
+  "skillApplied": "Skill added to this conversation.",
+  "skillAppliedOriginal": "Skill added to the original conversation. Close this sheet to return."
 }

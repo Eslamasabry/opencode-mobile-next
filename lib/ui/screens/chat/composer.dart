@@ -459,7 +459,8 @@ class _ChatComposer extends StatelessWidget {
 
   /// Attaching only has to wait for a run on servers where Send itself must
   /// wait; with an inbox the file simply rides on the next send.
-  bool get _attachBlocked => sending || shelfBusy || (busy && !canSendWhileBusy);
+  bool get _attachBlocked =>
+      sending || shelfBusy || (busy && !canSendWhileBusy);
 
   /// The chip's visible text: the presented model name, the agent only when
   /// it is not the server's default, the variant only when it is a real
@@ -1371,6 +1372,7 @@ class _ContextMeterLine extends StatelessWidget {
     final percent = (value * 100).round();
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return Semantics(
+      container: true,
       label: 'Context window $percent percent used',
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14),

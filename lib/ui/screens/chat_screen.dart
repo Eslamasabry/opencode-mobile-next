@@ -891,6 +891,10 @@ class _ChatScreenState extends State<ChatScreen>
 
   void _onEvent(EventEnvelope env) {
     if (!mounted) return;
+    if (env.type == 'session.skill.changed' &&
+        env.properties['sessionID'] == widget.sessionID) {
+      _scheduleRecentHistoryRefresh();
+    }
     if ((env.type == 'session.compacted' ||
             env.type == 'session.history.reset') &&
         env.properties['sessionID'] == widget.sessionID) {
@@ -2827,16 +2831,27 @@ class _ChatScreenState extends State<ChatScreen>
           _highlightedMessageID != messageID) {
         return;
       }
-      await _messageScroll.scrollTo(
-        index: listIndex,
-        alignment: alignment,
-        duration: MediaQuery.disableAnimationsOf(context)
-            ? Duration.zero
-            : const Duration(milliseconds: 360),
-        curve: Curves.easeOutCubic,
-      );
+      if (findKey != null) {
+        // A distant animated scroll builds a temporary list. Its excerpt
+        // context can be retired before the final list takes over. Materialize
+        // search targets directly, then animate only the precise reveal.
+        _messageScroll.jumpTo(index: listIndex, alignment: alignment);
+      } else {
+        await _messageScroll.scrollTo(
+          index: listIndex,
+          alignment: alignment,
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 360),
+          curve: Curves.easeOutCubic,
+        );
+      }
       if (findKey == null) return;
-      await WidgetsBinding.instance.endOfFrame;
+      final layout = WidgetsBinding.instance.endOfFrame;
+      // jumpTo can be a no-op for the same list index. Still wait for a
+      // scheduled layout before revealing the changed excerpt.
+      WidgetsBinding.instance.scheduleFrame();
+      await layout;
       final target = _findExcerptContext;
       if (!mounted ||
           !_findOpen ||
@@ -2845,9 +2860,22 @@ class _ChatScreenState extends State<ChatScreen>
           !target.mounted) {
         return;
       }
-      await Scrollable.ensureVisible(
-        target,
-        alignment: .3,
+      final scrollable = Scrollable.of(target);
+      final viewport = scrollable.context.findRenderObject() as RenderBox;
+      final excerpt = target.findRenderObject() as RenderBox;
+      final top = excerpt.localToGlobal(Offset.zero, ancestor: viewport).dy;
+      final desired = math.max(
+        0.0,
+        (viewport.size.height - excerpt.size.height) * .3,
+      );
+      final position = scrollable.position;
+      // This list centers slivers around an arbitrary item. ensureVisible's
+      // sliver reveal offset is unreliable there; use measured viewport pixels.
+      final delta = top - desired;
+      await position.moveTo(
+        position.pixels +
+            (position.axisDirection == AxisDirection.up ? -delta : delta),
+        clamp: false,
         duration: MediaQuery.disableAnimationsOf(context)
             ? Duration.zero
             : const Duration(milliseconds: 160),
@@ -4139,11 +4167,21 @@ class _ChatScreenState extends State<ChatScreen>
         return;
       case _ChatCommandAction.skills:
         if (mounted) {
-          await Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => SkillsScreen(controller: _conn),
+          final location = _conn.locationRevision;
+          final used = await Navigator.of(context).push<bool>(
+            MaterialPageRoute<bool>(
+              builder: (_) => SkillsScreen(
+                controller: _conn,
+                sessionID: _conn.supportsSessionSkills
+                    ? widget.sessionID
+                    : null,
+              ),
             ),
           );
+          if (mounted && used == true && _conn.locationRevision == location) {
+            _showComposerNote(_chatL10n(context).skillApplied);
+            await _load();
+          }
         }
         return;
       case _ChatCommandAction.tools:
@@ -4404,6 +4442,7 @@ class _ChatScreenState extends State<ChatScreen>
             reverted: reverted,
             stagedRevert: _conn.supportsStagedRevert,
             notesAvailable: _conn.supportsSessionNotes,
+            skillsAvailable: _conn.supportsSessionSkills,
             shared: shared,
             sharingAvailable: _conn.capabilities.sessionShare,
           ),
@@ -4412,6 +4451,21 @@ class _ChatScreenState extends State<ChatScreen>
     );
     if (!mounted || action == null) return;
     switch (action) {
+      case 'skills':
+        if (_conn.locationRevision != menuLocation) {
+          _showActionError(_chatL10n(context).skillLocationChanged);
+          return;
+        }
+        final used = await Navigator.of(context).push<bool>(
+          MaterialPageRoute<bool>(
+            builder: (_) =>
+                SkillsScreen(controller: _conn, sessionID: widget.sessionID),
+          ),
+        );
+        if (mounted && used == true && _conn.locationRevision == menuLocation) {
+          _showComposerNote(_chatL10n(context).skillApplied);
+          await _load();
+        }
       case 'note':
         if (_conn.locationRevision != menuLocation) {
           _showActionError(_chatL10n(context).sessionNoteChanged);
@@ -5739,6 +5793,9 @@ class _ChatScreenState extends State<ChatScreen>
         },
         child: Focus(
           focusNode: _findNavigationFocus,
+          // This node only routes keyboard shortcuts; exposing the whole
+          // screen as a focusable semantics node merges unrelated labels.
+          includeSemantics: false,
           child: ModelShortcuts(
             onCycle: _cycleModel,
             onBackground: _canBackgroundWork ? _backgroundRunningWork : null,

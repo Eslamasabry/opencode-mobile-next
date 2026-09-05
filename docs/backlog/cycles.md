@@ -579,3 +579,41 @@ TalkBack and final candidate checks remain. See verification/transcript-search.m
 
 The prior 33bb657 dev/master Android, Linux and Windows builds all completed
 successfully. This batch follows the same direct dev → master workflow.
+
+## Cycle 19 — use skills in a conversation
+
+Connected the existing skills catalog to v2 session activation through the chat
+menu and Skills command. The review shows the skill instructions and destination,
+with explicit Run agent now control. Activation uses protocol IDs, retains the
+composer, refreshes canonical history and preserves privacy for remote events.
+The controller guards location changes, staged revert and competing requests;
+uncertain responses prevent immediate duplicate submission. General Library
+preview and v1 behavior remain available.
+
+Eighteen focused and existing catalog regression checks pass, static analysis is
+clean, and the phone render was inspected. A 320px enlarged-text check exercises
+the activation control. Live activation remains unverified: the pinned Windows
+fixture returned an empty skill catalog before the POST could be exercised.
+All owned fixture servers were stopped. See verification/session-skills.md for
+the evidence, exact limitation and required live follow-up.
+
+Worked on dev directly; this batch uses the same fast-forward master workflow.
+
+CI follow-up from cycle 18: Android/Linux exposed an outdated timeline assertion
+and a real announcement regression. The timeline now verifies the canonical
+message body and active excerpt separately. Permission titles have a dedicated
+live-region semantics node, and the keyboard-only search focus node does not
+add a screen-wide accessibility target. The existing exact permission-label
+assertion is preserved.
+
+The context meter also keeps its own accessible node. The stronger timeline
+check exposed an offscreen distant search match: navigation now materializes
+the item and uses measured viewport pixels for its precise reveal, avoiding the
+generic reveal calculation for centered slivers. Both distant-message and
+long-reply visibility checks pass.
+
+The compact skill review also caught an overflow in shared Markdown preview
+mode controls with enlarged text. Rendered/Raw now wrap to fit available width.
+
+Final verification: all 126 checks across chat live events, permissions,
+transcript search, skill activation and catalog refresh pass on the final source.

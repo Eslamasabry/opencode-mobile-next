@@ -5,10 +5,12 @@ class SkillsScreen extends StatefulWidget {
 
   /// Embedded mode renders the body only, for the Commands & tools tabs.
   final bool embedded;
+  final String? sessionID;
   const SkillsScreen({
     super.key,
     required this.controller,
     this.embedded = false,
+    this.sessionID,
   });
 
   @override
@@ -19,14 +21,49 @@ class _SkillsScreenState extends State<SkillsScreen> {
   List<SkillInfo>? _skills;
   String? _error;
   int _loadGeneration = 0;
+  late int _location;
+  late final int _chatLocation;
 
   @override
   void initState() {
     super.initState();
+    _location = widget.controller.locationRevision;
+    _chatLocation = _location;
+    widget.controller.addListener(_connectionChanged);
     _load();
   }
 
+  void _connectionChanged() {
+    if (_location == widget.controller.locationRevision) return;
+    _location = widget.controller.locationRevision;
+    _loadGeneration++;
+    setState(() {
+      _skills = null;
+      _error = null;
+    });
+    // A chat-scoped catalog must not become a catalog for another location.
+    if (widget.sessionID == null) {
+      _load();
+    } else {
+      setState(
+        () => _error = AppLocalizations.of(context).skillLocationChanged,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_connectionChanged);
+    super.dispose();
+  }
+
   Future<void> _load() async {
+    if (widget.sessionID != null && _location != _chatLocation) {
+      setState(
+        () => _error = AppLocalizations.of(context).skillLocationChanged,
+      );
+      return;
+    }
     final generation = ++_loadGeneration;
     if (_skills == null) setState(() => _error = null);
     try {
@@ -98,7 +135,23 @@ class _SkillsScreenState extends State<SkillsScreen> {
           ),
         );
 
-  void _showSkill(SkillInfo skill) {
+  Future<void> _showSkill(SkillInfo skill) async {
+    if (widget.sessionID case final sessionID?) {
+      final used = await showModalBottomSheet<bool>(
+        context: context,
+        isScrollControlled: true,
+        isDismissible: false,
+        enableDrag: false,
+        builder: (_) => _SkillActivationSheet(
+          controller: widget.controller,
+          sessionID: sessionID,
+          skill: skill,
+          location: _location,
+        ),
+      );
+      if (mounted && used == true) Navigator.of(context).pop(true);
+      return;
+    }
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,

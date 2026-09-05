@@ -7,6 +7,7 @@ export 'managed_shell.dart';
 export 'session_note.dart';
 export 'session_export.dart';
 export 'session_import.dart';
+export 'session_skill.dart';
 export 'usage_statistics.dart';
 
 /// Connection lifecycle surfaced to the UI.
@@ -697,6 +698,8 @@ class CommandInfo {
 }
 
 class SkillInfo {
+  /// Protocol identifier; display names are not necessarily valid selectors.
+  final String? id;
   final String name;
   final String? description;
   final String location;
@@ -704,6 +707,7 @@ class SkillInfo {
   final bool slashCommand;
 
   const SkillInfo({
+    this.id,
     required this.name,
     this.description,
     required this.location,

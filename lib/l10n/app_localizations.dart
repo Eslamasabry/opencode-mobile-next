@@ -2283,6 +2283,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search all history'**
   String get transcriptFindAll;
+
+  /// No description provided for @skillMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a skill'**
+  String get skillMenu;
+
+  /// No description provided for @skillUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to conversation'**
+  String get skillUse;
+
+  /// No description provided for @skillActivationHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Adds these skill instructions to this conversation. Your unsent draft stays in the composer.'**
+  String get skillActivationHelp;
+
+  /// No description provided for @skillRunNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Run agent now'**
+  String get skillRunNow;
+
+  /// No description provided for @skillRunHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off to add the skill without starting another response.'**
+  String get skillRunHelp;
+
+  /// No description provided for @skillLocationChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection or project changed. Reopen Skills from the conversation.'**
+  String get skillLocationChanged;
+
+  /// No description provided for @skillUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill activation is unavailable on this server. You can still preview skills.'**
+  String get skillUnsupported;
+
+  /// No description provided for @skillStaged.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolve the staged revert in the conversation before adding a skill.'**
+  String get skillStaged;
+
+  /// No description provided for @skillBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'A skill is already being added to this conversation.'**
+  String get skillBusy;
+
+  /// No description provided for @skillUncertain.
+  ///
+  /// In en, this message translates to:
+  /// **'The server did not confirm the result. The skill may have been added. Close this sheet and check the conversation before trying again.'**
+  String get skillUncertain;
+
+  /// No description provided for @skillApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill added to this conversation.'**
+  String get skillApplied;
+
+  /// No description provided for @skillAppliedOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill added to the original conversation. Close this sheet to return.'**
+  String get skillAppliedOriginal;
 }
 
 class _AppLocalizationsDelegate

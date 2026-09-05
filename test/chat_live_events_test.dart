@@ -19,6 +19,7 @@ import 'package:opencode_mobile/ui/screens/global_sessions_screen.dart';
 import 'package:opencode_mobile/ui/screens/project_health_screen.dart';
 import 'package:opencode_mobile/ui/screens/session_context_screen.dart';
 import 'package:opencode_mobile/ui/widgets/product_states.dart';
+import 'package:opencode_mobile/ui/widgets/markdown.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
@@ -2989,7 +2990,23 @@ void main() {
     await tester.tap(find.byKey(const Key('timeline-row-user-0')));
     await tester.pumpAndSettle();
 
-    expect(find.text('oldest anchor prompt'), findsOneWidget);
+    // Search deliberately displays both a source excerpt and the unchanged
+    // message body. Verify the actual body and active excerpt independently.
+    expect(
+      find.descendant(
+        of: find.byType(MarkdownText),
+        matching: find.text('oldest anchor prompt'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('transcript-match-user-0/0/0')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('transcript-match-user-0/0/0')).hitTestable(),
+      findsOneWidget,
+    );
     // The key stays stable while highlighted (no remount), and the highlight
     // itself is expressed through the animated decoration.
     final highlightFinder = find.byKey(const Key('message-highlight-user-0'));

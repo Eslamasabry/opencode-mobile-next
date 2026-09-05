@@ -78,6 +78,7 @@ class _AttentionCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Semantics(
+                            container: true,
                             liveRegion: true,
                             label: announcement,
                             excludeSemantics: true,
@@ -517,6 +518,7 @@ class _SessionMenuSheet extends StatelessWidget {
     required this.sharingAvailable,
     this.stagedRevert = false,
     this.notesAvailable = false,
+    this.skillsAvailable = false,
   });
 
   final bool reasoningExpanded;
@@ -527,6 +529,7 @@ class _SessionMenuSheet extends StatelessWidget {
   final bool sharingAvailable;
   final bool stagedRevert;
   final bool notesAvailable;
+  final bool skillsAvailable;
 
   @override
   Widget build(BuildContext context) {
@@ -588,6 +591,12 @@ class _SessionMenuSheet extends StatelessWidget {
               dense: true,
             ),
             const SectionLabel('Actions'),
+            if (skillsAvailable)
+              _SessionSheetRow(
+                icon: Icons.extension_outlined,
+                label: _chatL10n(context).skillMenu,
+                value: 'skills',
+              ),
             if (notesAvailable)
               _SessionSheetRow(
                 icon: Icons.sticky_note_2_outlined,

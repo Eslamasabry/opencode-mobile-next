@@ -47,6 +47,12 @@ class Api2EventAdapter {
           _env('session.shell.changed', {'sessionID': event.sessionID}),
         ];
 
+      case Api2SessionSkillActivatedEvent():
+        // Rehydrate the canonical, redacted skill row; never expose event text.
+        return [
+          _env('session.skill.changed', {'sessionID': event.sessionID}),
+        ];
+
       case Api2SessionCreatedEvent():
         return [
           _env('session.created', {

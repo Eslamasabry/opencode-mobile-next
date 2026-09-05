@@ -34,6 +34,7 @@ part 'library/integrations_screen.dart';
 part 'library/integration_tiles.dart';
 part 'library/commands_screen.dart';
 part 'library/skills_screen.dart';
+part 'library/skill_activation.dart';
 part 'library/references_screen.dart';
 
 class LibraryScreen extends StatefulWidget {

@@ -31,8 +31,45 @@ class Api2OperationsGateway extends ProductRepository
         SessionNoteGateway,
         SessionExportGateway,
         SessionImportGateway,
+        SessionSkillGateway,
         UsageStatisticsGateway {
   final Api2Client client;
+
+  bool _skillsSupported = true;
+  @override
+  bool get sessionSkillsSupported => _skillsSupported;
+
+  @override
+  Future<void> activateSessionSkill(
+    String sessionID,
+    String skillID, {
+    required bool resume,
+  }) async {
+    if (!_skillsSupported) {
+      throw const SessionSkillException(SessionSkillFailure.unsupported);
+    }
+    try {
+      // The session identifies its location. The route has no location query.
+      await _transport.postJson(
+        '/session/${Uri.encodeComponent(sessionID)}/skill',
+        body: {'skill': skillID, 'resume': resume},
+      );
+    } on Api2Error catch (error) {
+      if ([405, 501].contains(error.statusCode) ||
+          (error.statusCode == 404 &&
+              ![
+                'SessionNotFoundError',
+                'SkillNotFoundError',
+              ].contains(error.tag))) {
+        _skillsSupported = false;
+        throw const SessionSkillException(SessionSkillFailure.unsupported);
+      }
+      if (error.statusCode == null || error.statusCode! >= 500) {
+        throw const SessionSkillException(SessionSkillFailure.uncertain);
+      }
+      rethrow;
+    }
+  }
 
   bool _importSupported = true;
   @override
@@ -50,7 +87,9 @@ class Api2OperationsGateway extends ProductRepository
         body: document.requestBody(destination),
       );
       final session = Api2Session.fromJson(_dataMap(json));
-      if (session == null || session.id != document.id || session.directory?.isNotEmpty != true) {
+      if (session == null ||
+          session.id != document.id ||
+          session.directory?.isNotEmpty != true) {
         throw const Api2RequestError('Import returned an invalid session');
       }
       return mapApi2Session(session);
@@ -1019,6 +1058,7 @@ class Api2OperationsGateway extends ProductRepository
         return [
           for (final skill in skills)
             SkillInfo(
+              id: skill.id,
               name: skill.name ?? skill.id,
               description: skill.description,
               location: skill.location ?? '',

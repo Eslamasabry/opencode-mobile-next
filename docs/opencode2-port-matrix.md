@@ -303,7 +303,7 @@ concept in v2) · **NONE** (no v2 equivalent found in beta-18600).
 | `PUT /auth/{providerID}` (auth.set) | `POST /api/integration/{id}/connect/key` · v2.integration.connect.key | replaced-by | Legacy credential write folds into integrations. |
 | `DELETE /auth/{providerID}` (auth.remove) | `DELETE /api/credential/{credentialID}` · v2.credential.remove | replaced-by | |
 | `DELETE /api/credential/{credentialID}` (compat) | same · v2.credential.remove | direct | v2 adds v2.credential.update (PATCH). |
-| `GET /api/command` / `/api/skill` / `/api/reference` (compat) | same · v2.command.list / v2.skill.list / v2.reference.list | direct | v2 adds `POST /api/session/{id}/skill` (v2.session.skill) for invocation. |
+| `GET /api/command` / `/api/skill` / `/api/reference` (compat) | same · v2.command.list / v2.skill.list / v2.reference.list | direct | Cycle 19 connects `POST /api/session/{id}/skill` (v2.session.skill) to chat-scoped preview/activation with explicit resume. Live activation remains pending; see `verification/session-skills.md`. |
 
 ### Integrations (provider OAuth)
 
