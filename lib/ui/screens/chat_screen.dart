@@ -333,9 +333,7 @@ class _ChatScreenState extends State<ChatScreen>
   int _offlineFlushRevision = 0;
   bool _sending = false;
   bool _aborting = false;
-  bool _permissionDismissScheduled = false;
   String? _activePermissionID;
-  Route<void>? _activePermissionRoute;
   bool _permissionReplying = false;
   bool _questionReplying = false;
   String? _activeFormID;
@@ -2928,7 +2926,6 @@ class _ChatScreenState extends State<ChatScreen>
     final shouldRehydrate =
         _dataRefreshRevision != _conn.dataRefreshRevision && _conn.api != null;
     _dataRefreshRevision = _conn.dataRefreshRevision;
-    _dismissResolvedPermissionDialog();
     _noteRunFinished();
     setState(() {});
     final scopeChanged =
@@ -3051,75 +3048,24 @@ class _ChatScreenState extends State<ChatScreen>
     ).showSnackBar(SnackBar(content: Text(message.toString())));
   }
 
-  void _dismissResolvedPermissionDialog() {
-    final activeID = _activePermissionID;
-    if (activeID == null ||
-        _conn.permissions.containsKey(activeID) ||
-        _permissionDismissScheduled) {
-      return;
-    }
-    _permissionDismissScheduled = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _permissionDismissScheduled = false;
-      if (!mounted ||
-          _activePermissionID != activeID ||
-          _conn.permissions.containsKey(activeID)) {
-        return;
-      }
-      final route = _activePermissionRoute;
-      if (route != null && route.isActive) {
-        route.navigator?.removeRoute(route);
-        // The request settled without this sheet replying — someone else
-        // (another device, the TUI, a notification action) handled it.
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Handled on another device')),
-        );
-      }
-    });
-  }
-
   /// The Review path from the attention card: the full permission sheet,
   /// now dismissible — closing it leaves the card in place.
   Future<void> _showPermissionDialog(PermissionRequest permission) async {
     if (_activePermissionID != null) return;
     _activePermissionID = permission.id;
     final tool = permission.tool;
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      isDismissible: true,
-      enableDrag: true,
-      useSafeArea: true,
-      clipBehavior: Clip.antiAlias,
-      constraints: const BoxConstraints(maxWidth: 720),
-      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (sheetContext) {
-        _activePermissionRoute = ModalRoute.of<void>(sheetContext);
-        _dismissResolvedPermissionDialog();
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
-          ),
-          child: PermissionSheet(
-            permission: permission,
-            supportsRejectMessage: _conn.permissionSupportsRejectMessage(
-              permission.id,
-            ),
-            onReply: (reply, {message}) =>
-                _conn.answerPermission(permission.id, reply, message: message),
-            onShowSource: tool == null
-                ? null
-                : () => _jumpToMessage(tool.messageID),
-          ),
-        );
-      },
-    );
-    if (!mounted) return;
-    _activePermissionID = null;
-    _activePermissionRoute = null;
+    try {
+      await showPermissionSheet(
+        context,
+        permission: permission,
+        controller: _conn,
+        onShowSource: tool == null
+            ? null
+            : () => _jumpToMessage(tool.messageID),
+      );
+    } finally {
+      _activePermissionID = null;
+    }
   }
 
   /// The card's fast path: the same reply the sheet's Allow once sends.

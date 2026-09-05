@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -128,6 +129,58 @@ final connProvider = Provider<ConnectionController>(
 );
 
 typedef OpenCodeApiFactory = OpenCodeApi Function(ServerProfile profile);
+
+/// The logical request reviewed by a user, independent of transport recovery.
+/// A refresh may recreate equivalent model objects, so compare their contents.
+class PendingRequestIdentity {
+  PendingRequestIdentity._(
+    this._owner,
+    this._location,
+    this._permission,
+    this._id,
+    this._contents,
+  );
+
+  final ConnectionController _owner;
+  final int _location;
+  final bool _permission;
+  final String _id;
+  final String _contents;
+  bool _retired = false;
+}
+
+Object? _canonicalRequestValue(Object? value) {
+  if (value is Map) {
+    final keys = value.keys.map((key) => key.toString()).toList()..sort();
+    return {for (final key in keys) key: _canonicalRequestValue(value[key])};
+  }
+  if (value is Iterable) return value.map(_canonicalRequestValue).toList();
+  return value;
+}
+
+String _permissionContents(PermissionRequest value) => jsonEncode(
+  _canonicalRequestValue({
+    'session': value.sessionID,
+    'permission': value.permission,
+    'patterns': value.patterns,
+    'always': value.always,
+    'metadata': value.metadata,
+    'message': value.message,
+    'tool': [value.tool?.messageID, value.tool?.callID],
+  }),
+);
+
+String _questionContents(PendingQuestion value) => jsonEncode([
+  value.sessionID,
+  for (final prompt in value.prompts)
+    [
+      prompt.title,
+      prompt.question,
+      prompt.multiple,
+      prompt.custom,
+      for (final choice in prompt.choices) [choice.label, choice.description],
+    ],
+]);
 typedef ProductRepositoryFactory = ProductRepository Function(OpenCodeApi api);
 
 /// Builds the OpenCode 2 gateway pair for a profile whose detected flavor is
@@ -2371,19 +2424,103 @@ class ConnectionController extends ChangeNotifier {
     String requestID,
     String response, {
     String? message,
-  }) async {
-    final permission = permissions[requestID];
-    if (permission == null) {
-      if (_resolvedPermissionIDs.contains(requestID)) return;
-      throw StateError('Permission request $requestID is no longer pending');
+    PendingRequestIdentity? expectedRequest,
+  }) => _sendPermissionReply(
+    api,
+    requestID,
+    response,
+    message: message,
+    expectedRequest: expectedRequest,
+    prepareTransport: true,
+  );
+
+  PendingRequestIdentity permissionIdentity(PermissionRequest request) =>
+      PendingRequestIdentity._(
+        this,
+        locationRevision,
+        true,
+        request.id,
+        _permissionContents(request),
+      );
+
+  PendingRequestIdentity questionIdentity(PendingQuestion request) =>
+      PendingRequestIdentity._(
+        this,
+        locationRevision,
+        false,
+        request.id,
+        _questionContents(request),
+      );
+
+  bool isRequestPending(PendingRequestIdentity request) {
+    if (request._retired ||
+        _disposed ||
+        request._owner != this ||
+        request._location != locationRevision) {
+      request._retired = true;
+      return false;
     }
-    final currentApi = await _requireActionTransport();
-    await _sendPermissionReply(
-      currentApi,
-      requestID,
-      response,
-      message: message,
+    bool pending;
+    if (request._permission) {
+      final current = permissions[request._id];
+      pending =
+          current != null && _permissionContents(current) == request._contents;
+    } else {
+      final current = questions[request._id];
+      pending =
+          current != null && _questionContents(current) == request._contents;
+    }
+    if (!pending) request._retired = true;
+    return pending;
+  }
+
+  final _pendingReplies =
+      <
+        (int, bool, String, String),
+        ({PendingRequestIdentity request, Future<void> future})
+      >{};
+
+  /// A notification, sheet and inline card share one slot. Claim it before
+  /// waking the transport; a second decision waits for the first result.
+  Future<void> _withPendingReply(
+    PendingRequestIdentity request,
+    Future<void> Function() send,
+  ) {
+    if (!isRequestPending(request)) return Future.value();
+    final key = (
+      request._location,
+      request._permission,
+      request._id,
+      request._contents,
     );
+    final existing = _pendingReplies[key];
+    if (existing != null && isRequestPending(existing.request)) {
+      return existing.future;
+    }
+    final completion = Completer<void>();
+    _pendingReplies[key] = (request: request, future: completion.future);
+    // Remember a removal even if a server reuses the ID before wake finishes.
+    void checkPending() => isRequestPending(request);
+    addListener(checkPending);
+    () async {
+      try {
+        await send();
+        completion.complete();
+      } catch (error, stack) {
+        // Resolution or replacement makes the old failure irrelevant.
+        if (!isRequestPending(request)) {
+          completion.complete();
+        } else {
+          completion.completeError(error, stack);
+        }
+      } finally {
+        removeListener(checkPending);
+        if (identical(_pendingReplies[key]?.future, completion.future)) {
+          _pendingReplies.remove(key);
+        }
+      }
+    }();
+    return completion.future;
   }
 
   /// True when [requestID] arrived over the OpenCode 2 permission contract,
@@ -2397,16 +2534,47 @@ class ConnectionController extends ChangeNotifier {
   /// foreground path's wake reconciliation doubles as an app resume, which
   /// would clear every posted alert.
   Future<void> _sendPermissionReply(
-    ServerGateway currentApi,
+    ServerGateway? currentApi,
     String requestID,
     String response, {
     String? message,
+    PendingRequestIdentity? expectedRequest,
+    bool prepareTransport = false,
   }) async {
+    if (expectedRequest != null &&
+        (!expectedRequest._permission || expectedRequest._id != requestID)) {
+      throw ArgumentError('Permission request identity does not match');
+    }
+    if (expectedRequest != null && !isRequestPending(expectedRequest)) return;
     final permission = permissions[requestID];
     if (permission == null) {
       if (_resolvedPermissionIDs.contains(requestID)) return;
       throw StateError('Permission request $requestID is no longer pending');
     }
+    final request = expectedRequest ?? permissionIdentity(permission);
+    return _withPendingReply(request, () async {
+      final transport = prepareTransport
+          ? await _requireActionTransport()
+          : currentApi;
+      if (!isRequestPending(request)) return;
+      if (transport == null) throw StateError('Not connected to OpenCode');
+      await _writePermissionReply(
+        transport,
+        request,
+        response,
+        message: message,
+      );
+    });
+  }
+
+  Future<void> _writePermissionReply(
+    ServerGateway currentApi,
+    PendingRequestIdentity request,
+    String response, {
+    String? message,
+  }) async {
+    final requestID = request._id;
+    final permission = permissions[requestID]!;
     final generation = _generation;
     try {
       final legacyIdentity = _legacyPermissionIdentities[requestID];
@@ -2427,10 +2595,14 @@ class ConnectionController extends ChangeNotifier {
           message: message,
         );
       }
-      if (!_isCurrent(generation, currentApi)) return;
+      if (!_isCurrent(generation, currentApi) || !isRequestPending(request)) {
+        return;
+      }
       _resolvePermission(requestID);
     } catch (error) {
-      if (!_isCurrent(generation, currentApi)) return;
+      if (!_isCurrent(generation, currentApi) || !isRequestPending(request)) {
+        return;
+      }
       if (_resolvedPermissionIDs.contains(requestID)) return;
       if (error is ApiException && error.isPermissionNotFound(permission.id)) {
         _resolvePermission(requestID);
@@ -2568,11 +2740,28 @@ class ConnectionController extends ChangeNotifier {
 
   Future<void> answerQuestion(
     String requestID,
-    List<List<String>> answers,
-  ) async {
-    await prepareActionTransport();
-    await _sendQuestionAnswer(api, repository, requestID, answers);
-  }
+    List<List<String>> answers, {
+    PendingRequestIdentity? expectedRequest,
+  }) => _sendQuestionReply(
+    api,
+    repository,
+    requestID,
+    answers,
+    expectedRequest: expectedRequest,
+    prepareTransport: true,
+  );
+
+  Future<void> rejectQuestion(
+    String requestID, {
+    PendingRequestIdentity? expectedRequest,
+  }) => _sendQuestionReply(
+    api,
+    repository,
+    requestID,
+    null,
+    expectedRequest: expectedRequest,
+    prepareTransport: true,
+  );
 
   /// Sends one question answer on already-resolved transport objects; the
   /// notification-action path passes the live background transport directly
@@ -2582,60 +2771,81 @@ class ConnectionController extends ChangeNotifier {
     ServerOperationsGateway? current,
     String requestID,
     List<List<String>> answers,
-  ) async {
-    final generation = _generation;
-    if (current == null) throw StateError('Not connected to OpenCode');
-    if (!questions.containsKey(requestID)) {
+  ) => _sendQuestionReply(currentApi, current, requestID, answers);
+
+  Future<void> _sendQuestionReply(
+    ServerGateway? currentApi,
+    ServerOperationsGateway? current,
+    String requestID,
+    List<List<String>>? answers, {
+    PendingRequestIdentity? expectedRequest,
+    bool prepareTransport = false,
+  }) async {
+    if (expectedRequest != null &&
+        (expectedRequest._permission || expectedRequest._id != requestID)) {
+      throw ArgumentError('Question request identity does not match');
+    }
+    if (expectedRequest != null && !isRequestPending(expectedRequest)) return;
+    final question = questions[requestID];
+    if (question == null) {
       if (_resolvedQuestionIDs.contains(requestID)) return;
       throw StateError('Question request $requestID is no longer pending');
     }
+    final request = expectedRequest ?? questionIdentity(question);
+    final capturedAnswers = answers
+        ?.map((values) => List<String>.of(values))
+        .toList();
+    return _withPendingReply(request, () async {
+      if (prepareTransport) {
+        await prepareActionTransport();
+        currentApi = api;
+        current = repository;
+      }
+      if (!isRequestPending(request)) return;
+      await _writeQuestionReply(currentApi, current, request, capturedAnswers);
+    });
+  }
+
+  Future<void> _writeQuestionReply(
+    ServerGateway? currentApi,
+    ServerOperationsGateway? current,
+    PendingRequestIdentity request,
+    List<List<String>>? answers,
+  ) async {
+    final requestID = request._id;
+    final generation = _generation;
+    if (current == null) throw StateError('Not connected to OpenCode');
     final v2SessionID = _v2QuestionSessions[requestID];
     try {
       if (v2SessionID != null) {
         if (currentApi == null) throw StateError('Not connected to OpenCode');
-        await currentApi.answerQuestionV2(v2SessionID, requestID, answers);
+        if (answers == null) {
+          await currentApi.rejectQuestionV2(v2SessionID, requestID);
+        } else {
+          await currentApi.answerQuestionV2(v2SessionID, requestID, answers);
+        }
+      } else if (answers == null) {
+        await current.rejectQuestion(requestID);
       } else {
         await current.answerQuestion(requestID, answers);
       }
     } catch (error) {
-      if (!_isCurrent(generation, currentApi) || repository != current) return;
+      if (!_isCurrent(generation, currentApi) ||
+          repository != current ||
+          !isRequestPending(request)) {
+        return;
+      }
       if (_isQuestionNotFound(error, requestID)) {
         _resolveQuestion(requestID);
         return;
       }
       rethrow;
     }
-    if (!_isCurrent(generation, currentApi) || repository != current) return;
-    _resolveQuestion(requestID);
-  }
-
-  Future<void> rejectQuestion(String requestID) async {
-    await prepareActionTransport();
-    final currentApi = api;
-    final current = repository;
-    final generation = _generation;
-    if (current == null) throw StateError('Not connected to OpenCode');
-    if (!questions.containsKey(requestID)) {
-      if (_resolvedQuestionIDs.contains(requestID)) return;
-      throw StateError('Question request $requestID is no longer pending');
+    if (!_isCurrent(generation, currentApi) ||
+        repository != current ||
+        !isRequestPending(request)) {
+      return;
     }
-    final v2SessionID = _v2QuestionSessions[requestID];
-    try {
-      if (v2SessionID != null) {
-        if (currentApi == null) throw StateError('Not connected to OpenCode');
-        await currentApi.rejectQuestionV2(v2SessionID, requestID);
-      } else {
-        await current.rejectQuestion(requestID);
-      }
-    } catch (error) {
-      if (!_isCurrent(generation, currentApi) || repository != current) return;
-      if (_isQuestionNotFound(error, requestID)) {
-        _resolveQuestion(requestID);
-        return;
-      }
-      rethrow;
-    }
-    if (!_isCurrent(generation, currentApi) || repository != current) return;
     _resolveQuestion(requestID);
   }
 

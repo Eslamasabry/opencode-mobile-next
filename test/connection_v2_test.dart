@@ -31,6 +31,7 @@ class _V2Api extends OpenCodeApi {
   Object? questionV2Error;
   Object? answerQuestionError;
   Object? rejectQuestionError;
+  Completer<void>? questionWrite;
   List<Session> sessionsResult = const [];
   final ProvidersResponse? providersResult;
   final ProvidersResponse? configuredProvidersResult;
@@ -108,6 +109,7 @@ class _V2Api extends OpenCodeApi {
     String requestID,
     List<List<String>> answers,
   ) async {
+    await questionWrite?.future;
     if (answerQuestionError case final error?) throw error;
     questionReplies.add((sessionID, requestID, answers));
   }
@@ -268,6 +270,139 @@ Map<String, dynamic> _question(String id, String sessionID) => {
 };
 
 void main() {
+  for (final replacement in ['scope', 'contents', 'resolved then reused']) {
+    test('request replies cannot cross $replacement while waking', () async {
+      final api = _V2Api();
+      final ready = Completer<void>();
+      final controller = _DelayedRequestController(
+        await _store(),
+        ready: ready,
+        replacementApi: api,
+        replacementRepository: _QuestionRepository(),
+      );
+      addTearDown(controller.dispose);
+      void ask({String session = 'session-1'}) {
+        controller.handleEventForTesting(
+          EventEnvelope(
+            type: 'permission.v2.asked',
+            properties: {
+              'id': 'permission-1',
+              'sessionID': session,
+              'action': 'bash',
+              'resources': ['git status'],
+            },
+          ),
+        );
+        for (final id in ['question-1', 'question-2']) {
+          controller.handleEventForTesting(
+            EventEnvelope(
+              type: 'question.v2.asked',
+              properties: _question(id, session),
+            ),
+          );
+        }
+      }
+
+      ask();
+      final operations = [
+        controller.answerPermission('permission-1', 'once'),
+        controller.answerQuestion('question-1', [
+          ['Yes'],
+        ]),
+        controller.rejectQuestion('question-2'),
+      ];
+      if (replacement == 'scope') {
+        controller.locationRevision++;
+        ask();
+      } else if (replacement == 'contents') {
+        ask(session: 'session-2');
+      } else {
+        for (final id in ['permission-1', 'question-1', 'question-2']) {
+          controller.handleEventForTesting(
+            EventEnvelope(
+              type: id.startsWith('permission')
+                  ? 'permission.v2.replied'
+                  : 'question.v2.replied',
+              properties: {'requestID': id},
+            ),
+          );
+        }
+        ask();
+      }
+      ready.complete();
+      await Future.wait(operations);
+      expect(api.permissionReplies, isEmpty);
+      expect(api.questionReplies, isEmpty);
+      expect(api.questionRejects, isEmpty);
+      expect(controller.permissions, contains('permission-1'));
+      expect(controller.questions, hasLength(2));
+    });
+  }
+
+  test(
+    'question answer and reject share a write slot before transport wake',
+    () async {
+      final api = _V2Api();
+      final ready = Completer<void>();
+      final controller = _DelayedRequestController(
+        await _store(),
+        ready: ready,
+        replacementApi: api,
+        replacementRepository: _QuestionRepository(),
+      );
+      addTearDown(controller.dispose);
+      controller.handleEventForTesting(
+        EventEnvelope(
+          type: 'question.v2.asked',
+          properties: _question('question-1', 'session-1'),
+        ),
+      );
+      final answer = controller.answerQuestion('question-1', [
+        ['Yes'],
+      ]);
+      final reject = controller.rejectQuestion('question-1');
+      ready.complete();
+      await Future.wait([answer, reject]);
+      expect(api.questionReplies, hasLength(1));
+      expect(api.questionRejects, isEmpty);
+    },
+  );
+
+  test(
+    'late question failure after remote resolution does not surface an error',
+    () async {
+      final write = Completer<void>();
+      final api = _V2Api()
+        ..questionWrite = write
+        ..answerQuestionError = ApiException(
+          'Temporary outage',
+          statusCode: 503,
+        );
+      final controller = ConnectionController(await _store())
+        ..api = api
+        ..repository = _QuestionRepository();
+      addTearDown(controller.dispose);
+      controller.handleEventForTesting(
+        EventEnvelope(
+          type: 'question.v2.asked',
+          properties: _question('question-1', 'session-1'),
+        ),
+      );
+      final answer = controller.answerQuestion('question-1', [
+        ['Yes'],
+      ]);
+      await Future<void>.delayed(Duration.zero);
+      controller.handleEventForTesting(
+        EventEnvelope(
+          type: 'question.v2.replied',
+          properties: {'requestID': 'question-1'},
+        ),
+      );
+      write.complete();
+      await answer;
+      expect(controller.questions, isEmpty);
+    },
+  );
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test('V2 HTTP hydration envelopes and session-scoped mutations', () async {

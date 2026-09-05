@@ -290,3 +290,37 @@ created. The protocol has no atomic conditional commit/prompt; fresh reads
 reduce but cannot eliminate a remote change between read and POST. Resolved
 request sheets and the broader release checklist remain open. The hourly
 automation remains paused at the user's clean-slate request.
+
+## 2026-09-05 — Cycle 09: resolved permission and question lifetimes
+
+Implemented in an isolated checkout, preserving the user's clean dev baseline.
+Chat and Activity now share permission presentation. Permission/question sheets
+observe the original location and request contents; removal, replacement or a
+scope change retires the request immediately. Only that sheet and its owned
+confirmation/full-diff routes are removed, even beneath an unrelated screen.
+Equivalent hydration and normal transport wake retain drafts and open sheets.
+Confirmations reserve the action before awaiting input without showing a
+sending spinner until the user confirms. Genuine reply errors remain inline.
+
+Controller actions capture request identity before waking. One shared slot
+covers permission choices and another covers question answer/reject, including
+native notification actions. A removal remains retired even if the server
+reissues the same ID before wake completes. Old completions cannot resolve a
+replacement request; late failures after remote resolution are suppressed.
+
+Verification: analysis clean. Across the eight focused request suites, 86 checks
+passed (the final affected UI rerun passed all 25). Two localization checks also
+passed. The initial UI run exposed premature sending spinners behind the Always
+and Dismiss confirmations; implementation was corrected. The recoverable-error
+fixture was corrected to use a product API error instead of expecting raw
+StateError text, which the app intentionally replaces with friendly copy.
+
+PR #71's completed Windows CI passed; Android and Linux failed only the
+localization ratchet, which mistook numeric interpolated diff counts for prose.
+The detector now ignores simple interpolation identifiers when deciding whether
+literal text contains words, with regressions for numeric counts and surrounding
+English prose. Baselines decreased where this corrected existing false positives;
+none increased. This is the observed CI failure, not evidence of a new platform
+build. #10 stays open for final native multi-session, keyboard and notification
+verification. No emulator, release APK, tag or publication was created. The hourly
+automation remains paused; dev will be aligned with master after merge.
