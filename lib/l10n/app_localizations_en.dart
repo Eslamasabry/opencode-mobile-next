@@ -914,4 +914,71 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get shareSessionViewsSaveError =>
       'Could not save this preference. Read-state sharing is off on this device for now.';
+
+  @override
+  String get exportTitle => 'Export conversation';
+
+  @override
+  String get exportDescription =>
+      'Choose a format to save this conversation on your device.';
+
+  @override
+  String get exportJson => 'Complete conversation · JSON';
+
+  @override
+  String get exportJsonDescription =>
+      'Downloads the full session from the server, including older messages.';
+
+  @override
+  String get exportMarkdown => 'Readable transcript · Markdown';
+
+  @override
+  String get exportMarkdownDescription =>
+      'Saves the messages currently loaded in this chat. Load older messages first if you need them included.';
+
+  @override
+  String get exportRedact => 'Redact sensitive data';
+
+  @override
+  String get exportRedactDescription =>
+      'Replaces conversation text and sensitive fields with placeholders. Turn this off to back up the original text. Review any export before sharing.';
+
+  @override
+  String get exportUnredacted =>
+      'The unredacted file may contain secrets, local paths, and private tool output.';
+
+  @override
+  String get exportSave => 'Save file';
+
+  @override
+  String get exportCancel => 'Cancel download';
+
+  @override
+  String get exportDownloading => 'Downloading complete conversation…';
+
+  @override
+  String get exportSaving => 'Saving file…';
+
+  @override
+  String get exportSaved => 'Conversation saved';
+
+  @override
+  String get exportChanged =>
+      'The connection or location changed. Reopen export from the intended conversation.';
+
+  @override
+  String get exportUnsupported =>
+      'This server does not support JSON export. You can still save the loaded Markdown transcript.';
+
+  @override
+  String get exportAuthorization =>
+      'The server denied access. Check your connection credentials and try again.';
+
+  @override
+  String get exportMissing =>
+      'This conversation no longer exists on the server. You can still save the loaded Markdown transcript.';
+
+  @override
+  String get exportFailed =>
+      'Could not export the conversation. Check your connection and storage, then try again.';
 }

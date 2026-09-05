@@ -10,8 +10,9 @@ library;
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
-import 'package:dio/dio.dart' show Options;
+import 'package:dio/dio.dart' show CancelToken, Options, ProgressCallback;
 
 import '../api/mcp_oauth.dart';
 import '../api/models.dart';
@@ -28,8 +29,41 @@ class Api2OperationsGateway extends ProductRepository
         StagedRevertGateway,
         SessionReadStateGateway,
         SessionNoteGateway,
+        SessionExportGateway,
         UsageStatisticsGateway {
   final Api2Client client;
+
+  bool _exportSupported = true;
+  @override
+  bool get sessionExportSupported => _exportSupported;
+
+  @override
+  Future<Uint8List> exportSession(
+    String sessionID, {
+    bool sanitize = true,
+    CancelToken? cancelToken,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    if (!_exportSupported) throw const SessionExportUnsupported();
+    try {
+      // This route identifies its session globally; never attach _loc(). Keep
+      // the server envelope byte-for-byte, without decoded models or re-encoding.
+      final bytes = await _transport.getBytes(
+        '/session/${Uri.encodeComponent(sessionID)}/export',
+        query: {'sanitize': sanitize.toString()},
+        cancelToken: cancelToken,
+        onReceiveProgress: onReceiveProgress,
+      );
+      return bytes is Uint8List ? bytes : Uint8List.fromList(bytes);
+    } on Api2Error catch (error) {
+      if ([405, 501].contains(error.statusCode) ||
+          (error.statusCode == 404 && error.tag != 'SessionNotFoundError')) {
+        _exportSupported = false;
+        throw const SessionExportUnsupported();
+      }
+      rethrow;
+    }
+  }
 
   bool _usageSupported = true;
   @override

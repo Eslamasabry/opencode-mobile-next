@@ -62,6 +62,7 @@ import 'project_health_screen.dart';
 import 'review_workspace.dart';
 import 'session_context_screen.dart';
 import 'session_note_screen.dart';
+import 'session_export_screen.dart';
 import 'staged_revert_screen.dart';
 import 'session_destination_sheet.dart';
 import 'session_relations_screen.dart';
@@ -3970,6 +3971,20 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _exportTranscript() async {
+    final repository = _conn.repository;
+    if (repository is SessionExportGateway &&
+        (repository as SessionExportGateway).sessionExportSupported) {
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => SessionExportScreen(
+            controller: _conn,
+            sessionID: widget.sessionID,
+            markdown: () => Uint8List.fromList(utf8.encode(_transcriptMarkdown())),
+          ),
+        ),
+      );
+      return;
+    }
     final path = await FilePicker.saveFile(
       dialogTitle: 'Export session transcript',
       fileName:

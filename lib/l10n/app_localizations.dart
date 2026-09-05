@@ -1677,6 +1677,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not save this preference. Read-state sharing is off on this device for now.'**
   String get shareSessionViewsSaveError;
+
+  /// No description provided for @exportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export conversation'**
+  String get exportTitle;
+
+  /// No description provided for @exportDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a format to save this conversation on your device.'**
+  String get exportDescription;
+
+  /// No description provided for @exportJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete conversation · JSON'**
+  String get exportJson;
+
+  /// No description provided for @exportJsonDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads the full session from the server, including older messages.'**
+  String get exportJsonDescription;
+
+  /// No description provided for @exportMarkdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Readable transcript · Markdown'**
+  String get exportMarkdown;
+
+  /// No description provided for @exportMarkdownDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Saves the messages currently loaded in this chat. Load older messages first if you need them included.'**
+  String get exportMarkdownDescription;
+
+  /// No description provided for @exportRedact.
+  ///
+  /// In en, this message translates to:
+  /// **'Redact sensitive data'**
+  String get exportRedact;
+
+  /// No description provided for @exportRedactDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Replaces conversation text and sensitive fields with placeholders. Turn this off to back up the original text. Review any export before sharing.'**
+  String get exportRedactDescription;
+
+  /// No description provided for @exportUnredacted.
+  ///
+  /// In en, this message translates to:
+  /// **'The unredacted file may contain secrets, local paths, and private tool output.'**
+  String get exportUnredacted;
+
+  /// No description provided for @exportSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save file'**
+  String get exportSave;
+
+  /// No description provided for @exportCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel download'**
+  String get exportCancel;
+
+  /// No description provided for @exportDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading complete conversation…'**
+  String get exportDownloading;
+
+  /// No description provided for @exportSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving file…'**
+  String get exportSaving;
+
+  /// No description provided for @exportSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation saved'**
+  String get exportSaved;
+
+  /// No description provided for @exportChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection or location changed. Reopen export from the intended conversation.'**
+  String get exportChanged;
+
+  /// No description provided for @exportUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This server does not support JSON export. You can still save the loaded Markdown transcript.'**
+  String get exportUnsupported;
+
+  /// No description provided for @exportAuthorization.
+  ///
+  /// In en, this message translates to:
+  /// **'The server denied access. Check your connection credentials and try again.'**
+  String get exportAuthorization;
+
+  /// No description provided for @exportMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'This conversation no longer exists on the server. You can still save the loaded Markdown transcript.'**
+  String get exportMissing;
+
+  /// No description provided for @exportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not export the conversation. Check your connection and storage, then try again.'**
+  String get exportFailed;
 }
 
 class _AppLocalizationsDelegate

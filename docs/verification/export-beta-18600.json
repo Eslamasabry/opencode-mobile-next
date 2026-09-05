@@ -1,0 +1,17 @@
+{
+  "verifiedAt": "2026-09-05T06:24:18.8343315+00:00",
+  "serverVersion": "0.0.0-beta-18600",
+  "binarySha256": "29443AC011DC37896A650A7267C8FA232533B9410E8185EA099C1D5214E658E0",
+  "sessionID": "ses_export_9d5c8640233045dc82f571df66a68ea0",
+  "exportStatus": 200,
+  "rawExportStatus": 200,
+  "messageCount": 2,
+  "unredactedUnicodePreserved": true,
+  "sanitizedTextReplacedByPlaceholder": true,
+  "responseEnvelope": "data.info + data.messages",
+  "unauthorizedStatus": 401,
+  "missingStatus": 404,
+  "missingTag": "SessionNotFoundError",
+  "duplicateImportStatus": 409,
+  "providerRunStarted": false
+}

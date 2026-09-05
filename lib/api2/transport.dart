@@ -153,6 +153,7 @@ class Api2Transport {
     String path, {
     Map<String, dynamic>? query,
     CancelToken? cancelToken,
+    ProgressCallback? onReceiveProgress,
   }) async {
     try {
       final response = await _dio.get<List<int>>(
@@ -160,6 +161,7 @@ class Api2Transport {
         queryParameters: _cleanQuery(query),
         options: Options(responseType: ResponseType.bytes),
         cancelToken: cancelToken,
+        onReceiveProgress: onReceiveProgress,
       );
       return response.data ?? const [];
     } on DioException catch (e) {
@@ -224,7 +226,14 @@ class Api2Transport {
   /// even when the body is empty (the Basic-auth gate sends none).
   static Api2Error mapError(DioException e, String what) {
     final status = e.response?.statusCode;
-    final raw = e.response?.data;
+    var raw = e.response?.data;
+    // Byte downloads still carry JSON error envelopes. Preserve their tags so
+    // a missing session cannot be mistaken for a missing export endpoint.
+    if (raw is List<int>) {
+      try {
+        raw = utf8.decode(raw);
+      } catch (_) {}
+    }
     Map<String, dynamic>? body;
     if (raw is Map) {
       body = Map<String, dynamic>.from(raw);

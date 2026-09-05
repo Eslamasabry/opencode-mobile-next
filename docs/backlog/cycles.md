@@ -460,3 +460,27 @@ of model-workflow-polish in #63. The pre-alignment dev backup's useful changes
 were adapted in #64 and remain preserved. No branch deletion, recurring-agent
 restart, release tag, or stable release publication is part of this batch.
 Main dev/master are synchronized after the current PR merge.
+
+## Cycle 14 — complete server JSON export
+
+Worked directly on local dev, following the simplified dev-to-master workflow.
+The existing chat export now offers server-generated JSON beside loaded
+Markdown on v2. Redaction defaults on; the pinned fixture exposed that it
+replaces conversation text with placeholders, so the form explicitly explains
+that preserving original text requires turning redaction off. JSON retains the
+server envelope without model hydration or re-encoding. Save remains visible
+while options scroll; cancellation, scope changes, typed errors and retries
+are handled. V1 retains the existing Markdown export.
+
+Static analysis passed. The focused transport/export checks cover full byte
+responses beyond 5,000 messages, auth and missing-session distinction,
+capability fallback, buffer reuse, cancellation, Markdown and retries. The
+411px render was inspected; compact enlarged-text interaction is also checked.
+Live beta-18600 export returned both modes, preserved unredacted Unicode,
+redacted ordinary text, and returned the declared auth/missing-session errors.
+The fixture also confirmed duplicate import returns 409. Import UI remains
+pending as a separate parity workflow. See the export verification document.
+
+No feature branch or PR was created. No release tag or stable release was
+published. The prior 06447b6 dev/master Android, Linux and Windows builds all
+completed successfully; its dev APK artifact is 9964432494 (test-signed).
