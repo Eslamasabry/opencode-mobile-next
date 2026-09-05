@@ -143,7 +143,7 @@ void main() {
           command: ['node', 'server.js'],
           timeoutMs: 5000,
         ),
-        scope: McpConfigScope.project,
+        scope: McpConfigScope.runtimeLocation,
       );
       await gateway.addMcpServer(
         const McpServerDraft(
@@ -152,7 +152,7 @@ void main() {
           url: 'https://example.com/mcp',
           timeoutMs: 7000,
         ),
-        scope: McpConfigScope.project,
+        scope: McpConfigScope.runtimeLocation,
       );
       await gateway.addMcpServer(
         const McpServerDraft(
@@ -160,7 +160,7 @@ void main() {
           kind: McpServerKind.remote,
           url: 'https://example.com/mcp',
         ),
-        scope: McpConfigScope.project,
+        scope: McpConfigScope.runtimeLocation,
       );
 
       for (final (index, call) in calls.indexed) {

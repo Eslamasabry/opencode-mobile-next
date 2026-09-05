@@ -33,6 +33,7 @@ class RequestRoutes {
   }
 
   void close() {
+    if (_closed) return;
     _closed = true;
     _changes?.removeListener(_check);
     _scheduleRemoval();

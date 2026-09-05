@@ -298,7 +298,7 @@ concept in v2) · **NONE** (no v2 equivalent found in beta-18600).
 | `GET /agent` (app.agents, handwritten) | `GET /api/agent` · v2.agent.list | direct | |
 | `GET /api/provider`, `/api/model`, `/api/agent` (compat catalog trio) | same paths · v2.provider.list / v2.model.list / v2.agent.list | direct | `location` param is now a union type; v2 adds v2.model.default (`GET /api/model/default`) which can replace config-derived model default. |
 | `GET /config` (config.get) | `GET /api/config` · v2.config.get | direct | Read-only in v2. |
-| `PATCH /config` (config.update — only used for MCP add) | — | **NONE** (general) / replaced-by v2.mcp.add for the MCP case | `PUT /api/mcp/{server}` with `{config}` body is now the sanctioned persistent MCP write. |
+| `PATCH /config` (config.update — only used for MCP add) | — | **NONE** for persistent configuration / runtime alternative for MCP | `PUT /api/mcp/{server}` with `{config}` adds in the selected location until restart. It does not persist project/global configuration; verified on beta-18600 in cycle 13. |
 | `GET /global/config` / `PATCH /global/config` | — | **NONE** | Shell settings feature loses read & write; no global config surface in v2. |
 | `PUT /auth/{providerID}` (auth.set) | `POST /api/integration/{id}/connect/key` · v2.integration.connect.key | replaced-by | Legacy credential write folds into integrations. |
 | `DELETE /auth/{providerID}` (auth.remove) | `DELETE /api/credential/{credentialID}` · v2.credential.remove | replaced-by | |
@@ -323,7 +323,7 @@ concept in v2) · **NONE** (no v2 equivalent found in beta-18600).
 |---|---|---|---|
 | `GET /mcp` (mcp.status) | `GET /api/mcp` · v2.mcp.list | direct | |
 | `POST /mcp/{name}/connect` / `/disconnect` | `POST /api/mcp/{server}/connect` / `/disconnect` · v2.mcp.connect/disconnect | direct | |
-| config-patch MCP add (`PATCH /config` or `/global/config`) | `PUT /api/mcp/{server}` · v2.mcp.add | replaced-by | v2 also has `DELETE /api/mcp/{server}` (v2.mcp.remove) — new capability for the setup screen. |
+| config-patch MCP add (`PATCH /config` or `/global/config`) | `PUT /api/mcp/{server}` · v2.mcp.add | runtime alternative | Cycle 13 distinguishes persistent v1 saves from location-scoped v2 additions until restart. V2 `DELETE /api/mcp/{server}` remains an unimplemented runtime-removal workflow. |
 | `GET /experimental/resource` (experimental.resource.list) | `GET /api/mcp/resource` · v2.mcp.resource.catalog | direct (rename) | |
 | `POST /mcp/{name}/auth` (mcp.auth.start) | — | **NONE** | No MCP auth ops in beta-18600. The whole mobile loopback OAuth flow (`lib/api/mcp_oauth.dart`, integrations_screen pending rows) has no v2 backend; auth presumably folds into connect or moves server-side. |
 | `POST /mcp/{name}/auth/callback` (mcp.auth.callback) | — | **NONE** | |

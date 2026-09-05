@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../api/product_repository.dart';
+import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
 import '../widgets/info_label.dart';
@@ -26,23 +27,53 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
   final _timeout = TextEditingController();
 
   late McpConfigScope _scope;
+  late final int _location;
+  late final String? _directory, _workspace;
+  late final bool _runtime;
+  bool _detached = false;
   McpServerKind _kind = McpServerKind.remote;
   bool _detectOAuth = true;
   bool _saving = false;
   bool _configurationSaved = false;
   String? _saveError;
 
-  bool get _hasProject =>
-      widget.controller.directory?.trim().isNotEmpty == true;
+  bool get _hasProject => _directory?.trim().isNotEmpty == true;
+  bool get _editable => !_saving && !_configurationSaved && !_detached;
+  bool get _locationMatches =>
+      widget.controller.locationRevision == _location &&
+      widget.controller.directory == _directory &&
+      widget.controller.workspace == _workspace &&
+      (_runtime
+          ? widget.controller.capabilities.mcpRuntimeAdds
+          : widget.controller.capabilities.mcpConfigWrites);
 
   @override
   void initState() {
     super.initState();
-    _scope = _hasProject ? McpConfigScope.project : McpConfigScope.global;
+    _location = widget.controller.locationRevision;
+    _directory = widget.controller.directory;
+    _workspace = widget.controller.workspace;
+    _runtime =
+        !widget.controller.capabilities.mcpConfigWrites &&
+        widget.controller.capabilities.mcpRuntimeAdds;
+    _scope = _runtime
+        ? McpConfigScope.runtimeLocation
+        : _hasProject
+        ? McpConfigScope.project
+        : McpConfigScope.global;
+    _detached = !_locationMatches;
+    widget.controller.addListener(_connectionChanged);
+  }
+
+  void _connectionChanged() {
+    if (!_detached && !_locationMatches && mounted) {
+      setState(() => _detached = true);
+    }
   }
 
   @override
   void dispose() {
+    widget.controller.removeListener(_connectionChanged);
     _name.dispose();
     _url.dispose();
     _command.dispose();
@@ -54,9 +85,12 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
   }
 
   Future<void> _save() async {
-    if (_saving || _configurationSaved || !_formKey.currentState!.validate()) {
+    if (!_editable || !_formKey.currentState!.validate()) {
       return;
     }
+    final route = ModalRoute.of(context);
+    final navigator = Navigator.of(context);
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     setState(() {
       _saving = true;
       _saveError = null;
@@ -84,6 +118,11 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
       // changed later.
       draft.toConfigJson();
       final repository = await widget.controller.prepareActionRepository();
+      if (!mounted) return;
+      if (_detached || !_locationMatches) {
+        _detached = true;
+        throw ProductException(l10n.mcpLocationChanged);
+      }
       if (repository == null) {
         throw const ProductException(
           'OpenCode is reconnecting. Try again shortly.',
@@ -91,8 +130,18 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
       }
       await repository.addMcpServer(draft, scope: _scope);
       _configurationSaved = true;
-      await widget.controller.reloadAfterConfigurationChange();
-      if (mounted) Navigator.pop(context, true);
+      // Runtime adds are already applied. Reconnecting the app is only needed
+      // after the persistent v1 configuration write, and only in its location.
+      if (!_runtime && mounted && _locationMatches) {
+        await widget.controller.reloadAfterConfigurationChange();
+      }
+      if (mounted && route != null && route.isActive) {
+        if (route.isCurrent) {
+          navigator.pop(true);
+        } else {
+          navigator.removeRoute(route, true);
+        }
+      }
     } catch (error) {
       if (mounted) {
         setState(() {
@@ -110,6 +159,7 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add MCP server'),
@@ -135,6 +185,11 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (_detached && !_configurationSaved && _saveError == null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(l10n.mcpLocationChanged),
+              ),
             if (_saveError case final error?) ...[
               Semantics(
                 liveRegion: true,
@@ -150,7 +205,7 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
             ],
             FilledButton.icon(
               key: const ValueKey('mcp-save'),
-              onPressed: _saving
+              onPressed: _saving || (_detached && !_configurationSaved)
                   ? null
                   : _configurationSaved
                   ? () => Navigator.pop(context, true)
@@ -167,10 +222,10 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
                     ),
               label: Text(
                 _saving
-                    ? 'Saving configuration'
+                    ? (_runtime ? l10n.mcpAdding : 'Saving configuration')
                     : _configurationSaved
                     ? 'Close'
-                    : 'Save MCP server',
+                    : (_runtime ? l10n.mcpAdd : 'Save MCP server'),
               ),
             ),
           ],
@@ -183,52 +238,72 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
           key: const ValueKey('mcp-setup-form'),
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
           children: [
-            Text('Persisted configuration', style: theme.textTheme.titleMedium),
+            Text(
+              _runtime ? l10n.mcpRuntimeTitle : 'Persisted configuration',
+              style: theme.textTheme.titleMedium,
+            ),
             const SizedBox(height: 4),
             Text(
-              'Saved by OpenCode on the server. It remains available after the app or server restarts.',
+              _runtime
+                  ? l10n.mcpRuntimeDescription
+                  : 'Saved by OpenCode on the server. It remains available after the app or server restarts.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 16),
-            SegmentedButton<McpConfigScope>(
-              key: const ValueKey('mcp-scope'),
-              showSelectedIcon: false,
-              segments: [
-                ButtonSegment(
-                  value: McpConfigScope.project,
-                  enabled: _hasProject,
-                  icon: const Icon(Icons.folder_outlined),
-                  label: const Text('This project'),
-                ),
-                const ButtonSegment(
-                  value: McpConfigScope.global,
-                  icon: Icon(Icons.public_outlined),
-                  label: Text('All projects'),
-                ),
-              ],
-              selected: {_scope},
-              onSelectionChanged: _saving || _configurationSaved
-                  ? null
-                  : (value) => setState(() => _scope = value.single),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _scope == McpConfigScope.project
-                  ? 'Writes only to ${widget.controller.directory}.'
-                  : 'Writes to this OpenCode server’s global configuration.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+            if (_runtime) ...[
+              Text(l10n.mcpCurrentLocation, style: theme.textTheme.labelMedium),
+              const SizedBox(height: 4),
+              Text(
+                [
+                  if (_hasProject) _directory!,
+                  if (_workspace?.isNotEmpty == true)
+                    l10n.mcpWorkspaceLocation(_workspace!),
+                  if (!_hasProject && _workspace?.isNotEmpty != true)
+                    l10n.mcpDefaultLocation,
+                ].join('\n'),
+                key: const ValueKey('mcp-location'),
               ),
-            ),
+            ] else ...[
+              SegmentedButton<McpConfigScope>(
+                key: const ValueKey('mcp-scope'),
+                showSelectedIcon: false,
+                segments: [
+                  ButtonSegment(
+                    value: McpConfigScope.project,
+                    enabled: _hasProject,
+                    icon: const Icon(Icons.folder_outlined),
+                    label: const Text('This project'),
+                  ),
+                  const ButtonSegment(
+                    value: McpConfigScope.global,
+                    icon: Icon(Icons.public_outlined),
+                    label: Text('All projects'),
+                  ),
+                ],
+                selected: {_scope},
+                onSelectionChanged: !_editable
+                    ? null
+                    : (value) => setState(() => _scope = value.single),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _scope == McpConfigScope.project
+                    ? 'Writes only to $_directory.'
+                    : 'Writes to this OpenCode server’s global configuration.',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
             const SizedBox(height: 20),
             const Divider(),
             const SizedBox(height: 12),
             TextFormField(
               key: const ValueKey('mcp-name'),
               controller: _name,
-              enabled: !_saving && !_configurationSaved,
+              enabled: _editable,
               textInputAction: TextInputAction.next,
               decoration: const InputDecoration(
                 labelText: 'Server name',
@@ -255,7 +330,7 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
                 ),
               ],
               selected: {_kind},
-              onSelectionChanged: _saving || _configurationSaved
+              onSelectionChanged: !_editable
                   ? null
                   : (value) => setState(() {
                       _kind = value.single;
@@ -269,7 +344,7 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
             TextFormField(
               key: const ValueKey('mcp-timeout'),
               controller: _timeout,
-              enabled: !_saving && !_configurationSaved,
+              enabled: _editable,
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: const InputDecoration(
@@ -295,7 +370,7 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
     TextFormField(
       key: const ValueKey('mcp-url'),
       controller: _url,
-      enabled: !_saving && !_configurationSaved,
+      enabled: _editable,
       keyboardType: TextInputType.url,
       textInputAction: TextInputAction.next,
       autocorrect: false,
@@ -319,7 +394,7 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
     TextFormField(
       key: const ValueKey('mcp-headers'),
       controller: _headers,
-      enabled: !_saving && !_configurationSaved,
+      enabled: _editable,
       minLines: 2,
       maxLines: 5,
       keyboardType: TextInputType.multiline,
@@ -341,7 +416,7 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
         'Turn this off when the server uses headers and should never start OAuth.',
       ),
       value: _detectOAuth,
-      onChanged: _saving || _configurationSaved
+      onChanged: !_editable
           ? null
           : (value) => setState(() => _detectOAuth = value),
     ),
@@ -351,7 +426,7 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
     TextFormField(
       key: const ValueKey('mcp-command'),
       controller: _command,
-      enabled: !_saving && !_configurationSaved,
+      enabled: _editable,
       minLines: 4,
       maxLines: 8,
       keyboardType: TextInputType.multiline,
@@ -370,7 +445,7 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
     TextFormField(
       key: const ValueKey('mcp-cwd'),
       controller: _cwd,
-      enabled: !_saving && !_configurationSaved,
+      enabled: _editable,
       textInputAction: TextInputAction.next,
       decoration: const InputDecoration(
         labelText: 'Working directory',
@@ -381,7 +456,7 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
     TextFormField(
       key: const ValueKey('mcp-environment'),
       controller: _environment,
-      enabled: !_saving && !_configurationSaved,
+      enabled: _editable,
       minLines: 2,
       maxLines: 5,
       keyboardType: TextInputType.multiline,

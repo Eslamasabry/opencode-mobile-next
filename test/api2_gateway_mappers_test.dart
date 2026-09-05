@@ -17,14 +17,17 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('capabilities', () {
-    test('exact 25-flag truth per the port matrix', () {
+    test('capability truth per the port matrix', () {
       const caps = api2ServerCapabilities;
       expect(caps.managedWorkspaces, isFalse);
       expect(caps.workspaceWarp, isFalse);
       expect(caps.sessionSteal, isFalse);
       expect(caps.consoleOrganizations, isFalse);
       expect(caps.mcpOAuth, isFalse);
-      expect(caps.mcpConfigWrites, isTrue);
+      expect(caps.mcpConfigWrites, isFalse);
+      expect(caps.mcpRuntimeAdds, isTrue);
+      expect(ServerCapabilities.allV1.mcpConfigWrites, isTrue);
+      expect(ServerCapabilities.allV1.mcpRuntimeAdds, isFalse);
       expect(caps.sessionShare, isFalse);
       expect(caps.sessionArchive, isFalse);
       expect(caps.sessionTodos, isFalse);
@@ -131,10 +134,7 @@ void main() {
         fixture('messages_page2.json'),
         Api2Message.fromJson,
       );
-      final mapped = mapApi2Messages(sessionID, [
-        ...page1.data,
-        ...page2.data,
-      ]);
+      final mapped = mapApi2Messages(sessionID, [...page1.data, ...page2.data]);
       expect(mapped, hasLength(page1.data.length + page2.data.length));
       for (final message in mapped) {
         expect(message.info.id, startsWith('msg_'));

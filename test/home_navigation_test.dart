@@ -161,6 +161,17 @@ void main() {
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect(api.paths.last, '');
+      await tester.tap(search);
+      tester.view.viewInsets = const FakeViewPadding(bottom: 260);
+      addTearDown(tester.view.resetViewInsets);
+      await tester.pump();
+      await tester.binding.handlePopRoute();
+      await tester.pump();
+      expect(find.text('Press back again to exit'), findsNothing);
+      expect(exits, 0);
+      expect(tester.widget<TextField>(search).focusNode?.hasFocus, isFalse);
+      tester.view.resetViewInsets();
+      await tester.pump();
       await tester.binding.handlePopRoute();
       await tester.pump();
       expect(find.text('Press back again to exit'), findsOneWidget);

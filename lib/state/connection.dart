@@ -3468,6 +3468,7 @@ class ConnectionController extends ChangeNotifier {
     sessionsLoading = true;
     sessionsLoadingMore = false;
     sessionsError = null;
+    sessionsMoreError = null;
     notifyListeners();
     try {
       final page = await currentApi.sessionPage();

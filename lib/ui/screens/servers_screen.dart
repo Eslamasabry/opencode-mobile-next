@@ -781,12 +781,6 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
         );
       }
     }
-    setState(() {
-      _error = null;
-      _testResult = null;
-      _pairingNotice = null;
-      _pairingFailure = null;
-    });
   }
 
   void _invalidateProbe() {

@@ -1588,6 +1588,66 @@ abstract class AppLocalizations {
   /// **'Updated at {time}'**
   String usageUpdated(String time);
 
+  /// No description provided for @mcpRuntimeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Until server restart'**
+  String get mcpRuntimeTitle;
+
+  /// No description provided for @mcpRuntimeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Adds this MCP server to the selected location and tries to connect it now. It is removed when OpenCode restarts. For permanent setup, edit the server configuration.'**
+  String get mcpRuntimeDescription;
+
+  /// No description provided for @mcpCurrentLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Current location'**
+  String get mcpCurrentLocation;
+
+  /// No description provided for @mcpDefaultLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode server’s default location'**
+  String get mcpDefaultLocation;
+
+  /// No description provided for @mcpWorkspaceLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace: {workspace}'**
+  String mcpWorkspaceLocation(String workspace);
+
+  /// No description provided for @mcpLocationChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection or location changed. Your draft is still here; reopen setup in the intended location before adding it.'**
+  String get mcpLocationChanged;
+
+  /// No description provided for @mcpAdding.
+  ///
+  /// In en, this message translates to:
+  /// **'Adding MCP server'**
+  String get mcpAdding;
+
+  /// No description provided for @mcpAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add MCP server'**
+  String get mcpAdd;
+
+  /// No description provided for @mcpRuntimeEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Add tools for the current location until OpenCode restarts.'**
+  String get mcpRuntimeEmpty;
+
+  /// No description provided for @mcpRuntimeAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'MCP server added for this location'**
+  String get mcpRuntimeAdded;
+
   /// No description provided for @sessionUnread.
   ///
   /// In en, this message translates to:

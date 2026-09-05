@@ -430,3 +430,33 @@ registrations are included. Local plugin junctions completed Flutter setup
 without changing Windows settings. Platform CI and the final native/device
 check remain necessary for the new plugin. This batch does not publish a release.
 The recurring automation remains paused; dev is realigned after merge.
+
+## 2026-09-05 — Cycle 13: MCP scope and PR review follow-ups
+
+BE-011 is implemented with a live beta-18600 two-project add/restart check.
+V2's MCP entry is runtime-only, so setup now states the restart limit and actual
+location, retains v1's persistent scopes, rejects unsupported scope requests,
+and prevents accidental replacement of an existing name. Connection changes
+cannot retarget an open draft. A 411px preview uses the real app fonts.
+
+Reviewed all 18 outstanding inline threads on PRs #63–75 and the created branches.
+Thirteen comments led to corrections; five were retained with specific reasoning
+in `docs/verification/pr-review-and-branches-2026-09-05.md`. Fixes cover keyboard
+Back, read-cache failures, partial events and instruction redaction, usage retry,
+request-route cleanup, stale pagination errors and small UI state improvements.
+
+Final static analysis is clean. Focused checks cover the changed workflows and
+their existing regressions; the affected review suite's 73 cases passed across
+the initial run and corrected single-case rerun, and both restart checks passed.
+The Files Back test exposed the shell's consumed keyboard inset; using the view
+inset fixed the actual embedded-tab behavior and the targeted rerun passed.
+Initial new MCP wire tests needed their local fixture signatures corrected;
+these were test-helper compile errors, not server failures. The pinned MCP helper
+was stopped and preserved. Android CI at prior master 697995d completed and
+produced a test-signed APK; this batch's platform builds run after publication.
+
+Existing feature branches are already merged, including the exact-tree squash
+of model-workflow-polish in #63. The pre-alignment dev backup's useful changes
+were adapted in #64 and remain preserved. No branch deletion, recurring-agent
+restart, release tag, or stable release publication is part of this batch.
+Main dev/master are synchronized after the current PR merge.
