@@ -24,8 +24,83 @@ import 'models.dart';
 import 'transport.dart';
 
 class Api2OperationsGateway extends ProductRepository
-    implements StagedRevertGateway, SessionReadStateGateway {
+    implements
+        StagedRevertGateway,
+        SessionReadStateGateway,
+        SessionNoteGateway {
   final Api2Client client;
+
+  bool _notesSupported = true;
+  @override
+  bool get sessionNotesSupported => _notesSupported;
+
+  String _notePath(String sessionID) =>
+      '/session/${Uri.encodeComponent(sessionID)}/instructions/entries';
+
+  Future<T> _noteRequest<T>(Future<T> Function() action) async {
+    try {
+      return await action();
+    } on Api2Error catch (error) {
+      // A missing session does not mean the endpoint is absent.
+      if ([405, 501].contains(error.statusCode) ||
+          (error.statusCode == 404 && error.tag != 'SessionNotFoundError')) {
+        _notesSupported = false;
+        throw const SessionNoteException(SessionNoteFailure.unsupported);
+      }
+      if (error.tag == 'InstructionEntryValueTooLargeError') {
+        final limit = error.body?['maxBytes'];
+        throw SessionNoteException(
+          SessionNoteFailure.tooLarge,
+          maxBytes: limit is int && limit > 0
+              ? limit
+              : SessionNoteGateway.maxBytes,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<String?> loadSessionNote(String sessionID) => _noteRequest(() async {
+    final json = await _transport.getJson(_notePath(sessionID), query: _loc());
+    if (json is! Map || json['data'] is! List) {
+      throw const SessionNoteException(SessionNoteFailure.invalidValue);
+    }
+    // Other entry names and values never leave the transport adapter.
+    final owned = (json['data'] as List)
+        .whereType<Map>()
+        .where((entry) => entry['key'] == SessionNoteGateway.key)
+        .toList();
+    if (owned.isEmpty) return null;
+    if (owned.length != 1 || owned.single['value'] is! String) {
+      throw const SessionNoteException(SessionNoteFailure.invalidValue);
+    }
+    return owned.single['value'] as String;
+  });
+
+  @override
+  Future<void> saveSessionNote(String sessionID, String value) async {
+    if (SessionNoteGateway.encodedBytes(value) > SessionNoteGateway.maxBytes) {
+      throw const SessionNoteException(SessionNoteFailure.tooLarge);
+    }
+    await _noteRequest(
+      () => _transport.putJson(
+        '${_notePath(sessionID)}/${SessionNoteGateway.key}',
+        query: _loc(),
+        body: {'value': value},
+      ),
+    );
+  }
+
+  @override
+  Future<void> removeSessionNote(String sessionID) async {
+    await _noteRequest(
+      () => _transport.deleteJson(
+        '${_notePath(sessionID)}/${SessionNoteGateway.key}',
+        query: _loc(),
+      ),
+    );
+  }
 
   /// v2 OAuth attempt routes are integration-scoped, but the domain contract
   /// only carries the attempt ID (matrix risk 7). Remember the owning

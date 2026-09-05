@@ -1132,6 +1132,144 @@ abstract class AppLocalizations {
   /// **'Review the staged revert, then clear it or make it permanent before sending. Your draft is kept.'**
   String get revertResolveBeforeSending;
 
+  /// No description provided for @sessionNoteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Note for the agent'**
+  String get sessionNoteTitle;
+
+  /// No description provided for @sessionNoteDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep a short instruction for this session. Saving or removing it takes effect at the next agent step and appears in the transcript then. It does not start a run.'**
+  String get sessionNoteDescription;
+
+  /// No description provided for @sessionNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For example: Keep explanations brief and run the relevant checks before finishing.'**
+  String get sessionNoteHint;
+
+  /// No description provided for @sessionNoteSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save note'**
+  String get sessionNoteSave;
+
+  /// No description provided for @sessionNoteRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove saved note'**
+  String get sessionNoteRemove;
+
+  /// No description provided for @sessionNoteSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Note saved'**
+  String get sessionNoteSaved;
+
+  /// No description provided for @sessionNoteRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Note removed'**
+  String get sessionNoteRemoved;
+
+  /// No description provided for @sessionNotePending.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies at the next agent step.'**
+  String get sessionNotePending;
+
+  /// No description provided for @sessionInstructionsUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Instructions updated'**
+  String get sessionInstructionsUpdated;
+
+  /// No description provided for @sessionInstructionsApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'The agent\'s session instructions have been updated for this step.'**
+  String get sessionInstructionsApplied;
+
+  /// No description provided for @sessionNoteUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This server does not support session notes.'**
+  String get sessionNoteUnsupported;
+
+  /// No description provided for @sessionNoteAuthorization.
+  ///
+  /// In en, this message translates to:
+  /// **'Check this server\'s password and permissions, then try again. Your draft is kept.'**
+  String get sessionNoteAuthorization;
+
+  /// No description provided for @sessionNoteChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The session or its instructions changed. Refresh the saved note before saving again. Your draft is kept.'**
+  String get sessionNoteChanged;
+
+  /// No description provided for @sessionNoteInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The saved note has a format this editor cannot safely change.'**
+  String get sessionNoteInvalid;
+
+  /// No description provided for @sessionNoteTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Shorten the note to fit the server\'s size limit.'**
+  String get sessionNoteTooLarge;
+
+  /// No description provided for @sessionNoteBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'A note change is already being saved. Try again when it finishes.'**
+  String get sessionNoteBusy;
+
+  /// No description provided for @sessionNoteRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh saved note'**
+  String get sessionNoteRefresh;
+
+  /// No description provided for @sessionNoteSavedVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Current saved note — review before replacing'**
+  String get sessionNoteSavedVersion;
+
+  /// No description provided for @sessionNoteNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved note'**
+  String get sessionNoteNone;
+
+  /// No description provided for @sessionNoteDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard your note changes?'**
+  String get sessionNoteDiscard;
+
+  /// No description provided for @sessionNoteKeepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get sessionNoteKeepEditing;
+
+  /// No description provided for @sessionNoteDiscardAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard changes'**
+  String get sessionNoteDiscardAction;
+
+  /// No description provided for @sessionNoteBytes.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} / {limit} bytes'**
+  String sessionNoteBytes(int used, int limit);
+
   /// No description provided for @sessionUnread.
   ///
   /// In en, this message translates to:

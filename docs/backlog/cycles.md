@@ -361,3 +361,39 @@ check. No native/device run, release APK, tag or public release was created.
 #57 remains linked for final live/device verification. The broader release
 checklist remains open. The hourly automation remains paused; dev will be
 realigned with master after merge.
+
+## 2026-09-05 — Cycle 11
+
+Implemented the bounded session note workflow linked to #58 in the isolated
+`codex/session-note` branch, keeping the user's main `dev` checkout clean.
+The session menu opens **Note for the agent**, a scrollable editor with a
+JSON-byte counter, Save/Remove, inline failure feedback and discard protection.
+It edits only `mobile.note`; unfamiliar value types remain untouched. V1 and
+known unsupported endpoints hide the action.
+
+Save/Remove re-read the saved value before writing. Scope and event revisions,
+post-wake checks and a shared write slot prevent known stale or competing
+decisions. Refresh retains the draft and displays the current saved note for
+review. Authorization errors explain how to recover. Successful changes leave
+feedback in chat; the next-step instruction event creates a durable transcript
+notice with matching live/REST IDs. Entry names and values are redacted from
+those notices, including server-owned instructions.
+
+The isolated beta-18600 server verified authenticated GET/PUT/DELETE, 401s
+without authorization, the exact 8,192-byte boundary, 413 rejection without
+overwriting the saved note, removal and preservation of an unrelated fixture
+entry. No provider run was started and the helper was stopped. Captured evidence
+and source-derived step-boundary semantics are in
+`docs/verification/session-note-beta-18600.md`.
+
+Clean analysis and 69 focused checks cover note wire/controller/editor behavior,
+transcript rendering, placement, event/mapping regressions and localization. A phone-width widget
+preview uses the real app fonts; compact 320px/large-text interaction is covered
+by the editor check. This is not a device release campaign. Initial UI checks
+needed a frame after simulated typing, and the old event test was updated to
+expect the new sanitized instruction hint instead of ignoring it.
+
+PR #73's Android, Linux and Windows CI all passed. #58 remains linked for the
+final device/model-step verification, alongside the remaining release backlog.
+No release tag or public artifact was published by this batch. The recurring
+automation stays paused; after merge, `dev` is realigned with `master`.

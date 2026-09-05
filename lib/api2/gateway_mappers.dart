@@ -263,13 +263,15 @@ MessageWithParts mapApi2Message(String sessionID, Api2Message message) {
         header: message.description,
       );
     case Api2SystemMessage():
+      final instructions =
+          message.description?.startsWith('Instructions updated:') == true;
       return _taggedMessage(
         sessionID,
         message,
         type: 'v2:notice',
-        kind: 'system',
-        text: message.text,
-        header: message.description,
+        kind: instructions ? 'instructions' : 'system',
+        text: instructions ? 'Session instructions updated.' : message.text,
+        header: instructions ? 'Instructions updated' : message.description,
       );
     case Api2SkillMessage():
       return _taggedMessage(

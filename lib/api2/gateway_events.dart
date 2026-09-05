@@ -121,6 +121,35 @@ class Api2EventAdapter {
           }),
         ];
 
+      case Api2SessionInstructionsUpdatedEvent():
+        // The server's text/delta may include server-owned entries. Emit only
+        // a neutral notice; its durable ID matches the later REST transcript.
+        final messageID = envelope.id?.replaceFirst(RegExp(r'^evt_'), 'msg_');
+        return [
+          _env('session.instructions.updated', {'sessionID': event.sessionID}),
+          if (event.text != null && messageID != null) ...[
+            _env('message.updated', {
+              'info': {
+                'id': messageID,
+                'sessionID': event.sessionID,
+                'role': 'user',
+                'time': {'created': created},
+              },
+            }),
+            _env('message.part.updated', {
+              'sessionID': event.sessionID,
+              'part': {
+                'id': 'v2-0',
+                'messageID': messageID,
+                'type': 'v2:notice',
+                'tool': 'instructions',
+                'text': 'Session instructions updated.',
+                'filename': 'Instructions updated',
+              },
+            }),
+          ],
+        ];
+
       case Api2SessionViewedEvent():
         return [
           _env('session.viewed', {
