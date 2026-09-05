@@ -246,3 +246,47 @@ The pinned v2 contract has no reset-to-inherited mutation and no atomic per-inbo
 model binding; explicit offline replay changes subsequent provider turns. #53
 remains linked for final live verification. Staged revert, resolved request
 sheets and the broader release checklist remain open.
+
+## 2026-09-05 — Cycle 08: explicit staged revert
+
+Implemented #55 in an isolated worktree from the clean dev/master baseline.
+V2 hydration and events retain the boundary, original snapshot and optional
+fixed file preview. Stage, Clear and Commit are separate operations. Chat has
+a persistent Review banner; the review loads the boundary prompt and returned
+patches, with explicit confirmations and scrolling at enlarged text. V1 keeps
+its original revert/restore paths.
+
+Matching-session structural events reset Chat, Timeline and Context. Hidden
+history is excluded from prompt reuse, retry, export and usage. Reopening an
+older boundary walks raw hidden pages until visible history is reached. Commit
+prunes the removed tail before refresh, including when the refresh fails.
+Scope, boundary/preview fingerprints, event revisions and fresh reads reject
+known stale confirmations; exclusive actions and reconciliation cover busy and
+ambiguous responses.
+
+The pinned server implicitly commits staged history before prompt admission.
+Send, prompt-based commands and offline replay now require explicit resolution,
+retain drafts/queued entries, and check current server state before dispatch.
+Shell execution does not itself commit and remains available for reviewing the
+staged working tree.
+
+Verification: a real beta-18600 server and Git snapshot fixture passed stage →
+clear, history-only stage, replacing a file stage with history-only state, and
+stage → commit. It proved that staging changes files immediately, raw history
+remains until commit, and commit deletes the boundary inclusively while keeping
+the staged file content. Captured evidence and reproduction notes are in
+`docs/verification/staged-revert-beta-18600.md`.
+
+Static analysis is clean. Focused verification passed: 23 state/selection checks (including 12 staged
+revert checks), 20 v2 HTTP interaction checks, 5 revert transport checks,
+7 context checks, 4 staged chat regressions and the existing paged-history
+regressions. Initial fixture failures were corrected: a missing test import,
+legacy selection fixtures unintentionally marked reverted, and scrolling/text
+frame setup in the large-text and composer checks.
+
+At the initial CI check, PR #70's Windows run passed while Android/Linux were
+still running. No final APK, native device campaign, tag or public release was
+created. The protocol has no atomic conditional commit/prompt; fresh reads
+reduce but cannot eliminate a remote change between read and POST. Resolved
+request sheets and the broader release checklist remain open. The hourly
+automation remains paused at the user's clean-slate request.

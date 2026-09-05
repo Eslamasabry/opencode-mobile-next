@@ -71,6 +71,7 @@ class _FakeOpenCodeApi extends OpenCodeApi with CompleteMessageHistory {
   final Map<String, FileContent> fileContents = {};
   final List<String> fileContentRequests = [];
   List<FileNode> projectFiles = const [];
+  Session? sessionResult;
 
   @override
   Future<List<Session>> sessions() async => const [];
@@ -83,7 +84,7 @@ class _FakeOpenCodeApi extends OpenCodeApi with CompleteMessageHistory {
       messagesHandler?.call(id) ?? Future.value([]);
 
   @override
-  Future<Session> session(String id) async => Session(id: id);
+  Future<Session> session(String id) async => sessionResult ?? Session(id: id);
 
   @override
   Future<Session> createSession() async {
@@ -337,6 +338,11 @@ class _DestinationRepository extends _FakeProductRepository {
       const CatalogSnapshot(providers: [], models: [], agents: []);
 }
 
+class _RevertProductRepository extends _FakeProductRepository
+    implements StagedRevertGateway {
+  _RevertProductRepository() : super(const []);
+}
+
 class _MessageDeleteRepository extends _FakeProductRepository {
   _MessageDeleteRepository(this.serverMessages) : super(const []);
 
@@ -564,6 +570,158 @@ void main() {
     'user',
     [Part(id: 'part-$id', messageID: id, type: 'text', text: text ?? id)],
   );
+
+  testWidgets(
+    'staged revert skips hidden pages when reopening older boundary',
+    (tester) async {
+      final api = _FakeOpenCodeApi()
+        ..sessionResult = Session(
+          id: 'session-1',
+          reverted: true,
+          stagedRevert: SessionRevert(messageID: 'msg_02'),
+        )
+        ..pageHandler = (cursor) async => switch (cursor) {
+          null => ServerPage(
+            items: [historyMessage('msg_05')],
+            nextCursor: 'hidden',
+          ),
+          'hidden' => const ServerPage(items: [], nextCursor: 'boundary'),
+          _ => ServerPage(
+            items: [historyMessage('msg_01'), historyMessage('msg_02')],
+          ),
+        };
+      final controller = await _controller(api);
+      controller.sessionsById['session-1'] = api.sessionResult!;
+      await _pumpChat(
+        tester,
+        api,
+        controller: controller,
+        repository: _RevertProductRepository(),
+      );
+      await tester.pumpAndSettle();
+      expect(api.pageCursors, containsAllInOrder([null, 'hidden', 'boundary']));
+      expect(find.byKey(const ValueKey('message-msg_01')), findsOneWidget);
+      expect(find.byKey(const ValueKey('message-msg_02')), findsNothing);
+      expect(find.byKey(const ValueKey('message-msg_05')), findsNothing);
+      expect(find.text('Revert staged'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'staged revert commit never reveals removed cached messages on refresh failure',
+    (tester) async {
+      final api = _FakeOpenCodeApi()
+        ..sessionResult = Session(
+          id: 'session-1',
+          reverted: true,
+          stagedRevert: SessionRevert(messageID: 'msg_02'),
+        )
+        ..pageHandler = (_) async => ServerPage(
+          items: [
+            historyMessage('msg_01'),
+            historyMessage('msg_02'),
+            historyMessage('msg_03'),
+          ],
+        );
+      final controller = await _controller(api);
+      controller.sessionsById['session-1'] = api.sessionResult!;
+      await _pumpChat(
+        tester,
+        api,
+        controller: controller,
+        repository: _RevertProductRepository(),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('message-msg_02')), findsNothing);
+      api.sessionResult = Session(id: 'session-1');
+      api.pageHandler = (_) async => throw StateError('history unavailable');
+      controller.handleEventForTesting(
+        _event('session.revert.committed', {
+          'sessionID': 'session-1',
+          'to': 'msg_02',
+        }),
+      );
+      await _pumpEvent(tester);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('message-msg_01')), findsOneWidget);
+      expect(find.byKey(const ValueKey('message-msg_02')), findsNothing);
+      expect(find.byKey(const ValueKey('message-msg_03')), findsNothing);
+      expect(find.text('Revert staged'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'staged revert keeps a composer draft until explicitly resolved',
+    (tester) async {
+      final api = _FakeOpenCodeApi()
+        ..sessionResult = Session(
+          id: 'session-1',
+          reverted: true,
+          stagedRevert: SessionRevert(messageID: 'msg_02'),
+        )
+        ..pageHandler = (_) async => ServerPage(
+          items: [historyMessage('msg_01'), historyMessage('msg_02')],
+        );
+      final controller = await _controller(api);
+      controller.sessionsById['session-1'] = api.sessionResult!;
+      await _pumpChat(
+        tester,
+        api,
+        controller: controller,
+        repository: _RevertProductRepository(),
+      );
+      await tester.pumpAndSettle();
+      final field = find.byKey(const Key('chat-composer-field'));
+      await tester.enterText(field, 'My next change');
+      await tester.pump();
+      expect(
+        tester
+            .widget<IconButton>(find.byKey(const Key('chat-send-button')))
+            .onPressed,
+        isNotNull,
+      );
+      await tester.tap(find.byKey(const Key('chat-send-button')));
+      await tester.pumpAndSettle();
+      expect(api.promptCalls, 0);
+      expect(
+        tester.widget<TextField>(field).controller!.text,
+        'My next change',
+      );
+      expect(find.textContaining('Your draft is kept'), findsOneWidget);
+    },
+  );
+
+  testWidgets('staged revert clear restores the hidden conversation', (
+    tester,
+  ) async {
+    final api = _FakeOpenCodeApi()
+      ..sessionResult = Session(
+        id: 'session-1',
+        reverted: true,
+        stagedRevert: SessionRevert(messageID: 'msg_02'),
+      )
+      ..pageHandler = (_) async => ServerPage(
+        items: [historyMessage('msg_01'), historyMessage('msg_02')],
+      );
+    final controller = await _controller(api);
+    controller.sessionsById['session-1'] = api.sessionResult!;
+    await _pumpChat(
+      tester,
+      api,
+      controller: controller,
+      repository: _RevertProductRepository(),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('message-msg_02')), findsNothing);
+    api.sessionResult = Session(id: 'session-1');
+    controller.handleEventForTesting(
+      _event('session.revert.cleared', {'sessionID': 'session-1'}),
+    );
+    await _pumpEvent(tester);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('message-msg_02')), findsOneWidget);
+    expect(find.text('Revert staged'), findsNothing);
+  });
 
   testWidgets(
     'paged history preserves newest rows through older and duplicate pages',

@@ -388,7 +388,7 @@ concept in v2) · **NONE** (no v2 equivalent found in beta-18600).
 - **inbox / steer** (`v2.session.inbox.list/cancel/queue/steer`): queued and steerable pending work per session — natural fit for Mission Control actions.
 - **wait** (`POST /api/session/{id}/wait`): server-side wait-for-idle; could replace status polling in the background service.
 - **instructions** (`v2.session.instructions.entry.list/put/remove`): per-session instruction entries — a new chat settings sheet.
-- **revert stage/commit** granularity (`v2.session.revert.*`): staged review-then-commit revert UI instead of the current one-shot revert.
+- **revert stage/commit** (`v2.session.revert.*`): implemented in cycle 08 with typed state, returned previews, explicit Clear/Commit and cross-client history reconciliation. Pinned beta-18600 file/history semantics verified live; see `docs/verification/staged-revert-beta-18600.md`. Final device UX remains part of release verification.
 - **import / export** (`v2.session.import`, `v2.session.export`): session backup, transfer between servers, and a principled replacement for sync.steal.
 - **generate** (`POST /api/generate`, `POST /api/session/{id}/generate`): one-shot text generation (e.g. title suggestions, commit messages) without a chat session.
 - **session context/stats** (`GET /api/session/{id}/context`): now presumably populated in v2 — could replace the message-derived context inspector.

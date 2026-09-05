@@ -277,6 +277,37 @@ enum Api2SessionOutcome {
   };
 }
 
+class Api2SessionRevert {
+  final String messageID;
+  final String? partID;
+  final String? snapshot;
+  final List<Map<String, dynamic>>? files;
+
+  Api2SessionRevert({
+    required this.messageID,
+    this.partID,
+    this.snapshot,
+    this.files,
+  });
+
+  static Api2SessionRevert? fromJson(dynamic value) {
+    final json = _asMap(value);
+    final messageID = _asString(json?['messageID']);
+    if (json == null || messageID == null || messageID.isEmpty) return null;
+    return Api2SessionRevert(
+      messageID: messageID,
+      partID: _asString(json['partID']),
+      snapshot: _asString(json['snapshot']),
+      files: json['files'] is List
+          ? [
+              for (final file in json['files'])
+                if (file is Map) _asMap(file)!,
+            ]
+          : null,
+    );
+  }
+}
+
 class Api2Session {
   final String id;
   final String? parentID;
@@ -292,6 +323,7 @@ class Api2Session {
   final Api2Location? location;
   final String? subpath;
   final bool reverted;
+  final Api2SessionRevert? revert;
   final Map<String, dynamic>? metadata;
 
   Api2Session({
@@ -309,6 +341,7 @@ class Api2Session {
     this.location,
     this.subpath,
     this.reverted = false,
+    this.revert,
     this.metadata,
   }) : time = time ?? Api2SessionTime();
 
@@ -330,6 +363,7 @@ class Api2Session {
       location: Api2Location.fromJson(j['location']),
       subpath: _asString(j['subpath']),
       reverted: j['revert'] != null,
+      revert: Api2SessionRevert.fromJson(j['revert']),
       metadata: _asMap(j['metadata']),
     );
   }

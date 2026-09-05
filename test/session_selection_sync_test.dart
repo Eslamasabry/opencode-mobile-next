@@ -212,6 +212,7 @@ void main() {
     'a queued prompt cancelled during selection is never delivered',
     () async {
       final api = SelectionApi();
+      api.values['a'] = api.values['a']!.copyWith(stagedRevert: null);
       final controller = await controllerFor(api);
       final started = Completer<void>();
       final pending = Completer<void>();
@@ -409,6 +410,9 @@ void main() {
     'new sessions receive defaults and offline replay applies its saved snapshot',
     () async {
       final api = SelectionApi();
+      // This scenario sends; the shared metadata fixture otherwise has an
+      // active revert, which correctly requires explicit resolution first.
+      api.values['a'] = api.values['a']!.copyWith(stagedRevert: null);
       final controller = await controllerFor(api);
       await controller.createSession();
       expect(api.createdDefaults!.model!.wireName, 'p/default');

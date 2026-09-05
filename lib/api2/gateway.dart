@@ -205,6 +205,19 @@ class Api2Gateway implements ServerGateway, SessionSelectionGateway {
 
   // ---------------- Prompting ----------------
 
+  Future<void> _requireResolvedRevert(String sessionID) async {
+    // The pinned server implicitly commits a stage before admitting a
+    // prompt, even with resume:false. Never let Send or offline replay
+    // silently perform that permanent operation.
+    if ((await client.session(sessionID)).reverted) {
+      throw ApiException(
+        'Review the staged revert, then clear it or make it permanent before sending.',
+        statusCode: 409,
+        errorTag: 'SessionRevertPending',
+      );
+    }
+  }
+
   @override
   Future<void> promptAsync(
     String sessionID, {
@@ -216,6 +229,7 @@ class Api2Gateway implements ServerGateway, SessionSelectionGateway {
     List<PromptAgentMention> agentMentions = const [],
     PromptDelivery? delivery,
   }) => _run(() async {
+    await _requireResolvedRevert(sessionID);
     await client.prompt(
       sessionID,
       text: text,
@@ -268,6 +282,7 @@ class Api2Gateway implements ServerGateway, SessionSelectionGateway {
     ModelRef? model,
     String? variant,
   }) => _run(() async {
+    await _requireResolvedRevert(sessionID);
     final name = command.startsWith('/') ? command.substring(1) : command;
     await transport.postJson(
       '/session/$sessionID/command',

@@ -236,7 +236,7 @@ Use one message-ID-to-list-index helper for timeline/search/tool jumps. With the
 
 ## #53 / #55 — focused v2 reconciliation plan
 
-**Status:** #53 client implementation completed in cycle 07; #55 remains ready for implementation. The plans below retain the original acceptance requirements. Existing issues [#53](https://github.com/Eslamasabry/opencode-mobile-next/issues/53) and [#55](https://github.com/Eslamasabry/opencode-mobile-next/issues/55) retain ownership pending final verification. Contract evidence is `contracts/opencode2-openapi-beta-18600.json` (`Session.Info`, `Model.Ref`, `Session.Revert`, and the session model/agent/revert routes); event evidence is `docs/opencode2-protocol-notes.md` section 3.2.
+**Status:** #53 client implementation completed in cycle 07; #55 implemented with pinned-server file/history verification in cycle 08. #53 still needs final live cross-client verification. The original plans below retain the full acceptance requirements; see the cycle 08 implementation note for current state.
 
 ### #53 — model, variant, and agent belong to the server session
 
@@ -274,6 +274,18 @@ remains part of the release gate.
 **Acceptance:** another client changes model, clears a variant, or changes agent and only the matching conversation's visible selection updates; reconnect adopts server state; an ordinary send issues no redundant model/agent POST; a failed picker write keeps the draft and allows retry; a delayed response/profile switch cannot rewrite another session; a new session receives defaults while existing sessions retain their own selections. Relevant existing fixtures are `test/session_model_scope_test.dart`, `test/api2_gateway_events_test.dart`, `test/api2_interaction_gateway_test.dart`, and `test/model_library_test.dart`; extend only the affected scenarios when implementing.
 
 ### #55 — retain the staged boundary and expose stage / commit / clear
+
+**Implemented in cycle 08:** typed boundaries and fixed previews, separate operations,
+matching-session events, persistent Review banner, explicit Clear/Commit,
+canonical prompt validation, stale-review and scope guards, exclusive mutations,
+and ambiguous-response reconciliation. Chat, Timeline and Context hide staged
+history; boundary-page traversal and commit invalidation retain truthful views.
+Send, prompt-based commands and offline replay preserve drafts until explicit
+resolution because the pinned server otherwise commits implicitly.
+Pinned beta-18600 file/history effects passed a live Git-snapshot fixture;
+see [evidence](../verification/staged-revert-beta-18600.md). Final mobile release
+verification remains in the release checklist. The table below is the original
+implementation plan, not a list of remaining gaps.
 
 The captured stage route returns **HTTP 200 `{data: Session.Revert}`**, with required `messageID` and optional `partID`, `snapshot`, and `files: FileDiff.Info[]`. Stage can move a reversible boundary and optionally apply file changes. Commit and clear return 204; all three declare 409 `SessionBusyError`. No endpoint accepts a compare-and-swap boundary/revision parameter.
 

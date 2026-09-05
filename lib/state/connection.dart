@@ -146,6 +146,21 @@ typedef EventStreamFactory =
       void Function(Object error)? onError,
     });
 
+/// A review belongs to one connection, session, and observed staged boundary.
+/// Reusing it after a remote stage/clear/commit is deliberately rejected.
+class SessionRevertReview {
+  final String sessionID;
+  final Object scope;
+  final int revision;
+  final SessionRevert? revert;
+  const SessionRevertReview(
+    this.sessionID,
+    this.scope,
+    this.revision,
+    this.revert,
+  );
+}
+
 /// Everything the UI needs about the active server connection.
 class ConnectionController extends ChangeNotifier {
   final ProfileStore store;
@@ -187,6 +202,9 @@ class ConnectionController extends ChangeNotifier {
   final Map<String, int> _sessionRevisions = {};
   final Map<String, int> _sessionStatusRevisions = {};
   final Map<String, Future<void>> _selectionMutations = {};
+  final Map<String, Object> _revertMutations = {};
+  final Map<String, int> _historyRevisions = {};
+  final Map<String, String> sessionRevertErrors = {};
   final Map<String, String> sessionSelectionErrors = {};
 
   StreamStatus status = StreamStatus.disconnected;
@@ -1763,6 +1781,29 @@ class ConnectionController extends ChangeNotifier {
         }
         break;
 
+      case 'session.revert.staged':
+      case 'session.revert.cleared':
+      case 'session.revert.committed':
+        final id = props['sessionID']?.toString();
+        if (id == null || id.isEmpty || _deletedSessionIDs.contains(id)) break;
+        final staged = SessionRevert.fromJson(props['revert']);
+        if (env.type == 'session.revert.staged' && staged == null) break;
+        final previous = sessionsById[id];
+        _markSessionChanged(id, affectsStatus: false);
+        sessionsById[id] = (previous ?? Session(id: id)).copyWith(
+          stagedRevert: staged,
+        );
+        _resetSessionHistory(
+          id,
+          removedFrom: env.type == 'session.revert.committed'
+              ? props['to']?.toString() ?? previous?.stagedRevert?.messageID
+              : null,
+        );
+        if (previous == null || env.type != 'session.revert.staged') {
+          unawaited(_refreshOneSession(id));
+        }
+        break;
+
       case 'session.model.selected':
       case 'session.agent.selected':
         final id = props['sessionID']?.toString();
@@ -3159,10 +3200,14 @@ class ConnectionController extends ChangeNotifier {
           revision != (_sessionRevisions[id] ?? 0)) {
         return;
       }
+      final revertChanged =
+          sessionsById[id]?.stagedRevert?.fingerprint !=
+          session.stagedRevert?.fingerprint;
       sessionsById[id] = session;
       sessionDetailsErrors.remove(id);
       _rememberSessionMembership(session, authoritative: true);
       _markSessionChanged(id, affectsStatus: false);
+      if (revertChanged) _resetSessionHistory(id);
       notifyListeners();
     } on ApiException catch (error) {
       if (error.statusCode == 404 &&
@@ -3683,6 +3728,28 @@ class ConnectionController extends ChangeNotifier {
         if (!_queue.any((queued) => queued.id == entry.id)) continue;
         var delivered = false;
         try {
+          if (supportsStagedRevert) {
+            final fresh = await currentApi.session(entry.sessionID);
+            if (_disposed ||
+                !identical(currentApi, api) ||
+                origin !=
+                    (profile?.id, profile?.baseUrl, directory, workspace)) {
+              break;
+            }
+            final revertChanged =
+                sessionsById[entry.sessionID]?.stagedRevert?.fingerprint !=
+                fresh.stagedRevert?.fingerprint;
+            sessionsById[entry.sessionID] = fresh;
+            _markSessionChanged(entry.sessionID, affectsStatus: false);
+            if (revertChanged) _resetSessionHistory(entry.sessionID);
+            if (fresh.reverted || sessionRevertSaving(entry.sessionID)) {
+              throw ApiException(
+                'Review the staged revert before sending this queued prompt.',
+                statusCode: 409,
+                errorTag: 'SessionRevertPending',
+              );
+            }
+          }
           Future<void> send() => currentApi.promptAsync(
             entry.sessionID,
             text: entry.text,
@@ -4231,6 +4298,176 @@ class ConnectionController extends ChangeNotifier {
         );
   }
 
+  bool get supportsStagedRevert =>
+      repository is StagedRevertGateway ||
+      (repository == null && serverFlavor == ServerFlavor.v2);
+
+  int sessionHistoryRevision(String id) => _historyRevisions[id] ?? 0;
+  bool sessionRevertSaving(String id) => _revertMutations.containsKey(id);
+  Object get _revertScope => (api, repository, _generation, locationRevision);
+
+  SessionRevertReview reviewSessionRevert(String id) => SessionRevertReview(
+    id,
+    _revertScope,
+    sessionHistoryRevision(id),
+    sessionsById[id]?.stagedRevert,
+  );
+
+  bool isRevertReviewCurrent(SessionRevertReview review) =>
+      !_disposed &&
+      review.scope == _revertScope &&
+      !_deletedSessionIDs.contains(review.sessionID) &&
+      review.revision == sessionHistoryRevision(review.sessionID) &&
+      review.revert?.fingerprint ==
+          sessionsById[review.sessionID]?.stagedRevert?.fingerprint;
+
+  void _resetSessionHistory(String id, {String? removedFrom}) {
+    _historyRevisions[id] = sessionHistoryRevision(id) + 1;
+    _eventBus.add(
+      EventEnvelope(
+        type: 'session.history.reset',
+        properties: {'sessionID': id, 'removedFrom': ?removedFrom},
+      ),
+    );
+    notifyListeners();
+  }
+
+  Future<void> stageSessionRevert(
+    SessionRevertReview review,
+    String messageID, {
+    required bool applyFiles,
+  }) => _mutateSessionRevert(
+    review,
+    messageID: messageID,
+    applyFiles: applyFiles,
+  );
+
+  Future<void> clearSessionRevert(SessionRevertReview review) =>
+      _mutateSessionRevert(review);
+
+  Future<void> commitSessionRevert(SessionRevertReview review) =>
+      _mutateSessionRevert(review, commit: true);
+
+  Future<void> _mutateSessionRevert(
+    SessionRevertReview review, {
+    String? messageID,
+    bool applyFiles = false,
+    bool commit = false,
+  }) async {
+    final id = review.sessionID;
+    final currentApi = api;
+    final operations = repository;
+    if (currentApi == null || operations is! StagedRevertGateway) {
+      throw const ProductException('OpenCode is reconnecting. Try again.');
+    }
+    if (!isRevertReviewCurrent(review)) {
+      throw const ProductException(
+        'The session changed. Review the revert again.',
+      );
+    }
+    if (sessionRevertSaving(id) || busySessions.contains(id)) {
+      throw const ProductException(
+        'Wait for the current session action to finish.',
+      );
+    }
+    final token = Object();
+    _revertMutations[id] = token;
+    sessionRevertErrors.remove(id);
+    notifyListeners();
+    var dispatched = false;
+    bool sameScope() => !_disposed && review.scope == _revertScope;
+    try {
+      final gateway = operations as StagedRevertGateway;
+      if (messageID != null &&
+          (messageID.startsWith('local-') ||
+              inboxItemsFor(id).any((item) => item.id == messageID) ||
+              await gateway.sessionRevertPrompt(id, messageID) == null)) {
+        throw const ProductException(
+          'This prompt is not in the saved conversation.',
+        );
+      }
+      // Always re-read immediately before a mutation. The API has no
+      // conditional commit; this prevents known stale reviews, not a server
+      // race between this read and the POST.
+      final fresh = await currentApi.session(id);
+      if (!isRevertReviewCurrent(review)) {
+        throw const ProductException(
+          'The session changed. Review the revert again.',
+        );
+      }
+      final changed =
+          fresh.stagedRevert?.fingerprint != review.revert?.fingerprint;
+      sessionsById[id] = fresh;
+      _markSessionChanged(id, affectsStatus: false);
+      sessionDetailsErrors.remove(id);
+      if (changed) _resetSessionHistory(id);
+      if (changed || (fresh.reverted && fresh.stagedRevert == null)) {
+        throw const ProductException(
+          'The staged revert changed. Review it again.',
+        );
+      }
+      if (messageID == null && fresh.stagedRevert == null) {
+        throw const ProductException('There is no staged revert to apply.');
+      }
+      if (busySessions.contains(id) ||
+          ((messageID != null || commit) && inboxItemsFor(id).isNotEmpty)) {
+        throw const ProductException(
+          'Wait for the session and queued prompts to finish.',
+        );
+      }
+      dispatched = true;
+      SessionRevert? staged;
+      if (messageID != null) {
+        staged = await gateway.stageSessionRevert(
+          id,
+          messageID,
+          applyFiles: applyFiles,
+        );
+      } else if (commit) {
+        await gateway.commitSessionRevert(id);
+      } else {
+        await gateway.clearSessionRevert(id);
+      }
+      if (!sameScope()) return;
+      if (sessionHistoryRevision(id) == review.revision &&
+          !_deletedSessionIDs.contains(id)) {
+        sessionsById[id] = (sessionsById[id] ?? fresh).copyWith(
+          stagedRevert: staged,
+        );
+        _markSessionChanged(id, affectsStatus: false);
+        _resetSessionHistory(
+          id,
+          removedFrom: commit ? review.revert?.messageID : null,
+        );
+      }
+      // Stage's 200 response is immediately usable. Clear/commit return 204:
+      // reconcile metadata/usage and invalidate all transcript continuations.
+      if (messageID == null) {
+        await _refreshOneSession(id);
+        if (sameScope() && sessionDetailsErrors[id] != null) {
+          throw ProductException(sessionDetailsErrors[id]!);
+        }
+      }
+    } catch (error) {
+      if (sameScope()) {
+        if (dispatched) {
+          // A timeout can mean the server applied the request. Reconcile
+          // before enabling any retry, and reload history even if GET fails.
+          _markSessionChanged(id, affectsStatus: false);
+          await _refreshOneSession(id);
+          if (sameScope()) _resetSessionHistory(id);
+        }
+        if (sameScope()) sessionRevertErrors[id] = error.toString();
+      }
+      rethrow;
+    } finally {
+      if (identical(_revertMutations[id], token)) {
+        _revertMutations.remove(id);
+        if (!_disposed) notifyListeners();
+      }
+    }
+  }
+
   bool get serverOwnsSessionSelection =>
       api is SessionSelectionGateway ||
       (api == null && serverFlavor == ServerFlavor.v2);
@@ -4666,6 +4903,9 @@ class ConnectionController extends ChangeNotifier {
     _sessionRevisions.clear();
     _sessionStatusRevisions.clear();
     _selectionMutations.clear();
+    _revertMutations.clear();
+    _historyRevisions.clear();
+    sessionRevertErrors.clear();
     sessionSelectionErrors.clear();
     sessionsById = {};
     _sessionsCursor = null;

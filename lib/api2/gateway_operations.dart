@@ -23,7 +23,8 @@ import 'gateway_mappers.dart';
 import 'models.dart';
 import 'transport.dart';
 
-class Api2OperationsGateway extends ProductRepository {
+class Api2OperationsGateway extends ProductRepository
+    implements StagedRevertGateway {
   final Api2Client client;
 
   /// v2 OAuth attempt routes are integration-scoped, but the domain contract
@@ -270,23 +271,57 @@ class Api2OperationsGateway extends ProductRepository {
       });
 
   @override
-  Future<void> revertSession(String id, String messageID) => _guard(
-    'Could not revert the session',
-    // `files: true` is what actually restores the working tree. Staging
-    // without it only moves the session boundary, so the caller would be
-    // told the revert succeeded while every file stayed changed. Deliberately
-    // not /revert/commit: commit makes the revert permanent, and v1's
-    // contract keeps it undoable through restoreSession → /revert/clear.
+  Future<void> revertSession(String id, String messageID) async {
+    await stageSessionRevert(id, messageID, applyFiles: true);
+  }
+
+  @override
+  Future<void> restoreSession(String id) => clearSessionRevert(id);
+
+  @override
+  Future<String?> sessionRevertPrompt(String sessionID, String messageID) =>
+      _guard('Could not load the prompt', () async {
+        final message = await client.message(sessionID, messageID);
+        if (message.id != messageID || message is! Api2UserMessage) return null;
+        return message.text.isNotEmpty
+            ? message.text
+            : message.files
+                  .map((file) => file.name ?? '')
+                  .where((name) => name.isNotEmpty)
+                  .join(', ');
+      });
+
+  @override
+  Future<SessionRevert> stageSessionRevert(
+    String sessionID,
+    String messageID, {
+    required bool applyFiles,
+  }) => _guard('Could not stage the revert', () async {
+    final json = await _transport.postJson(
+      '/session/${Uri.encodeComponent(sessionID)}/revert/stage',
+      body: {'messageID': messageID, 'files': applyFiles},
+    );
+    final revert = Api2SessionRevert.fromJson(_dataMap(json));
+    if (revert == null) {
+      throw const ProductException('OpenCode returned no staged boundary.');
+    }
+    return mapApi2Revert(revert);
+  });
+
+  @override
+  Future<void> clearSessionRevert(String sessionID) => _guard(
+    'Could not clear the staged revert',
     () => _transport.postJson(
-      '/session/$id/revert/stage',
-      body: {'messageID': messageID, 'files': true},
+      '/session/${Uri.encodeComponent(sessionID)}/revert/clear',
     ),
   );
 
   @override
-  Future<void> restoreSession(String id) => _guard(
-    'Could not restore the session',
-    () => _transport.postJson('/session/$id/revert/clear'),
+  Future<void> commitSessionRevert(String sessionID) => _guard(
+    'Could not commit the staged revert',
+    () => _transport.postJson(
+      '/session/${Uri.encodeComponent(sessionID)}/revert/commit',
+    ),
   );
 
   @override
@@ -533,14 +568,17 @@ class Api2OperationsGateway extends ProductRepository {
       limit: limit,
       rootsOnly: true,
     );
-    return ServerPage(items: [
-      for (final session in page.data)
-        if (includeArchived || !session.archived)
-          GlobalSessionResult(
-            session: mapApi2Session(session),
-            projectDirectory: session.location?.directory,
-          ),
-    ], nextCursor: page.nextCursor?.isNotEmpty == true ? page.nextCursor : null);
+    return ServerPage(
+      items: [
+        for (final session in page.data)
+          if (includeArchived || !session.archived)
+            GlobalSessionResult(
+              session: mapApi2Session(session),
+              projectDirectory: session.location?.directory,
+            ),
+      ],
+      nextCursor: page.nextCursor?.isNotEmpty == true ? page.nextCursor : null,
+    );
   });
 
   @override
