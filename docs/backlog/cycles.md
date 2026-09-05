@@ -397,3 +397,36 @@ PR #73's Android, Linux and Windows CI all passed. #58 remains linked for the
 final device/model-step verification, alongside the remaining release backlog.
 No release tag or public artifact was published by this batch. The recurring
 automation stays paused; after merge, `dev` is realigned with `master`.
+
+## 2026-09-05 — Cycle 12
+
+Implemented #54's aggregate usage overview in `codex/aggregate-usage`, preserving
+the clean main checkout. Settings → Usage and cost presents Today, 30 days,
+This year and All time, plus all/current-project scopes. Cost, sessions, prompts,
+subagents, steps, token breakdown, model usage and summarized tool reliability
+come from the server's statistics response. The existing context view remains.
+
+The global endpoint receives explicit project IDs only when selected, never the
+pinned directory/workspace. Calendar ranges use local dates; the maintained,
+pinned timezone plugin supplies the device's named zone. Unsupported and auth
+failures remain distinct; a missing timezone/project cannot silently change the
+query scope. Sequence and location guards drop superseded responses. Failed
+refreshes keep the previous result labeled; changing filters clears it.
+
+Thirty focused checks passed across statistics/controller/UI, existing Settings
+flows and localization; final static analysis reports no issues. PR #74 passed
+Android, Linux and Windows CI. The phone preview uses real fonts; the range controls
+fit one row at 411px and wrap on smaller/large-text layouts. The initial preview
+writer awaited filesystem I/O under the widget test's fake clock; it was stopped
+and corrected to write synchronously. No app/server request was hung.
+
+The beta-18600 fixture verified two-project totals, project filtering, timezone
+grouping, completed/failed/unfinished tool counts, empty ranges and 400/401
+responses. No provider execution was started. The native helper was stopped and
+fixtures preserved; see `docs/verification/usage-beta-18600.md` and its JSON.
+
+Dependency setup changed only flutter_timezone to 5.1.0. Its license and desktop
+registrations are included. Local plugin junctions completed Flutter setup
+without changing Windows settings. Platform CI and the final native/device
+check remain necessary for the new plugin. This batch does not publish a release.
+The recurring automation remains paused; dev is realigned after merge.

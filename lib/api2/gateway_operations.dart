@@ -27,8 +27,32 @@ class Api2OperationsGateway extends ProductRepository
     implements
         StagedRevertGateway,
         SessionReadStateGateway,
-        SessionNoteGateway {
+        SessionNoteGateway,
+        UsageStatisticsGateway {
   final Api2Client client;
+
+  bool _usageSupported = true;
+  @override
+  bool get usageStatisticsSupported => _usageSupported;
+
+  @override
+  Future<UsageStatistics> loadUsageStatistics(UsageQuery query) async {
+    try {
+      // Server-wide endpoint: never attach _loc(). Only the explicit project
+      // ID scopes this query; all projects omits the filter entirely.
+      final json = await _transport.getJson(
+        '/session/stats',
+        query: query.toQuery(),
+      );
+      return UsageStatistics.fromJson(_dataMap(json));
+    } on Api2Error catch (error) {
+      if ([404, 405, 501].contains(error.statusCode)) {
+        _usageSupported = false;
+        throw const UsageUnsupported();
+      }
+      rethrow;
+    }
+  }
 
   bool _notesSupported = true;
   @override

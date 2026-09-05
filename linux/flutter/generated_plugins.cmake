@@ -6,6 +6,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   desktop_drop
   dynamic_color
   flutter_secure_storage_linux
+  flutter_timezone
   record_linux
   screen_retriever_linux
   url_launcher_linux
