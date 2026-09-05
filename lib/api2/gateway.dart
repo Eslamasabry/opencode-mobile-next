@@ -10,6 +10,7 @@ import 'dart:convert';
 
 import '../api/models.dart';
 import '../domain/server_gateway.dart';
+import '../domain/parallel_requests.dart';
 import 'client.dart';
 import 'gateway_events.dart';
 import 'gateway_mappers.dart';
@@ -408,13 +409,15 @@ class Api2Gateway implements ServerGateway {
 
   @override
   Future<ProvidersResponse> providers() => _run(() async {
-    final providersFuture = client.providers();
-    final modelsFuture = client.models();
-    final defaultFuture = client.defaultModel();
+    final (providers, models, defaultModel) = await waitForRequests(
+      client.providers(),
+      client.models(),
+      client.defaultModel(),
+    );
     return mapApi2Providers(
-      providers: await providersFuture,
-      models: await modelsFuture,
-      defaultModel: await defaultFuture,
+      providers: providers,
+      models: models,
+      defaultModel: defaultModel,
     );
   });
 

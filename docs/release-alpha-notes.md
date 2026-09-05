@@ -82,10 +82,11 @@ your app version and platform prefilled and nothing else — redact the rest
 
 ### Upgrade note: stored credentials
 
-`flutter_secure_storage` 11 drops the legacy Android ciphers that 1.0.31
-(v10) migrated away from. Upgrading from 1.0.31 keeps every saved server.
-Upgrading from **1.0.30 or earlier straight to this build** loses saved
-server credentials: the app opens on the welcome screen and you pair again.
+For an in-place update with the same signer, `flutter_secure_storage` 11 uses
+the credential migration introduced in 1.0.31. Skipping that migration from
+**1.0.30 or earlier** requires pairing again. The public signer transition
+described above is separate: uninstalling an older build erases its local
+profiles, drafts, and queued prompts regardless of the storage migration.
 
 ## What is in this cut
 
@@ -103,9 +104,11 @@ server credentials: the app opens on the welcome screen and you pair again.
 
 ## Install
 
-- **Android**: attach the APK from this release; upgrade in place over
-  previous previews (same signing lineage). `scripts/release.sh` built it;
-  Shorebird receives Dart-only patches for this baseline.
+- **Android**: use the verified APK attached to this release. Update in place
+  only when the installed package and signer match. The `v1.0.33+34` public
+  preview has a different signer and cannot update in place to this build.
+  Record any local work you need before uninstalling; then pair your servers
+  again. Check the signer in **Settings → About** before proceeding.
 - **Linux**: `.deb` (Ubuntu 24.04-era dependencies) or the portable tarball;
   SHA256SUMS attached. See `docs/desktop.md` for runtime requirements
   (libsecret/keyring, zenity) and honest limitations.

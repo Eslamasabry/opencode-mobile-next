@@ -486,6 +486,21 @@ void main() {
 
     expect(repository.shellLoadCalls, 2);
     expect(find.text('bash'), findsOneWidget);
+
+    // A failed refresh with cached choices must retry the request, rather than
+    // opening the stale chooser behind a row labelled "Tap to retry".
+    repository.shellError = const ProductException('Shell refresh unavailable');
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Shell refresh unavailable'), findsOneWidget);
+    final loadsBeforeRetry = repository.shellLoadCalls;
+    repository.shellError = null;
+    await tester.tap(entry);
+    await tester.pumpAndSettle();
+    expect(repository.shellLoadCalls, loadsBeforeRetry + 1);
+    expect(find.byKey(const ValueKey('server-shell-/bin/bash')), findsNothing);
+    expect(find.text('bash'), findsOneWidget);
   });
 
   testWidgets('failed shell update retains the server-reported selection', (
@@ -731,9 +746,13 @@ void main() {
           .enabled,
       isFalse,
     );
-    expect(find.text('0 B of unsent work — 0 queued prompts (0 B) and 0 '
-        'drafts (0 B). Queued prompts are discarded after 14 days.'),
-        findsOneWidget);
+    expect(
+      find.text(
+        '0 B of unsent work — 0 queued prompts (0 B) and 0 '
+        'drafts (0 B). Queued prompts are discarded after 14 days.',
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('an Android service timeout turns the switch off and says why', (
@@ -779,10 +798,7 @@ void main() {
       find.byKey(const ValueKey('background-timeout-notice')),
       findsOneWidget,
     );
-    expect(
-      find.text('Android stopped the live connection'),
-      findsOneWidget,
-    );
+    expect(find.text('Android stopped the live connection'), findsOneWidget);
     expect(
       tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
       isFalse,

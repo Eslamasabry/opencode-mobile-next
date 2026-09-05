@@ -5,6 +5,8 @@ The review and implementation cycle keeps two focused queues:
 - [Backend](backend.md): protocol adapters, data handling, and connection state.
 - [Frontend](frontend.md): useful features, navigation, and everyday interactions.
 - [Completed cycles](cycles.md): shipped batches and their verification.
+- [V1 release readiness](../v1-release-readiness.md): the full release objective
+  and the evidence still needed before it can be marked complete.
 
 Each review pass adds a small number of evidence-backed, deduplicated items.
 Stable IDs preserve the history. Ready items contain a specific user problem,

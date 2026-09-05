@@ -17,6 +17,7 @@ import '../api/mcp_oauth.dart';
 import '../api/models.dart';
 import '../api/product_repository.dart' show ProductRepository;
 import '../domain/server_gateway.dart';
+import '../domain/parallel_requests.dart';
 import 'client.dart';
 import 'gateway_mappers.dart';
 import 'models.dart';
@@ -28,7 +29,9 @@ class Api2OperationsGateway extends ProductRepository {
   /// v2 OAuth attempt routes are integration-scoped, but the domain contract
   /// only carries the attempt ID (matrix risk 7). Remember the owning
   /// integration for every attempt this gateway started.
-  final Map<String, String> _oauthAttemptIntegration = {};
+  final Map<String, ({String integrationID, Map<String, dynamic> location})>
+  _oauthAttempts = {};
+  final Map<String, IntegrationAuthStatus> _oauthTerminalStatuses = {};
 
   Api2OperationsGateway({required this.client});
 
@@ -559,11 +562,19 @@ class Api2OperationsGateway extends ProductRepository {
 
   // ---------------- VCS & project health ----------------
 
+  Future<dynamic> _optionalVcsJson(String path) async {
+    try {
+      return await _transport.getJson(path, query: _loc());
+    } on Api2Error {
+      return null;
+    }
+  }
+
   @override
   Future<VersionControlHealth> loadVersionControlHealth() =>
       _guard('Could not load version control status', () async {
-        final vcsFuture = _transport.getJson('/vcs', query: _loc());
-        final statusFuture = _transport.getJson('/vcs/status', query: _loc());
+        final vcsFuture = _optionalVcsJson('/vcs');
+        final statusFuture = _optionalVcsJson('/vcs/status');
         final projectFuture = () async {
           try {
             return await _currentProjectJson();
@@ -572,22 +583,15 @@ class Api2OperationsGateway extends ProductRepository {
             return const <String, dynamic>{};
           }
         }();
-        Map<String, dynamic> info;
-        try {
-          info = _dataMap(await vcsFuture);
-        } on Api2Error {
-          info = const {};
-        }
-        List<VersionControlFile> changes;
-        try {
-          changes = [
-            for (final item in _dataMaps(await statusFuture))
-              mapVcsStatusJson(item),
-          ];
-        } on Api2Error {
-          changes = const [];
-        }
-        final project = await projectFuture;
+        final (vcs, status, project) = await waitForRequests(
+          vcsFuture,
+          statusFuture,
+          projectFuture,
+        );
+        final info = _dataMap(vcs);
+        final changes = [
+          for (final item in _dataMaps(status)) mapVcsStatusJson(item),
+        ];
         final branch = info['branch'];
         final current = branch is Map ? branch['current']?.toString() : null;
         final fallback = branch is Map ? branch['default']?.toString() : null;
@@ -741,19 +745,19 @@ class Api2OperationsGateway extends ProductRepository {
   // ---------------- Catalog ----------------
 
   @override
-  Future<CatalogSnapshot> loadCatalog() => _guard(
-    'Could not load models and agents',
-    () async {
-      final providersFuture = client.providers();
-      final modelsFuture = client.models();
-      final agentsFuture = client.agents();
-      return CatalogSnapshot(
-        providers: (await providersFuture).map(mapApi2CatalogProvider).toList(),
-        models: (await modelsFuture).map(mapApi2CatalogModel).toList(),
-        agents: (await agentsFuture).map(mapApi2CatalogAgent).toList(),
-      );
-    },
-  );
+  Future<CatalogSnapshot> loadCatalog() =>
+      _guard('Could not load models and agents', () async {
+        final (providers, models, agents) = await waitForRequests(
+          client.providers(),
+          client.models(),
+          client.agents(),
+        );
+        return CatalogSnapshot(
+          providers: providers.map(mapApi2CatalogProvider).toList(),
+          models: models.map(mapApi2CatalogModel).toList(),
+          agents: agents.map(mapApi2CatalogAgent).toList(),
+        );
+      });
 
   @override
   Future<ChatDefaults> loadChatDefaults() =>
@@ -875,13 +879,19 @@ class Api2OperationsGateway extends ProductRepository {
   @override
   Future<void> connectMcp(String name) => _guard(
     'Could not connect the MCP server',
-    () => _transport.postJson('/mcp/${Uri.encodeComponent(name)}/connect'),
+    () => _transport.postJson(
+      '/mcp/${Uri.encodeComponent(name)}/connect',
+      query: _loc(),
+    ),
   );
 
   @override
   Future<void> disconnectMcp(String name) => _guard(
     'Could not disconnect the MCP server',
-    () => _transport.postJson('/mcp/${Uri.encodeComponent(name)}/disconnect'),
+    () => _transport.postJson(
+      '/mcp/${Uri.encodeComponent(name)}/disconnect',
+      query: _loc(),
+    ),
   );
 
   @override
@@ -896,9 +906,18 @@ class Api2OperationsGateway extends ProductRepository {
   }) => _guard('Could not add the MCP server', () async {
     // Lossy: v2's runtime MCP write has no project/global scope split; the
     // server persists it in its own configuration layer.
+    final config = draft.toConfigJson();
+    if (draft.timeoutMs case final timeout?) {
+      config['timeout'] = {
+        'startup': timeout,
+        'catalog': timeout,
+        'execution': timeout,
+      };
+    }
     await _transport.putJson(
       '/mcp/${Uri.encodeComponent(draft.normalizedName)}',
-      body: {'config': draft.toConfigJson()},
+      query: _loc(),
+      body: {'config': config},
     );
   });
 
@@ -973,6 +992,7 @@ class Api2OperationsGateway extends ProductRepository {
         'Could not connect the integration',
         () => _transport.postJson(
           '/integration/${Uri.encodeComponent(id)}/connect/key',
+          query: _loc(),
           body: {'key': key, 'label': ?label},
         ),
       );
@@ -1010,8 +1030,10 @@ class Api2OperationsGateway extends ProductRepository {
     Map<String, String> inputs = const {},
     String? label,
   }) => _guard('Could not start the sign-in', () async {
+    final location = _loc();
     final json = await _transport.postJson(
       '/integration/${Uri.encodeComponent(id)}/connect/oauth',
+      query: location,
       body: {
         'methodID': methodID,
         if (inputs.isNotEmpty) 'answer': inputs,
@@ -1023,7 +1045,8 @@ class Api2OperationsGateway extends ProductRepository {
     if (attemptID.isEmpty) {
       throw const ProductException('OpenCode returned no sign-in attempt');
     }
-    _oauthAttemptIntegration[attemptID] = id;
+    _oauthAttempts[attemptID] = (integrationID: id, location: location);
+    _oauthTerminalStatuses.remove(attemptID);
     final time = data['time'];
     return IntegrationAuthLaunch(
       attemptID: attemptID,
@@ -1036,9 +1059,11 @@ class Api2OperationsGateway extends ProductRepository {
     );
   });
 
-  String _attemptIntegration(String attemptID) {
-    final id = _oauthAttemptIntegration[attemptID];
-    if (id == null) {
+  ({String integrationID, Map<String, dynamic> location}) _attempt(
+    String attemptID,
+  ) {
+    final attempt = _oauthAttempts[attemptID];
+    if (attempt == null) {
       // Interface friction: the domain contract addresses attempts by ID
       // only, but v2 attempt routes are integration-scoped. Attempts started
       // by an earlier app run cannot be resumed.
@@ -1046,23 +1071,25 @@ class Api2OperationsGateway extends ProductRepository {
         'This sign-in attempt is no longer tracked — start it again',
       );
     }
-    return id;
+    return attempt;
   }
 
   @override
   Future<IntegrationAuthStatus> integrationOAuthStatus(String attemptID) =>
       _guard('Could not check the sign-in status', () async {
-        final integrationID = _attemptIntegration(attemptID);
+        if (_oauthTerminalStatuses[attemptID] case final cached?) return cached;
+        final attempt = _attempt(attemptID);
         final json = await _transport.getJson(
-          '/integration/${Uri.encodeComponent(integrationID)}'
+          '/integration/${Uri.encodeComponent(attempt.integrationID)}'
           '/connect/oauth/${Uri.encodeComponent(attemptID)}',
+          query: attempt.location,
         );
         final data = _dataMap(json);
         final status =
             (data['status'] ??
                     (json is Map<String, dynamic> ? json['status'] : null))
                 ?.toString();
-        return IntegrationAuthStatus(
+        final result = IntegrationAuthStatus(
           state: switch (status) {
             'complete' => IntegrationAuthState.complete,
             'failed' => IntegrationAuthState.failed,
@@ -1071,29 +1098,43 @@ class Api2OperationsGateway extends ProductRepository {
           },
           message: data['message']?.toString(),
         );
+        if (result.state != IntegrationAuthState.pending) {
+          _oauthAttempts.remove(attemptID);
+          _oauthTerminalStatuses[attemptID] = result;
+          if (_oauthTerminalStatuses.length > 32) {
+            _oauthTerminalStatuses.remove(_oauthTerminalStatuses.keys.first);
+          }
+        }
+        return result;
       });
 
   @override
   Future<void> completeIntegrationOAuth(String attemptID, {String? code}) =>
       _guard('Could not finish the sign-in', () async {
-        final integrationID = _attemptIntegration(attemptID);
+        if (_oauthTerminalStatuses[attemptID]?.state ==
+            IntegrationAuthState.complete) {
+          return;
+        }
+        final attempt = _attempt(attemptID);
         await _transport.postJson(
-          '/integration/${Uri.encodeComponent(integrationID)}'
+          '/integration/${Uri.encodeComponent(attempt.integrationID)}'
           '/connect/oauth/${Uri.encodeComponent(attemptID)}/complete',
+          query: attempt.location,
           body: {'code': ?code},
         );
-        _oauthAttemptIntegration.remove(attemptID);
       });
 
   @override
   Future<void> cancelIntegrationOAuth(String attemptID) =>
       _guard('Could not cancel the sign-in', () async {
-        final integrationID = _attemptIntegration(attemptID);
+        if (_oauthTerminalStatuses.remove(attemptID) != null) return;
+        final attempt = _attempt(attemptID);
         await _transport.deleteJson(
-          '/integration/${Uri.encodeComponent(integrationID)}'
+          '/integration/${Uri.encodeComponent(attempt.integrationID)}'
           '/connect/oauth/${Uri.encodeComponent(attemptID)}',
+          query: attempt.location,
         );
-        _oauthAttemptIntegration.remove(attemptID);
+        _oauthAttempts.remove(attemptID);
       });
 
   // ---------------- Requests (questions & saved permissions) ----------------

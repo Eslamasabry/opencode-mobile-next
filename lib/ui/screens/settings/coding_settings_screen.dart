@@ -230,7 +230,11 @@ class _CodingSettingsScreenState extends State<CodingSettingsScreen>
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.chevron_right_rounded),
-              onTap: _loadingShell || _savingShell ? null : _chooseShell,
+              onTap: _loadingShell || _savingShell
+                  ? null
+                  : _shellError != null
+                  ? _loadShellSettings
+                  : _chooseShell,
             ),
           ListTile(
             leading: const Icon(Icons.model_training_outlined),

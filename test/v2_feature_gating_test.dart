@@ -110,7 +110,11 @@ class _HealthRepository implements ProductRepository {
   Future<List<FormatterHealth>> listFormatters() async {
     formatterCalls += 1;
     return const [
-      FormatterHealth(name: 'dart format', extensions: ['.dart'], enabled: true),
+      FormatterHealth(
+        name: 'dart format',
+        extensions: ['.dart'],
+        enabled: true,
+      ),
     ];
   }
 
@@ -171,7 +175,8 @@ Widget _app(Widget home) => MaterialApp(
 /// scrolling hub builds all of its slivers and "findsNothing" means hidden
 /// rather than merely below the fold.
 void _useTallSurface() {
-  final view = TestWidgetsFlutterBinding.instance.platformDispatcher.views.first;
+  final view =
+      TestWidgetsFlutterBinding.instance.platformDispatcher.views.first;
   view.physicalSize = const Size(400, 3000);
   view.devicePixelRatio = 1;
   addTearDown(view.resetPhysicalSize);
@@ -221,13 +226,45 @@ void main() {
   });
 
   group('hidden: nav destination with no v2 backend (§7 row 20)', () {
+    testWidgets('catalog tabs stay reachable on a narrow large-text phone', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final controller = await _controller(v2: false);
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(2)),
+            child: child!,
+          ),
+          home: CapabilitiesScreen(controller: controller),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final references = find.byKey(
+        const ValueKey('capabilities-tab-References'),
+      );
+      await Scrollable.ensureVisible(tester.element(references));
+      await tester.pumpAndSettle();
+      await tester.tap(references);
+      await tester.pumpAndSettle();
+      expect(DefaultTabController.of(tester.element(references)).index, 3);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('v1 keeps the Tools tab in Commands & tools', (tester) async {
       final controller = await _controller(v2: false);
       addTearDown(controller.dispose);
 
-      await tester.pumpWidget(
-        _app(CapabilitiesScreen(controller: controller)),
-      );
+      await tester.pumpWidget(_app(CapabilitiesScreen(controller: controller)));
       await tester.pump();
 
       expect(
@@ -241,12 +278,13 @@ void main() {
       final controller = await _controller(v2: true);
       addTearDown(controller.dispose);
 
-      await tester.pumpWidget(
-        _app(CapabilitiesScreen(controller: controller)),
-      );
+      await tester.pumpWidget(_app(CapabilitiesScreen(controller: controller)));
       await tester.pump();
 
-      expect(find.byKey(const ValueKey('capabilities-tab-Tools')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('capabilities-tab-Tools')),
+        findsNothing,
+      );
       expect(find.byType(ToolsScreen), findsNothing);
       // The surviving catalogs still have their tabs — the screen lives on.
       expect(find.byType(Tab), findsNWidgets(3));
@@ -297,7 +335,10 @@ void main() {
       await tester.pumpAndSettle();
       // The route itself survives: switching projects and project health
       // have a backend on every generation, so it is never a dead end.
-      expect(find.byKey(const ValueKey('manage-project-entry')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('manage-project-entry')),
+        findsOneWidget,
+      );
       await openManageProject(tester);
 
       expect(
@@ -311,7 +352,10 @@ void main() {
         find.byKey(const ValueKey('project-health-entry')),
         findsOneWidget,
       );
-      expect(find.byKey(const ValueKey('switch-project-entry')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('switch-project-entry')),
+        findsOneWidget,
+      );
     });
   });
 
@@ -586,10 +630,7 @@ void main() {
       final row = find.byKey(const ValueKey('gated-example'));
       expect(row, findsOneWidget);
       expect(tester.widget<ListTile>(row).enabled, isFalse);
-      expect(
-        find.text('Not available on OpenCode 2 servers'),
-        findsOneWidget,
-      );
+      expect(find.text('Not available on OpenCode 2 servers'), findsOneWidget);
       // Capability gating, not plan gating: no upsell, no call to action.
       expect(find.byType(FilledButton), findsNothing);
 

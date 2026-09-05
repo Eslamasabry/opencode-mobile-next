@@ -49,3 +49,28 @@ Verification: pinned Flutter analysis clean; **155 focused checks passed** acros
 the initial checks and the final affected-file rerun (**111 passed**). One Linux
 process-group check was skipped on Windows and remains covered by the existing
 Linux CI workflows. No additional native build or emulator campaign was run.
+
+## 2026-09-05 — Cycle 02: provider parity and catalog usability
+
+Implemented **BE-006–009** and **FE-007–008**:
+
+- Concurrent catalog requests attach failure handlers immediately while keeping
+  gateway error types. Optional VCS requests retain independent fallbacks.
+- V2 provider key, OAuth, and MCP actions carry their location. OAuth attempts
+  keep the location where sign-in began, even if the active workspace changes.
+- Code completion preserves the attempt until the confirming status read;
+  bounded terminal results make completion/status retries reliable.
+- V2 MCP timeouts use startup/catalog/execution fields; v1 keeps its scalar.
+- Default shell retries failed refreshes even when old choices are cached.
+  Commands & tools tabs scroll and remain reachable at 320dp with 2x text.
+- Corrected the documented v2 compatibility target and signer migration notes.
+  Added the full [V1 release readiness](../v1-release-readiness.md) requirements.
+
+Verification: pinned Flutter analysis clean; **121 focused checks passed**.
+The preceding PR #64 Linux and Windows builds passed; its Android workflow was
+still running when checked. This cycle did not publish a release or create a tag.
+
+Next: command creation/retry flow, stale connection probes, refresh/viewed-state
+retention, opaque global pagination, and complete long-history navigation.
+Release and protocol requirements remain open in the readiness document and
+review queues; passing this batch does not establish full feature parity.
