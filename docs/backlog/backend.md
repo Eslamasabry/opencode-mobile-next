@@ -309,3 +309,18 @@ The captured stage route returns **HTTP 200 `{data: Session.Revert}`**, with req
 - Deduplicated the second pass against this backlog, the frontend backlog, the checked-in audit/reverification documents, and the repository's open GitHub issues on 2026-09-05. Existing model-sync, read-state, aggregate-usage and persistent-stash issues were not re-entered.
 - The release review compared both captured contracts, current gateways/state/UI, release scripts/workflow, historical parity documents, and current open issues/published releases. It added BE-010 and BE-011 and retained the broader unimplemented v2 inventory. No product files, tests, builds, emulators, CI runs, or release state were changed in this pass.
 - Current review pass is documentation-only. Root owns implementation and final verification.
+
+## Active context — cycle 20
+
+Implemented a separate typed active-context capability for
+GET /api/session/{sessionID}/context. The response is the full active message
+list following compaction, not a token breakdown. No location query or client
+message-count cap is invented. Invalid/duplicate entries fail visibly; unknown
+types remain counted as notices. Missing-session and auth errors remain
+recoverable while unsupported routes disable the capability for that gateway.
+
+The UI guards location/history changes, refreshes after completion, and excludes
+staged history. A pinned beta-18600 imported-history fixture verifies compaction
+filtering, Unicode, read-only export parity and auth/missing-session behavior.
+See ../verification/active-context.md. Actual provider transformation and final
+native/TalkBack verification remain outside that fixture's evidence.

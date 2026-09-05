@@ -1346,4 +1346,105 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get skillAppliedOriginal =>
       'Skill added to the original conversation. Close this sheet to return.';
+
+  @override
+  String get activeContextTitle => 'Active context';
+
+  @override
+  String get activeContextSubtitle => 'Inspect messages after compaction';
+
+  @override
+  String get activeContextHelp =>
+      'Active messages returned by the server after its latest compaction. Message counts are not token counts.';
+
+  @override
+  String get activeContextRefresh => 'Refresh active context';
+
+  @override
+  String get activeContextSearch => 'Search active messages';
+
+  @override
+  String get activeContextAll => 'All';
+
+  @override
+  String activeContextCount(int shown, int total) {
+    return '$shown of $total messages';
+  }
+
+  @override
+  String get activeContextEmpty =>
+      'The server returned no active context messages.';
+
+  @override
+  String get activeContextNoMatches =>
+      'No active messages match these filters.';
+
+  @override
+  String get activeContextNoText => 'No supported text content in this entry.';
+
+  @override
+  String get activeContextUnsupported =>
+      'Active context inspection is unavailable on this server.';
+
+  @override
+  String get activeContextChanged =>
+      'The connection, project or conversation changed. Reopen this inspector from the conversation.';
+
+  @override
+  String get activeContextInvalid =>
+      'The server returned an invalid context snapshot. Refresh to try again.';
+
+  @override
+  String activeContextRefreshFailed(String error) {
+    return 'Showing the previous snapshot. Could not refresh: $error';
+  }
+
+  @override
+  String get activeContextContentHelp =>
+      'Snapshot of available message content. Binary attachment bodies, URLs and internal metadata are not displayed. This is not the complete provider request.';
+
+  @override
+  String get activeContextUser => 'User prompt';
+
+  @override
+  String get activeContextAssistant => 'Assistant';
+
+  @override
+  String get activeContextSystem => 'System instructions';
+
+  @override
+  String get activeContextSynthetic => 'Synthetic message';
+
+  @override
+  String get activeContextSkill => 'Skill';
+
+  @override
+  String get activeContextShell => 'Shell';
+
+  @override
+  String get activeContextCompaction => 'Compaction';
+
+  @override
+  String get activeContextChange => 'Session change';
+
+  @override
+  String get activeContextText => 'Text';
+
+  @override
+  String get activeContextToolInput => 'Tool input';
+
+  @override
+  String get activeContextToolOutput => 'Tool output';
+
+  @override
+  String get activeContextFile => 'File attachment';
+
+  @override
+  String get activeContextNotice => 'Server notice';
+
+  @override
+  String get activeContextPruned => 'Content pruned by the server';
+
+  @override
+  String get activeContextTruncated => 'Output truncated by the server';
 }

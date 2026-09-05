@@ -617,3 +617,30 @@ mode controls with enlarged text. Rendered/Raw now wrap to fit available width.
 
 Final verification: all 126 checks across chat live events, permissions,
 transcript search, skill activation and catalog refresh pass on the final source.
+
+## Cycle 20 — inspect active context
+
+Added Session context → Active context for v2, backed by the server context
+endpoint. Search and type filters cover the full response; entries open full
+selectable content with per-part copy. The view distinguishes available text,
+file names, pruned output and truncated shell output without dumping binary
+bodies or metadata. Message counts and usage estimates remain clearly separate.
+The scrollable header keeps results reachable at 320px with large text and the
+keyboard open. Search has an explicit clear action.
+
+History changes invalidate details; staged revert hides excluded messages;
+failed refreshes retain a labeled snapshot. Both context screens now clear
+stale content on a location change rather than reusing the conversation ID on
+the newly selected server/project.
+
+Pinned beta-18600 live verification imported four fixture messages. Active
+context returned the completed compaction, current Unicode prompt and system
+instructions, excluding the old prompt. Read-only export parity and 401/typed
+404 behavior passed, with no provider run. See verification/active-context.md.
+Nineteen focused/regression checks passed, static analysis is clean and the
+411px phone render was inspected. Final device/TalkBack and release-candidate
+checks remain.
+
+The preceding 7a88db6 commit's Android, Linux and Windows builds completed
+successfully for both dev and master. This batch follows local dev → fast-forward
+master → atomic push of both branches.

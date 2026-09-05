@@ -20,6 +20,7 @@ import '../api/product_repository.dart' show ProductRepository;
 import '../domain/server_gateway.dart';
 import '../domain/parallel_requests.dart';
 import 'client.dart';
+import 'active_context_mapper.dart';
 import 'gateway_mappers.dart';
 import 'models.dart';
 import 'transport.dart';
@@ -32,8 +33,57 @@ class Api2OperationsGateway extends ProductRepository
         SessionExportGateway,
         SessionImportGateway,
         SessionSkillGateway,
+        ActiveContextGateway,
         UsageStatisticsGateway {
   final Api2Client client;
+
+  bool _activeContextSupported = true;
+  @override
+  bool get activeContextSupported => _activeContextSupported;
+
+  @override
+  Future<List<ActiveContextMessage>> loadActiveContext(String sessionID) async {
+    if (!_activeContextSupported) {
+      throw const ActiveContextException(ActiveContextFailure.unsupported);
+    }
+    try {
+      final json = await _transport.getJson(
+        '/session/${Uri.encodeComponent(sessionID)}/context',
+      );
+      if (json is! Map || json['data'] is! List) {
+        throw const ActiveContextException(
+          ActiveContextFailure.invalidResponse,
+        );
+      }
+      final messages = <ActiveContextMessage>[];
+      final ids = <String>{};
+      for (final value in json['data'] as List) {
+        if (value is! Map ||
+            value['id'] is! String ||
+            value['type'] is! String ||
+            !ids.add(value['id'] as String)) {
+          throw const ActiveContextException(
+            ActiveContextFailure.invalidResponse,
+          );
+        }
+        final message = Api2Message.fromJson(Map<String, dynamic>.from(value));
+        if (message == null) {
+          throw const ActiveContextException(
+            ActiveContextFailure.invalidResponse,
+          );
+        }
+        messages.add(mapActiveContext(message));
+      }
+      return messages;
+    } on Api2Error catch (error) {
+      if ([405, 501].contains(error.statusCode) ||
+          (error.statusCode == 404 && error.tag != 'SessionNotFoundError')) {
+        _activeContextSupported = false;
+        throw const ActiveContextException(ActiveContextFailure.unsupported);
+      }
+      rethrow;
+    }
+  }
 
   bool _skillsSupported = true;
   @override

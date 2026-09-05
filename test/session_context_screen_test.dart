@@ -5,6 +5,7 @@ import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/sse.dart';
+import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/session_context_screen.dart';
@@ -136,6 +137,8 @@ Future<_ContextController> _controller(_ContextApi api) async {
 }
 
 Widget _app(Widget home, {double textScale = 1}) => MaterialApp(
+  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  supportedLocales: AppLocalizations.supportedLocales,
   builder: (context, child) => MediaQuery(
     data: MediaQuery.of(
       context,
@@ -147,6 +150,39 @@ Widget _app(Widget home, {double textScale = 1}) => MaterialApp(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets(
+    'changing location clears context instead of loading the old session elsewhere',
+    (tester) async {
+      final api = _ContextApi()..messagesResult = _messages();
+      final controller = await _controller(api);
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        _app(
+          SessionContextScreen(
+            controller: controller,
+            sessionID: 'session-1',
+            initialMessages: _messages(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final calls = api.messagesCalls;
+      controller.locationRevision++;
+      controller.notifyListeners();
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Reopen this inspector'), findsOneWidget);
+      expect(api.messagesCalls, calls);
+      expect(
+        tester
+            .widget<IconButton>(
+              find.widgetWithIcon(IconButton, Icons.refresh_rounded),
+            )
+            .onPressed,
+        isNull,
+      );
+    },
+  );
 
   test('token parsing retains cache activity in the OpenCode total', () {
     final tokens = Tokens.fromJson({

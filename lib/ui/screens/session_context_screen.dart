@@ -11,6 +11,7 @@ import '../../state/connection.dart';
 import '../../domain/session_history.dart';
 import '../widgets/product_states.dart';
 import '../app_theme.dart';
+import 'active_context_screen.dart';
 
 enum SessionContextBreakdownKind { user, assistant, tool, other }
 
@@ -196,7 +197,7 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
   bool _loading = false;
   int _generation = 0;
   late int _refreshRevision;
-  late int _locationRevision;
+  late final int _locationRevision;
   late int _historyRevision;
   late bool _wasBusy;
   String? _olderCursor;
@@ -204,6 +205,8 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
   bool _failedOlder = false;
   bool _olderNeedsReload = false;
   final Set<String> _usedCursors = {};
+  bool get _sameLocation =>
+      widget.controller.locationRevision == _locationRevision;
 
   @override
   void initState() {
@@ -227,10 +230,17 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
   }
 
   void _handleControllerChange() {
+    if (!_sameLocation) {
+      _generation++;
+      setState(() {
+        _messages = [];
+        _loading = false;
+        _error = null;
+      });
+      return;
+    }
     final refreshChanged =
         widget.controller.dataRefreshRevision != _refreshRevision;
-    final locationChanged =
-        widget.controller.locationRevision != _locationRevision;
     final busy = widget.controller.busySessions.contains(widget.sessionID);
     final historyRevision = widget.controller.sessionHistoryRevision(
       widget.sessionID,
@@ -239,9 +249,8 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
     _historyRevision = historyRevision;
     final completed = _wasBusy && !busy;
     _refreshRevision = widget.controller.dataRefreshRevision;
-    _locationRevision = widget.controller.locationRevision;
     _wasBusy = busy;
-    if (refreshChanged || locationChanged || completed || historyChanged) {
+    if (refreshChanged || completed || historyChanged) {
       if (historyChanged &&
           widget.controller.sessionsById[widget.sessionID]?.stagedRevert ==
               null) {
@@ -252,6 +261,7 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
   }
 
   Future<void> _load({bool older = false}) async {
+    if (!_sameLocation) return;
     older = older && !_olderNeedsReload;
     final cursor = older ? _olderCursor : null;
     if (older && (_loading || cursor == null)) return;
@@ -265,6 +275,7 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
     }
     try {
       final api = await widget.controller.prepareActionTransport();
+      if (!mounted || generation != _generation || !_sameLocation) return;
       if (api == null) {
         throw const ProductException('OpenCode is reconnecting. Try again.');
       }
@@ -352,12 +363,45 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
         actions: [
           IconButton(
             tooltip: 'Refresh context',
-            onPressed: _loading ? null : _load,
+            onPressed: _loading || !_sameLocation ? null : _load,
             icon: const Icon(Icons.refresh_rounded),
           ),
         ],
       ),
-      body: _buildBody(metrics),
+      body: !_sameLocation
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(AppLocalizations.of(context).activeContextChanged),
+              ),
+            )
+          : Column(
+              children: [
+                if (widget.controller.repository is ActiveContextGateway &&
+                    (widget.controller.repository as ActiveContextGateway)
+                        .activeContextSupported)
+                  ListTile(
+                    key: const ValueKey('open-active-context'),
+                    leading: const Icon(Icons.subject_rounded),
+                    title: Text(
+                      AppLocalizations.of(context).activeContextTitle,
+                    ),
+                    subtitle: Text(
+                      AppLocalizations.of(context).activeContextSubtitle,
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => ActiveContextScreen(
+                          controller: widget.controller,
+                          sessionID: widget.sessionID,
+                        ),
+                      ),
+                    ),
+                  ),
+                Expanded(child: _buildBody(metrics)),
+              ],
+            ),
     );
   }
 

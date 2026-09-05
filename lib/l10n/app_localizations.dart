@@ -2355,6 +2355,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Skill added to the original conversation. Close this sheet to return.'**
   String get skillAppliedOriginal;
+
+  /// No description provided for @activeContextTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Active context'**
+  String get activeContextTitle;
+
+  /// No description provided for @activeContextSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspect messages after compaction'**
+  String get activeContextSubtitle;
+
+  /// No description provided for @activeContextHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Active messages returned by the server after its latest compaction. Message counts are not token counts.'**
+  String get activeContextHelp;
+
+  /// No description provided for @activeContextRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh active context'**
+  String get activeContextRefresh;
+
+  /// No description provided for @activeContextSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search active messages'**
+  String get activeContextSearch;
+
+  /// No description provided for @activeContextAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get activeContextAll;
+
+  /// No description provided for @activeContextCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{shown} of {total} messages'**
+  String activeContextCount(int shown, int total);
+
+  /// No description provided for @activeContextEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The server returned no active context messages.'**
+  String get activeContextEmpty;
+
+  /// No description provided for @activeContextNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No active messages match these filters.'**
+  String get activeContextNoMatches;
+
+  /// No description provided for @activeContextNoText.
+  ///
+  /// In en, this message translates to:
+  /// **'No supported text content in this entry.'**
+  String get activeContextNoText;
+
+  /// No description provided for @activeContextUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Active context inspection is unavailable on this server.'**
+  String get activeContextUnsupported;
+
+  /// No description provided for @activeContextChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection, project or conversation changed. Reopen this inspector from the conversation.'**
+  String get activeContextChanged;
+
+  /// No description provided for @activeContextInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The server returned an invalid context snapshot. Refresh to try again.'**
+  String get activeContextInvalid;
+
+  /// No description provided for @activeContextRefreshFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing the previous snapshot. Could not refresh: {error}'**
+  String activeContextRefreshFailed(String error);
+
+  /// No description provided for @activeContextContentHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Snapshot of available message content. Binary attachment bodies, URLs and internal metadata are not displayed. This is not the complete provider request.'**
+  String get activeContextContentHelp;
+
+  /// No description provided for @activeContextUser.
+  ///
+  /// In en, this message translates to:
+  /// **'User prompt'**
+  String get activeContextUser;
+
+  /// No description provided for @activeContextAssistant.
+  ///
+  /// In en, this message translates to:
+  /// **'Assistant'**
+  String get activeContextAssistant;
+
+  /// No description provided for @activeContextSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System instructions'**
+  String get activeContextSystem;
+
+  /// No description provided for @activeContextSynthetic.
+  ///
+  /// In en, this message translates to:
+  /// **'Synthetic message'**
+  String get activeContextSynthetic;
+
+  /// No description provided for @activeContextSkill.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill'**
+  String get activeContextSkill;
+
+  /// No description provided for @activeContextShell.
+  ///
+  /// In en, this message translates to:
+  /// **'Shell'**
+  String get activeContextShell;
+
+  /// No description provided for @activeContextCompaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Compaction'**
+  String get activeContextCompaction;
+
+  /// No description provided for @activeContextChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Session change'**
+  String get activeContextChange;
+
+  /// No description provided for @activeContextText.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get activeContextText;
+
+  /// No description provided for @activeContextToolInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Tool input'**
+  String get activeContextToolInput;
+
+  /// No description provided for @activeContextToolOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Tool output'**
+  String get activeContextToolOutput;
+
+  /// No description provided for @activeContextFile.
+  ///
+  /// In en, this message translates to:
+  /// **'File attachment'**
+  String get activeContextFile;
+
+  /// No description provided for @activeContextNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Server notice'**
+  String get activeContextNotice;
+
+  /// No description provided for @activeContextPruned.
+  ///
+  /// In en, this message translates to:
+  /// **'Content pruned by the server'**
+  String get activeContextPruned;
+
+  /// No description provided for @activeContextTruncated.
+  ///
+  /// In en, this message translates to:
+  /// **'Output truncated by the server'**
+  String get activeContextTruncated;
 }
 
 class _AppLocalizationsDelegate

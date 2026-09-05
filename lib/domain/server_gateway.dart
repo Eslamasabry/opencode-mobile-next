@@ -8,6 +8,7 @@ export 'session_note.dart';
 export 'session_export.dart';
 export 'session_import.dart';
 export 'session_skill.dart';
+export 'active_context.dart';
 export 'usage_statistics.dart';
 
 /// Connection lifecycle surfaced to the UI.
