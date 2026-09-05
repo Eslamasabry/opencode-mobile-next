@@ -863,6 +863,41 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get mcpRuntimeTitle => 'Until server restart';
+
+  @override
+  String get mcpRuntimeDescription =>
+      'Adds this MCP server to the selected location and tries to connect it now. It is removed when OpenCode restarts. For permanent setup, edit the server configuration.';
+
+  @override
+  String get mcpCurrentLocation => 'Current location';
+
+  @override
+  String get mcpDefaultLocation => 'OpenCode server’s default location';
+
+  @override
+  String mcpWorkspaceLocation(String workspace) {
+    return 'Workspace: $workspace';
+  }
+
+  @override
+  String get mcpLocationChanged =>
+      'The connection or location changed. Your draft is still here; reopen setup in the intended location before adding it.';
+
+  @override
+  String get mcpAdding => 'Adding MCP server';
+
+  @override
+  String get mcpAdd => 'Add MCP server';
+
+  @override
+  String get mcpRuntimeEmpty =>
+      'Add tools for the current location until OpenCode restarts.';
+
+  @override
+  String get mcpRuntimeAdded => 'MCP server added for this location';
+
+  @override
   String get sessionUnread => 'Unread result';
 
   @override

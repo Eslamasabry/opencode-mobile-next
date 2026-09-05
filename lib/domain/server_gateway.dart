@@ -492,7 +492,7 @@ class McpServerInfo {
 
 enum McpServerKind { remote, local }
 
-enum McpConfigScope { project, global }
+enum McpConfigScope { project, global, runtimeLocation }
 
 class McpServerDraft {
   final String name;
@@ -816,7 +816,10 @@ class ServerCapabilities {
   final bool sessionSteal;
   final bool consoleOrganizations;
   final bool mcpOAuth;
+
+  /// Persistent project/global configuration writes, rather than runtime add.
   final bool mcpConfigWrites;
+  final bool mcpRuntimeAdds;
   final bool sessionShare;
   final bool sessionArchive;
   final bool sessionTodos;
@@ -852,6 +855,7 @@ class ServerCapabilities {
     this.consoleOrganizations = true,
     this.mcpOAuth = true,
     this.mcpConfigWrites = true,
+    this.mcpRuntimeAdds = false,
     this.sessionShare = true,
     this.sessionArchive = true,
     this.sessionTodos = true,

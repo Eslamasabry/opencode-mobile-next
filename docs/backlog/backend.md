@@ -96,12 +96,12 @@ Read-only reviews of the Flutter client's API adapters, domain and persisted sta
 
 ## BE-011 — Match MCP setup scope to the v2 contract
 
-- **Status:** Ready
-- **Priority / confidence:** Medium / high for scope; persistence is unverified
+- **Status:** Implemented — cycle 13; [pinned-server scope and restart evidence](../verification/mcp-scope-beta-18600.md)
+- **Priority / confidence:** Medium / verified scope and runtime-only behavior on beta-18600
 - **Evidence:** `lib/ui/screens/mcp_setup_screen.dart`, `build`, always offers `This project` / `All projects` and says it writes project/global configuration. `Api2OperationsGateway.addMcpServer` ignores `McpConfigScope`; captured `PUT /api/mcp/{server}` accepts a location query and `{config}`, with no global/project write selector. `integrations_screen.dart`, `_mcpSection`, repeats the all-project promise. This is separate from BE-008's correct location routing.
 - **User impact:** Choosing All projects on v2 does not perform the global configuration operation the form describes.
 - **Implementation:** Distinguish persistent project/global configuration writes from location-scoped MCP add in the capability model. Keep the existing v1 scope selector; show the actual selected location and supported operation on v2. Do not describe the v2 route as ephemeral: its contract says add at runtime, while the gateway comment and port matrix claim persistence. Confirm restart behavior from server implementation or a single live add/restart check before keeping or changing the restart promise.
-- **Minimal verification:** The same form renders the project/global selector for v1 and the current location for v2; outgoing requests match that displayed scope. No new broad test pass is needed.
+- **Verification:** The form preserves v1 project/global save and shows the pinned v2 location with an explicit restart limit. The adapter rejects persistent scope, checks existing names and pins both requests. A live two-project add/restart exercise confirms location isolation and removal after restart. Focused UI/wire tests include a connection change during wake.
 
 ## V1 release requirements — current review, 2026-09-05
 

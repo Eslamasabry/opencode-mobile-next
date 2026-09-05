@@ -86,10 +86,15 @@ class Api2EventAdapter {
           _env('session.metadata.updated', {
             'info': {
               'id': event.sessionID,
-              'directory': event.location?.directory,
-              'workspaceID': event.location?.workspaceID,
-              'projectID': event.projectID,
-              'path': event.subpath,
+              if (event.location != null) ...{
+                // A supplied destination replaces both location fields, so a
+                // move back to a local directory clears a previous workspace.
+                'directory': event.location!.directory,
+                'workspaceID': event.location!.workspaceID,
+              },
+              if (event.projectID != null) 'projectID': event.projectID,
+              if (event.subpath != null || envelope.data.containsKey('subpath'))
+                'path': event.subpath,
             },
           }),
         ];
@@ -124,7 +129,11 @@ class Api2EventAdapter {
       case Api2SessionInstructionsUpdatedEvent():
         // The server's text/delta may include server-owned entries. Emit only
         // a neutral notice; its durable ID matches the later REST transcript.
-        final messageID = envelope.id?.replaceFirst(RegExp(r'^evt_'), 'msg_');
+        final eventID = envelope.id;
+        final messageID =
+            eventID != null && eventID.startsWith('evt_') && eventID.length > 4
+            ? 'msg_${eventID.substring(4)}'
+            : null;
         return [
           _env('session.instructions.updated', {'sessionID': event.sessionID}),
           if (event.text != null && messageID != null) ...[

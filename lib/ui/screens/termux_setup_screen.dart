@@ -405,8 +405,10 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       final snapshot = await TermuxBridge.setupSnapshot();
       if (!mounted) return;
       _validateRestartSnapshot(snapshot.status);
-      _status = snapshot.status;
-      _setupOutput = snapshot.output;
+      setState(() {
+        _status = snapshot.status;
+        _setupOutput = snapshot.output;
+      });
       if (snapshot.status.isReady) {
         await _finishRestart(profile);
       } else if (snapshot.status.isRunning) {

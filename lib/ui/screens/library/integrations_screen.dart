@@ -299,16 +299,32 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
   }
 
   Future<void> _openMcpSetup() async {
+    final location = widget.controller.locationRevision;
+    final runtime =
+        widget.controller.capabilities.mcpRuntimeAdds &&
+        !widget.controller.capabilities.mcpConfigWrites;
     final saved = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
         builder: (_) => McpSetupScreen(controller: widget.controller),
       ),
     );
-    if (!mounted || saved != true) return;
+    if (!mounted ||
+        saved != true ||
+        widget.controller.locationRevision != location) {
+      return;
+    }
     await _load();
-    if (!mounted) return;
+    if (!mounted || widget.controller.locationRevision != location) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('MCP server saved in OpenCode')),
+      SnackBar(
+        content: Text(
+          runtime
+              ? lookupAppLocalizations(
+                  Localizations.localeOf(context),
+                ).mcpRuntimeAdded
+              : 'MCP server saved in OpenCode',
+        ),
+      ),
     );
   }
 
@@ -522,7 +538,11 @@ class _IntegrationsScreenState extends State<IntegrationsScreen>
         ProductInlineEmpty(
           icon: Icons.hub_outlined,
           title: 'No MCP servers configured',
-          message: 'Save one for this project or every project on the server.',
+          message: widget.controller.capabilities.mcpConfigWrites
+              ? 'Save one for this project or every project on the server.'
+              : lookupAppLocalizations(
+                  Localizations.localeOf(context),
+                ).mcpRuntimeEmpty,
           actionLabel: 'Add an MCP server',
           onAction: _openMcpSetup,
         )

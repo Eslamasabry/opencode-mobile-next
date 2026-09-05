@@ -113,6 +113,7 @@ class UsageOverview extends ChangeNotifier {
     try {
       final repository = await connection.prepareActionRepository();
       if (!_current(request)) return;
+      if (repository == null) throw const UsageRefreshInterrupted();
       if (repository is! UsageStatisticsGateway ||
           !(repository as UsageStatisticsGateway).usageStatisticsSupported) {
         throw const UsageUnsupported();
@@ -120,7 +121,7 @@ class UsageOverview extends ChangeNotifier {
       final timezone = await timezoneLoader();
       if (!_current(request)) return;
       final project = selectedScope == UsageScope.currentProject
-          ? await repository!.loadCurrentProject()
+          ? await repository.loadCurrentProject()
           : null;
       if (!_current(request)) return;
       if (selectedScope == UsageScope.currentProject &&

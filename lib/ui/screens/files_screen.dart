@@ -220,15 +220,18 @@ class _FilesScreenState extends State<FilesScreen> {
     _load(path);
   }
 
-  bool get _canNavigateBack => _search.text.isNotEmpty ||
+  bool get _canNavigateBack =>
+      _search.text.isNotEmpty ||
       (_surface == _FileSurface.files && _path.isNotEmpty);
 
   bool _handleBack() {
-    if (!_canNavigateBack) return false;
-    if (MediaQuery.viewInsetsOf(context).bottom > 0) {
+    // The shell Scaffold can consume MediaQuery's keyboard inset for its body.
+    // Read the view inset as well so the embedded Files tab still handles IME Back.
+    if (_keyboardOpen) {
       FocusManager.instance.primaryFocus?.unfocus();
       return true;
     }
+    if (!_canNavigateBack) return false;
     if (_search.text.isNotEmpty) {
       _clearSearch();
     } else {
@@ -237,6 +240,10 @@ class _FilesScreenState extends State<FilesScreen> {
     }
     return true;
   }
+
+  bool get _keyboardOpen =>
+      MediaQuery.viewInsetsOf(context).bottom > 0 ||
+      View.of(context).viewInsets.bottom > 0;
 
   void _selectSurface(_FileSurface surface) {
     if (_surface == surface) return;
@@ -685,7 +692,7 @@ class _FilesScreenState extends State<FilesScreen> {
     final content = _body(context);
     if (widget.backController != null) return content;
     return PopScope(
-      canPop: !_canNavigateBack,
+      canPop: !_canNavigateBack && !_keyboardOpen,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _handleBack();
       },
@@ -695,7 +702,8 @@ class _FilesScreenState extends State<FilesScreen> {
 
   Widget _body(BuildContext context) {
     final theme = Theme.of(context);
-    final l10n = Localizations.of<AppLocalizations>(context, AppLocalizations) ??
+    final l10n =
+        Localizations.of<AppLocalizations>(context, AppLocalizations) ??
         lookupAppLocalizations(Localizations.localeOf(context));
     final crumbs = _path.split('/').where((c) => c.isNotEmpty).toList();
 
@@ -784,12 +792,24 @@ class _FilesScreenState extends State<FilesScreen> {
                     child: i == crumbs.length
                         ? Semantics(
                             selected: true,
-                            child: Chip(label: Text(crumbs[i - 1],
-                              semanticsLabel: l10n.filesCurrentFolder(crumbs[i - 1]))),
+                            child: Chip(
+                              label: Text(
+                                crumbs[i - 1],
+                                semanticsLabel: l10n.filesCurrentFolder(
+                                  crumbs[i - 1],
+                                ),
+                              ),
+                            ),
                           )
                         : ActionChip(
-                            label: Text(crumbs[i - 1], semanticsLabel: l10n.filesOpenFolder(crumbs[i - 1])),
-                            onPressed: () => _navigateTo(crumbs.take(i).join('/')),
+                            label: Text(
+                              crumbs[i - 1],
+                              semanticsLabel: l10n.filesOpenFolder(
+                                crumbs[i - 1],
+                              ),
+                            ),
+                            onPressed: () =>
+                                _navigateTo(crumbs.take(i).join('/')),
                           ),
                   ),
               ],

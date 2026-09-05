@@ -145,6 +145,24 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   test(
+    'temporary missing repository keeps usage refresh recoverable',
+    () async {
+      final h = await harness();
+      await h.overview.refresh();
+      final previous = h.overview.snapshot;
+      h.connection.repository = null;
+      await h.overview.refresh();
+      expect(h.overview.error, isA<UsageRefreshInterrupted>());
+      expect(h.overview.snapshot, same(previous));
+      expect(h.repository.supported, isTrue);
+      h.connection.repository = h.repository;
+      await h.overview.refresh();
+      expect(h.overview.error, isNull);
+      expect(h.overview.snapshot, isNotNull);
+    },
+  );
+
+  test(
     'response preserves tokens, models and reliability without fake empty values',
     () {
       final result = stats();

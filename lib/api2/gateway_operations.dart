@@ -1049,9 +1049,23 @@ class Api2OperationsGateway extends ProductRepository
     McpServerDraft draft, {
     required McpConfigScope scope,
   }) => _guard('Could not add the MCP server', () async {
-    // Lossy: v2's runtime MCP write has no project/global scope split; the
-    // server persists it in its own configuration layer.
+    if (scope != McpConfigScope.runtimeLocation) {
+      throw const ProductException(
+        'This server supports MCP additions for the current location until restart',
+      );
+    }
     final config = draft.toConfigJson();
+    final location = _loc();
+    // PUT replaces existing names. The Add form must not silently overwrite
+    // one, and both requests must retain the originally selected location.
+    final existing = _dataMaps(
+      await _transport.getJson('/mcp', query: location),
+    );
+    if (existing.any((item) => item['name'] == draft.normalizedName)) {
+      throw ProductException(
+        'An MCP server named "${draft.normalizedName}" already exists in this location',
+      );
+    }
     if (draft.timeoutMs case final timeout?) {
       config['timeout'] = {
         'startup': timeout,
@@ -1061,7 +1075,7 @@ class Api2OperationsGateway extends ProductRepository
     }
     await _transport.putJson(
       '/mcp/${Uri.encodeComponent(draft.normalizedName)}',
-      query: _loc(),
+      query: location,
       body: {'config': config},
     );
   });

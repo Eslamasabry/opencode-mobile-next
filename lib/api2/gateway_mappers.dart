@@ -17,8 +17,8 @@ import 'transport.dart';
 /// The exact feature truth for an OpenCode 2 (beta-18600) server, per
 /// `docs/opencode2-port-matrix.md` §2:
 ///
-/// - `mcpConfigWrites` is true because `PUT /api/mcp/{server}` replaced the
-///   v1 config-patch MCP add.
+/// - `mcpRuntimeAdds` supports location-scoped MCP additions until restart.
+///   `mcpConfigWrites` is false: the route does not persist configuration.
 /// - `globalEventStream` is true because the single `/api/event` stream
 ///   carries every location (events are tagged with `location`), so a global
 ///   channel can be served by an unfiltered subscription.
@@ -35,7 +35,8 @@ const ServerCapabilities api2ServerCapabilities = ServerCapabilities(
   sessionSteal: false,
   consoleOrganizations: false,
   mcpOAuth: false,
-  mcpConfigWrites: true,
+  mcpConfigWrites: false,
+  mcpRuntimeAdds: true,
   sessionShare: false,
   sessionArchive: false,
   sessionTodos: false,
@@ -264,7 +265,7 @@ MessageWithParts mapApi2Message(String sessionID, Api2Message message) {
       );
     case Api2SystemMessage():
       final instructions =
-          message.description?.startsWith('Instructions updated:') == true;
+          message.description?.startsWith('Instructions updated') == true;
       return _taggedMessage(
         sessionID,
         message,

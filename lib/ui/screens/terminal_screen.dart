@@ -150,13 +150,13 @@ class _TerminalScreenState extends State<TerminalScreen> {
     if (widget.controller.connectionLoading && !dataRefreshChanged) {
       return;
     }
-    setState(() {
-      if (locationChanged) {
+    if (locationChanged) {
+      setState(() {
         _processes = null;
         _error = null;
         _creating = false;
-      }
-    });
+      });
+    }
     _load();
   }
 

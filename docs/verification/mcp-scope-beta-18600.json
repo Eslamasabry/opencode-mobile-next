@@ -1,0 +1,31 @@
+{
+  "verifiedAt": "2026-09-05T05:32:27.0203145+00:00",
+  "serverVersion": "0.0.0-beta-18600",
+  "binarySha256": "29443AC011DC37896A650A7267C8FA232533B9410E8185EA099C1D5214E658E0",
+  "addStatus": 204,
+  "beforeA": [],
+  "beforeB": [],
+  "afterAddA": [
+    {
+      "name": "scope-fixture",
+      "status": {
+        "status": "disabled"
+      }
+    }
+  ],
+  "afterAddB": [],
+  "afterRestartA": [],
+  "afterRestartB": [],
+  "config": {
+    "url": "http://127.0.0.1:9/mcp",
+    "disabled": true,
+    "type": "remote",
+    "timeout": {
+      "execution": 100,
+      "catalog": 100,
+      "startup": 100
+    },
+    "oauth": false
+  },
+  "providerRunStarted": false
+}

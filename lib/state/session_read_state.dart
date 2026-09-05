@@ -51,7 +51,12 @@ class SessionReadStore {
     final snapshot = jsonEncode(entries);
     final previous = _writes[profileID] ?? Future<void>.value();
     final writing = previous.catchError((Object _) {}).then((_) async {
-      await preferences.setString('$prefix$profileID', snapshot);
+      try {
+        await preferences.setString('$prefix$profileID', snapshot);
+      } catch (_) {
+        // Keep reading usable even when platform storage rejects this write.
+        // A later record writes the complete retained in-memory snapshot.
+      }
     });
     _writes[profileID] = writing;
     try {

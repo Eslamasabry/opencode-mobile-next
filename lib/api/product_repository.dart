@@ -1669,6 +1669,10 @@ class SdkProductRepository extends ProductRepository
     final patch = sdk.Config(mcp: {name: sdk.OpencodeSdkRawUnion013(config)});
 
     switch (scope) {
+      case McpConfigScope.runtimeLocation:
+        throw const ProductException(
+          'This server saves MCP configuration by project or globally',
+        );
       case McpConfigScope.project:
         if (_directory?.trim().isNotEmpty != true) {
           throw const ProductException(

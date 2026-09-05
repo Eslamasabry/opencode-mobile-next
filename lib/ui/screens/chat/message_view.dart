@@ -1020,7 +1020,8 @@ class _ToolCallGroupState extends State<_ToolCallGroup> {
           Semantics(
             button: true,
             expanded: _expanded,
-            label: '$title, ${widget.parts.length} steps, $status',
+            label:
+                '$title, ${widget.parts.length} ${widget.parts.length == 1 ? 'step' : 'steps'}, $status',
             child: InkWell(
               key: const Key('tool-call-group-header'),
               onTap: _toggle,

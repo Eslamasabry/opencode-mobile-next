@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
@@ -5,6 +8,10 @@ import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/mcp_setup_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:opencode_mobile/api2/gateway_mappers.dart';
+
+import '../tool/capture/fixtures.dart'
+    show capturePng, captureTheme, loadCaptureFonts;
 
 class _McpRepository implements ProductRepository {
   McpServerDraft? addedDraft;
@@ -31,10 +38,21 @@ class _McpController extends ConnectionController {
   final ProductRepository actionRepository;
   int reloadCalls = 0;
   Object? reloadError;
+  Completer<ProductRepository?>? wake;
+  ServerCapabilities serverCapabilities = ServerCapabilities.allV1;
+
+  @override
+  ServerCapabilities get capabilities => serverCapabilities;
+
+  void moveTo(String value) {
+    directory = value;
+    locationRevision++;
+    notifyListeners();
+  }
 
   @override
   Future<ProductRepository?> prepareActionRepository() async =>
-      actionRepository;
+      wake == null ? actionRepository : await wake!.future;
 
   @override
   Future<void> reloadAfterConfigurationChange() async {
@@ -111,6 +129,95 @@ Future<void> _reveal(WidgetTester tester, Key key) async {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  testWidgets('v2 shows its location and adds without configuration reload', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(411, 820);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final repository = _McpRepository();
+    final controller = await _controller(repository, directory: '/work/mobile')
+      ..serverCapabilities = api2ServerCapabilities
+      ..workspace = 'workspace-mobile';
+    addTearDown(controller.dispose);
+    final preview = Platform.environment['OC_MCP_CAPTURE'];
+    if (preview != null) await loadCaptureFonts();
+    final boundary = GlobalKey();
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: boundary,
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: captureTheme(light: true),
+          home: _SetupHost(controller: controller),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open setup'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('mcp-scope')), findsNothing);
+    expect(find.text('All projects'), findsNothing);
+    expect(find.text('Until server restart'), findsOneWidget);
+    expect(find.textContaining('Workspace: workspace-mobile'), findsOneWidget);
+    if (preview != null) {
+      File(
+        preview,
+      ).writeAsBytesSync(await capturePng(tester, boundary, pixelRatio: 1));
+    }
+    await _reveal(tester, const ValueKey('mcp-name'));
+    await tester.enterText(find.byKey(const ValueKey('mcp-name')), 'docs');
+    await _reveal(tester, const ValueKey('mcp-url'));
+    await tester.enterText(
+      find.byKey(const ValueKey('mcp-url')),
+      'https://mcp.example.com',
+    );
+    await tester.tap(find.byKey(const ValueKey('mcp-save')));
+    await tester.pumpAndSettle();
+    expect(repository.addedScope, McpConfigScope.runtimeLocation);
+    expect(controller.reloadCalls, 0);
+    expect(find.byType(McpSetupScreen), findsNothing);
+  });
+
+  testWidgets('connection change during wake retains draft without writing', (
+    tester,
+  ) async {
+    final repository = _McpRepository();
+    final controller = await _controller(repository, directory: '/work/mobile')
+      ..serverCapabilities = api2ServerCapabilities
+      ..wake = Completer<ProductRepository?>();
+    addTearDown(controller.dispose);
+    await _open(tester, controller);
+    await tester.enterText(find.byKey(const ValueKey('mcp-name')), 'my-draft');
+    await _reveal(tester, const ValueKey('mcp-url'));
+    await tester.enterText(
+      find.byKey(const ValueKey('mcp-url')),
+      'https://mcp.example.com',
+    );
+    await tester.tap(find.byKey(const ValueKey('mcp-save')));
+    await tester.pump();
+    controller.moveTo('/work/elsewhere');
+    controller.wake!.complete(repository);
+    await tester.pumpAndSettle();
+    expect(repository.addedDraft, isNull);
+    expect(controller.reloadCalls, 0);
+    expect(find.byType(McpSetupScreen), findsOneWidget);
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const ValueKey('mcp-save')))
+          .onPressed,
+      isNull,
+    );
+    await _reveal(tester, const ValueKey('mcp-name'));
+    expect(
+      tester
+          .widget<TextFormField>(find.byKey(const ValueKey('mcp-name')))
+          .controller!
+          .text,
+      'my-draft',
+    );
+  });
+
   testWidgets('saves a project remote MCP with exact advanced fields', (
     tester,
   ) async {
@@ -118,6 +225,9 @@ void main() {
     final controller = await _controller(repository, directory: '/work/mobile');
     addTearDown(controller.dispose);
     await _open(tester, controller);
+    expect(find.byKey(const ValueKey('mcp-scope')), findsOneWidget);
+    expect(find.text('This project'), findsOneWidget);
+    expect(find.text('All projects'), findsOneWidget);
 
     await tester.enterText(
       find.byKey(const ValueKey('mcp-name')),
