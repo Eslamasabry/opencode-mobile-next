@@ -25,6 +25,7 @@ import 'offline_queue.dart';
 import 'profiles.dart';
 import 'session_drafts.dart';
 import 'session_pins.dart';
+import 'prompt_shelf.dart';
 import 'session_read_state.dart';
 
 Map<String, dynamic> _catalogMap(Object? value) =>
@@ -4149,6 +4150,9 @@ class ConnectionController extends ChangeNotifier {
     try {
       await _sessionPins.drain(profileId);
     } catch (_) {}
+    try {
+      await _promptShelf.drain(profileId);
+    } catch (_) {}
     final scopedKeys = store.profileScopedPreferenceKeys(profileId);
     final failures = <String>[];
 
@@ -4225,6 +4229,7 @@ class ConnectionController extends ChangeNotifier {
       await store.remove(profileId);
       _sessionReadStore.forgetProfile(profileId);
       _sessionPins.forget(profileId);
+      _promptShelf.forget(profileId);
 
       return DeleteProfileResult(
         removedPreferenceKeys: scopedKeys,
@@ -4644,11 +4649,55 @@ class ConnectionController extends ChangeNotifier {
   }
 
   late final _sessionPins = SessionPinStore(store.prefs);
+  late final _promptShelf = PromptShelfStore(store.prefs);
+  String get promptShelfProfileID => (_connectedProfile ?? profile)?.id ?? '';
+  bool get canUsePromptShelf =>
+      promptShelfProfileID.isNotEmpty &&
+      store.profiles.any((profile) => profile.id == promptShelfProfileID) &&
+      !_deletingReadProfiles.contains(promptShelfProfileID);
+  List<StashedPrompt> get promptStash =>
+      _promptShelf.stashes(promptShelfProfileID);
+  List<String> get sentPromptHistory =>
+      _promptShelf.history(promptShelfProfileID);
+
+  Future<void> savePromptStash(
+    StashedPrompt prompt, {
+    required int locationRevision,
+  }) async {
+    if (!canUsePromptShelf || this.locationRevision != locationRevision) {
+      throw StateError('The prompt location changed');
+    }
+    await _promptShelf.stash(promptShelfProfileID, prompt);
+    if (!_disposed) notifyListeners();
+  }
+
+  Future<void> removePromptStash(
+    String id, {
+    required int locationRevision,
+  }) async {
+    if (!canUsePromptShelf || this.locationRevision != locationRevision) {
+      throw StateError('The prompt location changed');
+    }
+    await _promptShelf.remove(promptShelfProfileID, id);
+    if (!_disposed) notifyListeners();
+  }
+
+  Future<void> rememberSentPrompt(String profileID, String text) async {
+    // A network send can finish after its server profile has been deleted.
+    // Never recreate the removed profile's local history in that callback.
+    if (_disposed ||
+        profileID.isEmpty ||
+        _deletingReadProfiles.contains(profileID) ||
+        !store.profiles.any((profile) => profile.id == profileID)) {
+      return;
+    }
+    await _promptShelf.recordSent(profileID, text);
+  }
+
   String get _pinProfile => (_connectedProfile ?? profile)?.id ?? '';
   String get _pinScope => SessionPinStore.scope(directory, workspace);
-  Set<String> get pinnedSessionIDs => _pinProfile.isEmpty
-      ? const {}
-      : _sessionPins.ids(_pinProfile, _pinScope);
+  Set<String> get pinnedSessionIDs =>
+      _pinProfile.isEmpty ? const {} : _sessionPins.ids(_pinProfile, _pinScope);
   bool isSessionPinned(String id) => pinnedSessionIDs.contains(id);
   bool get canPinSessions =>
       _pinProfile.isNotEmpty && !_deletingReadProfiles.contains(_pinProfile);

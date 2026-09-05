@@ -288,11 +288,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not remove this draft from device storage. It is still queued. Check available storage and try again.';
 
   @override
-  String get composerReuseSubtitle => 'Add text from this conversation';
+  String get composerReuseSubtitle =>
+      'Reuse text from this conversation and recent sends';
 
   @override
   String get composerReuseDescription =>
-      'Adds text to your draft. Attachments aren’t copied.';
+      'Text from loaded prompts in this conversation and recent sends on this server. Selecting one appends it to your draft. Attachments are not copied. With a keyboard, use Up at the start or Down at the end to browse and restore your draft.';
 
   @override
   String get composerReuseSearch => 'Search recent prompts';
@@ -1110,4 +1111,132 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get sessionPinsLoadFailed =>
       'Some pinned conversations could not be loaded. Refresh to try again.';
+
+  @override
+  String get promptStashSaveFailed =>
+      'Could not save this prompt. Your composer is unchanged. Check device storage and try again.';
+
+  @override
+  String get promptOriginalDraft => 'Restore original draft';
+
+  @override
+  String get promptStashTitle => 'Saved prompts';
+
+  @override
+  String get promptStashDeleteFailed =>
+      'Could not delete this saved prompt. Try again.';
+
+  @override
+  String get promptRestoreTitle => 'Restore saved prompt?';
+
+  @override
+  String get promptRestorePreserve =>
+      'Your current prompt will be saved to the stash first, including its attachments and references.';
+
+  @override
+  String get promptStashDelete => 'Delete';
+
+  @override
+  String get promptStashFull =>
+      'Your stash has 50 prompts. Delete a saved prompt to make room; your current prompt is unchanged.';
+
+  @override
+  String get promptStashListDescription =>
+      'Saved on this device for this server. Restoring a prompt also saves any current prompt for later.';
+
+  @override
+  String get promptStashDeleteTitle => 'Delete saved prompt?';
+
+  @override
+  String promptStashAttachments(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attachments',
+      one: '1 attachment',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String promptStashReferences(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count references',
+      one: '1 reference',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get promptRestoredCopyKept =>
+      'Available content restored. A saved copy remains in your stash. Review attachments and references before sending.';
+
+  @override
+  String get promptAttachmentsUnavailable =>
+      'Some attachments cannot be restored';
+
+  @override
+  String get promptRestore => 'Restore';
+
+  @override
+  String get promptHistorySaveFailed =>
+      'Prompt sent, but its history could not be saved on this device.';
+
+  @override
+  String promptAttachmentsUnavailableDetail(String names) {
+    return 'Temporary attachments: $names. Restore the available content and reattach these files before sending. The saved copy will stay in your stash.';
+  }
+
+  @override
+  String get promptStashRestoreFailed =>
+      'Could not finish restoring the prompt. Saved copies remain available; check the composer before trying again.';
+
+  @override
+  String get promptStashEmpty =>
+      'Nothing saved yet. Use Stash current prompt in Prompt tools to keep a prompt for later.';
+
+  @override
+  String get promptStashContextOnly => 'Attachments and references';
+
+  @override
+  String get promptRestoredReferences =>
+      'Prompt restored. Saved references are snapshots; their server files may have changed.';
+
+  @override
+  String get promptDefaultLocation => 'the server default directory';
+
+  @override
+  String get promptStashed => 'Prompt saved to your stash.';
+
+  @override
+  String get promptStashReadFailed =>
+      'Could not read saved prompts. Their stored data has been kept.';
+
+  @override
+  String get promptStashDeleteDetail =>
+      'This removes the saved text, attachments and references from this device.';
+
+  @override
+  String get promptStashDescription =>
+      'Save text, attachments and references for later';
+
+  @override
+  String get promptRestoreAvailable => 'Restore available content';
+
+  @override
+  String get promptRestored => 'Prompt restored. Review it before sending.';
+
+  @override
+  String get promptStashAction => 'Stash current prompt';
+
+  @override
+  String promptStashLocation(String directory) {
+    return 'This prompt refers to files in $directory. Switch to its original project and workspace before restoring it.';
+  }
+
+  @override
+  String get promptStashScopeChanged =>
+      'The server or location changed. Close and reopen Saved prompts.';
 }

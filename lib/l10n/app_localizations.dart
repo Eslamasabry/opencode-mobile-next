@@ -619,13 +619,13 @@ abstract class AppLocalizations {
   /// No description provided for @composerReuseSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Add text from this conversation'**
+  /// **'Reuse text from this conversation and recent sends'**
   String get composerReuseSubtitle;
 
   /// No description provided for @composerReuseDescription.
   ///
   /// In en, this message translates to:
-  /// **'Adds text to your draft. Attachments aren’t copied.'**
+  /// **'Text from loaded prompts in this conversation and recent sends on this server. Selecting one appends it to your draft. Attachments are not copied. With a keyboard, use Up at the start or Down at the end to browse and restore your draft.'**
   String get composerReuseDescription;
 
   /// No description provided for @composerReuseSearch.
@@ -2007,6 +2007,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Some pinned conversations could not be loaded. Refresh to try again.'**
   String get sessionPinsLoadFailed;
+
+  /// No description provided for @promptStashSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save this prompt. Your composer is unchanged. Check device storage and try again.'**
+  String get promptStashSaveFailed;
+
+  /// No description provided for @promptOriginalDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore original draft'**
+  String get promptOriginalDraft;
+
+  /// No description provided for @promptStashTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved prompts'**
+  String get promptStashTitle;
+
+  /// No description provided for @promptStashDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete this saved prompt. Try again.'**
+  String get promptStashDeleteFailed;
+
+  /// No description provided for @promptRestoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore saved prompt?'**
+  String get promptRestoreTitle;
+
+  /// No description provided for @promptRestorePreserve.
+  ///
+  /// In en, this message translates to:
+  /// **'Your current prompt will be saved to the stash first, including its attachments and references.'**
+  String get promptRestorePreserve;
+
+  /// No description provided for @promptStashDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get promptStashDelete;
+
+  /// No description provided for @promptStashFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Your stash has 50 prompts. Delete a saved prompt to make room; your current prompt is unchanged.'**
+  String get promptStashFull;
+
+  /// No description provided for @promptStashListDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on this device for this server. Restoring a prompt also saves any current prompt for later.'**
+  String get promptStashListDescription;
+
+  /// No description provided for @promptStashDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete saved prompt?'**
+  String get promptStashDeleteTitle;
+
+  /// No description provided for @promptStashAttachments.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 attachment} other{{count} attachments}}'**
+  String promptStashAttachments(int count);
+
+  /// No description provided for @promptStashReferences.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 reference} other{{count} references}}'**
+  String promptStashReferences(int count);
+
+  /// No description provided for @promptRestoredCopyKept.
+  ///
+  /// In en, this message translates to:
+  /// **'Available content restored. A saved copy remains in your stash. Review attachments and references before sending.'**
+  String get promptRestoredCopyKept;
+
+  /// No description provided for @promptAttachmentsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Some attachments cannot be restored'**
+  String get promptAttachmentsUnavailable;
+
+  /// No description provided for @promptRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get promptRestore;
+
+  /// No description provided for @promptHistorySaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt sent, but its history could not be saved on this device.'**
+  String get promptHistorySaveFailed;
+
+  /// No description provided for @promptAttachmentsUnavailableDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Temporary attachments: {names}. Restore the available content and reattach these files before sending. The saved copy will stay in your stash.'**
+  String promptAttachmentsUnavailableDetail(String names);
+
+  /// No description provided for @promptStashRestoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not finish restoring the prompt. Saved copies remain available; check the composer before trying again.'**
+  String get promptStashRestoreFailed;
+
+  /// No description provided for @promptStashEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing saved yet. Use Stash current prompt in Prompt tools to keep a prompt for later.'**
+  String get promptStashEmpty;
+
+  /// No description provided for @promptStashContextOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachments and references'**
+  String get promptStashContextOnly;
+
+  /// No description provided for @promptRestoredReferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt restored. Saved references are snapshots; their server files may have changed.'**
+  String get promptRestoredReferences;
+
+  /// No description provided for @promptDefaultLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'the server default directory'**
+  String get promptDefaultLocation;
+
+  /// No description provided for @promptStashed.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt saved to your stash.'**
+  String get promptStashed;
+
+  /// No description provided for @promptStashReadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read saved prompts. Their stored data has been kept.'**
+  String get promptStashReadFailed;
+
+  /// No description provided for @promptStashDeleteDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the saved text, attachments and references from this device.'**
+  String get promptStashDeleteDetail;
+
+  /// No description provided for @promptStashDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Save text, attachments and references for later'**
+  String get promptStashDescription;
+
+  /// No description provided for @promptRestoreAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore available content'**
+  String get promptRestoreAvailable;
+
+  /// No description provided for @promptRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt restored. Review it before sending.'**
+  String get promptRestored;
+
+  /// No description provided for @promptStashAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Stash current prompt'**
+  String get promptStashAction;
+
+  /// No description provided for @promptStashLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'This prompt refers to files in {directory}. Switch to its original project and workspace before restoring it.'**
+  String promptStashLocation(String directory);
+
+  /// No description provided for @promptStashScopeChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The server or location changed. Close and reopen Saved prompts.'**
+  String get promptStashScopeChanged;
 }
 
 class _AppLocalizationsDelegate

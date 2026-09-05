@@ -2,7 +2,7 @@ part of '../chat_screen.dart';
 
 /// UX-P0-03: the three secondary prompt tools that used to sit as equal
 /// icons around the field. They now live behind one leading affordance.
-enum _PromptTool { commands, attach, voice, history, clearText }
+enum _PromptTool { commands, attach, voice, history, clearText, stash, saved }
 
 class _ChatComposer extends StatelessWidget {
   const _ChatComposer({
@@ -19,6 +19,10 @@ class _ChatComposer extends StatelessWidget {
     required this.onOpenEditor,
     this.onReusePrompt,
     this.onClearText,
+    this.onStashPrompt,
+    this.onOpenStash,
+    this.onRestoreHistoryDraft,
+    this.shelfBusy = false,
     required this.attachments,
     required this.busy,
     required this.sending,
@@ -63,6 +67,10 @@ class _ChatComposer extends StatelessWidget {
   final VoidCallback onOpenEditor;
   final VoidCallback? onReusePrompt;
   final VoidCallback? onClearText;
+  final VoidCallback? onStashPrompt;
+  final VoidCallback? onOpenStash;
+  final VoidCallback? onRestoreHistoryDraft;
+  final bool shelfBusy;
   final List<PromptAttachment> attachments;
   final bool busy;
   final bool sending;
@@ -154,7 +162,9 @@ class _ChatComposer extends StatelessWidget {
       references.isNotEmpty;
 
   void _submitFromKeyboard() {
-    if (_hasPrompt && !sending && (!busy || canSendWhileBusy)) onSend();
+    if (_hasPrompt && !sending && !shelfBusy && (!busy || canSendWhileBusy)) {
+      onSend();
+    }
   }
 
   @override
@@ -333,6 +343,17 @@ class _ChatComposer extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (onRestoreHistoryDraft != null)
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton.icon(
+              key: const Key('composer-restore-history-draft'),
+              onPressed: shelfBusy ? null : onRestoreHistoryDraft,
+              icon: const Icon(Icons.undo_rounded),
+              label: Text(_chatL10n(context).promptOriginalDraft),
+            ),
+          ),
+        if (shelfBusy) const LinearProgressIndicator(minHeight: 2),
         _ComposerField(
           controller: controller,
           focusNode: focusNode,
@@ -341,6 +362,7 @@ class _ChatComposer extends StatelessWidget {
           maxLines: compact ? 3 : 6,
           contentPadding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
           onSubmitShortcut: _submitFromKeyboard,
+          readOnly: shelfBusy,
         ),
         if (contextUsage case final usage?) _ContextMeterLine(usage: usage),
         Padding(
@@ -365,7 +387,7 @@ class _ChatComposer extends StatelessWidget {
               IconButton(
                 key: const Key('prompt-editor-button'),
                 tooltip: 'Open full-screen prompt editor',
-                onPressed: onOpenEditor,
+                onPressed: shelfBusy ? null : onOpenEditor,
                 icon: const Icon(Icons.open_in_full_rounded, size: 19),
                 style: IconButton.styleFrom(
                   foregroundColor: Theme.of(
@@ -376,7 +398,7 @@ class _ChatComposer extends StatelessWidget {
               const SizedBox(width: 2),
               _ComposerSubmit(
                 busy: busy,
-                sending: sending,
+                sending: sending || shelfBusy,
                 enabled: _hasPrompt,
                 canSendWhileBusy: canSendWhileBusy,
                 delivery: delivery,
@@ -396,6 +418,7 @@ class _ChatComposer extends StatelessWidget {
   /// closed, so a tool that opens its own sheet (Commands, Voice) never
   /// races the dismissal of this one.
   Future<void> _openTool(BuildContext context) async {
+    if (shelfBusy) return;
     final tool = await showModalBottomSheet<_PromptTool>(
       context: context,
       useSafeArea: true,
@@ -410,6 +433,8 @@ class _ChatComposer extends StatelessWidget {
         attachmentCount: attachments.length,
         canReusePrompt: onReusePrompt != null,
         canClearText: controller.text.isNotEmpty && onClearText != null,
+        canStash: _hasPrompt && onStashPrompt != null,
+        canOpenStash: onOpenStash != null,
       ),
     );
     switch (tool) {
@@ -425,12 +450,16 @@ class _ChatComposer extends StatelessWidget {
         onReusePrompt?.call();
       case _PromptTool.clearText:
         onClearText?.call();
+      case _PromptTool.stash:
+        onStashPrompt?.call();
+      case _PromptTool.saved:
+        onOpenStash?.call();
     }
   }
 
   /// Attaching only has to wait for a run on servers where Send itself must
   /// wait; with an inbox the file simply rides on the next send.
-  bool get _attachBlocked => sending || (busy && !canSendWhileBusy);
+  bool get _attachBlocked => sending || shelfBusy || (busy && !canSendWhileBusy);
 
   /// The chip's visible text: the presented model name, the agent only when
   /// it is not the server's default, the variant only when it is a real
@@ -506,6 +535,7 @@ class _ComposerField extends StatelessWidget {
     required this.maxLines,
     required this.contentPadding,
     this.onSubmitShortcut,
+    this.readOnly = false,
   });
 
   final TextEditingController controller;
@@ -519,6 +549,7 @@ class _ComposerField extends StatelessWidget {
   /// attached today, desktop later) without stealing plain Enter from the
   /// multiline field.
   final VoidCallback? onSubmitShortcut;
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -526,6 +557,7 @@ class _ComposerField extends StatelessWidget {
       key: const Key('chat-composer-field'),
       controller: controller,
       focusNode: focusNode,
+      readOnly: readOnly,
       minLines: minLines,
       maxLines: maxLines,
       // Accepts images committed by the IME (Android commitContent): the
@@ -627,6 +659,8 @@ class _PromptToolsSheet extends StatelessWidget {
     required this.attachmentCount,
     this.canReusePrompt = false,
     this.canClearText = false,
+    this.canStash = false,
+    this.canOpenStash = false,
   });
 
   /// Voice stays unavailable while a turn is in flight; Attach only where
@@ -636,6 +670,8 @@ class _PromptToolsSheet extends StatelessWidget {
   final int attachmentCount;
   final bool canReusePrompt;
   final bool canClearText;
+  final bool canStash;
+  final bool canOpenStash;
 
   @override
   Widget build(BuildContext context) {
@@ -702,6 +738,25 @@ class _PromptToolsSheet extends StatelessWidget {
                 subtitle: Text(_chatL10n(context).composerReuseSubtitle),
                 onTap: () => Navigator.pop(context, _PromptTool.history),
               ),
+            if (canOpenStash) ...[
+              ListTile(
+                key: const Key('composer-tool-stash'),
+                enabled: canStash,
+                leading: const Icon(Icons.inventory_2_outlined),
+                title: Text(_chatL10n(context).promptStashAction),
+                subtitle: Text(_chatL10n(context).promptStashDescription),
+                onTap: canStash
+                    ? () => Navigator.pop(context, _PromptTool.stash)
+                    : null,
+              ),
+              ListTile(
+                key: const Key('composer-tool-saved'),
+                leading: const Icon(Icons.bookmarks_outlined),
+                title: Text(_chatL10n(context).promptStashTitle),
+                subtitle: Text(_chatL10n(context).promptStashListDescription),
+                onTap: () => Navigator.pop(context, _PromptTool.saved),
+              ),
+            ],
             if (canClearText)
               ListTile(
                 key: const Key('composer-tool-clear'),

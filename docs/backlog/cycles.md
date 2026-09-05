@@ -532,3 +532,27 @@ Pin-focused persistence/controller/menu checks pass along with the existing
 inventory and profile-deletion regression suites. Native UI verification is
 still part of the final candidate. Worked directly on dev, then fast-forwarded
 master and pushed both; no feature branch or PR was created.
+
+## Cycle 17 — prompt stash and sent-text history
+
+Added Stash current prompt and Saved prompts to the existing composer tools.
+The per-server stash preserves up to 50 entries with full attachment payloads and
+structured references. Review, restore/pop and confirmed deletion preserve the
+current composer first and retain copies on partial restore or failed removal.
+Temporary attachments are named; project-bound references require their original
+location. The shelf stays separate from drafts and the offline queue.
+
+Successful direct sends contribute to bounded per-server text history. Hardware
+Up/Down navigation only handles composer boundaries, preserves the original
+text/selection and its autosave, and leaves modifiers, IME and suggestions alone.
+A visible Restore original draft action also recovers it after editing recalled
+text. Late send completion cannot recreate a deleted server profile's history.
+
+The focused store/composer checks and existing Enter shortcut regression checks
+pass; static analysis is clean. A 411px render was inspected and its copy/count
+labels refined. Restore is exercised at 320px with 1.7x text. Native keyboard,
+attachment lifetime and final release-candidate checks remain pending. See
+verification/prompt-stash-and-history.md for the exact behavior and limits.
+
+Worked directly on dev, fast-forwarded master and pushed both for this batch.
+No feature branch or PR was created.

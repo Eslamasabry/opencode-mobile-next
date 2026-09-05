@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -22,6 +23,7 @@ import '../../platform/platform_capabilities.dart';
 import '../../state/offline_queue.dart';
 import '../../state/connection.dart';
 import '../../state/review_handoff.dart';
+import '../../state/prompt_shelf.dart';
 import '../../voice/controller.dart';
 import '../../voice/voice_ui.dart';
 import '../navigation/chat_route.dart';
@@ -42,6 +44,7 @@ import '../widgets/markdown.dart';
 import '../widgets/pickers.dart';
 import '../widgets/model_shortcuts.dart';
 import '../widgets/product_states.dart';
+import '../widgets/prompt_history_navigation.dart';
 import '../widgets/question_options.dart';
 import '../widgets/session_title.dart';
 import '../widgets/session_read_state.dart';
@@ -75,6 +78,7 @@ part 'chat/timeline_sheet.dart';
 part 'chat/command_launcher.dart';
 part 'chat/prompt_editor.dart';
 part 'chat/prompt_history.dart';
+part 'chat/prompt_stash.dart';
 part 'chat/composer.dart';
 part 'chat/message_view.dart';
 part 'chat/session_sheets.dart';
@@ -301,6 +305,8 @@ class _ChatScreenState extends State<ChatScreen>
   /// reasoning blocks, so list recycling does not collapse them.
   final Map<String, bool> _transcriptExpansion = {};
   final List<PromptAttachment> _attachments = [];
+  final _promptHistory = PromptHistoryNavigation();
+  bool _promptShelfBusy = false;
 
   // UX-103 review handoff (start) — Files, Changes, and Review stage
   // structured references here; the composer renders them as chips and
@@ -414,6 +420,7 @@ class _ChatScreenState extends State<ChatScreen>
     }
     _lastDraftText = _composer.text;
     _composer.addListener(_scheduleDraftSave);
+    _focus.onKeyEvent = (_, event) => _navigatePromptHistory(event);
     _dataRefreshRevision = _conn.dataRefreshRevision;
     _conn.addListener(_onConnectionChanged);
     if (!_conn.sessionsById.containsKey(widget.sessionID)) {
@@ -454,7 +461,12 @@ class _ChatScreenState extends State<ChatScreen>
   /// after sends so the persisted draft always mirrors the composer.
   void _persistDraft() {
     _draftSaveTimer?.cancel();
-    unawaited(_conn.saveSessionDraft(widget.sessionID, _composer.text));
+    unawaited(
+      _conn.saveSessionDraft(
+        widget.sessionID,
+        _promptHistory.original?.text ?? _composer.text,
+      ),
+    );
   }
 
   // Save pauses in typing too: Android may kill a process without a final
@@ -471,7 +483,16 @@ class _ChatScreenState extends State<ChatScreen>
       if (message.info.role == 'user' && !message.info.id.startsWith('local-'))
         if (_messageText(message).trim() case final text when text.isNotEmpty)
           text,
-  }.take(30).toList();
+    ..._savedPromptHistory,
+  }.take(50).toList();
+
+  List<String> get _savedPromptHistory {
+    try {
+      return _conn.sentPromptHistory;
+    } catch (_) {
+      return const [];
+    }
+  }
 
   Set<String> get _shellIDs => {
     for (final message in _messages)
@@ -540,7 +561,203 @@ class _ChatScreenState extends State<ChatScreen>
     _focus.requestFocus();
   }
 
+  KeyEventResult _navigatePromptHistory(KeyEvent event) {
+    final value = _composer.value;
+    if (_sending ||
+        _promptShelfBusy ||
+        !isPromptHistoryKey(
+          event,
+          value,
+          suggestionsOpen:
+              value.text.trimLeft().startsWith('/') ||
+              _activeAgentQuery(value) != null,
+        )) {
+      return KeyEventResult.ignored;
+    }
+    final next = _promptHistory.move(
+      event.logicalKey == LogicalKeyboardKey.arrowUp,
+      value,
+      _recentPrompts,
+    );
+    if (next == null) return KeyEventResult.ignored;
+    setState(() => _composer.value = next);
+    return KeyEventResult.handled;
+  }
+
+  void _restoreHistoryDraft() {
+    final original = _promptHistory.restore();
+    if (original == null || !mounted) return;
+    setState(() => _composer.value = original);
+    _persistDraft();
+    _focus.requestFocus();
+  }
+
+  Future<void> _rememberSentPrompt(String profile, String text) async {
+    try {
+      await _conn.rememberSentPrompt(profile, text);
+    } catch (_) {
+      if (mounted && _conn.promptShelfProfileID == profile) {
+        _showComposerNote(_chatL10n(context).promptHistorySaveFailed);
+      }
+    }
+  }
+
+  StashedPrompt _snapshotPrompt() => StashedPrompt(
+    id: DateTime.now().microsecondsSinceEpoch.toString(),
+    text: _composer.text,
+    createdAt: DateTime.now().millisecondsSinceEpoch,
+    directory: _conn.directory,
+    workspace: _conn.workspace,
+    attachments: List.of(_attachments),
+    references: List.of(_stagedReferences),
+  );
+
+  bool _promptUnchanged(StashedPrompt snapshot, int location) =>
+      mounted &&
+      location == _conn.locationRevision &&
+      snapshot.text == _composer.text &&
+      listEquals(snapshot.attachments, _attachments) &&
+      listEquals(snapshot.references, _stagedReferences);
+
+  Future<void> _stashCurrentPrompt() async {
+    if (_sending || _promptShelfBusy || !_conn.canUsePromptShelf) return;
+    final snapshot = _snapshotPrompt();
+    if (snapshot.isEmpty) return;
+    final location = _conn.locationRevision;
+    setState(() => _promptShelfBusy = true);
+    try {
+      if (_conn.promptStash.length >= PromptShelfStore.capacity) {
+        _showComposerNote(_chatL10n(context).promptStashFull);
+        return;
+      }
+      await _conn.savePromptStash(snapshot, locationRevision: location);
+      if (!mounted || !_promptUnchanged(snapshot, location)) return;
+      setState(() {
+        _composer.clear();
+        _attachments.clear();
+        _handoff.store.clear(widget.sessionID);
+      });
+      _restoreHistoryDraft();
+      _persistDraft();
+      _showComposerNote(_chatL10n(context).promptStashed);
+    } catch (_) {
+      if (mounted) _showActionError(_chatL10n(context).promptStashSaveFailed);
+    } finally {
+      if (mounted) setState(() => _promptShelfBusy = false);
+    }
+  }
+
+  Future<void> _openPromptStash() async {
+    if (_sending || _promptShelfBusy || !_conn.canUsePromptShelf) return;
+    final location = _conn.locationRevision;
+    final selected = await showModalBottomSheet<StashedPrompt>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => _PromptStashSheet(controller: _conn, location: location),
+    );
+    if (!mounted || selected == null || location != _conn.locationRevision) {
+      return;
+    }
+    if (selected.locationBound &&
+        (selected.directory != _conn.directory ||
+            selected.workspace != _conn.workspace)) {
+      _showActionError(
+        _chatL10n(context).promptStashLocation(
+          selected.directory ?? _chatL10n(context).promptDefaultLocation,
+        ),
+      );
+      return;
+    }
+    final unavailable = selected.unavailableAttachments;
+    if (unavailable.isNotEmpty) {
+      final accepted = await showConfirmSheet(
+        context,
+        icon: Icons.attachment_rounded,
+        title: _chatL10n(context).promptAttachmentsUnavailable,
+        message: _chatL10n(
+          context,
+        ).promptAttachmentsUnavailableDetail(unavailable.join(', ')),
+        confirmLabel: _chatL10n(context).promptRestoreAvailable,
+      );
+      if (!mounted || !accepted || location != _conn.locationRevision) return;
+    }
+    final current = _snapshotPrompt();
+    if (!current.isEmpty) {
+      final accepted = await showConfirmSheet(
+        context,
+        icon: Icons.inventory_2_outlined,
+        title: _chatL10n(context).promptRestoreTitle,
+        message: _chatL10n(context).promptRestorePreserve,
+        confirmLabel: _chatL10n(context).promptRestore,
+      );
+      if (!mounted || !accepted || !_promptUnchanged(current, location)) return;
+    }
+    setState(() => _promptShelfBusy = true);
+    try {
+      if (!current.isEmpty) {
+        if (_conn.promptStash.length >= PromptShelfStore.capacity) {
+          _showComposerNote(_chatL10n(context).promptStashFull);
+          return;
+        }
+        await _conn.savePromptStash(current, locationRevision: location);
+      }
+      if (!mounted || !_promptUnchanged(current, location)) return;
+      // Keep the source entry until all content is applied. A failed removal
+      // leaves a recoverable copy, never a missing prompt.
+      setState(() {
+        _composer.value = TextEditingValue(
+          text: selected.text,
+          selection: TextSelection.collapsed(offset: selected.text.length),
+        );
+        _attachments.clear();
+        _attachments.addAll(
+          selected.attachments.where(StashedPrompt.canRestoreAttachment),
+        );
+        _handoff.store.clear(widget.sessionID);
+        for (final reference in selected.references) {
+          _handoff.stage(
+            ReviewReference(
+              id: _handoff.nextID('stash-${selected.id}'),
+              kind: reference.kind,
+              path: reference.path,
+              scope: reference.scope,
+              lineLabel: reference.lineLabel,
+              snippet: reference.snippet,
+              comment: reference.comment,
+              added: reference.added,
+              removed: reference.removed,
+              status: reference.status,
+            ),
+          );
+        }
+      });
+      _persistDraft();
+      if (unavailable.isEmpty && _promptHistory.original == null) {
+        await _conn.removePromptStash(selected.id, locationRevision: location);
+      }
+      if (mounted && location == _conn.locationRevision) {
+        _showComposerNote(
+          unavailable.isNotEmpty || _promptHistory.original != null
+              ? _chatL10n(context).promptRestoredCopyKept
+              : selected.locationBound
+              ? _chatL10n(context).promptRestoredReferences
+              : _chatL10n(context).promptRestored,
+        );
+        _focus.requestFocus();
+      }
+    } catch (_) {
+      if (mounted) {
+        _showActionError(_chatL10n(context).promptStashRestoreFailed);
+      }
+    } finally {
+      if (mounted) setState(() => _promptShelfBusy = false);
+    }
+  }
+
   void _clearDraftText() {
+    if (_promptShelfBusy) return;
     final previous = _composer.value;
     _composer.clear();
     _persistDraft();
@@ -1716,6 +1933,7 @@ class _ChatScreenState extends State<ChatScreen>
     // silently sent the command as a chat message.
     final hasStagedReferences = _handoff.references.isNotEmpty;
     if (_sending ||
+        _promptShelfBusy ||
         (_composer.text.trim().isEmpty &&
             _attachments.isEmpty &&
             !hasStagedReferences)) {
@@ -1840,12 +2058,14 @@ class _ChatScreenState extends State<ChatScreen>
         agentMentions: agentMentions,
         delivery: delivery,
       );
+      unawaited(_rememberSentPrompt(selectionProfileID ?? '', text));
       if (!mounted) return;
       setState(() {
         _sending = false;
         pending.requestComplete = true;
         if (pending.canonicalID != null) _pendingSends.remove(pending);
       });
+      if (_composer.text.isEmpty) _restoreHistoryDraft();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -2123,6 +2343,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _openPromptEditor() async {
+    if (_promptShelfBusy) return;
     final result = await Navigator.of(context).push<_PromptEditorResult>(
       MaterialPageRoute<_PromptEditorResult>(
         fullscreenDialog: true,
@@ -3979,7 +4200,8 @@ class _ChatScreenState extends State<ChatScreen>
           builder: (_) => SessionExportScreen(
             controller: _conn,
             sessionID: widget.sessionID,
-            markdown: () => Uint8List.fromList(utf8.encode(_transcriptMarkdown())),
+            markdown: () =>
+                Uint8List.fromList(utf8.encode(_transcriptMarkdown())),
           ),
         ),
       );
@@ -5180,6 +5402,23 @@ class _ChatScreenState extends State<ChatScreen>
                                         ? null
                                         : _reusePrompt,
                                     onClearText: _clearDraftText,
+                                    onStashPrompt:
+                                        _conn.canUsePromptShelf &&
+                                            !_sending &&
+                                            !_promptShelfBusy
+                                        ? _stashCurrentPrompt
+                                        : null,
+                                    onOpenStash:
+                                        _conn.canUsePromptShelf &&
+                                            !_sending &&
+                                            !_promptShelfBusy
+                                        ? _openPromptStash
+                                        : null,
+                                    onRestoreHistoryDraft:
+                                        _promptHistory.original == null
+                                        ? null
+                                        : _restoreHistoryDraft,
+                                    shelfBusy: _promptShelfBusy,
                                     attachments: _attachments,
                                     busy: busy,
                                     sending: _sending,
