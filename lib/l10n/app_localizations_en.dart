@@ -435,5 +435,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Only loaded messages are included. Load older history to include more.';
 
   @override
-  String get historyLoadedTotals => 'Loaded message totals';
+  String get historyLoadedTotals => 'Usage and loaded history';
+
+  @override
+  String get historyCopyLoadedReply => 'Copy loaded reply';
+
+  @override
+  String get historyLoadedMessages => 'Loaded messages';
+
+  @override
+  String get historyLoadedCost => 'Cost of loaded messages';
+
+  @override
+  String get historyServerTotalsNote =>
+      'Rows marked reported by server cover the session. Message counts and other estimates cover loaded history.';
 }

@@ -847,8 +847,32 @@ abstract class AppLocalizations {
   /// No description provided for @historyLoadedTotals.
   ///
   /// In en, this message translates to:
-  /// **'Loaded message totals'**
+  /// **'Usage and loaded history'**
   String get historyLoadedTotals;
+
+  /// No description provided for @historyCopyLoadedReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy loaded reply'**
+  String get historyCopyLoadedReply;
+
+  /// No description provided for @historyLoadedMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Loaded messages'**
+  String get historyLoadedMessages;
+
+  /// No description provided for @historyLoadedCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost of loaded messages'**
+  String get historyLoadedCost;
+
+  /// No description provided for @historyServerTotalsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Rows marked reported by server cover the session. Message counts and other estimates cover loaded history.'**
+  String get historyServerTotalsNote;
 }
 
 class _AppLocalizationsDelegate

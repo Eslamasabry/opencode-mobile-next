@@ -470,7 +470,10 @@ class OpenCodeApi
 
   @override
   Future<ServerPage<MessageWithParts>> messagePage(
-    String id, {String? cursor, int limit = 100}) async {
+    String id, {
+    String? cursor,
+    int limit = 100,
+  }) async {
     try {
       final response = await sdkClient.getSessionApi().sessionMessages(
         sessionID: id,
@@ -487,15 +490,20 @@ class OpenCodeApi
             }),
           )
           .toList();
-      return ServerPage(items: items, nextCursor: _messageCursor(response.headers));
+      return ServerPage(
+        items: items,
+        nextCursor: _messageCursor(response.headers),
+      );
     } on sdk.OpenCodeApiException catch (e) {
       _failGenerated(e, 'Get session messages');
     } on DioException catch (e) {
       final raw = e.response?.data;
       if (_wasSuccessfulResponse(e) && raw is List) {
         try {
-          return ServerPage(items: raw.map(_bundleFromJson).toList(),
-            nextCursor: _messageCursor(e.response!.headers));
+          return ServerPage(
+            items: raw.map(_bundleFromJson).toList(),
+            nextCursor: _messageCursor(e.response!.headers),
+          );
         } catch (_) {
           // Fall through to the existing product-facing transport error.
         }
@@ -511,7 +519,9 @@ class OpenCodeApi
     for (final link in (headers.value('link') ?? '').split(',')) {
       if (!RegExp(r'rel="?next"?').hasMatch(link)) continue;
       final match = RegExp(r'<([^>]+)>').firstMatch(link);
-      final next = Uri.tryParse(match?.group(1) ?? '')?.queryParameters['before'];
+      final next = Uri.tryParse(
+        match?.group(1) ?? '',
+      )?.queryParameters['before'];
       if (next != null && next.isNotEmpty) return next;
     }
     return null;

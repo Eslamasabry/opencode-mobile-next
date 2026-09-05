@@ -200,6 +200,7 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
   String? _olderCursor;
   bool _hasOlder = false;
   bool _failedOlder = false;
+  bool _olderNeedsReload = false;
   final Set<String> _usedCursors = {};
 
   @override
@@ -234,6 +235,7 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
   }
 
   Future<void> _load({bool older = false}) async {
+    older = older && !_olderNeedsReload;
     final cursor = older ? _olderCursor : null;
     if (older && (_loading || cursor == null)) return;
     final generation = ++_generation;
@@ -246,17 +248,30 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
     }
     try {
       final api = await widget.controller.prepareActionTransport();
-      if (api == null) throw const ProductException('OpenCode is reconnecting. Try again.');
+      if (api == null) {
+        throw const ProductException('OpenCode is reconnecting. Try again.');
+      }
       final page = await api.messagePage(widget.sessionID, cursor: cursor);
       if (!mounted || generation != _generation) return;
-      if (older && page.hasMore && (page.nextCursor == cursor || _usedCursors.contains(page.nextCursor))) {
+      if (older &&
+          page.hasMore &&
+          (page.nextCursor == cursor ||
+              _usedCursors.contains(page.nextCursor))) {
         _failedOlder = false;
-        throw ProductException(lookupAppLocalizations(Localizations.localeOf(context)).historyCursorExpired);
+        _olderNeedsReload = true;
+        throw ProductException(
+          lookupAppLocalizations(
+            Localizations.localeOf(context),
+          ).historyCursorExpired,
+        );
       }
       setState(() {
         if (older) {
           final existing = _messages.map((message) => message.info.id).toSet();
-          _messages = [...page.items.where((message) => existing.add(message.info.id)), ..._messages];
+          _messages = [
+            ...page.items.where((message) => existing.add(message.info.id)),
+            ..._messages,
+          ];
           _usedCursors.add(cursor!);
         } else {
           _messages = page.items;
@@ -264,10 +279,19 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
         }
         _olderCursor = page.nextCursor;
         _hasOlder = page.hasMore;
+        _olderNeedsReload = false;
       });
     } catch (error) {
       if (!mounted || generation != _generation) return;
-      setState(() => _error = error);
+      setState(() {
+        _error = error;
+        if (older &&
+            error is ApiException &&
+            (error.statusCode == 400 || error.statusCode == 410)) {
+          _olderNeedsReload = true;
+          _failedOlder = false;
+        }
+      });
     } finally {
       if (mounted && generation == _generation) {
         setState(() => _loading = false);
@@ -310,10 +334,21 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
       return ProductEmptyState(
         icon: Icons.donut_large_outlined,
         title: 'No context usage yet',
-        message: _hasOlder ? l10n.historyLoadedOnly :
-            'Send a prompt and wait for an assistant response. OpenCode will then report token usage for this session.',
-        actionLabel: _olderCursor != null ? l10n.historyLoadOlder : 'Refresh',
-        onAction: _olderCursor != null ? () => _load(older: true) : _load,
+        message: _error != null
+            ? productErrorText(_error!)
+            : _hasOlder
+            ? l10n.historyLoadedOnly
+            : 'Send a prompt and wait for an assistant response. OpenCode will then report token usage for this session.',
+        actionLabel: _olderNeedsReload
+            ? l10n.historyReload
+            : _olderCursor != null
+            ? l10n.historyLoadOlder
+            : 'Refresh',
+        onAction: _loading
+            ? null
+            : _olderCursor != null
+            ? () => _load(older: true)
+            : _load,
       );
     }
 
@@ -325,15 +360,27 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
         padding: const EdgeInsets.only(bottom: 32),
         children: [
           if (_error != null)
-            _InlineContextError(error: _error!, onRetry: () => _load(older: _failedOlder)),
-          if (_hasOlder) Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(children: [
-              Text(l10n.historyLoadedOnly),
-              TextButton(onPressed: _loading ? null : () => _load(older: true),
-                child: Text(l10n.historyLoadOlder)),
-            ]),
-          ),
+            _InlineContextError(
+              error: _error!,
+              onRetry: () => _load(older: _failedOlder),
+            ),
+          if (_hasOlder)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Text(l10n.historyLoadedOnly),
+                  TextButton(
+                    onPressed: _loading ? null : () => _load(older: true),
+                    child: Text(
+                      _olderNeedsReload
+                          ? l10n.historyReload
+                          : l10n.historyLoadOlder,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           _ContextHero(metrics: metrics),
           const SectionLabel('Current model request'),
           _MetricGrid(metrics: metrics),
@@ -341,8 +388,8 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
             const SectionLabel('Estimated input makeup'),
             _ContextBreakdown(segments: metrics.breakdown),
           ],
-          SectionLabel(_hasOlder && !metrics.reportedByServer ? l10n.historyLoadedTotals : 'Session totals'),
-          _SessionTotals(metrics: metrics),
+          SectionLabel(_hasOlder ? l10n.historyLoadedTotals : 'Session totals'),
+          _SessionTotals(metrics: metrics, partial: _hasOlder),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
             child: Text(
@@ -633,17 +680,19 @@ class _ContextBreakdown extends StatelessWidget {
 
 class _SessionTotals extends StatelessWidget {
   final SessionContextMetrics metrics;
+  final bool partial;
 
-  const _SessionTotals({required this.metrics});
+  const _SessionTotals({required this.metrics, this.partial = false});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
           _MetricRow(
-            label: 'Messages',
+            label: partial ? l10n.historyLoadedMessages : 'Messages',
             value: _formatNumber(
               metrics.userMessages + metrics.assistantMessages,
             ),
@@ -657,6 +706,8 @@ class _SessionTotals extends StatelessWidget {
             key: const ValueKey('session-context-cost'),
             label: metrics.serverCost != null
                 ? 'Accumulated cost · reported by server'
+                : partial
+                ? l10n.historyLoadedCost
                 : 'Accumulated cost',
             value: '\$${metrics.totalCost.toStringAsFixed(4)}',
           ),
@@ -670,7 +721,7 @@ class _SessionTotals extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(
-                'Reported by server: totals come from OpenCode\'s own session usage, not a sum over the loaded messages.',
+                l10n.historyServerTotalsNote,
                 key: const ValueKey('session-context-reported-by-server'),
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   color: AppTheme.mutedOf(Theme.of(context)),

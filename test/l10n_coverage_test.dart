@@ -113,7 +113,7 @@ const _baseline = <String, int>{
   'lib/ui/screens/review_workspace.dart': 41,
   'lib/ui/screens/saved_permissions_screen.dart': 13,
   'lib/ui/screens/servers_screen.dart': 35,
-  'lib/ui/screens/session_context_screen.dart': 8,
+  'lib/ui/screens/session_context_screen.dart': 7,
   'lib/ui/screens/session_destination_sheet.dart': 17,
   'lib/ui/screens/session_relations_screen.dart': 3,
   'lib/ui/screens/settings/background_settings_screen.dart': 6,

@@ -185,5 +185,9 @@
   "historyCursorExpired": "Older history changed or expired. Reload recent history to continue.",
   "historyRefreshed": "History refreshed. Older messages remain available above.",
   "historyLoadedOnly": "Only loaded messages are included. Load older history to include more.",
-  "historyLoadedTotals": "Loaded message totals"
+  "historyLoadedTotals": "Usage and loaded history",
+  "historyCopyLoadedReply": "Copy loaded reply",
+  "historyLoadedMessages": "Loaded messages",
+  "historyLoadedCost": "Cost of loaded messages",
+  "historyServerTotalsNote": "Rows marked reported by server cover the session. Message counts and other estimates cover loaded history."
 }

@@ -137,8 +137,16 @@ class Api2Gateway implements ServerGateway {
 
   @override
   Future<ServerPage<MessageWithParts>> messagePage(
-    String id, {String? cursor, int limit = 100}) => _run(() async {
-    final page = await client.messages(id, limit: limit, order: 'desc', cursor: cursor);
+    String id, {
+    String? cursor,
+    int limit = 100,
+  }) => _run(() async {
+    final page = await client.messages(
+      id,
+      limit: limit,
+      order: 'desc',
+      cursor: cursor,
+    );
     return ServerPage(
       items: mapApi2Messages(id, page.data.reversed.toList()),
       nextCursor: page.nextCursor?.isNotEmpty == true ? page.nextCursor : null,

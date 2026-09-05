@@ -138,3 +138,41 @@ this cycle does not claim full pagination or release readiness. The pinned v1
 global endpoint's equal-timestamp limitation remains documented as upstream
 behavior. Next delivery work is message history, model/agent synchronization,
 staged revert, and the remaining release requirements.
+
+## 2026-09-05 — Cycle 05: newest-first message history
+
+Implemented the message-history portion of **BE-010** on the preserved work
+branch, keeping dev on the merged baseline until the completed batch is ready.
+
+- Both gateways expose one chronological page with an opaque older cursor.
+  V1 retains response-header/Link tokens; v2 requests descending order once
+  and sends only its continuation on subsequent requests. Production reads use
+  `messagePage`; the old `messages` method is a latest-page compatibility read.
+- Chats open at their newest messages and offer older loading, including empty
+  intermediate pages. Overlapping head refreshes retain the loaded prefix;
+  reconnect and structural resets invalidate disjoint cached history. Failed
+  reads preserve the transcript and draft; expired/repeated cursors offer reload.
+- Older-page merges retain newer live changes and deletion tombstones. Unknown
+  part updates wait for message identity; older metadata updates wait for server
+  placement. Delta-before-base events survive an intervening page response.
+- Loading preserves the same visible message and pinned live end. The loading
+  spinner retains the button's dimensions to avoid moving a reader at the older
+  edge. Timeline search remains entered while loading and follows parent resets.
+- Timeline, context, Markdown export, and reply-copy labels identify partial
+  history. Context recovers expired cursors and distinguishes loaded counts/cost
+  from server-reported session usage. Provisional-session discard requires an
+  empty page with no continuation.
+
+Verification: analysis clean; **110 focused checks passed** across chat/live
+events, transcript actions, context, both message transports, and localization
+(98 final chat checks plus 12 unchanged context/transport/localization checks).
+The transport fixture verifies a newest-first request returning records beyond
+the previous cap and an older cursor request. Existing fixture gateways were
+migrated to expose their lists as one complete page. No release build or native
+visual campaign was performed. PR #67's three PR-triggered CI runs were cancelled
+when inspected; cancellation is not passing platform evidence.
+
+Scoped session inventory remains capped. Model/agent synchronization, staged
+revert, and the broader parity and release gates remain open. The original WIP
+checkpoint and its review notes remain in Git history; its stale working
+document was removed after resolving those findings.
