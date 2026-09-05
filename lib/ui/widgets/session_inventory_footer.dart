@@ -14,7 +14,11 @@ class SessionInventoryFooter extends StatelessWidget {
     listenable: controller,
     builder: (context, _) {
       final l10n = lookupAppLocalizations(Localizations.localeOf(context));
-      final error = controller.sessionsError ?? controller.sessionsMoreError;
+      final pinError = controller.pinnedSessionsLoadFailed;
+      final error =
+          controller.sessionsError ??
+          controller.sessionsMoreError ??
+          (pinError ? l10n.sessionPinsLoadFailed : null);
       final canContinue = controller.hasMoreSessions;
       final loading =
           controller.sessionsLoading || controller.sessionsLoadingMore;
@@ -34,7 +38,7 @@ class SessionInventoryFooter extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             if (loading) const LinearProgressIndicator(minHeight: 2),
-            if (controller.sessionsError != null && canContinue)
+            if ((controller.sessionsError != null || pinError) && canContinue)
               TextButton(
                 onPressed: loading ? null : controller.refreshSessions,
                 child: Text(l10n.sessionsReload),
@@ -43,14 +47,16 @@ class SessionInventoryFooter extends StatelessWidget {
               key: const ValueKey('session-inventory-more'),
               onPressed: loading
                   ? null
-                  : controller.sessionsError != null && !canContinue
+                  : (controller.sessionsError != null || pinError) &&
+                        !canContinue
                   ? controller.refreshSessions
                   : controller.loadMoreSessions,
               child: Text(
                 controller.sessionsNeedReload
                     ? l10n.sessionsReload
                     : controller.sessionsMoreError != null ||
-                          (controller.sessionsError != null && !canContinue)
+                          ((controller.sessionsError != null || pinError) &&
+                              !canContinue)
                     ? l10n.refreshRetry
                     : l10n.sessionsLoadMore,
               ),

@@ -383,5 +383,11 @@
   "importAuthorization": "The server denied access. Check your connection credentials. Your file is still selected.",
   "importParentMissing": "The parent conversation is missing from this server. Import the parent first, then retry this file.",
   "importRejected": "The server rejected this export format. Your file is still selected; check that it came from a compatible OpenCode server.",
-  "importUnconfirmed": "Import could not be confirmed. Check All sessions before retrying: the server may have received it. Your source file is unchanged."
+  "importUnconfirmed": "Import could not be confirmed. Check All sessions before retrying: the server may have received it. Your source file is unchanged.",
+  "sessionsNoOtherRecent": "No other recent conversations",
+  "sessionPin": "Pin on this device",
+  "sessionUnpin": "Unpin",
+  "sessionPinned": "Pinned",
+  "sessionPinFailed": "Could not save this pin. Check device storage and that the session location has not changed, then try again.",
+  "sessionPinsLoadFailed": "Some pinned conversations could not be loaded. Refresh to try again."
 }

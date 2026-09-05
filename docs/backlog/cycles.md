@@ -510,3 +510,25 @@ release and excludes the export/import changes in cycles 14–15.
 
 Worked on dev directly; master is fast-forwarded and both pushed for the batch.
 No additional feature branch or PR was created.
+
+## Cycle 16 — local pinned conversations
+
+Added persistent Pin/Unpin actions to session rows and desktop context menus.
+Pinned conversations appear in a section above Active/Recent without duplicates;
+other sorted-session consumers receive pinned-first ordering. Pins are scoped to
+server profile and selected location, and older pins hydrate independently of
+the first inventory page. Failed preference writes do not report success;
+failed reads retain the pin and offer refresh recovery. Profile deletion drains
+writes before deleting the namespace and discards its runtime cache.
+
+The pinned upstream v1 handler/storage was inspected for the unarchive half of
+#29. Numeric zero remains stored, while ordinary listing requires a null archive
+column; HTTP accepts numbers only and skips the internal clear operation when
+the field is omitted. V2 has no archive-write route. No false inverse action was
+added; #29 remains open for supported unarchive. Detailed sources and behavior
+are recorded in verification/session-pins-and-unarchive.md.
+
+Pin-focused persistence/controller/menu checks pass along with the existing
+inventory and profile-deletion regression suites. Native UI verification is
+still part of the final candidate. Worked directly on dev, then fast-forwarded
+master and pushed both; no feature branch or PR was created.

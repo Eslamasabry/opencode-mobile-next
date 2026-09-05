@@ -309,12 +309,21 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         .sortedSessions()
         .where((session) => !_pendingArchive.contains(session.id))
         .toList();
+    final pinned = sessions
+        .where((session) => widget.controller.isSessionPinned(session.id))
+        .toList();
     final active = sessions
-        .where((session) => widget.controller.busySessions.contains(session.id))
+        .where(
+          (session) =>
+              widget.controller.busySessions.contains(session.id) &&
+              !widget.controller.isSessionPinned(session.id),
+        )
         .toList();
     final recent = sessions
         .where(
-          (session) => !widget.controller.busySessions.contains(session.id),
+          (session) =>
+              !widget.controller.busySessions.contains(session.id) &&
+              !widget.controller.isSessionPinned(session.id),
         )
         .toList();
     final archived = widget.controller.archivedSessions();
@@ -381,14 +390,39 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           ),
                         ),
                       // 2. Continue active sessions, with their live state.
-                      if (active.isNotEmpty)
+                      if (pinned.isNotEmpty)
                         SectionLabel(
-                          'Active sessions',
-                          trailing: Text('${active.length}'),
+                          l10n.sessionPinned,
+                          trailing: Text('${pinned.length}'),
                         ),
                     ],
                   ),
                 ),
+                if (pinned.isNotEmpty)
+                  SliverList.builder(
+                    itemCount: pinned.length,
+                    itemBuilder: (context, index) => _SessionRow(
+                      controller: widget.controller,
+                      session: pinned[index],
+                      busy: widget.controller.busySessions.contains(
+                        pinned[index].id,
+                      ),
+                      needsAttention: _needsAttention(pinned[index].id),
+                      onOpen: _openSession,
+                      onAction: _sessionAction,
+                      sharingAvailable:
+                          widget.controller.capabilities.sessionShare,
+                      archiveAvailable:
+                          widget.controller.capabilities.sessionArchive,
+                    ),
+                  ),
+                if (active.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: SectionLabel(
+                      'Active sessions',
+                      trailing: Text('${active.length}'),
+                    ),
+                  ),
                 if (active.isNotEmpty)
                   SliverList.builder(
                     itemCount: active.length,
@@ -466,6 +500,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                         icon: Icons.chat_bubble_outline_rounded,
                         title: partial
                             ? l10n.sessionsNoLoadedRecent
+                            : pinned.isNotEmpty
+                            ? l10n.sessionsNoOtherRecent
                             : 'No recent sessions',
                         message: partial
                             ? l10n.sessionsLoadedOnly
@@ -833,10 +869,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     destructive: true,
   );
 
-  /// The archived list. The server gateway only exposes `archiveSession`
-  /// (it stamps `time.archived`; the SDK drops a null timestamp), so there is
-  /// no unarchive to offer. Rows still lead somewhere: open, or delete for
-  /// good, through the same confirm flow as the recent list.
+  /// The pinned v1 HTTP schema accepts only numeric archive timestamps; zero
+  /// remains stored rather than clearing the SQL archive filter. V2 has no
+  /// archive-write endpoint. Do not invent an unarchive request here. See
+  /// docs/verification/session-pins-and-unarchive.md for the upstream evidence.
   void _showArchived() {
     showModalBottomSheet<void>(
       context: context,
@@ -994,6 +1030,21 @@ class _SessionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final updated = session.time?.updated ?? session.time?.created;
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    final pinned = controller.isSessionPinned(session.id);
+    final location = controller.locationRevision;
+    Future<void> togglePin() async {
+      try {
+        await controller.setSessionPinned(
+          session.id,
+          !pinned,
+          locationRevision: location,
+        );
+      } catch (_) {
+        if (context.mounted) showProductError(context, l10n.sessionPinFailed);
+      }
+    }
+
     final row = Dismissible(
       key: ValueKey('session-dismiss-${session.id}'),
       direction: DismissDirection.endToStart,
@@ -1018,7 +1069,11 @@ class _SessionRow extends StatelessWidget {
               )
             : busy
             ? const _BreathingDot()
-            : const Icon(Icons.chat_bubble_outline_rounded, size: 21),
+            : Icon(
+                pinned ? Icons.push_pin : Icons.chat_bubble_outline_rounded,
+                size: 21,
+                semanticLabel: pinned ? l10n.sessionPinned : null,
+              ),
         title: Text(
           presentedSessionTitle(session, fallback: 'Untitled session'),
           maxLines: 1,
@@ -1056,8 +1111,14 @@ class _SessionRow extends StatelessWidget {
         ),
         trailing: PopupMenuButton<String>(
           tooltip: 'Session actions',
-          onSelected: (value) => onAction(value, session),
+          onSelected: (value) =>
+              value == 'pin' ? togglePin() : onAction(value, session),
           itemBuilder: (context) => [
+            if (controller.canPinSessions)
+              PopupMenuItem(
+                value: 'pin',
+                child: Text(pinned ? l10n.sessionUnpin : l10n.sessionPin),
+              ),
             const PopupMenuItem(value: 'rename', child: Text('Rename')),
             if (sharingAvailable)
               PopupMenuItem(
@@ -1084,6 +1145,12 @@ class _SessionRow extends StatelessWidget {
     // mouse user actually reaches for. A pass-through off desktop.
     return ContextMenuRegion(
       actions: () => [
+        if (controller.canPinSessions)
+          ContextMenuAction(
+            label: pinned ? l10n.sessionUnpin : l10n.sessionPin,
+            icon: pinned ? Icons.push_pin : Icons.push_pin_outlined,
+            onSelected: () => unawaited(togglePin()),
+          ),
         ContextMenuAction(
           menuKey: const ValueKey('session-menu-open'),
           label: 'Open',

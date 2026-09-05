@@ -24,6 +24,7 @@ import 'model_library.dart';
 import 'offline_queue.dart';
 import 'profiles.dart';
 import 'session_drafts.dart';
+import 'session_pins.dart';
 import 'session_read_state.dart';
 
 Map<String, dynamic> _catalogMap(Object? value) =>
@@ -3547,6 +3548,7 @@ class ConnectionController extends ChangeNotifier {
       sessionsError = statusError?.toString();
       if (statusError != null) _recordLocationError(sessionsError!);
       notifyListeners();
+      unawaited(_refreshPinnedSessions());
     } catch (error) {
       if (!_isCurrentSessionsRefresh(
         generation,
@@ -4144,6 +4146,9 @@ class ConnectionController extends ChangeNotifier {
     try {
       await _sessionReadStore.drain(profileId);
     } catch (_) {}
+    try {
+      await _sessionPins.drain(profileId);
+    } catch (_) {}
     final scopedKeys = store.profileScopedPreferenceKeys(profileId);
     final failures = <String>[];
 
@@ -4219,6 +4224,7 @@ class ConnectionController extends ChangeNotifier {
       }
       await store.remove(profileId);
       _sessionReadStore.forgetProfile(profileId);
+      _sessionPins.forget(profileId);
 
       return DeleteProfileResult(
         removedPreferenceKeys: scopedKeys,
@@ -4615,6 +4621,7 @@ class ConnectionController extends ChangeNotifier {
   }
 
   List<Session> sortedSessions() {
+    final pins = pinnedSessionIDs;
     final list =
         sessionsById.values
             .where(
@@ -4626,11 +4633,53 @@ class ConnectionController extends ChangeNotifier {
             )
             .toList()
           ..sort((a, b) {
+            final pinOrder =
+                (pins.contains(b.id) ? 1 : 0) - (pins.contains(a.id) ? 1 : 0);
+            if (pinOrder != 0) return pinOrder;
             final au = a.time?.updated ?? a.time?.created ?? 0;
             final bu = b.time?.updated ?? b.time?.created ?? 0;
             return bu.compareTo(au);
           });
     return list;
+  }
+
+  late final _sessionPins = SessionPinStore(store.prefs);
+  String get _pinProfile => (_connectedProfile ?? profile)?.id ?? '';
+  String get _pinScope => SessionPinStore.scope(directory, workspace);
+  Set<String> get pinnedSessionIDs => _pinProfile.isEmpty
+      ? const {}
+      : _sessionPins.ids(_pinProfile, _pinScope);
+  bool isSessionPinned(String id) => pinnedSessionIDs.contains(id);
+  bool get canPinSessions =>
+      _pinProfile.isNotEmpty && !_deletingReadProfiles.contains(_pinProfile);
+
+  Future<void> setSessionPinned(
+    String id,
+    bool pinned, {
+    required int locationRevision,
+  }) async {
+    if (!canPinSessions || this.locationRevision != locationRevision) {
+      throw StateError('The session location changed');
+    }
+    final profileID = _pinProfile;
+    await _sessionPins.setPinned(profileID, _pinScope, id, pinned);
+    if (!_disposed) notifyListeners();
+  }
+
+  bool get pinnedSessionsLoadFailed =>
+      pinnedSessionIDs.any((id) => sessionDetailsErrors.containsKey(id));
+
+  Future<void> _refreshPinnedSessions() async {
+    final currentApi = api;
+    final generation = _generation;
+    if (currentApi == null) return;
+    for (final id in pinnedSessionIDs) {
+      if (!_isCurrent(generation, currentApi)) return;
+      if (!_sessionInventoryIDs.contains(id) ||
+          sessionDetailsErrors.containsKey(id)) {
+        await _refreshOneSession(id);
+      }
+    }
   }
 
   List<Session> archivedSessions() {

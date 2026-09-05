@@ -1971,6 +1971,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Import could not be confirmed. Check All sessions before retrying: the server may have received it. Your source file is unchanged.'**
   String get importUnconfirmed;
+
+  /// No description provided for @sessionsNoOtherRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'No other recent conversations'**
+  String get sessionsNoOtherRecent;
+
+  /// No description provided for @sessionPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin on this device'**
+  String get sessionPin;
+
+  /// No description provided for @sessionUnpin.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin'**
+  String get sessionUnpin;
+
+  /// No description provided for @sessionPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned'**
+  String get sessionPinned;
+
+  /// No description provided for @sessionPinFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save this pin. Check device storage and that the session location has not changed, then try again.'**
+  String get sessionPinFailed;
+
+  /// No description provided for @sessionPinsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Some pinned conversations could not be loaded. Refresh to try again.'**
+  String get sessionPinsLoadFailed;
 }
 
 class _AppLocalizationsDelegate

@@ -1090,4 +1090,24 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get importUnconfirmed =>
       'Import could not be confirmed. Check All sessions before retrying: the server may have received it. Your source file is unchanged.';
+
+  @override
+  String get sessionsNoOtherRecent => 'No other recent conversations';
+
+  @override
+  String get sessionPin => 'Pin on this device';
+
+  @override
+  String get sessionUnpin => 'Unpin';
+
+  @override
+  String get sessionPinned => 'Pinned';
+
+  @override
+  String get sessionPinFailed =>
+      'Could not save this pin. Check device storage and that the session location has not changed, then try again.';
+
+  @override
+  String get sessionPinsLoadFailed =>
+      'Some pinned conversations could not be loaded. Refresh to try again.';
 }
