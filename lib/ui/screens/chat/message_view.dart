@@ -670,6 +670,11 @@ class V2TranscriptRow extends StatelessWidget {
         };
       default:
         final (icon, header, mono) = switch (kind) {
+          'instructions' => (
+            Icons.sticky_note_2_outlined,
+            _chatL10n(context).sessionInstructionsUpdated,
+            null,
+          ),
           'synthetic' => (
             Icons.auto_awesome_outlined,
             part.filename ?? 'Context added',
@@ -688,7 +693,11 @@ class V2TranscriptRow extends StatelessWidget {
           icon: icon,
           header: header,
           headerMono: mono,
-          text: kind == 'skill' && part.filename == null ? '' : part.text,
+          text: kind == 'instructions'
+              ? _chatL10n(context).sessionInstructionsApplied
+              : kind == 'skill' && part.filename == null
+              ? ''
+              : part.text,
         );
     }
   }

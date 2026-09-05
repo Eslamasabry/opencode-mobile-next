@@ -151,8 +151,12 @@ void main() {
     );
     expect((done['state'] as Map)['output'], contains('OpenCode for Android'));
 
-    // Events with no v1 analogue emit nothing.
-    expect(types, isNot(contains('session.instructions.updated')));
+    // Instruction deltas invalidate the note editor without exposing entries.
+    final instructions = out.where(
+      (e) => e.type == 'session.instructions.updated',
+    );
+    expect(instructions, isNotEmpty);
+    expect(instructions.first.properties.keys, ['sessionID']);
     // Live usage passes through under its v2 type so the controller can
     // merge cost/tokens into the stored session.
     final usage = out.where((e) => e.type == 'session.usage.updated');

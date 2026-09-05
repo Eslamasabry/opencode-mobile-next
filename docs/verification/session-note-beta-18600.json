@@ -1,0 +1,29 @@
+{
+  "verifiedAt": "2026-09-05T04:37:49.6370790+00:00",
+  "serverVersion": "0.0.0-beta-18600",
+  "binarySha256": "29443AC011DC37896A650A7267C8FA232533B9410E8185EA099C1D5214E658E0",
+  "sessionID": "ses_f90243bc7ffeT2jBHGfoyyr32O",
+  "unauthorized": [
+    {
+      "status": 401,
+      "method": "GET"
+    },
+    {
+      "status": 401,
+      "method": "PUT"
+    },
+    {
+      "status": 401,
+      "method": "DELETE"
+    }
+  ],
+  "acceptedBytes": 8192,
+  "acceptedStatus": 204,
+  "rejectedBytes": 8193,
+  "rejectedStatus": 413,
+  "maxBytes": 8192,
+  "rejectedWritePreservedValue": true,
+  "removeStatus": 204,
+  "unrelatedEntryPreserved": true,
+  "providerRunStarted": false
+}

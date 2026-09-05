@@ -34,6 +34,35 @@ Part _tagged({
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  testWidgets('instruction notice never renders raw entry names or values', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _host(
+        V2TranscriptRow(
+          part: _tagged(
+            type: 'v2:notice',
+            kind: 'instructions',
+            text: 'private contents',
+            header: 'server.private',
+          ),
+          messageId: 'msg_note',
+        ),
+      ),
+    );
+    expect(find.text('Instructions updated'), findsOneWidget);
+    await tester.tap(find.text('Instructions updated'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text(
+        "The agent's session instructions have been updated for this step.",
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('server.private'), findsNothing);
+    expect(find.textContaining('private contents'), findsNothing);
+  });
+
   group('v2VariantPart', () {
     test('finds the tagged part and ignores v1 messages', () {
       final tagged = MessageWithParts(

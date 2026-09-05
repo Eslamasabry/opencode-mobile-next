@@ -516,6 +516,7 @@ class _SessionMenuSheet extends StatelessWidget {
     required this.shared,
     required this.sharingAvailable,
     this.stagedRevert = false,
+    this.notesAvailable = false,
   });
 
   final bool reasoningExpanded;
@@ -525,6 +526,7 @@ class _SessionMenuSheet extends StatelessWidget {
   final bool shared;
   final bool sharingAvailable;
   final bool stagedRevert;
+  final bool notesAvailable;
 
   @override
   Widget build(BuildContext context) {
@@ -581,6 +583,12 @@ class _SessionMenuSheet extends StatelessWidget {
               dense: true,
             ),
             const SectionLabel('Actions'),
+            if (notesAvailable)
+              _SessionSheetRow(
+                icon: Icons.sticky_note_2_outlined,
+                label: _chatL10n(context).sessionNoteTitle,
+                value: 'note',
+              ),
             _SessionSheetRow(
               icon: Icons.replay_rounded,
               label: 'Retry last prompt',

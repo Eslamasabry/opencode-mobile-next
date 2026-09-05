@@ -61,6 +61,7 @@ import 'library_screen.dart';
 import 'project_health_screen.dart';
 import 'review_workspace.dart';
 import 'session_context_screen.dart';
+import 'session_note_screen.dart';
 import 'staged_revert_screen.dart';
 import 'session_destination_sheet.dart';
 import 'session_relations_screen.dart';
@@ -3990,6 +3991,7 @@ class _ChatScreenState extends State<ChatScreen>
     required bool reverted,
     required bool shared,
   }) async {
+    final menuLocation = _conn.locationRevision;
     final action = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
@@ -4002,6 +4004,7 @@ class _ChatScreenState extends State<ChatScreen>
             todosAvailable: _conn.capabilities.sessionTodos,
             reverted: reverted,
             stagedRevert: _conn.supportsStagedRevert,
+            notesAvailable: _conn.supportsSessionNotes,
             shared: shared,
             sharingAvailable: _conn.capabilities.sessionShare,
           ),
@@ -4010,6 +4013,20 @@ class _ChatScreenState extends State<ChatScreen>
     );
     if (!mounted || action == null) return;
     switch (action) {
+      case 'note':
+        if (_conn.locationRevision != menuLocation) {
+          _showActionError(_chatL10n(context).sessionNoteChanged);
+          return;
+        }
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => SessionNoteScreen(
+              controller: _conn,
+              sessionID: widget.sessionID,
+            ),
+          ),
+        );
+        if (mounted) setState(() {});
       case 'timeline':
         await _openTimeline();
       case 'context':
@@ -4949,6 +4966,52 @@ class _ChatScreenState extends State<ChatScreen>
                                       ),
                                     ),
                             ),
+                            if (_conn.sessionNoteReceipt(widget.sessionID)
+                                case final saved?)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 6,
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.sticky_note_2_outlined,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Semantics(
+                                        liveRegion: true,
+                                        child: Text(
+                                          [
+                                            saved
+                                                ? _chatL10n(
+                                                    context,
+                                                  ).sessionNoteSaved
+                                                : _chatL10n(
+                                                    context,
+                                                  ).sessionNoteRemoved,
+                                            _chatL10n(
+                                              context,
+                                            ).sessionNotePending,
+                                          ].join('. '),
+                                        ),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      tooltip: MaterialLocalizations.of(
+                                        context,
+                                      ).closeButtonTooltip,
+                                      onPressed: () =>
+                                          _conn.dismissSessionNoteReceipt(
+                                            widget.sessionID,
+                                          ),
+                                      icon: const Icon(Icons.close_rounded),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             _attentionRegion(reduceMotion, pendingPermissions),
                             // §7 rule 5: v2-only surfaces stay silent on v1.
                             // The map is already empty there, but the gate is

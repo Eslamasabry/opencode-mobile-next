@@ -4,6 +4,7 @@ import '../api2/models.dart' show Api2FormInfo, Api2FormState, Api2InboxItem;
 import 'managed_shell.dart';
 
 export 'managed_shell.dart';
+export 'session_note.dart';
 
 /// Connection lifecycle surfaced to the UI.
 enum StreamStatus { connecting, connected, reconnecting, disconnected }

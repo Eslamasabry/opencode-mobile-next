@@ -599,6 +599,87 @@ class AppLocalizationsEn extends AppLocalizations {
       'Review the staged revert, then clear it or make it permanent before sending. Your draft is kept.';
 
   @override
+  String get sessionNoteTitle => 'Note for the agent';
+
+  @override
+  String get sessionNoteDescription =>
+      'Keep a short instruction for this session. Saving or removing it takes effect at the next agent step and appears in the transcript then. It does not start a run.';
+
+  @override
+  String get sessionNoteHint =>
+      'For example: Keep explanations brief and run the relevant checks before finishing.';
+
+  @override
+  String get sessionNoteSave => 'Save note';
+
+  @override
+  String get sessionNoteRemove => 'Remove saved note';
+
+  @override
+  String get sessionNoteSaved => 'Note saved';
+
+  @override
+  String get sessionNoteRemoved => 'Note removed';
+
+  @override
+  String get sessionNotePending => 'Applies at the next agent step.';
+
+  @override
+  String get sessionInstructionsUpdated => 'Instructions updated';
+
+  @override
+  String get sessionInstructionsApplied =>
+      'The agent\'s session instructions have been updated for this step.';
+
+  @override
+  String get sessionNoteUnsupported =>
+      'This server does not support session notes.';
+
+  @override
+  String get sessionNoteAuthorization =>
+      'Check this server\'s password and permissions, then try again. Your draft is kept.';
+
+  @override
+  String get sessionNoteChanged =>
+      'The session or its instructions changed. Refresh the saved note before saving again. Your draft is kept.';
+
+  @override
+  String get sessionNoteInvalid =>
+      'The saved note has a format this editor cannot safely change.';
+
+  @override
+  String get sessionNoteTooLarge =>
+      'Shorten the note to fit the server\'s size limit.';
+
+  @override
+  String get sessionNoteBusy =>
+      'A note change is already being saved. Try again when it finishes.';
+
+  @override
+  String get sessionNoteRefresh => 'Refresh saved note';
+
+  @override
+  String get sessionNoteSavedVersion =>
+      'Current saved note — review before replacing';
+
+  @override
+  String get sessionNoteNone => 'No saved note';
+
+  @override
+  String get sessionNoteDiscard => 'Discard your note changes?';
+
+  @override
+  String get sessionNoteKeepEditing => 'Keep editing';
+
+  @override
+  String get sessionNoteDiscardAction => 'Discard changes';
+
+  @override
+  String sessionNoteBytes(int used, int limit) {
+    return '$used / $limit bytes';
+  }
+
+  @override
   String get sessionUnread => 'Unread result';
 
   @override

@@ -1858,6 +1858,16 @@ class ConnectionController extends ChangeNotifier {
         }
         break;
 
+      case 'session.instructions.updated':
+        final id = props['sessionID']?.toString();
+        if (id != null && !_deletedSessionIDs.contains(id)) {
+          final key = (locationRevision, id);
+          _noteRevisions[key] = (_noteRevisions[key] ?? 0) + 1;
+          _noteReceipts.remove(key);
+          notifyListeners();
+        }
+        break;
+
       case 'session.viewed':
         final id = props['sessionID']?.toString();
         final idle = props['idle'];
@@ -2891,6 +2901,101 @@ class ConnectionController extends ChangeNotifier {
   // ---------------- Forms (OpenCode 2) ----------------
 
   /// True when the connected server speaks the v2 forms contract.
+  bool get supportsSessionNotes =>
+      repository is SessionNoteGateway &&
+      (repository as SessionNoteGateway).sessionNotesSupported;
+  final _noteWrites = <(int, String)>{};
+  final _noteRevisions = <(int, String), int>{};
+  final _noteReceipts = <(int, String), bool>{};
+  bool? sessionNoteReceipt(String id) => _noteReceipts[(locationRevision, id)];
+  void dismissSessionNoteReceipt(String id) {
+    _noteReceipts.remove((locationRevision, id));
+    notifyListeners();
+  }
+
+  bool isSessionNoteReviewCurrent(SessionNoteReview review) =>
+      !_disposed &&
+      review.scope == (this, locationRevision) &&
+      !_deletedSessionIDs.contains(review.sessionID) &&
+      review.revision ==
+          (_noteRevisions[(locationRevision, review.sessionID)] ?? 0);
+
+  Future<SessionNoteReview> loadSessionNote(String id) async {
+    final scope = (this, locationRevision);
+    final revision = _noteRevisions[(locationRevision, id)] ?? 0;
+    final transport = await prepareActionRepository();
+    if (scope != (this, locationRevision) ||
+        _disposed ||
+        _deletedSessionIDs.contains(id)) {
+      throw const SessionNoteException(SessionNoteFailure.changed);
+    }
+    if (transport is! SessionNoteGateway ||
+        !(transport as SessionNoteGateway).sessionNotesSupported) {
+      throw const SessionNoteException(SessionNoteFailure.unsupported);
+    }
+    final value = await (transport as SessionNoteGateway).loadSessionNote(id);
+    final review = SessionNoteReview(
+      scope: scope,
+      sessionID: id,
+      value: value,
+      revision: revision,
+    );
+    if (!isSessionNoteReviewCurrent(review) ||
+        !identical(transport, repository)) {
+      throw const SessionNoteException(SessionNoteFailure.changed);
+    }
+    return review;
+  }
+
+  Future<void> saveSessionNote(SessionNoteReview review, String? value) async {
+    if (!isSessionNoteReviewCurrent(review)) {
+      throw const SessionNoteException(SessionNoteFailure.changed);
+    }
+    if (value != null &&
+        SessionNoteGateway.encodedBytes(value) > SessionNoteGateway.maxBytes) {
+      throw const SessionNoteException(SessionNoteFailure.tooLarge);
+    }
+    final key = (locationRevision, review.sessionID);
+    if (!_noteWrites.add(key)) {
+      throw const SessionNoteException(SessionNoteFailure.busy);
+    }
+    try {
+      final transport = await prepareActionRepository();
+      if (!isSessionNoteReviewCurrent(review)) {
+        throw const SessionNoteException(SessionNoteFailure.changed);
+      }
+      if (transport is! SessionNoteGateway ||
+          !(transport as SessionNoteGateway).sessionNotesSupported) {
+        throw const SessionNoteException(SessionNoteFailure.unsupported);
+      }
+      final notes = transport as SessionNoteGateway;
+      final current = await notes.loadSessionNote(review.sessionID);
+      if (!isSessionNoteReviewCurrent(review) ||
+          !identical(transport, repository) ||
+          current != review.value) {
+        throw const SessionNoteException(SessionNoteFailure.changed);
+      }
+      if (value == null) {
+        await notes.removeSessionNote(review.sessionID);
+      } else {
+        await notes.saveSessionNote(review.sessionID, value);
+      }
+      // A receipt belongs only to the session/location that accepted the write.
+      if (review.scope == (this, locationRevision) &&
+          !_disposed &&
+          !_deletedSessionIDs.contains(review.sessionID)) {
+        _noteRevisions[key] = (_noteRevisions[key] ?? 0) + 1;
+        _noteReceipts[key] = value != null;
+        while (_noteReceipts.length > 128) {
+          _noteReceipts.remove(_noteReceipts.keys.first);
+        }
+        notifyListeners();
+      }
+    } finally {
+      _noteWrites.remove(key);
+    }
+  }
+
   bool get supportsSessionReadState => repository is SessionReadStateGateway;
   late final _sessionReadStore = SessionReadStore(store.prefs);
   late bool _shareSessionViews =
@@ -5320,6 +5425,8 @@ class ConnectionController extends ChangeNotifier {
   }
 
   void _clearLocationData() {
+    _noteRevisions.clear();
+    _noteReceipts.clear();
     _dismissAllCodingAlerts(clearActive: true);
     _sessionsRefreshGeneration += 1;
     _catalogRefreshGeneration += 1;
