@@ -99,7 +99,7 @@ const _baseline = <String, int>{
   'lib/ui/screens/home_screen.dart': 4,
   'lib/ui/screens/host_management_screen.dart': 6,
   'lib/ui/screens/library/catalog_screen.dart': 4,
-  'lib/ui/screens/library/commands_screen.dart': 8,
+  'lib/ui/screens/library/commands_screen.dart': 2,
   'lib/ui/screens/library/integration_tiles.dart': 23,
   'lib/ui/screens/library/integrations_screen.dart': 16,
   'lib/ui/screens/library/references_screen.dart': 2,

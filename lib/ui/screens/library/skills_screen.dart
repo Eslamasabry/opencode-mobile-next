@@ -18,6 +18,7 @@ class SkillsScreen extends StatefulWidget {
 class _SkillsScreenState extends State<SkillsScreen> {
   List<SkillInfo>? _skills;
   String? _error;
+  int _loadGeneration = 0;
 
   @override
   void initState() {
@@ -26,16 +27,24 @@ class _SkillsScreenState extends State<SkillsScreen> {
   }
 
   Future<void> _load() async {
-    setState(() => _error = null);
+    final generation = ++_loadGeneration;
+    if (_skills == null) setState(() => _error = null);
     try {
       final repository = await widget.controller.prepareActionRepository();
+      if (!mounted || generation != _loadGeneration) return;
       if (repository == null) {
         throw const ProductException('OpenCode is reconnecting.');
       }
       final skills = await repository.listSkills();
-      if (mounted) setState(() => _skills = skills);
+      if (!mounted || generation != _loadGeneration) return;
+      setState(() {
+        _skills = skills;
+        _error = null;
+      });
     } catch (error) {
-      if (mounted) setState(() => _error = productErrorText(error));
+      if (mounted && generation == _loadGeneration) {
+        setState(() => _error = productErrorText(error));
+      }
     }
   }
 
@@ -47,7 +56,13 @@ class _SkillsScreenState extends State<SkillsScreen> {
           body: _body(),
         );
 
-  Widget _body() => _skills == null && _error == null
+  Widget _body() => ProductRefreshBody(
+    message: _skills == null ? null : _error,
+    onRetry: _load,
+    child: _content(),
+  );
+
+  Widget _content() => _skills == null && _error == null
       ? const LoadingList()
       : _error != null && _skills == null
       ? ProductErrorState(message: _error!, onRetry: _load)

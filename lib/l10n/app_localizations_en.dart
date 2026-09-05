@@ -366,4 +366,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatCopyReplySoFar => 'Copy reply so far';
+
+  @override
+  String commandRunTitle(String command) {
+    return 'Run /$command';
+  }
+
+  @override
+  String get commandDestination => 'Chat';
+
+  @override
+  String get commandNewChat => 'New chat';
+
+  @override
+  String get commandUntitledChat => 'Untitled chat';
+
+  @override
+  String get commandArguments => 'Arguments (optional)';
+
+  @override
+  String get commandRun => 'Run';
+
+  @override
+  String get commandRunning => 'Starting…';
+
+  @override
+  String get commandLocationChanged =>
+      'The server or workspace changed. Close this dialog and open the command again.';
+
+  @override
+  String get refreshFailed => 'Couldn’t refresh';
+
+  @override
+  String get refreshRetry => 'Retry';
 }

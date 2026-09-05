@@ -729,6 +729,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copy reply so far'**
   String get chatCopyReplySoFar;
+
+  /// No description provided for @commandRunTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Run /{command}'**
+  String commandRunTitle(String command);
+
+  /// No description provided for @commandDestination.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get commandDestination;
+
+  /// No description provided for @commandNewChat.
+  ///
+  /// In en, this message translates to:
+  /// **'New chat'**
+  String get commandNewChat;
+
+  /// No description provided for @commandUntitledChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Untitled chat'**
+  String get commandUntitledChat;
+
+  /// No description provided for @commandArguments.
+  ///
+  /// In en, this message translates to:
+  /// **'Arguments (optional)'**
+  String get commandArguments;
+
+  /// No description provided for @commandRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Run'**
+  String get commandRun;
+
+  /// No description provided for @commandRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting…'**
+  String get commandRunning;
+
+  /// No description provided for @commandLocationChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The server or workspace changed. Close this dialog and open the command again.'**
+  String get commandLocationChanged;
+
+  /// No description provided for @refreshFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t refresh'**
+  String get refreshFailed;
+
+  /// No description provided for @refreshRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get refreshRetry;
 }
 
 class _AppLocalizationsDelegate

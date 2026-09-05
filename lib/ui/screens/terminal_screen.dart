@@ -151,9 +151,11 @@ class _TerminalScreenState extends State<TerminalScreen> {
       return;
     }
     setState(() {
-      _processes = null;
-      _error = null;
-      if (locationChanged) _creating = false;
+      if (locationChanged) {
+        _processes = null;
+        _error = null;
+        _creating = false;
+      }
     });
     _load();
   }
@@ -172,17 +174,19 @@ class _TerminalScreenState extends State<TerminalScreen> {
 
   Future<void> _load() async {
     final generation = ++_loadGeneration;
-    final repository = await widget.controller.prepareActionRepository();
-    if (!mounted || generation != _loadGeneration) return;
-    if (repository == null) {
-      setState(() => _error = 'The server is not connected.');
-      return;
-    }
-    setState(() => _error = null);
+    if (_processes == null) setState(() => _error = null);
     try {
+      final repository = await widget.controller.prepareActionRepository();
+      if (!mounted || generation != _loadGeneration) return;
+      if (repository == null) {
+        throw const ProductException('The server is not connected.');
+      }
       final processes = await repository.listTerminals();
       if (mounted && generation == _loadGeneration) {
-        setState(() => _processes = processes);
+        setState(() {
+          _processes = processes;
+          _error = null;
+        });
       }
     } catch (error) {
       if (mounted && generation == _loadGeneration) {
@@ -321,7 +325,13 @@ class _TerminalScreenState extends State<TerminalScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ProductRefreshBody(
+    message: _processes == null ? null : _error,
+    onRetry: _load,
+    child: _body(context),
+  );
+
+  Widget _body(BuildContext context) {
     if (_processes == null && _error == null) return const LoadingList();
     if (_error != null && _processes == null) {
       return ProductErrorState(message: _error!, onRetry: _load);
