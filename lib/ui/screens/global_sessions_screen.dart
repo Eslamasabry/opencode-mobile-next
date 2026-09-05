@@ -9,6 +9,7 @@ import '../../state/connection.dart';
 import '../desktop/context_menu.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/product_states.dart';
+import '../widgets/session_read_state.dart';
 
 class GlobalSessionsScreen extends StatefulWidget {
   final ConnectionController controller;
@@ -419,6 +420,7 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
             );
           }
           return _GlobalSessionRow(
+            controller: widget.controller,
             result: _results[index],
             opening: _openingSessionID == _results[index].session.id,
             stealing: _stealingSessionID == _results[index].session.id,
@@ -449,6 +451,7 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
 }
 
 class _GlobalSessionRow extends StatelessWidget {
+  final ConnectionController controller;
   final GlobalSessionResult result;
   final bool opening;
   final bool stealing;
@@ -458,6 +461,7 @@ class _GlobalSessionRow extends StatelessWidget {
   final VoidCallback? onSteal;
 
   const _GlobalSessionRow({
+    required this.controller,
     required this.result,
     required this.opening,
     this.stealing = false,
@@ -501,7 +505,13 @@ class _GlobalSessionRow extends StatelessWidget {
             size: 22,
           ),
           title: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis),
-          subtitle: Text(details, maxLines: 3, overflow: TextOverflow.ellipsis),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SessionUnreadBadge(controller: controller, session: session),
+              Text(details, maxLines: 3, overflow: TextOverflow.ellipsis),
+            ],
+          ),
           // One overflow menu instead of a per-row icon: Open is the tap,
           // Continue here rides in the menu (and, on desktop, right click).
           trailing: opening || stealing

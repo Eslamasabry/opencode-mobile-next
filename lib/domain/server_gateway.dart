@@ -1170,6 +1170,12 @@ abstract class HostGateway {
   Future<void> switchConsoleOrganization(ConsoleOrganization organization);
 }
 
+/// Optional v2 read receipts for exact completed-run watermarks.
+abstract interface class SessionReadStateGateway {
+  /// Acknowledge exactly the idle transition displayed by the client.
+  Future<void> viewSession(String sessionID, int idle);
+}
+
 /// Version control, workspace health, and symbol search.
 abstract class VcsGateway {
   Future<VersionControlHealth> loadVersionControlHealth();

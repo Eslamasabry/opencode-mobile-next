@@ -6,6 +6,7 @@ import 'package:opencode_mobile/api/models.dart'
     show ModelRef, SessionSelection;
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api2/gateway.dart';
+import 'package:opencode_mobile/api2/gateway_operations.dart';
 import 'package:opencode_mobile/api2/gateway_events.dart';
 import 'package:opencode_mobile/api2/gateway_mappers.dart'
     show api2ServerCapabilities;
@@ -78,6 +79,29 @@ const _inboxID = 'msg_04c392e26001fDTa7Nswnl15Sq';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  test(
+    'view receipt posts the observed idle timestamp in the active location',
+    () async {
+      await withServer(handler: writeNoContent, (server, requests) async {
+        final gateway = gatewayFor(server);
+        final operations = Api2OperationsGateway(client: gateway.client);
+        try {
+          await operations.viewSession(_session, 1788579000000);
+          expect(requests, hasLength(1));
+          expect(requests.single.method, 'POST');
+          expect(requests.single.uri.path, '/api/session/$_session/view');
+          expect(
+            requests.single.uri.queryParameters['location[directory]'],
+            '/home/dev/projects/oc_app',
+          );
+          expect(requests.single.body, {'idle': 1788579000000});
+        } finally {
+          gateway.close();
+        }
+      });
+    },
+  );
 
   test(
     'ordinary v2 prompt command and shell preserve server selection',

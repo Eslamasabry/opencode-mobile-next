@@ -233,5 +233,10 @@
   "revertPromptUnavailable": "The boundary prompt could not be loaded.",
   "revertPromptLoading": "Loading the boundary prompt…",
   "revertAttachmentPrompt": "Attachment-only prompt",
-  "revertResolveBeforeSending": "Review the staged revert, then clear it or make it permanent before sending. Your draft is kept."
+  "revertResolveBeforeSending": "Review the staged revert, then clear it or make it permanent before sending. Your draft is kept.",
+  "sessionUnread": "Unread result",
+  "shareSessionViewsTitle": "Sync read state",
+  "shareSessionViewsOn": "Let your other OpenCode clients know which completed results you have viewed.",
+  "shareSessionViewsOff": "Reading stays private to this device. Unread results use local read history.",
+  "shareSessionViewsSaveError": "Could not save this preference. Read-state sharing is off on this device for now."
 }

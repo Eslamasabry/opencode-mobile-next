@@ -15,6 +15,7 @@ import '../widgets/confirm_sheet.dart';
 import '../widgets/entrance.dart';
 import '../widgets/product_states.dart';
 import '../widgets/session_title.dart';
+import '../widgets/session_read_state.dart';
 import '../widgets/session_inventory_footer.dart';
 import 'global_sessions_screen.dart';
 import 'manage_project_screen.dart';
@@ -392,6 +393,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                   SliverList.builder(
                     itemCount: active.length,
                     itemBuilder: (context, index) => _SessionRow(
+                      controller: widget.controller,
                       session: active[index],
                       busy: true,
                       needsAttention: _needsAttention(active[index].id),
@@ -479,6 +481,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     itemBuilder: (context, index) => EntranceReveal(
                       index: index,
                       child: _SessionRow(
+                        controller: widget.controller,
                         session: recent[index],
                         busy: false,
                         needsAttention: _needsAttention(recent[index].id),
@@ -963,6 +966,7 @@ class _ContextChoice {
 }
 
 class _SessionRow extends StatelessWidget {
+  final ConnectionController controller;
   final Session session;
   final bool busy;
 
@@ -976,6 +980,7 @@ class _SessionRow extends StatelessWidget {
   final bool archiveAvailable;
 
   const _SessionRow({
+    required this.controller,
     required this.session,
     required this.busy,
     this.needsAttention = false,
@@ -1019,28 +1024,34 @@ class _SessionRow extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        subtitle: _SessionRowSubtitle(
-          // "Needs you" outranks "Working": a run waiting on an answer is
-          // not making progress, and the colour says so.
-          status: needsAttention
-              ? 'Needs you'
-              : session.compactingSince != null
-              ? 'Compacting…'
-              : busy
-              ? 'Working'
-              : null,
-          statusColor: needsAttention
-              ? AppTheme.statusColor(theme, AppStatusTone.attention)
-              : null,
-          rest: [
-            if (session.shareUrl != null) 'Shared: ${session.shareUrl}',
-            if (updated != null) _relativeTime(updated),
-            if (session.directory?.isNotEmpty == true)
-              _basename(session.directory!),
-            // Server-reported usage, when the server sends it: what the run
-            // cost and how much it touched, so a row answers "was that
-            // worth it?" without opening the session.
-            ...sessionUsageLabels(session),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SessionUnreadBadge(controller: controller, session: session),
+            _SessionRowSubtitle(
+              // "Needs you" outranks "Working": a run waiting on an answer is
+              // not making progress, and the colour says so.
+              status: needsAttention
+                  ? 'Needs you'
+                  : session.compactingSince != null
+                  ? 'Compacting…'
+                  : busy
+                  ? 'Working'
+                  : null,
+              statusColor: needsAttention
+                  ? AppTheme.statusColor(theme, AppStatusTone.attention)
+                  : null,
+              rest: [
+                if (session.shareUrl != null) 'Shared: ${session.shareUrl}',
+                if (updated != null) _relativeTime(updated),
+                if (session.directory?.isNotEmpty == true)
+                  _basename(session.directory!),
+                // Server-reported usage, when the server sends it: what the run
+                // cost and how much it touched, so a row answers "was that
+                // worth it?" without opening the session.
+                ...sessionUsageLabels(session),
+              ],
+            ),
           ],
         ),
         trailing: PopupMenuButton<String>(

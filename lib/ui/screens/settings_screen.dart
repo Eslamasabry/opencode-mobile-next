@@ -7,6 +7,7 @@ import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../api/provider_presentation.dart';
 import '../../background/live_background.dart';
+import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
 import '../../state/offline_queue.dart';

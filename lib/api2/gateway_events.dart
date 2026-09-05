@@ -121,6 +121,14 @@ class Api2EventAdapter {
           }),
         ];
 
+      case Api2SessionViewedEvent():
+        return [
+          _env('session.viewed', {
+            'sessionID': event.sessionID,
+            if (event.idle != null) 'idle': event.idle,
+          }),
+        ];
+
       case Api2SessionStatusEvent():
         if (envelope.type == 'session.idle' ||
             (envelope.type == 'session.status' &&

@@ -167,6 +167,7 @@ class SessionsTab extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                               ),
                               subtitle: _SessionRowMeta(
+                                controller: controller,
                                 session: s,
                                 retrying: retrying,
                                 needsAttention: needsAttention,
@@ -294,6 +295,7 @@ bool _sessionNeedsAttention(
 
 class _SessionRowMeta extends StatelessWidget {
   const _SessionRowMeta({
+    required this.controller,
     required this.session,
     required this.retrying,
     this.needsAttention = false,
@@ -301,6 +303,7 @@ class _SessionRowMeta extends StatelessWidget {
   });
 
   final Session session;
+  final ConnectionController controller;
   final bool retrying;
 
   /// A permission, question, or form is waiting on this session.
@@ -320,6 +323,8 @@ class _SessionRowMeta extends StatelessWidget {
         summary != null &&
         (summary.additions > 0 || summary.deletions > 0 || summary.files > 0);
     final chips = <Widget>[
+      if (controller.isSessionUnread(session))
+        SessionUnreadBadge(controller: controller, session: session),
       if (needsAttention)
         _SessionChip(
           key: Key('session-needs-you-${session.id}'),

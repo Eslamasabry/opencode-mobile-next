@@ -148,6 +148,7 @@ class PrivacySettingsScreen extends StatefulWidget {
 
 class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
   bool _busy = false;
+  bool _readPreferenceFailed = false;
 
   ConnectionController get _controller => widget.controller;
 
@@ -198,6 +199,56 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.only(bottom: 24),
         children: [
+          ListenableBuilder(
+            listenable: _controller,
+            builder: (context, _) {
+              if (!_controller.supportsSessionReadState) {
+                return const SizedBox.shrink();
+              }
+              final l10n =
+                  Localizations.of<AppLocalizations>(
+                    context,
+                    AppLocalizations,
+                  ) ??
+                  lookupAppLocalizations(const Locale('en'));
+              return Column(
+                children: [
+                  SwitchListTile.adaptive(
+                    key: const ValueKey('share-session-views'),
+                    title: Text(l10n.shareSessionViewsTitle),
+                    subtitle: Text(
+                      _controller.shareSessionViews
+                          ? l10n.shareSessionViewsOn
+                          : l10n.shareSessionViewsOff,
+                    ),
+                    value: _controller.shareSessionViews,
+                    onChanged: _controller.savingReadPrivacy
+                        ? null
+                        : (value) async {
+                            setState(() => _readPreferenceFailed = false);
+                            try {
+                              await _controller.setShareSessionViews(value);
+                            } catch (_) {
+                              if (mounted) {
+                                setState(() => _readPreferenceFailed = true);
+                              }
+                            }
+                          },
+                  ),
+                  if (_readPreferenceFailed)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        l10n.shareSessionViewsSaveError,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
           ListTile(
             key: const ValueKey('saved-permissions-entry'),
             leading: const Icon(Icons.admin_panel_settings_outlined),
