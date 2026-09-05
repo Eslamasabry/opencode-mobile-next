@@ -1447,4 +1447,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get activeContextTruncated => 'Output truncated by the server';
+
+  @override
+  String get draftSaveFailed => 'Draft not saved. Copy your text or retry.';
+
+  @override
+  String get draftStorageFull =>
+      'Draft storage is full. Copy your text before leaving.';
+
+  @override
+  String get draftProfileRemoved =>
+      'The original server was removed. Copy your draft to keep it.';
+
+  @override
+  String get draftRetrySave => 'Retry saving draft';
+
+  @override
+  String get draftClearFailed =>
+      'Could not clear the saved draft. Retry before leaving.';
+
+  @override
+  String activeContextTypeCount(String type, int count) {
+    return '$type · $count';
+  }
+
+  @override
+  String activeContextPartHeading(String kind, String name) {
+    return '$kind · $name';
+  }
+
+  @override
+  String get draftLeaveTitle => 'Draft could not be saved';
+
+  @override
+  String get draftLeaveMessage =>
+      'Keep editing to copy your text or retry saving. Leaving now may lose your unsaved changes.';
+
+  @override
+  String get draftLeaveAction => 'Leave without saving';
+
+  @override
+  String get draftKeepEditing => 'Keep editing';
+
+  @override
+  String get draftUnsaved => 'Unsaved';
 }

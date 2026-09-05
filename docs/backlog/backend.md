@@ -324,3 +324,16 @@ staged history. A pinned beta-18600 imported-history fixture verifies compaction
 filtering, Unicode, read-only export parity and auth/missing-session behavior.
 See ../verification/active-context.md. Actual provider transformation and final
 native/TalkBack verification remain outside that fixture's evidence.
+
+## Draft recovery — cycle 21
+
+Ordinary text drafts now use profile/session identity, serialized acknowledged
+writes and visible storage failures. Capacity refuses new entries instead of
+evicting old unsent text. Profile deletion drains writes and rejects late saves.
+The chat retains input, exposes Copy/Retry and waits for saving before leaving.
+
+Follow-up: move automatic attachment recovery to a file-backed store with scoped
+metadata, bounded disk use, visible missing-file recovery and deletion cleanup.
+Do not put attachment data URLs into the ordinary SharedPreferences draft blob.
+Ambiguous pre-profile legacy drafts need an explicit review/restore action.
+See ../verification/draft-recovery.md and ../product-persona.md.

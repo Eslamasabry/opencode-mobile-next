@@ -315,7 +315,7 @@ void main() {
     expect(queue.every((entry) => entry.profileID == 'keeper'), isTrue);
 
     final drafts = SessionDraftStore(prefs: prefs).load();
-    expect(drafts.keys, ['ses_c']);
+    expect(drafts.values.map((draft) => draft.sessionID), ['ses_c']);
 
     expect(prefs.getString(WidgetSessionSnapshot.prefsKey), isNull);
     expect(
@@ -498,7 +498,10 @@ void main() {
     await controller.saveSessionDraft('ses_new', 'typed but unsent');
 
     final drafts = SessionDraftStore(prefs: prefs).load();
-    expect(drafts['ses_new']?.profileID, 'doomed');
+    expect(
+      drafts[SessionDraft.keyFor('doomed', 'ses_new')]?.profileID,
+      'doomed',
+    );
 
     await controller.deleteProfileAndLocalData('doomed');
     expect(

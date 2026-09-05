@@ -25,6 +25,7 @@ import '../../state/offline_queue.dart';
 import '../../state/connection.dart';
 import '../../state/review_handoff.dart';
 import '../../state/prompt_shelf.dart';
+import '../../state/session_drafts.dart';
 import '../../voice/controller.dart';
 import '../../voice/voice_ui.dart';
 import '../navigation/chat_route.dart';
@@ -360,6 +361,9 @@ class _ChatScreenState extends State<ChatScreen>
   Timer? _composerNoteTimer;
   Timer? _draftSaveTimer;
   String _lastDraftText = '';
+  late final String _draftProfileID;
+  int _draftWriteGeneration = 0;
+  SessionDraftFailure? _draftSaveFailure;
   BackgroundWorkSupport _backgroundSupport = BackgroundWorkSupport.unavailable;
   ServerOperationsGateway? _backgroundRepository;
   int _backgroundSupportRevision = 0;
@@ -426,6 +430,7 @@ class _ChatScreenState extends State<ChatScreen>
     _composer.text = widget.initialText;
     _attachments.addAll(widget.initialAttachments);
     _conn = _readConn();
+    _draftProfileID = _conn.profile?.id ?? _conn.store.activeId ?? '';
     _offlineFlushRevision = _conn.offlineFlushRevision;
     if (widget.initialText.isEmpty) {
       final draft = _conn.sessionDraft(widget.sessionID);
@@ -475,14 +480,31 @@ class _ChatScreenState extends State<ChatScreen>
   /// Saves the composer text as this session's draft (or clears the draft
   /// when the composer is empty). Runs on navigation away, app pause, and
   /// after sends so the persisted draft always mirrors the composer.
-  void _persistDraft() {
+  Future<bool> _persistDraft() async {
     _draftSaveTimer?.cancel();
-    unawaited(
-      _conn.saveSessionDraft(
+    final generation = ++_draftWriteGeneration;
+    try {
+      await _conn.saveSessionDraft(
         widget.sessionID,
         _promptHistory.original?.text ?? _composer.text,
-      ),
-    );
+        profileID: _draftProfileID,
+      );
+      if (mounted &&
+          generation == _draftWriteGeneration &&
+          _draftSaveFailure != null) {
+        setState(() => _draftSaveFailure = null);
+      }
+      return true;
+    } catch (error) {
+      if (mounted && generation == _draftWriteGeneration) {
+        setState(
+          () => _draftSaveFailure = error is SessionDraftWriteException
+              ? error.failure
+              : SessionDraftFailure.storage,
+        );
+      }
+      return false;
+    }
   }
 
   // Save pauses in typing too: Android may kill a process without a final
@@ -493,6 +515,17 @@ class _ChatScreenState extends State<ChatScreen>
     _draftSaveTimer?.cancel();
     _draftSaveTimer = Timer(const Duration(milliseconds: 600), _persistDraft);
   }
+
+  String _draftFailureText(SessionDraftFailure failure) => switch (failure) {
+    SessionDraftFailure.storage =>
+      _composer.text.trim().isEmpty
+          ? _chatL10n(context).draftClearFailed
+          : _chatL10n(context).draftSaveFailed,
+    SessionDraftFailure.full => _chatL10n(context).draftStorageFull,
+    SessionDraftFailure.profileRemoved => _chatL10n(
+      context,
+    ).draftProfileRemoved,
+  };
 
   List<String> get _recentPrompts => {
     for (final message in _visibleHistory.toList().reversed)
@@ -4947,7 +4980,27 @@ class _ChatScreenState extends State<ChatScreen>
       final discard = await _confirmDiscardDraft();
       if (!mounted || !discard) return;
     }
-    _persistDraft();
+    final textBeforeSave = _composer.text;
+    final attachmentsBeforeSave = List.of(_attachments);
+    final saved = await _persistDraft();
+    if (!mounted) return;
+    if (!saved) {
+      final leave = await showConfirmSheet(
+        context,
+        sheetKey: const ValueKey('leave-unsaved-draft'),
+        icon: Icons.save_outlined,
+        title: _chatL10n(context).draftLeaveTitle,
+        message: _chatL10n(context).draftLeaveMessage,
+        confirmLabel: _chatL10n(context).draftLeaveAction,
+        cancelLabel: _chatL10n(context).draftKeepEditing,
+        destructive: true,
+      );
+      if (!mounted || !leave) return;
+    }
+    if (_composer.text != textBeforeSave ||
+        !listEquals(attachmentsBeforeSave, _attachments)) {
+      return;
+    }
     _leavingProvisionalSession = true;
     final messenger = ScaffoldMessenger.maybeOf(context);
     final warning = await _discardUntouchedMobileSession();
@@ -5565,6 +5618,63 @@ class _ChatScreenState extends State<ChatScreen>
                                 onDiscard: _discardQueuedPrompt,
                                 onCancelInbox: _cancelInboxSend,
                                 onFlipDelivery: _flipInboxDelivery,
+                              ),
+                            if (_draftSaveFailure case final failure?)
+                              Padding(
+                                key: const ValueKey('draft-save-error'),
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  8,
+                                  16,
+                                  4,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Tooltip(
+                                        message: _draftFailureText(failure),
+                                        child: Semantics(
+                                          container: true,
+                                          liveRegion: true,
+                                          label: _draftFailureText(failure),
+                                          excludeSemantics: true,
+                                          child: Text(
+                                            compactComposer
+                                                ? _chatL10n(
+                                                    context,
+                                                  ).draftUnsaved
+                                                : _draftFailureText(failure),
+                                            style: TextStyle(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.error,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      tooltip: MaterialLocalizations.of(
+                                        context,
+                                      ).copyButtonLabel,
+                                      onPressed: _composer.text.isEmpty
+                                          ? null
+                                          : () => Clipboard.setData(
+                                              ClipboardData(
+                                                text: _composer.text,
+                                              ),
+                                            ),
+                                      icon: const Icon(Icons.copy_rounded),
+                                    ),
+                                    IconButton(
+                                      tooltip: _chatL10n(
+                                        context,
+                                      ).draftRetrySave,
+                                      onPressed: _persistDraft,
+                                      icon: const Icon(Icons.refresh_rounded),
+                                    ),
+                                  ],
+                                ),
                               ),
                             AnimatedSize(
                               duration: reduceMotion

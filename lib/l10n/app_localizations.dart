@@ -2535,6 +2535,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Output truncated by the server'**
   String get activeContextTruncated;
+
+  /// No description provided for @draftSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft not saved. Copy your text or retry.'**
+  String get draftSaveFailed;
+
+  /// No description provided for @draftStorageFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft storage is full. Copy your text before leaving.'**
+  String get draftStorageFull;
+
+  /// No description provided for @draftProfileRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'The original server was removed. Copy your draft to keep it.'**
+  String get draftProfileRemoved;
+
+  /// No description provided for @draftRetrySave.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry saving draft'**
+  String get draftRetrySave;
+
+  /// No description provided for @draftClearFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not clear the saved draft. Retry before leaving.'**
+  String get draftClearFailed;
+
+  /// No description provided for @activeContextTypeCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{type} · {count}'**
+  String activeContextTypeCount(String type, int count);
+
+  /// No description provided for @activeContextPartHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'{kind} · {name}'**
+  String activeContextPartHeading(String kind, String name);
+
+  /// No description provided for @draftLeaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft could not be saved'**
+  String get draftLeaveTitle;
+
+  /// No description provided for @draftLeaveMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing to copy your text or retry saving. Leaving now may lose your unsaved changes.'**
+  String get draftLeaveMessage;
+
+  /// No description provided for @draftLeaveAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave without saving'**
+  String get draftLeaveAction;
+
+  /// No description provided for @draftKeepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get draftKeepEditing;
+
+  /// No description provided for @draftUnsaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved'**
+  String get draftUnsaved;
 }
 
 class _AppLocalizationsDelegate

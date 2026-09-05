@@ -644,3 +644,26 @@ checks remain.
 The preceding 7a88db6 commit's Android, Linux and Windows builds completed
 successfully for both dev and master. This batch follows local dev → fast-forward
 master → atomic push of both branches.
+
+## Cycle 21 — recover draft text reliably
+
+Recorded the primary remote-developer persona and the secondary phone-first
+Termux persona. Their repeat journey prioritizes resume, compose, monitor,
+unblock and review; supporting features stay in the full parity scope.
+
+Fixed ordinary draft text persistence: server/profile-scoped identity, serialized
+save/clear/delete operations, acknowledged writes, retryable failures and no
+silent eviction of unsent drafts at capacity. Chat captures the draft's original
+server. Back waits for saving and offers an explicit keep-editing/leave choice
+when storage fails. Copy/Retry stay accessible in a compact recovery banner.
+The 320px enlarged-text/keyboard check found and drove a banner overflow fix.
+
+Cycle 20 CI follow-up: Android/Linux tests rejected an interpolated context
+label outside AppLocalizations. The type/count and part headings now use ARB
+messages; the localization gate passes without raising its baseline. The
+517a856 Windows jobs succeeded; its Android/Linux jobs failed this check.
+
+Focused recovery and existing profile deletion, queue, settings, prompt shelf,
+context and localization checks were exercised. See verification/draft-recovery.md
+for exact evidence and limits. Ordinary attachment persistence, camera/gallery,
+ambiguous legacy draft recovery and final device/install verification remain.

@@ -296,6 +296,7 @@ class ConnectionController extends ChangeNotifier {
   /// [SessionDraftStore] and kept in memory afterward.
   Map<String, SessionDraft>? _sessionDrafts;
   SessionDraftStore? _sessionDraftStore;
+  Future<void> _draftChanges = Future.value();
   int locationRevision = 0;
   String? directory;
   String? workspace;
@@ -4054,13 +4055,13 @@ class ConnectionController extends ChangeNotifier {
   });
 
   /// Drops every saved composer draft, for every session.
-  Future<bool> clearAllSessionDrafts() async {
+  Future<bool> clearAllSessionDrafts() => _serializeDraftChange(() async {
     if (_drafts.isEmpty) return true;
     if (!await _draftStore.save(const {})) return false;
     _sessionDrafts = {};
     notifyListeners();
     return true;
-  }
+  });
 
   /// Queued prompts across every profile, for the settings readout.
   int get totalQueuedPromptCount => _queue.length;
@@ -4148,32 +4149,65 @@ class ConnectionController extends ChangeNotifier {
   Map<String, SessionDraft> get _drafts =>
       _sessionDrafts ??= _draftStore.load();
 
-  /// The unsent composer text remembered for [sessionID], if any.
-  String? sessionDraft(String sessionID) => _drafts[sessionID]?.text;
+  Future<T> _serializeDraftChange<T>(Future<T> Function() change) {
+    final operation = _draftChanges.then((_) => change());
+    _draftChanges = operation.then<void>((_) {}, onError: (Object _) {});
+    return operation;
+  }
+
+  /// The unsent composer text for this server and session. Old unattributed
+  /// drafts can be recovered automatically only with an unambiguous server.
+  String? sessionDraft(String sessionID) {
+    final owner = profile?.id ?? store.activeId ?? '';
+    return (_drafts[SessionDraft.keyFor(owner, sessionID)] ??
+            (store.profiles.length <= 1 ? _drafts[sessionID] : null))
+        ?.text;
+  }
 
   /// Remembers (or, when [text] is blank, forgets) the composer draft for
   /// one session. No [notifyListeners]: drafts drive nothing outside the
   /// chat screen that saved them.
-  Future<void> saveSessionDraft(String sessionID, String text) async {
-    if (text.trim().isEmpty) {
-      if (_drafts.remove(sessionID) == null) return;
-    } else {
-      _drafts[sessionID] = SessionDraft(
-        sessionID: sessionID,
-        // Stamped so removing this server can take its drafts with it.
-        profileID: profile?.id ?? store.activeId ?? '',
-        text: text,
-        updatedAt: DateTime.now().millisecondsSinceEpoch,
-      );
-      // Mirror the store's cap in memory: oldest drafts fall off first.
-      if (_drafts.length > SessionDraftStore.maxDrafts) {
-        final oldest = _drafts.values.reduce(
-          (a, b) => a.updatedAt <= b.updatedAt ? a : b,
+  Future<void> saveSessionDraft(
+    String sessionID,
+    String text, {
+    String? profileID,
+  }) {
+    final owner = profileID ?? profile?.id ?? store.activeId ?? '';
+    return _serializeDraftChange(() async {
+      if (_deletingReadProfiles.contains(owner) ||
+          (owner.isNotEmpty && !store.profiles.any((p) => p.id == owner))) {
+        if (text.trim().isEmpty) return;
+        throw const SessionDraftWriteException(
+          SessionDraftFailure.profileRemoved,
         );
-        _drafts.remove(oldest.sessionID);
       }
-    }
-    await _draftStore.save(_drafts);
+      final key = SessionDraft.keyFor(owner, sessionID);
+      if (_drafts[key]?.text == text ||
+          (text.trim().isEmpty &&
+              !_drafts.containsKey(key) &&
+              (store.profiles.length > 1 || !_drafts.containsKey(sessionID)))) {
+        return;
+      }
+      final next = Map<String, SessionDraft>.of(_drafts);
+      if (store.profiles.length <= 1) next.remove(sessionID);
+      if (text.trim().isEmpty) {
+        next.remove(key);
+      } else {
+        next[key] = SessionDraft(
+          sessionID: sessionID,
+          profileID: owner,
+          text: text,
+          updatedAt: DateTime.now().millisecondsSinceEpoch,
+        );
+      }
+      if (next.length > SessionDraftStore.maxDrafts) {
+        throw const SessionDraftWriteException(SessionDraftFailure.full);
+      }
+      if (!await _draftStore.save(next)) {
+        throw const SessionDraftWriteException(SessionDraftFailure.storage);
+      }
+      _sessionDrafts = next;
+    });
   }
 
   /// Removes [profileId] and every piece of local data keyed to it, as one
@@ -4209,6 +4243,7 @@ class ConnectionController extends ChangeNotifier {
     String profileId,
   ) async {
     _deletingReadProfiles.add(profileId);
+    await _draftChanges;
     // Drain shortcut writes before the deletion sweep discovers its keys.
     // A failed write must not prevent the user from removing a profile.
     try {
@@ -4252,20 +4287,21 @@ class ConnectionController extends ChangeNotifier {
       }
 
       // 2. Composer drafts.
-      final keptDrafts = SessionDraftStore.withoutProfile(_drafts, profileId);
-      final removedDrafts = _drafts.length - keptDrafts.length;
       var clearedDrafts = 0;
-      if (removedDrafts > 0) {
-        if (await _draftStore.save(keptDrafts)) {
-          _sessionDrafts = keptDrafts;
-          clearedDrafts = removedDrafts;
-        } else {
-          failures.add(
-            '$removedDrafts unsent '
-            '${removedDrafts == 1 ? 'draft' : 'drafts'}',
-          );
+      await _serializeDraftChange(() async {
+        final keptDrafts = SessionDraftStore.withoutProfile(_drafts, profileId);
+        final removedDrafts = _drafts.length - keptDrafts.length;
+        if (removedDrafts > 0) {
+          if (await _draftStore.save(keptDrafts)) {
+            _sessionDrafts = keptDrafts;
+            clearedDrafts = removedDrafts;
+          } else {
+            failures.add(
+              '$removedDrafts unsent ${removedDrafts == 1 ? 'draft' : 'drafts'}',
+            );
+          }
         }
-      }
+      });
 
       // 3. The home-screen widget's session titles.
       await _pendingWidgetSnapshotWrite;

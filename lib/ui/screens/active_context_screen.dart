@@ -244,7 +244,10 @@ class _ActiveContextScreenState extends State<ActiveContextScreen> {
                                   padding: const EdgeInsets.only(left: 8),
                                   child: ChoiceChip(
                                     label: Text(
-                                      '${contextTypeLabel(_l10n, entry.key)} · ${entry.value}',
+                                      _l10n.activeContextTypeCount(
+                                        contextTypeLabel(_l10n, entry.key),
+                                        entry.value,
+                                      ),
                                     ),
                                     selected: _type == entry.key,
                                     onSelected: (_) =>
@@ -412,7 +415,7 @@ class _ContextMessageScreen extends StatelessWidget {
                       Expanded(
                         child: Text(
                           part.name?.isNotEmpty == true
-                              ? '$kind · ${part.name}'
+                              ? l10n.activeContextPartHeading(kind, part.name!)
                               : kind,
                           style: Theme.of(context).textTheme.titleSmall,
                         ),

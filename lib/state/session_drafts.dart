@@ -2,7 +2,15 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Composer text drafted in a chat session but never sent, keyed by session.
+enum SessionDraftFailure { storage, full, profileRemoved }
+
+class SessionDraftWriteException implements Exception {
+  const SessionDraftWriteException(this.failure);
+  final SessionDraftFailure failure;
+}
+
+/// Composer text drafted in a chat session but never sent, scoped by server
+/// profile and session identity.
 ///
 /// Unlike the offline queue — which snapshots a *send* the user asked for —
 /// a draft is text still being written. It survives navigating away from the
@@ -24,6 +32,10 @@ class SessionDraft {
     required this.text,
     required this.updatedAt,
   });
+
+  String get storageKey => keyFor(profileID, sessionID);
+  static String keyFor(String profileID, String sessionID) =>
+      profileID.isEmpty ? sessionID : jsonEncode([profileID, sessionID]);
 
   Map<String, dynamic> toJson() => {
     'sessionID': sessionID,
@@ -47,13 +59,12 @@ class SessionDraft {
 }
 
 /// Persists per-session composer drafts alongside the app's other
-/// preferences, mirroring [OfflineQueueStore]'s storage pattern. At most
-/// [maxDrafts] sessions are kept; when the cap is exceeded the oldest
-/// drafts are evicted first (newest wins).
+/// preferences. At most [maxDrafts] sessions are kept. A full store refuses
+/// new entries instead of silently removing another unsent draft.
 class SessionDraftStore {
   static const _key = 'oc.sessionDrafts';
 
-  /// Bounds storage: drafts are plain text, so 50 sessions stay tiny.
+  /// Bounds the number of drafts. Attachment payloads are not stored here.
   static const maxDrafts = 50;
 
   final SharedPreferences prefs;
@@ -72,7 +83,7 @@ class SessionDraftStore {
       final drafts = <String, SessionDraft>{};
       for (final entry in decoded) {
         final draft = SessionDraft.fromJson(entry);
-        if (draft != null) drafts[draft.sessionID] = draft;
+        if (draft != null) drafts[draft.storageKey] = draft;
       }
       return drafts;
     } catch (_) {
@@ -99,17 +110,23 @@ class SessionDraftStore {
 
   Future<bool> save(Map<String, SessionDraft> drafts) async {
     try {
-      if (drafts.isEmpty) return await prefs.remove(_key);
+      if (drafts.length > maxDrafts) return false;
       final entries = drafts.values.toList()
         ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-      if (entries.length > maxDrafts) {
-        entries.removeRange(maxDrafts, entries.length);
-      }
-      return await prefs.setString(
-        _key,
-        jsonEncode([for (final entry in entries) entry.toJson()]),
-      );
+      final saved = drafts.isEmpty
+          ? await prefs.remove(_key)
+          : await prefs.setString(
+              _key,
+              jsonEncode([for (final entry in entries) entry.toJson()]),
+            );
+      // SharedPreferences updates its cache before the platform write returns.
+      // A refused write must not look successful to another store reader.
+      if (!saved) await prefs.reload();
+      return saved;
     } catch (_) {
+      try {
+        await prefs.reload();
+      } catch (_) {}
       return false;
     }
   }

@@ -485,5 +485,19 @@
   "activeContextFile": "File attachment",
   "activeContextNotice": "Server notice",
   "activeContextPruned": "Content pruned by the server",
-  "activeContextTruncated": "Output truncated by the server"
+  "activeContextTruncated": "Output truncated by the server",
+  "draftSaveFailed": "Draft not saved. Copy your text or retry.",
+  "draftStorageFull": "Draft storage is full. Copy your text before leaving.",
+  "draftProfileRemoved": "The original server was removed. Copy your draft to keep it.",
+  "draftRetrySave": "Retry saving draft",
+  "draftClearFailed": "Could not clear the saved draft. Retry before leaving.",
+  "activeContextTypeCount": "{type} · {count}",
+  "@activeContextTypeCount": {"placeholders":{"type":{"type":"String"},"count":{"type":"int"}}},
+  "activeContextPartHeading": "{kind} · {name}",
+  "@activeContextPartHeading": {"placeholders":{"kind":{"type":"String"},"name":{"type":"String"}}},
+  "draftLeaveTitle": "Draft could not be saved",
+  "draftLeaveMessage": "Keep editing to copy your text or retry saving. Leaving now may lose your unsaved changes.",
+  "draftLeaveAction": "Leave without saving",
+  "draftKeepEditing": "Keep editing",
+  "draftUnsaved": "Unsaved"
 }
