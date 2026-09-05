@@ -45,6 +45,7 @@ Read-only reviews of the Flutter client's API adapters, domain and persisted sta
 - **Evidence:** `lib/api2/gateway_operations.dart`, `listGlobalSessions`, returns an empty list for every non-null integer cursor. `lib/ui/screens/global_sessions_screen.dart`, `_cursor`, derives timestamps. Captured `GET /api/session` and `SessionsResponse` explicitly support opaque `cursor.next` and `cursor.previous` strings.
 - **User impact:** Global search cannot reach results beyond the first 50 conversations.
 - **Implementation:** Return a page object carrying results and the opaque continuation cursor; let the v1 adapter retain its timestamp-based cursor. Forward v2 tokens verbatim and alone in the next request. Do not guess a timestamp-to-token conversion.
+- **Implementation plan:** See the shared BE-005 / BE-010 pagination plan below. The pinned v1 global endpoint already returns its numeric continuation in `x-next-cursor`; preserve that response header instead of deriving it in the UI.
 - **Minimal verification:** Existing `test/api2_client_test.dart` cursor fixture and `test/global_sessions_screen_test.dart` load-more checks; traverse two pages for each server flavor.
 
 ## BE-006 — Handle every concurrent catalog request immediately
@@ -90,6 +91,7 @@ Read-only reviews of the Flutter client's API adapters, domain and persisted sta
 - **Evidence:** `lib/api2/gateway.dart`, `messages`, starts with `order: 'asc'`, follows at most `maxPages = 20` pages of `pageLimit = 200`, and returns without exposing the remaining cursor. Captured `GET /api/session/{sessionID}/message` explicitly supports newest-first `desc` and opaque continuation tokens. `SessionGateway.messages` currently returns only a list. The gateway's own pagination TODO acknowledges this interface gap.
 - **User impact:** Above 4,000 server message records, opening or refreshing a session can omit its newest response. Search, context estimates, and Markdown export also operate on an incomplete history without telling the user. Raising the cap only moves the failure point.
 - **Implementation:** Hydrate a bounded newest-first page, map it into chronological display order, and retain the opaque older-history cursor in a page result. Add incremental older-history loading with deduplication, scroll preservation, and a visible loading/error/end state. Preserve the v1 adapter's actual pagination contract. Treat complete JSON export separately under #48; loaded Markdown must not imply a complete backup. Apply the same explicit continuation model to the bounded session inventory and BE-005.
+- **Implementation plan:** See below. V1 message `before` is also an opaque server token, returned in response headers; it is not a message ID or timestamp.
 - **Minimal verification:** One fixture extending beyond the old cap must still show the latest reply on first open; a second page must prepend older records without duplicate or displaced live messages. Reuse the existing `api2_client_test.dart`, gateway/mapper fixtures, and chat hydration checks rather than adding a broad suite.
 
 ## BE-011 — Match MCP setup scope to the v2 contract
@@ -142,6 +144,95 @@ These routes are present in `contracts/opencode2-openapi-beta-18600.json`; absen
 3. **Upgrade instructions corrected in cycle 02.** The release draft now consistently explains signer mismatch and no longer promises an in-place upgrade over all previews. README records that the old v1.0.33 signer differs and one uninstall is needed, deleting local profiles/drafts/queue. Give one consistent migration instruction and preserve the exact signer and package identity in the artifact evidence.
 4. **Record focused real-release evidence once.** The checked-in release preamble requires final-commit quality results and physical-device smoke evidence. Existing [#8](https://github.com/Eslamasabry/opencode-mobile-next/issues/8), [#9](https://github.com/Eslamasabry/opencode-mobile-next/issues/9), and [#10](https://github.com/Eslamasabry/opencode-mobile-next/issues/10) track Android/lifecycle/permission scenarios. Cover connection, long reply, permissions/forms, reconnect with an unsent draft, and notification/background resumption against each claimed protocol; add the exact release APK install/update check. Reuse one combined run and record untested devices/flows instead of implying exhaustive parity. [#43](https://github.com/Eslamasabry/opencode-mobile-next/issues/43) remains a separate patch-channel rehearsal if Shorebird patch delivery is promised.
 5. **Compatibility pin corrected in cycle 02.** README now identifies beta-18600 as the v2 capture; `contracts/README.md` identifies `f12e14cf` as the v1 snapshot. Align supported-server version/build evidence, release notes, and capability documentation. The August `opencode-sdk-coverage`, port-plan, public-release-audit, and reverification documents are historical records, not current gates: they contain resolved issues and stale future-feature lists. Android is the primary release target; desktop, store distribution, and untranslated locales must retain accurate status until their separate work is completed.
+
+## BE-005 / BE-010 — implementation-ready pagination plan
+
+**Status:** Ready for implementation. This plan changes no product code. It preserves the pinned v1 HTTP contract and captured v2 beta-18600 contract; no SDK regeneration or new transport is necessary.
+
+### Verified direction and cursor contracts
+
+| Collection | First request | Older/next request | Authoritative continuation and order |
+|---|---|---|---|
+| V1 global finder | `/experimental/session?roots=true&limit=50`, plus search/archive filters; omit the selected directory/workspace as the current repository does | Repeat the same filters and limit, adding numeric `cursor` | `x-next-cursor` response header. Server sorts by updated time descending, then ID descending. No header means no following page on the pinned server. |
+| V2 global finder | `/api/session?order=desc&limit=50&parentID=null`, plus search; retain `unscoped: true` | `/api/session?cursor=<token>` only | Body `cursor.next`, following the requested newest-first order toward older results. `cursor.previous` moves toward the already visited/newer side, not older history. |
+| V1 chat history | `/session/{id}/message?limit=100`, with the pinned directory/workspace | Same path/location and positive `limit`, plus `before=<token>` | `X-Next-Cursor` response header, also supplied as `Link: ...; rel="next"`. The server selects the newest N records and returns that page in chronological order. **`before` is an opaque base64url cursor, not a message ID.** |
+| V2 chat history | `/api/session/{id}/message?order=desc&limit=100` | Same session path with `cursor=<token>` only | Body `cursor.next` continues toward older messages. Reverse each newest-first response page for chronological rendering. Do not reverse cursor direction when reversing the display list. |
+
+The v1 OpenAPI file declares `limit` and `before`, but omits the pagination response headers. Those details are confirmed in the exact upstream commit used by `contracts/README.md`: [message HTTP handler, lines 106–144](https://github.com/anomalyco/opencode/blob/f12e14cf1640cbf0dfb6b1ff425b2daaef459eec/packages/opencode/src/server/routes/instance/httpapi/handlers/session.ts#L106), [message paging implementation, lines 425–466](https://github.com/anomalyco/opencode/blob/f12e14cf1640cbf0dfb6b1ff425b2daaef459eec/packages/opencode/src/session/message-v2.ts#L425), and [global finder handler, lines 138–156](https://github.com/anomalyco/opencode/blob/f12e14cf1640cbf0dfb6b1ff425b2daaef459eec/packages/opencode/src/server/routes/instance/httpapi/handlers/experimental.ts#L138). The v1 message handler rejects `before` without `limit`; omitted/zero limit takes its legacy full-history path. Use a positive limit. Existing generated `sessionMessages` and `experimentalSessionList` return Dio `Response` objects with the original headers, including on the successful-response deserialization fallback.
+
+V2 evidence is the captured `/api/session` and `/api/session/{sessionID}/message` parameter definitions, `SessionsResponse` / `SessionMessagesResponse`, and `docs/opencode2-protocol-notes.md` sections 4.2 and 12. Items retain the requested order across pages. `Api2Client.sessions` and `messages` already send continuation tokens alone; retain that behavior.
+
+### 1. Small domain and adapter change
+
+Add one page value in `lib/domain/server_gateway.dart` and make continuation opaque outside the adapter:
+
+```dart
+class ServerPage<T> {
+  final List<T> items;
+  final String? nextCursor;
+
+  const ServerPage({required this.items, this.nextCursor});
+  bool get hasMore => nextCursor != null;
+}
+
+// SessionOperationsGateway / ProductRepository:
+Future<ServerPage<GlobalSessionResult>> listGlobalSessions({
+  String? search,
+  bool includeArchived = false,
+  String? cursor,
+  int limit = 50,
+});
+
+// SessionGateway:
+// Each page is chronological; nextCursor always requests older history.
+Future<ServerPage<MessageWithParts>> messagePage(
+  String sessionID, {
+  String? cursor,
+  int limit = 100,
+});
+```
+
+- **`SdkProductRepository.listGlobalSessions`:** parse a supplied domain token into the SDK's numeric cursor at this boundary only; reject invalid tokens rather than falling back to page one. Return the response's `x-next-cursor` string with mapped items. Keep query/archive/root semantics unchanged. Header names are case-insensitive.
+- **`Api2OperationsGateway.listGlobalSessions`:** remove the non-null-cursor empty-list shortcut, request explicit `desc` on page one, and carry `page.nextCursor`. Any local archive/root filtering or duplicate suppression must not discard the server cursor; a sparse or even empty rendered page can still have another page.
+- **`OpenCodeApi.messagePage`:** pass `limit` and `before` to the existing generated `sessionMessages` call and return mapped bundles plus the response cursor. Preserve headers from `DioException.response` when applying the existing successful-raw-response fallback. Prefer `X-Next-Cursor`; if a Link-only fallback is needed, extract just its `before` token and call the known API path, never follow a server-provided URL to another origin. Do not fabricate or decode/re-encode the token.
+- **`Api2Gateway.messagePage`:** fetch exactly one raw page using the contract above and map `page.data.reversed`; `mapApi2Messages` maps records independently, so a page boundary does not require fetching all previous records. Carry the raw page's cursor even when mapping removes an invalid record. Preserve server order and equal-time ordering; remove ChatScreen's time-only sort for this path.
+- Keep `messages(id)` temporarily only as an explicitly documented latest-page compatibility wrapper for the small smoke helper. Move every production read to `messagePage`: ChatScreen `_load`, `_discardUntouchedMobileSession`, and SessionContextScreen `_load`. Remove the `maxPages` message-fetch loop; neither normal open nor refresh should drain history. Update existing fake gateways to expose their fixture as one complete page; this is a fixture-interface migration, not a new broad test suite.
+
+### 2. Global finder state and loading
+
+In `_GlobalSessionsScreenState`, replace `_cursor(results)` and timestamp comparisons with stored `_nextCursor`. `_reload` replaces items/cursor atomically; `_loadMore` appends unseen session IDs and adopts the response cursor. `hasMore` comes solely from the cursor, never `items.length == limit` or `added.isNotEmpty`.
+
+Bind a request to its repository/profile, query text, archive flag, and `_queryGeneration`; recheck after `prepareActionRepository` and after the HTTP request. Invalidate the old generation and disable load-more immediately when search/archive input changes, before the debounce fires, so an old continuation cannot run with a new v1 search filter. Keep already loaded results on load-more failure and retry the same token. An empty/duplicate page with a different cursor remains navigable; a repeated token must stop with a retry/reload error, not silently announce the end or start an automatic loop. Preserve the existing explicit Load more/retry affordance alongside near-bottom loading. Totals are loaded counts (`50+`), not a complete server count.
+
+### 3. Chat open, older pages, and refresh merging
+
+The current route is `GlobalSessionsScreen._open` → select location → `/chat/{sessionID}` → `ChatScreen.initState` → `_load`. `_onConnectionChanged` rehydrates after `dataRefreshRevision`; mutations also call `_load`. `ConnectionController` does not own transcript messages, so pagination belongs in ChatScreen (or a small dedicated transcript controller), not its global session map.
+
+Add `_olderCursor`, `_loadingOlder`, `_olderError`, and a history epoch. Capture the API object, profile ID, location revision, session ID, epoch, and `_eventVersion` for each request. A location/server/session reset invalidates both head and older requests; latest refresh and older loads must be serialized or explicitly invalidate one another. Keep the existing generation checks and message/part version protection.
+
+1. **First open / explicit history reset:** request one latest page, display its chronological rows, store its older cursor, and retain only pending sends/live changes newer than the request snapshot through the existing reconciliation logic. The latest reply is immediately present even in a 4,000+ record session. Show the empty-conversation screen only when both rows and continuation are absent; an empty mapped page with a cursor still needs a Load older action.
+2. **Load older:** request exactly `_olderCursor`; merge snapshots by message ID and part ID with the existing version checks, prepend new older rows in server order, and retain every existing row outside that page. Do not call `_mergeHydratedMessages` unchanged: its final loop currently drops all unchanged records omitted from the response. Introduce an explicit older-page merge mode that preserves those unseen rows and does not resurrect a message removed after the request started. Adopt the next cursor only after accepting this response.
+3. **Refresh the live end:** read a fresh latest page while keeping the visible transcript. When it overlaps the current canonical history, replace the covered recent segment using the version-aware merge and retain the already loaded older prefix and its continuation. Missing IDs outside the fetched segment are not deletions. Keep page-boundary/ordered-ID information rather than inferring the covered segment from timestamps. An explicit delete/revert/compaction invalidates affected cached history; fetch a fresh window instead of preserving removed snapshots.
+4. **Reconnect / no-overlap recovery:** do not concatenate a new head with an old cached tail and conceal the missing middle. Start a fresh contiguous latest window with its returned older cursor, retaining pending sends and newer live events. Reconnect should invalidate cached older windows, since deletions or structural changes may have happened while offline. Keep the visible message anchor when still present; otherwise show that history was refreshed and move to the latest window. All missing older history remains reachable through the new cursor, with no fetch-all loop or arbitrary page cap.
+5. **Failures:** older-page errors appear at the older edge with Retry and preserve text, position, and cursor. Latest-refresh errors preserve the existing transcript and composer. Invalid/expired cursors require an explicit fresh-history reload; do not silently append page one again. Absence of a cursor is the only normal end condition.
+
+### 4. Preserve the reversed transcript's reading position
+
+The current `ScrollablePositionedList` is reversed: list index 0 is newest, and `_messages` is chronological. Put the older-history loading/retry/end row at list index `_renderedMessageCount`, not index 0. Keep stable `message-{id}` keys.
+
+Before merging older rows, capture one visible message ID and its `itemLeadingEdge` through `_messagePositions`. After layout, restore that ID/alignment with `_messageScroll` if a shift occurred. If `_pinnedMessageCount` is active, increase it by the number of newly prepended older records: otherwise the existing pinned prefix will hide previously visible recent rows. Preserve `_awayFromLatest`; loading older must never invoke `_jumpToLatest`.
+
+Use one message-ID-to-list-index helper for timeline/search/tool jumps. With the current UI the calculation is `renderedCount - 1 - chronologicalIndex`; the older footer adds no leading offset. `_jumpToMessage` currently still adds an offset when busy although the builder no longer creates a busy row—remove that stale assumption while adopting the shared helper. Exclude the footer from `_earlierMessageCount` and viewport message-anchor calculations. Provide an explicit Load older action usable by touch, keyboard, and screen reader; automatic near-edge loading is optional and must be single-flight.
+
+### 5. Callers and remaining limits
+
+- **Empty-session discard:** use `messagePage(limit: 1)`; delete only after a successful, unambiguously empty response with no continuation. A failure or an empty mapped page that still has a cursor keeps the session. There is no reason to download a transcript to establish non-emptiness.
+- **Context, transcript search, timeline, Markdown export:** these currently read the in-memory transcript. Carry whether older history remains and label their loaded-window limits. Session-reported usage remains authoritative; do not turn a page's summed tokens into lifetime totals. Search/timeline must offer access to older history, and Markdown export must state when it contains only loaded messages. Complete server JSON export remains #48.
+- **Scoped session inventory:** `Api2Gateway.sessions()` has a separate 20-page cap. Do not replace it with a single page until `ConnectionController.refreshSessions` becomes page-aware: its current absent-ID sweep deletes older sessions and dismisses their alerts. The corresponding follow-through is `sessionPage` + a scoped list cursor/load-more state, preserving `sessionsById` records not covered by the fetched page, handling authoritative deletes separately, and fetching a directly opened/active session by ID if outside the loaded list. Workspace counts/search must distinguish loaded inventory from global results. The v1 `/session` route has no declared older-page cursor; do not repurpose `start` (a lower bound) as one. BE-005 makes the server-wide paged finder available, but finishing only that screen does not remove this separate inventory limitation.
+- **V1 global timestamp ties:** pinned [Session.listGlobal, lines 555–574](https://github.com/anomalyco/opencode/blob/f12e14cf1640cbf0dfb6b1ff425b2daaef459eec/packages/opencode/src/session/session.ts#L555) filters `time_updated < cursor` even though ordering also uses ID. Equal timestamps split across pages can therefore be skipped by the upstream legacy endpoint. Preserve its returned cursor and record this server limitation; subtracting time or inventing a compound cursor cannot fix it. A future alternate compatibility endpoint needs its own verified root/archive/order semantics before substitution.
+- **Compatibility evidence:** these headers/semantics are confirmed for the pinned v1 implementation, not every historical 1.x build or a proxy that strips headers. Do not convert a 400/missing-token problem into a successful empty page. Both pagers remain read-only and must reject stale scope/results without exposing tokens in user-facing copy.
+
+**Focused acceptance for implementation:** verify latest-first first requests and correct cursor-only/limit-plus-before continuations; an empty middle page with a valid cursor; cursor-error retry; overlapping live events/deletion while an older page is pending; profile/query changes mid-request; and preserving the same visible message while older rows are prepended. Reuse existing client/global-session/chat hydration fixtures. No tests or product files were changed in this design pass.
 
 ## Review notes
 

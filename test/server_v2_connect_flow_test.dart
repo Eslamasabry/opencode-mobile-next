@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -46,19 +48,17 @@ Future<(_RecordingProfileStore, ConnectionController)> _state() async {
   return (store, _RecordingConnection(store));
 }
 
-Widget _app(
-  ProfileStore store,
-  ConnectionController controller,
-) => ProviderScope(
-  overrides: [
-    bootstrapProvider.overrideWithValue(AppBootstrap(store)),
-    connProvider.overrideWithValue(controller),
-  ],
-  child: MaterialApp(
-    routes: {'/home': (_) => const Scaffold(body: Text('home-route'))},
-    home: const ServersScreen(),
-  ),
-);
+Widget _app(ProfileStore store, ConnectionController controller) =>
+    ProviderScope(
+      overrides: [
+        bootstrapProvider.overrideWithValue(AppBootstrap(store)),
+        connProvider.overrideWithValue(controller),
+      ],
+      child: MaterialApp(
+        routes: {'/home': (_) => const Scaffold(body: Text('home-route'))},
+        home: const ServersScreen(),
+      ),
+    );
 
 Future<void> _openEditor(WidgetTester tester) async {
   final connect = find.byKey(const ValueKey('welcome-connect-card'));
@@ -108,6 +108,55 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   tearDown(() => serverProbe = probeServerConnection);
+
+  for (final fieldKey in [
+    'server-url-field',
+    'server-username-field',
+    'server-password-field',
+  ]) {
+    testWidgets('editing $fieldKey discards a pending probe verdict', (
+      tester,
+    ) async {
+      final pending = Completer<ServerProbeResult>();
+      serverProbe = ({required baseUrl, username, password}) => pending.future;
+      final (store, controller) = await _state();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(_app(store, controller));
+      await _openEditor(tester);
+      await _enter(tester, 'server-url-field', 'https://old.example');
+      final testButton = find.byKey(const ValueKey('test-server-connection'));
+      await _reveal(tester, testButton);
+      await tester.tap(testButton);
+      await tester.pump();
+      // Avoid settling while the pending probe animates. The fields are
+      // mounted in the same editor list and can be scrolled directly.
+      final field = find.byKey(ValueKey(fieldKey));
+      await tester.ensureVisible(field);
+      await tester.pump();
+      await tester.enterText(
+        field,
+        fieldKey == 'server-url-field' ? 'https://new.example' : 'new-value',
+      );
+      pending.complete(
+        const ServerProbeResult.failure(
+          'Stale password failure',
+          flavor: ServerFlavor.v2,
+          needsPassword: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('server-probe-verdict')), findsNothing);
+      expect(find.text('Stale password failure'), findsNothing);
+      serverProbe = ({required baseUrl, username, password}) async =>
+          const ServerProbeResult.success('fresh');
+      await _test(tester);
+      expect(
+        find.byKey(const ValueKey('server-probe-verdict')),
+        findsOneWidget,
+      );
+      expect(find.textContaining('fresh'), findsWidgets);
+    });
+  }
 
   testWidgets('a v2 401 without a password focuses the password field', (
     tester,
@@ -168,10 +217,7 @@ void main() {
         .widget<TextField>(find.byKey(const ValueKey('server-password-field')))
         .controller!;
     expect(controllerText.selection.baseOffset, 0);
-    expect(
-      controllerText.selection.extentOffset,
-      'stale-password'.length,
-    );
+    expect(controllerText.selection.extentOffset, 'stale-password'.length);
   });
 
   testWidgets('a v2 success shows the flavor headline and saves the flavor', (
@@ -215,7 +261,10 @@ void main() {
     await _enter(tester, 'server-url-field', 'https://box.example:4096');
     await _test(tester);
 
-    expect(find.text('OpenCode 1 · 0.3.5 — limited feature set'), findsOneWidget);
+    expect(
+      find.text('OpenCode 1 · 0.3.5 — limited feature set'),
+      findsOneWidget,
+    );
     expect(
       find.text(
         'This app targets OpenCode 2; some features are unavailable on v1 '
@@ -321,9 +370,7 @@ void main() {
           }
           return null;
         },
-        home: Scaffold(
-          body: ConnectionStatusBanner(controller: controller),
-        ),
+        home: Scaffold(body: ConnectionStatusBanner(controller: controller)),
       ),
     );
 

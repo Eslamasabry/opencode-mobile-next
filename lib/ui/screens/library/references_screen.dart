@@ -21,6 +21,7 @@ class ReferencesScreen extends StatefulWidget {
 class _ReferencesScreenState extends State<ReferencesScreen> {
   List<ReferenceInfo>? _references;
   String? _error;
+  int _loadGeneration = 0;
 
   @override
   void initState() {
@@ -29,16 +30,24 @@ class _ReferencesScreenState extends State<ReferencesScreen> {
   }
 
   Future<void> _load() async {
-    setState(() => _error = null);
+    final generation = ++_loadGeneration;
+    if (_references == null) setState(() => _error = null);
     try {
       final repository = await widget.controller.prepareActionRepository();
+      if (!mounted || generation != _loadGeneration) return;
       if (repository == null) {
         throw const ProductException('OpenCode is reconnecting.');
       }
       final references = await repository.listReferences();
-      if (mounted) setState(() => _references = references);
+      if (!mounted || generation != _loadGeneration) return;
+      setState(() {
+        _references = references;
+        _error = null;
+      });
     } catch (error) {
-      if (mounted) setState(() => _error = productErrorText(error));
+      if (mounted && generation == _loadGeneration) {
+        setState(() => _error = productErrorText(error));
+      }
     }
   }
 
@@ -50,7 +59,13 @@ class _ReferencesScreenState extends State<ReferencesScreen> {
           body: _body(),
         );
 
-  Widget _body() => _references == null && _error == null
+  Widget _body() => ProductRefreshBody(
+    message: _references == null ? null : _error,
+    onRetry: _load,
+    child: _content(),
+  );
+
+  Widget _content() => _references == null && _error == null
       ? const LoadingList()
       : _error != null && _references == null
       ? ProductErrorState(message: _error!, onRetry: _load)

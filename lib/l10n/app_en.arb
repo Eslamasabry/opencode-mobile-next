@@ -162,5 +162,16 @@
   "termuxRestartNotPerformed": "Restart was not performed. The existing local server is still running.",
   "@termuxRestartNotPerformed": {"description":"Message after restart preflight fails while the existing managed server remains healthy"},
   "chatCopyCompleteReply": "Copy complete reply",
-  "chatCopyReplySoFar": "Copy reply so far"
+  "chatCopyReplySoFar": "Copy reply so far",
+  "commandRunTitle": "Run /{command}",
+  "@commandRunTitle": {"placeholders":{"command":{"type":"String"}}},
+  "commandDestination": "Chat",
+  "commandNewChat": "New chat",
+  "commandUntitledChat": "Untitled chat",
+  "commandArguments": "Arguments (optional)",
+  "commandRun": "Run",
+  "commandRunning": "Starting…",
+  "commandLocationChanged": "The server or workspace changed. Close this dialog and open the command again.",
+  "refreshFailed": "Couldn’t refresh",
+  "refreshRetry": "Retry"
 }

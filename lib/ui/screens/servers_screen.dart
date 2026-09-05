@@ -754,6 +754,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
   /// platform may offer it to autofill. So the field is emptied first and the
   /// payload is routed to [_applyPairing].
   void _urlChanged(String value) {
+    setState(_invalidateProbe);
     if (looksLikePairingPayload(value)) {
       final parsed = parsePairingPayload(value);
       _url.value = TextEditingValue.empty;
@@ -786,6 +787,16 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
       _pairingNotice = null;
       _pairingFailure = null;
     });
+  }
+
+  void _invalidateProbe() {
+    _probeGeneration += 1;
+    _testing = false;
+    _pairing = false;
+    _error = null;
+    _testResult = null;
+    _pairingNotice = null;
+    _pairingFailure = null;
   }
 
   Future<void> _testConnection() async {
@@ -906,6 +917,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
     final firstUrl = payload.urls.first;
     final generation = ++_probeGeneration;
     setState(() {
+      _testing = false;
       _pairing = true;
       _error = null;
       _testResult = null;
@@ -998,9 +1010,8 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
     }
     if (text.isEmpty || !mounted) return;
     setState(() {
+      _invalidateProbe();
       _pass.text = text;
-      _error = null;
-      _testResult = null;
     });
     _passFocus.requestFocus();
   }
@@ -1242,10 +1253,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                 focusNode: _userFocus,
                 textInputAction: TextInputAction.next,
                 onSubmitted: (_) => _passFocus.requestFocus(),
-                onChanged: (_) => setState(() {
-                  _error = null;
-                  _testResult = null;
-                }),
+                onChanged: (_) => setState(_invalidateProbe),
                 decoration: const InputDecoration(
                   labelText: 'Username (optional)',
                   hintText: 'opencode',
@@ -1257,10 +1265,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                 controller: _pass,
                 focusNode: _passFocus,
                 autofocus: _needsPassword || widget.focusPassword,
-                onChanged: (_) => setState(() {
-                  _error = null;
-                  _testResult = null;
-                }),
+                onChanged: (_) => setState(_invalidateProbe),
                 obscureText: _obscurePassword,
                 autocorrect: false,
                 enableSuggestions: false,

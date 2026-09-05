@@ -7,6 +7,7 @@ import '../../api/mcp_oauth.dart' show McpOAuthCallbackException;
 import '../../api/opencode_api.dart';
 import '../../api/product_repository.dart';
 import '../../feedback/bug_report.dart';
+import '../../l10n/app_localizations.dart';
 import '../../state/profiles.dart' show SecureStorageUnavailable;
 import '../app_theme.dart';
 
@@ -47,6 +48,39 @@ void showProductError(BuildContext context, Object error) {
         backgroundColor: Theme.of(context).colorScheme.error,
       ),
     );
+}
+
+/// Keeps cached content mounted while a refresh failure offers a retry.
+class ProductRefreshBody extends StatelessWidget {
+  const ProductRefreshBody({
+    super.key,
+    required this.message,
+    required this.onRetry,
+    required this.child,
+  });
+
+  final String? message;
+  final VoidCallback onRetry;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n =
+        Localizations.of<AppLocalizations>(context, AppLocalizations) ??
+        lookupAppLocalizations(Localizations.localeOf(context));
+    return Column(
+      children: [
+        if (message != null)
+          MaterialBanner(
+            content: Text('${l10n.refreshFailed}\n$message'),
+            actions: [
+              TextButton(onPressed: onRetry, child: Text(l10n.refreshRetry)),
+            ],
+          ),
+        Expanded(key: const ValueKey('refresh-content'), child: child),
+      ],
+    );
+  }
 }
 
 class LoadingList extends StatelessWidget {

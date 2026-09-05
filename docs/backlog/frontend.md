@@ -4,7 +4,7 @@ Code-reviewed findings for the ongoing review, implement, and push cycle. IDs st
 
 Pass 2 reviewed Commands, Skills, References, Terminal, and Settings. The open GitHub issue inventory was checked on 2026-09-05. FE-005 through FE-008 are specific implementation gaps outside the existing feature issues; they do not create duplicate GitHub issues. The older audit's general refresh-retention guidance is narrowed to the concrete failure in FE-006.
 
-Pass 3 rechecked onboarding, session finding and request handling, Files navigation, Review, accessibility infrastructure, release notes, and recent QA records on 2026-09-05. FE-005 and FE-006 remain the implementation queue; root completed FE-007 and FE-008 in cycle 2026-09-05-02. FE-009 through FE-011 are new, bounded code findings; the v1 scope below maps overlapping feature work to its existing GitHub issues instead of creating duplicate tasks. Historical audit ratings and old CI/signing blockers are not treated as current evidence.
+Pass 3 rechecked onboarding, session finding and request handling, Files navigation, Review, accessibility infrastructure, release notes, and recent QA records on 2026-09-05. Root completed FE-007 and FE-008 in cycle 2026-09-05-02, then FE-005, FE-006, and FE-009 in cycle 2026-09-05-03. FE-010 and FE-011 remain ready; the v1 scope below maps overlapping feature work to its existing GitHub issues instead of creating duplicate tasks. Historical audit ratings and old CI/signing blockers are not treated as current evidence.
 
 ## FE-001 — Refresh Workspace sessions with the pull gesture
 
@@ -44,7 +44,7 @@ Status: **Implemented — cycle 2026-09-05-01**
 
 ## FE-005 — Run a server command without requiring an existing chat
 
-Status: **Ready** · Priority: **High**
+Status: **Implemented — cycle 2026-09-05-03**
 
 - Trigger and impact: Open More → Commands & tools → Commands on a fresh workspace and tap a command. `_run` only shows “Create a session before running a command.” The user must leave, create a chat, return, and find the command again. Existing-session submissions also close the argument dialog before sending, so failure discards the entered arguments and leaves no in-flight indication.
 - Location: `lib/ui/screens/library/commands_screen.dart`, `_CommandsScreenState._run` and command row `onTap`.
@@ -53,7 +53,7 @@ Status: **Ready** · Priority: **High**
 
 ## FE-006 — Report failed refreshes while keeping useful catalog rows
 
-Status: **Ready** · Priority: **High**
+Status: **Implemented — cycle 2026-09-05-03**
 
 - Trigger and impact: Load Commands, Skills, References, or Terminal, then pull to refresh after the server becomes unavailable. Each screen records an error but renders it only when its list is null. Previously loaded rows remain with no indication that refresh failed, so terminal status and available commands appear current. The same suppression happens after refreshing a successfully loaded empty list.
 - Location: `lib/ui/screens/library/commands_screen.dart`, `_load`/`build`; `lib/ui/screens/library/skills_screen.dart`, `_load`/`_body`; `lib/ui/screens/library/references_screen.dart`, `_load`/`_body`; `lib/ui/screens/terminal_screen.dart`, `_TerminalScreenState._load`/`build`.
@@ -80,7 +80,7 @@ Status: **Implemented — cycle 2026-09-05-02** · Priority: **Medium**
 
 ## FE-009 — Keep connection-test results tied to the displayed server fields
 
-Status: **Ready** · Priority: **High**
+Status: **Implemented — cycle 2026-09-05-03**
 
 - Trigger and impact: Start Test connection, then edit the URL, username, or password before the reply arrives. The fields stay editable; their callbacks clear the verdict but do not invalidate the pending generation. The old request can restore “Connected — save to finish” or move focus to the password field for values no longer displayed. `_save` also reads that stale result's flavor and version. Cold connection re-probes, so this is misleading onboarding feedback and cached metadata, not proof of a permanent wrong-server connection.
 - Location: `lib/ui/screens/servers_screen.dart`, `_urlChanged` (756–788), `_testConnection` (814–839), `_pastePassword` (979–1005), credential `onChanged` callbacks (1245–1263), and `_save` (1063–1080). `_applyPairing` shares the same generation counter.

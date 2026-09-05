@@ -74,3 +74,33 @@ Next: command creation/retry flow, stale connection probes, refresh/viewed-state
 retention, opaque global pagination, and complete long-history navigation.
 Release and protocol requirements remain open in the readiness document and
 review queues; passing this batch does not establish full feature parity.
+
+## 2026-09-05 — Cycle 03: commands and trustworthy refresh feedback
+
+Implemented **FE-005, FE-006, and FE-009**:
+
+- Commands can start a new chat directly. Submission keeps the dialog open,
+  retains arguments and destination on failure, disables duplicate dispatch,
+  and reuses a chat already created by a failed attempt. Existing chats use
+  their own model and variant. Location changes prevent stale dispatch/navigation.
+- Commands, Skills, References, and Terminal show refresh failures with Retry
+  above cached content, including empty lists. The scrolling content stays
+  mounted; overlapping catalog loads cannot replace a newer result or failure.
+  Same-location terminal updates preserve rows while loading.
+- Changing connection URL, username, or password invalidates pending probe
+  results and focus changes. Password paste uses the same invalidation path,
+  and pairing supersedes the previous test's busy state.
+- The backend review documents exact opaque cursor contracts and page-aware
+  merge/scroll requirements for BE-005 and BE-010. Pagination is not implemented
+  by this batch.
+
+Verification: pinned Flutter analysis clean; **61 focused checks passed** across
+command dispatch, retained refresh content, connection editing/pairing, terminal
+scope/lifecycle, skills, and localization. An initial command-test fixture omitted
+a required field; it was corrected before the passing command checks. No native
+build, emulator campaign, release tag, or publication was performed. The preceding
+PR #65 Windows CI passed; Linux and Android were still running when checked.
+
+Next: review file/patch retention, Files Back behavior, complete pagination, then
+the remaining protocol workflows and final release-candidate evidence in the
+[readiness checklist](../v1-release-readiness.md).
