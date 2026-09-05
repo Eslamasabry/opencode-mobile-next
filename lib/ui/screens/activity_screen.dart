@@ -187,13 +187,15 @@ class _ActivityScreenState extends State<ActivityScreen> {
       }
       if (!mounted ||
           controller.locationRevision != location ||
-          controller.profile?.id != profile)
+          controller.profile?.id != profile) {
         return;
+      }
       final session = controller.sessionsById[sessionID];
-      if (session == null)
+      if (session == null) {
         throw ProductException(
           controller.sessionDetailsErrors[sessionID] ?? missing,
         );
+      }
       if (session.directory != null &&
           (session.directory != controller.directory ||
               session.workspaceID != controller.workspace)) {
@@ -202,8 +204,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
           workspace: session.workspaceID,
         );
       }
-      if (mounted && controller.profile?.id == profile)
+      if (mounted && controller.profile?.id == profile) {
         Navigator.of(context).pushNamed('/chat/$sessionID');
+      }
     } catch (error) {
       if (mounted) showProductError(context, error);
     }

@@ -176,3 +176,34 @@ Scoped session inventory remains capped. Model/agent synchronization, staged
 revert, and the broader parity and release gates remain open. The original WIP
 checkpoint and its review notes remain in Git history; its stale working
 document was removed after resolving those findings.
+
+## 2026-09-05 — Cycle 06: complete scoped v2 session pagination
+
+Removed the scoped v2 inventory's fixed enumeration cap. Recent sessions,
+Archived, and command destinations now load older pages using the server's
+opaque continuation, including pages with no matching rows. Loaded counts and
+empty states identify partial results; command arguments and destination choices
+survive loading. The workspace's empty Recent section now scrolls inline so it
+cannot trap gestures before Archived and the pager.
+
+Controller refreshes preserve cached metadata and alerts outside loaded pages.
+A complete walk removes missing list membership, while confirmed deletion or
+404 removes the entity. Revisions and tombstones reject stale pages and detail
+reads. Direct chat opens and unknown running sessions hydrate by ID; foreign
+session metadata stays outside scoped inventory and Activity opens its location.
+Metadata hydration has a separate status revision guard, and a failed status
+request leaves Load more available alongside the head retry action.
+
+Verification: analysis clean; **94 focused checks passed** across inventory,
+Activity, v1/v2 connection state, real HTTP page transports, command destinations,
+Workspace/Archived, and localization. Three chat-entry checks also passed before
+the final status-only fixes. Backend and frontend agents reviewed the batch;
+their membership, read-race, status-race, and blocked-pagination findings were
+resolved. PR #68's Linux, Windows, and Android CI all passed when inspected.
+
+The WIP checkpoint remains preserved in Git history. V1 scoped listing keeps
+its native contract without an invented continuation; the pinned v1 global
+timestamp-tie limitation remains documented. No native release build, final
+visual campaign, tag, or publication was performed. Model/agent synchronization,
+staged revert, resolved request sheets, and the broader release checklist remain
+open.

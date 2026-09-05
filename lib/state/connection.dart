@@ -185,6 +185,7 @@ class ConnectionController extends ChangeNotifier {
   final Map<String, int> _questionRevisions = {};
   int _sessionRevision = 0;
   final Map<String, int> _sessionRevisions = {};
+  final Map<String, int> _sessionStatusRevisions = {};
 
   StreamStatus status = StreamStatus.disconnected;
   String? version;
@@ -2887,7 +2888,7 @@ class ConnectionController extends ChangeNotifier {
           ...statuses.keys,
         };
         for (final id in statusIDs) {
-          if ((_sessionRevisions[id] ?? 0) > revision) continue;
+          if ((_sessionStatusRevisions[id] ?? 0) > revision) continue;
           if (statuses[id] != null && statuses[id] != 'idle') {
             busySessions.add(id);
             _markSessionAttentionActive(id);
@@ -3101,19 +3102,21 @@ class ConnectionController extends ChangeNotifier {
       sessionsById[id] = session;
       sessionDetailsErrors.remove(id);
       _rememberSessionMembership(session, authoritative: true);
-      _markSessionChanged(id);
+      _markSessionChanged(id, affectsStatus: false);
       notifyListeners();
     } on ApiException catch (error) {
       if (error.statusCode == 404 &&
           _isCurrent(generation, currentApi) &&
           revision == (_sessionRevisions[id] ?? 0)) {
         _removeSession(id);
-      } else if (_isCurrent(generation, currentApi)) {
+      } else if (_isCurrent(generation, currentApi) &&
+          revision == (_sessionRevisions[id] ?? 0)) {
         sessionDetailsErrors[id] = error.toString();
         notifyListeners();
       }
     } catch (error) {
-      if (_isCurrent(generation, currentApi)) {
+      if (_isCurrent(generation, currentApi) &&
+          revision == (_sessionRevisions[id] ?? 0)) {
         sessionDetailsErrors[id] = error.toString();
         notifyListeners();
       }
@@ -3153,7 +3156,7 @@ class ConnectionController extends ChangeNotifier {
     final currentApi = api;
     final generation = _generation;
     final tracked = {
-      for (final id in busySessions) id: _sessionRevisions[id] ?? 0,
+      for (final id in busySessions) id: _sessionStatusRevisions[id] ?? 0,
     };
     if (currentApi == null || tracked.isEmpty) return;
 
@@ -3168,7 +3171,7 @@ class ConnectionController extends ChangeNotifier {
 
     var changed = false;
     for (final entry in tracked.entries) {
-      if ((_sessionRevisions[entry.key] ?? 0) != entry.value) continue;
+      if ((_sessionStatusRevisions[entry.key] ?? 0) != entry.value) continue;
       final remoteStatus = statuses[entry.key] ?? 'idle';
       if (remoteStatus == 'idle') {
         final removed = busySessions.remove(entry.key);
@@ -4396,9 +4399,11 @@ class ConnectionController extends ChangeNotifier {
       identical(repository, currentRepository) &&
       refreshGeneration == _questionsRefreshGeneration;
 
-  void _markSessionChanged(String id) {
+  void _markSessionChanged(String id, {bool affectsStatus = true}) {
     _sessionRevision += 1;
     _sessionRevisions[id] = _sessionRevision;
+    // Metadata hydration must not invalidate a concurrent status snapshot.
+    if (affectsStatus) _sessionStatusRevisions[id] = _sessionRevision;
   }
 
   void _markQuestionChanged(String id) {
@@ -4440,6 +4445,7 @@ class ConnectionController extends ChangeNotifier {
     _questionRevisions.clear();
     _sessionRevision += 1;
     _sessionRevisions.clear();
+    _sessionStatusRevisions.clear();
     sessionsById = {};
     _sessionsCursor = null;
     sessionsLoadingMore = false;

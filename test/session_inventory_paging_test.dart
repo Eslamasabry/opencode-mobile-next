@@ -14,6 +14,7 @@ class _Api extends OpenCodeApi {
   _Api() : super(baseUrl: 'http://localhost');
   late Future<ServerPage<Session>> Function(String? cursor) page;
   Future<Session> Function(String id)? one;
+  Future<Map<String, String>> Function()? statuses;
   final cursors = <String?>[];
   int detailReads = 0;
 
@@ -24,7 +25,8 @@ class _Api extends OpenCodeApi {
   }
 
   @override
-  Future<Map<String, String>> sessionStatuses() async => {};
+  Future<Map<String, String>> sessionStatuses() async =>
+      statuses == null ? {} : await statuses!();
   @override
   Future<Session> session(String id) async {
     detailReads++;
@@ -53,6 +55,46 @@ Session _session(String id, {String? title, String? parentID}) =>
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  test(
+    'detail hydration does not suppress a concurrent busy snapshot',
+    () async {
+      final statusStarted = Completer<void>();
+      final status = Completer<Map<String, String>>();
+      final api = _Api()..page = (_) async => const ServerPage(items: []);
+      api.statuses = () {
+        statusStarted.complete();
+        return status.future;
+      };
+      final controller = await _controller(api);
+      final refresh = controller.refreshSessions();
+      await statusStarted.future;
+      await controller.ensureSession('running');
+      status.complete({'running': 'busy'});
+      await refresh;
+      expect(controller.busySessions, contains('running'));
+    },
+  );
+
+  testWidgets('status failures leave older sessions reachable', (tester) async {
+    final api = _Api()
+      ..page = (cursor) async => cursor == null
+          ? ServerPage(items: [_session('recent')], nextCursor: 'older')
+          : ServerPage(items: [_session('old')]);
+    api.statuses = () async => throw ApiException('status unavailable');
+    final controller = await _controller(api);
+    await controller.refreshSessions();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: SessionInventoryFooter(controller: controller)),
+      ),
+    );
+    expect(find.text('Load more sessions'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('session-inventory-more')));
+    await tester.pumpAndSettle();
+    expect(api.cursors, [null, 'older']);
+    expect(controller.sortedSessions().map((s) => s.id), contains('old'));
+  });
 
   testWidgets('empty and duplicate inventory pages keep continuation usable', (
     tester,
@@ -286,4 +328,27 @@ void main() {
       expect(controller.sessionsById['target']!.title, 'Fresh title');
     },
   );
+
+  testWidgets('stale detail failure cannot replace a successful newer read', (
+    tester,
+  ) async {
+    final old = Completer<Session>();
+    final api = _Api();
+    api.one = (_) => api.detailReads == 1
+        ? old.future
+        : Future.value(_session('target', title: 'Fresh title'));
+    final controller = await _controller(api);
+    final pending = controller.ensureSession('target');
+    controller.handleEventForTesting(
+      EventEnvelope(
+        type: 'session.compacted',
+        properties: {'sessionID': 'target'},
+      ),
+    );
+    await tester.pump();
+    old.completeError(ApiException('stale missing', statusCode: 404));
+    await pending;
+    expect(controller.sessionsById['target']!.title, 'Fresh title');
+    expect(controller.sessionDetailsErrors, isEmpty);
+  });
 }
