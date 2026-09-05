@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Effective date: August 28, 2026**
+**Effective date: September 5, 2026**
 
 OpenCode for Android is a client for OpenCode servers. It does not provide a
 developer-operated account, advertising, analytics, or crash-reporting service.
@@ -22,9 +22,10 @@ loopback addresses used by a server running on the same device.
 ## Data stored on your device
 
 The app stores server profile metadata, interface preferences, cached server
-state, downloaded voice models, unsent draft text, and prompts queued while
-offline. A queued prompt can include an attachment encoded into the queue. Drafts
-and queued prompts are stored in the app's private preferences; they are not
+state, downloaded voice models, unsent drafts and photos awaiting recovery, and
+prompts queued while offline. Ordinary draft and pending-photo payloads use
+app-private files; their metadata uses preferences. A queued or stashed prompt
+can include an attachment encoded into preferences. These local stores are not
 encrypted separately from the Android app sandbox. Queue entries are bounded by
 age, count, and total size. Server passwords are stored with Android secure
 storage. Android backup is disabled for this app.
@@ -60,8 +61,12 @@ of a prompt.
 
 ## Files, terminal access, and Termux
 
-The app reads a local file only after you select it through Android's file
-picker. An attachment is sent to your selected OpenCode server only when you
+The app reads a local file after you select it through a file or photo picker,
+paste it, or explicitly take a photo. Camera permission also supports QR pairing.
+Picked photos are kept locally with their original conversation until added to
+a draft or discarded, including recovery after an interrupted Android picker.
+The app does not request access to your entire photo library. An attachment is
+sent to your selected OpenCode server only when you
 submit the prompt. Files opened from a workspace are loaded from that server.
 
 If you enable on-device setup, the app uses Termux's explicit `RUN_COMMAND`

@@ -1,5 +1,6 @@
 import 'support/complete_message_history.dart';
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -21,6 +22,7 @@ import 'package:opencode_mobile/ui/screens/session_context_screen.dart';
 import 'package:opencode_mobile/ui/widgets/product_states.dart';
 import 'package:opencode_mobile/ui/widgets/markdown.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:opencode_mobile/state/prompt_photos.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class _FakeOpenCodeApi extends OpenCodeApi with CompleteMessageHistory {
@@ -1189,6 +1191,32 @@ void main() {
     expect(controller.sessionDraft('session-1'), 'Keep this draft');
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'leaving an empty conversation keeps its pending photo destination',
+    (tester) async {
+      final api = _FakeOpenCodeApi()..messagesHandler = (_) async => [];
+      final controller = await _pumpProvisionalChat(tester, api);
+      await controller.store.prefs.setString(
+        PromptPhotoStore.key,
+        jsonEncode(
+          const PendingPromptPhoto(
+            id: 'pending',
+            profileID: '',
+            sessionID: 'session-1',
+          ).toJson(),
+        ),
+      );
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      expect(api.deleteCalls, isEmpty);
+      expect(controller.promptPhotos.pending!.sessionID, 'session-1');
+      expect(
+        find.byKey(const ValueKey('provisional-chat-host')),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('mobile new command stays when an attachment cannot persist', (
     tester,

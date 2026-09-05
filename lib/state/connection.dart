@@ -25,6 +25,7 @@ import 'offline_queue.dart';
 import 'profiles.dart';
 import 'session_drafts.dart';
 import 'draft_attachments.dart';
+import 'prompt_photos.dart';
 import 'session_pins.dart';
 import 'prompt_shelf.dart';
 import 'session_read_state.dart';
@@ -299,6 +300,9 @@ class ConnectionController extends ChangeNotifier {
   SessionDraftStore? _sessionDraftStore;
   Future<void> _draftChanges = Future.value();
   final DraftAttachmentVault _draftAttachmentVault;
+  final PromptPhotoStore? _promptPhotoStore;
+  late final PromptPhotoStore promptPhotos =
+      _promptPhotoStore ?? PromptPhotoStore(store.prefs);
   int locationRevision = 0;
   String? directory;
   String? workspace;
@@ -451,7 +455,9 @@ class ConnectionController extends ChangeNotifier {
     AppDiagnosticsController? diagnostics,
     LocalWakeLockEnsurer? localWakeLockEnsurer,
     DraftAttachmentVault? draftAttachmentVault,
-  }) : _draftAttachmentVault = draftAttachmentVault ?? DraftAttachmentVault(),
+    PromptPhotoStore? promptPhotoStore,
+  }) : _promptPhotoStore = promptPhotoStore,
+       _draftAttachmentVault = draftAttachmentVault ?? DraftAttachmentVault(),
        _apiFactory = apiFactory ?? _createApi,
        _repositoryFactory = repositoryFactory ?? _createRepository,
        _v2GatewayFactory = v2GatewayFactory ?? _createV2GatewayPair,
@@ -4386,6 +4392,9 @@ class ConnectionController extends ChangeNotifier {
       });
 
       // 3. The home-screen widget's session titles.
+      if (!await promptPhotos.clearForProfile(profileId)) {
+        failures.add('pending photo');
+      }
       await _pendingWidgetSnapshotWrite;
       final widgetOutcome = await _widgetSnapshot.clearForProfile(profileId);
       if (widgetOutcome == WidgetSnapshotClear.failed) {

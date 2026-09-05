@@ -14,6 +14,8 @@ import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:opencode_mobile/state/prompt_photos.dart';
 
 /// Audit UX-P0-03: the composer used to ring the prompt field with five
 /// equal-weight controls, so the field was the least stable element on a
@@ -84,7 +86,28 @@ MessageWithParts _task() => MessageWithParts(
   ],
 );
 
-Future<ConnectionController> _controller() async {
+class _RecordingPhotoStore extends PromptPhotoStore {
+  _RecordingPhotoStore(super.prefs);
+  ImageSource? selected;
+  String? session;
+  @override
+  Future<PendingPromptPhoto?> pick({
+    required String profileID,
+    required String sessionID,
+    required String? directory,
+    required String? workspace,
+    required ImageSource source,
+  }) async {
+    expect(prefs.getString('oc.sessionDrafts'), contains('Keep before camera'));
+    selected = source;
+    session = sessionID;
+    return null;
+  }
+}
+
+Future<ConnectionController> _controller({
+  PromptPhotoStore Function(SharedPreferences)? photos,
+}) async {
   SharedPreferences.setMockInitialValues({
     'oc.profiles': jsonEncode([
       {
@@ -99,7 +122,7 @@ Future<ConnectionController> _controller() async {
   final prefs = await SharedPreferences.getInstance();
   final store = ProfileStore(prefs: prefs);
   await store.load();
-  return ConnectionController(store)
+  return ConnectionController(store, promptPhotoStore: photos?.call(prefs))
     ..api = _FakeApi()
     ..status = StreamStatus.connected;
 }
@@ -556,6 +579,8 @@ void main() {
     final tools = [
       const Key('composer-tool-commands'),
       const Key('composer-tool-attach'),
+      const Key('composer-tool-gallery'),
+      const Key('composer-tool-camera'),
       const Key('composer-tool-voice'),
     ];
     for (final tool in tools) {
@@ -573,6 +598,43 @@ void main() {
     expect(find.byKey(const Key('command-launcher-search')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'photo actions persist the draft and launch the selected source',
+    (tester) async {
+      late _RecordingPhotoStore photos;
+      final controller = await _controller(
+        photos: (prefs) => photos = _RecordingPhotoStore(prefs),
+      );
+      addTearDown(controller.dispose);
+      await _pumpChat(
+        tester,
+        controller,
+        size: const Size(320, 640),
+        textScale: 1.7,
+      );
+      await tester.enterText(
+        find.byKey(const Key('chat-composer-field')),
+        'Keep before camera',
+      );
+      for (final (name, source) in [
+        ('camera', ImageSource.camera),
+        ('gallery', ImageSource.gallery),
+      ]) {
+        await tester.tap(find.byKey(const Key('composer-tools-button')));
+        await tester.pumpAndSettle();
+        final choice = find.byKey(Key('composer-tool-$name'));
+        await tester.ensureVisible(choice);
+        await tester.tap(choice);
+        await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
+        expect(photos.selected, source);
+        expect(photos.session, 'session-1');
+        expect(controller.sessionDraft('session-1'), 'Keep before camera');
+        expect(tester.takeException(), isNull);
+      }
+    },
+  );
 
   testWidgets(
     'the tools sheet closes Voice while a run is active; Attach stays '

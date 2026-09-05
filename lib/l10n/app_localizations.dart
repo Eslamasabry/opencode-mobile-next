@@ -2643,6 +2643,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keep saved draft'**
   String get draftKeepSavedAttachments;
+
+  /// No description provided for @photoLibraryAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo library'**
+  String get photoLibraryAction;
+
+  /// No description provided for @photoLibraryDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a photo or screenshot'**
+  String get photoLibraryDescription;
+
+  /// No description provided for @photoCameraAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Take photo'**
+  String get photoCameraAction;
+
+  /// No description provided for @photoTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a photo smaller than 10 MB.'**
+  String get photoTooLarge;
+
+  /// No description provided for @photoStorageFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The photo could not be saved on this device. Free some space and retry.'**
+  String get photoStorageFailed;
+
+  /// No description provided for @photoPendingOther.
+  ///
+  /// In en, this message translates to:
+  /// **'A photo is waiting in its original conversation. Keep it there, or discard it before choosing another photo.'**
+  String get photoPendingOther;
+
+  /// No description provided for @photoUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The photo could not be opened. Try adding it again from Photo library or Take photo.'**
+  String get photoUnavailable;
+
+  /// No description provided for @photoPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo access was denied. Allow camera or photo access in Android app settings, then try again.'**
+  String get photoPermissionDenied;
+
+  /// No description provided for @photoPendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending photo'**
+  String get photoPendingTitle;
+
+  /// No description provided for @photoDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard pending photo'**
+  String get photoDiscard;
+
+  /// No description provided for @photoAddToDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Add recovered photo to draft'**
+  String get photoAddToDraft;
+
+  /// No description provided for @photoOtherLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to the photo\'s original server and project before adding it.'**
+  String get photoOtherLocation;
+
+  /// No description provided for @photoDraftFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove an attachment first. A draft holds up to 5 files and 20 MB in total.'**
+  String get photoDraftFull;
 }
 
 class _AppLocalizationsDelegate

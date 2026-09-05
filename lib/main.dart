@@ -98,6 +98,13 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
         bootstrap.store,
         diagnostics: widget.diagnostics,
       );
+      if (platformCapabilities.supportsPromptPhotos) {
+        await controller.promptPhotos.recoverLostData();
+      }
+      if (!mounted || generation != _generation) {
+        controller.dispose();
+        return;
+      }
       _controller?.dispose();
       setState(() {
         _bootstrap = bootstrap;

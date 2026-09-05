@@ -13,6 +13,7 @@ void main() {
     expect(caps.isDesktop, isFalse);
     expect(caps.supportsTermux, isTrue);
     expect(caps.supportsVoice, isTrue);
+    expect(caps.supportsPromptPhotos, isTrue);
     expect(caps.supportsBackgroundService, isTrue);
     expect(caps.supportsNotifications, isTrue);
     expect(caps.supportsHomeWidget, isTrue);
@@ -29,6 +30,7 @@ void main() {
     expect(caps.isDesktop, isTrue);
     expect(caps.supportsTermux, isFalse);
     expect(caps.supportsVoice, isFalse);
+    expect(caps.supportsPromptPhotos, isFalse);
     expect(caps.supportsBackgroundService, isFalse);
     expect(caps.supportsNotifications, isFalse);
     expect(caps.supportsHomeWidget, isFalse);

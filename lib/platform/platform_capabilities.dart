@@ -63,6 +63,7 @@ class PlatformCapabilities {
   /// desktop capture path exists yet, so desktop reports honestly unavailable
   /// rather than pretending a microphone is present.
   bool get supportsVoice => isAndroid;
+  bool get supportsPromptPhotos => isAndroid;
 
   /// The `oc/background` foreground service that keeps a live transport alive
   /// while the Activity is backgrounded, plus battery-optimisation exemption.

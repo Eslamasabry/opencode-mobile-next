@@ -2,7 +2,17 @@ part of '../chat_screen.dart';
 
 /// UX-P0-03: the three secondary prompt tools that used to sit as equal
 /// icons around the field. They now live behind one leading affordance.
-enum _PromptTool { commands, attach, voice, history, clearText, stash, saved }
+enum _PromptTool {
+  commands,
+  attach,
+  gallery,
+  camera,
+  voice,
+  history,
+  clearText,
+  stash,
+  saved,
+}
 
 class _ChatComposer extends StatelessWidget {
   const _ChatComposer({
@@ -41,6 +51,8 @@ class _ChatComposer extends StatelessWidget {
     required this.selectedVariant,
     this.showAttachmentNote = true,
     required this.onAttach,
+    required this.onPhotoLibrary,
+    required this.onCamera,
     required this.onContentInserted,
     required this.onVoice,
     required this.onSend,
@@ -119,6 +131,8 @@ class _ChatComposer extends StatelessWidget {
   final bool showAttachmentNote;
 
   final VoidCallback onAttach;
+  final VoidCallback onPhotoLibrary;
+  final VoidCallback onCamera;
 
   /// Receives images committed by the IME (keyboard image insertions and
   /// Android clipboard-image paste chips). See `_handleInsertedContent`.
@@ -445,6 +459,10 @@ class _ChatComposer extends StatelessWidget {
         onOpenCommands();
       case _PromptTool.attach:
         onAttach();
+      case _PromptTool.gallery:
+        onPhotoLibrary();
+      case _PromptTool.camera:
+        onCamera();
       case _PromptTool.voice:
         onVoice();
       case _PromptTool.history:
@@ -713,6 +731,27 @@ class _PromptToolsSheet extends StatelessWidget {
                   ? null
                   : () => Navigator.pop(context, _PromptTool.attach),
             ),
+            if (platformCapabilities.supportsPromptPhotos) ...[
+              ListTile(
+                key: const Key('composer-tool-gallery'),
+                enabled: !attachBlocked,
+                leading: const Icon(Icons.photo_library_outlined),
+                title: Text(_chatL10n(context).photoLibraryAction),
+                subtitle: Text(_chatL10n(context).photoLibraryDescription),
+                onTap: attachBlocked
+                    ? null
+                    : () => Navigator.pop(context, _PromptTool.gallery),
+              ),
+              ListTile(
+                key: const Key('composer-tool-camera'),
+                enabled: !attachBlocked,
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: Text(_chatL10n(context).photoCameraAction),
+                onTap: attachBlocked
+                    ? null
+                    : () => Navigator.pop(context, _PromptTool.camera),
+              ),
+            ],
             // Speech capture and the on-device recognizer are Android-only:
             // the `oc/voice` channel exists in the Android runner alone, and
             // the recorder writes into Android-shaped paths. Offering the row

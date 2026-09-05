@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import '../../api/models.dart';
@@ -27,6 +28,7 @@ import '../../state/review_handoff.dart';
 import '../../state/prompt_shelf.dart';
 import '../../state/session_drafts.dart';
 import '../../state/draft_attachments.dart';
+import '../../state/prompt_photos.dart';
 import '../../voice/controller.dart';
 import '../../voice/voice_ui.dart';
 import '../navigation/chat_route.dart';
@@ -315,12 +317,14 @@ class _ChatScreenState extends State<ChatScreen>
   final _promptHistory = PromptHistoryNavigation();
   bool _promptShelfOperationBusy = false;
   bool get _promptShelfBusy =>
+      _photoBusy ||
       _promptShelfOperationBusy ||
       _restoringDraftAttachments ||
       _draftRecoveryBlocked;
   bool _draftTrackingEnabled = false;
   bool _restoringDraftAttachments = false;
   bool _draftRecoveryBlocked = false;
+  bool _photoBusy = false;
   Future<void>? _draftRecoveryFuture;
   List<PromptAttachment> _lastDraftAttachments = const [];
   late final int _draftLocation;
@@ -445,6 +449,7 @@ class _ChatScreenState extends State<ChatScreen>
     _composer.text = widget.initialText;
     _attachments.addAll(widget.initialAttachments);
     _conn = _readConn();
+    _conn.promptPhotos.addListener(_onPhotosChanged);
     _draftProfileID = _conn.profile?.id ?? _conn.store.activeId ?? '';
     _draftLocation = _conn.locationRevision;
     _draftDirectory = _conn.directory;
@@ -2398,13 +2403,163 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _pickAttachment() async {
+    if (_promptShelfBusy) return;
+    final location = _conn.locationRevision;
+    setState(() => _photoBusy = true);
     try {
       final attachment = await _chooseAttachment(_attachments);
-      if (attachment != null && mounted) {
+      if (attachment != null && mounted && location == _conn.locationRevision) {
         setState(() => _attachments.add(attachment));
       }
     } catch (error) {
       if (mounted) _showActionError(error);
+    } finally {
+      if (mounted) setState(() => _photoBusy = false);
+    }
+  }
+
+  void _onPhotosChanged() {
+    if (mounted) setState(() {});
+  }
+
+  bool _photoMatches(PendingPromptPhoto photo) =>
+      photo.profileID == _draftProfileID &&
+      photo.sessionID == widget.sessionID &&
+      photo.directory == _conn.directory &&
+      photo.workspace == _conn.workspace &&
+      _draftLocation == _conn.locationRevision;
+
+  String _photoError(Object error) {
+    final l10n = _chatL10n(context);
+    if (error is PromptPhotoException) {
+      return switch (error.failure) {
+        PromptPhotoFailure.tooLarge => l10n.photoTooLarge,
+        PromptPhotoFailure.unsupported => l10n.chatAttachmentUnsupported,
+        PromptPhotoFailure.storage => l10n.photoStorageFailed,
+        PromptPhotoFailure.pending => l10n.photoPendingOther,
+        PromptPhotoFailure.unavailable => l10n.photoUnavailable,
+      };
+    }
+    if (error is PlatformException &&
+        error.code.toLowerCase().contains('denied')) {
+      return l10n.photoPermissionDenied;
+    }
+    return l10n.photoUnavailable;
+  }
+
+  Future<void> _pickPhoto(ImageSource source) async {
+    if (_promptShelfBusy || !platformCapabilities.supportsPromptPhotos) return;
+    if (_attachments.length >= _maxAttachmentCount ||
+        _attachments.fold<int>(
+              0,
+              (total, a) => total + _attachmentByteLength(a),
+            ) >=
+            _maxAggregateAttachmentBytes) {
+      _showActionError(_chatL10n(context).photoDraftFull);
+      return;
+    }
+    if (_conn.promptPhotos.pending case final pending?) {
+      final discard = await showConfirmSheet(
+        context,
+        title: _chatL10n(context).photoPendingTitle,
+        message: _chatL10n(context).photoPendingOther,
+        confirmLabel: _chatL10n(context).photoDiscard,
+        cancelLabel: _chatL10n(context).draftKeepEditing,
+        destructive: true,
+      );
+      if (!mounted || !discard) return;
+      try {
+        await _conn.promptPhotos.discard(pending.id);
+      } catch (error) {
+        if (mounted) _showActionError(_photoError(error));
+        return;
+      }
+    }
+    if (!mounted || !await _persistDraft() || !mounted) return;
+    if (_draftLocation != _conn.locationRevision ||
+        _conn.profile?.id != _draftProfileID) {
+      return;
+    }
+    setState(() => _photoBusy = true);
+    try {
+      final photo = await _conn.promptPhotos.pick(
+        profileID: _draftProfileID,
+        sessionID: widget.sessionID,
+        directory: _draftDirectory,
+        workspace: _draftWorkspace,
+        source: source,
+      );
+      if (photo != null && mounted && _photoMatches(photo)) {
+        await _applyPendingPhoto(photo, fromPicker: true);
+      }
+    } catch (error) {
+      if (mounted) _showActionError(_photoError(error));
+    } finally {
+      if (mounted) setState(() => _photoBusy = false);
+    }
+  }
+
+  Future<void> _applyPendingPhoto(
+    PendingPromptPhoto photo, {
+    bool fromPicker = false,
+  }) async {
+    if (_promptShelfBusy && !fromPicker) return;
+    if (!_photoMatches(photo)) {
+      _showActionError(_chatL10n(context).photoOtherLocation);
+      return;
+    }
+    setState(() => _photoBusy = true);
+    try {
+      final attachment = await _conn.promptPhotos.readPending(photo.id);
+      if (!mounted || !_photoMatches(photo)) return;
+      if (!_attachments.any((a) => a.url == attachment.url)) {
+        if (_attachments.length >= _maxAttachmentCount ||
+            _attachments.fold<int>(
+                      0,
+                      (total, a) => total + _attachmentByteLength(a),
+                    ) +
+                    _attachmentByteLength(attachment) >
+                _maxAggregateAttachmentBytes) {
+          _showActionError(_chatL10n(context).photoDraftFull);
+          return;
+        }
+        setState(() => _attachments.add(attachment));
+      }
+      if (await _persistDraft()) await _conn.promptPhotos.discard(photo.id);
+    } catch (error) {
+      if (mounted) _showActionError(_photoError(error));
+    } finally {
+      if (mounted) setState(() => _photoBusy = false);
+    }
+  }
+
+  Future<void> _discardPendingPhoto(PendingPromptPhoto photo) async {
+    try {
+      await _conn.promptPhotos.discard(photo.id);
+    } catch (error) {
+      if (mounted) _showActionError(_photoError(error));
+    }
+  }
+
+  Future<void> _reviewPendingPhoto(PendingPromptPhoto photo) async {
+    if (_photoBusy) return;
+    setState(() => _photoBusy = true);
+    try {
+      final attachment = await _conn.promptPhotos.readPending(photo.id);
+      if (!mounted) return;
+      setState(() => _photoBusy = false);
+      await showFilePreviewSheet(
+        context,
+        FilePreviewData.fromDataUrl(
+          name: attachment.filename,
+          mimeType: attachment.mime,
+          url: attachment.url,
+        ),
+      );
+    } catch (error) {
+      if (mounted) _showActionError(_photoError(error));
+    } finally {
+      if (mounted) setState(() => _photoBusy = false);
     }
   }
 
@@ -5033,6 +5188,9 @@ class _ChatScreenState extends State<ChatScreen>
         _composer.text.trim().isNotEmpty ||
         _attachments.isNotEmpty ||
         _draftRecoveryBlocked ||
+        _photoBusy ||
+        (_conn.promptPhotos.pending?.sessionID == widget.sessionID &&
+            _conn.promptPhotos.pending?.profileID == _draftProfileID) ||
         _conn.busySessions.contains(widget.sessionID)) {
       return null;
     }
@@ -5699,6 +5857,53 @@ class _ChatScreenState extends State<ChatScreen>
                                 onCancelInbox: _cancelInboxSend,
                                 onFlipDelivery: _flipInboxDelivery,
                               ),
+                            if (_conn.promptPhotos.pending case final photo?
+                                when photo.profileID == _draftProfileID &&
+                                    photo.sessionID == widget.sessionID)
+                              Padding(
+                                key: const ValueKey('pending-photo-recovery'),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 4,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: TextButton(
+                                        onPressed: _photoBusy
+                                            ? null
+                                            : () => _reviewPendingPhoto(photo),
+                                        child: Text(
+                                          photo.name ??
+                                              _chatL10n(
+                                                context,
+                                              ).photoPendingTitle,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      tooltip: _chatL10n(
+                                        context,
+                                      ).photoAddToDraft,
+                                      onPressed: _promptShelfBusy
+                                          ? null
+                                          : () => _applyPendingPhoto(photo),
+                                      icon: const Icon(
+                                        Icons.add_photo_alternate_outlined,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      tooltip: _chatL10n(context).photoDiscard,
+                                      onPressed: _photoBusy
+                                          ? null
+                                          : () => _discardPendingPhoto(photo),
+                                      icon: const Icon(Icons.close_rounded),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             if (_draftSaveFailure case final failure?)
                               Padding(
                                 key: const ValueKey('draft-save-error'),
@@ -5892,6 +6097,7 @@ class _ChatScreenState extends State<ChatScreen>
                                         : _restoreHistoryDraft,
                                     shelfBusy: _promptShelfBusy,
                                     shelfLoading:
+                                        _photoBusy ||
                                         _promptShelfOperationBusy ||
                                         _restoringDraftAttachments,
                                     attachments: _attachments,
@@ -5932,6 +6138,10 @@ class _ChatScreenState extends State<ChatScreen>
                                     ),
                                     showAttachmentNote: showAttachmentNote,
                                     onAttach: _pickAttachment,
+                                    onPhotoLibrary: () =>
+                                        _pickPhoto(ImageSource.gallery),
+                                    onCamera: () =>
+                                        _pickPhoto(ImageSource.camera),
                                     onContentInserted: (content) => unawaited(
                                       _handleInsertedContent(content),
                                     ),
@@ -6008,6 +6218,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   @override
   void dispose() {
+    _conn.promptPhotos.removeListener(_onPhotosChanged);
     _draftTrackingEnabled = false;
     _persistDraft();
     _composer.removeListener(_scheduleDraftSave);

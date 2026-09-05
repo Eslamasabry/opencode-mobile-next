@@ -691,3 +691,18 @@ Camera/gallery input, large-payload stash migration, ambiguous legacy recovery,
 remaining server parity and final Android interruption/install/upgrade checks
 remain in the release scope. Public APK publication must identify its actual
 source commit and signing identity.
+
+## Cycle 23 — camera and photo-library input
+
+Android composer tools now include Photo library and Take photo, backed by the
+pinned Flutter image picker. Draft saving precedes native launch. A separate
+app-private recovery store retains the original destination and copies selected
+bytes before applying them. Interrupted-picker results wait in the original
+conversation for preview/add/discard; a project change cannot redirect a result.
+Permission denial and cancellation do not block a subsequent attempt.
+
+The compact source-choice flow, storage/restart simulations, cleanup, existing
+draft behavior and localization were checked. See verification/prompt-photos.md
+for evidence and limits. Real Android camera, cloud-picker and process-destruction
+checks remain; expanded-editor photo shortcuts and additional formats are not
+claimed. All six CI jobs for preceding commit e2a3057 succeeded.

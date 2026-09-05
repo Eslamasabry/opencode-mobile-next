@@ -40,6 +40,7 @@ dependencies:
   # alpha line, and called out in the release notes.
   flutter_secure_storage: 11.0.0
   crypto: 3.0.7
+  image_picker: 1.2.3
   # Scanning the QR that `opencode2 pair` prints. Pinned exactly, because it
   # registers a platform plugin and ships native camera code.
   #

@@ -1513,4 +1513,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get draftKeepSavedAttachments => 'Keep saved draft';
+
+  @override
+  String get photoLibraryAction => 'Photo library';
+
+  @override
+  String get photoLibraryDescription => 'Choose a photo or screenshot';
+
+  @override
+  String get photoCameraAction => 'Take photo';
+
+  @override
+  String get photoTooLarge => 'Choose a photo smaller than 10 MB.';
+
+  @override
+  String get photoStorageFailed =>
+      'The photo could not be saved on this device. Free some space and retry.';
+
+  @override
+  String get photoPendingOther =>
+      'A photo is waiting in its original conversation. Keep it there, or discard it before choosing another photo.';
+
+  @override
+  String get photoUnavailable =>
+      'The photo could not be opened. Try adding it again from Photo library or Take photo.';
+
+  @override
+  String get photoPermissionDenied =>
+      'Photo access was denied. Allow camera or photo access in Android app settings, then try again.';
+
+  @override
+  String get photoPendingTitle => 'Pending photo';
+
+  @override
+  String get photoDiscard => 'Discard pending photo';
+
+  @override
+  String get photoAddToDraft => 'Add recovered photo to draft';
+
+  @override
+  String get photoOtherLocation =>
+      'Return to the photo\'s original server and project before adding it.';
+
+  @override
+  String get photoDraftFull =>
+      'Remove an attachment first. A draft holds up to 5 files and 20 MB in total.';
 }

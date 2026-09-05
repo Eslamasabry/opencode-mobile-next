@@ -5,9 +5,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
-    <!-- Scanning the QR that `opencode2 pair` prints. The camera is used for
-         exactly that: a preview that is torn down the moment a pairing code
-         decodes. No frame is stored, and nothing else in the app opens it. -->
+    <!-- QR pairing uses an ephemeral preview. The composer's explicit Take
+         photo action also opens the system camera; that result is kept locally
+         for review and is uploaded only when the user sends the prompt. -->
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-feature android:name="android.hardware.microphone" android:required="false"/>
     <!-- required="false" so a device with no camera can still install and
