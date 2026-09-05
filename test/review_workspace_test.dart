@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
+import 'package:opencode_mobile/api/product_repository.dart'
+    show ProductException;
 import 'package:opencode_mobile/ui/app_theme.dart';
 import 'package:opencode_mobile/ui/screens/review_workspace.dart';
 
@@ -36,6 +40,122 @@ Future<void> _pumpReview(
 }
 
 void main() {
+  FileDiff diff(String file, [String? text]) => FileDiff(
+    file: file,
+    patch: '@@ -1 +1 @@\n-old\n+${text ?? file}',
+    additions: 1,
+    deletions: 1,
+  );
+
+  testWidgets(
+    'refresh preserves selected file and line selection after reorder',
+    (tester) async {
+      var diffs = [diff('a.dart'), diff('b.dart')];
+      await _pumpReview(tester, () async => diffs);
+      await tester.tap(find.byKey(const Key('review-file-1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('+b.dart'));
+      await tester.pump();
+      expect(find.byKey(const Key('review-selection-bar')), findsOneWidget);
+      diffs = [diff('inserted.dart'), diff('b.dart'), diff('a.dart')];
+      // Move b away from its old index, rather than only inserting elsewhere.
+      diffs = [diffs[1], diffs[0], diffs[2]];
+      await tester.tap(find.byKey(const Key('review-refresh')));
+      await tester.pumpAndSettle();
+      expect(find.text('+b.dart'), findsOneWidget);
+      expect(find.text('+inserted.dart'), findsNothing);
+      expect(find.byKey(const Key('review-selection-bar')), findsOneWidget);
+      expect(find.text('2 of 3 viewed'), findsOneWidget);
+    },
+  );
+
+  testWidgets('changed patches invalidate viewed state and selected lines', (
+    tester,
+  ) async {
+    var diffs = [diff('a.dart'), diff('b.dart')];
+    await _pumpReview(tester, () async => diffs);
+    await tester.tap(find.byKey(const Key('review-file-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('+b.dart'));
+    await tester.pump();
+    diffs = [diff('a.dart'), diff('b.dart', 'updated')];
+    await tester.tap(find.byKey(const Key('review-refresh')));
+    await tester.pumpAndSettle();
+    expect(find.text('+updated'), findsOneWidget);
+    expect(find.byKey(const Key('review-selection-bar')), findsNothing);
+    expect(find.text('1 of 2 viewed'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('review-file-1')));
+    await tester.pumpAndSettle();
+    expect(find.text('2 of 2 viewed'), findsOneWidget);
+  });
+
+  testWidgets(
+    'failed refresh retains readable diff and selection until retry',
+    (tester) async {
+      var fail = false;
+      await _pumpReview(tester, () async {
+        if (fail) throw const ProductException('Review refresh failed');
+        return [diff('a.dart')];
+      });
+      await tester.tap(find.text('+a.dart'));
+      await tester.pump();
+      final line = tester.element(find.text('+a.dart'));
+      fail = true;
+      await tester.tap(find.byKey(const Key('review-refresh')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Review refresh failed'), findsOneWidget);
+      expect(tester.element(find.text('+a.dart')), same(line));
+      expect(find.byKey(const Key('review-selection-bar')), findsOneWidget);
+      fail = false;
+      await tester.tap(find.text('Retry'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Review refresh failed'), findsNothing);
+      expect(find.byKey(const Key('review-selection-bar')), findsOneWidget);
+    },
+  );
+
+  testWidgets('refresh honors a file opened while the request was pending', (
+    tester,
+  ) async {
+    Completer<List<FileDiff>>? pending;
+    await _pumpReview(
+      tester,
+      () async =>
+          pending == null ? [diff('a.dart'), diff('b.dart')] : pending.future,
+    );
+    pending = Completer<List<FileDiff>>();
+    await tester.tap(find.byKey(const Key('review-refresh')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('review-file-1')));
+    await tester.pump();
+    pending.complete([diff('b.dart'), diff('a.dart')]);
+    await tester.pumpAndSettle();
+    expect(find.text('+b.dart'), findsOneWidget);
+  });
+
+  testWidgets(
+    'scope change clears cached content and rejects an older refresh',
+    (tester) async {
+      Completer<List<FileDiff>>? pending;
+      await _pumpReview(
+        tester,
+        () async => pending == null ? [diff('session.dart')] : pending.future,
+        workingTreeLoader: () async =>
+            throw const ProductException('Working tree failed'),
+      );
+      pending = Completer<List<FileDiff>>();
+      await tester.tap(find.byKey(const Key('review-refresh')));
+      await tester.pump();
+      await tester.tap(find.text('Working tree'));
+      await tester.pump();
+      pending.complete([diff('stale.dart')]);
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Working tree failed'), findsOneWidget);
+      expect(find.text('+session.dart'), findsNothing);
+      expect(find.text('+stale.dart'), findsNothing);
+    },
+  );
+
   testWidgets('navigates files and supports unified and split review', (
     tester,
   ) async {

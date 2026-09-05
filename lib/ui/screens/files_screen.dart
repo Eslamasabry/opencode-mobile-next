@@ -25,6 +25,12 @@ typedef ProjectFileAttachment =
     Future<void> Function(String path, FilePreviewData data);
 typedef ProjectReviewPrompt = void Function(String prompt);
 
+/// Lets a containing navigation shell offer Back to its active Files tab.
+class FilesBackController {
+  bool Function()? _handler;
+  bool handleBack() => _handler?.call() ?? false;
+}
+
 class FilesScreen extends StatefulWidget {
   final ConnectionController controller;
   final ProjectFileAttachment? onAttachFile;
@@ -39,6 +45,7 @@ class FilesScreen extends StatefulWidget {
   /// Bumped by the shell's Ctrl+F while this destination is showing. Desktop
   /// only in practice: nothing dispatches app shortcuts off desktop.
   final ValueListenable<int>? focusSearchSignal;
+  final FilesBackController? backController;
 
   const FilesScreen({
     super.key,
@@ -47,6 +54,7 @@ class FilesScreen extends StatefulWidget {
     this.onReviewPrompt,
     this.handoff,
     this.focusSearchSignal,
+    this.backController,
   });
 
   @override
@@ -86,6 +94,7 @@ class _FilesScreenState extends State<FilesScreen> {
     widget.controller.addListener(_controllerChanged);
     _search.addListener(_searchChanged);
     widget.focusSearchSignal?.addListener(_focusSearch);
+    widget.backController?._handler = _handleBack;
     _captureLocation();
     _load('');
   }
@@ -93,6 +102,10 @@ class _FilesScreenState extends State<FilesScreen> {
   @override
   void didUpdateWidget(FilesScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.backController != widget.backController) {
+      oldWidget.backController?._handler = null;
+      widget.backController?._handler = _handleBack;
+    }
     if (oldWidget.focusSearchSignal != widget.focusSearchSignal) {
       oldWidget.focusSearchSignal?.removeListener(_focusSearch);
       widget.focusSearchSignal?.addListener(_focusSearch);
@@ -205,6 +218,24 @@ class _FilesScreenState extends State<FilesScreen> {
     _searchOriginPath = null;
     _search.clear();
     _load(path);
+  }
+
+  bool get _canNavigateBack => _search.text.isNotEmpty ||
+      (_surface == _FileSurface.files && _path.isNotEmpty);
+
+  bool _handleBack() {
+    if (!_canNavigateBack) return false;
+    if (MediaQuery.viewInsetsOf(context).bottom > 0) {
+      FocusManager.instance.primaryFocus?.unfocus();
+      return true;
+    }
+    if (_search.text.isNotEmpty) {
+      _clearSearch();
+    } else {
+      final parts = _path.split('/');
+      _navigateTo(parts.take(parts.length - 1).join('/'));
+    }
+    return true;
   }
 
   void _selectSurface(_FileSurface surface) {
@@ -651,7 +682,21 @@ class _FilesScreenState extends State<FilesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final content = _body(context);
+    if (widget.backController != null) return content;
+    return PopScope(
+      canPop: !_canNavigateBack,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _handleBack();
+      },
+      child: content,
+    );
+  }
+
+  Widget _body(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = Localizations.of<AppLocalizations>(context, AppLocalizations) ??
+        lookupAppLocalizations(Localizations.localeOf(context));
     final crumbs = _path.split('/').where((c) => c.isNotEmpty).toList();
 
     return Column(
@@ -730,18 +775,22 @@ class _FilesScreenState extends State<FilesScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               children: [
                 ActionChip(
-                  label: const Text('/'),
+                  label: Text(l10n.filesProjectRoot),
                   onPressed: () => _navigateTo(''),
                 ),
                 for (var i = 1; i <= crumbs.length; i++)
                   Padding(
                     padding: const EdgeInsets.only(left: 6),
-                    child: ActionChip(
-                      label: Text(crumbs[i - 1]),
-                      onPressed: i == crumbs.length
-                          ? null
-                          : () => _navigateTo(crumbs.take(i).join('/')),
-                    ),
+                    child: i == crumbs.length
+                        ? Semantics(
+                            selected: true,
+                            child: Chip(label: Text(crumbs[i - 1],
+                              semanticsLabel: l10n.filesCurrentFolder(crumbs[i - 1]))),
+                          )
+                        : ActionChip(
+                            label: Text(crumbs[i - 1], semanticsLabel: l10n.filesOpenFolder(crumbs[i - 1])),
+                            onPressed: () => _navigateTo(crumbs.take(i).join('/')),
+                          ),
                   ),
               ],
             ),
@@ -1297,6 +1346,7 @@ class _FilesScreenState extends State<FilesScreen> {
 
   @override
   void dispose() {
+    widget.backController?._handler = null;
     _searchDebounce?.cancel();
     widget.controller.removeListener(_controllerChanged);
     widget.focusSearchSignal?.removeListener(_focusSearch);

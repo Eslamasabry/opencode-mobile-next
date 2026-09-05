@@ -399,4 +399,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get refreshRetry => 'Retry';
+
+  @override
+  String get filesProjectRoot => 'Project root';
+
+  @override
+  String filesOpenFolder(String folder) {
+    return 'Open folder $folder';
+  }
+
+  @override
+  String filesCurrentFolder(String folder) {
+    return 'Current folder: $folder';
+  }
+
+  @override
+  String get globalSessionsLoadMore => 'Load more sessions';
 }

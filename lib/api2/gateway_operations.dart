@@ -519,30 +519,28 @@ class Api2OperationsGateway extends ProductRepository {
   );
 
   @override
-  Future<List<GlobalSessionResult>> listGlobalSessions({
+  Future<ServerPage<GlobalSessionResult>> listGlobalSessions({
     String? search,
     bool includeArchived = false,
-    int? cursor,
+    String? cursor,
     int limit = 50,
   }) => _guard('Could not search sessions', () async {
-    // Interface friction: the domain contract pages with an int cursor, but
-    // v2 cursors are opaque strings — deep paging is not resumable, so any
-    // non-null cursor reports the end of the list.
-    if (cursor != null) return const <GlobalSessionResult>[];
     final page = await client.sessions(
       unscoped: true,
+      cursor: cursor,
+      order: 'desc',
       search: search?.trim().isNotEmpty == true ? search!.trim() : null,
       limit: limit,
       rootsOnly: true,
     );
-    return [
+    return ServerPage(items: [
       for (final session in page.data)
         if (includeArchived || !session.archived)
           GlobalSessionResult(
             session: mapApi2Session(session),
             projectDirectory: session.location?.directory,
           ),
-    ];
+    ], nextCursor: page.nextCursor?.isNotEmpty == true ? page.nextCursor : null);
   });
 
   @override

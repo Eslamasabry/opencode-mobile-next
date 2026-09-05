@@ -173,5 +173,11 @@
   "commandRunning": "Starting…",
   "commandLocationChanged": "The server or workspace changed. Close this dialog and open the command again.",
   "refreshFailed": "Couldn’t refresh",
-  "refreshRetry": "Retry"
+  "refreshRetry": "Retry",
+  "filesProjectRoot": "Project root",
+  "filesOpenFolder": "Open folder {folder}",
+  "@filesOpenFolder": {"placeholders":{"folder":{"type":"String"}}},
+  "filesCurrentFolder": "Current folder: {folder}",
+  "@filesCurrentFolder": {"placeholders":{"folder":{"type":"String"}}},
+  "globalSessionsLoadMore": "Load more sessions"
 }

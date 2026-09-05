@@ -789,6 +789,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Retry'**
   String get refreshRetry;
+
+  /// No description provided for @filesProjectRoot.
+  ///
+  /// In en, this message translates to:
+  /// **'Project root'**
+  String get filesProjectRoot;
+
+  /// No description provided for @filesOpenFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Open folder {folder}'**
+  String filesOpenFolder(String folder);
+
+  /// No description provided for @filesCurrentFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Current folder: {folder}'**
+  String filesCurrentFolder(String folder);
+
+  /// No description provided for @globalSessionsLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more sessions'**
+  String get globalSessionsLoadMore;
 }
 
 class _AppLocalizationsDelegate

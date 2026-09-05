@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -13,14 +14,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 typedef _SessionQuery = ({
   String? search,
   bool includeArchived,
-  int? cursor,
+  String? cursor,
   int limit,
 });
 
 class _FinderRepository implements ProductRepository {
-  _FinderRepository(this.handler);
+  _FinderRepository(this.handler) : pageHandler = null;
+  _FinderRepository.pages(this.pageHandler) : handler = null;
 
-  final Future<List<GlobalSessionResult>> Function(_SessionQuery query) handler;
+  final Future<List<GlobalSessionResult>> Function(_SessionQuery query)?
+  handler;
+  final Future<ServerPage<GlobalSessionResult>> Function(_SessionQuery query)?
+  pageHandler;
   final calls = <_SessionQuery>[];
   final stealCalls = <String>[];
   Object? stealError;
@@ -37,12 +42,12 @@ class _FinderRepository implements ProductRepository {
   void setLocation({String? directory, String? workspace}) {}
 
   @override
-  Future<List<GlobalSessionResult>> listGlobalSessions({
+  Future<ServerPage<GlobalSessionResult>> listGlobalSessions({
     String? search,
     bool includeArchived = false,
-    int? cursor,
+    String? cursor,
     int limit = 50,
-  }) {
+  }) async {
     final query = (
       search: search,
       includeArchived: includeArchived,
@@ -50,7 +55,8 @@ class _FinderRepository implements ProductRepository {
       limit: limit,
     );
     calls.add(query);
-    return handler(query);
+    if (pageHandler != null) return pageHandler!(query);
+    return ServerPage(items: await handler!(query));
   }
 
   @override
@@ -127,6 +133,118 @@ Widget _app(
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  testWidgets('empty and duplicate pages keep their continuation reachable', (
+    tester,
+  ) async {
+    final repository = _FinderRepository.pages(
+      (query) async => switch (query.cursor) {
+        null => const ServerPage(items: [], nextCursor: 'z-token'),
+        'z-token' => ServerPage(items: [_result(1)], nextCursor: 'a-token'),
+        'a-token' => ServerPage(items: [_result(1)], nextCursor: 'next-token'),
+        _ => ServerPage(items: [_result(2)]),
+      },
+    );
+    final controller = await _controller(repository);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+    final more = find.byKey(const ValueKey('global-sessions-load-more'));
+    expect(find.text('No sessions yet'), findsNothing);
+    for (var i = 0; i < 3; i++) {
+      await tester.tap(more);
+      await tester.pumpAndSettle();
+    }
+    expect(repository.calls.map((query) => query.cursor), [
+      null,
+      'z-token',
+      'a-token',
+      'next-token',
+    ]);
+    expect(find.text('Session 1'), findsOneWidget);
+    expect(find.text('Session 2'), findsOneWidget);
+    expect(more, findsNothing);
+  });
+
+  testWidgets('failed next page preserves rows and retries the same cursor', (
+    tester,
+  ) async {
+    var fail = true;
+    final repository = _FinderRepository.pages((query) async {
+      if (query.cursor == null) {
+        return ServerPage(items: [_result(1)], nextCursor: 'retry-token');
+      }
+      if (fail) throw const ProductException('Next page unavailable');
+      return ServerPage(items: [_result(2)]);
+    });
+    final controller = await _controller(repository);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('global-sessions-load-more')));
+    await tester.pumpAndSettle();
+    expect(find.text('Session 1'), findsOneWidget);
+    expect(find.text('Next page unavailable'), findsOneWidget);
+    fail = false;
+    await tester.tap(find.text('Try again'));
+    await tester.pumpAndSettle();
+    expect(repository.calls.map((query) => query.cursor), [
+      null,
+      'retry-token',
+      'retry-token',
+    ]);
+    expect(find.text('Session 2'), findsOneWidget);
+  });
+
+  testWidgets('editing query invalidates a pending page before debounce', (
+    tester,
+  ) async {
+    final pending = Completer<ServerPage<GlobalSessionResult>>();
+    final repository = _FinderRepository.pages((query) async {
+      if (query.search == 'new query') return ServerPage(items: [_result(99)]);
+      if (query.cursor == null) {
+        return ServerPage(items: [_result(1)], nextCursor: 'old-token');
+      }
+      return pending.future;
+    });
+    final controller = await _controller(repository);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('global-sessions-load-more')));
+    await tester.pump();
+    await tester.enterText(
+      find.byKey(const ValueKey('global-session-search')),
+      'new query',
+    );
+    pending.complete(ServerPage(items: [_result(2)]));
+    await tester.pump();
+    expect(find.text('Session 2'), findsNothing);
+    await tester.pump(const Duration(milliseconds: 301));
+    await tester.pumpAndSettle();
+    expect(find.text('Session 99'), findsOneWidget);
+    expect(find.text('Session 1'), findsNothing);
+  });
+
+  testWidgets('repeated server cursor offers a restart instead of looping', (
+    tester,
+  ) async {
+    final repository = _FinderRepository.pages(
+      (query) async =>
+          ServerPage(items: [_result(1)], nextCursor: 'repeated-token'),
+    );
+    final controller = await _controller(repository);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('global-sessions-load-more')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('could not advance'), findsOneWidget);
+    expect(repository.calls, hasLength(2));
+    await tester.tap(find.text('Try again'));
+    await tester.pumpAndSettle();
+    expect(repository.calls.last.cursor, isNull);
+  });
+
   testWidgets('finder searches server titles and includes archived on demand', (
     tester,
   ) async {
@@ -162,17 +280,20 @@ void main() {
     expect(find.textContaining('Archived'), findsOneWidget);
   });
 
-  testWidgets('finder paginates with the last server timestamp', (
+  testWidgets('finder paginates with the exact opaque server token', (
     tester,
   ) async {
-    final repository = _FinderRepository((query) async {
+    final repository = _FinderRepository.pages((query) async {
       if (query.cursor == null) {
-        return List.generate(
-          50,
-          (index) => _result(index, updated: 5000 - index),
+        return ServerPage(
+          items: List.generate(
+            50,
+            (index) => _result(index, updated: 5000 - index),
+          ),
+          nextCursor: 'opaque/next+token=',
         );
       }
-      return [_result(80, updated: 4800)];
+      return ServerPage(items: [_result(80, updated: 4800)]);
     });
     final controller = await _controller(repository);
     addTearDown(controller.dispose);
@@ -188,7 +309,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.calls, hasLength(2));
-    expect(repository.calls.last.cursor, 4951);
+    expect(repository.calls.last.cursor, 'opaque/next+token=');
     expect(find.text('51'), findsOneWidget);
   });
 
@@ -352,8 +473,9 @@ void main() {
     tester,
   ) async {
     final repository = _FinderRepository(
-      (query) async =>
-          [_result(2, directory: '/work/other', workspace: 'ws-remote')],
+      (query) async => [
+        _result(2, directory: '/work/other', workspace: 'ws-remote'),
+      ],
     );
     final controller = await _controller(repository);
     controller.directory = '/work/active';
@@ -386,8 +508,9 @@ void main() {
     tester,
   ) async {
     final repository = _FinderRepository(
-      (query) async =>
-          [_result(2, directory: '/work/other', workspace: 'ws-remote')],
+      (query) async => [
+        _result(2, directory: '/work/other', workspace: 'ws-remote'),
+      ],
     )..stealError = const ProductException('Sync is unavailable');
     final controller = await _controller(repository);
     controller.directory = '/work/active';
@@ -411,8 +534,9 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(320, 640));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final repository = _FinderRepository(
-      (query) async =>
-          [_result(2, directory: '/work/other', workspace: 'ws-remote')],
+      (query) async => [
+        _result(2, directory: '/work/other', workspace: 'ws-remote'),
+      ],
     );
     final controller = await _controller(repository);
     controller.directory = '/work/active';

@@ -17,6 +17,14 @@ abstract class LiveEventChannel {
 
 enum VcsDiffMode { workingTree, branch }
 
+/// A server-owned continuation token. Consumers must not derive or order it.
+class ServerPage<T> {
+  const ServerPage({required this.items, this.nextCursor});
+  final List<T> items;
+  final String? nextCursor;
+  bool get hasMore => nextCursor != null && nextCursor!.isNotEmpty;
+}
+
 class WorkspaceProject {
   final String id;
   final String name;
@@ -1103,10 +1111,10 @@ abstract class HostGateway {
     required String projectDirectory,
     required String id,
   });
-  Future<List<GlobalSessionResult>> listGlobalSessions({
+  Future<ServerPage<GlobalSessionResult>> listGlobalSessions({
     String? search,
     bool includeArchived,
-    int? cursor,
+    String? cursor,
     int limit,
   });
   Future<void> moveSession(

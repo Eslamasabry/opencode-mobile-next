@@ -104,3 +104,37 @@ PR #65 Windows CI passed; Linux and Android were still running when checked.
 Next: review file/patch retention, Files Back behavior, complete pagination, then
 the remaining protocol workflows and final release-candidate evidence in the
 [readiness checklist](../v1-release-readiness.md).
+
+## 2026-09-05 — Cycle 04: stable review, folder navigation, global pagination
+
+Implemented **FE-010, FE-011, and BE-005**:
+
+- Review retains the selected file by path across reordered results and keeps
+  readable patches on refresh failure. Unchanged patches retain line selection;
+  changed patches clear invalid selections and Viewed marks. Switching scope
+  clears old content and rejects late responses from the previous scope.
+- Files consumes Back only in the active tab: clear search, then navigate to
+  the parent folder, then use the existing root exit guard. Standalone Files
+  routes also handle folder Back. Breadcrumbs name the project root, folder
+  actions, and current folder for assistive technology.
+- All sessions now returns and consumes `ServerPage` continuation tokens.
+  V1 uses the returned `X-Next-Cursor`; v2 requests newest-first unscoped
+  results and forwards subsequent opaque cursors alone. Empty/filtered and
+  duplicate pages retain Load more. Failures retry the same token; cursor
+  cycles offer a reload rather than looping. Search edits invalidate pending
+  responses immediately, before debounce.
+- Backend review recorded exact remaining model/agent synchronization and
+  staged-revert state/API/UI work for existing issues #53 and #55.
+
+Verification: Flutter analysis clean; **120 focused checks passed** across
+Review, Home navigation, file workflows, both global-search adapters, finder
+pagination, repositories, and localization. The final v1 cursor check traversed
+two pages and rejected a malformed token before making a request. No emulator
+campaign or release build was performed. PR #66's platform CI runs were still
+active at the initial check.
+
+BE-010 message-history pagination and scoped session inventory remain incomplete;
+this cycle does not claim full pagination or release readiness. The pinned v1
+global endpoint's equal-timestamp limitation remains documented as upstream
+behavior. Next delivery work is message history, model/agent synchronization,
+staged revert, and the remaining release requirements.

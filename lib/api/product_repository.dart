@@ -162,10 +162,10 @@ abstract class ProductRepository implements ServerOperationsGateway {
     const ProductException('Workspace removal is unavailable on this server'),
   );
   @override
-  Future<List<GlobalSessionResult>> listGlobalSessions({
+  Future<ServerPage<GlobalSessionResult>> listGlobalSessions({
     String? search,
     bool includeArchived = false,
-    int? cursor,
+    String? cursor,
     int limit = 50,
   }) => Future.error(
     const ProductException(
@@ -843,24 +843,28 @@ class SdkProductRepository extends ProductRepository
   }
 
   @override
-  Future<List<GlobalSessionResult>> listGlobalSessions({
+  Future<ServerPage<GlobalSessionResult>> listGlobalSessions({
     String? search,
     bool includeArchived = false,
-    int? cursor,
+    String? cursor,
     int limit = 50,
   }) => _guard('Could not search sessions', () async {
     final query = search?.trim();
+    final legacyCursor = cursor == null ? null : int.tryParse(cursor);
+    if (cursor != null && legacyCursor == null) {
+      throw const ProductException('Session pagination expired. Refresh the list.');
+    }
     // Deliberately omit the repository's selected directory/workspace. This
     // endpoint is the server-wide finder; passing the active directory would
     // silently reduce it to the list the Workspace screen already has.
     final response = await _client.getExperimentalApi().experimentalSessionList(
       roots: sdk.OpencodeSdkRawUnion051(true),
-      cursor: cursor,
+      cursor: legacyCursor,
       search: query?.isNotEmpty == true ? query : null,
       limit: limit,
       archived: sdk.OpencodeSdkRawUnion052(includeArchived),
     );
-    return (response.data ?? const [])
+    final items = (response.data ?? const [])
         .map(
           (item) => GlobalSessionResult(
             session: _sessionFromGlobalSdk(item),
@@ -869,6 +873,8 @@ class SdkProductRepository extends ProductRepository
           ),
         )
         .toList();
+    final next = response.headers.value('x-next-cursor');
+    return ServerPage(items: items, nextCursor: next?.isNotEmpty == true ? next : null);
   });
 
   @override

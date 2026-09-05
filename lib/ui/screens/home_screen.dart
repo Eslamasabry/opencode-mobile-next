@@ -32,6 +32,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   /// and focuses its search field. Desktop-only in practice — nothing
   /// dispatches shortcuts off desktop.
   final _findInFiles = ValueNotifier<int>(0);
+  final _filesBack = FilesBackController();
 
   @override
   void initState() {
@@ -91,7 +92,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     // reachable from Session and the More hub. One destination, one badge.
     final tabs = [
       WorkspaceScreen(controller: conn),
-      FilesScreen(controller: conn, focusSearchSignal: _findInFiles),
+      FilesScreen(
+        controller: conn,
+        focusSearchSignal: _findInFiles,
+        backController: _filesBack,
+      ),
       ActivityScreen(controller: conn, embedded: true),
       LibraryScreen(controller: conn),
     ];
@@ -215,6 +220,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   /// Guards against losing a connected session to an accidental gesture.
   void _onRootPop(bool didPop, Object? result) {
     if (didPop) return;
+    if (_tab == 1 && _filesBack.handleBack()) {
+      _lastBackAt = null;
+      return;
+    }
     final now = DateTime.now();
     if (_lastBackAt != null &&
         now.difference(_lastBackAt!) < const Duration(seconds: 2)) {

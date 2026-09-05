@@ -4,7 +4,7 @@ Code-reviewed findings for the ongoing review, implement, and push cycle. IDs st
 
 Pass 2 reviewed Commands, Skills, References, Terminal, and Settings. The open GitHub issue inventory was checked on 2026-09-05. FE-005 through FE-008 are specific implementation gaps outside the existing feature issues; they do not create duplicate GitHub issues. The older audit's general refresh-retention guidance is narrowed to the concrete failure in FE-006.
 
-Pass 3 rechecked onboarding, session finding and request handling, Files navigation, Review, accessibility infrastructure, release notes, and recent QA records on 2026-09-05. Root completed FE-007 and FE-008 in cycle 2026-09-05-02, then FE-005, FE-006, and FE-009 in cycle 2026-09-05-03. FE-010 and FE-011 remain ready; the v1 scope below maps overlapping feature work to its existing GitHub issues instead of creating duplicate tasks. Historical audit ratings and old CI/signing blockers are not treated as current evidence.
+Pass 3 rechecked onboarding, session finding and request handling, Files navigation, Review, accessibility infrastructure, release notes, and recent QA records on 2026-09-05. Root completed FE-007 and FE-008 in cycle 2026-09-05-02, FE-005, FE-006, and FE-009 in cycle 03, then FE-010 and FE-011 in cycle 04. The v1 scope below maps remaining feature work to its existing GitHub issues instead of creating duplicate tasks. Historical audit ratings and old CI/signing blockers are not treated as current evidence.
 
 ## FE-001 — Refresh Workspace sessions with the pull gesture
 
@@ -89,7 +89,7 @@ Status: **Implemented — cycle 2026-09-05-03**
 
 ## FE-010 — Preserve the reviewed file when refreshed diffs change order
 
-Status: **Ready** · Priority: **High**
+Status: **Implemented — cycle 2026-09-05-04**
 
 - Trigger and impact: Review the second changed file, then refresh after another file was inserted, removed, or reordered. `_load` clears the readable diff, retains only `_selectedFile`'s numeric index, and marks whichever file occupies that index as Viewed. Refresh can silently move the reader to a different file and inflate viewed progress. A failed refresh also removes all previously readable changes. This is a concrete current instance of audit UX-REV-05, not a new general refresh redesign.
 - Location: `lib/ui/screens/review_workspace.dart`, `_ReviewWorkspaceState._load` (91–117), `_markViewed` (125–132), and `_reviewContent` (276–305).
@@ -98,7 +98,7 @@ Status: **Ready** · Priority: **High**
 
 ## FE-011 — Make Android Back navigate out of nested file folders
 
-Status: **Ready** · Priority: **Medium**
+Status: **Implemented — cycle 2026-09-05-04**
 
 - Trigger and impact: Open Files, descend into a folder, and use Android Back to return to its parent. Files changes `_path` within one route and has no back handler, so `HomeScreen._onRootPop` instead says “Press back again to exit” and then exits. The root breadcrumb's only label is `/`, which does not describe its destination to assistive technology.
 - Location: `lib/ui/screens/home_screen.dart`, `PopScope` (129–131) and `_onRootPop` (216–232); `lib/ui/screens/files_screen.dart`, `_navigateTo` (203–208) and breadcrumb actions (725–747).
