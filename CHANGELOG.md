@@ -2,62 +2,118 @@
 
 This project is in public alpha. Only the newest preview is supported.
 
-## 1.0.34+35 - Unreleased
+## 1.0.34+35 - 2026-09-06
 
-- Preserve queued drafts when device storage fails, and prevent queued sends
-  after their server/workspace changes or the draft is discarded.
-- Search all projects in OpenCode 2 All chats, and resume terminal output with
-  correct byte offsets for Arabic, emoji, and other multibyte text.
-- Refresh sessions with the Workspace pull gesture and show the active execution
-  directory. Search files as you type and preserve results on refresh.
-- Give file previews a separate wrapping action row and visible Close control;
-  Copy uses the full loaded text instead of the shortened preview.
+Changes since **1.0.33+34** (2026-09-02), including the interim `dev-06447b6`
+preview and subsequent work. [Full comparison](https://github.com/Eslamasabry/opencode-mobile-next/compare/v1.0.33%2B34...v1.0.34%2B35).
 
-- Add a unified Running work sheet for related agents and supported OpenCode 2
-  commands, with paged output, Copy/Follow, timeout controls, and confirmed Stop.
-- Reconcile command state after reconnect, pause output polling when hidden,
-  and preserve loaded output when a command disappears or a read fails.
-- Give the composer a full-width editor and a quieter action row. Keep the
-  input connection and selection intact when the keyboard opens or a run ends.
-- Save draft text after pauses in typing. Add Clear draft text with Undo,
-  searchable prompt reuse, and local image thumbnails in the attachment strip.
-- Replace More's oversized tiles with grouped rows, search tools and settings
-  by name or related terms, and label the catalog-named model as the default
-  for new chats.
-- Offer a touch-sized Background action for eligible running work, with Ctrl+B
-  as an optional shortcut. Respect v1's runtime subagent capability and v2's
-  session background endpoint; idle acknowledgements do not claim promotion.
-- Keep context usage quiet below 70%, enlarge agent-switch touch targets,
-  and let prompt history scroll with large text and an open keyboard.
-- Save model favorites and eight recent models per server profile. Cycle
-  models from the chat's switch menu or with F2 / Shift+F2 on a keyboard.
-- Simplify model selection into one searchable list with All, Favorites, and
-  Recent tabs. Move detailed options out of the list and keep Apply reachable
-  with the keyboard open or large accessibility text.
-- Show the active chat's model and reasoning mode consistently in the picker,
-  preserve model choices across workspace changes, and offer a clear-filters
-  action when model searches have no results.
-- Put downloads, setup requirements, and connection troubleshooting at the
-  front of the README.
-- Keep server symbol paths readable on Windows clients and make the
-  localization check recognize Windows paths.
-- Keep model and reasoning-mode choices scoped to the conversation where they
-  were selected; other active and new sessions retain their own/default model.
-- Update the generated OpenCode SDK to upstream `f12e14cf`, including support
-  for `ProviderConfig.options.chunkTimeout: false`.
-- Give CI branch APKs one stable non-production signer so they update one
-  another; public-release signing remains separate.
-- Establish a recoverable permanent public signer. Moving from `1.0.33+34`
-  requires one final uninstall because that release's private key was lost.
-- Show the installed version, package ID, and Android signing certificate in
-  About.
+### Composer, photos, and draft recovery
+
+- Rework the composer with a full-width editor, quieter action row, larger
+  touch targets, and stable keyboard focus and selection. Add reply actions,
+  image thumbnails, and Clear draft text with Undo.
+- Save draft text and attachments per server and conversation. Attachment-only
+  drafts use app-private file storage; review partially missing attachments
+  before restoring the available content.
+- Show Copy and Retry when saving fails. Back and New chat wait for saving;
+  leaving unsaved work requires a choice. Full storage does not silently evict
+  older drafts.
+- Add Android Camera and Photo library actions with recovery tied to the
+  original server, conversation, and location. Copy photos into private
+  storage and validate image type and size before attaching them.
+- Add Older drafts review for ambiguous legacy text: search, read, copy,
+  append, or explicitly delete. Appending preserves the source and current
+  draft; legacy attachments remain with the source.
+- Add a persistent prompt stash with up to 50 entries per server, location
+  review on restore, searchable reuse, and the last 50 sent text prompts.
+  Keyboard history navigation preserves the unfinished draft.
+- Retain queued prompts after storage failures and block stale sends after
+  location changes, discard, or removal of the source server profile.
+
+### Finding, organizing, and moving conversations
+
+- Pin conversations locally per server and reopen them from a pinned section.
+- Search the transcript, tool text, and filenames with highlighted excerpts
+  and match navigation. Search older history on demand; add Ctrl+F, F3,
+  and Escape keyboard controls.
+- Load newest messages first, preserve the reading position while loading
+  older pages, and paginate scoped and all-project conversation lists.
+- Track unread completions, mark conversations read while actively viewing
+  them, and offer a private local-only read-history option.
+- Add complete OpenCode 2 JSON export, redacted by default, with an explicit
+  unredacted option and recoverable save failures.
+- Add reviewed OpenCode 2 JSON import with a visible destination, validation,
+  conflict handling, and reconciliation after uncertain server responses.
+
+### Agent controls and visibility
+
+- Keep model and reasoning choices specific to each conversation. Synchronize
+  OpenCode 2 server-owned model and agent selections; retain explicit choices
+  in offline snapshots.
+- Add per-server model favorites and recents, a searchable picker with
+  All/Favorites/Recent tabs, clear filters, and F2 / Shift+F2 cycling.
+- Add Running work for related agents and supported OpenCode 2 commands:
+  paged output, Copy/Follow, timeouts, confirmed Stop, and reconnect recovery.
+- Expose Background for supported running work, including Ctrl+B; honor
+  differences between OpenCode 1 and OpenCode 2 capabilities.
+- Add an OpenCode 2 Note for the agent editor with conflict review and saved
+  transcript feedback, without exposing note contents in status notices.
+- Allow reviewed OpenCode 2 session skill activation, with Run agent now
+  and protection against duplicate or stale activation.
+- Add an OpenCode 2 Active context inspector with search, type filters,
+  selectable text, and Copy. It shows server-reported active messages after
+  compaction, not the exact provider request or exact token accounting.
+- Add Usage and cost totals by date range and all/current-project scope,
+  including token, model, and tool summaries where supported by the server.
+
+### Workspace, review, and connection reliability
+
+- Preserve selected files, patches, and viewed state during review refreshes.
+  Add explicit staged revert review while protecting unfinished prompts.
+- Navigate up folders with Back, search files while typing, refresh sessions
+  from Workspace, and show the active execution directory.
+- Improve file-preview controls and copy the full loaded text. Resume terminal
+  output with correct UTF-8 byte offsets, including Arabic and emoji.
+- Keep permission and question replies tied to their original request and
+  location; retire resolved sheets and prevent duplicate replies.
+- Start a chat from a command, retain arguments and destination on failure,
+  and retry without unnecessarily creating another conversation.
+- Keep cached content visible during refresh errors with Retry. Ignore stale
+  connection probes, catalog loads, and pagination responses.
+- Preserve provider/OAuth destinations across location changes. Explain that
+  OpenCode 2 MCP additions are runtime-only and prevent accidental replacement.
+- Make managed local-server restart respect ownership and active work.
+- Replace oversized More tiles with grouped rows, add tools/settings search,
+  and improve small-screen and large-text layouts.
+
+### Packaging and maintenance
+
+- Establish a permanent public Android signing identity; show app version,
+  package ID, and certificate in About. CI previews use a separate stable signer.
 - Require device authentication for notification-based tool approval on
   Android 12 and newer.
-- Rename Linux package/runtime/launcher paths to `opencode-mobile` and refuse
-  to replace or remove paths the installer cannot prove it owns.
-- Enable private vulnerability reporting, Discussions, dependency alerts, and
-  public repository metadata.
-- Correct privacy, compatibility, release-signing, desktop, and support docs.
+- Use `opencode-mobile` for Linux package, launcher, and runtime paths, with
+  ownership checks to protect the OpenCode server CLI. Keep Linux and Android
+  release checksum manifests separate.
+- Update the generated SDK to upstream `f12e14cf`, including
+  `ProviderConfig.options.chunkTimeout: false` support.
+- Fix unnecessary native photo-recovery calls at startup and bundle accurate
+  notices for all 13 added photo/file-picker dependencies.
+- Refresh setup, troubleshooting, compatibility, privacy, and support docs;
+  add public security-reporting guidance and repository metadata.
+
+### Upgrade notes and known limits
+
+- **Signing transition:** `1.0.33+34` and CI-signed `dev-*` APKs cannot update
+  in place to this public signer. Preserve local drafts, queued prompts, and
+  connection details before removing an older installation; uninstalling erases
+  local app data. See release notes for certificate fingerprints.
+- Android remains the primary platform. Desktop builds are experimental;
+  English is the supported UI language. This is not a full-parity or stable v1 release.
+- OpenCode 2 features depend on the pinned beta contract. Unsupported server
+  capabilities remain unavailable; active context is a server snapshot.
+- Physical-device camera, process-death recovery, and install/upgrade smoke
+  testing remain incomplete. Photos support PNG/JPEG/GIF/WebP, not HEIC or video.
 
 ## 1.0.33+34 - 2026-09-02
 

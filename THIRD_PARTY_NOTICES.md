@@ -24,6 +24,20 @@ table says so with a dash rather than inventing an owner.
 
 ## Bundled components
 
+### Photo and file selection
+
+`image_picker` 1.2.3, `image_picker_android` 0.8.13+22, and
+`image_picker_ios` 0.8.13+7 distribute identical combined Flutter BSD
+3-Clause and aFileChooser Apache 2.0 notices, including Paul Burke's
+copyright. Their complete, unmodified text is in `LICENSES/image-picker.txt`.
+
+The file-selector platform packages, `flutter_plugin_android_lifecycle`,
+`image_picker_for_web`, `image_picker_macos`, and
+`image_picker_platform_interface` share the exact Flutter BSD 3-Clause
+text in `LICENSES/flutter-file-selection.txt`. The Linux and Windows
+image-picker implementations share the variant in
+`LICENSES/image-picker-desktop.txt`. Versions are listed in the table below.
+
 ### sherpa-onnx
 
 - Component: `sherpa_onnx` Flutter package and native sherpa-onnx runtime
@@ -205,6 +219,10 @@ lives in `packages/opencode_sdk/`, and is covered by this project's
 | `ffi` | 2.2.0 | BSD-3-Clause | Copyright 2019, the Dart project authors | runtime |
 | `ffi_leak_tracker` | 0.1.2 | BSD-3-Clause | Copyright (c) 2026, Halil Durmus | runtime |
 | `file` | 7.0.1 | BSD-3-Clause | Copyright 2017, the Dart project authors. All rights reserved | runtime |
+| `file_selector_linux` | 0.9.4+1 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `file_selector_macos` | 0.9.5+1 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `file_selector_platform_interface` | 2.7.0 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `file_selector_windows` | 0.9.3+6 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
 | `file_picker` | 12.1.3 | MIT | Copyright (c) 2018 Miguel Ruivo | runtime |
 | `file_picker_darwin` | 1.0.4 | MIT | Copyright (c) 2018 Miguel Ruivo | runtime |
 | `file_picker_linux` | 1.0.2 | MIT | Copyright (c) 2018 Miguel Ruivo | runtime |
@@ -212,6 +230,7 @@ lives in `packages/opencode_sdk/`, and is covered by this project's
 | `file_picker_web` | 3.0.3 | MIT | Copyright (c) 2018 Miguel Ruivo | runtime |
 | `fixnum` | 1.1.1 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |
 | `flutter_lints` | 6.0.0 | BSD-3-Clause | Copyright 2013 The Flutter Authors. All rights reserved | test-only |
+| `flutter_plugin_android_lifecycle` | 2.0.35 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
 | `flutter_riverpod` | 3.4.2 | MIT | Copyright (c) 2020 Remi Rousselet | runtime |
 | `flutter_secure_storage` | 11.0.0 | BSD-3-Clause | Copyright 2017 German Saprykin | runtime |
 | `flutter_secure_storage_darwin` | 0.4.0 | BSD-3-Clause | Copyright 2025 Julian Steenbakker | runtime |
@@ -228,6 +247,14 @@ lives in `packages/opencode_sdk/`, and is covered by this project's
 | `http_multi_server` | 3.2.2 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |
 | `http_parser` | 4.1.2 | BSD-3-Clause | Copyright 2014, the Dart project authors | runtime |
 | `intl` | 0.20.3 | BSD-3-Clause | Copyright 2013, the Dart project authors | runtime |
+| `image_picker` | 1.2.3 | BSD-3-Clause AND Apache-2.0 | Copyright 2013 The Flutter Authors; Copyright 2011 - 2013 Paul Burke | runtime |
+| `image_picker_android` | 0.8.13+22 | BSD-3-Clause AND Apache-2.0 | Copyright 2013 The Flutter Authors; Copyright 2011 - 2013 Paul Burke | runtime |
+| `image_picker_for_web` | 3.1.1 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `image_picker_ios` | 0.8.13+7 | BSD-3-Clause AND Apache-2.0 | Copyright 2013 The Flutter Authors; Copyright 2011 - 2013 Paul Burke | runtime |
+| `image_picker_linux` | 0.2.2 | BSD-3-Clause | Copyright 2013 The Flutter Authors. All rights reserved | runtime |
+| `image_picker_macos` | 0.2.2+1 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `image_picker_platform_interface` | 2.11.1 | BSD-3-Clause | Copyright 2013 The Flutter Authors | runtime |
+| `image_picker_windows` | 0.2.2 | BSD-3-Clause | Copyright 2013 The Flutter Authors. All rights reserved | runtime |
 | `io` | 1.1.0 | BSD-3-Clause | Copyright 2017, the Dart project authors | runtime |
 | `jni` | 1.0.3 | BSD-3-Clause | Copyright 2022, the Dart project authors | runtime |
 | `jni_flutter` | 1.0.2 | BSD-3-Clause | Copyright 2026, the Dart project authors | runtime |

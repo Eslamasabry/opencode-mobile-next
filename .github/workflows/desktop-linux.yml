@@ -196,5 +196,7 @@ jobs:
         run: |
           set -euo pipefail
           ls -l dist
+          # Keep Android's checksum manifest when both platforms share a release.
+          mv dist/SHA256SUMS dist/SHA256SUMS-linux
           gh release upload "${GITHUB_REF_NAME}" dist/* \
             --repo "$GITHUB_REPOSITORY" --clobber

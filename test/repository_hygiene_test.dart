@@ -168,7 +168,7 @@ void main() {
     };
     expect(documented, isNotEmpty);
 
-    final lock = File('pubspec.lock').readAsStringSync().split('\n');
+    final lock = File('pubspec.lock').readAsLinesSync();
     final resolved = <String, String>{};
     String? current;
     var hosted = false;

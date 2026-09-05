@@ -1,123 +1,134 @@
-# Release notes draft - Alpha 1.0.34+35
+# Release notes source - Alpha 1.0.34+35
 
-Used by `scripts/cut-alpha.sh` for tag `v1.0.34+35`. Do not publish until the
-release signer, exact commit, Android quality run, and physical-device smoke
-check have all been recorded.
+The tag workflow extracts the section below for `v1.0.34+35` and appends
+the verified source commit, APK checksum, package ID, and signing certificate.
+Publication evidence belongs on the GitHub release. Device checks that have
+not been performed must remain disclosed rather than implied by passing CI.
 
 ---
 
 # OpenCode Mobile - Alpha 1.0.34+35
 
-> ⚠️ **This is an alpha release of a vibecoded app.** OpenCode Mobile is
-> built heavily with AI assistance by an independent community maintainer.
-> It is not affiliated with the official OpenCode project. Expect rough
-> edges, breaking changes between previews, and untested corners.
+This release makes it easier to resume coding from your phone: keep unfinished
+prompts and attachments, find earlier work, review what the agent sees, and
+move conversations between supported servers.
 
-> **Desktop builds are experimental.** Linux is exercised on a virtual display
-> in CI. Windows compiles and packages in CI but still needs routine manual
-> testing. The Android app is the primary target.
+**Changes since [1.0.33+34](https://github.com/Eslamasabry/opencode-mobile-next/releases/tag/v1.0.33%2B34),
+released September 2, 2026.** It includes the interim `dev-06447b6` preview
+and all subsequent changes through this release tag.
 
-## New in 1.0.34
+OpenCode Mobile is an independent community app built with substantial AI
+assistance. It is not affiliated with the official OpenCode project.
+**This is still an alpha:** Android is the primary target; desktop builds
+are experimental, and full OpenCode feature parity is not complete.
 
-- Model selection is isolated per conversation instead of changing every open
-  session, including queued and mid-turn sends.
-- Android and desktop now display the consistent **OpenCode Mobile** identity.
-- Settings → About shows the exact app version, package ID, and Android signing
-  certificate so update conflicts can be diagnosed before data is removed.
-- Notification permission approvals require device authentication on Android
-  12 and newer.
-- Linux packages use `opencode-mobile` and refuse to overwrite or remove the
-  OpenCode server CLI.
-- Public security reporting, Discussions, dependency alerts, and stable CI
-  test signing are enabled.
+## Write a prompt without losing your place
 
-## Install and verify
+- A full-width composer, quieter controls, larger touch targets, image
+  thumbnails, reply actions, and stable keyboard focus and selection.
+- Automatic draft saving per server and conversation, including attachment-only
+  drafts and durable private copies of ordinary draft attachments.
+- Visible Copy/Retry recovery when saving fails, explicit choices before
+  leaving unsaved work, and review when only some attachments can be restored.
+- Android Camera and Photo library actions with recovery back to the original
+  conversation. Photos are validated before they are added to the prompt.
+- An Older drafts screen to search, read, copy, or append ambiguous legacy
+  text without overwriting the current draft or removing the original.
+- A prompt stash with up to 50 entries per server, searchable reuse, sent-text
+  history, and Clear draft text with Undo. Queued prompts retain failed saves
+  and cannot silently move to a different server or workspace.
 
-The public sideload signer expected for this release is
-`842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C`.
-Compare it with **Settings → About**. If it differs, Android cannot update in
-place. Uninstalling first erases local app profiles, drafts, and queued prompts.
-The tag workflow appends the exact APK checksum and source commit to the draft
-release after verifying both version and signer.
+## Find and move your work
 
-## Report a bug (please, genuinely)
+- Local pinned conversations and a pinned section in Workspace.
+- Transcript search with highlighted excerpts, tool/filename matches, older
+  history search, and keyboard shortcuts.
+- Newest-first message loading, stable older-page navigation, and complete
+  pagination for scoped and all-project conversation lists.
+- Unread completion tracking with an option to keep read history local.
+- **OpenCode 2:** complete JSON export with redaction on by default, plus
+  reviewed JSON import with explicit destination and conflict recovery.
 
-The app carries its own bug-report flow now: **More hub → Report a bug**,
-the error screens themselves, or Settings → About. The form arrives with
-your app version and platform prefilled and nothing else — redact the rest
-(no passwords, no keys, no hostnames, no transcripts).
+## Understand and control the agent
 
-## New in 1.0.33: providers and background
+- Per-conversation model and reasoning selection, server-synchronized OpenCode
+  2 choices, and per-server favorites/recents in a searchable model picker.
+- Running work for related agents and supported commands, with output paging,
+  Copy/Follow, timeout controls, Stop confirmation, and reconnect recovery.
+- A reachable Background action for supported work, plus Ctrl+B.
+- **OpenCode 2:** Note for the agent, reviewed session skill activation with
+  optional immediate execution, and an Active context inspector with search,
+  filters, selectable text, and Copy.
+- **OpenCode 2:** Usage and cost totals by date range and project, including
+  token, model, and tool summaries from the server.
 
-- **Providers**: every provider shows its real logo (fetched from Google's
-  public favicon service by domain, monogram fallback), a Connected / Not
-  connected state with model count, connected providers first, and the
-  Providers section now leads the Integrations screen.
-- **Background**: the persistent notification is live — session title, what
-  the agent is doing, running and pending counts, a progress bar, Android 16
-  live-update promotion, and a Pause action. Background mode is one tap from
-  the Workspace header, suggested from the empty Activity inbox, and the
-  Settings hub shows whether it is running.
+## Fewer interruptions while reviewing or reconnecting
 
-## New in 1.0.32: the UI/UX refresh
+- Review keeps selected patches and viewed state; staged revert protects
+  unfinished prompts. Files supports Back-to-parent and search while typing.
+- Permission/question sheets retire when resolved, keep replies scoped to the
+  right location, and block duplicate submissions.
+- Command retries preserve arguments and destination. Refresh failures keep
+  cached content visible with Retry; stale network results are ignored.
+- Provider/OAuth operations retain their original destination. OpenCode 2 MCP
+  setup explains its runtime-only lifetime and prevents accidental replacement.
+- Terminal reconnect offsets handle multibyte text correctly. File preview
+  controls wrap on phones, and Copy includes all loaded text.
+- More and Settings use grouped, searchable rows; small-screen and large-text
+  layouts receive fixes. Managed local-server restart checks ownership and work.
+- Startup avoids unnecessary native photo-recovery calls. Dependency notices
+  include the newly added photo/file-picker packages and their license texts.
 
-- **Identity**: a new launcher icon drawn from the app's own prompt glyph,
-  Space Grotesk headlines, and one sanctioned depth/emphasis recipe.
-- **Chat**: permission requests arrive as an inline card above the composer
-  instead of a locked modal; selectable answers; cost and tokens behind a
-  toggle; streaming and running-tool emphasis; tool groups summarised as a
-  sentence; `choices`, `checklist` and `command` blocks the agent can emit;
-  a real model name in the chip; long-press to attach; a haptic when a run
-  finishes; one session menu; a full-screen diff viewer.
-- **Onboarding**: a three-step pairing guide, inline connection errors,
-  bottom-sheet confirms everywhere, plain-language Termux steps.
-- **Workspace**: wrapped diffs on phones, Activity as a pure inbox, Terminal
-  one tap away, swipe-to-archive with Undo, fewer nouns ("Move", "Cloud
-  environments", "This computer").
-- **Server data the TUI cannot show**: retry countdowns, tool durations,
-  actionable error cards, permission previews with the exact command and a
-  diff, model pricing, agent colours, session cost and diff size.
-- **Platform**: share text from any app into a new session; predictive back;
-  Riverpod 3; `flutter_secure_storage` 11 (see the upgrade note below).
+## Android download and upgrade
 
-### Upgrade note: stored credentials
+Download **`opencode-mobile-1.0.34+35.apk`** from this release's assets.
+Use **`SHA256SUMS`** to verify it. This is a standalone sideload APK.
 
-For an in-place update with the same signer, `flutter_secure_storage` 11 uses
-the credential migration introduced in 1.0.31. Skipping that migration from
-**1.0.30 or earlier** requires pairing again. The public signer transition
-described above is separate: uninstalling an older build erases its local
-profiles, drafts, and queued prompts regardless of the storage migration.
+**Check the signing identity before replacing an existing installation.**
+The package is `io.github.eslamasabry.opencode_mobile`. This release uses the
+permanent public signer:
 
-## What is in this cut
+```text
+842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C
+```
 
-- **OpenCode 1 and OpenCode 2 (beta)** — one app, dual-stack. The connect
-  flow detects the server flavor; v2 adds the inbox (steer or queue a
-  prompt while a run is live), forms, and pairing by QR scan or paste.
-- **Session-first Workspace**, one unified **Activity** surface (requests,
-  forms, alerts), a simplified composer, and **review-to-prompt** staging.
-- **Desktop**: Linux packages (`.deb` + tarball + SHA256SUMS, reproducible),
-  window state persistence, keyboard shortcut layer (Ctrl+K, Ctrl+N,
-  Ctrl+1–4, …), right-click menus, scrollbars, mouse text selection,
-  drag-and-drop file attach. Windows: CI-built zip, experimental.
-- The full audit-and-fix trail is in `docs/audits/` and
-  `docs/reverification-report.md` — including what is still known-open.
+- Builds already using this signer can update in place.
+- The previous `1.0.33+34` public APK used signer `8F51FBCA…C82053`;
+  its private key was lost, so it cannot update in place to this release.
+- CI previews, including `dev-06447b6`, use signer `2D010C21…18D0EC`;
+  they also cannot update in place to this public build.
+- **Uninstalling erases local profiles, drafts, stashed/queued prompts, and
+  other local app data.** Copy or export work you need and record connection
+  details before removing an older installation. Server-side conversations
+  are stored separately. After reinstalling, pair your servers again.
 
-## Install
+Settings → About shows the version, package ID, and certificate in builds that
+support this view. Notification-based tool approval requires device
+authentication on Android 12 and newer.
 
-- **Android**: use the verified APK attached to this release. Update in place
-  only when the installed package and signer match. The `v1.0.33+34` public
-  preview has a different signer and cannot update in place to this build.
-  Record any local work you need before uninstalling; then pair your servers
-  again. Check the signer in **Settings → About** before proceeding.
-- **Linux**: `.deb` (Ubuntu 24.04-era dependencies) or the portable tarball;
-  SHA256SUMS attached. See `docs/desktop.md` for runtime requirements
-  (libsecret/keyring, zenity) and honest limitations.
-- **Windows**: CI artifact only (see workflow runs) — experimental,
-  untested, contributors wanted.
+## Desktop and compatibility
 
-## Not in this cut
+Linux packages use `opencode-mobile` and protect the separate OpenCode server
+command. Linux assets, when attached, use **`SHA256SUMS-linux`**. Windows
+builds remain available through CI artifacts. Both platforms are experimental;
+see [desktop setup](https://github.com/Eslamasabry/opencode-mobile-next/blob/v1.0.34%2B35/docs/desktop.md).
 
-- Play Store distribution (signing decision still open).
-- iOS/macOS. Localization beyond English (the l10n layer exists; `en` only).
-- Server-version guarantees: tested against OpenCode 1.18.x and the v2 beta
-  this repo pins; other versions may differ.
+OpenCode 1 and the repository's pinned OpenCode 2 beta contract are supported;
+features marked OpenCode 2 depend on server capability. Unsupported endpoints
+are not a promise of full parity. Active context shows the server's active
+messages after compaction, not the exact provider request or token accounting.
+
+English is the supported UI language. Play Store, iOS, and macOS distribution
+are not included. Physical-device camera, process-death recovery, and
+install/upgrade smoke checks remain incomplete. Camera/library input supports
+PNG, JPEG, GIF, and WebP within the composer limits; HEIC and video are not supported.
+
+## Full changelog and feedback
+
+[Detailed changelog](https://github.com/Eslamasabry/opencode-mobile-next/blob/v1.0.34%2B35/CHANGELOG.md)
+· [All changes since 1.0.33+34](https://github.com/Eslamasabry/opencode-mobile-next/compare/v1.0.33%2B34...v1.0.34%2B35)
+· [Changes since the interim dev APK](https://github.com/Eslamasabry/opencode-mobile-next/compare/dev-06447b6...v1.0.34%2B35)
+
+Use **More → Report a bug** or Settings → About. Include the app version,
+server version, and steps to reproduce; remove credentials and private
+conversation content before submitting.
