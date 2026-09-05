@@ -23,8 +23,7 @@ class CapabilitiesScreen extends StatelessWidget {
     final tools = controller.capabilities.toolInventory;
     final tabs = <(String, Widget)>[
       ('Commands', CommandsScreen(controller: controller, embedded: true)),
-      if (tools)
-        ('Tools', ToolsScreen(controller: controller, embedded: true)),
+      if (tools) ('Tools', ToolsScreen(controller: controller, embedded: true)),
       ('Skills', SkillsScreen(controller: controller, embedded: true)),
       ('References', ReferencesScreen(controller: controller, embedded: true)),
     ];
@@ -35,7 +34,12 @@ class CapabilitiesScreen extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Commands & tools'),
           bottom: TabBar(
-            tabs: [for (final tab in tabs) Tab(key: ValueKey('capabilities-tab-${tab.$1}'), text: tab.$1)],
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            tabs: [
+              for (final tab in tabs)
+                Tab(key: ValueKey('capabilities-tab-${tab.$1}'), text: tab.$1),
+            ],
           ),
         ),
         body: TabBarView(children: [for (final tab in tabs) tab.$2]),

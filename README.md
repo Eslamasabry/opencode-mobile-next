@@ -160,7 +160,7 @@ the server as a service on a Linux box are all covered in
 |---|---|
 | Android | Primary target; arm64 sideload APK |
 | OpenCode 1 | Supported against the current 1.18.x line |
-| OpenCode 2 | Beta support pinned to upstream commit `f12e14cf` |
+| OpenCode 2 | Beta support targets the captured `0.0.0-beta-18600` contract; newer betas may differ |
 | Linux x64 | Experimental; CI-built tarball and Debian package |
 | Windows x64 | Experimental; CI artifact, no installer |
 | iOS / macOS | Not available |

@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:opencode_sdk/opencode_sdk.dart' as sdk;
 
 import '../domain/server_gateway.dart';
+import '../domain/parallel_requests.dart';
 import 'mcp_oauth.dart';
 import 'models.dart';
 
@@ -1383,9 +1384,8 @@ class SdkProductRepository extends ProductRepository
           locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
           locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
         );
-        final providerResponse = await providersRequest;
-        final modelResponse = await modelsRequest;
-        final agentResponse = await agentsRequest;
+        final (providerResponse, modelResponse, agentResponse) =
+            await waitForRequests(providersRequest, modelsRequest, agentsRequest);
         final providers = (providerResponse.data?.data ?? const [])
             .map((provider) {
               return CatalogProvider(
