@@ -25,6 +25,18 @@ class ServerPage<T> {
   bool get hasMore => nextCursor != null && nextCursor!.isNotEmpty;
 }
 
+/// Servers whose model and agent are persistent session state rather than
+/// fields on each prompt. Defaults are applied only at creation.
+abstract interface class SessionSelectionGateway {
+  Future<Session> createSelectedSession(SessionSelection defaults);
+  Future<void> setSessionModel(
+    String sessionID,
+    ModelRef model,
+    String variant,
+  );
+  Future<void> setSessionAgent(String sessionID, String agent);
+}
+
 class WorkspaceProject {
   final String id;
   final String name;

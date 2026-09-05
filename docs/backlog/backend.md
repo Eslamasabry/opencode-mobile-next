@@ -112,7 +112,7 @@ This is a source/contract inventory, not a release sign-off. Open GitHub issues 
 | Priority | Requirement and current evidence | Concrete completion requirement |
 |---|---|---|
 | High | **Reach every conversation and recent reply:** global finder, message history, and scoped v2 inventory now preserve continuation. | Verify the final candidate against live servers. Retain documented v1 endpoint limitations; client pagination does not establish full release coverage. |
-| High | **Server-authoritative model, variant, and agent:** [#53](https://github.com/Eslamasabry/opencode-mobile-next/issues/53). `mapApi2Session` reads model/agent but drops model variant; `ConnectionController.modelForSession` uses local choices/profile defaults; `_applySelection` writes them before each send. Selected events are parsed in `events.dart` but not forwarded by `Api2EventAdapter`. `Api2Client.createSession` supports defaults; the gateway does not pass them. | Hydrate and merge matching-session selections on connect/reconnect and events, including variant. Persist intentional picker changes through the v2 selection APIs; do not overwrite another client's choice on ordinary sends. Keep v1 per-prompt selections and new-session fallback behavior. |
+| High | **Server-authoritative model, variant, and agent:** [#53](https://github.com/Eslamasabry/opencode-mobile-next/issues/53), client implementation completed in cycle 07. Typed session selection, explicit writes, live patches, creation defaults and offline snapshots are wired. | Complete final live cross-client/device verification. V2 selections govern subsequent provider turns; the contract has no atomic per-inbox selection binding or reset-to-inherited endpoint. V1 retains per-prompt choices. |
 | High | **Truthful revert workflow:** [#55](https://github.com/Eslamasabry/opencode-mobile-next/issues/55). The current v2 adapter exposes stage/clear through the one-shot v1 interface; commit is absent and the domain retains only `reverted: bool`. Revert events are parsed but not forwarded. | Add stage, preview, explicit commit, and clear, with persistent staged state and busy/conflict recovery. Confirm actual file effects on the pinned server. Preserve the existing undoable v1 workflow. |
 | High | **Provider setup and MCP correctness:** BE-006–009, then BE-011. Key/OAuth setup exists; this is correction of shipped flows, not a missing integrations screen. | Complete root's scoped requests/OAuth/timeout work, then correct scope presentation. A failed/retried setup must leave a usable recoverable state. |
 | Medium | **Complete backup and transfer:** [#48](https://github.com/Eslamasabry/opencode-mobile-next/issues/48) is sanitized JSON export. `_exportTranscript` currently writes only rendered Markdown. The v2 export/import routes exist; neither is exposed by the product gateway. | Add server-generated JSON with `sanitize=true` beside Markdown. Keep import a separate feature: validate the transfer payload, select destination location, handle the declared 409 conflict, and retain the original on failure. Import was excluded from #48, not from the broader parity goal. Captured v1 has no equivalent transfer routes. |
@@ -236,9 +236,28 @@ Use one message-ID-to-list-index helper for timeline/search/tool jumps. With the
 
 ## #53 / #55 — focused v2 reconciliation plan
 
-**Status:** Ready for implementation planning; no product changes or checks performed in this pass. Existing issues [#53](https://github.com/Eslamasabry/opencode-mobile-next/issues/53) and [#55](https://github.com/Eslamasabry/opencode-mobile-next/issues/55) retain ownership. Contract evidence is `contracts/opencode2-openapi-beta-18600.json` (`Session.Info`, `Model.Ref`, `Session.Revert`, and the session model/agent/revert routes); event evidence is `docs/opencode2-protocol-notes.md` section 3.2 and the already parsed event types in `lib/api2/events.dart`.
+**Status:** #53 client implementation completed in cycle 07; #55 remains ready for implementation. The plans below retain the original acceptance requirements. Existing issues [#53](https://github.com/Eslamasabry/opencode-mobile-next/issues/53) and [#55](https://github.com/Eslamasabry/opencode-mobile-next/issues/55) retain ownership pending final verification. Contract evidence is `contracts/opencode2-openapi-beta-18600.json` (`Session.Info`, `Model.Ref`, `Session.Revert`, and the session model/agent/revert routes); event evidence is `docs/opencode2-protocol-notes.md` section 3.2.
 
 ### #53 — model, variant, and agent belong to the server session
+
+**Implemented in cycle 07:** `SessionSelection` distinguishes unknown metadata
+from known inherited values and retains the full model ref/variant and agent.
+Full reads and creation hydrate selection; selected events and partial rename /
+move updates preserve unrelated fields. Intentional model, variant, agent and
+cycle changes serialize through `SessionSelectionGateway` and reconcile server
+state. Existing v2 sessions never fall back to profile defaults, including while
+the transport is retired. All controller-based creation, including new command
+destinations, receives profile defaults and adopts the server response.
+
+Ordinary v2 prompt/command/shell requests perform no selection writes. Explicit
+offline replay preserves saved choices, respects cancellation during waits, and
+does not dispatch on a retired API. A selection failure restores the composer
+without enqueueing an undispatched prompt. Failed dispatched prompts preserve
+their original selection/profile snapshot. Pickers retain intentional drafts,
+show saving/errors, and bind an open variant editor to its displayed model.
+Inherited v2 sessions remain eligible for compaction. The historical gap table
+below records what this implementation addressed; final live/device acceptance
+remains part of the release gate.
 
 | Missing link | Current code | Required change |
 |---|---|---|

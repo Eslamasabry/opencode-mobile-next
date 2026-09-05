@@ -83,6 +83,16 @@ Session mapApi2Session(Api2Session session) => Session(
   tokens: mapApi2Tokens(session.tokens),
   summary: null, // v2 sessions carry no aggregate diff summary.
   agent: session.agent,
+  selection: SessionSelection(
+    model: session.model == null
+        ? null
+        : ModelRef(
+            providerID: session.model!.providerID,
+            modelID: session.model!.id,
+          ),
+    variant: session.model?.variant ?? '',
+    agent: session.agent,
+  ),
   model: session.model == null
       ? null
       : '${session.model!.providerID}/${session.model!.id}',

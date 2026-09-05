@@ -24,7 +24,7 @@ import 'transport.dart';
 /// server has no equivalent endpoint the method returns an inert empty
 /// result or throws a typed [ProductException], and the matching
 /// [ServerCapabilities] flag is false (see [api2ServerCapabilities]).
-class Api2Gateway implements ServerGateway {
+class Api2Gateway implements ServerGateway, SessionSelectionGateway {
   final Api2Client client;
 
   Api2Gateway({required this.client});
@@ -108,6 +108,42 @@ class Api2Gateway implements ServerGateway {
       _run(() async => mapApi2Session(await client.createSession()));
 
   @override
+  Future<Session> createSelectedSession(SessionSelection defaults) => _run(
+    () async => mapApi2Session(
+      await client.createSession(
+        model: defaults.model == null
+            ? null
+            : Api2ModelRef(
+                id: defaults.model!.normalized.modelID,
+                providerID: defaults.model!.providerID,
+                variant: defaults.variant.isEmpty ? null : defaults.variant,
+              ),
+        agent: defaults.agent?.isNotEmpty == true ? defaults.agent : null,
+      ),
+    ),
+  );
+
+  @override
+  Future<void> setSessionModel(
+    String sessionID,
+    ModelRef model,
+    String variant,
+  ) => _run(
+    () => client.switchModel(
+      sessionID,
+      Api2ModelRef(
+        id: model.normalized.modelID,
+        providerID: model.providerID,
+        variant: variant.isEmpty ? null : variant,
+      ),
+    ),
+  );
+
+  @override
+  Future<void> setSessionAgent(String sessionID, String agent) =>
+      _run(() => client.switchAgent(sessionID, agent));
+
+  @override
   Future<void> deleteSession(String id) => _run(() => client.deleteSession(id));
 
   @override
@@ -180,12 +216,6 @@ class Api2Gateway implements ServerGateway {
     List<PromptAgentMention> agentMentions = const [],
     PromptDelivery? delivery,
   }) => _run(() async {
-    await _applySelection(
-      sessionID,
-      model: model,
-      agent: agent,
-      variant: variant,
-    );
     await client.prompt(
       sessionID,
       text: text,
@@ -223,13 +253,7 @@ class Api2Gateway implements ServerGateway {
     ModelRef? model,
     String? variant,
   }) => _run(() async {
-    // v2 shell takes only the command; agent/model ride as session state.
-    await _applySelection(
-      sessionID,
-      model: model,
-      agent: agent,
-      variant: variant,
-    );
+    // v2 uses its existing session selection for ordinary sends.
     await transport.postJson(
       '/session/$sessionID/shell',
       body: {'command': command},
@@ -244,7 +268,6 @@ class Api2Gateway implements ServerGateway {
     ModelRef? model,
     String? variant,
   }) => _run(() async {
-    await _applySelection(sessionID, model: model, variant: variant);
     final name = command.startsWith('/') ? command.substring(1) : command;
     await transport.postJson(
       '/session/$sessionID/command',
@@ -255,27 +278,6 @@ class Api2Gateway implements ServerGateway {
   @override
   Future<void> abort(String sessionID) =>
       _run(() => client.interrupt(sessionID));
-
-  Future<void> _applySelection(
-    String sessionID, {
-    ModelRef? model,
-    String? agent,
-    String? variant,
-  }) async {
-    if (model != null) {
-      await client.switchModel(
-        sessionID,
-        Api2ModelRef(
-          id: model.normalized.modelID,
-          providerID: model.providerID,
-          variant: variant,
-        ),
-      );
-    }
-    if (agent != null && agent.isNotEmpty) {
-      await client.switchAgent(sessionID, agent);
-    }
-  }
 
   // ---------------- Permissions ----------------
 

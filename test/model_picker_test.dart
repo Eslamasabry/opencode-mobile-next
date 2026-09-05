@@ -504,6 +504,32 @@ void main() {
     expect(controller.selectedVariant, 'fast');
   });
 
+  testWidgets('open options keep variant edits bound to the displayed model', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(411, 891));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final controller = await _controller();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(controller));
+    await tester.tap(find.text('Choose model'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('model-picker-options')));
+    await tester.pumpAndSettle();
+    await controller.selectModel(
+      ModelRef(providerID: 'opencode', modelID: 'big-pickle'),
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('fast · low effort'));
+    await tester.tap(find.text('fast · low effort'));
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Use model and mode'));
+    await tester.pumpAndSettle();
+    expect(controller.selectedModel!.modelID, 'nemotron-3.5-lightning-free');
+    expect(controller.selectedVariant, 'fast');
+  });
+
   testWidgets('primary agent picker excludes subagents', (tester) async {
     await tester.binding.setSurfaceSize(const Size(411, 891));
     addTearDown(() => tester.binding.setSurfaceSize(null));

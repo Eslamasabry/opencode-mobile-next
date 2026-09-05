@@ -244,6 +244,42 @@ abstract class AppLocalizations {
   /// **'Applies to this session\'s next turns.'**
   String get modelSessionScopeNote;
 
+  /// No description provided for @modelSelectionLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading session selection…'**
+  String get modelSelectionLoading;
+
+  /// No description provided for @modelServerDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Server default'**
+  String get modelServerDefault;
+
+  /// No description provided for @modelSelectionSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving session selection…'**
+  String get modelSelectionSaving;
+
+  /// No description provided for @modelAgentSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the agent. Try again.'**
+  String get modelAgentSaveFailed;
+
+  /// No description provided for @modelUnavailableSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'The session\'s model is unavailable in this catalog. Refresh models or choose another.'**
+  String get modelUnavailableSelection;
+
+  /// No description provided for @modelScopeChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection changed. Reopen the model selector to continue.'**
+  String get modelScopeChanged;
+
   /// No description provided for @commonClearSearch.
   ///
   /// In en, this message translates to:

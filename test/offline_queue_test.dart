@@ -21,6 +21,15 @@ import 'package:shared_preferences_platform_interface/shared_preferences_platfor
 class _QueueController extends ConnectionController {
   _QueueController(super.store);
   Completer<ServerGateway?>? pendingTransport;
+  Future<void>? selectionWait;
+
+  @override
+  Future<void> waitForSessionSelection(
+    String sessionID, {
+    ServerGateway? expectedApi,
+  }) =>
+      selectionWait ??
+      super.waitForSessionSelection(sessionID, expectedApi: expectedApi);
 
   @override
   Future<ServerGateway?> prepareActionTransport() =>
@@ -46,6 +55,7 @@ class _FakeApi extends OpenCodeApi with CompleteMessageHistory {
   /// Per-attempt plan consumed from the front: null means success, an error
   /// object is thrown. An empty plan means every attempt succeeds.
   final List<Object?> promptPlan = [];
+  Future<void> Function()? beforePrompt;
 
   @override
   Future<List<Session>> sessions() async => const [];
@@ -70,6 +80,7 @@ class _FakeApi extends OpenCodeApi with CompleteMessageHistory {
     List<PromptAgentMention> agentMentions = const [],
     PromptDelivery? delivery,
   }) async {
+    await beforePrompt?.call();
     if (promptPlan.isNotEmpty) {
       final planned = promptPlan.removeAt(0);
       if (planned != null) throw planned;
@@ -440,6 +451,71 @@ void main() {
       tester.widget<TextField>(find.byType(TextField)).controller?.text,
       isEmpty,
     );
+  });
+
+  testWidgets(
+    'selection failure restores an undispatched draft without queuing',
+    (tester) async {
+      final api = _FakeApi();
+      final controller = await _controller(api);
+      addTearDown(controller.dispose);
+      final pending = Completer<void>();
+      controller.selectionWait = pending.future;
+      await _pumpChat(tester, controller);
+      await tester.enterText(
+        find.byKey(const Key('chat-composer-field')),
+        'Keep this draft',
+      );
+      await tester.pump();
+      await tester.tap(find.byTooltip('Send'));
+      await tester.pump();
+      pending.completeError(ApiException('selection timed out'));
+      await tester.pump();
+      await tester.pump();
+      expect(api.prompts, isEmpty);
+      expect(controller.queuedPromptsFor('session-1'), isEmpty);
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const Key('chat-composer-field')))
+            .controller!
+            .text,
+        'Keep this draft',
+      );
+    },
+  );
+
+  testWidgets('a failed dispatched prompt queues its captured selection', (
+    tester,
+  ) async {
+    final api = _FakeApi();
+    final controller = await _controller(api);
+    addTearDown(controller.dispose);
+    final pending = Completer<void>();
+    final started = Completer<void>();
+    api.beforePrompt = () {
+      started.complete();
+      return pending.future;
+    };
+    api.promptPlan.add(ApiException('disconnected'));
+    controller.selectedModel = ModelRef(providerID: 'p', modelID: 'original');
+    controller.selectedAgent = 'build';
+    await _pumpChat(tester, controller);
+    await tester.enterText(
+      find.byKey(const Key('chat-composer-field')),
+      'Keep my choice',
+    );
+    await tester.pump();
+    await tester.tap(find.byTooltip('Send'));
+    await tester.pump();
+    expect(started.isCompleted, isTrue);
+    controller.selectedModel = ModelRef(providerID: 'p', modelID: 'later');
+    controller.selectedAgent = 'plan';
+    pending.complete();
+    await tester.pump();
+    await tester.pump();
+    final queued = controller.queuedPromptsFor('session-1').single;
+    expect(queued.model!.wireName, 'p/original');
+    expect(queued.agent, 'build');
   });
 
   testWidgets('a queued draft can be edited back into the composer', (

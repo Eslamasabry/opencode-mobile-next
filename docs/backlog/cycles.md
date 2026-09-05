@@ -207,3 +207,42 @@ timestamp-tie limitation remains documented. No native release build, final
 visual campaign, tag, or publication was performed. Model/agent synchronization,
 staged revert, resolved request sheets, and the broader release checklist remain
 open.
+
+## 2026-09-05 — Cycle 07: server-owned session model and agent
+
+Implemented the client workflow for **#53**. V2 session reads and creation retain
+the full model, variant and agent, including the difference between unhydrated
+and server-inherited values. Selected events update only their session. Rename
+and move events patch metadata without erasing selections, usage or revert
+state. Existing v2 chats keep server choices while connected or offline; profile
+defaults apply only when creating a new chat, including command destinations.
+
+Intentional picker/cycle changes serialize through the model/agent endpoints and
+reconcile the server response. Ordinary v2 prompts, commands and shell calls make
+no selection writes. Offline replay explicitly applies saved snapshots, checks
+cancellation after waits, and stops before using a retired transport. A selection
+failure restores the draft without enqueueing an undispatched prompt. A failed
+dispatched prompt retains its captured selection and profile for offline replay.
+
+Pickers follow remote changes while their drafts are untouched, preserve edits
+on failure, display unavailable server models, and show agent saving/errors. An
+open Options editor remains bound to its displayed model. Inherited v2 selections
+use server-default copy and remain eligible for compaction. V1 per-prompt model,
+variant and agent behavior is preserved.
+
+Verification: analysis clean. The final controller/event/inventory run passed
+**29 checks**, including **11 selection checks**. The actual v2 reconnect path and
+gateway lifecycle passed **5 checks**; reconnect adopts a changed remote model,
+agent and cleared variant. HTTP selection/creation/ordinary-dispatch fixtures,
+picker and Options regressions, offline capture/cancellation/failure checks,
+command destinations, mapping/localization and affected chat dispatch checks
+passed. Three wake-replacement checks passed after correcting the fixture to
+publish its returned API, as production recovery does. Both agents reviewed the
+batch and their concrete interruption/editor findings were resolved.
+
+PR #69's platform CI was still running at this cycle's initial check. No final
+native build, live cross-client/device campaign, tag or publication was performed.
+The pinned v2 contract has no reset-to-inherited mutation and no atomic per-inbox
+model binding; explicit offline replay changes subsequent provider turns. #53
+remains linked for final live verification. Staged revert, resolved request
+sheets and the broader release checklist remain open.

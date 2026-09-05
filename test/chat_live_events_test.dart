@@ -383,7 +383,12 @@ class _DelayedActionController extends ConnectionController {
   final Completer<OpenCodeApi?> readyApi;
 
   @override
-  Future<OpenCodeApi?> prepareActionTransport() => readyApi.future;
+  Future<OpenCodeApi?> prepareActionTransport() async {
+    final replacement = await readyApi.future;
+    // Real wake recovery publishes the replacement before returning it.
+    api = replacement;
+    return replacement;
+  }
 }
 
 class _DelayedRepositoryController extends ConnectionController {
