@@ -14,6 +14,12 @@ enum ReviewDiffMode { unified, split }
 
 enum ReviewDiffScope { session, workingTree, branch }
 
+bool _sameReviewDiff(FileDiff? a, FileDiff? b) =>
+    a != null && b != null &&
+    _ReviewWorkspaceState._normalizedPath(a.file) == _ReviewWorkspaceState._normalizedPath(b.file) &&
+    a.patch == b.patch && a.before == b.before && a.after == b.after &&
+    a.status == b.status;
+
 class ReviewWorkspace extends StatefulWidget {
   const ReviewWorkspace({
     super.key,
@@ -56,7 +62,7 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
 
   /// Files whose diff was opened this session, per scope — the GitHub
   /// "Viewed" pattern, session-local only.
-  final Set<String> _viewedFiles = {};
+  final Map<String, FileDiff> _viewedFiles = {};
   int? _selectionStart;
   int? _selectionEnd;
 
@@ -67,6 +73,7 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
   late ReviewDiffScope _scope;
   String? _pendingInitialFile;
   int _loadGeneration = 0;
+  bool _refreshing = false;
   final ScrollController _vertical = ScrollController();
   final ScrollController _horizontal = ScrollController();
 
@@ -91,15 +98,22 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
   Future<void> _load() async {
     final generation = ++_loadGeneration;
     setState(() {
-      _error = null;
-      _diffs = null;
+      _refreshing = true;
+      if (_diffs == null) _error = null;
     });
     try {
       final diffs = await _loaderFor(_scope)();
       if (!mounted || generation != _loadGeneration) return;
+      // Read the current selection after the await: the reader may have
+      // opened a different cached file while this request was in flight.
+      final previous = _diffs;
+      final previousSelected = previous != null && previous.isNotEmpty
+          ? previous[_selectedFile] : null;
+      var resetPosition = false;
       setState(() {
         _diffs = diffs;
-        final initialFile = _pendingInitialFile;
+        _error = null;
+        final initialFile = _pendingInitialFile ?? previousSelected?.file;
         final initialIndex = initialFile == null
             ? -1
             : diffs.indexWhere(
@@ -108,16 +122,32 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
               );
         if (initialIndex >= 0) {
           _selectedFile = initialIndex;
-        } else if (_selectedFile >= diffs.length) {
+        } else {
           _selectedFile = 0;
         }
-        _markViewed(_selectedFile);
+        final current = diffs.isEmpty ? null : diffs[_selectedFile];
+        _viewedFiles.removeWhere((key, viewed) =>
+          key.startsWith('$_scope:') &&
+          !diffs.any((diff) => _sameReviewDiff(viewed, diff)));
+        if (previous == null) _markViewed(_selectedFile);
         _pendingInitialFile = null;
-        _clearSelection();
+        resetPosition = !_sameReviewDiff(previousSelected, current);
+        if (resetPosition) _clearSelection();
       });
+      if (resetPosition) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted || generation != _loadGeneration) return;
+          if (_vertical.hasClients) _vertical.jumpTo(0);
+          if (_horizontal.hasClients) _horizontal.jumpTo(0);
+        });
+      }
     } catch (error) {
       if (mounted && generation == _loadGeneration) {
         setState(() => _error = error);
+      }
+    } finally {
+      if (mounted && generation == _loadGeneration) {
+        setState(() => _refreshing = false);
       }
     }
   }
@@ -125,11 +155,12 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
   void _markViewed(int index) {
     final diffs = _diffs;
     if (diffs == null || index < 0 || index >= diffs.length) return;
-    _viewedFiles.add('$_scope:${diffs[index].file}');
+    final diff = diffs[index];
+    _viewedFiles['$_scope:${_normalizedPath(diff.file)}'] = diff;
   }
 
   bool _isViewed(FileDiff diff) =>
-      _viewedFiles.contains('$_scope:${diff.file}');
+      _sameReviewDiff(_viewedFiles['$_scope:${_normalizedPath(diff.file)}'], diff);
 
   ReviewDiffLoader _loaderFor(ReviewDiffScope scope) => switch (scope) {
     ReviewDiffScope.session => widget.loadDiffs!,
@@ -147,6 +178,9 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
     if (_scope == scope) return;
     setState(() {
       _scope = scope;
+      _diffs = null;
+      _error = null;
+      _pendingInitialFile = null;
       _selectedFile = 0;
       _clearSelection();
     });
@@ -160,7 +194,10 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
   }
 
   void _selectFile(int index) {
-    if (_selectedFile == index) return;
+    if (_selectedFile == index) {
+      setState(() => _markViewed(index));
+      return;
+    }
     setState(() {
       _selectedFile = index;
       _markViewed(index);
@@ -249,8 +286,10 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
           IconButton(
             key: const Key('review-refresh'),
             tooltip: 'Refresh changes',
-            onPressed: _diffs == null ? null : _load,
-            icon: const Icon(Icons.refresh_rounded),
+            onPressed: _diffs == null || _refreshing ? null : _load,
+            icon: _refreshing
+                ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.refresh_rounded),
           ),
         ],
       ),
@@ -259,7 +298,11 @@ class _ReviewWorkspaceState extends State<ReviewWorkspace> {
   }
 
   Widget _body(BuildContext context) {
-    final content = _reviewContent(context);
+    final content = ProductRefreshBody(
+      message: _diffs != null && _error != null ? productErrorText(_error!) : null,
+      onRetry: _load,
+      child: _reviewContent(context),
+    );
     if (_availableScopes.length == 1) return content;
     return Column(
       children: [
@@ -1453,7 +1496,7 @@ class _ReviewDiffCanvasState extends State<_ReviewDiffCanvas> {
   /// Unchanged lines revealed above / below each hunk (by hunk source index).
   final Map<int, int> _revealedAbove = {};
   final Map<int, int> _revealedBelow = {};
-  String? _expansionFile;
+  FileDiff? _expansionDiff;
   int _expansionLength = -1;
 
   bool _wrap = false;
@@ -1468,11 +1511,10 @@ class _ReviewDiffCanvasState extends State<_ReviewDiffCanvas> {
   /// Expansion belongs to one file's diff; a different file (or a reloaded
   /// diff of a different shape) starts collapsed again.
   void _resetExpansionIfNeeded() {
-    final file = widget.diff?.file;
-    if (file == _expansionFile && widget.lines.length == _expansionLength) {
+    if (_sameReviewDiff(widget.diff, _expansionDiff) && widget.lines.length == _expansionLength) {
       return;
     }
-    _expansionFile = file;
+    _expansionDiff = widget.diff;
     _expansionLength = widget.lines.length;
     _revealedAbove.clear();
     _revealedBelow.clear();

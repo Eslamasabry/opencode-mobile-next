@@ -595,6 +595,9 @@ void main() {
         server.listen((request) async {
           requestUri = request.uri;
           request.response.headers.contentType = ContentType.json;
+          if (!request.uri.queryParameters.containsKey('cursor')) {
+            request.response.headers.set('X-Next-Cursor', '1700000003000');
+          }
           request.response.write(
             jsonEncode([
               {
@@ -630,22 +633,30 @@ void main() {
           final repository = SdkProductRepository(api.sdkClient)
             ..setLocation(directory: '/work/current', workspace: 'current');
 
+          await expectLater(repository.listGlobalSessions(cursor: 'not-a-v1-token'),
+              throwsA(isA<ProductException>()));
+          expect(requestUri, isNull);
+          final first = await repository.listGlobalSessions(
+            search: '  wake  ', includeArchived: true, limit: 37,
+          );
+          expect(first.nextCursor, '1700000003000');
           final results = await repository.listGlobalSessions(
             search: '  wake  ',
             includeArchived: true,
-            cursor: 1700000005000,
+            cursor: first.nextCursor,
             limit: 37,
           );
 
           expect(requestUri?.path, '/experimental/session');
           expect(requestUri?.queryParameters, {
             'roots': 'true',
-            'cursor': '1700000005000',
+            'cursor': '1700000003000',
             'search': 'wake',
             'limit': '37',
             'archived': 'true',
           });
-          final result = results.single;
+          final result = results.items.single;
+          expect(results.hasMore, isFalse);
           expect(result.session.id, 'ses_global_1');
           expect(result.session.workspaceID, 'workspace-2');
           expect(result.session.directory, '/work/second');

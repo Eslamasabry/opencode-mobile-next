@@ -429,7 +429,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(requestedPaths, ['', 'lib', 'lib/ui']);
-    expect(find.widgetWithText(ActionChip, '/'), findsOneWidget);
+    expect(find.widgetWithText(ActionChip, 'Project root'), findsOneWidget);
     expect(find.text('/lib/ui'), findsNothing);
 
     await tester.tap(find.widgetWithText(ActionChip, 'lib'));

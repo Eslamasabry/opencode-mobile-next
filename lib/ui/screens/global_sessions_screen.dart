@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 
 import '../../api/product_repository.dart';
+import '../../l10n/app_localizations.dart';
 import '../../state/connection.dart';
 import '../desktop/context_menu.dart';
 import '../widgets/confirm_sheet.dart';
@@ -29,16 +30,23 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
   bool _includeArchived = false;
   bool _loading = true;
   bool _loadingMore = false;
-  bool _hasMore = false;
+  String? _nextCursor;
+  final Set<String> _usedCursors = {};
+  bool _restartPagination = false;
+  bool get _hasMore => _nextCursor != null;
   String? _openingSessionID;
   String? _stealingSessionID;
   int _queryGeneration = 0;
   int _dataRefreshRevision = 0;
+  ServerOperationsGateway? _activeRepository;
+  String? _profileID;
 
   @override
   void initState() {
     super.initState();
     _dataRefreshRevision = widget.controller.dataRefreshRevision;
+    _activeRepository = widget.controller.repository;
+    _profileID = widget.controller.profile?.id;
     widget.controller.addListener(_controllerChanged);
     _scroll.addListener(_scrollChanged);
     unawaited(_reload());
@@ -47,15 +55,24 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
   void _controllerChanged() {
     if (!mounted) return;
     final revision = widget.controller.dataRefreshRevision;
-    if (revision == _dataRefreshRevision) return;
+    final repository = widget.controller.repository;
+    final profileID = widget.controller.profile?.id;
+    if (revision == _dataRefreshRevision &&
+        identical(repository, _activeRepository) &&
+        profileID == _profileID) {
+      return;
+    }
     _dataRefreshRevision = revision;
-    if (widget.controller.repository != null) unawaited(_reload());
+    _activeRepository = repository;
+    _profileID = profileID;
+    unawaited(_reload());
   }
 
   void _scrollChanged() {
     if (!_scroll.hasClients ||
         _scroll.position.extentAfter > 280 ||
         !_hasMore ||
+        _error != null ||
         _loadingMore) {
       return;
     }
@@ -67,7 +84,13 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
     _debounce = Timer(const Duration(milliseconds: 300), () {
       if (mounted) unawaited(_reload());
     });
-    setState(() {});
+    // Invalidate in-flight pages immediately, before the debounce expires.
+    setState(() {
+      _queryGeneration++;
+      _loading = true;
+      _loadingMore = false;
+      _nextCursor = null;
+    });
   }
 
   Future<ServerOperationsGateway> _repository() async {
@@ -84,10 +107,13 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
       _loading = true;
       _loadingMore = false;
       _error = null;
-      _hasMore = false;
+      _nextCursor = null;
+      _usedCursors.clear();
+      _restartPagination = false;
     });
     try {
       final repository = await _repository();
+      if (!mounted || generation != _queryGeneration) return;
       final results = await repository.listGlobalSessions(
         search: query,
         includeArchived: includeArchived,
@@ -95,8 +121,11 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
       );
       if (!mounted || generation != _queryGeneration) return;
       setState(() {
-        _results = results;
-        _hasMore = results.length == _pageSize && _cursor(results) != null;
+        final seen = <String>{};
+        _results = results.items
+            .where((result) => seen.add(result.session.id))
+            .toList();
+        _nextCursor = results.hasMore ? results.nextCursor : null;
       });
     } catch (error) {
       if (!mounted || generation != _queryGeneration) return;
@@ -113,33 +142,40 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
 
   Future<void> _loadMore() async {
     final generation = _queryGeneration;
-    final cursor = _cursor(_results);
+    final cursor = _nextCursor;
     if (_loading || _loadingMore || !_hasMore || cursor == null) return;
+    final query = _search.text.trim();
+    final includeArchived = _includeArchived;
     setState(() {
       _loadingMore = true;
       _error = null;
     });
     try {
       final repository = await _repository();
+      if (!mounted || generation != _queryGeneration) return;
       final page = await repository.listGlobalSessions(
-        search: _search.text.trim(),
-        includeArchived: _includeArchived,
+        search: query,
+        includeArchived: includeArchived,
         cursor: cursor,
         limit: _pageSize,
       );
       if (!mounted || generation != _queryGeneration) return;
       final existing = _results.map((result) => result.session.id).toSet();
-      final added = page
+      final added = page.items
           .where((result) => existing.add(result.session.id))
           .toList();
-      final nextCursor = _cursor(page);
+      final nextCursor = page.hasMore ? page.nextCursor : null;
+      if (nextCursor != null &&
+          (nextCursor == cursor || _usedCursors.contains(nextCursor))) {
+        _restartPagination = true;
+        throw const ProductException(
+          'Session pagination could not advance. Refresh the list to continue.',
+        );
+      }
       setState(() {
         _results = [..._results, ...added];
-        _hasMore =
-            page.length == _pageSize &&
-            added.isNotEmpty &&
-            nextCursor != null &&
-            nextCursor < cursor;
+        _usedCursors.add(cursor);
+        _nextCursor = nextCursor;
       });
     } catch (error) {
       if (mounted && generation == _queryGeneration) {
@@ -150,12 +186,6 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
         setState(() => _loadingMore = false);
       }
     }
-  }
-
-  static int? _cursor(List<GlobalSessionResult> results) {
-    if (results.isEmpty) return null;
-    final time = results.last.session.time;
-    return time?.updated ?? time?.created;
   }
 
   Future<void> _open(GlobalSessionResult result) async {
@@ -311,9 +341,12 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
   Widget _content() {
     if (_loading) return const LoadingList(rows: 7);
     if (_error != null && _results.isEmpty) {
-      return ProductErrorState(message: productErrorText(_error!), onRetry: _reload);
+      return ProductErrorState(
+        message: productErrorText(_error!),
+        onRetry: _hasMore && !_restartPagination ? _loadMore : _reload,
+      );
     }
-    if (_results.isEmpty) {
+    if (_results.isEmpty && !_hasMore) {
       final query = _search.text.trim();
       return ProductEmptyState(
         icon: Icons.manage_search_rounded,
@@ -332,7 +365,7 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
       );
     }
 
-    final extraRows = (_error != null || _loadingMore) ? 1 : 0;
+    final extraRows = (_error != null || _hasMore) ? 1 : 0;
     return RefreshIndicator(
       onRefresh: _reload,
       child: ListView.separated(
@@ -354,8 +387,24 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
                 title: const Text('Could not load more sessions'),
                 subtitle: Text(productErrorText(_error!)),
                 trailing: TextButton(
-                  onPressed: _loadMore,
+                  onPressed: _restartPagination ? _reload : _loadMore,
                   child: const Text('Try again'),
+                ),
+              );
+            }
+            if (!_loadingMore) {
+              final l10n =
+                  Localizations.of<AppLocalizations>(
+                    context,
+                    AppLocalizations,
+                  ) ??
+                  lookupAppLocalizations(Localizations.localeOf(context));
+              return Padding(
+                padding: const EdgeInsets.all(16),
+                child: OutlinedButton(
+                  key: const ValueKey('global-sessions-load-more'),
+                  onPressed: _loadMore,
+                  child: Text(l10n.globalSessionsLoadMore),
                 ),
               );
             }

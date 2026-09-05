@@ -40,7 +40,7 @@ Read-only reviews of the Flutter client's API adapters, domain and persisted sta
 
 ## BE-005 — Carry the v2 global-search pagination cursor
 
-- **Status:** Ready
+- **Status:** Implemented — cycle 2026-09-05-04 (global finder; scoped session inventory remains separate)
 - **Priority / confidence:** Medium / high
 - **Evidence:** `lib/api2/gateway_operations.dart`, `listGlobalSessions`, returns an empty list for every non-null integer cursor. `lib/ui/screens/global_sessions_screen.dart`, `_cursor`, derives timestamps. Captured `GET /api/session` and `SessionsResponse` explicitly support opaque `cursor.next` and `cursor.previous` strings.
 - **User impact:** Global search cannot reach results beyond the first 50 conversations.
@@ -147,7 +147,7 @@ These routes are present in `contracts/opencode2-openapi-beta-18600.json`; absen
 
 ## BE-005 / BE-010 — implementation-ready pagination plan
 
-**Status:** Ready for implementation. This plan changes no product code. It preserves the pinned v1 HTTP contract and captured v2 beta-18600 contract; no SDK regeneration or new transport is necessary.
+**Status:** BE-005 global finder implemented in cycle 04 with `ServerPage`, exact v1 response-header continuation, and v2 opaque tokens. BE-010 message history and the separate scoped-session inventory follow-through remain ready for implementation. The plan preserves the pinned v1 HTTP contract and captured v2 beta-18600 contract; no SDK regeneration or new transport is necessary.
 
 ### Verified direction and cursor contracts
 
@@ -233,6 +233,43 @@ Use one message-ID-to-list-index helper for timeline/search/tool jumps. With the
 - **Compatibility evidence:** these headers/semantics are confirmed for the pinned v1 implementation, not every historical 1.x build or a proxy that strips headers. Do not convert a 400/missing-token problem into a successful empty page. Both pagers remain read-only and must reject stale scope/results without exposing tokens in user-facing copy.
 
 **Focused acceptance for implementation:** verify latest-first first requests and correct cursor-only/limit-plus-before continuations; an empty middle page with a valid cursor; cursor-error retry; overlapping live events/deletion while an older page is pending; profile/query changes mid-request; and preserving the same visible message while older rows are prepended. Reuse existing client/global-session/chat hydration fixtures. No tests or product files were changed in this design pass.
+
+## #53 / #55 — focused v2 reconciliation plan
+
+**Status:** Ready for implementation planning; no product changes or checks performed in this pass. Existing issues [#53](https://github.com/Eslamasabry/opencode-mobile-next/issues/53) and [#55](https://github.com/Eslamasabry/opencode-mobile-next/issues/55) retain ownership. Contract evidence is `contracts/opencode2-openapi-beta-18600.json` (`Session.Info`, `Model.Ref`, `Session.Revert`, and the session model/agent/revert routes); event evidence is `docs/opencode2-protocol-notes.md` section 3.2 and the already parsed event types in `lib/api2/events.dart`.
+
+### #53 — model, variant, and agent belong to the server session
+
+| Missing link | Current code | Required change |
+|---|---|---|
+| Complete selection value | `Api2Session.model` retains variant, but `mapApi2Session` flattens to `providerID/modelID`; `Session.copyWith` cannot explicitly clear nullable selection fields. | Keep a full typed per-session selection, including variant, and represent unknown/unhydrated separately from a server-inherited selection. Provide explicit clearing for a removed variant. |
+| Server state reaches consumers | `modelForSession` / `variantForSession` prefer `sessionModels` then profile defaults; `selectedAgent` is profile-wide. `Api2SessionCreatedEvent` parses model/agent but its adapter omits them. | Hydrate per-session state from session reads and creation responses/events. Add `agentForSession` and a session-scoped setter; profile preferences are defaults for new sessions, not overrides of existing v2 sessions. Fetch a directly opened session by ID if inventory pagination has not loaded it. |
+| Live changes reach state | `Api2SessionModelSelectedEvent` and `Api2SessionAgentSelectedEvent` exist, but `Api2EventAdapter.adapt` has no handlers. | Forward explicit selected events with session ID and full model/agent payload. Merge only that session, call `_markSessionChanged`, and notify consumers. Use existing revision/gateway-generation guards so an earlier REST result cannot overwrite a later event. Partial rename/move events must merge their fields instead of replacing the full session and erasing its selection/revert state. |
+| User choices reach the API | `selectModelForSession` writes local preferences only; `pickers.dart`, `_agentPicker`, uses `selectedAgent` / `selectAgent`. `_applySelection` instead writes model/agent before each ordinary prompt/shell/command. | Expose domain session-selection operations backed by `Api2Client.switchModel` / `switchAgent`. Invoke them for intentional picker/cycle changes. Pass `sessionID` through the agent picker and update chat chips/send paths to session getters. Remove unconditional selection writes from ordinary v2 sends. |
+| Creation uses defaults | `Api2Client.createSession` already accepts model and agent, but `SessionGateway.createSession` / `ConnectionController.createSession` / `Api2Gateway.createSession` do not pass them. | Extend the creation options to carry model, variant, and agent. Apply the profile's chosen defaults only when creating the new v2 session, then adopt the returned server selection. |
+
+**Mutation/reconciliation behavior:** serialize selection mutations per session, capture profile/API/session identity before awaits, and expose saving/error state beside the affected picker. A 204 means the mutation was accepted, not that a stale optimistic value may overwrite a newer remote selection; settle through the matching event or a revision-guarded session read. Re-selecting the already confirmed value is a no-op. Unknown catalog entries remain visible as unavailable/refreshable instead of silently selecting another provider/model. Remote selections should not populate the user's local favorites or recents.
+
+**Preserve:** v1's per-prompt model/agent/variant payloads; local per-chat model isolation; model favorites/recents/cycling; availability validation; composer content after failures. Ordinary v2 sends must use the server's current session selection. Do not lose explicit selection snapshots carried by offline queue/retry flows when removing `_applySelection`: distinguish an intentional queued override from a profile/default display value and apply such overrides deliberately through the selection operation. The v2 prompt body has no per-inbox model/agent field, so do not promise atomic model binding to a queued item while another client can change the shared session. Explain that selection changes govern subsequent provider turns, as the route descriptions specify.
+
+**Acceptance:** another client changes model, clears a variant, or changes agent and only the matching conversation's visible selection updates; reconnect adopts server state; an ordinary send issues no redundant model/agent POST; a failed picker write keeps the draft and allows retry; a delayed response/profile switch cannot rewrite another session; a new session receives defaults while existing sessions retain their own selections. Relevant existing fixtures are `test/session_model_scope_test.dart`, `test/api2_gateway_events_test.dart`, `test/api2_interaction_gateway_test.dart`, and `test/model_library_test.dart`; extend only the affected scenarios when implementing.
+
+### #55 — retain the staged boundary and expose stage / commit / clear
+
+The captured stage route returns **HTTP 200 `{data: Session.Revert}`**, with required `messageID` and optional `partID`, `snapshot`, and `files: FileDiff.Info[]`. Stage can move a reversible boundary and optionally apply file changes. Commit and clear return 204; all three declare 409 `SessionBusyError`. No endpoint accepts a compare-and-swap boundary/revision parameter.
+
+| Missing link | Current code | Required change |
+|---|---|---|
+| Revert state | `Api2Session.fromJson` / `mapApi2Session` retain only `reverted: bool`; `Session.copyWith` cannot clear or replace revert data. | Carry a typed nullable staged-revert value through wire model, domain session, and copy/update path. Retain boundary and returned file patches; use `FileDiff.fromJson`/the existing patch renderer rather than a whole-working-tree substitute. Missing `files` means preview unavailable, not zero changed files. |
+| Separate operations | `Api2OperationsGateway.revertSession` calls stage with `files: true` but discards the response. `restoreSession` calls clear; commit has no domain/API/UI link. | Add `stageSessionRevert(id, messageID, applyFiles)` returning the typed stage, plus `commitSessionRevert(id)` and `clearSessionRevert(id)`, behind a v2 staged-revert capability. Keep the old v1 revert/restore methods intact. |
+| Events and immediate state | `Api2SessionRevertEvent` already parses staged/cleared/committed (including committed `to`), but the adapter drops them. Chat `_revertLast` / `_restore` then only call `_load`, which reloads messages; `session.reverted` and Restore can stay stale. | Forward each event explicitly. Merge/clear staged state for the matching session, advance its revision, and refresh its transcript/changes after structural operations. Apply the stage's 200 response immediately; after commit/clear, reconcile the session itself as well as messages. Do not wait for an unrelated full session-list refresh. |
+| Lasting, accurate UI | `_revertLast`, `_restore`, `/undo`, `/redo`, and the session action sheet present the v1 one-shot flow. | On v2, stage the chosen canonical prompt, show returned affected files and a persistent staged-boundary banner, and provide distinct Commit and Clear actions. Closing the sheet or reopening the chat must preserve that banner via hydrated session state. Keep keyboard/slash/menu affordances consistent with the same state and operation. |
+
+**Mutation/reconciliation behavior:** allow only one revert mutation per session; disable while busy and handle a server-side 409 without losing the staged preview. Capture profile, repository, session ID, and the displayed boundary before any await. If a remote event changes that boundary, invalidate an open commit confirmation and show the new preview; read the current session before committing and compare the boundary/snapshot the user reviewed. The protocol has no atomic conditional commit, so this reduces but cannot eliminate a cross-client change between that read and POST. After a timeout/ambiguous response, reconcile state before presenting a retry instead of assuming that no mutation occurred. A committed event invalidates cached transcript pages from BE-010; it must not be handled as an ordinary append.
+
+**Preserve and verify semantics:** retain v1's undoable revert/restore flow and its existing confirmation. Do not automatically commit on v2, and do not claim that merely staging is a permanent rollback. The current adapter uses `files: true`, so staging may already change files; a preview shown after staging must not claim those files are untouched. #55 explicitly requires one pinned-server check of stage → clear and stage → commit file/history effects before final UI wording and release sign-off. The contract establishes route/data/state distinctions, not every working-tree recovery guarantee.
+
+**Acceptance:** stage immediately enables a visible persistent Clear/Commit state; returned patches can be reviewed; leaving/reopening and reconnecting preserve the server boundary; remote stage/clear/commit changes update only the matching chat; busy/missing-anchor failures leave a recoverable UI; stale confirmations cannot knowingly commit a different boundary; commit/clear refresh both session metadata and transcript; v1 keeps the current one-shot UI. Reuse `test/api2_interaction_gateway_test.dart`, `test/api2_gateway_events_test.dart`, and existing chat mutation fixtures when implementing. No tests were run for this plan.
 
 ## Review notes
 

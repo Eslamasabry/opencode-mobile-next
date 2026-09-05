@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
@@ -20,6 +21,23 @@ class _ShellApi extends OpenCodeApi {
 
   @override
   Future<List<FileNode>> listFiles([String path = '']) async => [];
+}
+
+class _NestedFilesApi extends _ShellApi {
+  final paths = <String>[];
+
+  @override
+  Future<List<FileNode>> listFiles([String path = '']) async {
+    paths.add(path);
+    return switch (path) {
+      '' => [FileNode(name: 'lib', path: 'lib', isDir: true)],
+      'lib' => [FileNode(name: 'src', path: 'lib/src', isDir: true)],
+      _ => [],
+    };
+  }
+
+  @override
+  Future<List<String>> findFile(String query) async => [];
 }
 
 class _ShellRepository implements ProductRepository {
@@ -93,6 +111,84 @@ Future<void> _pumpShell(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets(
+    'Files Back clears search, ascends folders, then uses root exit guard',
+    (tester) async {
+      final api = _NestedFilesApi();
+      final controller = await _controller()
+        ..api = api;
+      addTearDown(controller.dispose);
+      var exits = 0;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'SystemNavigator.pop') exits++;
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+      await _pumpShell(tester, controller);
+      await tester.tap(find.byIcon(Icons.folder_outlined));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('lib'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('src'));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .getSemantics(find.widgetWithText(ActionChip, 'Project root'))
+            .label,
+        contains('Project root'),
+      );
+      final search = find.byKey(const ValueKey('files-search-field'));
+      await tester.enterText(search, 'needle');
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(tester.widget<TextField>(search).controller!.text, isEmpty);
+      expect(api.paths.last, 'lib/src');
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(api.paths.last, 'lib');
+      expect(exits, 0);
+      expect(find.text('Press back again to exit'), findsNothing);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(api.paths.last, '');
+      await tester.binding.handlePopRoute();
+      await tester.pump();
+      expect(find.text('Press back again to exit'), findsOneWidget);
+      expect(exits, 0);
+      await tester.binding.handlePopRoute();
+      await tester.pump();
+      expect(exits, 1);
+    },
+  );
+
+  testWidgets('inactive Files tab does not consume Back', (tester) async {
+    final api = _NestedFilesApi();
+    final controller = await _controller()
+      ..api = api;
+    addTearDown(controller.dispose);
+    await _pumpShell(tester, controller);
+    await tester.tap(find.byIcon(Icons.folder_outlined));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('lib'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.more_horiz_rounded));
+    await tester.pumpAndSettle();
+    final loads = api.paths.length;
+    await tester.binding.handlePopRoute();
+    await tester.pump();
+    expect(find.text('Press back again to exit'), findsOneWidget);
+    expect(api.paths.length, loads);
+  });
 
   testWidgets('phone shell uses product bottom navigation', (tester) async {
     tester.view.physicalSize = const Size(390, 844);
