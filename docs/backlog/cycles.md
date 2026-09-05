@@ -706,3 +706,21 @@ draft behavior and localization were checked. See verification/prompt-photos.md
 for evidence and limits. Real Android camera, cloud-picker and process-destruction
 checks remain; expanded-editor photo shortcuts and additional formats are not
 claimed. All six CI jobs for preceding commit e2a3057 succeeded.
+
+## Cycle 24 — startup fix and older draft review
+
+Fixed the photo-recovery startup regression exposed by Android/Linux CI on
+525baca: no native picker call is needed without a pending request or after the
+payload has already been stored. Windows CI passed that commit; Android/Linux
+builds were prevented by the startup test failure, not established as successful.
+
+Added Older drafts to composer tools for ambiguous multi-profile legacy text.
+Users can search, review, copy, append without replacing current input, and
+explicitly delete a saved source. Source retention, current project checks,
+acknowledged deletion and server-owned draft protection apply. Legacy attachment
+insertion is not claimed; text-only recovery is explained in the review screen.
+
+Thirteen startup/photo checks and twenty draft/localization checks passed.
+Static analysis is clean. See verification/draft-recovery.md and
+verification/prompt-photos.md. Native camera/process interruption, a fresh APK
+build and the remaining full release/parity work still need completion.

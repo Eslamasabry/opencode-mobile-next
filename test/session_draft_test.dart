@@ -553,6 +553,90 @@ void main() {
   });
 
   test(
+    'legacy removal is acknowledged and cannot remove a server-owned draft',
+    () async {
+      late _DraftStorage disk;
+      final c = await _controller(
+        _FakeApi(),
+        twoProfiles: true,
+        configureStorage: (value) => disk = value,
+      );
+      addTearDown(c.dispose);
+      const legacy = SessionDraft(
+        sessionID: 'old',
+        text: 'Older thought',
+        updatedAt: 10,
+      );
+      const owned = SessionDraft(
+        sessionID: 'owned',
+        profileID: 'profile-1',
+        text: 'Keep owned',
+        updatedAt: 12,
+      );
+      await c.store.prefs.setString(
+        'oc.sessionDrafts',
+        jsonEncode([legacy.toJson(), owned.toJson()]),
+      );
+      expect(c.legacySessionDrafts.single.text, 'Older thought');
+      expect(c.sessionDraft('old'), isNull);
+      expect(await c.removeLegacySessionDraft(owned), isFalse);
+      disk.refuse = true;
+      expect(await c.removeLegacySessionDraft(legacy), isFalse);
+      expect(c.legacySessionDrafts, hasLength(1));
+      disk.refuse = false;
+      expect(await c.removeLegacySessionDraft(legacy), isTrue);
+      expect(c.legacySessionDrafts, isEmpty);
+      expect(c.sessionDraft('owned'), 'Keep owned');
+      expect(await c.removeLegacySessionDraft(legacy), isFalse);
+    },
+  );
+
+  testWidgets('older draft review appends text and retains the saved source', (
+    tester,
+  ) async {
+    final c = await _controller(_FakeApi(), twoProfiles: true);
+    addTearDown(c.dispose);
+    await c.store.prefs.setString(
+      'oc.sessionDrafts',
+      jsonEncode([
+        const SessionDraft(
+          sessionID: 'old',
+          text: 'مرحبا old idea 🌍',
+          updatedAt: 10,
+        ).toJson(),
+        const SessionDraft(
+          sessionID: 'session-1',
+          profileID: 'profile-1',
+          text: 'Current thought',
+          updatedAt: 11,
+        ).toJson(),
+      ]),
+    );
+    await _pumpChat(tester, c);
+    await tester.tap(find.byKey(const Key('composer-tools-button')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const Key('composer-tool-legacy-drafts')),
+    );
+    await tester.tap(find.byKey(const Key('composer-tool-legacy-drafts')));
+    await tester.pumpAndSettle();
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('legacy-drafts-search')),
+      'old idea',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('legacy-draft-old')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Insert into draft'));
+    await tester.pumpAndSettle();
+    await tester.pumpAndSettle();
+    expect(c.sessionDraft('session-1'), 'Current thought\n\nمرحبا old idea 🌍');
+    expect(c.legacySessionDrafts.single.text, 'مرحبا old idea 🌍');
+    expect(tester.takeException(), isNull);
+  });
+
+  test(
     'a full store refuses new drafts without evicting unsent work',
     () async {
       SharedPreferences.setMockInitialValues({});

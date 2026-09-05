@@ -14,6 +14,7 @@ class _Picker extends ImagePicker {
   Future<XFile?> Function()? choose;
   LostDataResponse lost = LostDataResponse.empty();
   int calls = 0;
+  int lostReads = 0;
   ImageSource? selectedSource;
   @override
   Future<XFile?> pickImage({
@@ -31,7 +32,10 @@ class _Picker extends ImagePicker {
   }
 
   @override
-  Future<LostDataResponse> retrieveLostData() async => lost;
+  Future<LostDataResponse> retrieveLostData() async {
+    lostReads++;
+    return lost;
+  }
 }
 
 class _RefusedPrefs extends InMemorySharedPreferencesStore {
@@ -114,6 +118,14 @@ void main() {
     expect(await pick(), isNull);
     expect(store.pending, isNull);
   });
+
+  test(
+    'startup without a pending request does not call the native picker',
+    () async {
+      await store.recoverLostData();
+      expect(picker.lostReads, 0);
+    },
+  );
 
   test(
     'permission denial does not leave a nonexistent photo blocking retry',

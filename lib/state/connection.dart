@@ -4170,6 +4170,29 @@ class ConnectionController extends ChangeNotifier {
     return savedSessionDraft(sessionID)?.text;
   }
 
+  List<SessionDraft> get legacySessionDrafts =>
+      _drafts.values.where((draft) => draft.profileID.isEmpty).toList()
+        ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
+  /// Explicit removal after review, restricted to the exact legacy snapshot.
+  Future<bool> removeLegacySessionDraft(SessionDraft snapshot) =>
+      _serializeDraftChange(() async {
+        if (snapshot.profileID.isNotEmpty || !_draftStore.readable) {
+          return false;
+        }
+        final current = _drafts[snapshot.storageKey];
+        if (current == null ||
+            jsonEncode(current.toJson()) != jsonEncode(snapshot.toJson())) {
+          return false;
+        }
+        final next = Map<String, SessionDraft>.of(_drafts)
+          ..remove(snapshot.storageKey);
+        if (!await _draftStore.save(next)) return false;
+        _sessionDrafts = next;
+        notifyListeners();
+        return _collectDraftAttachments(owner: '');
+      });
+
   SessionDraft? savedSessionDraft(String sessionID, {String? profileID}) {
     final owner = profileID ?? profile?.id ?? store.activeId ?? '';
     return (_drafts[SessionDraft.keyFor(owner, sessionID)] ??

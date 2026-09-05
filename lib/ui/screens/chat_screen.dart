@@ -67,6 +67,7 @@ import 'files_screen.dart';
 import 'global_sessions_screen.dart';
 import 'home_screen.dart';
 import 'library_screen.dart';
+import 'legacy_drafts_screen.dart';
 import 'project_health_screen.dart';
 import 'review_workspace.dart';
 import 'session_context_screen.dart';
@@ -2415,6 +2416,36 @@ class _ChatScreenState extends State<ChatScreen>
       if (mounted) _showActionError(error);
     } finally {
       if (mounted) setState(() => _photoBusy = false);
+    }
+  }
+
+  Future<void> _recoverLegacyDraft() async {
+    if (_promptShelfBusy) return;
+    final location = _conn.locationRevision;
+    setState(() => _promptShelfOperationBusy = true);
+    try {
+      final text = await Navigator.of(context).push<String>(
+        MaterialPageRoute(
+          builder: (_) => LegacyDraftsScreen(controller: _conn),
+        ),
+      );
+      if (!mounted || text == null) return;
+      if (location != _conn.locationRevision) {
+        _showActionError(_chatL10n(context).legacyDraftLocationChanged);
+        return;
+      }
+      _restoreHistoryDraft();
+      final combined = _composer.text.isEmpty
+          ? text
+          : '${_composer.text}\n\n$text';
+      _composer.value = TextEditingValue(
+        text: combined,
+        selection: TextSelection.collapsed(offset: combined.length),
+      );
+      await _persistDraft();
+      if (mounted) _focus.requestFocus();
+    } finally {
+      if (mounted) setState(() => _promptShelfOperationBusy = false);
     }
   }
 
@@ -6085,6 +6116,11 @@ class _ChatScreenState extends State<ChatScreen>
                                             !_promptShelfBusy
                                         ? _stashCurrentPrompt
                                         : null,
+                                    onLegacyDrafts:
+                                        _conn.store.profiles.length < 2 ||
+                                            _conn.legacySessionDrafts.isEmpty
+                                        ? null
+                                        : _recoverLegacyDraft,
                                     onOpenStash:
                                         _conn.canUsePromptShelf &&
                                             !_sending &&

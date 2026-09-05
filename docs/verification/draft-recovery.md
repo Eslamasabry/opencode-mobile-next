@@ -47,7 +47,7 @@ compact failure before its targeted correction).
   Stashed prompts and queued sends retain their separate storage behavior.
 - Unattributed drafts from versions predating profile ownership are retained.
   Automatic restoration is restricted to an unambiguous single-profile setup;
-  ambiguous legacy drafts still need an explicit recovery UI.
+  cycle 24 adds explicit text review for ambiguous multi-profile drafts.
 - Camera/gallery input, large-payload stash storage and actual process-death/
   install-upgrade/device recovery verification remain in the release scope.
 - A confirmed failed save cannot promise survival if Android kills the process.
@@ -99,3 +99,23 @@ stops both composer progress indicators while waiting for a user choice; the
 New session test uses a deterministic nonpersistent content reference rather
 than depending on an unmocked native directory provider. The interrupted command
 with an incorrect literal test filter is not validation evidence.
+
+## Cycle 24 — older draft review
+
+When multiple server profiles make a legacy draft's origin ambiguous, the
+composer tools menu exposes Older drafts. Search covers saved text and session
+identity. Review shows selectable text with Copy, Insert into draft and an
+explicitly confirmed Delete saved copy. Insertion appends text, preserves the
+current composer contents and attachments, and retains the legacy source.
+Location changes during review prevent insertion into the changed project.
+
+This flow recovers text only; any legacy attachment metadata stays with the
+source and is explicitly called out. Automatic single-profile restoration keeps
+its existing behavior. Removal is serialized, checks the exact reviewed snapshot,
+refuses server-owned drafts and publishes only after preference acknowledgement.
+The search explanation and results share a scrolling viewport so the keyboard
+does not pin a large fixed header above the results.
+
+Local evidence: 20 draft/localization checks passed in `cycle24-drafts.log`,
+including Unicode append-with-source-retention and refused deletion. Static
+analysis reports no issues in `cycle24-analysis.log`.

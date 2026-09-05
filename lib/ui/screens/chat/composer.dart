@@ -12,6 +12,7 @@ enum _PromptTool {
   clearText,
   stash,
   saved,
+  legacyDrafts,
 }
 
 class _ChatComposer extends StatelessWidget {
@@ -31,6 +32,7 @@ class _ChatComposer extends StatelessWidget {
     this.onClearText,
     this.onStashPrompt,
     this.onOpenStash,
+    this.onLegacyDrafts,
     this.onRestoreHistoryDraft,
     this.shelfBusy = false,
     this.shelfLoading = true,
@@ -82,6 +84,7 @@ class _ChatComposer extends StatelessWidget {
   final VoidCallback? onClearText;
   final VoidCallback? onStashPrompt;
   final VoidCallback? onOpenStash;
+  final VoidCallback? onLegacyDrafts;
   final VoidCallback? onRestoreHistoryDraft;
   final bool shelfBusy;
   final bool shelfLoading;
@@ -450,6 +453,7 @@ class _ChatComposer extends StatelessWidget {
         canClearText: controller.text.isNotEmpty && onClearText != null,
         canStash: _hasPrompt && onStashPrompt != null,
         canOpenStash: onOpenStash != null,
+        hasLegacyDrafts: onLegacyDrafts != null,
       ),
     );
     switch (tool) {
@@ -473,6 +477,8 @@ class _ChatComposer extends StatelessWidget {
         onStashPrompt?.call();
       case _PromptTool.saved:
         onOpenStash?.call();
+      case _PromptTool.legacyDrafts:
+        onLegacyDrafts?.call();
     }
   }
 
@@ -681,6 +687,7 @@ class _PromptToolsSheet extends StatelessWidget {
     this.canClearText = false,
     this.canStash = false,
     this.canOpenStash = false,
+    this.hasLegacyDrafts = false,
   });
 
   /// Voice stays unavailable while a turn is in flight; Attach only where
@@ -692,6 +699,7 @@ class _PromptToolsSheet extends StatelessWidget {
   final bool canClearText;
   final bool canStash;
   final bool canOpenStash;
+  final bool hasLegacyDrafts;
 
   @override
   Widget build(BuildContext context) {
@@ -778,6 +786,14 @@ class _PromptToolsSheet extends StatelessWidget {
                 title: Text(_chatL10n(context).composerReuseTitle),
                 subtitle: Text(_chatL10n(context).composerReuseSubtitle),
                 onTap: () => Navigator.pop(context, _PromptTool.history),
+              ),
+            if (hasLegacyDrafts)
+              ListTile(
+                key: const Key('composer-tool-legacy-drafts'),
+                leading: const Icon(Icons.restore_page_outlined),
+                title: Text(_chatL10n(context).legacyDraftsTitle),
+                subtitle: Text(_chatL10n(context).legacyDraftsDescription),
+                onTap: () => Navigator.pop(context, _PromptTool.legacyDrafts),
               ),
             if (canOpenStash) ...[
               ListTile(

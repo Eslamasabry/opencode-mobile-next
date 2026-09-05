@@ -1558,4 +1558,47 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get photoDraftFull =>
       'Remove an attachment first. A draft holds up to 5 files and 20 MB in total.';
+
+  @override
+  String get legacyDraftsTitle => 'Older drafts';
+
+  @override
+  String get legacyDraftsDescription =>
+      'Review drafts saved before server tracking';
+
+  @override
+  String get legacyDraftsExplanation =>
+      'These drafts have no recorded server. Review their text before using it in this conversation.';
+
+  @override
+  String get legacyDraftInsertExplanation =>
+      'Insert adds this text after your current draft. The original saved copy stays here until you delete it.';
+
+  @override
+  String get legacyDraftTextOnly =>
+      'Only text can be inserted here. Any saved attachments remain with the older draft.';
+
+  @override
+  String get legacyDraftDelete => 'Delete saved copy';
+
+  @override
+  String get legacyDraftDeleteExplanation =>
+      'Permanently remove this older draft and its saved attachments from this device?';
+
+  @override
+  String get legacyDraftDeleteFailed =>
+      'The draft changed or could not be removed. Reopen it and retry.';
+
+  @override
+  String get legacyDraftInsert => 'Insert into draft';
+
+  @override
+  String get legacyDraftSearch => 'Search older drafts';
+
+  @override
+  String get legacyDraftsEmpty => 'No older drafts found';
+
+  @override
+  String get legacyDraftLocationChanged =>
+      'The project changed. Reopen Older drafts to choose where to insert the text.';
 }

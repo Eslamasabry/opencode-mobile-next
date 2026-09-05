@@ -519,5 +519,17 @@
   "photoDiscard": "Discard pending photo",
   "photoAddToDraft": "Add recovered photo to draft",
   "photoOtherLocation": "Return to the photo's original server and project before adding it.",
-  "photoDraftFull": "Remove an attachment first. A draft holds up to 5 files and 20 MB in total."
+  "photoDraftFull": "Remove an attachment first. A draft holds up to 5 files and 20 MB in total.",
+  "legacyDraftsTitle": "Older drafts",
+  "legacyDraftsDescription": "Review drafts saved before server tracking",
+  "legacyDraftsExplanation": "These drafts have no recorded server. Review their text before using it in this conversation.",
+  "legacyDraftInsertExplanation": "Insert adds this text after your current draft. The original saved copy stays here until you delete it.",
+  "legacyDraftTextOnly": "Only text can be inserted here. Any saved attachments remain with the older draft.",
+  "legacyDraftDelete": "Delete saved copy",
+  "legacyDraftDeleteExplanation": "Permanently remove this older draft and its saved attachments from this device?",
+  "legacyDraftDeleteFailed": "The draft changed or could not be removed. Reopen it and retry.",
+  "legacyDraftInsert": "Insert into draft",
+  "legacyDraftSearch": "Search older drafts",
+  "legacyDraftsEmpty": "No older drafts found",
+  "legacyDraftLocationChanged": "The project changed. Reopen Older drafts to choose where to insert the text."
 }

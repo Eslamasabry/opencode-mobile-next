@@ -207,7 +207,9 @@ class PromptPhotoStore extends ChangeNotifier {
   /// Called during bootstrap before chat routes can read drafts. The plugin
   /// clears its lost-result cache, so save its returned path before reading it.
   Future<void> recoverLostData() async {
-    if (_busy) return;
+    // Every picker launch first commits an origin record. Without one there
+    // is nothing this app can recover safely, and startup needs no native call.
+    if (_busy || pending == null || pending!.ref != null) return;
     _busy = true;
     try {
       await _serial(() async {

@@ -66,3 +66,15 @@ for generated desktop plugin links without changing Developer Mode.
 
 Plugin contract: [Flutter image picker](https://pub.dev/packages/image_picker),
 including Android lost-data recovery and temporary native camera files.
+
+## Cycle 24 startup follow-up
+
+Commit 525baca passed Windows CI, but Android/Linux tests timed out in the
+bootstrap retry scenario before reaching their build steps. Recovery called the
+native picker even when no photo request existed. The store now skips that call
+when there is no persisted request, or its payload is already durable. Every
+app-initiated picker launch commits its origin first, so this does not skip an
+unrecovered request belonging to this app. Pending requests still use native
+lost-data recovery. All 13 startup/diagnostics/photo tests passed in
+`cycle24-startup.log`, including the failing bootstrap retry and a new assertion
+that an ordinary startup makes no native picker call.

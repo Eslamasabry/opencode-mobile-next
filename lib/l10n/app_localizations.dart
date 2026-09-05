@@ -2721,6 +2721,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove an attachment first. A draft holds up to 5 files and 20 MB in total.'**
   String get photoDraftFull;
+
+  /// No description provided for @legacyDraftsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Older drafts'**
+  String get legacyDraftsTitle;
+
+  /// No description provided for @legacyDraftsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Review drafts saved before server tracking'**
+  String get legacyDraftsDescription;
+
+  /// No description provided for @legacyDraftsExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'These drafts have no recorded server. Review their text before using it in this conversation.'**
+  String get legacyDraftsExplanation;
+
+  /// No description provided for @legacyDraftInsertExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert adds this text after your current draft. The original saved copy stays here until you delete it.'**
+  String get legacyDraftInsertExplanation;
+
+  /// No description provided for @legacyDraftTextOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only text can be inserted here. Any saved attachments remain with the older draft.'**
+  String get legacyDraftTextOnly;
+
+  /// No description provided for @legacyDraftDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete saved copy'**
+  String get legacyDraftDelete;
+
+  /// No description provided for @legacyDraftDeleteExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently remove this older draft and its saved attachments from this device?'**
+  String get legacyDraftDeleteExplanation;
+
+  /// No description provided for @legacyDraftDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The draft changed or could not be removed. Reopen it and retry.'**
+  String get legacyDraftDeleteFailed;
+
+  /// No description provided for @legacyDraftInsert.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert into draft'**
+  String get legacyDraftInsert;
+
+  /// No description provided for @legacyDraftSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search older drafts'**
+  String get legacyDraftSearch;
+
+  /// No description provided for @legacyDraftsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No older drafts found'**
+  String get legacyDraftsEmpty;
+
+  /// No description provided for @legacyDraftLocationChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The project changed. Reopen Older drafts to choose where to insert the text.'**
+  String get legacyDraftLocationChanged;
 }
 
 class _AppLocalizationsDelegate
