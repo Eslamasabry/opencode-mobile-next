@@ -7,6 +7,55 @@ import 'package:opencode_mobile/api2/client.dart';
 import 'package:opencode_mobile/api2/gateway.dart';
 
 void main() {
+  test(
+    'scoped v2 inventory opens newest first and retains cursor-only continuation',
+    () async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      addTearDown(() => server.close(force: true));
+      final requests = <Uri>[];
+      server.listen((request) async {
+        requests.add(request.uri);
+        final older = request.uri.queryParameters.containsKey('cursor');
+        request.response.headers.contentType = ContentType.json;
+        request.response.write(
+          jsonEncode({
+            'data': [
+              {
+                'id': older ? 'older' : 'newest',
+                'title': 'Session',
+                'location': {'directory': '/work', 'workspaceID': 'workspace'},
+                'time': {'created': 1, 'updated': 2},
+              },
+            ],
+            'cursor': older ? {} : {'next': 'opaque/next+cursor='},
+          }),
+        );
+        await request.response.close();
+      });
+      final client = Api2Client.connect(
+        baseUrl: 'http://${server.address.host}:${server.port}',
+        password: 'fixture',
+        directory: '/work',
+        workspace: 'workspace',
+      );
+      addTearDown(client.close);
+      final gateway = Api2Gateway(client: client);
+      final first = await gateway.sessionPage(limit: 2);
+      expect(requests, hasLength(1));
+      expect(first.items.single.id, 'newest');
+      final next = await gateway.sessionPage(cursor: first.nextCursor);
+      expect(next.items.single.id, 'older');
+      expect(next.hasMore, isFalse);
+      expect(requests.first.queryParameters, {
+        'directory': '/work',
+        'workspace': 'workspace',
+        'limit': '2',
+        'order': 'desc',
+      });
+      expect(requests.last.queryParameters, {'cursor': 'opaque/next+cursor='});
+    },
+  );
+
   for (final linkOnly in [false, true]) {
     test('v1 message pages retain opaque continuation ($linkOnly)', () async {
       final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);

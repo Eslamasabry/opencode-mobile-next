@@ -873,6 +873,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rows marked reported by server cover the session. Message counts and other estimates cover loaded history.'**
   String get historyServerTotalsNote;
+
+  /// No description provided for @sessionsLoadedOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing loaded sessions. Load more to include older conversations.'**
+  String get sessionsLoadedOnly;
+
+  /// No description provided for @sessionsDetailsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Session details could not be loaded. Try again.'**
+  String get sessionsDetailsUnavailable;
+
+  /// No description provided for @sessionsLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more sessions'**
+  String get sessionsLoadMore;
+
+  /// No description provided for @sessionsReload.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload recent sessions'**
+  String get sessionsReload;
+
+  /// No description provided for @sessionsNoLoadedRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'No recent sessions in loaded results'**
+  String get sessionsNoLoadedRecent;
+
+  /// No description provided for @sessionsNoLoadedArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'No archived sessions in loaded results'**
+  String get sessionsNoLoadedArchived;
+
+  /// No description provided for @sessionsLoadedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} loaded'**
+  String sessionsLoadedCount(int count);
 }
 
 class _AppLocalizationsDelegate

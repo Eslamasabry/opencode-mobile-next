@@ -185,6 +185,7 @@ class ConnectionController extends ChangeNotifier {
   final Map<String, int> _questionRevisions = {};
   int _sessionRevision = 0;
   final Map<String, int> _sessionRevisions = {};
+  final Map<String, int> _sessionStatusRevisions = {};
 
   StreamStatus status = StreamStatus.disconnected;
   String? version;
@@ -273,6 +274,19 @@ class ConnectionController extends ChangeNotifier {
   bool transcriptTimestampsVisible = false;
 
   Map<String, Session> sessionsById = {};
+  String? _sessionsCursor;
+  bool get hasMoreSessions => _sessionsCursor != null;
+  bool sessionsLoadingMore = false;
+  String? sessionsMoreError;
+  bool sessionsNeedReload = false;
+  final Set<String> _sessionPageIDs = {};
+  final Set<String> _sessionInventoryIDs = {};
+  bool _sessionInventoryInitialized = false;
+  final Set<String> _usedSessionCursors = {};
+  int _sessionSnapshotRevision = 0;
+  final Map<(ServerGateway, int, String, int), Future<void>> _sessionReads = {};
+  final Map<String, String> sessionDetailsErrors = {};
+  final Set<String> _deletedSessionIDs = {};
   Set<String> busySessions = {};
 
   /// Sessions currently in provider-retry backoff, keyed by session ID.
@@ -1702,8 +1716,14 @@ class ConnectionController extends ChangeNotifier {
         final info = props['info'];
         if (info is Map<String, dynamic>) {
           final s = Session.fromJson(info);
+          if (_deletedSessionIDs.contains(s.id) &&
+              env.type != 'session.created') {
+            break;
+          }
+          _deletedSessionIDs.remove(s.id);
           _markSessionChanged(s.id);
           sessionsById[s.id] = s;
+          _rememberSessionMembership(s);
           notifyListeners();
         }
         break;
@@ -1713,39 +1733,7 @@ class ConnectionController extends ChangeNotifier {
         if (info is Map<String, dynamic>) {
           final id = info['id']?.toString();
           if (id != null && id.isNotEmpty) {
-            _markSessionChanged(id);
-            sessionsById.remove(id);
-            _forgetSessionModel(id);
-            busySessions.remove(id);
-            retryStates.remove(id);
-            _dismissSessionCodingAlerts(id);
-            permissions.removeWhere((_, value) => value.sessionID == id);
-            final removedQuestionIDs = questions.entries
-                .where((entry) => entry.value.sessionID == id)
-                .map((entry) => entry.key)
-                .toList();
-            for (final questionID in removedQuestionIDs) {
-              _markQuestionChanged(questionID);
-              questions.remove(questionID);
-            }
-            _legacyPermissionIdentities.removeWhere(
-              (_, identity) => identity.sessionID == id,
-            );
-            _v2PermissionSessions.removeWhere(
-              (_, sessionID) => sessionID == id,
-            );
-            _v2QuestionSessions.removeWhere((_, sessionID) => sessionID == id);
-            final removedFormIDs = forms.values
-                .where((form) => form.sessionID == id)
-                .map((form) => form.id)
-                .toList();
-            if (removedFormIDs.isNotEmpty) _formRevision += 1;
-            for (final formID in removedFormIDs) {
-              forms.remove(formID);
-            }
-            if (_inboxBySession.remove(id) != null) inboxRevision += 1;
-            _syncInputAlerts();
-            notifyListeners();
+            _removeSession(id);
           }
         }
         break;
@@ -2847,10 +2835,11 @@ class ConnectionController extends ChangeNotifier {
     final refreshGeneration = ++_sessionsRefreshGeneration;
     final revision = _sessionRevision;
     sessionsLoading = true;
+    sessionsLoadingMore = false;
     sessionsError = null;
     notifyListeners();
     try {
-      final list = await currentApi.sessions();
+      final page = await currentApi.sessionPage();
       if (!_isCurrentSessionsRefresh(
         generation,
         currentApi,
@@ -2886,18 +2875,12 @@ class ConnectionController extends ChangeNotifier {
       )) {
         return;
       }
-      final hydrated = {for (final session in list) session.id: session};
-      final sessionIDs = {...sessionsById.keys, ...hydrated.keys};
-      for (final id in sessionIDs) {
-        if ((_sessionRevisions[id] ?? 0) > revision) continue;
-        final session = hydrated[id];
-        if (session == null) {
-          sessionsById.remove(id);
-          _dismissSessionCodingAlerts(id);
-        } else {
-          sessionsById[id] = session;
-        }
-      }
+      _sessionSnapshotRevision = revision;
+      _sessionPageIDs.clear();
+      _usedSessionCursors.clear();
+      _mergeSessionPage(page, revision);
+      sessionsMoreError = null;
+      sessionsNeedReload = false;
       if (statuses != null) {
         final statusIDs = {
           ...sessionsById.keys,
@@ -2905,10 +2888,13 @@ class ConnectionController extends ChangeNotifier {
           ...statuses.keys,
         };
         for (final id in statusIDs) {
-          if ((_sessionRevisions[id] ?? 0) > revision) continue;
+          if ((_sessionStatusRevisions[id] ?? 0) > revision) continue;
           if (statuses[id] != null && statuses[id] != 'idle') {
             busySessions.add(id);
             _markSessionAttentionActive(id);
+            if (!sessionsById.containsKey(id)) {
+              unawaited(_refreshOneSession(id));
+            }
           } else {
             busySessions.remove(id);
             _settleSessionAttention(id, CodingAlertKind.complete);
@@ -2944,7 +2930,164 @@ class ConnectionController extends ChangeNotifier {
     }
   }
 
-  Future<void> _refreshOneSession(String id) async {
+  void _removeSession(String id) {
+    _markSessionChanged(id);
+    _deletedSessionIDs.add(id);
+    sessionsById.remove(id);
+    sessionDetailsErrors.remove(id);
+    _sessionInventoryIDs.remove(id);
+    _forgetSessionModel(id);
+    busySessions.remove(id);
+    retryStates.remove(id);
+    _dismissSessionCodingAlerts(id);
+    permissions.removeWhere((_, value) => value.sessionID == id);
+    final removedQuestionIDs = questions.entries
+        .where((entry) => entry.value.sessionID == id)
+        .map((entry) => entry.key)
+        .toList();
+    for (final questionID in removedQuestionIDs) {
+      _markQuestionChanged(questionID);
+      questions.remove(questionID);
+    }
+    _legacyPermissionIdentities.removeWhere(
+      (_, identity) => identity.sessionID == id,
+    );
+    _v2PermissionSessions.removeWhere((_, sessionID) => sessionID == id);
+    _v2QuestionSessions.removeWhere((_, sessionID) => sessionID == id);
+    final removedFormIDs = forms.values
+        .where((form) => form.sessionID == id)
+        .map((form) => form.id)
+        .toList();
+    if (removedFormIDs.isNotEmpty) _formRevision += 1;
+    for (final formID in removedFormIDs) {
+      forms.remove(formID);
+    }
+    if (_inboxBySession.remove(id) != null) inboxRevision += 1;
+    _syncInputAlerts();
+    notifyListeners();
+  }
+
+  void _mergeSessionPage(ServerPage<Session> page, int revision) {
+    if (!_sessionInventoryInitialized) {
+      for (final session in sessionsById.values) {
+        _rememberSessionMembership(session);
+      }
+      _sessionInventoryInitialized = true;
+    }
+    for (final session in page.items) {
+      _sessionPageIDs.add(session.id);
+      if (_deletedSessionIDs.contains(session.id)) continue;
+      if ((_sessionRevisions[session.id] ?? 0) <= revision) {
+        sessionsById[session.id] = session;
+        _sessionInventoryIDs.add(session.id);
+      }
+    }
+    _sessionsCursor = page.hasMore ? page.nextCursor : null;
+    // Absence is meaningful only after walking the entire inventory. A
+    // partial head refresh must not delete older cached chats or their alerts.
+    if (!page.hasMore) {
+      for (final id in _sessionInventoryIDs.toList()) {
+        if (!_sessionPageIDs.contains(id) &&
+            (_sessionRevisions[id] ?? 0) <= _sessionSnapshotRevision) {
+          _sessionInventoryIDs.remove(id);
+        }
+      }
+    }
+  }
+
+  void _rememberSessionMembership(
+    Session session, {
+    bool authoritative = false,
+  }) {
+    if ((directory == null || session.directory == directory) &&
+        (workspace == null || session.workspaceID == workspace)) {
+      _sessionInventoryIDs.add(session.id);
+    } else if (authoritative &&
+        ((directory != null &&
+                session.directory != null &&
+                session.directory != directory) ||
+            (workspace != null && session.workspaceID != workspace))) {
+      _sessionInventoryIDs.remove(session.id);
+    }
+  }
+
+  Future<void> loadMoreSessions() async {
+    if (sessionsLoading || sessionsLoadingMore) return;
+    if (sessionsNeedReload) {
+      await refreshSessions();
+      return;
+    }
+    final cursor = _sessionsCursor;
+    final currentApi = api;
+    if (cursor == null || currentApi == null) return;
+    final generation = _generation;
+    final refreshGeneration = ++_sessionsRefreshGeneration;
+    final revision = _sessionRevision;
+    sessionsLoadingMore = true;
+    sessionsMoreError = null;
+    notifyListeners();
+    try {
+      final page = await currentApi.sessionPage(cursor: cursor);
+      if (!_isCurrentSessionsRefresh(
+        generation,
+        currentApi,
+        refreshGeneration,
+      )) {
+        return;
+      }
+      if (page.hasMore &&
+          (page.nextCursor == cursor ||
+              _usedSessionCursors.contains(page.nextCursor))) {
+        sessionsNeedReload = true;
+        throw const ProductException(
+          'The session list changed. Reload recent sessions to continue.',
+        );
+      }
+      _usedSessionCursors.add(cursor);
+      _mergeSessionPage(page, revision);
+    } catch (error) {
+      if (!_isCurrentSessionsRefresh(
+        generation,
+        currentApi,
+        refreshGeneration,
+      )) {
+        return;
+      }
+      sessionsMoreError = error.toString();
+      if (error is ApiException &&
+          (error.statusCode == 400 || error.statusCode == 410)) {
+        sessionsNeedReload = true;
+      }
+    } finally {
+      if (_isCurrentSessionsRefresh(
+        generation,
+        currentApi,
+        refreshGeneration,
+      )) {
+        sessionsLoadingMore = false;
+        notifyListeners();
+      }
+    }
+  }
+
+  /// Direct routes and active sessions are independent of inventory pages.
+  Future<void> ensureSession(String id) => _refreshOneSession(id);
+
+  Future<void> _refreshOneSession(String id) {
+    final currentApi = api;
+    if (currentApi == null) return Future.value();
+    final key = (currentApi, _generation, id, _sessionRevisions[id] ?? 0);
+    final pending = _sessionReads[key];
+    if (pending != null) return pending;
+    late final Future<void> tracked;
+    tracked = _readOneSession(id).whenComplete(() {
+      if (identical(_sessionReads[key], tracked)) _sessionReads.remove(key);
+    });
+    _sessionReads[key] = tracked;
+    return tracked;
+  }
+
+  Future<void> _readOneSession(String id) async {
     final currentApi = api;
     final generation = _generation;
     if (currentApi == null) return;
@@ -2952,19 +3095,39 @@ class ConnectionController extends ChangeNotifier {
     try {
       final session = await currentApi.session(id);
       if (!_isCurrent(generation, currentApi) ||
+          _deletedSessionIDs.contains(id) ||
           revision != (_sessionRevisions[id] ?? 0)) {
         return;
       }
       sessionsById[id] = session;
+      sessionDetailsErrors.remove(id);
+      _rememberSessionMembership(session, authoritative: true);
+      _markSessionChanged(id, affectsStatus: false);
       notifyListeners();
-    } catch (_) {}
+    } on ApiException catch (error) {
+      if (error.statusCode == 404 &&
+          _isCurrent(generation, currentApi) &&
+          revision == (_sessionRevisions[id] ?? 0)) {
+        _removeSession(id);
+      } else if (_isCurrent(generation, currentApi) &&
+          revision == (_sessionRevisions[id] ?? 0)) {
+        sessionDetailsErrors[id] = error.toString();
+        notifyListeners();
+      }
+    } catch (error) {
+      if (_isCurrent(generation, currentApi) &&
+          revision == (_sessionRevisions[id] ?? 0)) {
+        sessionDetailsErrors[id] = error.toString();
+        notifyListeners();
+      }
+    }
   }
 
   /// Polling fallback plus terminal-state reconciliation for connected SSE.
   void enablePollingFallback() {
     if (_poll?.isActive ?? false) return;
     _poll = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (sessionsLoading) return;
+      if (sessionsLoading || sessionsLoadingMore) return;
       if (shouldPoll) {
         unawaited(refreshSessions());
       } else if (busySessions.isNotEmpty) {
@@ -2993,7 +3156,7 @@ class ConnectionController extends ChangeNotifier {
     final currentApi = api;
     final generation = _generation;
     final tracked = {
-      for (final id in busySessions) id: _sessionRevisions[id] ?? 0,
+      for (final id in busySessions) id: _sessionStatusRevisions[id] ?? 0,
     };
     if (currentApi == null || tracked.isEmpty) return;
 
@@ -3008,7 +3171,7 @@ class ConnectionController extends ChangeNotifier {
 
     var changed = false;
     for (final entry in tracked.entries) {
-      if ((_sessionRevisions[entry.key] ?? 0) != entry.value) continue;
+      if ((_sessionStatusRevisions[entry.key] ?? 0) != entry.value) continue;
       final remoteStatus = statuses[entry.key] ?? 'idle';
       if (remoteStatus == 'idle') {
         final removed = busySessions.remove(entry.key);
@@ -3540,15 +3703,36 @@ class ConnectionController extends ChangeNotifier {
     );
   }
 
-  Future<Session> createSession() async =>
-      (await _requireActionTransport()).createSession();
+  Future<Session> createSession() async {
+    final currentApi = await _requireActionTransport();
+    final generation = _generation;
+    final revision = _sessionRevision;
+    final session = await currentApi.createSession();
+    if (_isCurrent(generation, currentApi) &&
+        (_sessionRevisions[session.id] ?? 0) <= revision) {
+      _markSessionChanged(session.id);
+      sessionsById[session.id] = session;
+      _sessionInventoryIDs.add(session.id);
+      notifyListeners();
+    }
+    return session;
+  }
 
   Future<void> renameSession(String sessionID, String title) async {
-    await (await _requireActionTransport()).renameSession(sessionID, title);
+    final currentApi = await _requireActionTransport();
+    final generation = _generation;
+    await currentApi.renameSession(sessionID, title);
+    if (_isCurrent(generation, currentApi)) {
+      _markSessionChanged(sessionID);
+      await _refreshOneSession(sessionID);
+    }
   }
 
   Future<void> deleteSession(String sessionID) async {
-    await (await _requireActionTransport()).deleteSession(sessionID);
+    final currentApi = await _requireActionTransport();
+    final generation = _generation;
+    await currentApi.deleteSession(sessionID);
+    if (_isCurrent(generation, currentApi)) _removeSession(sessionID);
   }
 
   Future<void> _reconcileAfterBackground() async {
@@ -3724,7 +3908,13 @@ class ConnectionController extends ChangeNotifier {
   List<Session> sortedSessions() {
     final list =
         sessionsById.values
-            .where((s) => s.parentID == null && !s.archived)
+            .where(
+              (s) =>
+                  s.parentID == null &&
+                  !s.archived &&
+                  (!_sessionInventoryInitialized ||
+                      _sessionInventoryIDs.contains(s.id)),
+            )
             .toList()
           ..sort((a, b) {
             final au = a.time?.updated ?? a.time?.created ?? 0;
@@ -3736,9 +3926,17 @@ class ConnectionController extends ChangeNotifier {
 
   List<Session> archivedSessions() {
     final list =
-        sessionsById.values.where((session) => session.archived).toList()..sort(
-          (a, b) => (b.time?.archived ?? 0).compareTo(a.time?.archived ?? 0),
-        );
+        sessionsById.values
+            .where(
+              (session) =>
+                  session.archived &&
+                  (!_sessionInventoryInitialized ||
+                      _sessionInventoryIDs.contains(session.id)),
+            )
+            .toList()
+          ..sort(
+            (a, b) => (b.time?.archived ?? 0).compareTo(a.time?.archived ?? 0),
+          );
     return list;
   }
 
@@ -4201,9 +4399,11 @@ class ConnectionController extends ChangeNotifier {
       identical(repository, currentRepository) &&
       refreshGeneration == _questionsRefreshGeneration;
 
-  void _markSessionChanged(String id) {
+  void _markSessionChanged(String id, {bool affectsStatus = true}) {
     _sessionRevision += 1;
     _sessionRevisions[id] = _sessionRevision;
+    // Metadata hydration must not invalidate a concurrent status snapshot.
+    if (affectsStatus) _sessionStatusRevisions[id] = _sessionRevision;
   }
 
   void _markQuestionChanged(String id) {
@@ -4245,7 +4445,19 @@ class ConnectionController extends ChangeNotifier {
     _questionRevisions.clear();
     _sessionRevision += 1;
     _sessionRevisions.clear();
+    _sessionStatusRevisions.clear();
     sessionsById = {};
+    _sessionsCursor = null;
+    sessionsLoadingMore = false;
+    sessionsMoreError = null;
+    sessionsNeedReload = false;
+    _sessionPageIDs.clear();
+    _usedSessionCursors.clear();
+    _sessionInventoryIDs.clear();
+    _sessionInventoryInitialized = false;
+    _sessionReads.clear();
+    sessionDetailsErrors.clear();
+    _deletedSessionIDs.clear();
     sessionModels = {};
     _modelLibrary = const ModelLibrary();
     busySessions = {};

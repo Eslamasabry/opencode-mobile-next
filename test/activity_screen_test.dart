@@ -116,6 +116,25 @@ Widget _app(Widget home, {Map<String, WidgetBuilder> routes = const {}}) =>
     MaterialApp(home: home, routes: routes);
 
 void main() {
+  testWidgets('busy sessions without loaded metadata never show All clear', (
+    tester,
+  ) async {
+    final controller = await _controller(seed: false)
+      ..busySessions = {'outside-page'};
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      _app(
+        Scaffold(body: ActivityScreen(controller: controller, embedded: true)),
+      ),
+    );
+    await tester.pump();
+    expect(
+      find.byKey(const ValueKey('activity-running-outside-page')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('activity-all-clear')), findsNothing);
+  });
+
   TestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('the inbox renders attention and running, never history', (

@@ -28,6 +28,15 @@ class _CommandsApi extends OpenCodeApi {
   Completer<Session>? creation;
   Completer<void>? submission;
   Object? failure;
+  Future<ServerPage<Session>> Function(String? cursor)? pageHandler;
+  @override
+  Future<ServerPage<Session>> sessionPage({
+    String? cursor,
+    int limit = 100,
+  }) async =>
+      pageHandler == null ? const ServerPage(items: []) : pageHandler!(cursor);
+  @override
+  Future<Map<String, String>> sessionStatuses() async => {};
   final calls =
       <({String session, String args, ModelRef? model, String? variant})>[];
 
@@ -79,6 +88,44 @@ final _run = find.byKey(const ValueKey('command-submit'));
 final _arguments = find.byKey(const ValueKey('command-arguments'));
 
 void main() {
+  testWidgets(
+    'loading command destinations retains arguments and selected chat',
+    (tester) async {
+      final api = _CommandsApi()
+        ..pageHandler = (cursor) async => cursor == null
+            ? ServerPage(
+                items: [Session(id: 'recent', title: 'Recent chat')],
+                nextCursor: 'older',
+              )
+            : ServerPage(
+                items: [Session(id: 'old', title: 'Older chat')],
+              );
+      final controller = await _controller(api);
+      addTearDown(controller.dispose);
+      await controller.refreshSessions();
+      await _open(tester, controller);
+      await tester.enterText(_arguments, 'keep my arguments');
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('session-inventory-more')),
+      );
+      await tester.tap(find.byKey(const ValueKey('session-inventory-more')));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<TextField>(_arguments).controller!.text,
+        'keep my arguments',
+      );
+      await tester.tap(find.byKey(const ValueKey('command-destination')));
+      await tester.pumpAndSettle();
+      expect(find.text('Older chat').hitTestable(), findsOneWidget);
+      await tester.tap(find.text('Older chat').hitTestable());
+      await tester.pumpAndSettle();
+      await tester.tap(_run);
+      await tester.pumpAndSettle();
+      expect(api.calls.single.session, 'old');
+      expect(api.calls.single.args, 'keep my arguments');
+    },
+  );
+
   testWidgets(
     'new workspace creates a chat and runs without duplicate submission',
     (tester) async {

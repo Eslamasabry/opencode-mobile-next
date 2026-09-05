@@ -413,6 +413,9 @@ class _ChatScreenState extends State<ChatScreen>
     _composer.addListener(_scheduleDraftSave);
     _dataRefreshRevision = _conn.dataRefreshRevision;
     _conn.addListener(_onConnectionChanged);
+    if (!_conn.sessionsById.containsKey(widget.sessionID)) {
+      unawaited(_conn.ensureSession(widget.sessionID));
+    }
     _syncRetryTicker();
     _handoff.store.addListener(_onHandoffChanged); // UX-103 review handoff
     _load();
@@ -2778,6 +2781,7 @@ class _ChatScreenState extends State<ChatScreen>
         _requestedHistoryScope != null &&
         _requestedHistoryScope != _historyScope;
     if (shouldRehydrate || scopeChanged) unawaited(_load(resetHistory: true));
+    if (shouldRehydrate || scopeChanged) unawaited(_conn.ensureSession(widget.sessionID));
     if (shouldRehydrate ||
         _backgroundRepository != _conn.repository ||
         _backgroundLocationRevision != _conn.locationRevision) {

@@ -271,6 +271,21 @@ class OpenCodeApi
   // ----- Sessions -----
 
   @override
+  Future<ServerPage<Session>> sessionPage({
+    String? cursor,
+    int limit = 100,
+  }) async {
+    if (cursor != null) {
+      throw const ProductException(
+        'This server does not support a session continuation token.',
+      );
+    }
+    // The v1 scoped route does not expose older-page continuation. Preserve
+    // its existing list contract rather than inventing a timestamp cursor.
+    return ServerPage(items: await sessions());
+  }
+
+  @override
   Future<List<Session>> sessions() async {
     try {
       final response = await sdkClient.getSessionApi().sessionList(

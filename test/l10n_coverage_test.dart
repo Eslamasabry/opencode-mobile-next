@@ -124,7 +124,7 @@ const _baseline = <String, int>{
   'lib/ui/screens/terminal_screen.dart': 21,
   'lib/ui/screens/termux_setup_screen.dart': 24,
   'lib/ui/screens/tools_screen.dart': 8,
-  'lib/ui/screens/workspace_screen.dart': 24,
+  'lib/ui/screens/workspace_screen.dart': 23,
   'lib/ui/screens/worktrees_screen.dart': 23,
   'lib/ui/widgets/agent_blocks.dart': 4,
   'lib/ui/widgets/appearance_picker.dart': 2,

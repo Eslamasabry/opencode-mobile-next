@@ -20,6 +20,7 @@ import '../widgets/info_label.dart';
 import '../widgets/provider_logo.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/product_states.dart';
+import '../widgets/session_inventory_footer.dart';
 import '../widgets/pickers.dart';
 import 'capabilities_screen.dart';
 import 'guide_screen.dart';

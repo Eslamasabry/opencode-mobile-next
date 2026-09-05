@@ -867,12 +867,15 @@ abstract class SessionRetryGateway {
 
 /// Session inventory and live conversation reads for the selected location.
 abstract class SessionGateway {
+  /// Compatibility read; paged servers return their newest page only.
   Future<List<Session>> sessions();
+  Future<ServerPage<Session>> sessionPage({String? cursor, int limit = 100});
   Future<Session> createSession();
   Future<void> deleteSession(String id);
   Future<void> renameSession(String id, String title);
   Future<Session> session(String id);
   Future<Map<String, String>> sessionStatuses();
+
   /// Compatibility read of the latest page only. UI callers must use
   /// [messagePage] to retain older-history continuation and coverage.
   Future<List<MessageWithParts>> messages(String id);

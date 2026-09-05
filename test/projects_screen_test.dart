@@ -16,6 +16,11 @@ class _WorkspaceSessionsApi extends OpenCodeApi {
 
   final deleteCalls = <String>[];
   bool deleted = false;
+  Future<ServerPage<Session>> Function(String? cursor)? pageHandler;
+  @override
+  Future<ServerPage<Session>> sessionPage({String? cursor, int limit = 100}) =>
+      pageHandler?.call(cursor) ??
+      super.sessionPage(cursor: cursor, limit: limit);
 
   @override
   Future<List<Session>> sessions() async => deleted
@@ -180,6 +185,67 @@ Widget _host(ProjectsScreen screen) => MaterialApp(
 );
 
 void main() {
+  testWidgets(
+    'archived pager remains reachable through an empty filtered first page',
+    (tester) async {
+      final api = _WorkspaceSessionsApi()
+        ..pageHandler = (cursor) async => cursor == null
+            ? ServerPage(
+                items: [Session(id: 'child', parentID: 'root')],
+                nextCursor: 'older',
+              )
+            : ServerPage(
+                items: [
+                  Session(
+                    id: 'archived',
+                    title: 'Older archived chat',
+                    time: SessionTime(created: 1, archived: 2),
+                  ),
+                ],
+              );
+      final controller = await _controller(_ProjectsRepository())
+        ..api = api
+        ..status = StreamStatus.connected;
+      addTearDown(controller.dispose);
+      await controller.refreshSessions();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: WorkspaceScreen(controller: controller)),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('No recent sessions in loaded results'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('Archived sessions'),
+        180,
+        scrollable: find
+            .descendant(
+              of: find.byType(CustomScrollView),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      // Move the row above the docked quick-ask control before tapping it.
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -220));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Archived sessions'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('No archived sessions in loaded results'),
+        findsOneWidget,
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('session-inventory-more')).hitTestable(),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('archived-session-archived')),
+        findsOneWidget,
+      );
+      expect(find.text('Older archived chat'), findsOneWidget);
+    },
+  );
+
   TestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('project browser and rename dialog fit compact large text', (
@@ -310,7 +376,10 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('current-project-entry')));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('workspace-context-sheet')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('workspace-context-sheet')),
+      findsOneWidget,
+    );
     await tester.tap(find.byKey(const ValueKey('context-switch-project')));
     await tester.pumpAndSettle();
 
@@ -356,7 +425,10 @@ void main() {
     // Management destinations no longer sit on the sessions screen at all.
     expect(find.byKey(const ValueKey('worktrees-entry')), findsNothing);
     expect(find.byKey(const ValueKey('project-health-entry')), findsNothing);
-    expect(find.byKey(const ValueKey('managed-workspaces-entry')), findsNothing);
+    expect(
+      find.byKey(const ValueKey('managed-workspaces-entry')),
+      findsNothing,
+    );
 
     await tester.tap(find.byKey(const ValueKey('manage-project-entry')));
     await tester.pumpAndSettle();

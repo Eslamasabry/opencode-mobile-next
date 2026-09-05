@@ -41,12 +41,6 @@ class Api2Gateway implements ServerGateway {
          workspace: workspace,
        );
 
-  /// Cursor-walk bounds for satisfying the unpaginated domain contract.
-  /// TODO(api2): replace fetch-all with real pagination once the domain
-  /// session/message contracts grow cursor support.
-  static const int maxPages = 20;
-  static const int pageLimit = 200;
-
   Api2Transport get transport => client.transport;
 
   @override
@@ -91,19 +85,23 @@ class Api2Gateway implements ServerGateway {
   // ---------------- Sessions ----------------
 
   @override
-  Future<List<Session>> sessions() => _run(() async {
-    final all = <Session>[];
-    String? cursor;
-    for (var page = 0; page < maxPages; page += 1) {
-      final result = cursor == null
-          ? await client.sessions(limit: pageLimit)
-          : await client.sessions(cursor: cursor);
-      all.addAll(result.data.map(mapApi2Session));
-      cursor = result.nextCursor;
-      if (cursor == null) break;
-    }
-    return all;
-  });
+  Future<List<Session>> sessions() async => (await sessionPage()).items;
+
+  @override
+  Future<ServerPage<Session>> sessionPage({String? cursor, int limit = 100}) =>
+      _run(() async {
+        final page = await client.sessions(
+          limit: limit,
+          order: 'desc',
+          cursor: cursor,
+        );
+        return ServerPage(
+          items: page.data.map(mapApi2Session).toList(),
+          nextCursor: page.nextCursor?.isNotEmpty == true
+              ? page.nextCursor
+              : null,
+        );
+      });
 
   @override
   Future<Session> createSession() =>
