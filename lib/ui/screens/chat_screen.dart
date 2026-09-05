@@ -1516,9 +1516,12 @@ class _ChatScreenState extends State<ChatScreen>
   Future<bool> _queueDraft(
     String text,
     List<PromptAttachment> attachments,
-    List<PromptAgentMention> mentions,
-  ) async {
-    final profileID = _conn.profile?.id;
+    List<PromptAgentMention> mentions, {
+    SessionSelection? selection,
+    String? profileID,
+  }) async {
+    selection ??= _conn.selectionForSession(widget.sessionID);
+    profileID ??= _conn.profile?.id;
     if (profileID == null) return false;
     final now = DateTime.now();
     final bool queued;
@@ -1531,10 +1534,10 @@ class _ChatScreenState extends State<ChatScreen>
           text: text,
           attachments: attachments,
           mentions: mentions,
-          modelProviderID: _conn.modelForSession(widget.sessionID)?.providerID,
-          modelID: _conn.modelForSession(widget.sessionID)?.modelID,
-          agent: _conn.selectedAgent,
-          variant: _conn.variantForSession(widget.sessionID),
+          modelProviderID: selection.model?.providerID,
+          modelID: selection.model?.modelID,
+          agent: selection.agent,
+          variant: selection.variant,
           createdAt: now.millisecondsSinceEpoch,
         ),
       );
@@ -1747,6 +1750,9 @@ class _ChatScreenState extends State<ChatScreen>
     }
     final attachments = List<PromptAttachment>.from(_attachments);
     final agentMentions = _promptAgentMentions(text, _subagents);
+    var selection = _conn.selectionForSession(widget.sessionID);
+    final selectionProfileID = _conn.profile?.id;
+    var promptStarted = false;
     final createdAt = DateTime.now().millisecondsSinceEpoch;
     final localID = 'local-$createdAt-${DateTime.now().microsecondsSinceEpoch}';
     final pending = _PendingSend(
@@ -1786,14 +1792,18 @@ class _ChatScreenState extends State<ChatScreen>
       _attachments.clear();
     });
     try {
+      await _conn.waitForSessionSelection(
+        widget.sessionID,
+        expectedApi: actionApi,
+      );
+      selection = _conn.selectionForSession(widget.sessionID);
+      promptStarted = true;
       await actionApi.promptAsync(
         widget.sessionID,
         text: text,
-        model: _conn.modelForSession(widget.sessionID),
-        agent: _conn.selectedAgent.isNotEmpty ? _conn.selectedAgent : null,
-        variant: _conn.variantForSession(widget.sessionID).isEmpty
-            ? null
-            : _conn.variantForSession(widget.sessionID),
+        model: selection.model,
+        agent: selection.agent?.isNotEmpty == true ? selection.agent : null,
+        variant: selection.variant.isEmpty ? null : selection.variant,
         attachments: attachments,
         agentMentions: agentMentions,
         delivery: delivery,
@@ -1817,8 +1827,16 @@ class _ChatScreenState extends State<ChatScreen>
       });
       // A transport-level failure (no HTTP response) means the server became
       // unreachable mid-send: queue the draft rather than erroring.
-      if (e is ApiException && e.statusCode == null) {
-        if (await _queueDraft(text, attachments, agentMentions)) return;
+      if (promptStarted && e is ApiException && e.statusCode == null) {
+        if (await _queueDraft(
+          text,
+          attachments,
+          agentMentions,
+          selection: selection,
+          profileID: selectionProfileID,
+        )) {
+          return;
+        }
       }
       if (!mounted) return;
       setState(() => _attachments.insertAll(0, attachments));
@@ -1900,6 +1918,10 @@ class _ChatScreenState extends State<ChatScreen>
     }
     final original = _composer.text;
     try {
+      await _conn.waitForSessionSelection(
+        widget.sessionID,
+        expectedApi: actionApi,
+      );
       await actionApi.slashCommand(
         widget.sessionID,
         command.serverCommand!.name,
@@ -2618,7 +2640,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<void> _compact() async {
     final model = _conn.modelForSession(widget.sessionID);
-    if (model == null) {
+    if (model == null && !_conn.serverOwnsSessionSelection) {
       _showActionError('Select a model before compacting this session.');
       return;
     }
@@ -2626,8 +2648,8 @@ class _ChatScreenState extends State<ChatScreen>
       final repository = await _requireActionRepository();
       await repository.compactSession(
         widget.sessionID,
-        providerID: model.providerID,
-        modelID: model.modelID,
+        providerID: model?.providerID ?? '',
+        modelID: model?.modelID ?? '',
       );
       if (mounted) {
         ScaffoldMessenger.of(
@@ -2746,11 +2768,14 @@ class _ChatScreenState extends State<ChatScreen>
       if (api == null) {
         throw const ProductException('OpenCode is reconnecting.');
       }
+      await _conn.waitForSessionSelection(widget.sessionID, expectedApi: api);
       await api.promptAsync(
         widget.sessionID,
         text: text,
         model: _conn.modelForSession(widget.sessionID),
-        agent: _conn.selectedAgent.isEmpty ? null : _conn.selectedAgent,
+        agent: _conn.agentForSession(widget.sessionID).isEmpty
+            ? null
+            : _conn.agentForSession(widget.sessionID),
         variant: _conn.variantForSession(widget.sessionID).isEmpty
             ? null
             : _conn.variantForSession(widget.sessionID),
@@ -2781,7 +2806,9 @@ class _ChatScreenState extends State<ChatScreen>
         _requestedHistoryScope != null &&
         _requestedHistoryScope != _historyScope;
     if (shouldRehydrate || scopeChanged) unawaited(_load(resetHistory: true));
-    if (shouldRehydrate || scopeChanged) unawaited(_conn.ensureSession(widget.sessionID));
+    if (shouldRehydrate || scopeChanged) {
+      unawaited(_conn.ensureSession(widget.sessionID));
+    }
     if (shouldRehydrate ||
         _backgroundRepository != _conn.repository ||
         _backgroundLocationRevision != _conn.locationRevision) {
@@ -3032,10 +3059,13 @@ class _ChatScreenState extends State<ChatScreen>
       if (api == null) {
         throw const ProductException('OpenCode is reconnecting.');
       }
+      await _conn.waitForSessionSelection(widget.sessionID, expectedApi: api);
       await api.shell(
         widget.sessionID,
         command: cmd,
-        agent: _conn.selectedAgent.isNotEmpty ? _conn.selectedAgent : 'build',
+        agent: _conn.agentForSession(widget.sessionID).isNotEmpty
+            ? _conn.agentForSession(widget.sessionID)
+            : 'build',
         model: _conn.modelForSession(widget.sessionID),
         variant: _conn.variantForSession(widget.sessionID).isEmpty
             ? null
@@ -4974,12 +5004,26 @@ class _ChatScreenState extends State<ChatScreen>
                                     onDeliveryChanged: (delivery) =>
                                         setState(() => _delivery = delivery),
                                     voiceOpening: _voiceOpening,
-                                    selectedAgent: _conn.selectedAgent,
+                                    selectedAgent: _conn.agentForSession(
+                                      widget.sessionID,
+                                    ),
                                     defaultAgent: _defaultAgentName,
                                     selectedModel: _conn.modelForSession(
                                       widget.sessionID,
                                     ),
                                     modelLabel: _presentedModelLabel,
+                                    selectionFallback:
+                                        !_conn.serverOwnsSessionSelection
+                                        ? null
+                                        : _conn
+                                              .selectionForSession(
+                                                widget.sessionID,
+                                              )
+                                              .modelKnown
+                                        ? _chatL10n(context).modelServerDefault
+                                        : _chatL10n(
+                                            context,
+                                          ).modelSelectionLoading,
                                     selectedCatalogModel: _selectedCatalogModel,
                                     selectedVariant: _conn.variantForSession(
                                       widget.sessionID,

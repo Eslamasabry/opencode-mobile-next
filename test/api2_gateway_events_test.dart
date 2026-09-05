@@ -36,10 +36,7 @@ void main() {
     // Busy/idle transitions from execution events.
     final statuses = out
         .where((event) => event.type == 'session.status')
-        .map(
-          (event) =>
-              (event.properties['status'] as Map)['type'].toString(),
-        )
+        .map((event) => (event.properties['status'] as Map)['type'].toString())
         .toList();
     expect(statuses.first, 'busy');
     expect(
@@ -86,10 +83,7 @@ void main() {
           ((event.properties['info'] as Map)['time'] as Map)['completed'] !=
           null,
     );
-    expect(
-      (completed.properties['info'] as Map)['tokens'],
-      isA<Map>(),
-    );
+    expect((completed.properties['info'] as Map)['tokens'], isA<Map>());
 
     // Text streaming: started (empty part) → delta → ended (full text).
     final textParts = out
@@ -121,8 +115,9 @@ void main() {
         (event) =>
             event.type == 'message.part.updated' &&
             (event.properties['part'] as Map)['type'] == 'reasoning' &&
-            ((event.properties['part'] as Map)['id'] as String)
-                .startsWith('reasoning-'),
+            ((event.properties['part'] as Map)['id'] as String).startsWith(
+              'reasoning-',
+            ),
       ),
       isTrue,
     );
@@ -154,10 +149,7 @@ void main() {
       'README.md',
       reason: 'input from tool.called must survive to the result',
     );
-    expect(
-      (done['state'] as Map)['output'],
-      contains('OpenCode for Android'),
-    );
+    expect((done['state'] as Map)['output'], contains('OpenCode for Android'));
 
     // Events with no v1 analogue emit nothing.
     expect(types, isNot(contains('session.instructions.updated')));
@@ -288,7 +280,7 @@ void main() {
       'type': 'session.renamed',
       'data': {'sessionID': 'ses_x', 'title': 'New title'},
     }).single;
-    expect(renamed.type, 'session.updated');
+    expect(renamed.type, 'session.metadata.updated');
     expect((renamed.properties['info'] as Map)['title'], 'New title');
 
     expect(

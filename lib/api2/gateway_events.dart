@@ -57,17 +57,19 @@ class Api2EventAdapter {
               if (event.location?.directory != null)
                 'directory': event.location!.directory,
               if (event.parentID != null) 'parentID': event.parentID,
+              'workspaceID': event.location?.workspaceID,
+              'path': event.subpath,
+              'serverSelection': true,
+              'model': event.model?.toJson(),
+              'agent': event.agent,
               'time': {'created': created, 'updated': created},
             },
           }),
         ];
 
       case Api2SessionRenamedEvent():
-        // Lossy: the v2 event carries only {sessionID, title}; the v1 shape
-        // wants a full Session object. Consumers replace their stored
-        // session, so fields beyond id/title reset until the next refetch.
         return [
-          _env('session.updated', {
+          _env('session.metadata.updated', {
             'info': {'id': event.sessionID, 'title': event.title},
           }),
         ];
@@ -81,12 +83,32 @@ class Api2EventAdapter {
 
       case Api2SessionMovedEvent():
         return [
-          _env('session.updated', {
+          _env('session.metadata.updated', {
             'info': {
               'id': event.sessionID,
-              if (event.location?.directory != null)
-                'directory': event.location!.directory,
+              'directory': event.location?.directory,
+              'workspaceID': event.location?.workspaceID,
+              'projectID': event.projectID,
+              'path': event.subpath,
             },
+          }),
+        ];
+
+      case Api2SessionModelSelectedEvent():
+        if (event.model == null) return const [];
+        return [
+          _env('session.model.selected', {
+            'sessionID': event.sessionID,
+            'model': event.model?.toJson(),
+          }),
+        ];
+
+      case Api2SessionAgentSelectedEvent():
+        if (event.agent.isEmpty) return const [];
+        return [
+          _env('session.agent.selected', {
+            'sessionID': event.sessionID,
+            'agent': event.agent,
           }),
         ];
 

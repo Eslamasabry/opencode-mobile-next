@@ -3,7 +3,8 @@ import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/api/server_probe.dart';
-import 'package:opencode_mobile/api/sse.dart' show LiveEventChannel, StreamStatus;
+import 'package:opencode_mobile/api/sse.dart'
+    show LiveEventChannel, StreamStatus;
 import 'package:opencode_mobile/api2/gateway_mappers.dart'
     show api2ServerCapabilities;
 import 'package:opencode_mobile/api2/transport.dart' show Api2AuthRequired;
@@ -93,6 +94,33 @@ class _FakeV2Operations implements ServerOperationsGateway {
       throw UnimplementedError('${invocation.memberName}');
 }
 
+class _SelectionV2Gateway extends _FakeV2Gateway
+    implements SessionSelectionGateway {
+  _SelectionV2Gateway(this.model, this.agent, this.variant);
+  final String model;
+  final String agent;
+  final String variant;
+
+  @override
+  Future<ServerPage<Session>> sessionPage({
+    String? cursor,
+    int limit = 100,
+  }) async => ServerPage(
+    items: [
+      Session(
+        id: 'chat',
+        selection: SessionSelection(
+          model: ModelRef(providerID: 'remote', modelID: model),
+          agent: agent,
+          variant: variant,
+        ),
+      ),
+    ],
+  );
+  @override
+  Future<Map<String, String>> sessionStatuses() async => {};
+}
+
 class _FakeV1Repository implements ProductRepository {
   @override
   void setLocation({String? directory, String? workspace}) {}
@@ -153,6 +181,38 @@ void main() {
 
   tearDown(() => serverProbe = probeServerConnection);
 
+  testWidgets(
+    'reconnect replaces cached selection with current v2 session truth',
+    (tester) async {
+      final first = _SelectionV2Gateway('old', 'build', 'high');
+      final replacement = _SelectionV2Gateway('remote-change', 'plan', '');
+      var builds = 0;
+      final controller = ConnectionController(
+        await _store(),
+        v2GatewayFactory: (_) => (
+          gateway: builds++ == 0 ? first : replacement,
+          operations: _FakeV2Operations(),
+        ),
+      );
+      addTearDown(controller.dispose);
+      await controller.connect(_v2Profile());
+      await tester.pump();
+      expect(controller.modelForSession('chat')!.wireName, 'remote/old');
+      expect(controller.variantForSession('chat'), 'high');
+      await controller.retryConnection();
+      await tester.pump();
+      expect(controller.api, same(replacement));
+      expect(
+        controller.modelForSession('chat')!.wireName,
+        'remote/remote-change',
+      );
+      expect(controller.agentForSession('chat'), 'plan');
+      expect(controller.variantForSession('chat'), '');
+      expect(first.closed, isTrue);
+      controller.dispose();
+    },
+  );
+
   testWidgets('a v2 profile builds the v2 pair and gateway event channels', (
     tester,
   ) async {
@@ -199,10 +259,8 @@ void main() {
     final controller = ConnectionController(
       await _store(),
       repositoryFactory: (_) => _FakeV1Repository(),
-      v2GatewayFactory: (_) => (
-        gateway: gateway,
-        operations: _FakeV2Operations(),
-      ),
+      v2GatewayFactory: (_) =>
+          (gateway: gateway, operations: _FakeV2Operations()),
     );
     // Disposed at the end of the body, not in tearDown: the polling
     // fallback timer must be cancelled before the tester's invariant check.
@@ -250,10 +308,8 @@ void main() {
       store,
       apiFactory: (_) => v1Api,
       repositoryFactory: (_) => _FakeV1Repository(),
-      v2GatewayFactory: (_) => (
-        gateway: gateway,
-        operations: _FakeV2Operations(),
-      ),
+      v2GatewayFactory: (_) =>
+          (gateway: gateway, operations: _FakeV2Operations()),
     );
     // Disposed at the end of the body, not in tearDown: the polling
     // fallback timer must be cancelled before the tester's invariant check.

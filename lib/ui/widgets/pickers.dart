@@ -39,6 +39,13 @@ Future<void> showModelPicker(
   // connected. Refresh on every open so removed models are not retained until
   // a reconnect or lifecycle wake.
   unawaited(controller.refreshCatalog());
+  if (sessionID != null && controller.serverOwnsSessionSelection) {
+    unawaited(controller.ensureSession(sessionID));
+  }
+  if (applyScope == ModelPickerApplyScope.classic &&
+      controller.serverOwnsSessionSelection) {
+    applyScope = ModelPickerApplyScope.newSessions;
+  }
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -132,6 +139,17 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
   String _draftVariant = '';
   bool _applying = false;
   String? _saveError;
+  ModelRef? _observedModel;
+  String _observedVariant = '';
+  bool _agentSaving = false;
+  bool _optionsOpen = false;
+  String? _agentError;
+  String? _scopeProfile;
+  int _scopeLocation = 0;
+
+  bool get _sameScope =>
+      widget.controller.profile?.id == _scopeProfile &&
+      widget.controller.locationRevision == _scopeLocation;
 
   ScrollController? _ownedScroll;
 
@@ -141,16 +159,29 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
   @override
   void initState() {
     super.initState();
+    _scopeProfile = widget.controller.profile?.id;
+    _scopeLocation = widget.controller.locationRevision;
     _syncDraft();
+    _observedModel = _currentModel;
+    _observedVariant = _currentVariant;
+    widget.controller.addListener(_selectionChanged);
   }
 
   @override
   void didUpdateWidget(covariant ModelCatalogView oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_selectionChanged);
+      widget.controller.addListener(_selectionChanged);
+    }
     if (oldWidget.controller != widget.controller ||
         oldWidget.sessionID != widget.sessionID ||
         oldWidget.applyScope != widget.applyScope) {
+      _scopeProfile = widget.controller.profile?.id;
+      _scopeLocation = widget.controller.locationRevision;
       _syncDraft();
+      _observedModel = _currentModel;
+      _observedVariant = _currentVariant;
     }
   }
 
@@ -179,8 +210,19 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
     }
   }
 
+  void _selectionChanged() {
+    if (!mounted) return;
+    final untouched =
+        _draftModel?.wireName == _observedModel?.wireName &&
+        _draftVariant == _observedVariant;
+    _observedModel = _currentModel;
+    _observedVariant = _currentVariant;
+    if (untouched && !_applying && !_optionsOpen) setState(_syncDraft);
+  }
+
   @override
   void dispose() {
+    widget.controller.removeListener(_selectionChanged);
     _ownedScroll?.dispose();
     _search.dispose();
     super.dispose();
@@ -403,6 +445,18 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
         _provider != '*' ||
         _intent != _ModelIntent.all;
     final leadItems = <Widget>[
+      if (!_sameScope)
+        _Notice(
+          icon: Icons.info_outline_rounded,
+          text: _strings.modelScopeChanged,
+        ),
+      if (_currentModel != null &&
+          !widget.controller.modelAvailable(_currentModel!))
+        _Notice(
+          icon: Icons.info_outline_rounded,
+          text:
+              '${_currentModel!.wireName}\n${_strings.modelUnavailableSelection}',
+        ),
       if (compact) ...[
         if (widget.showHeader) _header(context),
         if (catalog.models.isNotEmpty) _pinnedControls(context),
@@ -561,63 +615,101 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
     );
   }
 
-  Widget _agentPicker(CatalogSnapshot catalog) {
+  Widget _agentPicker(CatalogSnapshot catalog, {VoidCallback? onStateChanged}) {
     final visible = catalog.agents
         .where((agent) => !agent.hidden && agent.mode != 'subagent')
         .toList();
-    final value =
-        visible.any((agent) => agent.id == widget.controller.selectedAgent)
+    final sessionID = _scopedSessionID;
+    final selected = sessionID == null
         ? widget.controller.selectedAgent
-        : null;
-    return DropdownButtonFormField<String>(
+        : widget.controller.agentForSession(sessionID);
+    final value = selected.isEmpty ? null : selected;
+    final unavailable =
+        selected.isNotEmpty && !visible.any((agent) => agent.id == selected);
+    return KeyedSubtree(
       key: const Key('model-picker-agent'),
-      isExpanded: true,
-      initialValue: value,
-      decoration: const InputDecoration(
-        labelText: 'Agent',
-        prefixIcon: Icon(Icons.support_agent_outlined),
-      ),
-      hint: Text(visible.isEmpty ? 'No agents available' : 'Server default'),
-      items: [
-        for (final agent in visible)
-          DropdownMenuItem(
-            value: agent.id,
-            child: Row(
-              children: [
-                // The agent's own colour, as the terminal client shows it,
-                // so the same agent is recognisable across both clients.
-                Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: agentColor(
-                      agent.color,
-                      Theme.of(context).colorScheme,
+      child: DropdownButtonFormField<String>(
+        key: ValueKey(('model-picker-agent', value, _agentSaving)),
+        isExpanded: true,
+        initialValue: value,
+        decoration: InputDecoration(
+          labelText: 'Agent',
+          prefixIcon: const Icon(Icons.support_agent_outlined),
+          helperText: _agentSaving ? _strings.modelSelectionSaving : null,
+          errorText: _agentError,
+        ),
+        hint: Text(visible.isEmpty ? 'No agents available' : 'Server default'),
+        items: [
+          if (unavailable)
+            DropdownMenuItem(value: selected, child: Text(selected)),
+          for (final agent in visible)
+            DropdownMenuItem(
+              value: agent.id,
+              child: Row(
+                children: [
+                  // The agent's own colour, as the terminal client shows it,
+                  // so the same agent is recognisable across both clients.
+                  Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: agentColor(
+                        agent.color,
+                        Theme.of(context).colorScheme,
+                      ),
+                      shape: BoxShape.circle,
                     ),
-                    shape: BoxShape.circle,
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    [
-                      agent.mode == 'unknown'
-                          ? agent.id
-                          : '${agent.id} · ${agent.mode}',
-                      if (agent.model?.isNotEmpty == true) agent.model!,
-                    ].join(' · '),
-                    overflow: TextOverflow.ellipsis,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      [
+                        agent.mode == 'unknown'
+                            ? agent.id
+                            : '${agent.id} · ${agent.mode}',
+                        if (agent.model?.isNotEmpty == true) agent.model!,
+                      ].join(' · '),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-      ],
-      onChanged: visible.isEmpty
-          ? null
-          : (value) {
-              if (value != null) widget.controller.selectAgent(value);
-            },
+        ],
+        onChanged:
+            !_sameScope ||
+                visible.isEmpty ||
+                _agentSaving ||
+                _applying ||
+                (sessionID != null &&
+                    widget.controller.sessionSelectionSaving(sessionID))
+            ? null
+            : (value) async {
+                if (value == null) return;
+                setState(() {
+                  _agentSaving = true;
+                  _agentError = null;
+                });
+                onStateChanged?.call();
+                try {
+                  if (sessionID == null) {
+                    await widget.controller.selectAgent(value);
+                  } else {
+                    await widget.controller.selectAgentForSession(
+                      sessionID,
+                      value,
+                    );
+                  }
+                } catch (_) {
+                  if (mounted) {
+                    setState(() => _agentError = _strings.modelAgentSaveFailed);
+                  }
+                } finally {
+                  if (mounted) setState(() => _agentSaving = false);
+                  onStateChanged?.call();
+                }
+              },
+      ),
     );
   }
 
@@ -846,7 +938,16 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
               ),
             FilledButton(
               key: ValueKey('use-model-${model.providerID}-${model.id}'),
-              onPressed: _applying ? null : _applyDraft,
+              onPressed:
+                  !_sameScope ||
+                      _applying ||
+                      _agentSaving ||
+                      (_scopedSessionID != null &&
+                          widget.controller.sessionSelectionSaving(
+                            _scopedSessionID!,
+                          ))
+                  ? null
+                  : _applyDraft,
               child: _applying
                   ? const SizedBox.square(
                       dimension: 24,
@@ -869,68 +970,83 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
     BuildContext context,
     CatalogSnapshot catalog,
     CatalogModel model,
-  ) => showDialog<void>(
-    context: context,
-    builder: (context) => StatefulBuilder(
-      builder: (context, updateDialog) => AlertDialog(
-        title: Text(model.name),
-        scrollable: true,
-        content: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              '${presentedProviderName(model.providerID, catalog.providers)} · ${model.id}',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              [
-                if (model.contextLimit > 0)
-                  '${_number(model.contextLimit)} context',
-                if (model.outputLimit > 0)
-                  '${_number(model.outputLimit)} output',
-                if (model.reasoning) 'Reasoning',
-                if (model.tools) 'Tools',
-                if (model.attachments) 'Attachments',
-                ?modelCostLabel(model),
-              ].join(' · '),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              _strings.modelThinkingMode,
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            const SizedBox(height: 8),
-            _variantSelector(
-              context,
-              model,
-              onChanged: (value) {
-                setState(() => _draftVariant = value);
-                updateDialog(() {});
-              },
-            ),
-            const SizedBox(height: 20),
-            _agentPicker(catalog),
-            if (widget.applyScope == ModelPickerApplyScope.session) ...[
-              const SizedBox(height: 16),
-              Text(
-                _strings.modelSessionScopeNote,
-                key: const Key('model-picker-session-scope-note'),
-                style: Theme.of(context).textTheme.bodySmall,
+  ) async {
+    _optionsOpen = true;
+    try {
+      await showDialog<void>(
+        context: context,
+        builder: (context) => ListenableBuilder(
+          listenable: widget.controller,
+          builder: (context, _) => StatefulBuilder(
+            builder: (context, updateDialog) => AlertDialog(
+              title: Text(model.name),
+              scrollable: true,
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${presentedProviderName(model.providerID, catalog.providers)} · ${model.id}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    [
+                      if (model.contextLimit > 0)
+                        '${_number(model.contextLimit)} context',
+                      if (model.outputLimit > 0)
+                        '${_number(model.outputLimit)} output',
+                      if (model.reasoning) 'Reasoning',
+                      if (model.tools) 'Tools',
+                      if (model.attachments) 'Attachments',
+                      ?modelCostLabel(model),
+                    ].join(' · '),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    _strings.modelThinkingMode,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  _variantSelector(
+                    context,
+                    model,
+                    onChanged: (value) {
+                      setState(() => _draftVariant = value);
+                      updateDialog(() {});
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  _agentPicker(
+                    catalog,
+                    onStateChanged: () {
+                      if (context.mounted) updateDialog(() {});
+                    },
+                  ),
+                  if (widget.applyScope == ModelPickerApplyScope.session) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      _strings.modelSessionScopeNote,
+                      key: const Key('model-picker-session-scope-note'),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ],
               ),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Done'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Done'),
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
-    ),
-  );
+        ),
+      );
+    } finally {
+      _optionsOpen = false;
+    }
+  }
 
   Widget _variantSelector(
     BuildContext context,
@@ -964,7 +1080,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
 
   Future<void> _applyDraft() async {
     final model = _draftModel;
-    if (model == null || _applying) return;
+    if (model == null || _applying || !_sameScope) return;
     final variant = _draftVariant;
     setState(() {
       _applying = true;
@@ -981,7 +1097,7 @@ class _ModelCatalogViewState extends State<ModelCatalogView> {
       } else {
         await widget.controller.selectModel(model, variant: variant);
       }
-      if (!mounted) return;
+      if (!mounted || !_sameScope) return;
       if (!ModelLibrary.sameModel(_currentModel, model) ||
           _currentVariant != variant) {
         setState(

@@ -186,6 +186,8 @@ class ConnectionController extends ChangeNotifier {
   int _sessionRevision = 0;
   final Map<String, int> _sessionRevisions = {};
   final Map<String, int> _sessionStatusRevisions = {};
+  final Map<String, Future<void>> _selectionMutations = {};
+  final Map<String, String> sessionSelectionErrors = {};
 
   StreamStatus status = StreamStatus.disconnected;
   String? version;
@@ -1725,6 +1727,64 @@ class ConnectionController extends ChangeNotifier {
           sessionsById[s.id] = s;
           _rememberSessionMembership(s);
           notifyListeners();
+        }
+        break;
+
+      case 'session.metadata.updated':
+        final info = props['info'];
+        if (info is Map<String, dynamic>) {
+          final id = info['id']?.toString();
+          if (id == null || _deletedSessionIDs.contains(id)) break;
+          final previous = sessionsById[id];
+          var next = previous ?? Session(id: id);
+          if (info.containsKey('title')) {
+            next = next.copyWith(title: info['title'] as String?);
+          }
+          if (info.containsKey('directory')) {
+            next = next.copyWith(directory: info['directory']);
+          }
+          if (info.containsKey('workspaceID')) {
+            next = next.copyWith(workspaceID: info['workspaceID']);
+          }
+          if (info.containsKey('projectID')) {
+            next = next.copyWith(projectID: info['projectID']);
+          }
+          if (info.containsKey('path')) {
+            next = next.copyWith(path: info['path']);
+          }
+          _markSessionChanged(id, affectsStatus: false);
+          sessionsById[id] = next;
+          _rememberSessionMembership(
+            next,
+            authoritative: info.containsKey('directory'),
+          );
+          notifyListeners();
+          if (previous == null) unawaited(_refreshOneSession(id));
+        }
+        break;
+
+      case 'session.model.selected':
+      case 'session.agent.selected':
+        final id = props['sessionID']?.toString();
+        if (id == null || _deletedSessionIDs.contains(id)) break;
+        final previous = sessionsById[id] ?? Session(id: id);
+        final old =
+            previous.selection ??
+            const SessionSelection(modelKnown: false, agentKnown: false);
+        final parsed = SessionSelection.fromJson(props);
+        final next = env.type == 'session.model.selected'
+            ? old.withModel(parsed.model, parsed.variant)
+            : old.withAgent(parsed.agent);
+        _markSessionChanged(id, affectsStatus: false);
+        sessionsById[id] = previous.copyWith(
+          selection: next,
+          model: next.model?.wireName,
+          agent: next.agent,
+        );
+        sessionSelectionErrors.remove(id);
+        notifyListeners();
+        if (!next.modelKnown || !next.agentKnown) {
+          unawaited(_refreshOneSession(id));
         }
         break;
 
@@ -3621,8 +3681,9 @@ class ConnectionController extends ChangeNotifier {
           break;
         }
         if (!_queue.any((queued) => queued.id == entry.id)) continue;
+        var delivered = false;
         try {
-          await currentApi.promptAsync(
+          Future<void> send() => currentApi.promptAsync(
             entry.sessionID,
             text: entry.text,
             model: entry.model,
@@ -3631,6 +3692,42 @@ class ConnectionController extends ChangeNotifier {
             attachments: entry.attachments,
             agentMentions: entry.mentions,
           );
+          if (currentApi is SessionSelectionGateway) {
+            await _mutateSessionSelection(entry.sessionID, (gateway) async {
+              await _queueChanges;
+              if (!_queue.any((queued) => queued.id == entry.id)) return false;
+              // Persisted offline entries carry intentional choices. Online
+              // prompt delivery alone never rewrites shared session state.
+              final model = entry.model;
+              if (model != null) {
+                await gateway.setSessionModel(
+                  entry.sessionID,
+                  model,
+                  entry.variant ?? '',
+                );
+              }
+              if (!identical(api, currentApi)) {
+                throw const ProductException('The connection changed.');
+              }
+              await _queueChanges;
+              if (!_queue.any((queued) => queued.id == entry.id)) return true;
+              if (entry.agent?.isNotEmpty == true) {
+                await gateway.setSessionAgent(entry.sessionID, entry.agent!);
+              }
+              if (!identical(api, currentApi)) {
+                throw const ProductException('The connection changed.');
+              }
+              await _queueChanges;
+              if (!_queue.any((queued) => queued.id == entry.id)) return true;
+              await send();
+              delivered = true;
+              return true;
+            }, requireConfirmation: false);
+          } else {
+            await send();
+            delivered = true;
+          }
+          if (!delivered) continue;
           await _serializeQueueChange(() async {
             _queue.removeWhere((queued) => queued.id == entry.id);
             mutated = true;
@@ -3707,7 +3804,15 @@ class ConnectionController extends ChangeNotifier {
     final currentApi = await _requireActionTransport();
     final generation = _generation;
     final revision = _sessionRevision;
-    final session = await currentApi.createSession();
+    final session = currentApi is SessionSelectionGateway
+        ? await (currentApi as SessionSelectionGateway).createSelectedSession(
+            SessionSelection(
+              model: selectedModel,
+              variant: selectedVariant,
+              agent: selectedAgent,
+            ),
+          )
+        : await currentApi.createSession();
     if (_isCurrent(generation, currentApi) &&
         (_sessionRevisions[session.id] ?? 0) <= revision) {
       _markSessionChanged(session.id);
@@ -4126,14 +4231,111 @@ class ConnectionController extends ChangeNotifier {
         );
   }
 
-  /// The model [sessionID] sends with: its own choice when one was made from
-  /// that chat, else the profile default.
+  bool get serverOwnsSessionSelection =>
+      api is SessionSelectionGateway ||
+      (api == null && serverFlavor == ServerFlavor.v2);
+
+  SessionSelection selectionForSession(String sessionID) =>
+      serverOwnsSessionSelection
+      ? sessionsById[sessionID]?.selection ??
+            const SessionSelection(modelKnown: false, agentKnown: false)
+      : SessionSelection(
+          model: sessionModels[sessionID]?.model ?? selectedModel,
+          variant: sessionModels[sessionID]?.variant ?? selectedVariant,
+          agent: selectedAgent,
+        );
+
   ModelRef? modelForSession(String sessionID) =>
-      sessionModels[sessionID]?.model ?? selectedModel;
+      selectionForSession(sessionID).model;
 
   /// The variant [sessionID] sends with; see [modelForSession].
   String variantForSession(String sessionID) =>
-      sessionModels[sessionID]?.variant ?? selectedVariant;
+      selectionForSession(sessionID).variant;
+
+  String agentForSession(String sessionID) =>
+      selectionForSession(sessionID).agent ?? '';
+
+  bool sessionSelectionSaving(String sessionID) =>
+      _selectionMutations.containsKey(sessionID);
+
+  Future<void> waitForSessionSelection(
+    String sessionID, {
+    ServerGateway? expectedApi,
+  }) async {
+    await (_selectionMutations[sessionID] ?? Future.value());
+    if (expectedApi != null && !identical(api, expectedApi)) {
+      throw const ProductException(
+        'The connection changed. Reopen the session and try again.',
+      );
+    }
+  }
+
+  Future<void> _mutateSessionSelection(
+    String sessionID,
+    Future<bool> Function(SessionSelectionGateway gateway) mutate, {
+    bool requireConfirmation = true,
+  }) {
+    final currentApi = api;
+    final generation = _generation;
+    if (currentApi is! SessionSelectionGateway) {
+      return Future.error(const ProductException('OpenCode is reconnecting.'));
+    }
+    final previous = _selectionMutations[sessionID] ?? Future.value();
+    late final Future<void> tracked;
+    tracked = previous
+        .catchError((Object _) {})
+        .then((_) async {
+          if (!_isCurrent(generation, currentApi)) {
+            throw const ProductException(
+              'The connection changed. Reopen the session and try again.',
+            );
+          }
+          try {
+            sessionSelectionErrors.remove(sessionID);
+            final changed = await mutate(currentApi as SessionSelectionGateway);
+            if (!_isCurrent(generation, currentApi)) return;
+            if (changed) {
+              _markSessionChanged(sessionID, affectsStatus: false);
+              await _refreshOneSession(sessionID);
+              if (!_isCurrent(generation, currentApi)) return;
+              final error = sessionDetailsErrors[sessionID];
+              if (requireConfirmation && error != null) {
+                throw ProductException(error);
+              }
+            }
+          } catch (error) {
+            if (_isCurrent(generation, currentApi)) {
+              // A timeout may have applied the mutation. Reconcile before retry.
+              _markSessionChanged(sessionID, affectsStatus: false);
+              await _refreshOneSession(sessionID);
+              if (_isCurrent(generation, currentApi)) {
+                sessionSelectionErrors[sessionID] = error.toString();
+              }
+            }
+            rethrow;
+          }
+        })
+        .whenComplete(() {
+          if (identical(_selectionMutations[sessionID], tracked)) {
+            _selectionMutations.remove(sessionID);
+            if (!_disposed) notifyListeners();
+          }
+        });
+    _selectionMutations[sessionID] = tracked;
+    notifyListeners();
+    return tracked;
+  }
+
+  Future<void> selectAgentForSession(String sessionID, String name) async {
+    if (!serverOwnsSessionSelection) return selectAgent(name);
+    if (name.isEmpty) return;
+    await _mutateSessionSelection(sessionID, (gateway) async {
+      final current = selectionForSession(sessionID);
+      if (current.agentKnown && current.agent == name) return false;
+      await gateway.setSessionAgent(sessionID, name);
+      return true;
+    });
+  }
 
   /// Chooses a model for one session without touching the profile default
   /// or any other session.
@@ -4147,6 +4349,23 @@ class ConnectionController extends ChangeNotifier {
     final nextVariant = variant ?? '';
     if (catalog != null && !modelAvailable(ref)) return;
     if (!_variantAllowed(ref, nextVariant)) return;
+    if (serverOwnsSessionSelection) {
+      final generation = _generation;
+      await _mutateSessionSelection(sessionID, (gateway) async {
+        final current = selectionForSession(sessionID);
+        if (current.modelKnown &&
+            ModelLibrary.sameModel(current.model, ref) &&
+            current.variant == nextVariant) {
+          return false;
+        }
+        await gateway.setSessionModel(sessionID, ref, nextVariant);
+        return true;
+      });
+      if (!_disposed && generation == _generation && recordRecent) {
+        await _rememberModel(ref);
+      }
+      return;
+    }
     sessionModels[sessionID] = SessionModelChoice(
       model: ref,
       variant: nextVariant,
@@ -4446,6 +4665,8 @@ class ConnectionController extends ChangeNotifier {
     _sessionRevision += 1;
     _sessionRevisions.clear();
     _sessionStatusRevisions.clear();
+    _selectionMutations.clear();
+    sessionSelectionErrors.clear();
     sessionsById = {};
     _sessionsCursor = null;
     sessionsLoadingMore = false;

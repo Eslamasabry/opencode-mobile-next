@@ -31,6 +31,7 @@ class _ChatComposer extends StatelessWidget {
     this.defaultAgent = '',
     required this.selectedModel,
     this.modelLabel,
+    this.selectionFallback,
     this.selectedCatalogModel,
     required this.selectedVariant,
     this.showAttachmentNote = true,
@@ -96,6 +97,7 @@ class _ChatComposer extends StatelessWidget {
   /// Presented model name (catalog name or provider · model); the chip shows
   /// it instead of the raw ID. The tooltip keeps the raw string.
   final String? modelLabel;
+  final String? selectionFallback;
 
   /// The selection's catalog entry, for the pricing line in the chip's
   /// tooltip; null when the catalog does not know the model.
@@ -449,7 +451,9 @@ class _ChatComposer extends StatelessWidget {
     }
     final variant = selectedVariant.trim();
     if (variant.isNotEmpty && !_isDefaultVariant(variant)) parts.add(variant);
-    return parts.isEmpty ? 'Choose model' : parts.join(' · ');
+    return parts.isEmpty
+        ? selectionFallback ?? 'Choose model'
+        : parts.join(' · ');
   }
 
   /// Full raw selection for the tooltip.
@@ -459,7 +463,9 @@ class _ChatComposer extends StatelessWidget {
     final model = selectedModel;
     if (model != null && model.modelID.isNotEmpty) parts.add(model.wireName);
     if (selectedVariant.isNotEmpty) parts.add(selectedVariant);
-    return parts.isEmpty ? 'Choose model' : parts.join(' · ');
+    return parts.isEmpty
+        ? selectionFallback ?? 'Choose model'
+        : parts.join(' · ');
   }
 
   /// "$3.00 in · $15.00 out /1M" (the picker's pricing line), or null for

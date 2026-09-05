@@ -432,9 +432,11 @@ server). Everything live (chat updates, permissions, statuses, background
 alerts, widget) sits on this.
 
 **Phase 2 — sessions + messages + prompt.** session list/create/get/delete/
-rename, v2.message.list pagination, and the prompt rewrite: per-prompt
-model/agent/variant becomes v2.session.switchModel/switchAgent + a
-`{text, files, agents, skills}` body. Rework `promptAsync`, `shell`,
+rename, v2.message.list pagination, and the prompt rewrite: explicit selection
+changes use v2.session.switchModel/switchAgent; ordinary prompts use existing
+server session state and a `{text, files, agents, skills}` body. Cycle 07 wires
+server model/variant/agent reads, selected events, picker writes and creation
+defaults. Offline snapshots have a separate explicit replay path. Rework `promptAsync`, `shell`,
 `slashCommand`, the offline queue flush (`QueuedPrompt` snapshots the old
 argument shape), and abort→interrupt. Screens: chat_screen, sessions_tab,
 workspace_screen, home/mission control, widget snapshot.

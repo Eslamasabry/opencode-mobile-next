@@ -86,6 +86,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get modelSessionScopeNote => 'Applies to this session\'s next turns.';
 
   @override
+  String get modelSelectionLoading => 'Loading session selection…';
+
+  @override
+  String get modelServerDefault => 'Server default';
+
+  @override
+  String get modelSelectionSaving => 'Saving session selection…';
+
+  @override
+  String get modelAgentSaveFailed => 'Could not save the agent. Try again.';
+
+  @override
+  String get modelUnavailableSelection =>
+      'The session\'s model is unavailable in this catalog. Refresh models or choose another.';
+
+  @override
+  String get modelScopeChanged =>
+      'The connection changed. Reopen the model selector to continue.';
+
+  @override
   String get commonClearSearch => 'Clear search';
 
   @override

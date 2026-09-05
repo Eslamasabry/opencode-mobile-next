@@ -218,10 +218,15 @@ class _RunCommandDialogState extends State<_RunCommandDialog> {
       }
       var sessionID = _destination;
       if (sessionID.isEmpty) {
-        _createdSessionID ??= (await api.createSession()).id;
+        _createdSessionID ??= (await widget.controller.createSession()).id;
         if (!_sameLocation) throw ProductException(locationError);
         sessionID = _createdSessionID!;
       }
+      await widget.controller.waitForSessionSelection(
+        sessionID,
+        expectedApi: api,
+      );
+      if (!_sameLocation) throw ProductException(locationError);
       final variant = widget.controller.variantForSession(sessionID);
       await api.slashCommand(
         sessionID,

@@ -67,6 +67,58 @@ class SessionDiffSummary {
   }
 }
 
+/// Server-owned selection. Known null values mean server inheritance;
+/// unknown fields have not been hydrated yet.
+class SessionSelection {
+  final ModelRef? model;
+  final String variant;
+  final String? agent;
+  final bool modelKnown;
+  final bool agentKnown;
+  const SessionSelection({
+    this.model,
+    this.variant = '',
+    this.agent,
+    this.modelKnown = true,
+    this.agentKnown = true,
+  });
+
+  factory SessionSelection.fromJson(Map<String, dynamic> json) {
+    final raw = json['model'];
+    return SessionSelection(
+      model:
+          raw is Map &&
+              raw['providerID'] is String &&
+              (raw['id'] ?? raw['modelID']) is String
+          ? ModelRef(
+              providerID: raw['providerID'],
+              modelID: raw['id'] ?? raw['modelID'],
+            ).normalized
+          : null,
+      variant: raw is Map ? raw['variant']?.toString() ?? '' : '',
+      agent: json['agent']?.toString(),
+      modelKnown: json.containsKey('model'),
+      agentKnown: json.containsKey('agent'),
+    );
+  }
+
+  SessionSelection withModel(ModelRef? model, String variant) =>
+      SessionSelection(
+        model: model,
+        variant: variant,
+        agent: agent,
+        agentKnown: agentKnown,
+      );
+  SessionSelection withAgent(String? agent) => SessionSelection(
+    model: model,
+    variant: variant,
+    agent: agent,
+    modelKnown: modelKnown,
+  );
+}
+
+const _unchangedSessionField = Object();
+
 class Session {
   final String id;
   final String? title;
@@ -94,6 +146,7 @@ class Session {
   /// Selected model as `providerID/modelID` (the server's `model` ref
   /// flattened); null when the session has no explicit model.
   final String? model;
+  final SessionSelection? selection;
 
   /// When the server started compacting this session's context; null when
   /// no compaction is in progress.
@@ -115,6 +168,7 @@ class Session {
     this.summary,
     this.agent,
     this.model,
+    this.selection,
     this.compactingSince,
   });
 
@@ -138,6 +192,9 @@ class Session {
       summary: SessionDiffSummary.fromJson(j['summary']),
       agent: j['agent']?.toString(),
       model: modelRefString(j['model']),
+      selection: j['serverSelection'] == true
+          ? SessionSelection.fromJson(j)
+          : null,
       compactingSince: time.compacting == null
           ? null
           : DateTime.fromMillisecondsSinceEpoch(time.compacting!),
@@ -153,25 +210,41 @@ class Session {
     double? cost,
     SessionTokens? tokens,
     SessionDiffSummary? summary,
-    String? agent,
-    String? model,
+    Object? agent = _unchangedSessionField,
+    Object? model = _unchangedSessionField,
+    Object? directory = _unchangedSessionField,
+    Object? workspaceID = _unchangedSessionField,
+    Object? projectID = _unchangedSessionField,
+    Object? path = _unchangedSessionField,
+    SessionSelection? selection,
     SessionTime? time,
   }) => Session(
     id: id,
     title: title ?? this.title,
-    projectID: projectID,
-    workspaceID: workspaceID,
+    projectID: identical(projectID, _unchangedSessionField)
+        ? this.projectID
+        : projectID as String?,
+    workspaceID: identical(workspaceID, _unchangedSessionField)
+        ? this.workspaceID
+        : workspaceID as String?,
     parentID: parentID,
-    directory: directory,
-    path: path,
+    directory: identical(directory, _unchangedSessionField)
+        ? this.directory
+        : directory as String?,
+    path: identical(path, _unchangedSessionField) ? this.path : path as String?,
     reverted: reverted,
     shareUrl: shareUrl,
     time: time ?? this.time,
     cost: cost ?? this.cost,
     tokens: tokens ?? this.tokens,
     summary: summary ?? this.summary,
-    agent: agent ?? this.agent,
-    model: model ?? this.model,
+    agent: identical(agent, _unchangedSessionField)
+        ? this.agent
+        : agent as String?,
+    model: identical(model, _unchangedSessionField)
+        ? this.model
+        : model as String?,
+    selection: selection ?? this.selection,
     compactingSince: compactingSince,
   );
 }
