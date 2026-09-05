@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,7 +14,7 @@ import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class _FormChatApi extends OpenCodeApi {
+class _FormChatApi extends OpenCodeApi with CompleteMessageHistory {
   _FormChatApi() : super(baseUrl: 'http://localhost');
 
   // Forms are a v2 capability, and the chat now gates the renderer and the

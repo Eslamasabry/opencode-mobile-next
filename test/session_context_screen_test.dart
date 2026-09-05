@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
@@ -9,7 +10,7 @@ import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/session_context_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class _ContextApi extends OpenCodeApi {
+class _ContextApi extends OpenCodeApi with CompleteMessageHistory {
   _ContextApi() : super(baseUrl: 'http://localhost');
 
   List<MessageWithParts> messagesResult = const [];

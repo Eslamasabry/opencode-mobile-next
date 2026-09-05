@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -32,7 +33,7 @@ class _MemoryProfileStore extends ProfileStore {
   }
 }
 
-class _NavigationApi extends OpenCodeApi {
+class _NavigationApi extends OpenCodeApi with CompleteMessageHistory {
   _NavigationApi({required this.question})
     : super(baseUrl: 'http://localhost:4096');
 

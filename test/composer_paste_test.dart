@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -12,7 +13,7 @@ import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class _FakeApi extends OpenCodeApi {
+class _FakeApi extends OpenCodeApi with CompleteMessageHistory {
   _FakeApi() : super(baseUrl: 'http://localhost');
 
   @override

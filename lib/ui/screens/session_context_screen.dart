@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../api/models.dart';
 import '../../api/product_repository.dart';
+import '../../l10n/app_localizations.dart';
 import '../../api/provider_presentation.dart';
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
@@ -174,12 +175,14 @@ class SessionContextScreen extends StatefulWidget {
   final ConnectionController controller;
   final String sessionID;
   final List<MessageWithParts> initialMessages;
+  final bool initialHasOlder;
 
   const SessionContextScreen({
     super.key,
     required this.controller,
     required this.sessionID,
     this.initialMessages = const [],
+    this.initialHasOlder = false,
   });
 
   @override
@@ -194,11 +197,16 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
   late int _refreshRevision;
   late int _locationRevision;
   late bool _wasBusy;
+  String? _olderCursor;
+  bool _hasOlder = false;
+  bool _failedOlder = false;
+  final Set<String> _usedCursors = {};
 
   @override
   void initState() {
     super.initState();
     _messages = List.of(widget.initialMessages);
+    _hasOlder = widget.initialHasOlder;
     _refreshRevision = widget.controller.dataRefreshRevision;
     _locationRevision = widget.controller.locationRevision;
     _wasBusy = widget.controller.busySessions.contains(widget.sessionID);
@@ -225,24 +233,38 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
     if (refreshChanged || locationChanged || completed) unawaited(_load());
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool older = false}) async {
+    final cursor = older ? _olderCursor : null;
+    if (older && (_loading || cursor == null)) return;
     final generation = ++_generation;
     if (mounted) {
       setState(() {
         _loading = true;
         _error = null;
+        _failedOlder = older;
       });
     }
     try {
       final api = await widget.controller.prepareActionTransport();
       if (api == null) throw const ProductException('OpenCode is reconnecting. Try again.');
-      final messages = await api.messages(widget.sessionID);
-      messages.sort(
-        (a, b) =>
-            (a.info.time?.created ?? 0).compareTo(b.info.time?.created ?? 0),
-      );
+      final page = await api.messagePage(widget.sessionID, cursor: cursor);
       if (!mounted || generation != _generation) return;
-      setState(() => _messages = messages);
+      if (older && page.hasMore && (page.nextCursor == cursor || _usedCursors.contains(page.nextCursor))) {
+        _failedOlder = false;
+        throw ProductException(lookupAppLocalizations(Localizations.localeOf(context)).historyCursorExpired);
+      }
+      setState(() {
+        if (older) {
+          final existing = _messages.map((message) => message.info.id).toSet();
+          _messages = [...page.items.where((message) => existing.add(message.info.id)), ..._messages];
+          _usedCursors.add(cursor!);
+        } else {
+          _messages = page.items;
+          _usedCursors.clear();
+        }
+        _olderCursor = page.nextCursor;
+        _hasOlder = page.hasMore;
+      });
     } catch (error) {
       if (!mounted || generation != _generation) return;
       setState(() => _error = error);
@@ -276,6 +298,7 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
   }
 
   Widget _buildBody(SessionContextMetrics metrics) {
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     if (_loading && _messages.isEmpty) return const LoadingList(rows: 7);
     if (_error != null && _messages.isEmpty) {
       return ProductErrorState(
@@ -287,10 +310,10 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
       return ProductEmptyState(
         icon: Icons.donut_large_outlined,
         title: 'No context usage yet',
-        message:
+        message: _hasOlder ? l10n.historyLoadedOnly :
             'Send a prompt and wait for an assistant response. OpenCode will then report token usage for this session.',
-        actionLabel: 'Refresh',
-        onAction: _load,
+        actionLabel: _olderCursor != null ? l10n.historyLoadOlder : 'Refresh',
+        onAction: _olderCursor != null ? () => _load(older: true) : _load,
       );
     }
 
@@ -302,7 +325,15 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
         padding: const EdgeInsets.only(bottom: 32),
         children: [
           if (_error != null)
-            _InlineContextError(error: _error!, onRetry: _load),
+            _InlineContextError(error: _error!, onRetry: () => _load(older: _failedOlder)),
+          if (_hasOlder) Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(children: [
+              Text(l10n.historyLoadedOnly),
+              TextButton(onPressed: _loading ? null : () => _load(older: true),
+                child: Text(l10n.historyLoadOlder)),
+            ]),
+          ),
           _ContextHero(metrics: metrics),
           const SectionLabel('Current model request'),
           _MetricGrid(metrics: metrics),
@@ -310,7 +341,7 @@ class _SessionContextScreenState extends State<SessionContextScreen> {
             const SectionLabel('Estimated input makeup'),
             _ContextBreakdown(segments: metrics.breakdown),
           ],
-          const SectionLabel('Session totals'),
+          SectionLabel(_hasOlder && !metrics.reportedByServer ? l10n.historyLoadedTotals : 'Session totals'),
           _SessionTotals(metrics: metrics),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),

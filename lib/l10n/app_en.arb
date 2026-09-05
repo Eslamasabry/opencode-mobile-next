@@ -179,5 +179,11 @@
   "@filesOpenFolder": {"placeholders":{"folder":{"type":"String"}}},
   "filesCurrentFolder": "Current folder: {folder}",
   "@filesCurrentFolder": {"placeholders":{"folder":{"type":"String"}}},
-  "globalSessionsLoadMore": "Load more sessions"
+  "globalSessionsLoadMore": "Load more sessions",
+  "historyLoadOlder": "Load older messages",
+  "historyReload": "Reload recent history",
+  "historyCursorExpired": "Older history changed or expired. Reload recent history to continue.",
+  "historyRefreshed": "History refreshed. Older messages remain available above.",
+  "historyLoadedOnly": "Only loaded messages are included. Load older history to include more.",
+  "historyLoadedTotals": "Loaded message totals"
 }

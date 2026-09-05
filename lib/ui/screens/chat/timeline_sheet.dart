@@ -27,10 +27,13 @@ class _SessionSheetRow extends StatelessWidget {
 }
 
 class _TimelineSheet extends StatefulWidget {
-  const _TimelineSheet({required this.messages, required this.forkMode});
+  const _TimelineSheet({required this.messages, required this.forkMode,
+    this.hasOlder = false, this.loadOlder});
 
   final List<MessageWithParts> messages;
   final bool forkMode;
+  final bool hasOlder;
+  final Future<ServerPage<MessageWithParts>> Function()? loadOlder;
 
   @override
   State<_TimelineSheet> createState() => _TimelineSheetState();
@@ -38,6 +41,24 @@ class _TimelineSheet extends StatefulWidget {
 
 class _TimelineSheetState extends State<_TimelineSheet> {
   final _search = TextEditingController();
+  late List<MessageWithParts> _messages = widget.messages;
+  late bool _hasOlder = widget.hasOlder;
+  bool _loadingOlder = false;
+  Object? _olderError;
+
+  Future<void> _loadOlder() async {
+    if (_loadingOlder || widget.loadOlder == null) return;
+    setState(() { _loadingOlder = true; _olderError = null; });
+    try {
+      final page = await widget.loadOlder!();
+      if (!mounted) return;
+      setState(() { _messages = page.items; _hasOlder = page.hasMore; });
+    } catch (error) {
+      if (mounted) setState(() => _olderError = error);
+    } finally {
+      if (mounted) setState(() => _loadingOlder = false);
+    }
+  }
 
   String _preview(MessageWithParts message) {
     final text = message.parts
@@ -88,7 +109,7 @@ class _TimelineSheetState extends State<_TimelineSheet> {
     final theme = Theme.of(context);
     final largeText = MediaQuery.textScalerOf(context).scale(1) >= 1.5;
     final query = _search.text.trim().toLowerCase();
-    final visible = widget.messages.reversed.where((message) {
+    final visible = _messages.reversed.where((message) {
       if (widget.forkMode && !_isForkable(message)) return false;
       if (query.isEmpty) return true;
       final role = message.info.role == 'user'
@@ -157,6 +178,14 @@ class _TimelineSheetState extends State<_TimelineSheet> {
                   isDense: true,
                 ),
               ),
+            ),
+            if (_hasOlder) Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                Text(_olderError == null ? _chatL10n(context).historyLoadedOnly : productErrorText(_olderError!)),
+                TextButton(onPressed: _loadingOlder ? null : _loadOlder,
+                  child: Text(_chatL10n(context).historyLoadOlder)),
+              ]),
             ),
             Expanded(
               child: visible.isEmpty

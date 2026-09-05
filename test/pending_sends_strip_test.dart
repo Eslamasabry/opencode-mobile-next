@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -16,7 +17,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// A v2-flavored fake: forms/inbox capabilities on, inbox mutations
 /// recorded, prompts recording their delivery mode.
-class _V2ChatApi extends OpenCodeApi {
+class _V2ChatApi extends OpenCodeApi with CompleteMessageHistory {
   _V2ChatApi() : super(baseUrl: 'http://localhost');
 
   final prompts = <({String text, PromptDelivery? delivery})>[];
@@ -69,7 +70,7 @@ class _V2ChatApi extends OpenCodeApi {
 }
 
 /// A v1 fake: no inbox capability, so the composer keeps its lone Stop.
-class _V1ChatApi extends OpenCodeApi {
+class _V1ChatApi extends OpenCodeApi with CompleteMessageHistory {
   _V1ChatApi() : super(baseUrl: 'http://localhost');
 
   final prompts = <({String text, PromptDelivery? delivery})>[];

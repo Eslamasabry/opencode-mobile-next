@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +30,7 @@ void desktopTest(
   });
 }
 
-class _TranscriptApi extends OpenCodeApi {
+class _TranscriptApi extends OpenCodeApi with CompleteMessageHistory {
   _TranscriptApi() : super(baseUrl: 'http://localhost');
 
   @override

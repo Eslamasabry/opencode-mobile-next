@@ -11,6 +11,8 @@
 /// - v2-only features on a v1 server: **hidden**, no explainer
 library;
 
+import 'support/complete_message_history.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
@@ -34,7 +36,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// A transport that speaks v1 and reports the v1 superset, like today's
 /// [OpenCodeApi].
-class _V1Api extends OpenCodeApi {
+class _V1Api extends OpenCodeApi with CompleteMessageHistory {
   _V1Api() : super(baseUrl: 'http://localhost');
 
   @override

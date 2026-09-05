@@ -813,6 +813,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Load more sessions'**
   String get globalSessionsLoadMore;
+
+  /// No description provided for @historyLoadOlder.
+  ///
+  /// In en, this message translates to:
+  /// **'Load older messages'**
+  String get historyLoadOlder;
+
+  /// No description provided for @historyReload.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload recent history'**
+  String get historyReload;
+
+  /// No description provided for @historyCursorExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Older history changed or expired. Reload recent history to continue.'**
+  String get historyCursorExpired;
+
+  /// No description provided for @historyRefreshed.
+  ///
+  /// In en, this message translates to:
+  /// **'History refreshed. Older messages remain available above.'**
+  String get historyRefreshed;
+
+  /// No description provided for @historyLoadedOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only loaded messages are included. Load older history to include more.'**
+  String get historyLoadedOnly;
+
+  /// No description provided for @historyLoadedTotals.
+  ///
+  /// In en, this message translates to:
+  /// **'Loaded message totals'**
+  String get historyLoadedTotals;
 }
 
 class _AppLocalizationsDelegate

@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,7 +13,7 @@ import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/chat_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class _ComposerApi extends OpenCodeApi {
+class _ComposerApi extends OpenCodeApi with CompleteMessageHistory {
   _ComposerApi() : super(baseUrl: 'http://localhost');
 
   final prompts = <String>[];

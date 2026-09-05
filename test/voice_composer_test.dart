@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 import 'dart:ui' show Tristate;
 
 import 'package:flutter/material.dart';
@@ -17,7 +18,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'voice_controller_test.dart';
 
-class _VoiceChatApi extends OpenCodeApi {
+class _VoiceChatApi extends OpenCodeApi with CompleteMessageHistory {
   _VoiceChatApi() : super(baseUrl: 'http://localhost');
 
   int promptCalls = 0;

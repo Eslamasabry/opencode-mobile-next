@@ -874,6 +874,9 @@ abstract class SessionGateway {
   Future<Session> session(String id);
   Future<Map<String, String>> sessionStatuses();
   Future<List<MessageWithParts>> messages(String id);
+  /// Chronological items; the opaque continuation always requests older rows.
+  Future<ServerPage<MessageWithParts>> messagePage(
+    String id, {String? cursor, int limit = 100});
   Future<List<Todo>> todos(String id);
   Future<List<FileDiff>> diff(String id);
 }

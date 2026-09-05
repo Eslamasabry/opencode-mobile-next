@@ -465,14 +465,21 @@ class OpenCodeApi
   }
 
   @override
-  Future<List<MessageWithParts>> messages(String id) async {
+  Future<List<MessageWithParts>> messages(String id) async =>
+      (await messagePage(id)).items;
+
+  @override
+  Future<ServerPage<MessageWithParts>> messagePage(
+    String id, {String? cursor, int limit = 100}) async {
     try {
       final response = await sdkClient.getSessionApi().sessionMessages(
         sessionID: id,
         directory: _directory,
         workspace: _workspace,
+        limit: limit,
+        before: cursor,
       );
-      return (response.data ?? const [])
+      final items = (response.data ?? const [])
           .map(
             (bundle) => _bundleFromJson({
               'info': bundle.info.toJson(),
@@ -480,19 +487,34 @@ class OpenCodeApi
             }),
           )
           .toList();
+      return ServerPage(items: items, nextCursor: _messageCursor(response.headers));
     } on sdk.OpenCodeApiException catch (e) {
       _failGenerated(e, 'Get session messages');
     } on DioException catch (e) {
       final raw = e.response?.data;
       if (_wasSuccessfulResponse(e) && raw is List) {
         try {
-          return raw.map(_bundleFromJson).toList();
+          return ServerPage(items: raw.map(_bundleFromJson).toList(),
+            nextCursor: _messageCursor(e.response!.headers));
         } catch (_) {
           // Fall through to the existing product-facing transport error.
         }
       }
       _fail(e, 'Get session messages');
     }
+  }
+
+  String? _messageCursor(Headers headers) {
+    final cursor = headers.value('x-next-cursor');
+    if (cursor != null && cursor.isNotEmpty) return cursor;
+    // Read only the opaque token from Link, never follow a returned URL.
+    for (final link in (headers.value('link') ?? '').split(',')) {
+      if (!RegExp(r'rel="?next"?').hasMatch(link)) continue;
+      final match = RegExp(r'<([^>]+)>').firstMatch(link);
+      final next = Uri.tryParse(match?.group(1) ?? '')?.queryParameters['before'];
+      if (next != null && next.isNotEmpty) return next;
+    }
+    return null;
   }
 
   MessageWithParts _bundleFromJson(dynamic raw) {

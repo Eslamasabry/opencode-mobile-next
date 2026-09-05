@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,7 +16,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Covers the chat UI built on the widened server data: the retry banner,
 /// typed assistant error cards, the length footer, and session-row chips.
-class _Api extends OpenCodeApi {
+class _Api extends OpenCodeApi with CompleteMessageHistory {
   _Api() : super(baseUrl: 'http://localhost');
 
   List<MessageWithParts> messagesResult = const [];

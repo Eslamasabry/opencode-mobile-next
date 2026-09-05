@@ -114,6 +114,7 @@ void main() {
             expect(uri.queryParameters, {
               'directory': '/work/acme',
               'workspace': 'workspace-1',
+              if (uri.path.endsWith('/message')) 'limit': '100',
             });
           }
         } finally {

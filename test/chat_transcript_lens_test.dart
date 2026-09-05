@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 // Tests for the chat-transcript lens fixes (C1–C14, T1):
 // streaming delta batching, expansion survival across list recycling,
 // assistant long-press actions, and earlier-messages pill gating.
@@ -18,7 +19,7 @@ import 'package:opencode_mobile/ui/widgets/tool_card.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class _TranscriptApi extends OpenCodeApi {
+class _TranscriptApi extends OpenCodeApi with CompleteMessageHistory {
   _TranscriptApi() : super(baseUrl: 'http://localhost');
 
   List<MessageWithParts> Function()? messagesBuilder;

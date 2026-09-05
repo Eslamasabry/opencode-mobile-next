@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -19,7 +20,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// narrow phone at a large text scale. These tests pin the new anatomy —
 /// one leading tools button, a secondary model chip, and Send — and the
 /// share of the composer the field must keep.
-class _FakeApi extends OpenCodeApi {
+class _FakeApi extends OpenCodeApi with CompleteMessageHistory {
   _FakeApi() : super(baseUrl: 'http://localhost');
   List<MessageWithParts> transcript = [];
 

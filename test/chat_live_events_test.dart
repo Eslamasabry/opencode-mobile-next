@@ -1,3 +1,4 @@
+import 'support/complete_message_history.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -19,11 +20,21 @@ import 'package:opencode_mobile/ui/screens/project_health_screen.dart';
 import 'package:opencode_mobile/ui/screens/session_context_screen.dart';
 import 'package:opencode_mobile/ui/widgets/product_states.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
-class _FakeOpenCodeApi extends OpenCodeApi {
+class _FakeOpenCodeApi extends OpenCodeApi with CompleteMessageHistory {
   _FakeOpenCodeApi() : super(baseUrl: 'http://localhost');
 
   Future<List<MessageWithParts>> Function(String id)? messagesHandler;
+  Future<ServerPage<MessageWithParts>> Function(String? cursor)? pageHandler;
+  final pageCursors = <String?>[];
+
+  @override
+  Future<ServerPage<MessageWithParts>> messagePage(String id, {String? cursor, int limit = 100}) {
+    if (pageHandler == null) return super.messagePage(id, cursor: cursor, limit: limit);
+    pageCursors.add(cursor);
+    return pageHandler!(cursor);
+  }
   Completer<void>? promptCompleter;
   int promptCalls = 0;
   final List<
@@ -535,6 +546,90 @@ Future<void> _useComposerTool(WidgetTester tester, String tool) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  MessageWithParts historyMessage(String id, [String? text]) => _message(id, 'user', [
+    Part(id: 'part-$id', messageID: id, type: 'text', text: text ?? id),
+  ]);
+
+  testWidgets('paged history preserves newest rows through older and duplicate pages', (tester) async {
+    final api = _FakeOpenCodeApi()..pageHandler = (cursor) async => switch (cursor) {
+      null => ServerPage(items: [historyMessage('recent'), historyMessage('newest')], nextCursor: 'first'),
+      'first' => ServerPage(items: [historyMessage('older'), historyMessage('recent')], nextCursor: 'empty'),
+      'empty' => const ServerPage(items: [], nextCursor: 'last'),
+      _ => ServerPage(items: [historyMessage('oldest')]),
+    };
+    await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+    final older = find.byKey(const ValueKey('chat-load-older'));
+    for (var i = 0; i < 3; i++) {
+      await tester.ensureVisible(older);
+      await tester.tap(older);
+      await tester.pumpAndSettle();
+    }
+    expect(api.pageCursors, [null, 'first', 'empty', 'last']);
+    expect(find.byKey(const ValueKey('message-newest')), findsOneWidget);
+    expect(find.byKey(const ValueKey('message-recent')), findsOneWidget);
+    expect(find.byKey(const ValueKey('message-oldest')), findsOneWidget);
+    expect(older, findsNothing);
+  });
+
+  testWidgets('paged history retry keeps the cursor and transcript', (tester) async {
+    var fail = true;
+    final api = _FakeOpenCodeApi()..pageHandler = (cursor) async {
+      if (cursor == null) return ServerPage(items: [historyMessage('newest')], nextCursor: 'retry');
+      if (fail) throw ApiException('Older request failed');
+      return ServerPage(items: [historyMessage('older')]);
+    };
+    await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('chat-load-older')));
+    await tester.pumpAndSettle();
+    expect(find.text('Older request failed'), findsOneWidget);
+    expect(find.byKey(const ValueKey('message-newest')), findsOneWidget);
+    fail = false;
+    await tester.tap(find.byKey(const ValueKey('chat-load-older')));
+    await tester.pumpAndSettle();
+    expect(api.pageCursors, [null, 'retry', 'retry']);
+    expect(find.byKey(const ValueKey('message-older')), findsOneWidget);
+  });
+
+  testWidgets('paged history does not resurrect a message removed during loading', (tester) async {
+    final pending = Completer<ServerPage<MessageWithParts>>();
+    final api = _FakeOpenCodeApi()..pageHandler = (cursor) async => cursor == null
+      ? ServerPage(items: [historyMessage('newest')], nextCursor: 'older') : pending.future;
+    final controller = await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('chat-load-older')));
+    await tester.pump();
+    controller.handleEventForTesting(_event('message.removed', {
+      'sessionID': 'session-1', 'messageID': 'deleted',
+    }));
+    await _pumpEvent(tester);
+    pending.complete(ServerPage(items: [historyMessage('deleted'), historyMessage('older')]));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('message-deleted')), findsNothing);
+    expect(find.byKey(const ValueKey('message-older')), findsOneWidget);
+    expect(find.byKey(const ValueKey('message-newest')), findsOneWidget);
+  });
+
+  testWidgets('paged history preserves deltas newer than an older snapshot', (tester) async {
+    final pending = Completer<ServerPage<MessageWithParts>>();
+    final api = _FakeOpenCodeApi()..pageHandler = (cursor) async => cursor == null
+      ? ServerPage(items: [historyMessage('newest', 'latest')], nextCursor: 'older') : pending.future;
+    final controller = await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('chat-load-older')));
+    await tester.pump();
+    controller.handleEventForTesting(_event('message.part.delta', {
+      'sessionID': 'session-1', 'messageID': 'newest', 'partID': 'part-newest',
+      'field': 'text', 'delta': ' live',
+    }));
+    await _pumpEvent(tester);
+    pending.complete(ServerPage(items: [historyMessage('older'), historyMessage('newest', 'stale')]));
+    await tester.pumpAndSettle();
+    expect(find.text('latest live'), findsOneWidget);
+    expect(find.text('stale'), findsNothing);
+  });
 
   test('message errors surface nested data.message', () {
     final info = MessageInfo.fromJson({
