@@ -48,6 +48,7 @@ class _Controller extends ConnectionController {
     String id,
     String reply, {
     String? message,
+    PendingRequestIdentity? expectedRequest,
   }) async {
     answeredPermissionID = id;
     permissionReply = reply;

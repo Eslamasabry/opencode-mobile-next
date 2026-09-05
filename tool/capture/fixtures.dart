@@ -797,6 +797,7 @@ class CaptureController extends ConnectionController {
     String id,
     String reply, {
     String? message,
+    PendingRequestIdentity? expectedRequest,
   }) async {
     answered.add((id: id, reply: reply));
     permissions.remove(id);

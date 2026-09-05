@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
@@ -13,6 +15,7 @@ class _ReplyApi extends OpenCodeApi {
   final permissionReplies = <(String, String, String)>[];
   final questionReplies = <(String, String, List<List<String>>)>[];
   Object? failure;
+  Completer<void>? pending;
 
   @override
   Future<void> respondPermissionV2(
@@ -21,6 +24,7 @@ class _ReplyApi extends OpenCodeApi {
     String reply, {
     String? message,
   }) async {
+    await pending?.future;
     if (failure case final error?) throw error;
     permissionReplies.add((sessionID, requestID, reply));
   }
@@ -73,12 +77,13 @@ _harness() async {
   );
   await backgroundLive.restore();
   final api = _ReplyApi();
-  final controller = ConnectionController(
-    ProfileStore(prefs: preferences),
-    backgroundLive: backgroundLive,
-  )
-    ..api = api
-    ..repository = _StubRepository();
+  final controller =
+      ConnectionController(
+          ProfileStore(prefs: preferences),
+          backgroundLive: backgroundLive,
+        )
+        ..api = api
+        ..repository = _StubRepository();
   controller.suspendForLifecycle();
   calls.clear();
   return (
@@ -130,30 +135,60 @@ Future<void> _flush() => Future<void>.delayed(Duration.zero);
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('notification Allow once resolves the exact pending permission', () async {
-    final harness = await _harness();
-    addTearDown(harness.controller.dispose);
-    _askPermission(harness.controller);
-    await _flush();
+  test(
+    'notification Allow and in-app Deny share the in-flight request',
+    () async {
+      final harness = await _harness();
+      addTearDown(harness.controller.dispose);
+      _askPermission(harness.controller);
+      final pending = Completer<void>();
+      harness.api.pending = pending;
+      final notification = harness.backgroundLive.handleNativeAction({
+        'kind': 'permission',
+        'sessionID': 'session-1',
+        'decision': 'allow',
+        'requestID': 'permission-1',
+      });
+      final inApp = harness.controller.answerPermission(
+        'permission-1',
+        'reject',
+      );
+      pending.complete();
+      await inApp;
+      expect(await notification, {'handled': true});
+      expect(harness.api.permissionReplies, [
+        ('session-1', 'permission-1', 'once'),
+      ]);
+    },
+  );
 
-    final result = await harness.backgroundLive.handleNativeAction({
-      'kind': 'permission',
-      'sessionID': 'session-1',
-      'decision': 'allow',
-      'requestID': 'permission-1',
-    });
+  test(
+    'notification Allow once resolves the exact pending permission',
+    () async {
+      final harness = await _harness();
+      addTearDown(harness.controller.dispose);
+      _askPermission(harness.controller);
+      await _flush();
 
-    expect(result, {'handled': true});
-    expect(harness.api.permissionReplies, [
-      ('session-1', 'permission-1', 'once'),
-    ]);
-    expect(harness.controller.permissions, isEmpty);
-    await _flush();
-    expect(
-      harness.calls.where((call) => call.method == 'dismissCodingAlert'),
-      isNotEmpty,
-    );
-  });
+      final result = await harness.backgroundLive.handleNativeAction({
+        'kind': 'permission',
+        'sessionID': 'session-1',
+        'decision': 'allow',
+        'requestID': 'permission-1',
+      });
+
+      expect(result, {'handled': true});
+      expect(harness.api.permissionReplies, [
+        ('session-1', 'permission-1', 'once'),
+      ]);
+      expect(harness.controller.permissions, isEmpty);
+      await _flush();
+      expect(
+        harness.calls.where((call) => call.method == 'dismissCodingAlert'),
+        isNotEmpty,
+      );
+    },
+  );
 
   test('notification Deny rejects without a durable grant option', () async {
     final harness = await _harness();
@@ -272,35 +307,38 @@ void main() {
     expect(harness.controller.questions, hasLength(1));
   });
 
-  test('a stale request ID never resolves a different pending request', () async {
-    final harness = await _harness();
-    addTearDown(harness.controller.dispose);
-    _askPermission(harness.controller);
-    harness.controller.handleEventForTesting(
-      EventEnvelope(
-        type: 'permission.v2.asked',
-        properties: const {
-          'id': 'permission-2',
-          'sessionID': 'session-1',
-          'action': 'shell',
-          'resources': ['rm -rf build'],
-        },
-      ),
-    );
-    await _flush();
+  test(
+    'a stale request ID never resolves a different pending request',
+    () async {
+      final harness = await _harness();
+      addTearDown(harness.controller.dispose);
+      _askPermission(harness.controller);
+      harness.controller.handleEventForTesting(
+        EventEnvelope(
+          type: 'permission.v2.asked',
+          properties: const {
+            'id': 'permission-2',
+            'sessionID': 'session-1',
+            'action': 'shell',
+            'resources': ['rm -rf build'],
+          },
+        ),
+      );
+      await _flush();
 
-    // The notification represented permission-1, which was resolved from the
-    // app before the user tapped the action. permission-2 must survive.
-    harness.controller.permissions.remove('permission-1');
-    final result = await harness.backgroundLive.handleNativeAction({
-      'kind': 'permission',
-      'sessionID': 'session-1',
-      'decision': 'allow',
-      'requestID': 'permission-1',
-    });
+      // The notification represented permission-1, which was resolved from the
+      // app before the user tapped the action. permission-2 must survive.
+      harness.controller.permissions.remove('permission-1');
+      final result = await harness.backgroundLive.handleNativeAction({
+        'kind': 'permission',
+        'sessionID': 'session-1',
+        'decision': 'allow',
+        'requestID': 'permission-1',
+      });
 
-    expect(result, {'handled': true});
-    expect(harness.api.permissionReplies, isEmpty);
-    expect(harness.controller.permissions.keys, ['permission-2']);
-  });
+      expect(result, {'handled': true});
+      expect(harness.api.permissionReplies, isEmpty);
+      expect(harness.controller.permissions.keys, ['permission-2']);
+    },
+  );
 }

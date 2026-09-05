@@ -4,53 +4,70 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../api/models.dart';
+import '../../../state/connection.dart';
 import '../../permission_presentation.dart';
 import '../../app_theme.dart';
 import '../../widgets/code_highlight.dart';
 import '../../widgets/diff_view.dart';
+import '../../widgets/request_routes.dart';
 
 /// Presents the OpenCode 2 permission prompt as a modal bottom sheet
 /// (design doc §3). One component serves three entry points: the chat
-/// auto-present, the Requests tile, and notification taps.
+/// review card, the Requests tile, and notification taps.
 ///
-/// [onReply] receives `once` / `always` / `reject` plus the optional reject
-/// [message] (v2 steering-by-rejection; ignored by v1 transports). Throwing
-/// keeps the sheet open with the error inline. [supportsRejectMessage]
-/// controls the reject expansion: when false (v1 servers, whose reply shape
-/// has no message field) Reject submits directly. [onShowSource], when
+/// Replies retain the request's scope through transport recovery. Failures
+/// keep the sheet open with the error inline while that request is pending.
+/// v2 supports a rejection message; v1 Reject submits directly. [onShowSource], when
 /// given for a request carrying a tool source, renders the "From tool call"
 /// chip; it runs after the sheet dismisses itself.
 Future<void> showPermissionSheet(
   BuildContext context, {
   required PermissionRequest permission,
-  required Future<void> Function(String reply, {String? message}) onReply,
-  required bool supportsRejectMessage,
+  required ConnectionController controller,
   String contextLabel = 'in this chat',
   VoidCallback? onShowSource,
-}) {
-  return showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    clipBehavior: Clip.antiAlias,
-    constraints: const BoxConstraints(maxWidth: 720),
-    backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
-    builder: (sheetContext) => Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
-      ),
-      child: PermissionSheet(
-        permission: permission,
-        onReply: onReply,
-        supportsRejectMessage: supportsRejectMessage,
-        contextLabel: contextLabel,
-        onShowSource: onShowSource,
-      ),
-    ),
+}) async {
+  final request = controller.permissionIdentity(permission);
+  if (!controller.isRequestPending(request)) return;
+  final routes = RequestRoutes(
+    changes: controller,
+    isPending: () => controller.isRequestPending(request),
   );
+  try {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      clipBehavior: Clip.antiAlias,
+      constraints: const BoxConstraints(maxWidth: 720),
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+        ),
+        child: PermissionSheet(
+          permission: permission,
+          routes: routes,
+          onReply: (reply, {message}) => controller.answerPermission(
+            permission.id,
+            reply,
+            message: message,
+            expectedRequest: request,
+          ),
+          supportsRejectMessage: controller.permissionSupportsRejectMessage(
+            permission.id,
+          ),
+          contextLabel: contextLabel,
+          onShowSource: onShowSource,
+        ),
+      ),
+    );
+  } finally {
+    routes.close();
+  }
 }
 
 class PermissionSheet extends StatefulWidget {
@@ -61,6 +78,7 @@ class PermissionSheet extends StatefulWidget {
     required this.supportsRejectMessage,
     this.contextLabel = 'in this chat',
     this.onShowSource,
+    this.routes,
   });
 
   final PermissionRequest permission;
@@ -68,43 +86,64 @@ class PermissionSheet extends StatefulWidget {
   final bool supportsRejectMessage;
   final String contextLabel;
   final VoidCallback? onShowSource;
+  final RequestRoutes? routes;
 
   @override
   State<PermissionSheet> createState() => _PermissionSheetState();
 }
 
 class _PermissionSheetState extends State<PermissionSheet> {
+  late final _routes = widget.routes ?? RequestRoutes();
   final _rejectMessage = TextEditingController();
   bool _replying = false;
+  bool _confirming = false;
   bool _rejecting = false;
   Object? _error;
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _routes.own(ModalRoute.of(context));
+  }
+
+  @override
   void dispose() {
+    _routes.close();
     _rejectMessage.dispose();
     super.dispose();
   }
 
   Future<void> _reply(String reply, {String? message}) async {
-    if (_replying) return;
-    if (reply == 'always' && !await _confirmAlways()) return;
+    if (_replying || !_routes.isPending) return;
     setState(() {
       _replying = true;
+      _confirming = reply == 'always';
       _error = null;
     });
     try {
+      if (reply == 'always' && !await _confirmAlways()) return;
+      if (!mounted || !_routes.isPending) return;
+      setState(() => _confirming = false);
       await widget.onReply(reply, message: message);
-      if (mounted) Navigator.of(context).pop();
+      _routes.close();
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted || !_routes.isPending) return;
       setState(() {
         _replying = false;
         _error = error;
       });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _replying = false;
+          _confirming = false;
+        });
+      }
     }
   }
 
   void _startReject() {
+    if (_replying || !_routes.isPending) return;
     if (!widget.supportsRejectMessage) {
       // v1 reply shape has no message field: Reject submits directly.
       _reply('reject');
@@ -128,46 +167,49 @@ class _PermissionSheetState extends State<PermissionSheet> {
         : permission.patterns;
     return await showDialog<bool>(
           context: context,
-          builder: (context) => AlertDialog(
-            scrollable: true,
-            icon: const Icon(Icons.warning_amber_rounded),
-            title: const Text('Confirm broader access'),
-            content: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Context: ${permission.permission} ${widget.contextLabel}',
+          builder: (context) {
+            _routes.own(ModalRoute.of(context));
+            return AlertDialog(
+              scrollable: true,
+              icon: const Icon(Icons.warning_amber_rounded),
+              title: const Text('Confirm broader access'),
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Context: ${permission.permission} ${widget.contextLabel}',
+                  ),
+                  const SizedBox(height: 12),
+                  const Text('Always allow patterns:'),
+                  const SizedBox(height: 4),
+                  SelectableText(
+                    broader.isEmpty
+                        ? '(all matching requests)'
+                        : broader.join('\n'),
+                    style: const TextStyle(fontFamily: AppTheme.monoFamily),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Consequence: future matching actions can run without asking again for the lifetime of this OpenCode server. Allow once is safer.',
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Manage saved grants in Settings → Saved permissions.',
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Keep asking'),
                 ),
-                const SizedBox(height: 12),
-                const Text('Always allow patterns:'),
-                const SizedBox(height: 4),
-                SelectableText(
-                  broader.isEmpty
-                      ? '(all matching requests)'
-                      : broader.join('\n'),
-                  style: const TextStyle(fontFamily: AppTheme.monoFamily),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Consequence: future matching actions can run without asking again for the lifetime of this OpenCode server. Allow once is safer.',
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Manage saved grants in Settings → Saved permissions.',
+                FilledButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Confirm always allow'),
                 ),
               ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Keep asking'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Confirm always allow'),
-              ),
-            ],
-          ),
+            );
+          },
         ) ??
         false;
   }
@@ -195,12 +237,13 @@ class _PermissionSheetState extends State<PermissionSheet> {
   );
 
   void _openFullDiff(String diff) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        fullscreenDialog: true,
-        builder: (_) => DiffView.single(_pendingDiff(diff)),
-      ),
+    if (!_routes.isPending) return;
+    final route = MaterialPageRoute<void>(
+      fullscreenDialog: true,
+      builder: (_) => DiffView.single(_pendingDiff(diff)),
     );
+    _routes.own(route);
+    Navigator.of(context).push(route);
   }
 
   IconData get _resourceIcon => switch (widget.permission.permission) {
@@ -290,8 +333,9 @@ class _PermissionSheetState extends State<PermissionSheet> {
                     avatar: const Icon(Icons.build_circle_outlined, size: 18),
                     label: const Text('From tool call'),
                     onPressed: () {
+                      if (!_routes.isPending) return;
                       final onShowSource = widget.onShowSource!;
-                      Navigator.of(context).pop();
+                      _routes.close();
                       onShowSource();
                     },
                   ),
@@ -412,7 +456,7 @@ class _PermissionSheetState extends State<PermissionSheet> {
         FilledButton(
           key: const Key('permission-allow-once'),
           onPressed: _replying ? null : () => _reply('once'),
-          child: _replying
+          child: _replying && !_confirming
               ? const SizedBox.square(
                   dimension: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),

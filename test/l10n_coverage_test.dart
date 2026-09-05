@@ -31,9 +31,16 @@ final _hasLetter = RegExp('[A-Za-z]');
 final _identifierLike = RegExp(r'^[^\s]*[/._+:][^\s]*$');
 // Dart interpolation-only literals like '$count' or '${a.b}'.
 final _interpolationOnly = RegExp(r'^\$\{?[A-Za-z_][A-Za-z0-9_.]*\}?$');
+// Names inside interpolation are Dart identifiers, not rendered words. Strip
+// only simple references; expressions and any surrounding prose still count.
+final _interpolation = RegExp(
+  r'\$(?:\{[A-Za-z_][A-Za-z0-9_.]*\}|[A-Za-z_][A-Za-z0-9_]*)',
+);
 
 bool _translatable(String literal) {
-  if (!_hasLetter.hasMatch(literal)) return false;
+  if (!_hasLetter.hasMatch(literal.replaceAll(_interpolation, ''))) {
+    return false;
+  }
   if (_identifierLike.hasMatch(literal)) return false;
   if (_interpolationOnly.hasMatch(literal)) return false;
   return true;
@@ -85,15 +92,15 @@ const _baseline = <String, int>{
   'lib/ui/screens/capabilities_screen.dart': 1,
   'lib/ui/screens/chat/attention_card.dart': 7,
   'lib/ui/screens/chat/command_launcher.dart': 9,
-  'lib/ui/screens/chat/composer.dart': 16,
+  'lib/ui/screens/chat/composer.dart': 15,
   'lib/ui/screens/chat/form_flow.dart': 1,
   'lib/ui/screens/chat/message_view.dart': 30,
   'lib/ui/screens/chat/permission_sheet.dart': 17,
   'lib/ui/screens/chat/prompt_editor.dart': 4,
   'lib/ui/screens/chat/sessions_tab.dart': 9,
   'lib/ui/screens/chat/timeline_sheet.dart': 4,
-  'lib/ui/screens/chat_screen.dart': 28,
-  'lib/ui/screens/files_screen.dart': 18,
+  'lib/ui/screens/chat_screen.dart': 27,
+  'lib/ui/screens/files_screen.dart': 16,
   'lib/ui/screens/global_sessions_screen.dart': 10,
   'lib/ui/screens/guide_screen.dart': 15,
   'lib/ui/screens/home_screen.dart': 4,
@@ -101,16 +108,16 @@ const _baseline = <String, int>{
   'lib/ui/screens/library/catalog_screen.dart': 4,
   'lib/ui/screens/library/commands_screen.dart': 2,
   'lib/ui/screens/library/integration_tiles.dart': 23,
-  'lib/ui/screens/library/integrations_screen.dart': 16,
+  'lib/ui/screens/library/integrations_screen.dart': 15,
   'lib/ui/screens/library/references_screen.dart': 2,
   'lib/ui/screens/library/skills_screen.dart': 1,
   'lib/ui/screens/manage_project_screen.dart': 7,
   'lib/ui/screens/managed_workspaces_screen.dart': 25,
   'lib/ui/screens/mcp_setup_screen.dart': 26,
   'lib/ui/screens/pairing_scanner_screen.dart': 3,
-  'lib/ui/screens/project_health_screen.dart': 23,
+  'lib/ui/screens/project_health_screen.dart': 22,
   'lib/ui/screens/projects_screen.dart': 13,
-  'lib/ui/screens/review_workspace.dart': 41,
+  'lib/ui/screens/review_workspace.dart': 39,
   'lib/ui/screens/saved_permissions_screen.dart': 13,
   'lib/ui/screens/servers_screen.dart': 35,
   'lib/ui/screens/session_context_screen.dart': 7,
@@ -139,10 +146,10 @@ const _baseline = <String, int>{
   'lib/ui/widgets/product_states.dart': 3,
   'lib/ui/widgets/question_options.dart': 2,
   'lib/ui/widgets/saved_server_connection_card.dart': 7,
-  'lib/ui/widgets/tool_card.dart': 9,
+  'lib/ui/widgets/tool_card.dart': 7,
   'lib/ui/widgets/transcript_display_toggles.dart': 2,
   'lib/voice/notices.dart': 1,
-  'lib/voice/voice_ui.dart': 29,
+  'lib/voice/voice_ui.dart': 28,
 };
 
 void main() {
@@ -157,6 +164,14 @@ void main() {
     expect(countHardcodedStrings("Text('anthropic/claude')"), 0, reason: 'id');
     expect(countHardcodedStrings(r"Text('$count')"), 0, reason: 'interp');
     expect(countHardcodedStrings(r"Text('$count files')"), 1);
+    expect(
+      countHardcodedStrings(
+        r"Text('+${file.counts.added}  −${file.counts.removed}')",
+      ),
+      0,
+      reason: 'numeric diff counts contain no translatable words',
+    );
+    expect(countHardcodedStrings(r"Text('${file.counts.added} added')"), 1);
     expect(countHardcodedStrings("// Text('comment')"), 0);
     expect(countHardcodedStrings('Text(l10n.send)'), 0);
   });

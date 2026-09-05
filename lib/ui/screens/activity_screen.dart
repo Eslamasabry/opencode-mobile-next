@@ -11,6 +11,7 @@ import '../desktop/desktop_interaction.dart';
 import '../permission_presentation.dart';
 import '../widgets/product_states.dart';
 import '../widgets/question_options.dart';
+import '../widgets/request_routes.dart';
 import 'chat/form_flow.dart';
 import 'chat/permission_sheet.dart';
 import 'settings_screen.dart';
@@ -430,12 +431,8 @@ class ActivityPermissionTile extends StatelessWidget {
       onTap: () => showPermissionSheet(
         context,
         permission: permission,
-        supportsRejectMessage: controller.permissionSupportsRejectMessage(
-          permission.id,
-        ),
+        controller: controller,
         contextLabel: 'for ${_sessionTitle(controller, permission.sessionID)}',
-        onReply: (reply, {message}) =>
-            controller.answerPermission(permission.id, reply, message: message),
       ),
     );
   }
@@ -517,12 +514,32 @@ Future<void> showQuestionSheet(
   BuildContext context,
   ConnectionController controller,
   PendingQuestion question,
-) => showModalBottomSheet<void>(
-  context: context,
-  isScrollControlled: true,
-  showDragHandle: true,
-  builder: (_) => _QuestionSheet(question: question, controller: controller),
-);
+) async {
+  final request = controller.questionIdentity(question);
+  if (!controller.isRequestPending(request)) return;
+  final routes = RequestRoutes(
+    changes: controller,
+    isPending: () => controller.isRequestPending(request),
+  );
+  try {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) {
+        routes.own(ModalRoute.of(context));
+        return _QuestionSheet(
+          question: question,
+          controller: controller,
+          request: request,
+          routes: routes,
+        );
+      },
+    );
+  } finally {
+    routes.close();
+  }
+}
 
 class _SessionRow extends StatelessWidget {
   final Session session;
@@ -586,8 +603,15 @@ class _SessionRow extends StatelessWidget {
 class _QuestionSheet extends StatefulWidget {
   final PendingQuestion question;
   final ConnectionController controller;
+  final PendingRequestIdentity request;
+  final RequestRoutes routes;
 
-  const _QuestionSheet({required this.question, required this.controller});
+  const _QuestionSheet({
+    required this.question,
+    required this.controller,
+    required this.request,
+    required this.routes,
+  });
 
   @override
   State<_QuestionSheet> createState() => _QuestionSheetState();
@@ -603,6 +627,7 @@ class _QuestionSheetState extends State<_QuestionSheet> {
     (_) => TextEditingController(),
   );
   bool _busy = false;
+  bool _confirming = false;
   String? _error;
 
   bool get _complete {
@@ -613,7 +638,7 @@ class _QuestionSheetState extends State<_QuestionSheet> {
   }
 
   Future<void> _submit() async {
-    if (!_complete || _busy) return;
+    if (!_complete || _busy || !widget.routes.isPending) return;
     setState(() {
       _busy = true;
       _error = null;
@@ -637,10 +662,16 @@ class _QuestionSheetState extends State<_QuestionSheet> {
       }
     }
     try {
-      await widget.controller.answerQuestion(widget.question.id, answers);
-      if (mounted) Navigator.pop(context);
+      await widget.controller.answerQuestion(
+        widget.question.id,
+        answers,
+        expectedRequest: widget.request,
+      );
+      widget.routes.close();
     } catch (error) {
-      if (mounted) setState(() => _error = productErrorText(error));
+      if (mounted && widget.routes.isPending) {
+        setState(() => _error = productErrorText(error));
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -665,37 +696,56 @@ class _QuestionSheetState extends State<_QuestionSheet> {
   }
 
   Future<void> _reject() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Dismiss this request?'),
-        content: const Text(
-          'OpenCode will continue without answers to these questions.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Dismiss'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
-    setState(() => _busy = true);
+    if (_busy || !widget.routes.isPending) return;
+    setState(() {
+      _busy = true;
+      _confirming = true;
+      _error = null;
+    });
     try {
-      await widget.controller.rejectQuestion(widget.question.id);
-      if (mounted) Navigator.pop(context);
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) {
+          widget.routes.own(ModalRoute.of(context));
+          return AlertDialog(
+            title: const Text('Dismiss this request?'),
+            content: const Text(
+              'OpenCode will continue without answers to these questions.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Dismiss'),
+              ),
+            ],
+          );
+        },
+      );
+      if (confirmed != true || !mounted || !widget.routes.isPending) return;
+      setState(() => _confirming = false);
+      await widget.controller.rejectQuestion(
+        widget.question.id,
+        expectedRequest: widget.request,
+      );
+      widget.routes.close();
     } catch (error) {
-      if (mounted) setState(() => _error = productErrorText(error));
+      if (mounted && widget.routes.isPending) {
+        setState(() => _error = productErrorText(error));
+      }
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _confirming = false;
+        });
+      }
     }
   }
 
@@ -810,7 +860,7 @@ class _QuestionSheetState extends State<_QuestionSheet> {
                     ),
                     FilledButton(
                       onPressed: _complete && !_busy ? _submit : null,
-                      child: _busy
+                      child: _busy && !_confirming
                           ? const SizedBox.square(
                               dimension: 16,
                               child: CircularProgressIndicator(strokeWidth: 2),
