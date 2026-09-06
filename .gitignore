@@ -48,3 +48,7 @@ app.*.map.json
 # Developer agent prompt packs are third-party content installed locally.
 # See CONTRIBUTING.md — they are not part of this repository.
 .claude/skills/
+
+# Local opencode session configuration (agents, commands, node_modules) is
+# machine-specific and must never be committed.
+.opencode/
