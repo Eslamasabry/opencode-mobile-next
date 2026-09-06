@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Effective date: September 5, 2026**
+**Effective date: September 6, 2026**
 
 OpenCode for Android is a client for OpenCode servers. It does not provide a
 developer-operated account, advertising, analytics, or crash-reporting service.
@@ -37,6 +37,35 @@ and remove that environment when you no longer use it.
 You can remove a server profile in the app. You can erase all local data by
 clearing the app's storage or uninstalling it. Data retained by an OpenCode
 server or AI provider must be deleted through that service.
+
+## Optional remaining-usage collector
+
+Remaining usage is a separately installed server extension, not a built-in
+OpenCode endpoint. On each screen visit, the app asks you to confirm that you
+installed or trust the collector before it requests the selected provider's
+fixed route (`/ocmn/quota/v1` for Codex or `/ocmn/quota/v1/claude` for Claude)
+at your saved server's exact origin using that profile's server sign-in. It never
+forwards that sign-in to a different origin or follows a redirect.
+
+The operator must authenticate the proxy route and replace the client's
+credentials with a dedicated collector-only read token before forwarding to
+the private collector. If explicitly configured by its operator, the optional
+collector reads one selected OAuth credential file on the server and contacts
+the provider's fixed usage endpoint. Provider tokens are not sent to the app,
+refreshed by the collector, or written to a new credential store.
+
+The app displays only normalized core account windows, plan information when
+reported, reset times and freshness. Claude usage responses do not identify the
+account independently; that view is explicitly bound to the operator-selected
+login and its opaque reference changes when the login token changes. The app
+does not receive that token or an inferred account email.
+
+Quota consent and snapshots are kept only in memory for the screen visit;
+there is no background polling, quota notification, or quota upload to this
+project's developer. Changing provider clears the old snapshot and requires
+consent for the new route. Invalid or missing
+data is not converted into an estimated allowance. The provider's own privacy
+and access policies apply, and its internal usage endpoint may change.
 
 ## App diagnostics
 

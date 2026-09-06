@@ -204,6 +204,7 @@ class _UsageReport extends StatelessWidget {
     final date = DateFormat.yMMMd(locale);
     final time = DateFormat.Hm(locale);
     final tools = stats.tools;
+    final providers = stats.providers;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -274,6 +275,44 @@ class _UsageReport extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 24),
+        Text(l10n.usageProviders, style: theme.textTheme.titleLarge),
+        const SizedBox(height: 8),
+        Text(l10n.usageProviderScope, style: theme.textTheme.bodySmall),
+        const SizedBox(height: 12),
+        if (providers.isEmpty) Text(l10n.usageNoModels),
+        for (final provider in providers)
+          Card(
+            key: ValueKey('usage-provider-${provider.providerID}'),
+            margin: const EdgeInsets.only(bottom: 10),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(provider.providerID, style: theme.textTheme.titleMedium),
+                  Text(l10n.usageProviderModelCount(provider.modelCount)),
+                  const SizedBox(height: 8),
+                  Text(
+                    provider.cost == null
+                        ? l10n.usageProviderCostUnavailable
+                        : _money(context, provider.cost!),
+                    style: theme.textTheme.titleLarge,
+                  ),
+                  if (provider.cost != null &&
+                      stats.cost > 0 &&
+                      provider.cost! <= stats.cost)
+                    Text(
+                      l10n.usageProviderCostShare(
+                        NumberFormat.percentPattern(
+                          locale,
+                        ).format(provider.cost! / stats.cost),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        const SizedBox(height: 24),
         Text(l10n.usageModels, style: theme.textTheme.titleLarge),
         const SizedBox(height: 12),
         if (stats.models.isEmpty) Text(l10n.usageNoModels),
@@ -307,7 +346,7 @@ class _UsageReport extends StatelessWidget {
                       ),
                     ],
                   ),
-                  if (stats.cost > 0) ...[
+                  if (stats.cost > 0 && model.cost <= stats.cost) ...[
                     const SizedBox(height: 12),
                     LinearProgressIndicator(
                       value: (model.cost / stats.cost).clamp(0, 1),

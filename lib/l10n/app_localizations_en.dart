@@ -1601,4 +1601,230 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get legacyDraftLocationChanged =>
       'The project changed. Reopen Older drafts to choose where to insert the text.';
+
+  @override
+  String get quotaTitle => 'Remaining usage';
+
+  @override
+  String get quotaSettingsSummary =>
+      'Codex and Claude collectors · setup required';
+
+  @override
+  String get quotaDescription =>
+      'Choose a provider to view its reported account windows. These are separate from OpenCode token usage and cost.';
+
+  @override
+  String get quotaSource => 'Collector server';
+
+  @override
+  String get quotaUnknownSource => 'No saved server';
+
+  @override
+  String get quotaSourceChanged =>
+      'The server or project changed, or its local data is being removed. Reopen Remaining usage to review the source again.';
+
+  @override
+  String get quotaSetupTitle => 'An optional collector is required';
+
+  @override
+  String get quotaSetupDescription =>
+      'Your server operator must install and protect this route at the same origin as OpenCode. Reading it uses this profile\'s server sign-in. Confirm only if you installed or trust that deployment. Provider tokens stay on the server.';
+
+  @override
+  String get quotaSetupGuide =>
+      'Setup instructions are in tool/quota/README.md in the app repository. This screen does not install services or remember permission after you leave.';
+
+  @override
+  String get quotaSetupNeeded =>
+      'Use a saved server with a password and HTTPS, or phone loopback. Update its connection settings before checking the collector.';
+
+  @override
+  String get quotaConsent =>
+      'I installed and trust this collector on this server.';
+
+  @override
+  String get quotaRead => 'Read remaining usage';
+
+  @override
+  String get quotaRefresh => 'Refresh remaining usage';
+
+  @override
+  String get quotaLoading => 'Reading remaining usage';
+
+  @override
+  String get quotaForgetConsent => 'Stop using this collector';
+
+  @override
+  String get quotaCollectorAuth =>
+      'The collector route did not accept this server sign-in. Ask the server operator to check its authentication setup.';
+
+  @override
+  String get quotaCollectorMissing =>
+      'The optional collector route is not available on this server. Check its installation and proxy routing.';
+
+  @override
+  String get quotaUnavailable =>
+      'Remaining usage could not be refreshed. Check the connection and collector, then retry.';
+
+  @override
+  String get quotaInvalidResponse =>
+      'The collector returned an unsupported or invalid snapshot. No new allowance is shown.';
+
+  @override
+  String get quotaUnconfigured =>
+      'The collector has no authorized account source configured. Ask its operator to finish setup.';
+
+  @override
+  String get quotaProviderUnsupported =>
+      'The selected OAuth login or provider usage route is not supported by this collector.';
+
+  @override
+  String get quotaProviderAuth =>
+      'Sign in again using the provider\'s existing login tool on the server. This app does not read or refresh that login.';
+
+  @override
+  String get quotaRateLimited =>
+      'The provider limited quota checks. Wait before refreshing; this does not prove your coding allowance is exhausted.';
+
+  @override
+  String get quotaAccountUnverified =>
+      'The collector could not verify the selected account. No allowance is shown. Check the login source on the server.';
+
+  @override
+  String get quotaCodexAccount => 'Codex account windows';
+
+  @override
+  String quotaPlan(String plan) {
+    return 'Reported plan: $plan';
+  }
+
+  @override
+  String quotaChecked(String time) {
+    return 'Snapshot checked $time';
+  }
+
+  @override
+  String get quotaStale =>
+      'Previous snapshot — refresh to check the latest allowance.';
+
+  @override
+  String get quotaUseBlocked =>
+      'The provider reports that ordinary Codex use is currently blocked. Window percentages alone do not determine access.';
+
+  @override
+  String get quotaNotReported => 'Not reported';
+
+  @override
+  String get quotaPrimaryWindow => 'Primary window';
+
+  @override
+  String get quotaSecondaryWindow => 'Secondary window';
+
+  @override
+  String quotaOtherWindow(int number) {
+    return 'Usage window $number';
+  }
+
+  @override
+  String quotaRemaining(String percent) {
+    return '$percent remaining';
+  }
+
+  @override
+  String quotaWindowRemainingLabel(String window) {
+    return '$window: remaining percentage';
+  }
+
+  @override
+  String quotaUsed(String percent) {
+    return '$percent used';
+  }
+
+  @override
+  String quotaResetAt(String time) {
+    return 'Reported reset: $time';
+  }
+
+  @override
+  String get quotaResetUnknown => 'Reset time not reported';
+
+  @override
+  String get quotaResetPassed =>
+      'Reset time passed — refresh to check. The displayed allowance has not been replenished locally.';
+
+  @override
+  String quotaDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count-day window',
+      one: '1-day window',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String quotaHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count-hour window',
+      one: '1-hour window',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String quotaSeconds(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count-second window',
+      one: '1-second window',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get quotaSourceDisclosure =>
+      'Read-only snapshot from the optional collector using an internal provider endpoint. Other product allowances, model-specific limits, credits and eligibility are not included. Missing data is unknown, not unlimited.';
+
+  @override
+  String get quotaCodex => 'Codex';
+
+  @override
+  String get quotaClaude => 'Claude';
+
+  @override
+  String get quotaClaudeAccount => 'Claude login windows';
+
+  @override
+  String get quotaSourceBound =>
+      'Tied to the collector\'s configured Claude login. The usage response does not independently identify the account.';
+
+  @override
+  String get usageProviders => 'Providers';
+
+  @override
+  String get usageProviderScope =>
+      'Totals from this server\'s returned model records for the selected scope. Not provider billing or subscription allowances.';
+
+  @override
+  String usageProviderModelCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count models',
+      one: '1 model',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get usageProviderCostUnavailable => 'Cost subtotal unavailable';
+
+  @override
+  String usageProviderCostShare(String percent) {
+    return '$percent of reported cost';
+  }
 }

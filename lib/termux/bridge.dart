@@ -41,7 +41,7 @@ class TermuxBridge {
   ///
   /// Keep this in step with the shell fallback in [_managerScript]
   /// (`requested_version="${2:-…}"`); a test asserts the two agree.
-  static const defaultOpenCodeVersion = '1.18.25';
+  static const defaultOpenCodeVersion = '1.18.29';
 
   /// The npm dist-tag, available only when a caller passes it to
   /// [installAndServeScript] on purpose. Nothing in the app does today: it
@@ -1202,7 +1202,7 @@ install_ubuntu_base() {
 
 setup() {
   CURRENT_PORT="${1:-4096}"
-  local requested_version="${2:-1.18.25}"
+  local requested_version="${2:-1.18.29}"
   local dispatcher_pid="${3:-}"
   local dispatcher_start="${4:-}"
   SETUP_SUCCEEDED=0

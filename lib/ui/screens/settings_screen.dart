@@ -27,6 +27,7 @@ import 'guide_screen.dart';
 import 'host_management_screen.dart';
 import 'saved_permissions_screen.dart';
 import 'usage_screen.dart';
+import 'provider_quota_screen.dart';
 
 part 'settings/server_settings_screen.dart';
 part 'settings/coding_settings_screen.dart';
@@ -241,6 +242,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Localizations.localeOf(context),
                 ).usageTitle,
                 onTap: () => _open(UsageScreen(controller: controller)),
+              ),
+            if (profile != null)
+              _CategoryRow(
+                rowKey: 'settings-category-quota',
+                icon: Icons.speed_rounded,
+                title: lookupAppLocalizations(
+                  Localizations.localeOf(context),
+                ).quotaTitle,
+                subtitle: lookupAppLocalizations(
+                  Localizations.localeOf(context),
+                ).quotaSettingsSummary,
+                onTap: () => _open(ProviderQuotaScreen(controller: controller)),
               ),
             _CategoryRow(
               rowKey: 'settings-category-diagnostics',

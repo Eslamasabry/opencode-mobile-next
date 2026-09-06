@@ -184,6 +184,24 @@ class UsageActivity {
       UsageActivity(date: _text(json['date']), steps: _count(json['steps']));
 }
 
+/// A rollup of the returned model records, not a provider billing or quota read.
+class UsageProvider {
+  final String providerID;
+  final List<UsageModel> models;
+  final double? cost;
+
+  UsageProvider._(this.providerID, List<UsageModel> records)
+    : models = List.unmodifiable(records),
+      cost = _sumCost(records);
+
+  int get modelCount => models.map((model) => model.modelID).toSet().length;
+
+  static double? _sumCost(List<UsageModel> records) {
+    final total = records.fold<double>(0, (sum, model) => sum + model.cost);
+    return total.isFinite ? total : null;
+  }
+}
+
 class UsageStatistics {
   final int from, to, sessions, subagents, prompts, steps, activeDays, streak;
   final double cost;
@@ -214,6 +232,24 @@ class UsageStatistics {
       cost == 0 &&
       tokens.total == 0 &&
       (tools?.calls ?? 0) == 0;
+
+  List<UsageProvider> get providers {
+    final records = <String, List<UsageModel>>{};
+    for (final model in models) {
+      records.putIfAbsent(model.providerID, () => []).add(model);
+    }
+    final result = [
+      for (final entry in records.entries)
+        UsageProvider._(entry.key, entry.value),
+    ];
+    result.sort((a, b) {
+      if (a.cost == null && b.cost != null) return 1;
+      if (b.cost == null && a.cost != null) return -1;
+      final byCost = (b.cost ?? 0).compareTo(a.cost ?? 0);
+      return byCost == 0 ? a.providerID.compareTo(b.providerID) : byCost;
+    });
+    return List.unmodifiable(result);
+  }
 
   factory UsageStatistics.fromJson(Map<String, dynamic> json) {
     final range = _map(json['range']);

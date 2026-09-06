@@ -2793,6 +2793,318 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The project changed. Reopen Older drafts to choose where to insert the text.'**
   String get legacyDraftLocationChanged;
+
+  /// Read-only subscription quota screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining usage'**
+  String get quotaTitle;
+
+  /// Settings row explaining remaining quota requires an optional server extension
+  ///
+  /// In en, this message translates to:
+  /// **'Codex and Claude collectors · setup required'**
+  String get quotaSettingsSummary;
+
+  /// Distinguishes account-wide rate-limit windows from project consumption
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a provider to view its reported account windows. These are separate from OpenCode token usage and cost.'**
+  String get quotaDescription;
+
+  /// Label above the explicitly selected server origin
+  ///
+  /// In en, this message translates to:
+  /// **'Collector server'**
+  String get quotaSource;
+
+  /// Safe fallback when a quota source origin is unavailable
+  ///
+  /// In en, this message translates to:
+  /// **'No saved server'**
+  String get quotaUnknownSource;
+
+  /// A retained quota screen lost its original scope or profile
+  ///
+  /// In en, this message translates to:
+  /// **'The server or project changed, or its local data is being removed. Reopen Remaining usage to review the source again.'**
+  String get quotaSourceChanged;
+
+  /// First-visit quota setup heading; no claim of built-in OpenCode support
+  ///
+  /// In en, this message translates to:
+  /// **'An optional collector is required'**
+  String get quotaSetupTitle;
+
+  /// Informed consent before sending existing server authentication to an optional same-origin route
+  ///
+  /// In en, this message translates to:
+  /// **'Your server operator must install and protect this route at the same origin as OpenCode. Reading it uses this profile\'s server sign-in. Confirm only if you installed or trust that deployment. Provider tokens stay on the server.'**
+  String get quotaSetupDescription;
+
+  /// Explains operator configuration and visit-only consent
+  ///
+  /// In en, this message translates to:
+  /// **'Setup instructions are in tool/quota/README.md in the app repository. This screen does not install services or remember permission after you leave.'**
+  String get quotaSetupGuide;
+
+  /// Quota reads are unavailable for missing credentials or an unsafe source
+  ///
+  /// In en, this message translates to:
+  /// **'Use a saved server with a password and HTTPS, or phone loopback. Update its connection settings before checking the collector.'**
+  String get quotaSetupNeeded;
+
+  /// Explicit opt-in checkbox; does not install or configure a collector
+  ///
+  /// In en, this message translates to:
+  /// **'I installed and trust this collector on this server.'**
+  String get quotaConsent;
+
+  /// Explicit first quota read after informed consent
+  ///
+  /// In en, this message translates to:
+  /// **'Read remaining usage'**
+  String get quotaRead;
+
+  /// Manual refresh or retry of the same trusted quota source
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh remaining usage'**
+  String get quotaRefresh;
+
+  /// Progress semantics for a quota read
+  ///
+  /// In en, this message translates to:
+  /// **'Reading remaining usage'**
+  String get quotaLoading;
+
+  /// Clear this visit's consent and in-memory quota snapshot; no remote mutation
+  ///
+  /// In en, this message translates to:
+  /// **'Stop using this collector'**
+  String get quotaForgetConsent;
+
+  /// Collector or proxy authentication failure, distinct from provider reauthentication
+  ///
+  /// In en, this message translates to:
+  /// **'The collector route did not accept this server sign-in. Ask the server operator to check its authentication setup.'**
+  String get quotaCollectorAuth;
+
+  /// Optional collector returned a missing route or unsupported method
+  ///
+  /// In en, this message translates to:
+  /// **'The optional collector route is not available on this server. Check its installation and proxy routing.'**
+  String get quotaCollectorMissing;
+
+  /// Safe quota network/service failure without raw errors
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining usage could not be refreshed. Check the connection and collector, then retry.'**
+  String get quotaUnavailable;
+
+  /// Malformed or incompatible quota response
+  ///
+  /// In en, this message translates to:
+  /// **'The collector returned an unsupported or invalid snapshot. No new allowance is shown.'**
+  String get quotaInvalidResponse;
+
+  /// The collector is reachable but lacks an explicitly configured credential source
+  ///
+  /// In en, this message translates to:
+  /// **'The collector has no authorized account source configured. Ask its operator to finish setup.'**
+  String get quotaUnconfigured;
+
+  /// Honest first-provider/auth-method limitation
+  ///
+  /// In en, this message translates to:
+  /// **'The selected OAuth login or provider usage route is not supported by this collector.'**
+  String get quotaProviderUnsupported;
+
+  /// Provider login expired or was unreadable; not collector Basic authentication failure
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in again using the provider\'s existing login tool on the server. This app does not read or refresh that login.'**
+  String get quotaProviderAuth;
+
+  /// A polling rate limit is distinct from an exhausted subscription window
+  ///
+  /// In en, this message translates to:
+  /// **'The provider limited quota checks. Wait before refreshing; this does not prove your coding allowance is exhausted.'**
+  String get quotaRateLimited;
+
+  /// Missing or mismatched account identity must not display measurements
+  ///
+  /// In en, this message translates to:
+  /// **'The collector could not verify the selected account. No allowance is shown. Check the login source on the server.'**
+  String get quotaAccountUnverified;
+
+  /// Heading for Codex entitlements, not all ChatGPT product allowances
+  ///
+  /// In en, this message translates to:
+  /// **'Codex account windows'**
+  String get quotaCodexAccount;
+
+  /// Provider-reported plan label, from a safe allowlist
+  ///
+  /// In en, this message translates to:
+  /// **'Reported plan: {plan}'**
+  String quotaPlan(String plan);
+
+  /// Collector snapshot time, formatted in the device locale
+  ///
+  /// In en, this message translates to:
+  /// **'Snapshot checked {time}'**
+  String quotaChecked(String time);
+
+  /// An expired, interrupted or failed-refresh snapshot is not live provider truth
+  ///
+  /// In en, this message translates to:
+  /// **'Previous snapshot — refresh to check the latest allowance.'**
+  String get quotaStale;
+
+  /// Explicit provider eligibility signal, independent of quota arithmetic
+  ///
+  /// In en, this message translates to:
+  /// **'The provider reports that ordinary Codex use is currently blocked. Window percentages alone do not determine access.'**
+  String get quotaUseBlocked;
+
+  /// Unknown allowance; never means zero or unlimited
+  ///
+  /// In en, this message translates to:
+  /// **'Not reported'**
+  String get quotaNotReported;
+
+  /// First provider rate-limit window without assuming a five-hour duration
+  ///
+  /// In en, this message translates to:
+  /// **'Primary window'**
+  String get quotaPrimaryWindow;
+
+  /// Second provider rate-limit window without assuming a weekly duration
+  ///
+  /// In en, this message translates to:
+  /// **'Secondary window'**
+  String get quotaSecondaryWindow;
+
+  /// Safe display name for an additional bounded window
+  ///
+  /// In en, this message translates to:
+  /// **'Usage window {number}'**
+  String quotaOtherWindow(int number);
+
+  /// Percentage remaining within one reported provider window
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} remaining'**
+  String quotaRemaining(String percent);
+
+  /// Progress-bar semantics label; its numeric value is expressed separately
+  ///
+  /// In en, this message translates to:
+  /// **'{window}: remaining percentage'**
+  String quotaWindowRemainingLabel(String window);
+
+  /// Provider-reported percentage used within one window
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} used'**
+  String quotaUsed(String percent);
+
+  /// Absolute provider reset time in device locale
+  ///
+  /// In en, this message translates to:
+  /// **'Reported reset: {time}'**
+  String quotaResetAt(String time);
+
+  /// Missing provider reset time is not fabricated
+  ///
+  /// In en, this message translates to:
+  /// **'Reset time not reported'**
+  String get quotaResetUnknown;
+
+  /// Passing a reset deadline does not invent a new allowance
+  ///
+  /// In en, this message translates to:
+  /// **'Reset time passed — refresh to check. The displayed allowance has not been replenished locally.'**
+  String get quotaResetPassed;
+
+  /// Exact whole-day provider window duration
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1-day window} other{{count}-day window}}'**
+  String quotaDays(int count);
+
+  /// Exact whole-hour provider window duration
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1-hour window} other{{count}-hour window}}'**
+  String quotaHours(int count);
+
+  /// Exact duration when a provider window is not whole hours or days
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1-second window} other{{count}-second window}}'**
+  String quotaSeconds(int count);
+
+  /// Honest limits and provenance of optional provider quota collectors
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only snapshot from the optional collector using an internal provider endpoint. Other product allowances, model-specific limits, credits and eligibility are not included. Missing data is unknown, not unlimited.'**
+  String get quotaSourceDisclosure;
+
+  /// Codex provider selector
+  ///
+  /// In en, this message translates to:
+  /// **'Codex'**
+  String get quotaCodex;
+
+  /// Claude provider selector
+  ///
+  /// In en, this message translates to:
+  /// **'Claude'**
+  String get quotaClaude;
+
+  /// Claude allowances for the operator-selected OAuth login
+  ///
+  /// In en, this message translates to:
+  /// **'Claude login windows'**
+  String get quotaClaudeAccount;
+
+  /// Distinguishes credential-bound Claude usage from provider-confirmed account identity
+  ///
+  /// In en, this message translates to:
+  /// **'Tied to the collector\'s configured Claude login. The usage response does not independently identify the account.'**
+  String get quotaSourceBound;
+
+  /// Provider grouping within server consumption statistics
+  ///
+  /// In en, this message translates to:
+  /// **'Providers'**
+  String get usageProviders;
+
+  /// Limits the meaning of provider-grouped consumption
+  ///
+  /// In en, this message translates to:
+  /// **'Totals from this server\'s returned model records for the selected scope. Not provider billing or subscription allowances.'**
+  String get usageProviderScope;
+
+  /// Distinct model IDs within a provider; variants are not counted as new models
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 model} other{{count} models}}'**
+  String usageProviderModelCount(int count);
+
+  /// Invalid numeric aggregate is not rendered as a plausible cost
+  ///
+  /// In en, this message translates to:
+  /// **'Cost subtotal unavailable'**
+  String get usageProviderCostUnavailable;
+
+  /// Provider subtotal divided by the selected server consumption total, when consistent
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} of reported cost'**
+  String usageProviderCostShare(String percent);
 }
 
 class _AppLocalizationsDelegate

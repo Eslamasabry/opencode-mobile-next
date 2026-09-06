@@ -192,7 +192,9 @@ class BackgroundLiveController extends ChangeNotifier {
     required this.preferences,
     BackgroundMethodInvoker? invoke,
     this.liveStatusDebounce = const Duration(milliseconds: 800),
-  }) : enabled = preferences.getBool(preferenceKey) ?? false,
+  }) : enabled =
+           platformCapabilities.supportsBackgroundService &&
+           (preferences.getBool(preferenceKey) ?? false),
        _invoke = invoke ?? _invokePlatform;
 
   static Future<Map<String, dynamic>> _invokePlatform(
@@ -211,6 +213,7 @@ class BackgroundLiveController extends ChangeNotifier {
   }
 
   Future<bool> setEnabled(bool value) async {
+    if (_disableIfUnsupported()) return false;
     if (busy || value == enabled && (value == active || !value)) {
       return enabled;
     }
@@ -221,6 +224,7 @@ class BackgroundLiveController extends ChangeNotifier {
     if (value) stoppedByAndroidTimeout = false;
     notifyListeners();
     final succeeded = await _run(value ? 'enable' : 'disable');
+    if (_disableIfUnsupported()) return false;
     if (!succeeded) {
       enabled = previous;
       await preferences.setBool(preferenceKey, previous);
@@ -430,18 +434,36 @@ class BackgroundLiveController extends ChangeNotifier {
     super.dispose();
   }
 
+  bool _disableIfUnsupported() {
+    if (platformCapabilities.supportsBackgroundService) return false;
+    // A saved Android opt-in is not evidence that this platform can stay live.
+    // Clear runtime state (including a previous platform override's status),
+    // but keep the preference: an unsupported platform is not a user opt-out.
+    final changed =
+        enabled ||
+        active ||
+        notificationGranted ||
+        batteryOptimizationIgnored ||
+        lastError != null;
+    _applyStatus(const {'enabled': false});
+    _cancelPendingLiveStatus();
+    lastError = null;
+    if (changed) notifyListeners();
+    return true;
+  }
+
   Future<bool> _run(String method, {bool persist = true}) async {
-    // The foreground service lives in the Android runner alone. Asking for it
-    // elsewhere only produced a MissingPluginException and an error string
-    // parked on a controller whose UI is already hidden; saying no up front
-    // keeps `lastError` meaning "something went wrong", not "wrong OS".
-    if (!platformCapabilities.supportsBackgroundService) return false;
+    // Reject before any platform call or preference write. Unsupported is not
+    // an Android failure and must never leave enabled true, which would make
+    // the connection controller skip lifecycle suspension.
+    if (_disableIfUnsupported()) return false;
     if (busy) return false;
     busy = true;
     lastError = null;
     notifyListeners();
     try {
       final status = await _invoke(method);
+      if (_disableIfUnsupported()) return false;
       _applyStatus(status);
       if (persist) await preferences.setBool(preferenceKey, enabled);
       return true;
@@ -456,6 +478,7 @@ class BackgroundLiveController extends ChangeNotifier {
       return false;
     } finally {
       busy = false;
+      _disableIfUnsupported();
       notifyListeners();
     }
   }

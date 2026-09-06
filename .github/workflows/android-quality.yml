@@ -48,6 +48,14 @@ jobs:
       - name: Resolve dependencies
         run: flutter pub get
 
+      - name: Set up Node for the optional quota collector tests
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24.19.0"
+
+      - name: Test optional quota collector with synthetic inputs
+        run: node --test tool/quota/collector.test.mjs
+
       - name: Generate ignored Gradle wrapper
         run: >-
           gradle -p android wrapper

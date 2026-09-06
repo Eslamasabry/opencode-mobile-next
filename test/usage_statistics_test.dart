@@ -145,6 +145,69 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   test(
+    'provider rollups use returned IDs, retain variants and do not count variants as new models',
+    () {
+      final data = fixture();
+      final models = data['models'] as List;
+      ((models.last as Map)['model'] as Map)['providerID'] = 'anthropic';
+      final variant =
+          jsonDecode(jsonEncode(models.first)) as Map<String, dynamic>;
+      (variant['model'] as Map)['variant'] = 'low';
+      variant['cost'] = .29;
+      models.add(variant);
+      final providers = UsageStatistics.fromJson(data).providers;
+      expect(providers.map((provider) => provider.providerID), [
+        'openai',
+        'anthropic',
+      ]);
+      expect(providers.first.models, hasLength(2));
+      expect(providers.first.modelCount, 1);
+      expect(providers.first.cost, closeTo(3, .00001));
+      expect(providers.last.cost, .71);
+      expect(() => providers.clear(), throwsUnsupportedError);
+      expect(() => providers.first.models.clear(), throwsUnsupportedError);
+    },
+  );
+
+  test(
+    'provider cost overflow stays unavailable and empty statistics have no invented providers',
+    () {
+      final data = fixture();
+      for (final model in data['models'] as List) {
+        (model as Map)['cost'] = 1e308;
+      }
+      expect(UsageStatistics.fromJson(data).providers.single.cost, isNull);
+      expect(UsageStatistics.fromJson(empty()).providers, isEmpty);
+    },
+  );
+
+  testWidgets(
+    'provider consumption summary retains all original model detail',
+    (tester) async {
+      final h = await harness();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: UsageScreen(controller: h.connection, overview: h.overview),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final card = find.byKey(const ValueKey('usage-provider-openai'));
+      expect(card, findsOneWidget);
+      expect(
+        find.descendant(of: card, matching: find.text(r'$3.42')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: card, matching: find.text('2 models')),
+        findsOneWidget,
+      );
+      expect(find.text('gpt-5.6-sol'), findsOneWidget);
+      expect(find.text('gpt-5.4-mini'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  test(
     'temporary missing repository keeps usage refresh recoverable',
     () async {
       final h = await harness();
@@ -455,7 +518,10 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text(r'$3.42'), findsOneWidget);
+      expect(
+        tester.widget<Text>(find.byKey(const ValueKey('usage-total-cost'))).data,
+        r'$3.42',
+      );
       expect(find.text('Timezone: Asia/Dubai'), findsOneWidget);
       if (preview != null) {
         final png = await capturePng(tester, boundary, pixelRatio: 1);
@@ -468,7 +534,10 @@ void main() {
         find.text('Showing the previous result for these filters.'),
         findsOneWidget,
       );
-      expect(find.text(r'$3.42'), findsOneWidget);
+      expect(
+        tester.widget<Text>(find.byKey(const ValueKey('usage-total-cost'))).data,
+        r'$3.42',
+      );
       expect(tester.takeException(), isNull);
     },
   );

@@ -855,6 +855,16 @@ class ConnectionController extends ChangeNotifier {
 
   bool get isConnected => status == StreamStatus.connected && api != null;
 
+  final _profileDataChanges = ChangeNotifier();
+
+  /// Notifies read-only, profile-scoped companions before local deletion or
+  /// controller disposal can race their in-flight requests. Unlike the main
+  /// notifier this does not publish widget snapshots or connection state.
+  Listenable get profileDataChanges => _profileDataChanges;
+
+  bool isProfileReadable(String id) =>
+      !_disposed && id.isNotEmpty && _readProfileAvailable(id);
+
   ServerProfile? get profile {
     final id = store.activeId;
     if (id == null) return null;
@@ -4348,6 +4358,7 @@ class ConnectionController extends ChangeNotifier {
     String profileId,
   ) async {
     _deletingReadProfiles.add(profileId);
+    _profileDataChanges.notifyListeners();
     await _draftChanges;
     // Drain shortcut writes before the deletion sweep discovers its keys.
     // A failed write must not prevent the user from removing a profile.
@@ -5835,6 +5846,8 @@ class ConnectionController extends ChangeNotifier {
   void dispose() {
     if (_disposed) return;
     _disposed = true;
+    _profileDataChanges.notifyListeners();
+    _profileDataChanges.dispose();
     _dismissAllCodingAlerts(clearActive: true);
     _generation += 1;
     connectionRevision = _generation;

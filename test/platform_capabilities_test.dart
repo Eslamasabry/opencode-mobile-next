@@ -5,7 +5,14 @@ import 'package:opencode_mobile/platform/platform_capabilities.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  tearDown(() => debugPlatformCapabilities = null);
+  setUp(() {
+    final previousTarget = debugDefaultTargetPlatformOverride;
+    final previousCapabilities = debugPlatformCapabilities;
+    addTearDown(() {
+      debugDefaultTargetPlatformOverride = previousTarget;
+      debugPlatformCapabilities = previousCapabilities;
+    });
+  });
 
   test('Android has every platform feature this app ships', () {
     const caps = PlatformCapabilities.android();
@@ -41,6 +48,37 @@ void main() {
     expect(caps.supportsQrPairing, isFalse);
     // Something has to tell a desktop user a new build exists.
     expect(caps.supportsDesktopReleaseCheck, isTrue);
+  });
+
+  test('iOS leaves every unsupported platform feature off', () {
+    const caps = PlatformCapabilities(platform: TargetPlatform.iOS);
+    expect(caps.isAndroid, isFalse);
+    expect(caps.isDesktop, isFalse);
+    expect(caps.supportsTermux, isFalse);
+    expect(caps.supportsVoice, isFalse);
+    expect(caps.supportsPromptPhotos, isFalse);
+    expect(caps.supportsBackgroundService, isFalse);
+    expect(caps.supportsNotifications, isFalse);
+    expect(caps.supportsHomeWidget, isFalse);
+    expect(caps.supportsCodePush, isFalse);
+    expect(caps.supportsUsbHostBridge, isFalse);
+    expect(caps.supportsQrPairing, isFalse);
+    expect(caps.supportsDesktopReleaseCheck, isFalse);
+  });
+
+  test('the ambient iOS target matches the explicit capability seam', () {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    debugPlatformCapabilities = null;
+    const ios = PlatformCapabilities(platform: TargetPlatform.iOS);
+    expect(platformCapabilities, ios);
+    expect(platformCapabilities.supportsBackgroundService, isFalse);
+
+    debugPlatformCapabilities = const PlatformCapabilities.android();
+    expect(platformCapabilities.supportsBackgroundService, isTrue);
+    debugPlatformCapabilities = ios;
+    expect(platformCapabilities, ios);
+    debugPlatformCapabilities = null;
+    expect(platformCapabilities, ios);
   });
 
   test('every capability is claimed by exactly one update channel', () {

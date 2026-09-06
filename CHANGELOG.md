@@ -2,6 +2,31 @@
 
 This project is in public alpha. Only the newest preview is supported.
 
+## Unreleased
+
+- Add Settings → Remaining usage for explicitly trusted, separately
+  installed Codex and Claude quota collectors. Report account windows, reset times,
+  unknown values and stale results separately from OpenCode consumption.
+  The collectors support OAuth logins, perform no credential
+  refresh, and require an authenticated same-origin proxy deployment.
+- Group consumption by provider while retaining the existing model details.
+  Variant records do not inflate model counts, and consumption is never
+  labelled as a provider's subscription allowance.
+- Cancel quota reads and discard consent immediately on profile deletion,
+  source changes or screen disposal. No provider tokens or quota snapshots
+  are persisted by the app; provider access was tested with synthetic data.
+- Ignore saved Android background-service opt-ins on unsupported platforms,
+  including iOS, without calling native channels or changing the saved choice.
+  Add isolated iOS remote-client gating tests; an iOS runner/build is not
+  included in this change.
+- Pin the managed Termux OpenCode server to **1.18.29**, the upstream fix
+  that makes `gpt-6-astra` appear correctly for users authenticating via
+  Codex OAuth with a personal ChatGPT subscription. New installs pick it
+  up automatically; existing managed servers move to it through the
+  Termux update flow. Users connecting to their own computer-hosted
+  servers need that server updated to see the fix — the app has no
+  separate model-list logic.
+
 ## 1.0.34+35 - 2026-09-06
 
 Changes since **1.0.33+34** (2026-09-02), including the interim `dev-06447b6`

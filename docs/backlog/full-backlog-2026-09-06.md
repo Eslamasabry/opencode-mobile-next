@@ -4,10 +4,15 @@
 `b618d30` (protocol contract, state/privacy, platform, UI/design-system);
 story claims corrected where the code or contract disagreed.*
 
+**Lead correction:** the [execution plan](roadmap-2026-09-06.md) now owns
+ordering and evidence levels. This inventory preserves scope, not commitments
+or readiness. Earlier review conclusions are leads until their cited code,
+contract, or device result supports the specific claim. Sizes remain estimates.
+
 Decomposition behind the [shaping summary](roadmap-2026-09-06.md). Formats:
-epic hypotheses (if/then + validation measures), user stories (Mike Cohn +
-one Gherkin scenario each — single When/Then per story, per repo test
-discipline). UI specs reference the mobile design system (§ tokens from
+epic hypotheses (if/then + validation measures), user stories and testable
+acceptance scenarios (including failure/race cases; a single When/Then is not
+a repository requirement). UI specs reference the mobile design system (§ tokens from
 `lib/ui/app_theme.dart`); architecture references current files. Persona:
 [developer away from the desk](../product-persona.md). This is a planning
 artifact — queues and readiness rows remain the delivery ledger.
@@ -24,45 +29,50 @@ step. Walking skeleton (thin end-to-end slice) = E1's device journey.
 | **Give a useful instruction** | Composer, drafts+attachments recovery, stash, voice, camera | Stash payload migration → **E5**; web attach → **E6** |
 | **Understand progress** | Streaming, tool cards, Running work, usage | Live cross-client verification → **E1/E2**; skills live-check → **E1** |
 | **Unblock confidently** | Permissions/forms/questions, notification replies | Credential account switching → **E3**; MCP removal → **E4** |
-| **Review & steer** | Diffs, staged revert, export/import | — (parity tail verified in E1) |
+| **Review & steer** | Diffs, staged revert, export/import | Final-candidate device evidence still belongs to E1; not yet verified here |
 | **Trust the tool** | Privacy posture, diagnostics redaction | Persona validation loop → **E10** |
 
 ## 2. Epic register
 
 | ID | Epic | Size | Lane | Depends on | Gate |
 |---|---|---|---|---|---|
-| E1 | Release evidence & publication | M | Now | — | D1 (wording) for S7 only |
+| E1 | Release evidence & publication | M | Continuous gate | Actual candidate | Separate publication approval for S7 |
 | E2 | Journey hardening | M | Now→Next | E1-S3 findings | — |
 | E3 | Provider credential management | M | Next | — | — |
 | E4 | MCP lifecycle completion | S | Next | serialize with E3 (same files) | — |
-| E5 | Prompt-stash payload migration | S | Next | serialize with E2 chat edits | — |
+| E5 | Prompt-stash payload migration | M | Next | serialize with E2 chat edits | Transaction/GC/deletion proof |
 | E6 | Web search attach | M | Later | E2 evidence + persona rule 4 | D-explicit call |
-| E7 | Localization | L | Later | — | demand signal in issues |
+| E7 | Localization | L | Ongoing externalization; translations later | Human language review | No ratchet increases |
 | E8 | Desktop runtime verification | S | Later | — | contributor hands |
 | E9 | Shorebird patch readiness | S | Later | — | D2 (promise patches?) |
 | E10 | Persona validation | S | parallel | E1 candidate exists | D3 (go/no-go) |
 | E11 | Advanced server surface | — | Hold | — | per-item triggers (§4) |
-| E12 | iOS remote-control client | L | Next (gated) | D4 prerequisites | phases §3 |
-| F1a | Voice: speak the run | S/M | Frontier→promote-now | E2 done | — |
+| E12 | iOS remote-control client | L | Parallel preparation | macOS for native build | Signing only gates distribution |
+| E13 | Provider usage & remaining quota | M/L | Next product slice | Provider/account contract + collector boundary | One provider end-to-end first |
+| F1a | Voice: speak the run | M | Next differentiator | Audio/privacy/engine proof | execution plan |
 | F1b/c | Voice conversation → ambient | L | Frontier | probe + E10 | [innovation doc](innovation-2026-09-06.md) |
 | F2 | Plugins + mobile variants | M | Frontier | contract spike + upstream | 〃 |
 | F3 | Cross-server attention inbox | M/L | Frontier | E10 demand probe | 〃 |
-| F4 | Session handoff phone↔desktop | S | Frontier→promote-now | — | 〃 |
+| F4 | Session handoff phone↔desktop | S/M | Candidate | CLI/deep-link scope proof | 〃 |
 | F5 | Smart completion digests | S/M | Frontier | concierge probe | 〃 |
-| F6 | Launch surfaces (S1 promotable) | S | Frontier→promote-now | — | 〃 |
+| F6 | Launch surfaces | S/M | Candidate | Native routing and exposure review | 〃 |
 | F7 | Phone-first overnight mode | S/M | Frontier | Termux signal | 〃 |
+| F8 | Demo mode (zero-setup first run) | S/M | Candidate | Complete demo isolation test | 〃 |
+| F9 | Tailnet & tunnel connectivity | S/M | Secure-path design | HTTPS/loopback policy unchanged | 〃 |
+| F10 | Codex / pi / ACP integration research | L | Separate protocol spikes | Authenticated remote transport for CLI-only backends | 〃 |
 
-Order within Now: **E1-S1 → E1-S2/S3 (device in hand) → E1-S4/S5 → E1-S6
-spike in parallel → E1-S7 after D1**. Next cycle: E2 fix batch, then E3 → E4
-(serial), E5 alongside if a second editor exists (no shared files with E3/E4).
+Pull order is in the [execution plan](roadmap-2026-09-06.md): validate the
+existing pin diff, E13 quota proof/UI, independent iOS preparation, E5/input
+correctness, then voice and onboarding. E1 tests the actual candidate; it is
+not a prerequisite to all feature research. E3/E4 serialize shared adapters.
 
 ## 3. Epics in detail
 
 ### E1 — Release evidence & publication
 
-**Hypothesis.** If we run one complete, recorded device journey against the
-signed `v1.0.34+35` candidate, then we convert ~10 "implemented, pending
-verification" readiness rows into evidence and can publish with honest claims.
+**Goal.** Run a recorded device journey against an identified, verified
+candidate and attach evidence only to the requirements actually exercised.
+The `v1.0.34+35` source tag alone does not prove a signed APK is available.
 **Validation.** Within one cycle: every readiness row cites a dated artifact
 under `docs/qa/` or `docs/verification/`; zero rows still say "pending" for
 the covered scope.
@@ -150,9 +160,10 @@ drafts, queue, pins, and stash to survive, *so that* updating costs nothing.
 post-E2 commit (cycle 24's "fresh APK build" residual).
 
 **Architecture.** Fixes land in the owning surfaces; `lib/state/connection.dart`
-and chat part files are single-owner — one fix batch at a time, serial. The
-contract's typed 409 `ConflictError`/`SessionBusyError` semantics supply the
-"already resolved" copy for S2 — cite them rather than inventing wording.
+and chat part files are single-owner — one fix batch at a time, serial. Do
+not interpret every 409 or busy response as "already resolved": reconcile the
+exact request and scope. Keep recoverable failures actionable; do not revive
+resolved requests by rolling back an old optimistic snapshot.
 
 ### E3 — Provider credential management (v2)
 
@@ -185,15 +196,18 @@ active *so that* new runs use the other account without disconnecting.
 **E3-S3 · Rename a credential** — inline edit from the row's overflow menu;
 label only.
 **E3-S4 · Remove a credential** — overflow → `confirm_sheet` (destructive
-pattern, established haptics); removing the active credential requires
-choosing a successor or confirming "none".
+pattern, established haptics). Re-read the displayed connection identity;
+do not assume which account is active when the server cannot report it.
+Verify server behavior for removing the active credential before promising
+successor selection or a reset-to-none operation.
 **E3-S5 · Command-method sign-in** — *As a* a user of a command-only provider,
 *I want* guided terminal sign-in, *so that* I'm not told to use a flow that
 doesn't exist for my provider.
 - **Given** a provider whose methods include `command` **When** I tap Connect
-  **Then** I see the command in a copyable mono block (JetBrains Mono, code 12)
-  with a "Waiting for authorization…" live-region status and Cancel; polling
-  reflects start/status/cancel truthfully.
+  **Then** I see the declared sign-in instructions and accurate attempt
+  status with Cancel. A method named `command` does not prove the response
+  contains a copyable command; confirm the start/status payloads and whether
+  the command executes on the server before writing the UI.
 **E3-S6 · Resume a pending attempt** — *As a* an interrupted user, *I want*
 OAuth/command attempts to survive navigation or app restart, *so that*
 finishing sign-in doesn't restart it.
@@ -204,7 +218,8 @@ finishing sign-in doesn't restart it.
 
 **Interaction & UI.** Provider card expands in place (progressive disclosure;
 no new screen). Credential rows: `surfaceContainerLow` inline surface, 48dp
-row, overflow via 24dp icon button with tooltip. Active badge = status text +
+minimum target, overflow with a 24dp glyph inside a 48dp button with tooltip.
+Active badge = status text +
 `AppTheme.statusColor` (never color alone). Status changes announce via
 live-region node (permission-title pattern). Sheets: 24 top radius, actions
 pinned above keyboard inset; rename dialog 22. All strings to ARB, no baseline
@@ -220,11 +235,16 @@ parsed today but collapsed into refresh hints with their payloads discarded
 (`lib/api2/events.dart`) — targeted badge updates require typing the
 `credential.switched` payload `{integrationID, credentialID}` first;
 otherwise reconcile by catalog refetch and keep unknown-active rendering.
+Invalidate event-derived active state on a stream gap; refetch cannot recover
+a field the read contract does not expose. A missing event cannot leave an
+activation action spinning forever: show accepted/unconfirmed with recovery.
 Persistent attempt state (E3-S6) stores `attemptID`, `integrationID`,
 location snapshot, and expiry only — **never** the one-time `code` or
 `answer` inputs — and must rehydrate into each new gateway generation
 (transports are rebuilt per connection; an un-rehydrated attempt throws
-"no longer tracked" today). All calls through `prepareActionTransport()`.
+"no longer tracked" today). Repository operations use
+`prepareActionRepository()`; gateway calls use `prepareActionTransport()`.
+Recheck profile/location/repository identity after wake and every await.
 Never echo secret material — diagnostics sanitization already covers; add
 fixture asserting command-block text stays out of logs. New capability flag
 touches both `server_gateway.dart` and the `api2ServerCapabilities` const
@@ -249,8 +269,9 @@ copy distinguishes runtime removal from persistent config (BE-011 wording).
 **Architecture.** `removeMcpServer` beside `addMcpServer`; list reconciliation
 by refetch (volatile-stream rule — no removal event exists, only
 status/tools/resources refetch pings; 404 `McpServerNotFoundError` is typed).
-Reuse the existing `mcpRuntimeAdds`/`mcpConfigWrites` capability pair for
-truthful copy — do not invent a new flag. Wire test in
+Reuse `mcpRuntimeAdds`/`mcpConfigWrites` for scope copy, not as proof that
+removal is supported. Give the remove operation its own capability or an
+optional callable gateway surface with truthful unsupported handling. Wire test in
 `test/product_repository_test.dart` fixture shape.
 
 ### E5 — Prompt-stash payload migration
@@ -298,7 +319,7 @@ compose/review is solid AND maintainer explicitly calls it next (persona rule
 **E6-S1 · Capability + provider discovery** — v2-only flag (default false,
 adapter sets true); empty/multiple provider states handled.
 **E6-S2 · Search sheet** — entry from composer tools (extends the
-capability-gated `_PromptTool` sheet pattern behind a `supportsWebSearch`
+capability-gated `_PromptTool` sheet pattern behind a server-operation
 flag); query field, results as `surfaceContainerLow` rows (title, domain,
 favicon via the existing domain-only favicon path — never a full URL image
 fetch). Single-shot results — the contract defines no cursors; an
@@ -308,21 +329,23 @@ unconfigured server's 503 renders as setup guidance, not an error.
   `launchUrl` (security invariant).
 **E6-S3 · Attach selected results** — multi-select → Attach → reference chips
 in the composer (existing chip anatomy); attached set editable before send.
-**E6-S4 · Send with the prompt** — attached results ship via
-`GET/POST /api/session/{id}/synthetic` (context injection without a user
-turn — the contract's purpose-built mechanism, decided over prompt-text
-mangling); sent message renders them as references, and export includes
-them.
+**E6-S4 · Send with the prompt** — keep selected results local until explicit
+submission. `POST /api/session/{id}/synthetic` is an available *mutation*,
+not a GET/read or a guaranteed atomic attachment+prompt transaction. Compare
+it with a reviewed prompt-context block before choosing the transport; prove
+cancel, duplicate/uncertain response, staged revert, ordering and export
+semantics. Do not inject context while the user merely browses search results.
 **Architecture.** `WebSearchGateway` in domain; api2 adapter; UI reads only
-the gateway. Events: none expected (request/response); volatile rules n/a.
+the gateway. `websearch.updated` invalidates discovery; synthetic context
+also affects history/inbox state. Normal scope/reconnect rules still apply.
 All external URLs through the link gate everywhere in the sheet.
 
-### E7 — Localization (demand-gated)
+### E7 — Localization (ongoing foundation, sequenced translations)
 
-**Hypothesis.** If non-English demand is real (issue signal), then
-externalization + one pilot locale grows the audience honestly; otherwise it
-is premature completeness. **Trigger:** recurring non-English reports/issues
-(#15/#18–20 referenced). **Stories:** S1 string inventory + externalization
+Existing locale/RTL issues remain in scope; lack of interview data is not
+evidence of no demand. Continue externalization now; choose pilot language
+and human review capacity before promising translated support.
+**Stories:** S1 string inventory + externalization
 batches (ARB only, ratchet never rises); S2 pseudo-RTL mirroring audit
 (start/end paddings, icon mirroring, back handling); S3 locale picker
 (More → Appearance, platform face retained); S4 first locale pilot chosen
@@ -368,12 +391,14 @@ Dispositioned, not forgotten. Promote only when its trigger fires:
 | Message content update | Editing requests after attach/Review confusion reported |
 | One-shot generate, server-internal controls, destructive worktree reset | Never without a phone workflow — standing non-goal |
 
-### E12 — iOS remote-control client (gated on D4)
+### E12 — iOS remote-control client (build and distribution gates separated)
 
 **Hypothesis.** If the controller ships on iOS as a remote-server-only
 client, then the primary persona (developer away from the desk) gains phone
-choice — and the codebase proves its portability claim. On-device server is
-explicitly out (platform disposition 2026-09-06: iOS forbids `fork`/`exec`).
+choice — and the codebase proves its portability claim. On-device execution
+is outside this port's scope: ordinary App Store sandbox/background constraints
+do not provide a drop-in Termux environment. This is not a claim that every
+form of emulation or local computation on iOS is impossible.
 **Validation.** A TestFlight build completes the core journey — paste-pair →
 chat → approve → review — against a real server, with no feature claiming
 to work that doesn't.
@@ -386,24 +411,31 @@ platform-guarded so iOS skips it; `mobile_scanner`, `record`, `sherpa_onnx`,
 implementations. The five `oc/*` channels have no iOS halves — they stay
 gated off until their phase.
 
-**Phase 0 · Prerequisites (maintainer, = D4):** Apple Developer account;
-macOS build story (local Xcode or GitHub macOS runner); TestFlight
-go/no-go. Nothing below starts without these.
+**Phase 0 · Preparation:** audit plugin targets, bootstrap, secure-storage
+entitlements, picker/URL behavior, lifecycle and capability tests. Scaffold
+with the pinned Flutter tooling in a controlled diff; Linux can host source
+preparation, but native compilation/simulator validation needs macOS/Xcode.
+Paid Apple enrollment and signing credentials gate TestFlight/distribution,
+not architecture work, widget tests, or an unsigned simulator build.
 
-**E12-S1 · Green shell in CI** — on a macOS host: `flutter create
---platforms=ios .`, add `PlatformCapabilities.ios()` (all gates false),
-privacy manifest stub, CI workflow (analyze + test + `flutter build ios
---no-codesign`).
+**E12-S1 · Green shell in CI** — generate the iOS target using the pinned
+Flutter (`flutter create --platforms=ios .` only after reviewing generator
+side effects). Keep unsupported Android features gated; add the actual required
+entitlements/privacy declarations, not empty placeholders. On macOS, run
+analyze, serial tests and `flutter build ios --simulator`; separately prove
+the device target with `flutter build ios --release --no-codesign`.
 - **Given** the `ios/` target exists **When** macOS CI runs **Then** analyze
-  and the serial suite pass and an unsigned build artifact is produced —
-  no Android/Linux workflow changes.
+  and the serial suite pass and a usable simulator artifact is produced.
+  Passing source/widget gates is not native plugin, device, or signing proof.
 
 **E12-S2 · Remote core journey** — servers screen, paste-pairing (QR stays
 hidden), chat with SSE streaming, permission/form approval, drafts, model
-picker, export via iOS share sheet. **Truthful limitation, stated in-product
+picker and export/save through a verified iOS file path (a share sheet is a
+separate native integration, not already available). **Truthful limitation, stated in-product
 and in release notes: no background alerts on iOS v1** — the SSE transport
-lives only in foreground/short-background; push would require a relay that
-violates the no-third-party privacy posture.
+liveness is not guaranteed during suspension. Later push would need an
+explicit APNs/backend design and privacy review; it is not inherently forbidden
+by a no-analytics policy. Do not disguise long-lived SSE as an iOS background mode.
 - **Given** an iOS build paired to a server **When** the app is backgrounded
   mid-run and returned to **Then** the transcript reconciles by refetch
   (existing volatile-stream rule) and the UI never implies it was watched
@@ -420,27 +452,104 @@ is high), foreground-only local notifications, WidgetKit home widget.
 explaining the no-account, user-hosted-server model, final privacy manifest
 (camera/mic usage strings), PRIVACY.md iOS section (no APNs, no relay).
 
-**Architecture.** No domain/state changes are expected — that is the
-portability payoff being tested. New code: `PlatformCapabilities.ios()`
-flipping gates per phase, channel iOS halves where a phase demands them,
-`ios/` runner, one CI workflow. Widget tests pump iOS via
-`debugPlatformCapabilities(TargetPlatform.ios)` using the existing
-debug seam. **Park criterion:** D4 unanswered after one planning cycle →
-E12 parks with no code stranded (phases 1–2 touch only gates, `ios/`, CI).
+**Architecture.** Reuse the gateways; verify rather than assume lifecycle,
+storage and native plugin compatibility. Tests assign
+`debugPlatformCapabilities = const PlatformCapabilities(platform: TargetPlatform.iOS)`
+and restore it in teardown. New work may touch bootstrap, photo/draft recovery,
+privacy/entitlements, native files, CI and platform tests as well as gates.
+Do not declare the port a one-file change or implement all Android channels
+on iOS; add only the capabilities the remote-control slice needs.
+
+### E13 — Provider usage and actual remaining subscription quota
+
+**Implementation checkpoint:** Codex/Claude core-window collectors, the scoped
+app view and provider consumption groups exist in the working tree. They are
+not deployed or released. See [verification](../verification/provider-quota-2026-09-06.md)
+for the passed checks and the latest assertion-only failure/correction. GLM,
+MiniMax, Gemini, additional scoped windows, budgets and alerts remain open.
+
+**User job:** know which account has capacity, what window limits it, and when
+capacity resets across Codex/ChatGPT, Claude, GLM, MiniMax and Gemini. Real
+remaining quota is the goal; a manual budget is not a substitute.
+
+**Current evidence:** `UsageStatisticsGateway`, `UsageOverviewController` and
+`usage_screen.dart` implement server consumption. `UsageModel` already carries
+`providerID` and `modelID`; no catalog lookup is required to group totals.
+The pinned contracts do not establish a provider-quota API. Community endpoint
+surveys are research leads, not successful authenticated tests or guarantees
+of provider support. Preserve raw credential material outside this app.
+
+**Data distinctions (never merge silently):**
+- Provider quota: account/plan-wide, often includes use from other clients;
+  retain the provider's exact window, unit and reset timestamp.
+- OpenCode consumption: selected server/project/date range, tokens and cost;
+  it cannot reconstruct opaque subscription limits.
+- Personal budget: user-entered target in a compatible measurable unit;
+  label separately. No token-to-hour/message/quota-percent conversions.
+
+**E13-Q0 · Verify one provider:** begin with Codex/ChatGPT OAuth, then Claude.
+For each, record pinned source, auth identity, endpoint, permitted scope,
+official/undocumented status, payload/reset semantics and a sanitized fixture.
+Live credential use needs explicit approval; it is not authorized by this plan.
+GLM, MiniMax and Gemini get separate provider adapters, not assumed identical
+five-hour/weekly limits. Missing quota remains unavailable, not zero or unlimited.
+
+**E13-S4 · Typed quota contract and first read-only view** — do this before
+adding five collectors. Proposed `ProviderUsageGateway` returns account-scoped
+snapshots with provider/account reference, source, fetched-at/expiry, windows,
+used/remaining/limit or reported percent, reset-at, units, and status
+(`fresh`, `stale`, `unsupported`, `authRequired`, `rateLimited`, `unavailable`).
+These names are design proposals, not an existing upstream route.
+- Given fresh provider windows, opening Usage → Remaining shows each window
+  and its reset separately; a weekly limit does not mask an exhausted short window.
+- Given failed refresh, retain and mark the old snapshot stale with Retry;
+  reaching a reset timestamp alone never fabricates a replenished allowance.
+- Given profile/account change during refresh, discard the late result and
+  never relabel it as the newly selected account's allowance.
+
+**E13-S5 · Authorized server-side collector** — prefer a supported upstream
+read if available; otherwise evaluate an optional collector/companion beside
+the user's server, whether computer-hosted or Termux-hosted. Require explicit
+credential-store access, exact vendor-host allowlists, no arbitrary target URL,
+no token forwarding to the client, no raw-body logging, bounded caching/backoff,
+and safe token-refresh ownership. Do not copy auth stores or race CLI refreshes.
+An additional loopback endpoint still needs authentication, scope checks and
+revocation; loopback is not an authorization boundary. No secret goes in a
+command line or persistent URI. Version/sign the collector independently only
+after its update/rollback policy is reviewed; a shell script alone is not the
+complete security or lifecycle implementation.
+
+**E13-S1 · Provider consumption rollup** — keep the current Usage view and
+group its `UsageModel` entries directly by provider; drill into model/variant
+totals without labelling them subscription remaining. Quota support must not
+depend on v2 statistics, so v1 or future backends can use a supported collector.
+
+**E13-S2 · Optional personal budgets** — later, only for units the selected
+source measures. Persist scope/window/unit in `oc.budgets.<profileId>`; prove
+failed-write and deletion behavior. No pretend weekly-hour meter from tokens.
+
+**E13-S3 · Limits and attention** — distinguish real provider-window
+exhaustion from generic 429/busy/transport errors. Add alerts only after source,
+dedupe, freshness, opt-in and privacy rules are proven; never auto-switch
+accounts or providers to evade limits.
+
+**UI:** Usage keeps separate Consumption and Remaining destinations. Provider
+cards show a safe account label, plan if reported, every returned window,
+freshness and source. Unknown has no percentage bar. No credentials, hidden
+raw responses or server errors in the view/notifications. Reuse theme roles,
+ARB, 48dp controls and scrollable/wrapping layouts at enlarged text.
+
+**Focused acceptance:** sanitized fixtures for supported/absent fields,
+fraction/percent units, multiple windows, no-reset fields, expired auth,
+provider 429, schema drift, offline stale cache, account switching, deletion
+and a cold reconnect. First-provider end-to-end evidence is required before
+claiming a multi-provider monitor. Size and dates are revised after Q0.
 
 ## 4. Sequencing, dependencies, ownership
 
-```
-E1 ──S3 findings──▶ E2 ──evidence──▶ (E6 gate)
-│                                    └─ E10 feeds re-rank of E6/E7/E11
-└─ E3 ──serialize──▶ E4        E5 (parallel if 2nd editor; else after E2)
-E7, E8, E9: triggered lanes, no ordering between them
-```
-
-- **Now:** E1 (S7 blocked on D1). **Next:** E2 → (E3 → E4 serial) + E5.
-  **Later:** gated lanes. **E12 (iOS):** blocked on D4; phases 1–2 touch only
-  `platform_capabilities.dart`, `ios/`, and CI — parallel-safe beside E3–E5
-  on a second editor.
+Follow the [execution plan](roadmap-2026-09-06.md), not the earlier
+release-first sequence. E13 collector/contract proof can proceed alongside
+read-only iOS preparation; concrete shared state/gateway/native edits serialize.
 - Single-owner serialization: E3+E4 share `gateway_operations.dart` /
   `server_gateway.dart`; E2 chat fixes + E5 share chat part files. Never two
   editors on `lib/state/connection.dart`, the chat library, or a MethodChannel
@@ -452,18 +561,22 @@ E7, E8, E9: triggered lanes, no ordering between them
 
 ## 5. Decision points (maintainer)
 
-1. **D1** — publish wording/channel for `1.0.34+35` (blocks E1-S7 only).
-2. **D2** — is Shorebird patching a promise? (decides E9).
-3. **D3** — green-light E10 sessions (produces the only real data this plan
-   can get).
-4. **D4** — iOS prerequisites: Apple Developer account, macOS build story
-   (local Xcode vs CI runner), TestFlight go/no-go — unblocks E12 phase 1.
+1. **D1** — approve publication for a verified candidate; a tag is not approval.
+2. **D2** — approve any Shorebird rehearsal involving signing/publication;
+   Shorebird remains the preferred eligible Android delivery path.
+3. **D3** — consent and recruitment for user observations; do not block all
+   engineering evidence on interviews.
+4. **D4** — macOS build access for native iOS validation; Apple enrollment and
+   signing only for subsequent distribution, not source preparation.
+5. **D5** — authorize a particular quota collector's credential access and
+   any live-provider checks after reviewing its security design.
 
 ## 6. Frontier lane — new work streams
 
 Innovation streams live in [innovation-2026-09-06.md](innovation-2026-09-06.md):
 voice mode (speak-the-run → conversation → ambient), plugins with mobile
 variants, cross-server attention inbox, session handoff, completion digests,
-launch surfaces, and Termux overnight mode. Each is a probe-gated bet with
-kill criteria; **F1a, F4, and F6-S1 are promote-now** (platform-shaped risk,
-no demand unknown) and form the natural post-E2 cycle alongside E3–E5.
+launch surfaces, Termux, onboarding, connectivity and alternate backends.
+Pull small validated slices under the execution plan; no idea is risk-free
+because another application implements it. All prior research is retained
+locally as advisory evidence, not copied into public positioning.

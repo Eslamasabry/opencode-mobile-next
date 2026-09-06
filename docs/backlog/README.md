@@ -2,6 +2,11 @@
 
 The review and implementation cycle keeps two focused queues:
 
+- [Execution order and evidence guardrails](roadmap-2026-09-06.md): lead-curated
+  next slices, evidence corrections, and held read-only specialist review plan.
+- [Epic/story inventory](full-backlog-2026-09-06.md) and
+  [innovation inventory](innovation-2026-09-06.md): proposed scope; presence in
+  these files is not an implementation or release-readiness claim.
 - [Backend](backend.md): protocol adapters, data handling, and connection state.
 - [Frontend](frontend.md): useful features, navigation, and everyday interactions.
 - [Completed cycles](cycles.md): shipped batches and their verification.
