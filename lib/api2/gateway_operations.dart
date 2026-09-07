@@ -318,6 +318,31 @@ class Api2OperationsGateway extends ProductRepository
   Api2OperationsGateway({required this.client});
 
   @override
+  Future<ManagedShell> startManagedShell({
+    required String command,
+    required String directory,
+    required String ownerToken,
+  }) => _guard('Could not start the development command', () async {
+    if (command.trim().isEmpty ||
+        command.length > 4096 ||
+        directory.trim().isEmpty ||
+        ownerToken.isEmpty) {
+      throw const ProductException('Invalid development command');
+    }
+    final json = await _transport.postJson(
+      '/shell',
+      query: _loc(),
+      body: {
+        'command': command,
+        'cwd': directory,
+        'timeout': 0,
+        'metadata': {'ocDevelopmentServiceOwner': ownerToken},
+      },
+    );
+    return _managedShell(_dataMap(json));
+  });
+
+  @override
   Future<ManagedShellList> loadRunningShells() =>
       _guard('Could not load running commands', () async {
         try {
@@ -413,6 +438,8 @@ class Api2OperationsGateway extends ProductRepository
     return ManagedShell(
       id: json['id'] as String,
       command: json['command'] as String? ?? '',
+      directory: json['cwd'] as String?,
+      ownerToken: metadata['ocDevelopmentServiceOwner'] as String?,
       status: ManagedShellStatus.values.firstWhere(
         (status) => status.name == json['status'],
         orElse: () => ManagedShellStatus.unknown,

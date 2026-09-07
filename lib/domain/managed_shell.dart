@@ -11,6 +11,8 @@ class ManagedShell {
     this.completedAt,
     this.exitCode,
     this.sessionID,
+    this.directory,
+    this.ownerToken,
   });
 
   final String id;
@@ -20,6 +22,10 @@ class ManagedShell {
   final DateTime? completedAt;
   final int? exitCode;
   final String? sessionID;
+  final String? directory;
+
+  /// Only this feature's ownership field, never arbitrary server metadata.
+  final String? ownerToken;
   bool get running => status == ManagedShellStatus.running;
 }
 
@@ -45,6 +51,11 @@ class ManagedShellOutput {
 }
 
 abstract class ManagedShellGateway {
+  Future<ManagedShell> startManagedShell({
+    required String command,
+    required String directory,
+    required String ownerToken,
+  });
   Future<ManagedShellList> loadRunningShells();
   Future<ManagedShell?> getManagedShell(String id);
   Future<ManagedShellOutput> readManagedShellOutput(

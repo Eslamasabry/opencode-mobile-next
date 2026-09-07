@@ -30,6 +30,13 @@ extension on VcsDiffMode {
 
 abstract class ProductRepository implements ServerOperationsGateway {
   @override
+  Future<ManagedShell> startManagedShell({
+    required String command,
+    required String directory,
+    required String ownerToken,
+  }) => Future.error(const ProductException('Service control is unavailable'));
+
+  @override
   Future<ManagedShellList> loadRunningShells() async =>
       const ManagedShellList(supported: false);
 

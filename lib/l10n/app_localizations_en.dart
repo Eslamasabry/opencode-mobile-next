@@ -9,6 +9,133 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get servicesTitle => 'Development services';
+
+  @override
+  String get servicesCopy => 'Copy command';
+
+  @override
+  String get servicesSubtitle => 'Project commands, logs, and preview links';
+
+  @override
+  String get servicesIntro =>
+      'Keep your project\'s development commands and preview links together. Saving a service does not start it.';
+
+  @override
+  String get servicesAdd => 'Register service';
+
+  @override
+  String get servicesName => 'Service name';
+
+  @override
+  String get servicesCommand => 'Development command';
+
+  @override
+  String get servicesCommandHint =>
+      'Use a foreground command, such as npm run dev. Background or detached commands cannot be tracked.';
+
+  @override
+  String get servicesUrl => 'Preview URL (optional)';
+
+  @override
+  String get servicesUrlHint =>
+      'Use an address this phone can reach. localhost points to this phone. No ports are exposed or forwarded for you.';
+
+  @override
+  String get servicesSave => 'Save service';
+
+  @override
+  String get servicesInvalid =>
+      'Enter a name, a foreground command, and an optional HTTP or HTTPS URL without credentials.';
+
+  @override
+  String get servicesUnavailable =>
+      'This connection cannot start and track development commands. You can save commands and review their preview links here.';
+
+  @override
+  String get servicesScopeChanged =>
+      'The server or project changed. Reopen Development services from the intended project.';
+
+  @override
+  String get servicesNotStarted => 'Not started';
+
+  @override
+  String get servicesRunning => 'Running command';
+
+  @override
+  String get servicesStopped => 'Stopped';
+
+  @override
+  String get servicesUnknown => 'Status unknown';
+
+  @override
+  String get servicesStatusHint =>
+      'Command status does not confirm that your app is ready or reachable.';
+
+  @override
+  String get servicesStart => 'Start';
+
+  @override
+  String get servicesStop => 'Stop';
+
+  @override
+  String get servicesRestart => 'Restart';
+
+  @override
+  String get servicesLogs => 'Logs';
+
+  @override
+  String get servicesVisit => 'Visit';
+
+  @override
+  String get servicesRemove => 'Remove configuration';
+
+  @override
+  String get servicesRemoveHint =>
+      'Remove this saved service and its local ownership record? This does not stop its command on the server. Stop it first if needed.';
+
+  @override
+  String get servicesStartHint =>
+      'Run this saved command in the project shown below? It uses the server\'s environment. Keep it in the foreground; this panel cannot manage detached processes.';
+
+  @override
+  String get servicesStopHint =>
+      'Stop this service\'s tracked command? The server also removes its retained logs. Other commands are not affected.';
+
+  @override
+  String get servicesRestartHint =>
+      'Stop this tracked command, remove its server log, then start the saved command again?';
+
+  @override
+  String get servicesForget => 'Forget last run';
+
+  @override
+  String get servicesForgetHint =>
+      'Clear the local run record? This does not stop any server process. Starting again may create a duplicate if the previous command is still running.';
+
+  @override
+  String get servicesUnknownHint =>
+      'The last run could not be confirmed. Refresh to reconcile it before starting again.';
+
+  @override
+  String get servicesLogEmpty => 'No captured output is available yet.';
+
+  @override
+  String get servicesLogTail =>
+      'Bounded log tail. Earlier output may be omitted. Logs are kept on the server, not saved on this phone.';
+
+  @override
+  String get servicesWorking => 'Updating service…';
+
+  @override
+  String servicesExit(int code) {
+    return 'Recorded exit code: $code';
+  }
+
+  @override
+  String get servicesRefresh => 'Refresh status';
+
+  @override
   String get appTitle => 'OpenCode Mobile';
 
   @override

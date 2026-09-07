@@ -868,6 +868,9 @@ class ServerCapabilities {
   final bool toolInventory;
   final bool experimentalCapabilities;
   final bool shellSettings;
+
+  /// Ownership-tagged command creation and exact-ID lifecycle controls.
+  final bool developmentServices;
   final bool remoteUpgrade;
   final bool clientDiagnostics;
   final bool gitInit;
@@ -927,6 +930,7 @@ class ServerCapabilities {
     this.toolInventory = true,
     this.experimentalCapabilities = true,
     this.shellSettings = true,
+    this.developmentServices = false,
     this.remoteUpgrade = true,
     this.clientDiagnostics = true,
     this.gitInit = true,
