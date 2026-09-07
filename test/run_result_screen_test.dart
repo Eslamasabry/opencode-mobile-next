@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
@@ -23,6 +24,7 @@ class _Gateway implements ServerGateway {
   final List<List<MessageWithParts>> pages;
   final Object? failure;
   final requestedCursors = <String?>[];
+  Completer<void>? barrier;
 
   @override
   Future<ServerPage<MessageWithParts>> messagePage(
@@ -31,6 +33,7 @@ class _Gateway implements ServerGateway {
     int limit = 100,
   }) async {
     requestedCursors.add(cursor);
+    await barrier?.future;
     if (failure != null) throw failure!;
     final index = cursor == null ? 0 : int.parse(cursor);
     final hasMore = index + 1 < pages.length;
@@ -47,6 +50,9 @@ class _Gateway implements ServerGateway {
 class _Controller extends ConnectionController {
   _Controller(super.store);
   ServerGateway? transport;
+  ServerProfile? selectedProfile;
+  @override
+  ServerProfile? get profile => selectedProfile ?? super.profile;
 
   @override
   Future<ServerGateway?> prepareActionTransport() async => transport;
@@ -181,9 +187,9 @@ void main() {
       );
       expect(gateway.requestedCursors, [null, '1', '2']);
       expect(loaded.messages.map((m) => m.info.id), [
-        'a-final',
-        'a-edit',
         'u-prompt',
+        'a-edit',
+        'a-final',
       ]);
       expect(loaded.complete, isFalse);
       final result = RunResult.fromMessages('ses_1', loaded.messages)!;
@@ -364,6 +370,102 @@ void main() {
     });
   });
 
+  for (final loading in [false, true]) {
+    for (final change in ['profile', 'connection', 'location']) {
+      testWidgets(
+        'same-controller $change change permanently invalidates ${loading ? 'in-flight' : 'loaded'} results',
+        (tester) async {
+          final gateway = _Gateway([_run]);
+          if (loading) gateway.barrier = Completer<void>();
+          final c = await _controller(gateway);
+          addTearDown(c.dispose);
+          var opened = false;
+          await tester.pumpWidget(
+            _app(
+              RunResultScreen(controller: c, sessionID: 'ses_1'),
+              routes: {
+                '/chat/ses_1': (_) {
+                  opened = true;
+                  return const Scaffold();
+                },
+              },
+            ),
+          );
+          await tester.pump();
+          if (!loading) {
+            await tester.pumpAndSettle();
+            expect(find.text('Completed'), findsOneWidget);
+          }
+          if (change == 'profile') {
+            c.selectedProfile = ServerProfile(
+              id: 'b',
+              name: 'B',
+              baseUrl: 'http://b',
+            );
+          } else if (change == 'connection') {
+            c.connectionRevision++;
+          } else {
+            c.locationRevision++;
+            c.directory = '/different';
+          }
+          c.notifyListeners();
+          await tester.pump();
+          gateway.barrier?.complete();
+          await tester.pumpAndSettle();
+          expect(
+            find.byKey(const Key('run-result-scope-changed')),
+            findsOneWidget,
+          );
+          expect(find.byType(RunResultView), findsNothing);
+          expect(
+            find.byKey(const Key('run-result-open-conversation')),
+            findsNothing,
+          );
+          expect(find.text('Retry'), findsNothing);
+          final replacement = _Gateway([_run]);
+          c.transport = replacement;
+          await tester
+              .widget<RefreshIndicator>(find.byType(RefreshIndicator))
+              .onRefresh();
+          await tester.pumpAndSettle();
+          expect(replacement.requestedCursors, isEmpty);
+          expect(opened, isFalse);
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+  }
+
+  test(
+    'equal timestamps spanning older pages retain the user boundary and step order',
+    () async {
+      final gateway = _Gateway([
+        [
+          _msg(
+            'a-last',
+            role: 'assistant',
+            created: 100,
+            completed: 120,
+            finish: 'stop',
+          ),
+        ],
+        [
+          _msg('z-user', role: 'user', created: 100),
+          _msg('x-first', role: 'assistant', created: 100, completed: 110),
+        ],
+      ]);
+      final loaded = await loadRunHistory(
+        gateway,
+        'ses_1',
+        isCurrent: () => true,
+      );
+      final result = RunResult.fromMessages('ses_1', loaded.messages)!;
+      expect(result.userMessageID, 'z-user');
+      expect(result.lastStepID, 'a-last');
+      expect(result.stepCount, 2);
+    },
+  );
+
   group('RunResultScreen', () {
     testWidgets('loads history, binds observation to the exact step, opens '
         'the conversation', (tester) async {
@@ -426,7 +528,13 @@ void main() {
       final failedController = await _controller(failing);
       addTearDown(failedController.dispose);
       await tester.pumpWidget(
-        _app(RunResultScreen(controller: failedController, sessionID: 'ses_1')),
+        _app(
+          RunResultScreen(
+            key: UniqueKey(),
+            controller: failedController,
+            sessionID: 'ses_1',
+          ),
+        ),
       );
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('run-result-error-state')), findsOneWidget);

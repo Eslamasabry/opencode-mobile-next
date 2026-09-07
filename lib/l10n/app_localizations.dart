@@ -2356,6 +2356,12 @@ abstract class AppLocalizations {
   /// **'Run results'**
   String get digestRunResults;
 
+  /// No description provided for @runResultsScopeChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection or project changed. Close this view and reopen Run results from the intended project.'**
+  String get runResultsScopeChanged;
+
   /// No description provided for @runResultsTitle.
   ///
   /// In en, this message translates to:

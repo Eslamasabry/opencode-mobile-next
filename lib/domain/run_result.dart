@@ -125,7 +125,8 @@ class RunResult {
   /// Creation time of the user message that started the run.
   final DateTime? startedAt;
 
-  /// Latest completion time across the run's assistant messages.
+  /// Completion time of the terminal newest step only. An earlier completed
+  /// step cannot finish a turn whose newest step is still running.
   final DateTime? finishedAt;
 
   /// Assistant messages that make up the run.
@@ -172,7 +173,14 @@ class RunResult {
     List<MessageWithParts> messages, {
     bool historyComplete = false,
   }) {
-    final ordered = [...messages]..sort(_byCreation);
+    // List.sort is not stable. Codex turn items share a created timestamp,
+    // so retain authoritative input order for ties rather than sorting ids.
+    final indexed = messages.indexed.toList()
+      ..sort((a, b) {
+        final time = _byCreation(a.$2, b.$2);
+        return time != 0 ? time : a.$1.compareTo(b.$1);
+      });
+    final ordered = indexed.map((item) => item.$2).toList();
     var lastUser = -1;
     for (var i = 0; i < ordered.length; i++) {
       if (ordered[i].info.role == 'user') lastUser = i;
@@ -186,14 +194,6 @@ class RunResult {
     var earlierErrors = 0;
     for (final message in run.take(run.length - 1)) {
       if (message.info.errorText != null) earlierErrors++;
-    }
-
-    DateTime? finishedAt;
-    for (final message in run) {
-      final done = _time(message.info.time?.completed);
-      if (done != null && (finishedAt == null || done.isAfter(finishedAt))) {
-        finishedAt = done;
-      }
     }
 
     final changed = <String, RunChangedFile>{};
@@ -253,6 +253,7 @@ class RunResult {
     }
 
     final last = run.last.info;
+    final outcome = _outcomeOf(last);
     return RunResult._(
       sessionID: sessionID,
       runID: run.first.info.id,
@@ -260,11 +261,13 @@ class RunResult {
       startedAt: _time(
         user?.info.time?.created ?? run.first.info.time?.created,
       ),
-      finishedAt: finishedAt,
+      finishedAt: outcome.kind == RunOutcomeKind.running
+          ? null
+          : _time(last.time?.completed),
       stepCount: run.length,
       agent: last.agent ?? run.first.info.agent,
       model: last.modelID ?? run.first.info.modelID,
-      outcome: _outcomeOf(last),
+      outcome: outcome,
       changedFiles: List.unmodifiable(changed.values),
       commands: List.unmodifiable(commands),
       toolCount: toolCount,
@@ -299,7 +302,7 @@ class RunResult {
     final byTime = (a.info.time?.created ?? 0).compareTo(
       b.info.time?.created ?? 0,
     );
-    return byTime != 0 ? byTime : a.info.id.compareTo(b.info.id);
+    return byTime;
   }
 
   static DateTime? _time(int? raw) =>

@@ -38,10 +38,36 @@ class _RunResultScreenState extends State<RunResultScreen> {
   RunResult? _result;
   bool _loaded = false;
   int _generation = 0;
+  late final Object _boundScope;
+  bool _invalidated = false;
+
+  Object get _currentScope => (
+    widget.controller,
+    widget.sessionID,
+    widget.controller.profile?.id,
+    widget.controller.profile?.baseUrl,
+    widget.controller.connectionRevision,
+    widget.controller.locationRevision,
+    widget.controller.directory,
+    widget.controller.workspace,
+  );
+
+  bool get _current => !_invalidated && _boundScope == _currentScope;
+
+  void _invalidateIfChanged() {
+    if (_current) return;
+    _invalidated = true;
+    _generation++;
+    _result = null;
+    _loaded = false;
+    _loading = false;
+    _error = null;
+  }
 
   @override
   void initState() {
     super.initState();
+    _boundScope = _currentScope;
     widget.controller.addListener(_changed);
     // The first load starts after initState so its setState is legal; the
     // initial fields already describe the loading state for the first frame.
@@ -55,14 +81,7 @@ class _RunResultScreenState extends State<RunResultScreen> {
       oldWidget.controller.removeListener(_changed);
       widget.controller.addListener(_changed);
     }
-    if (oldWidget.controller != widget.controller ||
-        oldWidget.sessionID != widget.sessionID) {
-      // A different session or connection: nothing loaded so far applies.
-      _result = null;
-      _loaded = false;
-      _error = null;
-      scheduleMicrotask(_load);
-    }
+    _invalidateIfChanged();
   }
 
   @override
@@ -72,34 +91,34 @@ class _RunResultScreenState extends State<RunResultScreen> {
   }
 
   void _changed() {
-    if (mounted) setState(() {});
+    if (mounted) setState(_invalidateIfChanged);
   }
 
   Future<void> _load() async {
+    if (!mounted) return;
+    _invalidateIfChanged();
+    if (!_current) {
+      setState(() {});
+      return;
+    }
     final generation = ++_generation;
     final controller = widget.controller;
-    final profile = controller.profile?.id;
-    final location = controller.locationRevision;
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
       final api = await controller.prepareActionTransport();
-      if (!mounted || generation != _generation) return;
+      if (!mounted || generation != _generation || !_current) return;
       if (api == null) {
         throw const ProductException('OpenCode is reconnecting. Try again.');
       }
       final loaded = await loadRunHistory(
         api,
         widget.sessionID,
-        isCurrent: () =>
-            mounted &&
-            generation == _generation &&
-            controller.profile?.id == profile &&
-            controller.locationRevision == location,
+        isCurrent: () => mounted && generation == _generation && _current,
       );
-      if (!mounted || generation != _generation) return;
+      if (!mounted || generation != _generation || !_current) return;
       setState(() {
         _result = RunResult.fromMessages(
           widget.sessionID,
@@ -110,7 +129,7 @@ class _RunResultScreenState extends State<RunResultScreen> {
         _loading = false;
       });
     } catch (error) {
-      if (!mounted || generation != _generation) return;
+      if (!mounted || generation != _generation || !_current) return;
       setState(() {
         _error = error is ProductException ? error.message : '$error';
         _loading = false;
@@ -119,17 +138,30 @@ class _RunResultScreenState extends State<RunResultScreen> {
   }
 
   void _openConversation() {
+    if (!_current) return;
     Navigator.of(context).pushNamed('/chat/${widget.sessionID}');
   }
 
   @override
   Widget build(BuildContext context) {
+    _invalidateIfChanged();
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final theme = Theme.of(context);
     final session = widget.controller.sessionsById[widget.sessionID];
     final result = _result;
     final Widget body;
-    if (_loading && !_loaded) {
+    if (!_current) {
+      body = Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            l10n.runResultsScopeChanged,
+            key: const Key('run-result-scope-changed'),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    } else if (_loading && !_loaded) {
       body = const Center(
         key: Key('run-result-loading'),
         child: CircularProgressIndicator(),
@@ -227,9 +259,13 @@ Future<LoadedRunHistory> loadRunHistory(
         'The session changed while loading history.',
       );
     }
+    // Pages walk backwards; each gateway page keeps its server item order.
+    // Prepend older pages so equal timestamps spanning pages stay ordered.
+    final older = <MessageWithParts>[];
     for (final message in result.items) {
-      if (seen.add(message.info.id)) messages.add(message);
+      if (seen.add(message.info.id)) older.add(message);
     }
+    messages.insertAll(0, older);
     if (!result.hasMore) {
       complete = true;
       break;

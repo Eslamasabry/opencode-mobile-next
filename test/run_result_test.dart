@@ -53,6 +53,53 @@ Part _tool(
 );
 
 void main() {
+  test(
+    'equal timestamps preserve server turn order and the latest assistant step',
+    () {
+      final result = RunResult.fromMessages('ses_1', [
+        _msg('z-user', role: 'user', created: 100),
+        _msg(
+          'x-step',
+          role: 'assistant',
+          created: 100,
+          completed: 110,
+          finish: 'tool-calls',
+        ),
+        _msg(
+          'a-final',
+          role: 'assistant',
+          created: 100,
+          completed: 120,
+          finish: 'stop',
+        ),
+      ])!;
+      expect(result.userMessageID, 'z-user');
+      expect(result.runID, 'x-step');
+      expect(result.lastStepID, 'a-final');
+      expect(result.stepCount, 2);
+      expect(result.outcome.kind, RunOutcomeKind.completed);
+    },
+  );
+
+  test(
+    'an unfinished newest step never inherits an earlier finished timestamp',
+    () {
+      final result = RunResult.fromMessages('ses_1', [
+        _msg('u', role: 'user', created: 1),
+        _msg(
+          'old',
+          role: 'assistant',
+          created: 2,
+          completed: 20,
+          finish: 'stop',
+        ),
+        _msg('new', role: 'assistant', created: 3),
+      ])!;
+      expect(result.outcome.kind, RunOutcomeKind.running);
+      expect(result.finishedAt, isNull);
+    },
+  );
+
   group('grouping', () {
     test('the run is the assistant steps after the latest user message', () {
       final result = RunResult.fromMessages('ses_1', [

@@ -462,6 +462,7 @@
   "digestDismiss": "Dismiss",
   "digestRunResults": "Run results",
   "@digestRunResults": {"description": "Completion digest action opening the latest run's server-recorded outcome and tool evidence"},
+  "runResultsScopeChanged": "The connection or project changed. Close this view and reopen Run results from the intended project.",
   "runResultsTitle": "Run results",
   "runResultsEmpty": "The latest turn has no assistant step yet, so there is nothing to show.",
   "@runResultsEmpty": {"description": "Run results empty state: the newest user message has no assistant reply after it"},

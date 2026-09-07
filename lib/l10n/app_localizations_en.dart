@@ -1348,6 +1348,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get digestRunResults => 'Run results';
 
   @override
+  String get runResultsScopeChanged =>
+      'The connection or project changed. Close this view and reopen Run results from the intended project.';
+
+  @override
   String get runResultsTitle => 'Run results';
 
   @override
