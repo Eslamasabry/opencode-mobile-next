@@ -4060,4 +4060,73 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get returnBriefDismiss => 'Dismiss shown items';
+
+  @override
+  String get capsuleTitle => 'Context capsule';
+
+  @override
+  String get capsuleEntry =>
+      'Collect notes, errors and screenshots for this task';
+
+  @override
+  String get capsuleDescription =>
+      'Build a bundle for this task. Applying adds it to your existing draft; nothing is sent. Unapplied edits are kept only while this screen is open.';
+
+  @override
+  String get capsuleNote => 'Note';
+
+  @override
+  String get capsuleError => 'Error';
+
+  @override
+  String get capsuleCode => 'Code';
+
+  @override
+  String get capsuleLabel => 'Label';
+
+  @override
+  String get capsuleExcerpt => 'Excerpt';
+
+  @override
+  String get capsulePaste => 'Paste';
+
+  @override
+  String get capsuleRemove => 'Remove';
+
+  @override
+  String get capsuleAddImage => 'Add screenshot or image';
+
+  @override
+  String get capsulePreview => 'Tap to preview';
+
+  @override
+  String get capsuleApply => 'Apply to draft';
+
+  @override
+  String get capsuleApplied =>
+      'Context added to your saved draft. Review it before sending.';
+
+  @override
+  String get capsuleScopeChanged =>
+      'The task, connection or draft changed. Close this capsule and reopen it from the intended task.';
+
+  @override
+  String get capsuleTextOnly =>
+      'This connection accepts text only. You can still collect notes, errors and code.';
+
+  @override
+  String get capsuleImagesOnly =>
+      'Choose a PNG, JPEG, GIF or WebP image. Paste text into an excerpt instead.';
+
+  @override
+  String get capsuleImageFailed =>
+      'Could not add that image. Use up to 5 attachments, 10 MB each and 20 MB total, including your existing draft.';
+
+  @override
+  String get capsulePasteFailed =>
+      'Clipboard text is unavailable. You can type or paste into the excerpt.';
+
+  @override
+  String get capsuleTextLimit =>
+      'Keep each excerpt under 16,000 characters and the bundle under 32,000.';
 }
