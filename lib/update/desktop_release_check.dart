@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../platform/platform_capabilities.dart';
 import '../ui/widgets/external_link.dart';
@@ -15,6 +14,13 @@ const desktopReleasesApiUrl =
     'https://api.github.com/repos/Eslamasabry/opencode-mobile-next/releases';
 const desktopReleasesPageUrl =
     'https://github.com/Eslamasabry/opencode-mobile-next/releases';
+const desktopReleaseNetworkTimeout = Duration(seconds: 10);
+
+const _desktopReleaseOwner = 'Eslamasabry';
+const _desktopReleaseRepository = 'opencode-mobile-next';
+final _desktopReleaseTagPattern = RegExp(
+  r'^v\d+\.\d+\.\d+\+(\d+)(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$',
+);
 
 class DesktopReleaseInfo {
   final String tag;
@@ -27,7 +33,7 @@ class DesktopReleaseInfo {
 /// `v1.0.25+26-preview.5` (→ 26) or `v1.0.19+20` (→ 20). Returns null when
 /// the tag carries none.
 int? buildNumberFromTag(String tag) {
-  final match = RegExp(r'\+(\d+)').firstMatch(tag);
+  final match = _desktopReleaseTagPattern.firstMatch(tag);
   return match == null ? null : int.tryParse(match.group(1)!);
 }
 
@@ -39,43 +45,91 @@ bool isNewerRelease({required int currentBuildNumber, required String tag}) {
   return tagBuild != null && tagBuild > currentBuildNumber;
 }
 
-/// Fetches the newest non-draft release. Pre-releases count: the preview
-/// lineage is this app's distribution channel.
+/// Fetches the newest valid non-draft release. Pre-releases count: the
+/// preview lineage is this app's distribution channel.
 class DesktopReleaseChecker {
-  DesktopReleaseChecker({Dio? dio}) : _dio = dio ?? Dio();
+  DesktopReleaseChecker({
+    Dio? dio,
+    Duration timeout = desktopReleaseNetworkTimeout,
+  }) : _dio = dio ?? Dio(),
+       _timeout = timeout;
 
   final Dio _dio;
+  final Duration _timeout;
 
   Future<DesktopReleaseInfo?> fetchLatest() async {
-    final response = await _dio.get<List<dynamic>>(
-      desktopReleasesApiUrl,
-      queryParameters: {'per_page': 10},
-      options: Options(
-        headers: {'Accept': 'application/vnd.github+json'},
-        responseType: ResponseType.json,
-      ),
-    );
+    final cancelToken = CancelToken();
+    final response = await _dio
+        .get<List<dynamic>>(
+          desktopReleasesApiUrl,
+          queryParameters: {'per_page': 10},
+          cancelToken: cancelToken,
+          options: Options(
+            connectTimeout: _timeout,
+            receiveTimeout: _timeout,
+            sendTimeout: _timeout,
+            headers: {'Accept': 'application/vnd.github+json'},
+            responseType: ResponseType.json,
+          ),
+        )
+        .timeout(
+          _timeout,
+          onTimeout: () {
+            cancelToken.cancel('Desktop release request timed out');
+            throw TimeoutException(
+              'Desktop release request timed out',
+              _timeout,
+            );
+          },
+        );
+
+    DesktopReleaseInfo? newest;
+    var newestBuild = -1;
     for (final entry in response.data ?? const <dynamic>[]) {
       if (entry is! Map) continue;
       if (entry['draft'] == true) continue;
       final tag = entry['tag_name'];
-      if (tag is! String || tag.isEmpty) continue;
-      // `html_url` arrives over the network, so it only survives if it is an
-      // https GitHub URL with no embedded credentials; anything else falls
-      // back to the compiled-in releases page rather than being launched.
+      if (tag is! String) continue;
+      final build = buildNumberFromTag(tag);
+      // GitHub's API is ordered by publication time, not this app's
+      // monotonic build number. Ignore malformed/unversioned entries while
+      // choosing the highest valid project build.
+      if (build == null || build <= newestBuild) continue;
+
       final htmlUrl = entry['html_url'];
-      final parsed = htmlUrl is String ? safeExternalLinkUri(htmlUrl) : null;
-      final trusted =
-          parsed != null &&
-          parsed.scheme == 'https' &&
-          (parsed.host == 'github.com' || parsed.host.endsWith('.github.com'));
-      return DesktopReleaseInfo(
+      final parsed = htmlUrl is String ? _trustedReleaseUri(htmlUrl) : null;
+      newestBuild = build;
+      newest = DesktopReleaseInfo(
         tag: tag,
-        htmlUrl: trusted ? parsed.toString() : desktopReleasesPageUrl,
+        htmlUrl: parsed?.toString() ?? desktopReleasesPageUrl,
       );
     }
+    return newest;
+  }
+}
+
+Uri? _trustedReleaseUri(String? value) {
+  final parsed = safeExternalLinkUri(value);
+  if (parsed == null ||
+      parsed.scheme != 'https' ||
+      parsed.host.toLowerCase() != 'github.com' ||
+      parsed.hasPort ||
+      parsed.hasQuery ||
+      parsed.fragment.isNotEmpty) {
     return null;
   }
+  final segments = parsed.pathSegments;
+  if (segments.length < 3 ||
+      segments[0].toLowerCase() != _desktopReleaseOwner.toLowerCase() ||
+      segments[1].toLowerCase() != _desktopReleaseRepository.toLowerCase() ||
+      segments[2].toLowerCase() != 'releases' ||
+      (segments.length != 3 &&
+          (segments.length != 5 ||
+              segments[3].toLowerCase() != 'tag' ||
+              segments[4].isEmpty))) {
+    return null;
+  }
+  return parsed;
 }
 
 /// The complement of Shorebird code push: the platforms that ship a release
@@ -99,6 +153,7 @@ class DesktopReleaseNotice extends StatefulWidget {
     this.enabledOverride,
     this.currentBuildNumberLoader,
     this.launcher,
+    this.navigatorKey,
     this.now,
   });
 
@@ -111,6 +166,10 @@ class DesktopReleaseNotice extends StatefulWidget {
   final bool? enabledOverride;
   final Future<int?> Function()? currentBuildNumberLoader;
   final Future<void> Function(Uri url)? launcher;
+
+  /// The Navigator context used by the production external-link confirmation.
+  /// The notice is mounted above the app Navigator in [MaterialApp.builder].
+  final GlobalKey<NavigatorState>? navigatorKey;
   final DateTime Function()? now;
 
   @override
@@ -156,15 +215,12 @@ class _DesktopReleaseNoticeState extends State<DesktopReleaseNotice>
     _lastCheck = now;
     try {
       final currentBuild = await _loadCurrentBuildNumber();
-      if (currentBuild == null) return;
-      final latest =
-          await (widget.checker ?? DesktopReleaseChecker()).fetchLatest();
+      if (currentBuild == null || !mounted) return;
+      final latest = await (widget.checker ?? DesktopReleaseChecker())
+          .fetchLatest();
       if (latest == null || !mounted) return;
-      if (isNewerRelease(
-        currentBuildNumber: currentBuild,
-        tag: latest.tag,
-      )) {
-        _showAvailable(latest);
+      if (isNewerRelease(currentBuildNumber: currentBuild, tag: latest.tag)) {
+        _showAvailable(context, latest);
       }
     } on Exception catch (error) {
       debugPrint('Desktop release check failed: $error');
@@ -173,11 +229,16 @@ class _DesktopReleaseNoticeState extends State<DesktopReleaseNotice>
     }
   }
 
-  void _showAvailable(DesktopReleaseInfo release) {
+  void _showAvailable(BuildContext context, DesktopReleaseInfo release) {
     if (_noticeShown) return;
-    _noticeShown = true;
     final messenger = widget.messengerKey.currentState;
-    if (messenger == null) return;
+    if (!mounted || messenger == null) {
+      // A check that could not reach the messenger did not deliver anything;
+      // let the next resume retry without waiting for the normal throttle.
+      _lastCheck = null;
+      return;
+    }
+    _noticeShown = true;
     messenger.showSnackBar(
       SnackBar(
         duration: const Duration(seconds: 12),
@@ -186,12 +247,20 @@ class _DesktopReleaseNoticeState extends State<DesktopReleaseNotice>
           label: 'View',
           onPressed: () {
             final url =
-                safeExternalLinkUri(release.htmlUrl) ??
+                _trustedReleaseUri(release.htmlUrl) ??
                 Uri.parse(desktopReleasesPageUrl);
-            final launch =
-                widget.launcher ??
-                (uri) => launchUrl(uri, mode: LaunchMode.externalApplication);
-            unawaited(launch(url));
+            if (widget.launcher case final launch?) {
+              // Keep the existing callback as a lightweight test seam. The
+              // production path below always goes through the app's external
+              // link confirmation and URL policy.
+              unawaited(launch(url));
+            } else {
+              final linkContext =
+                  widget.navigatorKey?.currentContext ?? context;
+              if (linkContext.mounted) {
+                unawaited(openExternalLink(linkContext, url.toString()));
+              }
+            }
           },
         ),
       ),

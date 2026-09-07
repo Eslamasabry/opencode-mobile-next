@@ -568,6 +568,7 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
                   messengerKey: _messengerKey,
                   child: DesktopReleaseNotice(
                     messengerKey: _messengerKey,
+                    navigatorKey: _navigatorKey,
                     // Desktop only. On Android this returns its child
                     // untouched, so the touch product gains no key handling.
                     child: AppShortcuts(
