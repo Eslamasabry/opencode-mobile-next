@@ -27,8 +27,10 @@ ServerProbe _probeReturning(Map<String, ServerProbeResult> byUrl) {
   return ({required String baseUrl, String? username, String? password}) async {
     final result = byUrl[baseUrl];
     if (result == null) {
-      fail('The probe was called for an address it should never reach: '
-          '$baseUrl');
+      fail(
+        'The probe was called for an address it should never reach: '
+        '$baseUrl',
+      );
     }
     return result;
   };
@@ -70,9 +72,7 @@ void main() {
 
     test('keeps several addresses in the order the server reported them', () {
       final result = parsePairingPayload(
-        pairJson(
-          urls: ['http://127.0.0.1:4097', 'http://192.0.2.20:4097'],
-        ),
+        pairJson(urls: ['http://127.0.0.1:4097', 'http://192.0.2.20:4097']),
       );
       expect(result.payload!.urls, [
         'http://127.0.0.1:4097',
@@ -292,6 +292,35 @@ void main() {
       expect(payload.urls, isNotEmpty);
     });
 
+    test('toString strips credentials and query secrets from URLs', () {
+      const urlSecret = 'url-query-secret-fixture';
+      final payload = parsePairingPayload(
+        pairJson(
+          urls: [
+            'https://pair-user:pair-password@desk.example:4097/'
+                '?token=$urlSecret#fragment-$urlSecret',
+          ],
+        ),
+      ).payload!;
+
+      final rendered = payload.toString();
+      expect(rendered, contains('https://desk.example:4097'));
+      expect(rendered, isNot(contains('pair-user')));
+      expect(rendered, isNot(contains('pair-password')));
+      expect(rendered, isNot(contains(urlSecret)));
+    });
+
+    test('toString does not echo an untrusted non-default username', () {
+      const usernameSecret = 'username-secret-fixture';
+      final payload = parsePairingPayload(
+        pairJson(username: usernameSecret),
+      ).payload!;
+
+      final rendered = payload.toString();
+      expect(rendered, contains('username: <redacted>'));
+      expect(rendered, isNot(contains(usernameSecret)));
+    });
+
     test('urls cannot be mutated by a caller', () {
       final payload = parsePairingPayload(pairJson()).payload!;
       expect(() => payload.urls.add('https://evil.example'), throwsA(anything));
@@ -329,26 +358,31 @@ void main() {
   group('selectPairingUrl — which address this device should dial', () {
     tearDown(() => debugPlatformCapabilities = null);
 
-    test('a phone prefers a routable address over the server loopback', () async {
-      final payload = parsePairingPayload(
-        pairJson(urls: ['http://127.0.0.1:4097', 'https://desk.example:4097']),
-      ).payload!;
-      var order = <String>[];
-      final selection = await selectPairingUrl(
-        payload,
-        preferLoopback: false,
-        probe: ({required baseUrl, username, password}) async {
-          order.add(baseUrl);
-          return _v2Ok;
-        },
-      );
-      // The server's own 127.0.0.1 is not the phone's; try the routable one
-      // first, and stop as soon as it answers.
-      expect(order, ['https://desk.example:4097']);
-      expect(selection.chosenUrl, 'https://desk.example:4097');
-      expect(selection.ok, isTrue);
-      expect(selection.connected, isTrue);
-    });
+    test(
+      'a phone prefers a routable address over the server loopback',
+      () async {
+        final payload = parsePairingPayload(
+          pairJson(
+            urls: ['http://127.0.0.1:4097', 'https://desk.example:4097'],
+          ),
+        ).payload!;
+        var order = <String>[];
+        final selection = await selectPairingUrl(
+          payload,
+          preferLoopback: false,
+          probe: ({required baseUrl, username, password}) async {
+            order.add(baseUrl);
+            return _v2Ok;
+          },
+        );
+        // The server's own 127.0.0.1 is not the phone's; try the routable one
+        // first, and stop as soon as it answers.
+        expect(order, ['https://desk.example:4097']);
+        expect(selection.chosenUrl, 'https://desk.example:4097');
+        expect(selection.ok, isTrue);
+        expect(selection.connected, isTrue);
+      },
+    );
 
     test('a desktop prefers loopback — the server is this machine', () async {
       final payload = parsePairingPayload(
@@ -387,71 +421,77 @@ void main() {
       expect(onDesktop.chosenUrl, 'http://127.0.0.1:4097');
     });
 
-    test('falls through to the next address when the first is refused',
-        () async {
-      final payload = parsePairingPayload(
-        pairJson(urls: ['https://desk.example:4097', 'http://127.0.0.1:4097']),
-      ).payload!;
-      final selection = await selectPairingUrl(
-        payload,
-        preferLoopback: false,
-        probe: _probeReturning({
-          'https://desk.example:4097': _refused,
-          'http://127.0.0.1:4097': _v2Ok,
-        }),
-      );
-      expect(selection.chosenUrl, 'http://127.0.0.1:4097');
-      expect(selection.connected, isTrue);
-      // The failure of the first is still recorded, so the UI can say which
-      // address it fell back from.
-      final skipped = selection.outcomes.firstWhere(
-        (o) => o.url == 'https://desk.example:4097',
-      );
-      expect(skipped.probed, isTrue);
-      expect(skipped.reason, contains('refused'));
-    });
+    test(
+      'falls through to the next address when the first is refused',
+      () async {
+        final payload = parsePairingPayload(
+          pairJson(
+            urls: ['https://desk.example:4097', 'http://127.0.0.1:4097'],
+          ),
+        ).payload!;
+        final selection = await selectPairingUrl(
+          payload,
+          preferLoopback: false,
+          probe: _probeReturning({
+            'https://desk.example:4097': _refused,
+            'http://127.0.0.1:4097': _v2Ok,
+          }),
+        );
+        expect(selection.chosenUrl, 'http://127.0.0.1:4097');
+        expect(selection.connected, isTrue);
+        // The failure of the first is still recorded, so the UI can say which
+        // address it fell back from.
+        final skipped = selection.outcomes.firstWhere(
+          (o) => o.url == 'https://desk.example:4097',
+        );
+        expect(skipped.probed, isTrue);
+        expect(skipped.reason, contains('refused'));
+      },
+    );
 
-    test('a cleartext LAN address is refused before any request is made',
-        () async {
-      // `opencode service set hostname 0.0.0.0` makes the server print one of
-      // these. Dialing it would send HTTP Basic across the network in clear.
-      final payload = parsePairingPayload(
-        pairJson(
-          urls: ['http://192.0.2.20:4097', 'http://127.0.0.1:4097'],
-        ),
-      ).payload!;
-      final selection = await selectPairingUrl(
-        payload,
-        preferLoopback: false,
-        // Only loopback may be probed; the fake fails the test otherwise.
-        probe: _probeReturning({'http://127.0.0.1:4097': _v2Ok}),
-      );
-      expect(selection.chosenUrl, 'http://127.0.0.1:4097');
-      final lan = selection.outcomes.firstWhere(
-        (o) => o.url == 'http://192.0.2.20:4097',
-      );
-      expect(lan.probed, isFalse);
-      expect(lan.reason, contains('HTTPS is required'));
-      expect(lan.result, isNull);
-    });
+    test(
+      'a cleartext LAN address is refused before any request is made',
+      () async {
+        // `opencode service set hostname 0.0.0.0` makes the server print one of
+        // these. Dialing it would send HTTP Basic across the network in clear.
+        final payload = parsePairingPayload(
+          pairJson(urls: ['http://192.0.2.20:4097', 'http://127.0.0.1:4097']),
+        ).payload!;
+        final selection = await selectPairingUrl(
+          payload,
+          preferLoopback: false,
+          // Only loopback may be probed; the fake fails the test otherwise.
+          probe: _probeReturning({'http://127.0.0.1:4097': _v2Ok}),
+        );
+        expect(selection.chosenUrl, 'http://127.0.0.1:4097');
+        final lan = selection.outcomes.firstWhere(
+          (o) => o.url == 'http://192.0.2.20:4097',
+        );
+        expect(lan.probed, isFalse);
+        expect(lan.reason, contains('HTTPS is required'));
+        expect(lan.result, isNull);
+      },
+    );
 
-    test('a malformed address in the payload is reported, not dialed',
-        () async {
-      final payload = parsePairingPayload(
-        pairJson(urls: ['ftp://desk.example', 'http://127.0.0.1:4097']),
-      ).payload!;
-      final selection = await selectPairingUrl(
-        payload,
-        preferLoopback: false,
-        probe: _probeReturning({'http://127.0.0.1:4097': _v2Ok}),
-      );
-      expect(selection.chosenUrl, 'http://127.0.0.1:4097');
-      final bad = selection.outcomes.firstWhere(
-        (o) => o.url == 'ftp://desk.example',
-      );
-      expect(bad.probed, isFalse);
-      expect(bad.reason, isNotNull);
-    });
+    test(
+      'a malformed address in the payload is reported, not dialed',
+      () async {
+        final payload = parsePairingPayload(
+          pairJson(urls: ['ftp://desk.example', 'http://127.0.0.1:4097']),
+        ).payload!;
+        final selection = await selectPairingUrl(
+          payload,
+          preferLoopback: false,
+          probe: _probeReturning({'http://127.0.0.1:4097': _v2Ok}),
+        );
+        expect(selection.chosenUrl, 'http://127.0.0.1:4097');
+        final bad = selection.outcomes.firstWhere(
+          (o) => o.url == 'ftp://desk.example',
+        );
+        expect(bad.probed, isFalse);
+        expect(bad.reason, isNotNull);
+      },
+    );
 
     test('when nothing answers, the reason is given per address', () async {
       final payload = parsePairingPayload(
@@ -475,6 +515,94 @@ void main() {
       expect(detail, contains('refused'));
       expect(detail, contains('https://desk.example:4097'));
       expect(detail, contains('timed out'));
+    });
+
+    test('failure detail strips URL secrets and arbitrary probe text', () async {
+      const urlSecret = 'url-query-secret-fixture';
+      const probeSecret = 'probe-error-secret-fixture';
+      final payload = parsePairingPayload(
+        pairJson(
+          urls: [
+            'https://pair-user:pair-password@desk.example:4097/'
+                '?token=$urlSecret#fragment-$urlSecret',
+          ],
+        ),
+      ).payload!;
+      final selection = await selectPairingUrl(
+        payload,
+        preferLoopback: false,
+        probe: ({required baseUrl, username, password}) async =>
+            ServerProbeResult.failure(probeSecret),
+      );
+
+      final detail = selection.failureDetail;
+      expect(detail, contains('https://desk.example:4097'));
+      expect(detail, isNot(contains('pair-user')));
+      expect(detail, isNot(contains('pair-password')));
+      expect(detail, isNot(contains(urlSecret)));
+      expect(detail, isNot(contains(probeSecret)));
+
+      final manuallyConstructed = PairingSelection(
+        outcomes: [
+          PairingUrlOutcome(
+            url:
+                'https://pair-user:pair-password@desk.example:4097/?token=$urlSecret',
+            probed: true,
+            reason: probeSecret,
+          ),
+        ],
+      );
+      expect(manuallyConstructed.failureDetail, isNot(contains(probeSecret)));
+      expect(manuallyConstructed.failureDetail, isNot(contains(urlSecret)));
+    });
+
+    test(
+      'failure detail keeps a safe bracketed IPv6 origin readable',
+      () async {
+        final payload = parsePairingPayload(
+          pairJson(urls: ['https://[2001:db8::1]:4097']),
+        ).payload!;
+        final selection = await selectPairingUrl(
+          payload,
+          preferLoopback: false,
+          probe: ({required baseUrl, username, password}) async => _timedOut,
+        );
+
+        expect(selection.failureDetail, contains('https://[2001:db8::1]:4097'));
+      },
+    );
+
+    test('a thrown probe is isolated and the next address is tried', () async {
+      const probeSecret = 'probe-thrown-secret-fixture';
+      final payload = parsePairingPayload(
+        pairJson(
+          urls: ['https://first.example:4097', 'https://second.example:4097'],
+        ),
+      ).payload!;
+      final order = <String>[];
+      final selection = await selectPairingUrl(
+        payload,
+        preferLoopback: false,
+        probe: ({required baseUrl, username, password}) async {
+          order.add(baseUrl);
+          if (baseUrl.contains('first')) {
+            throw StateError(probeSecret);
+          }
+          return _v2Ok;
+        },
+      );
+
+      expect(order, [
+        'https://first.example:4097',
+        'https://second.example:4097',
+      ]);
+      expect(selection.chosenUrl, 'https://second.example:4097');
+      expect(selection.connected, isTrue);
+      final failed = selection.outcomes.firstWhere(
+        (outcome) => outcome.url == 'https://first.example:4097',
+      );
+      expect(failed.reason, contains('failed before'));
+      expect(failed.reason, isNot(contains(probeSecret)));
     });
 
     test('an address that answers 401 is still the right host', () async {
@@ -545,24 +673,28 @@ void main() {
       expect(selection.chosenUrl, 'http://127.0.0.1:4097');
     });
 
-    test('every address rejected up front still yields per-address reasons',
-        () async {
-      final payload = parsePairingPayload(
-        pairJson(urls: ['http://192.0.2.20:4097', 'http://198.51.100.4:4097']),
-      ).payload!;
-      final selection = await selectPairingUrl(
-        payload,
-        preferLoopback: false,
-        probe: ({required baseUrl, username, password}) async {
-          fail('No address here is safe to dial: $baseUrl');
-        },
-      );
-      expect(selection.ok, isFalse);
-      expect(selection.outcomes, hasLength(2));
-      expect(selection.outcomes.every((o) => !o.probed), isTrue);
-      expect(selection.failureDetail, contains('192.0.2.20'));
-      expect(selection.failureDetail, contains('198.51.100.4'));
-    });
+    test(
+      'every address rejected up front still yields per-address reasons',
+      () async {
+        final payload = parsePairingPayload(
+          pairJson(
+            urls: ['http://192.0.2.20:4097', 'http://198.51.100.4:4097'],
+          ),
+        ).payload!;
+        final selection = await selectPairingUrl(
+          payload,
+          preferLoopback: false,
+          probe: ({required baseUrl, username, password}) async {
+            fail('No address here is safe to dial: $baseUrl');
+          },
+        );
+        expect(selection.ok, isFalse);
+        expect(selection.outcomes, hasLength(2));
+        expect(selection.outcomes.every((o) => !o.probed), isTrue);
+        expect(selection.failureDetail, contains('192.0.2.20'));
+        expect(selection.failureDetail, contains('198.51.100.4'));
+      },
+    );
   });
 
   group('orderPairingCandidates', () {
@@ -589,17 +721,14 @@ void main() {
 
     test('is stable within each group', () {
       const urls = ['https://b.example', 'https://a.example'];
-      expect(
-        orderPairingCandidates(urls, preferLoopback: false),
-        urls,
-      );
+      expect(orderPairingCandidates(urls, preferLoopback: false), urls);
     });
 
     test('an unparseable address is treated as routable, not dropped', () {
-      final ordered = orderPairingCandidates(
-        const ['::::', 'http://127.0.0.1:4097'],
-        preferLoopback: true,
-      );
+      final ordered = orderPairingCandidates(const [
+        '::::',
+        'http://127.0.0.1:4097',
+      ], preferLoopback: true);
       expect(ordered, hasLength(2));
       expect(ordered.first, 'http://127.0.0.1:4097');
     });

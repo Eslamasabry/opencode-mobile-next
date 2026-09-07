@@ -89,11 +89,12 @@ class PairingPayload {
   /// written into the field or profile that owns it.
   void consume() => _password = null;
 
-  /// Redacted on purpose: see the class comment. `urls` and `username` are
-  /// not secret and are the two things worth seeing in a diagnostic.
+  /// Redacted on purpose: see the class comment. Only the default username is
+  /// useful in a diagnostic; arbitrary payload usernames are untrusted too.
   @override
   String toString() =>
-      'PairingPayload(urls: $urls, username: $username, '
+      'PairingPayload(urls: ${urls.map(_safePairingUrlForDisplay).toList()}, '
+      'username: ${username == pairingDefaultUsername ? username : '<redacted>'}, '
       'password: ${isConsumed ? '<consumed>' : '<redacted>'})';
 }
 
@@ -272,8 +273,7 @@ class PairingUrlOutcome {
   /// 401, 503 — is what separates "the server is there" from "nothing is
   /// listening", and it is the distinction the user needs.
   bool get answered =>
-      result != null &&
-      (result!.ok || result!.flavor != ServerFlavor.unknown);
+      result != null && (result!.ok || result!.flavor != ServerFlavor.unknown);
 }
 
 /// The result of trying every address in a pairing payload.
@@ -305,8 +305,104 @@ class PairingSelection {
   /// bind the service to the network depends entirely on *which* address
   /// failed and how. So each address gets its own line.
   String get failureDetail => outcomes
-      .map((o) => '${o.url} — ${o.reason ?? 'Did not answer.'}')
+      .map(
+        (o) =>
+            '${_safePairingUrlForDisplay(o.url)} — ${_safePairingOutcomeReason(o)}',
+      )
       .join('\n');
+}
+
+/// Produces the only URL form allowed in pairing diagnostics.
+///
+/// Pairing data is untrusted input. A URL can carry a username/password in
+/// userinfo, or secrets in a query or fragment. Invalid values are replaced
+/// wholesale so even a malformed string cannot smuggle a credential into a
+/// crash report or the pairing failure panel.
+String _safePairingUrlForDisplay(String value) {
+  if (value.trim().isEmpty || value.length > 2048) {
+    return '<invalid address>';
+  }
+  try {
+    final normalized = normalizeServerProfileUrl(value);
+    final uri = Uri.tryParse(normalized);
+    if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
+      return '<invalid address>';
+    }
+    final host = uri.host.contains(':') && !uri.host.startsWith('[')
+        ? '[${uri.host}]'
+        : uri.host;
+    final port = uri.hasPort ? ':${uri.port}' : '';
+    return '${uri.scheme}://$host$port';
+  } on Object {
+    return '<invalid address>';
+  }
+}
+
+const _probeThrewReason =
+    'The connection test failed before the server could be checked. Try another address.';
+const _probeUnknownReason =
+    'The address did not answer as an OpenCode server. Check the address and try again.';
+const _probeNoServerReason =
+    'The server did not answer. Check that opencode serve is running on that address.';
+const _probePasswordReason =
+    'Password rejected. Check the pairing code and try again.';
+const _invalidPairingAddressReason =
+    'That pairing code contains an unusable server address.';
+
+/// Keeps known probe verdicts useful while refusing arbitrary probe text.
+///
+/// [ServerProbe] is an injectable seam, and a future implementation may
+/// accidentally include an address or an exception in `message`. Selection
+/// must never copy that text into user-visible diagnostics.
+String _safePairingProbeReason(ServerProbeResult result) {
+  if (result.needsPassword) return _probePasswordReason;
+  final message = result.message;
+  const knownSafeMessages = <String>{
+    'The connection was refused. Is opencode serve running on that host and '
+        'port?',
+    'The connection timed out. Check the address, and that the server is '
+        'reachable from this phone.',
+    'That host name could not be found. Check the address spelling.',
+    'The server’s TLS certificate was rejected. Use a certificate this phone '
+        'trusts.',
+    'The server responded but reported itself unhealthy. Check its logs, then '
+        'try again.',
+    'The server is starting. Try again in a moment.',
+  };
+  if (message != null && knownSafeMessages.contains(message)) return message;
+  if (result.suggestsMissingServer) return _probeNoServerReason;
+  if (result.flavor != ServerFlavor.unknown) return _probeUnknownReason;
+  return _probeUnknownReason;
+}
+
+/// Applies the same allowlist at the diagnostic boundary as the probe path.
+/// This also protects callers that construct [PairingSelection] directly.
+String _safePairingOutcomeReason(PairingUrlOutcome outcome) {
+  if (outcome.result != null) {
+    if (outcome.result!.ok) return 'Did not answer.';
+    return _safePairingProbeReason(outcome.result!);
+  }
+  const knownSafeReasons = <String>{
+    'Did not answer.',
+    _invalidPairingAddressReason,
+    _probeThrewReason,
+    'Enter a server URL.',
+    'Include https://. Use http:// only for localhost, 127.0.0.1, or [::1].',
+    'Enter a complete server URL, such as https://server.example:4096.',
+    'Server URLs must use https://, or http:// for local Termux.',
+    'Server URLs must use https://, or http:// for a local server.',
+    'Do not put credentials in the URL. Use the fields below.',
+    'Remove query parameters and fragments from the server URL.',
+    'Remove the path from the server URL. Enter only its origin.',
+    'HTTPS is required outside this device. Basic credentials must never be '
+        'sent over HTTP.',
+    'HTTP is allowed only for localhost, 127.0.0.1, or [::1]. Use HTTPS for '
+        'LAN and remote servers.',
+  };
+  final reason = outcome.reason;
+  if (reason == null) return 'Did not answer.';
+  if (knownSafeReasons.contains(reason)) return reason;
+  return _invalidPairingAddressReason;
 }
 
 /// Orders a payload's addresses by how likely this device is to reach them.
@@ -327,8 +423,15 @@ List<String> orderPairingCandidates(
   final loopback = <String>[];
   final routable = <String>[];
   for (final url in urls) {
-    final host = Uri.tryParse(url)?.host ?? '';
-    (isLoopbackHost(host) ? loopback : routable).add(url);
+    var isLoopback = false;
+    try {
+      final host = Uri.tryParse(url)?.host ?? '';
+      isLoopback = isLoopbackHost(host);
+    } on Object {
+      // Keep a malformed untrusted candidate in the list; selection will
+      // report it rather than allowing ordering itself to abort the scan.
+    }
+    (isLoopback ? loopback : routable).add(url);
   }
   return preferLoopback
       ? [...loopback, ...routable]
@@ -366,38 +469,57 @@ Future<PairingSelection> selectPairingUrl(
   final outcomes = <PairingUrlOutcome>[];
   final candidates = <String>[];
   for (final raw in payload.urls) {
-    final url = normalizeServerProfileUrl(raw);
-    final invalid = validateServerProfileUrl(
-      url,
-      username: username,
-      password: password,
-    );
-    if (invalid != null) {
+    late final String url;
+    try {
+      url = normalizeServerProfileUrl(raw);
+    } on Object {
       outcomes.add(
-        PairingUrlOutcome(url: url, probed: false, reason: invalid),
+        PairingUrlOutcome(
+          url: raw.trim(),
+          probed: false,
+          reason: _invalidPairingAddressReason,
+        ),
       );
+      continue;
+    }
+    String? invalid;
+    try {
+      invalid = validateServerProfileUrl(
+        url,
+        username: username,
+        password: password,
+      );
+    } on Object {
+      invalid = _invalidPairingAddressReason;
+    }
+    if (invalid != null) {
+      outcomes.add(PairingUrlOutcome(url: url, probed: false, reason: invalid));
       continue;
     }
     candidates.add(url);
   }
 
-  for (final url in orderPairingCandidates(
+  final orderedCandidates = orderPairingCandidates(
     candidates,
     preferLoopback: preferLocal,
-  )) {
-    final result = await runProbe(
-      baseUrl: url,
-      username: username,
-      password: password,
-    );
+  );
+  for (final url in orderedCandidates) {
+    final ServerProbeResult result;
+    try {
+      result = await runProbe(
+        baseUrl: url,
+        username: username,
+        password: password,
+      );
+    } on Object {
+      outcomes.add(
+        PairingUrlOutcome(url: url, probed: true, reason: _probeThrewReason),
+      );
+      continue;
+    }
     if (result.ok) {
       outcomes.add(
-        PairingUrlOutcome(
-          url: url,
-          probed: true,
-          reason: null,
-          result: result,
-        ),
+        PairingUrlOutcome(url: url, probed: true, reason: null, result: result),
       );
       return PairingSelection(
         outcomes: outcomes,
@@ -409,7 +531,7 @@ Future<PairingSelection> selectPairingUrl(
       PairingUrlOutcome(
         url: url,
         probed: true,
-        reason: result.message,
+        reason: _safePairingProbeReason(result),
         result: result,
       ),
     );
