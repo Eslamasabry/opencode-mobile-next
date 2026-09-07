@@ -439,6 +439,9 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n =
+        Localizations.of<AppLocalizations>(context, AppLocalizations) ??
+        lookupAppLocalizations(Localizations.localeOf(context));
     return Scaffold(
       appBar: AppBar(title: const Text('All sessions')),
       body: Column(
@@ -457,7 +460,7 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
                 suffixIcon: _search.text.isEmpty
                     ? null
                     : IconButton(
-                        tooltip: 'Clear session search',
+                        tooltip: l10n.commonClearSearch,
                         onPressed: () {
                           _search.clear();
                           _debounce?.cancel();
@@ -518,6 +521,9 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
   }
 
   Widget _content() {
+    final l10n =
+        Localizations.of<AppLocalizations>(context, AppLocalizations) ??
+        lookupAppLocalizations(Localizations.localeOf(context));
     if (_loading && _results.isEmpty) return const LoadingList(rows: 7);
     if (_error != null && _results.isEmpty) {
       return ProductErrorState(
@@ -533,7 +539,7 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
         message: query.isEmpty
             ? 'Sessions from every OpenCode project will appear here.'
             : 'Try a shorter title search or include archived sessions.',
-        actionLabel: query.isEmpty ? 'Refresh' : 'Clear search',
+        actionLabel: query.isEmpty ? 'Refresh' : l10n.commonClearSearch,
         onAction: query.isEmpty
             ? _reload
             : () {
@@ -575,7 +581,7 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
                   onPressed: _errorWasRefresh || _restartPagination
                       ? _reload
                       : _loadMore,
-                  child: const Text('Try again'),
+                  child: Text(l10n.commonRetry),
                 ),
               );
             }

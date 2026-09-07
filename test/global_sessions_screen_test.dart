@@ -223,7 +223,7 @@ void main() {
     expect(find.text('Session 1'), findsOneWidget);
     expect(find.text('Next page unavailable'), findsOneWidget);
     fail = false;
-    await tester.tap(find.text('Try again'));
+    await tester.tap(find.text('Retry'));
     await tester.pumpAndSettle();
     expect(repository.calls.map((query) => query.cursor), [
       null,
@@ -260,7 +260,7 @@ void main() {
     expect(find.text('Temporary refresh failure'), findsOneWidget);
     expect(find.text('Could not refresh sessions.'), findsOneWidget);
 
-    await tester.tap(find.text('Try again'));
+    await tester.tap(find.text('Retry'));
     await tester.pumpAndSettle();
     expect(find.text('Session 2'), findsOneWidget);
     expect(find.text('Session 1'), findsNothing);
@@ -340,7 +340,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('could not advance'), findsOneWidget);
     expect(repository.calls, hasLength(2));
-    await tester.tap(find.text('Try again'));
+    await tester.tap(find.text('Retry'));
     await tester.pumpAndSettle();
     expect(repository.calls.last.cursor, isNull);
   });
@@ -379,6 +379,35 @@ void main() {
     expect(find.text('Session 2'), findsOneWidget);
     expect(find.textContaining('Archived'), findsOneWidget);
   });
+
+  testWidgets(
+    'accessible clear search resets the query and reloads all sessions',
+    (tester) async {
+      final repository = _FinderRepository(
+        (query) async => [_result(query.search?.isEmpty == true ? 1 : 9)],
+      );
+      final controller = await _controller(repository);
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(_app(controller));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('global-session-search')),
+        'wake cycle',
+      );
+      await tester.pump(const Duration(milliseconds: 301));
+      await tester.pumpAndSettle();
+      expect(repository.calls.last.search, 'wake cycle');
+      expect(find.byTooltip('Clear search'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Clear search'));
+      await tester.pumpAndSettle();
+
+      expect(repository.calls.last.search, '');
+      expect(find.text('Session 1'), findsOneWidget);
+      expect(find.text('Session 9'), findsNothing);
+    },
+  );
 
   testWidgets('finder paginates with the exact opaque server token', (
     tester,
