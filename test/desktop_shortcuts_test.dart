@@ -511,7 +511,12 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.more_vert));
+      final appMenu = find.descendant(
+        of: find.byType(AppBar),
+        matching: find.byType(PopupMenuButton<String>),
+      );
+      expect(appMenu.hitTestable(), findsOneWidget);
+      await tester.tap(appMenu);
       await tester.pumpAndSettle();
 
       expect(find.text('Refresh'), findsWidgets);
