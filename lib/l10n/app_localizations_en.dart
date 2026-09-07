@@ -438,6 +438,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get globalSessionsLoadMore => 'Load more sessions';
 
   @override
+  String get globalSessionsRefreshFailed => 'Could not refresh sessions.';
+
+  @override
+  String get workspaceSearchAllSessions => 'Search all sessions';
+
+  @override
+  String get workspaceProjectListUnavailable => 'Project list unavailable';
+
+  @override
+  String get workspaceProjectListFallback =>
+      'Your conversations can still be available. Search all sessions to find previous work.';
+
+  @override
+  String get workspaceRetryProjects => 'Retry projects';
+
+  @override
   String get historyLoadOlder => 'Load older messages';
 
   @override
@@ -1261,6 +1277,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get digestIdle => 'Server idle recorded · outcome unverified';
 
   @override
+  String get digestStatusUnverified =>
+      'Server reported idle. Success or failure is not verified.';
+
+  @override
+  String get digestChangedFilesUnknown => 'Changed files: unknown.';
+
+  @override
+  String digestChangedFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count changed files in the session total; this run is unknown.',
+      one: '1 changed file in the session total; this run is unknown.',
+      zero: 'No changed files in the session total; this run is unknown.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get digestPendingDecisionsUnknown => 'Pending decisions: unknown.';
+
+  @override
+  String digestPendingDecisions(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count pending decisions in the current cache.',
+      one: '1 pending decision in the current cache.',
+      zero: 'No pending decisions in the current cache.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get digestOutcomesUnknown =>
+      'Tool outcomes and remaining tasks: unknown.';
+
+  @override
+  String get digestProvenance =>
+      'Cached server metadata only. No AI summary or model call. Open the conversation to verify results and review changes or tasks.';
+
+  @override
   String get digestOpenConversation => 'Open conversation';
 
   @override
@@ -1268,6 +1326,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get digestCopy => 'Copy digest';
+
+  @override
+  String get digestCopySucceeded => 'Digest copied';
 
   @override
   String get digestCopyFailed => 'Could not copy digest';
@@ -1759,6 +1820,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mcpLoadFailed => 'Could not refresh MCP data. Try again.';
 
   @override
+  String get mcpSavedStatus => 'Saved in OpenCode';
+
+  @override
+  String get mcpConnectionUnconfirmed => 'App connection not confirmed';
+
+  @override
+  String get mcpRetryReconnect => 'Retry reconnect';
+
+  @override
+  String get mcpReconnecting => 'Reconnecting';
+
+  @override
+  String get mcpStillDisconnected =>
+      'OpenCode is still disconnected. Try again.';
+
+  @override
   String get mcpScopeChanged =>
       'The server or project changed. Refresh to load its MCP servers before making changes.';
 
@@ -2192,6 +2269,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quotaSource => 'Collector server';
+
+  @override
+  String quotaSourceTitle(String profile, String provider) {
+    return '$profile · $provider';
+  }
 
   @override
   String get quotaUnknownSource => 'No saved server';
@@ -2841,6 +2923,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get monitorUnknownServers => 'Servers with unknown attention';
+
+  @override
+  String monitorPendingSummary(int pendingCount, int unknownCount) {
+    return 'Current pending requests: $pendingCount\nServers with unknown attention: $unknownCount';
+  }
+
+  @override
+  String monitorRequestSummary(
+    String profile,
+    String kind,
+    String lastChecked,
+    String time,
+  ) {
+    return '$profile · $kind\n$lastChecked: $time';
+  }
+
+  @override
+  String monitorLabeledTime(String label, String time) {
+    return '$label: $time';
+  }
 
   @override
   String get monitorSelected => 'Selected location';

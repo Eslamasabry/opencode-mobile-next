@@ -136,7 +136,10 @@ class ProfileMonitorInbox extends StatelessWidget {
           leading: const Icon(Icons.dns_outlined),
           title: Text(l10n.monitorTitle),
           subtitle: Text(
-            '${l10n.monitorPending}: ${controller.unifiedAttentionCount}\n${l10n.monitorUnknownServers}: ${controller.unknownAttentionProfileCount}',
+            l10n.monitorPendingSummary(
+              controller.unifiedAttentionCount,
+              controller.unknownAttentionProfileCount,
+            ),
           ),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => Navigator.of(context).push(
@@ -192,11 +195,16 @@ class _MonitorRequestRow extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: Text(
-          '${profile.name} · ${switch (request.kind) {
-            MonitoredRequestKind.permission => l10n.monitorPermission,
-            MonitoredRequestKind.question => l10n.monitorQuestion,
-            MonitoredRequestKind.form => l10n.monitorForm,
-          }}\n${l10n.monitorLastChecked}: ${_time(context, checked)}',
+          l10n.monitorRequestSummary(
+            profile.name,
+            switch (request.kind) {
+              MonitoredRequestKind.permission => l10n.monitorPermission,
+              MonitoredRequestKind.question => l10n.monitorQuestion,
+              MonitoredRequestKind.form => l10n.monitorForm,
+            },
+            l10n.monitorLastChecked,
+            _time(context, checked),
+          ),
         ),
         onTap: () => openMonitoredRequest(
           context,
@@ -328,10 +336,16 @@ class _MonitorProfileState extends State<_MonitorProfile> {
         ),
         if (rules.enabled) ...[
           Text(
-            '${l10n.monitorLastChecked}: ${_time(context, snapshot.checkedAt)}',
+            l10n.monitorLabeledTime(
+              l10n.monitorLastChecked,
+              _time(context, snapshot.checkedAt),
+            ),
           ),
           Text(
-            '${l10n.monitorNextCheck}: ${_time(context, snapshot.nextCheckAt)}',
+            l10n.monitorLabeledTime(
+              l10n.monitorNextCheck,
+              _time(context, snapshot.nextCheckAt),
+            ),
           ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,

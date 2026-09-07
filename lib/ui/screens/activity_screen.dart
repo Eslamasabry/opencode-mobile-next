@@ -458,6 +458,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   key: ValueKey('activity-all-clear'),
                   icon: Icons.task_alt_rounded,
                   title: 'All clear',
+                  scrollable: false,
                   message:
                       'Nothing needs you right now. Permission requests, '
                       'questions, and running sessions appear here the '

@@ -22,6 +22,28 @@ class GlobalSessionsScreen extends StatefulWidget {
   State<GlobalSessionsScreen> createState() => _GlobalSessionsScreenState();
 }
 
+class _GlobalSessionsScope {
+  const _GlobalSessionsScope({
+    required this.profileID,
+    required this.query,
+    required this.includeArchived,
+  });
+
+  final String? profileID;
+  final String query;
+  final bool includeArchived;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _GlobalSessionsScope &&
+      other.profileID == profileID &&
+      other.query == query &&
+      other.includeArchived == includeArchived;
+
+  @override
+  int get hashCode => Object.hash(profileID, query, includeArchived);
+}
+
 class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
   static const _pageSize = 50;
 
@@ -43,7 +65,25 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
   int _dataRefreshRevision = 0;
   ServerOperationsGateway? _activeRepository;
   String? _profileID;
+  _GlobalSessionsScope? _loadedScope;
+  bool _errorWasRefresh = false;
   final Map<String, FocusNode> _rowFocus = {};
+
+  _GlobalSessionsScope get _scope => _GlobalSessionsScope(
+    profileID: widget.controller.profile?.id,
+    query: _search.text.trim(),
+    includeArchived: _includeArchived,
+  );
+
+  bool _requestIsCurrent(
+    int generation,
+    _GlobalSessionsScope scope,
+    ServerOperationsGateway repository,
+  ) =>
+      mounted &&
+      generation == _queryGeneration &&
+      scope == _scope &&
+      identical(repository, widget.controller.repository);
 
   @override
   void initState() {
@@ -61,18 +101,24 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
     final revision = widget.controller.dataRefreshRevision;
     final repository = widget.controller.repository;
     final profileID = widget.controller.profile?.id;
+    final profileChanged = profileID != _profileID;
+    final repositoryChanged = !identical(repository, _activeRepository);
     // Location selection and chat refreshes must not discard older pages.
     if ((_openingSessionID != null || _stealingSessionID != null) &&
-        profileID == _profileID) {
+        !profileChanged &&
+        !repositoryChanged) {
       _dataRefreshRevision = revision;
       _activeRepository = repository;
       return;
     }
     if (revision == _dataRefreshRevision &&
-        identical(repository, _activeRepository) &&
-        profileID == _profileID) {
+        !repositoryChanged &&
+        !profileChanged) {
       return;
     }
+    // A replacement transport must retire delayed pages even though the
+    // server-wide list remains logically scoped to the same profile.
+    if (repositoryChanged || profileChanged) _queryGeneration++;
     if (profileID == _profileID && _results.isNotEmpty) {
       // The global inventory is profile-scoped, not location-scoped. Keep the
       // search, cursor chain and loaded older rows until an explicit refresh.
@@ -80,7 +126,16 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
       _activeRepository = repository;
       // Rebuild callbacks against the current location after reconnecting.
       // Keeping the rows must not keep their retired navigation guards.
-      setState(() {});
+      setState(() {
+        // A replacement repository retires any request it was serving. The
+        // retained rows and cursor chain remain available for a retry.
+        if (repositoryChanged) {
+          _loading = false;
+          _loadingMore = false;
+          _error = null;
+          _errorWasRefresh = false;
+        }
+      });
       return;
     }
     _dataRefreshRevision = revision;
@@ -111,6 +166,14 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
       _loading = true;
       _loadingMore = false;
       _nextCursor = null;
+      _usedCursors.clear();
+      _restartPagination = false;
+      _error = null;
+      _errorWasRefresh = false;
+      if (_loadedScope != _scope) {
+        _results = const [];
+        _loadedScope = null;
+      }
     });
   }
 
@@ -122,40 +185,63 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
 
   Future<void> _reload() async {
     final generation = ++_queryGeneration;
-    final query = _search.text.trim();
-    final includeArchived = _includeArchived;
+    final scope = _scope;
+    final retainRows = _loadedScope == scope && _results.isNotEmpty;
+    final previousCursor = _nextCursor;
+    final previousCursors = Set<String>.of(_usedCursors);
+    final previousRestartPagination = _restartPagination;
     setState(() {
       _loading = true;
       _loadingMore = false;
       _error = null;
-      _nextCursor = null;
-      _usedCursors.clear();
-      _restartPagination = false;
+      _errorWasRefresh = false;
+      if (!retainRows) {
+        _nextCursor = null;
+        _usedCursors.clear();
+        _restartPagination = false;
+        _results = const [];
+        _loadedScope = null;
+      }
     });
     try {
       final repository = await _repository();
-      if (!mounted || generation != _queryGeneration) return;
+      if (!_requestIsCurrent(generation, scope, repository)) return;
       final results = await repository.listGlobalSessions(
-        search: query,
-        includeArchived: includeArchived,
+        search: scope.query,
+        includeArchived: scope.includeArchived,
         limit: _pageSize,
       );
-      if (!mounted || generation != _queryGeneration) return;
+      if (!_requestIsCurrent(generation, scope, repository)) return;
       setState(() {
         final seen = <String>{};
         _results = results.items
             .where((result) => seen.add(result.session.id))
             .toList();
         _nextCursor = results.hasMore ? results.nextCursor : null;
+        _usedCursors.clear();
+        _restartPagination = false;
+        _loadedScope = scope;
       });
     } catch (error) {
-      if (!mounted || generation != _queryGeneration) return;
+      if (!mounted || generation != _queryGeneration || scope != _scope) {
+        return;
+      }
       setState(() {
-        _results = const [];
+        if (retainRows) {
+          _nextCursor = previousCursor;
+          _usedCursors
+            ..clear()
+            ..addAll(previousCursors);
+          _restartPagination = previousRestartPagination;
+          _errorWasRefresh = true;
+        } else {
+          _results = const [];
+          _loadedScope = null;
+        }
         _error = error;
       });
     } finally {
-      if (mounted && generation == _queryGeneration) {
+      if (mounted && generation == _queryGeneration && scope == _scope) {
         setState(() => _loading = false);
       }
     }
@@ -163,24 +249,24 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
 
   Future<void> _loadMore() async {
     final generation = _queryGeneration;
+    final scope = _scope;
     final cursor = _nextCursor;
     if (_loading || _loadingMore || !_hasMore || cursor == null) return;
-    final query = _search.text.trim();
-    final includeArchived = _includeArchived;
     setState(() {
       _loadingMore = true;
       _error = null;
+      _errorWasRefresh = false;
     });
     try {
       final repository = await _repository();
-      if (!mounted || generation != _queryGeneration) return;
+      if (!_requestIsCurrent(generation, scope, repository)) return;
       final page = await repository.listGlobalSessions(
-        search: query,
-        includeArchived: includeArchived,
+        search: scope.query,
+        includeArchived: scope.includeArchived,
         cursor: cursor,
         limit: _pageSize,
       );
-      if (!mounted || generation != _queryGeneration) return;
+      if (!_requestIsCurrent(generation, scope, repository)) return;
       final existing = _results.map((result) => result.session.id).toSet();
       final added = page.items
           .where((result) => existing.add(result.session.id))
@@ -199,11 +285,11 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
         _nextCursor = nextCursor;
       });
     } catch (error) {
-      if (mounted && generation == _queryGeneration) {
+      if (mounted && generation == _queryGeneration && scope == _scope) {
         setState(() => _error = error);
       }
     } finally {
-      if (mounted && generation == _queryGeneration) {
+      if (mounted && generation == _queryGeneration && scope == _scope) {
         setState(() => _loadingMore = false);
       }
     }
@@ -432,7 +518,7 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
   }
 
   Widget _content() {
-    if (_loading) return const LoadingList(rows: 7);
+    if (_loading && _results.isEmpty) return const LoadingList(rows: 7);
     if (_error != null && _results.isEmpty) {
       return ProductErrorState(
         message: productErrorText(_error!),
@@ -458,7 +544,7 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
       );
     }
 
-    final extraRows = (_error != null || _hasMore) ? 1 : 0;
+    final extraRows = (_error != null || _hasMore || _loading) ? 1 : 0;
     return RefreshIndicator(
       onRefresh: _reload,
       child: ListView.separated(
@@ -477,11 +563,30 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
                   Icons.error_outline_rounded,
                   color: Theme.of(context).colorScheme.error,
                 ),
-                title: const Text('Could not load more sessions'),
+                title: Text(
+                  _errorWasRefresh
+                      ? lookupAppLocalizations(
+                          Localizations.localeOf(context),
+                        ).globalSessionsRefreshFailed
+                      : 'Could not load more sessions',
+                ),
                 subtitle: Text(productErrorText(_error!)),
                 trailing: TextButton(
-                  onPressed: _restartPagination ? _reload : _loadMore,
+                  onPressed: _errorWasRefresh || _restartPagination
+                      ? _reload
+                      : _loadMore,
                   child: const Text('Try again'),
+                ),
+              );
+            }
+            if (_loading) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 18),
+                child: Center(
+                  child: SizedBox.square(
+                    dimension: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
                 ),
               );
             }

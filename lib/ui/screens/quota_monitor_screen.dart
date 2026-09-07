@@ -118,7 +118,10 @@ class _SourceState extends State<_Source> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          '${profile.name} · ${quotaProviderLabel(l10n, target.provider)}',
+          l10n.quotaSourceTitle(
+            profile.name,
+            quotaProviderLabel(l10n, target.provider),
+          ),
           style: Theme.of(context).textTheme.titleMedium,
         ),
         Text(_sourceOrigin(profile.baseUrl, l10n.quotaUnknownSource)),

@@ -90,6 +90,14 @@ class _FinderController extends ConnectionController {
     dataRefreshRevision += 1;
     notifyListeners();
   }
+
+  Future<void> signalProfile(String id, ProductRepository value) async {
+    await store.upsert(
+      ServerProfile(id: id, name: 'Profile $id', baseUrl: 'http://localhost'),
+    );
+    await store.setActiveId(id);
+    signalRepository(value);
+  }
 }
 
 GlobalSessionResult _result(
@@ -225,6 +233,39 @@ void main() {
     expect(find.text('Session 2'), findsOneWidget);
   });
 
+  testWidgets('failed refresh preserves rows and offers a refresh retry', (
+    tester,
+  ) async {
+    var calls = 0;
+    final repository = _FinderRepository((_) async {
+      calls += 1;
+      if (calls == 1) return [_result(1)];
+      if (calls == 2) {
+        throw const ProductException('Temporary refresh failure');
+      }
+      return [_result(2)];
+    });
+    final controller = await _controller(repository);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+    await tester.drag(
+      find.byKey(const PageStorageKey('global-sessions-list')),
+      const Offset(0, 320),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Session 1'), findsOneWidget);
+    expect(find.text('Temporary refresh failure'), findsOneWidget);
+    expect(find.text('Could not refresh sessions.'), findsOneWidget);
+
+    await tester.tap(find.text('Try again'));
+    await tester.pumpAndSettle();
+    expect(find.text('Session 2'), findsOneWidget);
+    expect(find.text('Session 1'), findsNothing);
+  });
+
   testWidgets('editing query invalidates a pending page before debounce', (
     tester,
   ) async {
@@ -253,6 +294,35 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Session 99'), findsOneWidget);
     expect(find.text('Session 1'), findsNothing);
+  });
+
+  testWidgets('profile switch retires a delayed page from the old scope', (
+    tester,
+  ) async {
+    final pending = Completer<ServerPage<GlobalSessionResult>>();
+    final oldRepository = _FinderRepository.pages((query) async {
+      if (query.cursor == null) {
+        return ServerPage(items: [_result(1)], nextCursor: 'old-token');
+      }
+      return pending.future;
+    });
+    final newRepository = _FinderRepository((_) async => [_result(99)]);
+    final controller = await _controller(oldRepository);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('global-sessions-load-more')));
+    await tester.pump();
+
+    await controller.signalProfile('other-server', newRepository);
+    await tester.pumpAndSettle();
+    pending.complete(ServerPage(items: [_result(2)]));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Session 99'), findsOneWidget);
+    expect(find.text('Session 1'), findsNothing);
+    expect(find.text('Session 2'), findsNothing);
   });
 
   testWidgets('repeated server cursor offers a restart instead of looping', (
@@ -462,6 +532,40 @@ void main() {
     await tester.tap(find.text('Session 1'));
     await tester.pumpAndSettle();
     expect(find.text('Opened session'), findsOneWidget);
+  });
+
+  testWidgets('repository replacement retires a pending page and keeps retry', (
+    tester,
+  ) async {
+    final pending = Completer<ServerPage<GlobalSessionResult>>();
+    final retained = _FinderRepository.pages((query) async {
+      if (query.cursor == null) {
+        return ServerPage(items: [_result(1)], nextCursor: 'retry-token');
+      }
+      return pending.future;
+    });
+    final replacement = _FinderRepository.pages(
+      (query) async => ServerPage(items: [_result(2)]),
+    );
+    final controller = await _controller(retained);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('global-sessions-load-more')));
+    await tester.pump();
+
+    controller.signalRepository(replacement);
+    await tester.pumpAndSettle();
+    pending.complete(ServerPage(items: [_result(3)]));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Session 1'), findsOneWidget);
+    expect(find.text('Session 3'), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('global-sessions-load-more')));
+    await tester.pumpAndSettle();
+    expect(replacement.calls.last.cursor, 'retry-token');
+    expect(find.text('Session 2'), findsOneWidget);
   });
 
   testWidgets('unavailable finder stays scoped on a compact large-text phone', (

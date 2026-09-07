@@ -5,7 +5,6 @@ import '../../domain/completion_digest.dart';
 import '../../l10n/app_localizations.dart';
 
 /// Deliberately formats only allowlisted counts and app-authored copy.
-/// Localization is handed off to the integration owner.
 class CompletionDigestCard extends StatelessWidget {
   const CompletionDigestCard({
     super.key,
@@ -20,24 +19,21 @@ class CompletionDigestCard extends StatelessWidget {
   final VoidCallback onReview;
   final VoidCallback onDismiss;
 
-  String get statusText =>
-      'Server reported idle. Success or failure is not verified.';
-  String get changedFilesText => digest.changedFiles == null
-      ? 'Changed files: unknown.'
-      : 'Changed files: ${digest.changedFiles} (session total, not this run).';
-  String get pendingDecisionsText => digest.pendingDecisions == null
-      ? 'Pending decisions: unknown.'
-      : 'Pending decisions: ${digest.pendingDecisions} in the current cache.';
-  String get outcomesText => 'Tool outcomes and remaining tasks: unknown.';
-  String get provenanceText =>
-      'Cached server metadata only. No AI summary or model call. '
-      'Open the conversation to verify results and review changes or tasks.';
-  String get sanitizedSummary => [
-    statusText,
-    changedFilesText,
-    pendingDecisionsText,
-    outcomesText,
-    provenanceText,
+  String _changedFilesText(AppLocalizations l10n) => digest.changedFiles == null
+      ? l10n.digestChangedFilesUnknown
+      : l10n.digestChangedFiles(digest.changedFiles!);
+
+  String _pendingDecisionsText(AppLocalizations l10n) =>
+      digest.pendingDecisions == null
+      ? l10n.digestPendingDecisionsUnknown
+      : l10n.digestPendingDecisions(digest.pendingDecisions!);
+
+  String _sanitizedSummary(AppLocalizations l10n) => [
+    l10n.digestStatusUnverified,
+    _changedFilesText(l10n),
+    _pendingDecisionsText(l10n),
+    l10n.digestOutcomesUnknown,
+    l10n.digestProvenance,
   ].join('\n');
 
   @override
@@ -46,15 +42,22 @@ class CompletionDigestCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
+        key: const Key('completion-digest-card'),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(statusText, style: Theme.of(context).textTheme.titleSmall),
+          Text(
+            l10n.digestStatusUnverified,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
           const SizedBox(height: 8),
-          Text(changedFilesText),
-          Text(pendingDecisionsText),
-          Text(outcomesText),
+          Text(_changedFilesText(l10n)),
+          Text(_pendingDecisionsText(l10n)),
+          Text(l10n.digestOutcomesUnknown),
           const SizedBox(height: 8),
-          Text(provenanceText, style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            l10n.digestProvenance,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           Wrap(
             spacing: 8,
             runSpacing: 4,
@@ -65,10 +68,15 @@ class CompletionDigestCard extends StatelessWidget {
               ),
               TextButton(onPressed: onReview, child: Text(l10n.digestReview)),
               TextButton.icon(
+                key: const Key('completion-digest-copy'),
                 onPressed: () async {
                   try {
                     await Clipboard.setData(
-                      ClipboardData(text: sanitizedSummary),
+                      ClipboardData(text: _sanitizedSummary(l10n)),
+                    );
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.digestCopySucceeded)),
                     );
                   } catch (_) {
                     if (!context.mounted) return;

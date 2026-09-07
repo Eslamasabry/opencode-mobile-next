@@ -27,6 +27,7 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
   final _timeout = TextEditingController();
 
   late McpConfigScope _scope;
+  late final String? _profileId;
   late final int _location;
   late final String? _directory, _workspace;
   late final bool _runtime;
@@ -39,10 +40,13 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
 
   bool get _hasProject => _directory?.trim().isNotEmpty == true;
   bool get _editable => !_saving && !_configurationSaved && !_detached;
-  bool get _locationMatches =>
+  bool get _scopeMatches =>
+      widget.controller.profile?.id == _profileId &&
       widget.controller.locationRevision == _location &&
       widget.controller.directory == _directory &&
-      widget.controller.workspace == _workspace &&
+      widget.controller.workspace == _workspace;
+  bool get _locationMatches =>
+      _scopeMatches &&
       (_runtime
           ? widget.controller.capabilities.mcpRuntimeAdds
           : widget.controller.capabilities.mcpConfigWrites);
@@ -50,6 +54,7 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
   @override
   void initState() {
     super.initState();
+    _profileId = widget.controller.profile?.id;
     _location = widget.controller.locationRevision;
     _directory = widget.controller.directory;
     _workspace = widget.controller.workspace;
@@ -66,7 +71,8 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
   }
 
   void _connectionChanged() {
-    if (!_detached && !_locationMatches && mounted) {
+    final matches = _configurationSaved ? _scopeMatches : _locationMatches;
+    if (!_detached && !matches && mounted) {
       setState(() => _detached = true);
     }
   }
@@ -118,7 +124,7 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
       // changed later.
       draft.toConfigJson();
       final repository = await widget.controller.prepareActionRepository();
-      if (!mounted) return;
+      if (!mounted || !_routeIsCurrent(route)) return;
       if (_detached || !_locationMatches) {
         _detached = true;
         throw ProductException(l10n.mcpLocationChanged);
@@ -130,29 +136,100 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
       }
       await repository.addMcpServer(draft, scope: _scope);
       _configurationSaved = true;
+      if (!_scopeMatches) {
+        _detached = true;
+        throw ProductException(l10n.mcpLocationChanged);
+      }
       // Runtime adds are already applied. Reconnecting the app is only needed
       // after the persistent v1 configuration write, and only in its location.
-      if (!_runtime && mounted && _locationMatches) {
+      if (!_runtime && _routeIsCurrent(route) && _scopeMatches) {
         await widget.controller.reloadAfterConfigurationChange();
+        if (!_scopeMatches) {
+          _detached = true;
+          throw ProductException(l10n.mcpLocationChanged);
+        }
+        _throwIfReconnectFailed(l10n);
       }
-      if (mounted && route != null && route.isActive) {
-        if (route.isCurrent) {
+      if (_routeIsActive(route)) {
+        if (route!.isCurrent) {
           navigator.pop(true);
         } else {
           navigator.removeRoute(route, true);
         }
       }
     } catch (error) {
-      if (mounted) {
+      if (mounted && _routeIsCurrent(route)) {
+        if (!(_configurationSaved ? _scopeMatches : _locationMatches)) {
+          setState(() => _detached = true);
+          return;
+        }
         setState(() {
           _saveError = _configurationSaved
-              ? 'Saved in OpenCode, but the app could not reconnect. '
+              ? '${l10n.mcpSavedStatus}, but the app could not reconnect. '
                     '${productErrorText(error)}'
               : productErrorText(error);
         });
       }
     } finally {
       if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _retryReconnect() async {
+    if (!_configurationSaved || _saving || _detached) return;
+    final route = ModalRoute.of(context);
+    final navigator = Navigator.of(context);
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    if (!_routeIsCurrent(route) || !_scopeMatches) {
+      if (mounted && !_scopeMatches) setState(() => _detached = true);
+      return;
+    }
+    setState(() {
+      _saving = true;
+      _saveError = null;
+    });
+    try {
+      await widget.controller.reloadAfterConfigurationChange();
+      if (!mounted || !_routeIsActive(route)) return;
+      if (!_scopeMatches) {
+        if (route!.isCurrent) setState(() => _detached = true);
+        return;
+      }
+      _throwIfReconnectFailed(l10n);
+      if (route!.isCurrent) {
+        navigator.pop(true);
+      } else {
+        navigator.removeRoute(route, true);
+      }
+    } catch (error) {
+      if (mounted && _routeIsCurrent(route)) {
+        if (!_scopeMatches) {
+          setState(() => _detached = true);
+          return;
+        }
+        setState(() {
+          _saveError =
+              '${l10n.mcpSavedStatus}, but the app could not reconnect. '
+              '${productErrorText(error)}';
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  bool _routeIsCurrent(ModalRoute<dynamic>? route) =>
+      _routeIsActive(route) && route!.isCurrent;
+
+  bool _routeIsActive(ModalRoute<dynamic>? route) =>
+      mounted &&
+      route != null &&
+      identical(ModalRoute.of(context), route) &&
+      route.isActive;
+
+  void _throwIfReconnectFailed(AppLocalizations l10n) {
+    if (widget.controller.connectionError != null) {
+      throw ProductException(l10n.mcpStillDisconnected);
     }
   }
 
@@ -190,6 +267,18 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Text(l10n.mcpLocationChanged),
               ),
+            if (_configurationSaved) ...[
+              Text(l10n.mcpSavedStatus, key: ValueKey('mcp-saved-status')),
+              if (_saveError != null)
+                Padding(
+                  padding: EdgeInsets.only(top: 4),
+                  child: Text(
+                    l10n.mcpConnectionUnconfirmed,
+                    key: ValueKey('mcp-connection-status'),
+                  ),
+                ),
+              const SizedBox(height: 8),
+            ],
             if (_saveError case final error?) ...[
               Semantics(
                 liveRegion: true,
@@ -203,6 +292,18 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
               ),
               const SizedBox(height: 8),
             ],
+            if (_configurationSaved && _saveError != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: OutlinedButton.icon(
+                  key: const ValueKey('mcp-retry-reconnect'),
+                  onPressed: _saving || _detached || !_scopeMatches
+                      ? null
+                      : _retryReconnect,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: Text(l10n.mcpRetryReconnect),
+                ),
+              ),
             FilledButton.icon(
               key: const ValueKey('mcp-save'),
               onPressed: _saving || (_detached && !_configurationSaved)
@@ -222,7 +323,11 @@ class _McpSetupScreenState extends State<McpSetupScreen> {
                     ),
               label: Text(
                 _saving
-                    ? (_runtime ? l10n.mcpAdding : 'Saving configuration')
+                    ? (_configurationSaved
+                          ? l10n.mcpReconnecting
+                          : (_runtime
+                                ? l10n.mcpAdding
+                                : 'Saving configuration'))
                     : _configurationSaved
                     ? 'Close'
                     : (_runtime ? l10n.mcpAdd : 'Save MCP server'),

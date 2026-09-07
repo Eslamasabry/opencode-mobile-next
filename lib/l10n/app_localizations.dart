@@ -850,6 +850,36 @@ abstract class AppLocalizations {
   /// **'Load more sessions'**
   String get globalSessionsLoadMore;
 
+  /// Generic failure when refreshing the global session inventory
+  ///
+  /// In en, this message translates to:
+  /// **'Could not refresh sessions.'**
+  String get globalSessionsRefreshFailed;
+
+  /// No description provided for @workspaceSearchAllSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Search all sessions'**
+  String get workspaceSearchAllSessions;
+
+  /// No description provided for @workspaceProjectListUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Project list unavailable'**
+  String get workspaceProjectListUnavailable;
+
+  /// No description provided for @workspaceProjectListFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Your conversations can still be available. Search all sessions to find previous work.'**
+  String get workspaceProjectListFallback;
+
+  /// No description provided for @workspaceRetryProjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry projects'**
+  String get workspaceRetryProjects;
+
   /// No description provided for @historyLoadOlder.
   ///
   /// In en, this message translates to:
@@ -2230,6 +2260,48 @@ abstract class AppLocalizations {
   /// **'Server idle recorded · outcome unverified'**
   String get digestIdle;
 
+  /// Completion digest status; idle does not prove a successful run
+  ///
+  /// In en, this message translates to:
+  /// **'Server reported idle. Success or failure is not verified.'**
+  String get digestStatusUnverified;
+
+  /// The server did not provide a session-wide changed-file total
+  ///
+  /// In en, this message translates to:
+  /// **'Changed files: unknown.'**
+  String get digestChangedFilesUnknown;
+
+  /// Session-wide changed-file total; it is not evidence for this run
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0 {No changed files in the session total; this run is unknown.} one {1 changed file in the session total; this run is unknown.} other {{count} changed files in the session total; this run is unknown.}}'**
+  String digestChangedFiles(int count);
+
+  /// The pending-request snapshot is unavailable
+  ///
+  /// In en, this message translates to:
+  /// **'Pending decisions: unknown.'**
+  String get digestPendingDecisionsUnknown;
+
+  /// Known pending-request count from the current cache
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0 {No pending decisions in the current cache.} one {1 pending decision in the current cache.} other {{count} pending decisions in the current cache.}}'**
+  String digestPendingDecisions(int count);
+
+  /// The metadata-only digest does not report tool outcomes or remaining tasks
+  ///
+  /// In en, this message translates to:
+  /// **'Tool outcomes and remaining tasks: unknown.'**
+  String get digestOutcomesUnknown;
+
+  /// Provenance disclosure for a metadata-only completion digest
+  ///
+  /// In en, this message translates to:
+  /// **'Cached server metadata only. No AI summary or model call. Open the conversation to verify results and review changes or tasks.'**
+  String get digestProvenance;
+
   /// No description provided for @digestOpenConversation.
   ///
   /// In en, this message translates to:
@@ -2247,6 +2319,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copy digest'**
   String get digestCopy;
+
+  /// Accessible confirmation after a completion digest is copied
+  ///
+  /// In en, this message translates to:
+  /// **'Digest copied'**
+  String get digestCopySucceeded;
 
   /// No description provided for @digestCopyFailed.
   ///
@@ -3058,6 +3136,36 @@ abstract class AppLocalizations {
   /// **'Could not refresh MCP data. Try again.'**
   String get mcpLoadFailed;
 
+  /// No description provided for @mcpSavedStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved in OpenCode'**
+  String get mcpSavedStatus;
+
+  /// No description provided for @mcpConnectionUnconfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'App connection not confirmed'**
+  String get mcpConnectionUnconfirmed;
+
+  /// No description provided for @mcpRetryReconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry reconnect'**
+  String get mcpRetryReconnect;
+
+  /// No description provided for @mcpReconnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnecting'**
+  String get mcpReconnecting;
+
+  /// No description provided for @mcpStillDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode is still disconnected. Try again.'**
+  String get mcpStillDisconnected;
+
   /// Warns against acting on MCP data from a previous profile or location
   ///
   /// In en, this message translates to:
@@ -3777,6 +3885,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Collector server'**
   String get quotaSource;
+
+  /// Selected quota source profile and provider heading
+  ///
+  /// In en, this message translates to:
+  /// **'{profile} · {provider}'**
+  String quotaSourceTitle(String profile, String provider);
 
   /// Safe fallback when a quota source origin is unavailable
   ///
@@ -4845,6 +4959,29 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Servers with unknown attention'**
   String get monitorUnknownServers;
+
+  /// Saved-server attention counts in the current inbox
+  ///
+  /// In en, this message translates to:
+  /// **'Current pending requests: {pendingCount}\nServers with unknown attention: {unknownCount}'**
+  String monitorPendingSummary(int pendingCount, int unknownCount);
+
+  /// Saved-server request row summary
+  ///
+  /// In en, this message translates to:
+  /// **'{profile} · {kind}\n{lastChecked}: {time}'**
+  String monitorRequestSummary(
+    String profile,
+    String kind,
+    String lastChecked,
+    String time,
+  );
+
+  /// A localized monitor timestamp with its label
+  ///
+  /// In en, this message translates to:
+  /// **'{label}: {time}'**
+  String monitorLabeledTime(String label, String time);
 
   /// No description provided for @monitorSelected.
   ///

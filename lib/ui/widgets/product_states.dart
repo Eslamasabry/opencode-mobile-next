@@ -134,6 +134,7 @@ class ProductEmptyState extends StatelessWidget {
   final String message;
   final String? actionLabel;
   final VoidCallback? onAction;
+  final bool scrollable;
 
   const ProductEmptyState({
     super.key,
@@ -142,15 +143,15 @@ class ProductEmptyState extends StatelessWidget {
     required this.message,
     this.actionLabel,
     this.onAction,
+    this.scrollable = true,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: ConstrainedBox(
+      builder: (context, constraints) {
+        final content = ConstrainedBox(
           constraints: BoxConstraints(
             minHeight: constraints.hasBoundedHeight ? constraints.maxHeight : 0,
           ),
@@ -185,8 +186,14 @@ class ProductEmptyState extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ),
+        );
+        return scrollable
+            ? SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: content,
+              )
+            : content;
+      },
     );
   }
 }

@@ -16,6 +16,7 @@ import '../tool/capture/fixtures.dart'
 class _McpRepository implements ProductRepository {
   McpServerDraft? addedDraft;
   McpConfigScope? addedScope;
+  int addCalls = 0;
   Object? addError;
 
   @override
@@ -23,6 +24,7 @@ class _McpRepository implements ProductRepository {
     McpServerDraft draft, {
     required McpConfigScope scope,
   }) async {
+    addCalls += 1;
     if (addError case final error?) throw error;
     addedDraft = draft;
     addedScope = scope;
@@ -38,8 +40,10 @@ class _McpController extends ConnectionController {
   final ProductRepository actionRepository;
   int reloadCalls = 0;
   Object? reloadError;
+  bool reloadReturnsDisconnected = false;
   Completer<ProductRepository?>? wake;
   ServerCapabilities serverCapabilities = ServerCapabilities.allV1;
+  ServerProfile? activeProfile;
 
   @override
   ServerCapabilities get capabilities => serverCapabilities;
@@ -51,6 +55,18 @@ class _McpController extends ConnectionController {
   }
 
   @override
+  ServerProfile? get profile => activeProfile;
+
+  void switchProfile(String id) {
+    activeProfile = ServerProfile(
+      id: id,
+      name: id,
+      baseUrl: 'https://$id.example.com',
+    );
+    notifyListeners();
+  }
+
+  @override
   Future<ProductRepository?> prepareActionRepository() async =>
       wake == null ? actionRepository : await wake!.future;
 
@@ -58,6 +74,10 @@ class _McpController extends ConnectionController {
   Future<void> reloadAfterConfigurationChange() async {
     reloadCalls += 1;
     if (reloadError case final error?) throw error;
+    if (reloadReturnsDisconnected) {
+      lastError = 'Endpoint is unavailable';
+      notifyListeners();
+    }
   }
 }
 
@@ -351,7 +371,7 @@ void main() {
     expect(find.byType(McpSetupScreen), findsOneWidget);
   });
 
-  testWidgets('does not offer a duplicate save when reconnect fails', (
+  testWidgets('retries reconnect without duplicating a saved MCP server', (
     tester,
   ) async {
     final repository = _McpRepository();
@@ -369,8 +389,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.addedDraft?.normalizedName, 'docs');
+    expect(repository.addCalls, 1);
     expect(controller.reloadCalls, 1);
-    expect(find.textContaining('Saved in OpenCode'), findsOneWidget);
+    expect(find.text('Saved in OpenCode'), findsOneWidget);
+    expect(find.byKey(const ValueKey('mcp-saved-status')), findsOneWidget);
+    expect(find.byKey(const ValueKey('mcp-connection-status')), findsOneWidget);
+    expect(find.byKey(const ValueKey('mcp-retry-reconnect')), findsOneWidget);
     expect(find.text('Close'), findsOneWidget);
     expect(
       tester
@@ -379,8 +403,61 @@ void main() {
       isFalse,
     );
 
+    await tester.tap(find.byKey(const ValueKey('mcp-retry-reconnect')));
+    await tester.pumpAndSettle();
+    expect(repository.addCalls, 1);
+    expect(controller.reloadCalls, 2);
+    expect(find.byType(McpSetupScreen), findsOneWidget);
+    expect(find.byKey(const ValueKey('mcp-retry-reconnect')), findsOneWidget);
+
+    controller.reloadError = null;
+    controller.reloadReturnsDisconnected = true;
+    await tester.tap(find.byKey(const ValueKey('mcp-retry-reconnect')));
+    await tester.pumpAndSettle();
+    expect(repository.addCalls, 1);
+    expect(controller.reloadCalls, 3);
+    expect(find.byType(McpSetupScreen), findsOneWidget);
+    expect(find.textContaining('still disconnected'), findsOneWidget);
+
+    controller.reloadReturnsDisconnected = false;
+    controller.lastError = null;
+    await tester.tap(find.byKey(const ValueKey('mcp-retry-reconnect')));
+    await tester.pumpAndSettle();
+    expect(repository.addCalls, 1);
+    expect(controller.reloadCalls, 4);
+    expect(find.byType(McpSetupScreen), findsNothing);
+  });
+
+  testWidgets('keeps reconnect disabled after the saved profile changes', (
+    tester,
+  ) async {
+    final repository = _McpRepository();
+    final controller = await _controller(repository)
+      ..reloadError = const ProductException('Endpoint is unavailable');
+    addTearDown(controller.dispose);
+    await _open(tester, controller);
+
+    await tester.enterText(find.byKey(const ValueKey('mcp-name')), 'docs');
+    await tester.enterText(
+      find.byKey(const ValueKey('mcp-url')),
+      'https://mcp.example.com',
+    );
     await tester.tap(find.byKey(const ValueKey('mcp-save')));
     await tester.pumpAndSettle();
-    expect(find.byType(McpSetupScreen), findsNothing);
+
+    controller.switchProfile('other-server');
+    await tester.pump();
+    final retry = tester.widget<OutlinedButton>(
+      find.byKey(const ValueKey('mcp-retry-reconnect')),
+    );
+    expect(retry.onPressed, isNull);
+    expect(repository.addCalls, 1);
+    expect(controller.reloadCalls, 1);
+
+    await tester.tap(find.byKey(const ValueKey('mcp-retry-reconnect')));
+    await tester.pumpAndSettle();
+    expect(repository.addCalls, 1);
+    expect(controller.reloadCalls, 1);
+    expect(find.byKey(const ValueKey('mcp-saved-status')), findsOneWidget);
   });
 }

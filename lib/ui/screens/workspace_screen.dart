@@ -330,7 +330,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                               TextButton.icon(
                                 onPressed: _openAllSessions,
                                 icon: const Icon(Icons.manage_search_rounded),
-                                label: const Text('Search all sessions'),
+                                label: Text(l10n.workspaceSearchAllSessions),
                               ),
                             ],
                           ),
@@ -344,7 +344,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                               Semantics(
                                 liveRegion: true,
                                 child: Text(
-                                  'Project list unavailable',
+                                  l10n.workspaceProjectListUnavailable,
                                   style: Theme.of(
                                     context,
                                   ).textTheme.titleMedium,
@@ -353,24 +353,23 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                               const SizedBox(height: 8),
                               Text(_projectError!),
                               const SizedBox(height: 4),
-                              const Text(
-                                'Your conversations can still be available. '
-                                'Search all sessions to find previous work.',
-                              ),
+                              Text(l10n.workspaceProjectListFallback),
                               Wrap(
                                 spacing: 8,
                                 children: [
                                   TextButton.icon(
                                     onPressed: _load,
                                     icon: const Icon(Icons.refresh_rounded),
-                                    label: const Text('Retry projects'),
+                                    label: Text(l10n.workspaceRetryProjects),
                                   ),
                                   TextButton.icon(
                                     onPressed: _openAllSessions,
                                     icon: const Icon(
                                       Icons.manage_search_rounded,
                                     ),
-                                    label: const Text('Search all sessions'),
+                                    label: Text(
+                                      l10n.workspaceSearchAllSessions,
+                                    ),
                                   ),
                                 ],
                               ),
