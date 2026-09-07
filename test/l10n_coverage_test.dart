@@ -129,7 +129,7 @@ const _baseline = <String, int>{
   'lib/ui/screens/settings/server_settings_screen.dart': 14,
   'lib/ui/screens/settings_screen.dart': 4,
   'lib/ui/screens/terminal_screen.dart': 21,
-  'lib/ui/screens/termux_setup_screen.dart': 24,
+  'lib/ui/screens/termux_setup_screen.dart': 21,
   'lib/ui/screens/tools_screen.dart': 8,
   'lib/ui/screens/workspace_screen.dart': 23,
   'lib/ui/screens/worktrees_screen.dart': 23,
@@ -149,7 +149,7 @@ const _baseline = <String, int>{
   'lib/ui/widgets/tool_card.dart': 7,
   'lib/ui/widgets/transcript_display_toggles.dart': 2,
   'lib/voice/notices.dart': 1,
-  'lib/voice/voice_ui.dart': 28,
+  'lib/voice/voice_ui.dart': 27,
 };
 
 void main() {

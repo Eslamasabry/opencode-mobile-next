@@ -18,6 +18,7 @@ class _MemoryProfileStore extends ProfileStore {
 
   final savedProfiles = <ServerProfile>[];
   String? selectedID;
+  Completer<void>? pendingSave;
 
   @override
   List<ServerProfile> get profiles => List.unmodifiable(savedProfiles);
@@ -27,6 +28,7 @@ class _MemoryProfileStore extends ProfileStore {
 
   @override
   Future<void> upsert(ServerProfile profile) async {
+    await pendingSave?.future;
     final index = savedProfiles.indexWhere((item) => item.id == profile.id);
     if (index == -1) {
       savedProfiles.add(profile);
@@ -96,9 +98,354 @@ Map<String, Object> _commandResult({String stdout = ''}) => {
   'errorMessage': '',
 };
 
+// Gates represent native command acknowledgements, independent of widget time.
+class _SetupProgressFixture {
+  _SetupProgressFixture(this.store)
+    : connection = _LocalConnectionController(store);
+
+  final _MemoryProfileStore store;
+  final _LocalConnectionController connection;
+  Completer<Map<String, Object>>? pendingBridge;
+  Completer<Map<String, Object>>? pendingLaunch;
+  Completer<Map<String, Object>>? pendingStatus;
+  int launchCalls = 0;
+  int restartCalls = 0;
+  String? restartOperation;
+  String inventoryOutput = 'ubuntu=absent\nversion=\n';
+  Completer<Map<String, Object>>? pendingInventory;
+  int statusReads = 0;
+  bool launched = false;
+
+  Future<Object?> handle(MethodCall call) async {
+    if (call.method == 'getCapabilities') {
+      return <String, Object>{
+        'installed': true,
+        'version': '0.118',
+        'serviceAvailable': true,
+        'protocolSupported': true,
+        'permissionGranted': true,
+      };
+    }
+    if (call.method != 'runInTermux') return true;
+    final script = (call.arguments as Map)['script'] as String;
+    if (script.contains('ubuntu=absent')) {
+      return pendingInventory?.future ??
+          _commandResult(stdout: inventoryOutput);
+    }
+    if (script.contains("printf 'opencode-bridge-ok'")) {
+      return pendingBridge?.future ??
+          Future.value(_commandResult(stdout: 'opencode-bridge-ok'));
+    }
+    if (script.contains('"\$MANAGER" restart')) {
+      restartCalls++;
+      restartOperation = RegExp(
+        r"restart '4096' '([^']+)'",
+      ).firstMatch(script)!.group(1);
+      return _commandResult();
+    }
+    if (script.contains('manager_tmp=')) {
+      launchCalls++;
+      final result =
+          await (pendingLaunch?.future ??
+              Future.value(_commandResult(stdout: 'manager-started:123')));
+      launched = true;
+      return result;
+    }
+    if (script.contains('__OC_SETUP_OUTPUT__') ||
+        (script.contains('exec "') && script.contains(' status'))) {
+      statusReads++;
+      if (launched && pendingStatus != null) return pendingStatus!.future;
+      return statusResult();
+    }
+    return _commandResult();
+  }
+
+  Map<String, Object> statusResult() => _commandResult(
+    stdout: restartOperation != null
+        ? '''phase=ready
+message=OpenCode is ready
+port=4096
+runner=proot
+version=1.18.29
+pid=123
+operation=$restartOperation
+operation_result=completed
+__OC_SETUP_OUTPUT__
+[oc] authenticated server ready
+'''
+        : launched
+        ? '''phase=installing_dependencies
+message=Installing Termux dependencies
+port=4096
+runner=proot
+version=
+pid=123
+__OC_SETUP_OUTPUT__
+[oc] Installing packages
+'''
+        : '''phase=idle
+message=No setup has been started
+port=4096
+runner=
+version=
+pid=
+__OC_SETUP_OUTPUT__
+''',
+  );
+
+  Future<void> mount(WidgetTester tester, {double textScale = 1}) async {
+    const channel = MethodChannel('oc/termux');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, handle);
+    addTearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null);
+      connection.dispose();
+    });
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          bootstrapProvider.overrideWithValue(AppBootstrap(store)),
+          connProvider.overrideWithValue(connection),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: TextScaler.linear(textScale)),
+            child: child!,
+          ),
+          home: const TermuxSetupScreen(),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    statusReads = 0;
+  }
+}
+
+Future<_SetupProgressFixture> _setupFixture() async {
+  SharedPreferences.setMockInitialValues({});
+  return _SetupProgressFixture(
+    _MemoryProfileStore(prefs: await SharedPreferences.getInstance()),
+  );
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   const channel = MethodChannel('oc/termux');
+
+  testWidgets(
+    'install shows immediate progress throughout slow native startup',
+    (tester) async {
+      final fixture = await _setupFixture();
+      await fixture.mount(tester);
+      fixture.pendingBridge = Completer<Map<String, Object>>();
+      fixture.store.pendingSave = Completer<void>();
+      fixture.pendingLaunch = Completer<Map<String, Object>>();
+      fixture.pendingStatus = Completer<Map<String, Object>>();
+
+      await tester.scrollUntilVisible(find.text('Install & start'), 250);
+      await tester.pump();
+      await tester.tap(find.text('Install & start'));
+      await tester.pump();
+
+      expect(find.text('Preparing setup'), findsOneWidget);
+      expect(find.text('Checking Termux connection'), findsOneWidget);
+      expect(find.text('0s elapsed'), findsOneWidget);
+      expect(find.text('LIVE OUTPUT'), findsOneWidget);
+      expect(find.text('Install & start'), findsNothing);
+      expect(fixture.launchCalls, 0);
+      expect(fixture.statusReads, 0);
+
+      await tester.pump(const Duration(seconds: 21));
+      expect(find.text('21s elapsed'), findsOneWidget);
+      expect(find.text('Checking Termux connection'), findsOneWidget);
+      expect(fixture.statusReads, 0);
+
+      fixture.pendingBridge!.complete(
+        _commandResult(stdout: 'opencode-bridge-ok'),
+      );
+      await tester.pump();
+      expect(find.text('Saving local server settings'), findsOneWidget);
+      expect(fixture.launchCalls, 0);
+
+      fixture.store.pendingSave!.complete();
+      await tester.pump();
+      expect(find.text('Starting setup in Termux'), findsOneWidget);
+      expect(fixture.launchCalls, 1);
+      await tester.pump(const Duration(seconds: 3));
+      expect(fixture.launchCalls, 1);
+      expect(fixture.statusReads, 0);
+
+      fixture.pendingLaunch!.complete(
+        _commandResult(stdout: 'manager-started:123'),
+      );
+      await tester.pump();
+      expect(find.text('Reading setup progress'), findsOneWidget);
+      fixture.pendingStatus!.complete(fixture.statusResult());
+      await tester.pump();
+      expect(find.text('Installing Termux dependencies'), findsOneWidget);
+      expect(fixture.launchCalls, 1);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets(
+    'prelaunch bridge failure stops waiting and offers a working retry',
+    (tester) async {
+      final fixture = await _setupFixture();
+      await fixture.mount(tester);
+      fixture.pendingBridge = Completer<Map<String, Object>>();
+      await tester.scrollUntilVisible(find.text('Install & start'), 250);
+      await tester.pump();
+      await tester.tap(find.text('Install & start'));
+      await tester.pump();
+      fixture.pendingBridge!.completeError(
+        PlatformException(
+          code: 'bridge_failed',
+          message: 'Termux could not answer',
+        ),
+      );
+      await tester.pump();
+      expect(find.textContaining('Termux could not answer'), findsOneWidget);
+      expect(fixture.launchCalls, 0);
+      expect(fixture.store.savedProfiles, isEmpty);
+
+      fixture.pendingBridge = null;
+      await tester.ensureVisible(
+        find.text('Retry — resumes where setup left off'),
+      );
+      await tester.pump();
+      await tester.tap(find.text('Retry — resumes where setup left off'));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      expect(fixture.launchCalls, 1);
+      expect(find.text('Installing Termux dependencies'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets(
+    'resuming during launch preserves progress and avoids stale polling',
+    (tester) async {
+      final fixture = await _setupFixture();
+      await fixture.mount(tester);
+      fixture.pendingLaunch = Completer<Map<String, Object>>();
+      await tester.scrollUntilVisible(find.text('Install & start'), 250);
+      await tester.pump();
+      await tester.tap(find.text('Install & start'));
+      await tester.pump();
+      expect(fixture.launchCalls, 1);
+      expect(find.text('Starting setup in Termux'), findsOneWidget);
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 2));
+      expect(find.text('Starting setup in Termux'), findsOneWidget);
+      expect(find.text('Install & start'), findsNothing);
+      expect(fixture.statusReads, 0);
+      expect(fixture.launchCalls, 1);
+
+      fixture.pendingLaunch!.complete(
+        _commandResult(stdout: 'manager-started:123'),
+      );
+      await tester.pump();
+      expect(find.text('Installing Termux dependencies'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  for (final textScale in [1.0, 2.0]) {
+    testWidgets(
+      'setup uses phone space without overflow at text scale $textScale',
+      (tester) async {
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final fixture = await _setupFixture();
+        await fixture.mount(tester, textScale: textScale);
+        await tester.scrollUntilVisible(find.text('Install & start'), 250);
+        await tester.pump();
+        await tester.tap(find.text('Install & start'));
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 1));
+        expect(find.text('LIVE OUTPUT'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        if (textScale == 1) {
+          final terminal = find.byKey(const Key('setup-live-output'));
+          expect(tester.getSize(terminal).height, greaterThanOrEqualTo(300));
+          expect(tester.getRect(terminal).bottom, lessThanOrEqualTo(844));
+        }
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+  }
+
+  testWidgets('checks the environment before enabling installation', (
+    tester,
+  ) async {
+    final fixture = await _setupFixture();
+    fixture.pendingInventory = Completer<Map<String, Object>>();
+    await fixture.mount(tester);
+    expect(find.text('Checking installed environment...'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Install & start'), 200);
+    await tester.pump();
+    final button = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Install & start'),
+    );
+    expect(button.onPressed, isNull);
+    expect(fixture.launchCalls, 0);
+    fixture.pendingInventory!.complete(
+      _commandResult(stdout: 'ubuntu=absent\nversion=\n'),
+    );
+    await tester.pump();
+    expect(find.text('No managed Ubuntu installation found.'), findsOneWidget);
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.widgetWithText(FilledButton, 'Install & start'),
+          )
+          .onPressed,
+      isNotNull,
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('starts the detected installation without downloading packages', (
+    tester,
+  ) async {
+    final fixture = await _setupFixture();
+    fixture.inventoryOutput = 'ubuntu=installed\nversion=1.18.29\n';
+    fixture.store.savedProfiles.add(
+      ServerProfile(
+        id: 'local',
+        name: 'This device',
+        baseUrl: TermuxBridge.managedServerUrl,
+        username: 'opencode',
+        password: 'synthetic-test-secret',
+      ),
+    );
+    await fixture.mount(tester);
+    expect(find.text('Found OpenCode 1.18.29 in Ubuntu'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Start installed OpenCode'), 200);
+    await tester.pump();
+    await tester.tap(find.text('Start installed OpenCode'));
+    await tester.pumpAndSettle();
+    expect(fixture.restartCalls, 0);
+    await tester.tap(find.text('Start & connect'));
+    await tester.pumpAndSettle();
+    expect(fixture.restartCalls, 1);
+    expect(fixture.launchCalls, 0);
+    expect(find.text('Continue to app'), findsOneWidget);
+    expect(fixture.store.selectedID, 'local');
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 
   testWidgets('checking Termux does not mark the download step complete', (
     tester,
@@ -180,6 +527,9 @@ void main() {
           if (call.method != 'runInTermux') return true;
           final arguments = call.arguments as Map<Object?, Object?>;
           final script = arguments['script']! as String;
+          if (script.contains('ubuntu=absent')) {
+            return _commandResult(stdout: 'ubuntu=absent\nversion=\n');
+          }
           if (script.contains("printf 'opencode-bridge-ok'")) {
             return _commandResult(stdout: 'opencode-bridge-ok');
           }
@@ -280,7 +630,8 @@ pid=
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('Install & start'), findsOneWidget);
-    await tester.ensureVisible(find.text('Install & start'));
+    await tester.scrollUntilVisible(find.text('Install & start'), 250);
+    await tester.pump();
     await tester.tap(find.text('Install & start'));
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
@@ -408,6 +759,9 @@ pid=
               }
               if (call.method != 'runInTermux') return true;
               final script = (call.arguments as Map)['script'] as String;
+              if (script.contains('ubuntu=absent')) {
+                return _commandResult(stdout: 'ubuntu=absent\nversion=\n');
+              }
               if (script.contains("printf 'opencode-bridge-ok'")) {
                 return _commandResult(stdout: 'opencode-bridge-ok');
               }
@@ -519,6 +873,9 @@ __OC_SETUP_OUTPUT__
           if (call.method != 'runInTermux') return true;
           final arguments = call.arguments as Map<Object?, Object?>;
           final script = arguments['script']! as String;
+          if (script.contains('ubuntu=absent')) {
+            return _commandResult(stdout: 'ubuntu=absent\nversion=\n');
+          }
           if (script.contains("printf 'opencode-bridge-ok'")) {
             return _commandResult(stdout: 'opencode-bridge-ok');
           }
@@ -574,7 +931,8 @@ __OC_SETUP_OUTPUT__
     );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
-    await tester.ensureVisible(find.text('Install & start'));
+    await tester.scrollUntilVisible(find.text('Install & start'), 250);
+    await tester.pump();
     await tester.tap(find.text('Install & start'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));

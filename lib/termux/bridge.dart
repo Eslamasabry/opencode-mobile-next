@@ -155,6 +155,36 @@ class TermuxBridge {
     return TermuxSetupSnapshot.parse(result.stdout);
   }
 
+  /// Inspects only the app-owned Ubuntu installation; never starts a server.
+  static Future<TermuxInstallation> inspectInstallation() async {
+    final result = await run(
+      installationScript(),
+      timeout: const Duration(seconds: 25),
+    );
+    return TermuxInstallation.parse(result.stdout);
+  }
+
+  static String installationScript() => r'''
+set -eu
+PREFIX="${PREFIX:-/data/data/com.termux/files/usr}"
+if [ ! -d "$PREFIX/var/lib/proot-distro/containers/opencode-ubuntu/rootfs" ] &&
+   [ ! -d "$PREFIX/var/lib/proot-distro/installed-rootfs/opencode-ubuntu" ]; then
+  printf 'ubuntu=absent\nversion=\n'
+  exit 0
+fi
+# A missing/broken proot command or a hung version probe is an error, not an
+# absent installation. Bound the whole login, including container startup.
+timeout -k 2s 20s proot-distro login opencode-ubuntu -- bash -c '
+set -eu
+if ! command -v opencode >/dev/null 2>&1; then
+  printf "ubuntu=installed\nversion=\n"
+  exit 0
+fi
+version=$(opencode --version)
+printf "ubuntu=installed\nversion=%s\n" "$version"
+'
+''';
+
   static Future<String> diagnostics() async {
     final result = await run(diagnosticsScript());
     return result.stdout.trim();
@@ -1243,13 +1273,25 @@ export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--dns-result-order=ipv4first
 install_opencode() {
   local npm_cache
   local install_code
+  local binary_package
+  case "$(node -p 'process.arch')" in
+    arm64) binary_package=opencode-linux-arm64 ;;
+    x64) binary_package=opencode-linux-x64-baseline ;;
+    *) printf '[oc] ERROR: OpenCode requires a 64-bit ARM or x64 Ubuntu environment\n' >&2; return 64 ;;
+  esac
   npm_cache=$(mktemp -d /tmp/opencode-mobile-npm.XXXXXX)
+  # Make the compatible Ubuntu binary a required package. Optional dependency
+  # failures must not silently leave postinstall trying a musl-only fallback.
+  # Keep upstream postinstall intact and visible so runtime errors are actionable.
   if npm install -g \
+    --include=optional \
+    --foreground-scripts \
     --cache "$npm_cache" \
     --fetch-retries=5 \
     --fetch-retry-mintimeout=10000 \
     --fetch-retry-maxtimeout=60000 \
     --fetch-timeout=300000 \
+    "$binary_package@$OC_REQUESTED_VERSION" \
     "opencode-ai@$OC_REQUESTED_VERSION"; then
     install_code=0
   else
@@ -1259,7 +1301,7 @@ install_opencode() {
   return "$install_code"
 }
 install_opencode || {
-  printf '[oc] npm download failed; retrying in 10 seconds\n'
+  printf '[oc] OpenCode installation failed; retrying in 10 seconds\n'
   sleep 10
   install_opencode
 }
@@ -1505,6 +1547,45 @@ case "${1:-status}" in
   *) echo "usage: $0 {setup|restart|status|diagnostics|stop}" >&2; exit 64 ;;
 esac
 ''';
+}
+
+/// The installed app-owned environment, independent of server running state.
+class TermuxInstallation {
+  final bool ubuntuInstalled;
+  final String? openCodeVersion;
+
+  const TermuxInstallation({
+    required this.ubuntuInstalled,
+    this.openCodeVersion,
+  });
+
+  factory TermuxInstallation.parse(String output) {
+    final match = RegExp(
+      r'^ubuntu=(absent|installed)\r?\nversion=([^\r\n]*)\r?\n?$',
+    ).firstMatch(output.trim());
+    if (match == null) {
+      throw const TermuxBridgeException(
+        'Could not read the installed Ubuntu and OpenCode versions.',
+        code: 'invalid_installation_probe',
+      );
+    }
+    final installed = match[1] == 'installed';
+    final version = match[2]!;
+    if (version.isNotEmpty &&
+        (!installed ||
+            !RegExp(
+              r'^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]+)?$',
+            ).hasMatch(version))) {
+      throw const TermuxBridgeException(
+        'OpenCode returned an unexpected version response.',
+        code: 'invalid_installation_probe',
+      );
+    }
+    return TermuxInstallation(
+      ubuntuInstalled: installed,
+      openCodeVersion: version.isEmpty ? null : version,
+    );
+  }
 }
 
 class TermuxCapabilities {

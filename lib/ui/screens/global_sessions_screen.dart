@@ -10,6 +10,9 @@ import '../desktop/context_menu.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/product_states.dart';
 import '../widgets/session_read_state.dart';
+import '../widgets/session_handoff.dart';
+import 'session_relations_screen.dart';
+import '../../api/models.dart';
 
 class GlobalSessionsScreen extends StatefulWidget {
   final ConnectionController controller;
@@ -41,6 +44,7 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
   int _dataRefreshRevision = 0;
   ServerOperationsGateway? _activeRepository;
   String? _profileID;
+  final Map<String, FocusNode> _rowFocus = {};
 
   @override
   void initState() {
@@ -58,9 +62,26 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
     final revision = widget.controller.dataRefreshRevision;
     final repository = widget.controller.repository;
     final profileID = widget.controller.profile?.id;
+    // Location selection and chat refreshes must not discard older pages.
+    if ((_openingSessionID != null || _stealingSessionID != null) &&
+        profileID == _profileID) {
+      _dataRefreshRevision = revision;
+      _activeRepository = repository;
+      return;
+    }
     if (revision == _dataRefreshRevision &&
         identical(repository, _activeRepository) &&
         profileID == _profileID) {
+      return;
+    }
+    if (profileID == _profileID && _results.isNotEmpty) {
+      // The global inventory is profile-scoped, not location-scoped. Keep the
+      // search, cursor chain and loaded older rows until an explicit refresh.
+      _dataRefreshRevision = revision;
+      _activeRepository = repository;
+      // Rebuild callbacks against the current location after reconnecting.
+      // Keeping the rows must not keep their retired navigation guards.
+      setState(() {});
       return;
     }
     _dataRefreshRevision = revision;
@@ -189,21 +210,84 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
     }
   }
 
-  Future<void> _open(GlobalSessionResult result) async {
+  Future<void> _open(
+    GlobalSessionResult result, {
+    bool related = false,
+    bool handoff = false,
+  }) async {
     final session = result.session;
     if (_openingSessionID != null) return;
+    if (!RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(session.id)) {
+      showProductError(
+        context,
+        'Session reference unavailable. Refresh and try again.',
+      );
+      return;
+    }
+    final profileID = widget.controller.profile?.id;
+    final directory = session.directory ?? result.projectDirectory;
+    if (profileID != _profileID || directory == null) {
+      showProductError(
+        context,
+        'Session location unavailable. Refresh and try again.',
+      );
+      return;
+    }
     setState(() => _openingSessionID = session.id);
     try {
       await widget.controller.selectLocation(
-        directory: session.directory ?? result.projectDirectory,
+        directory: directory,
         workspace: session.workspaceID,
       );
       if (!mounted) return;
-      await Navigator.of(context).pushNamed('/chat/${session.id}');
+      if (widget.controller.profile?.id != profileID ||
+          widget.controller.directory != directory ||
+          widget.controller.workspace != session.workspaceID) {
+        throw StateError('Session location changed. Return and try again.');
+      }
+      final scope = SessionNavigationScope(widget.controller);
+      final repository = await _repository();
+      scope.check(widget.controller);
+      final current = await repository.getSessionDetails(session.id);
+      scope.check(widget.controller);
+      if (!mounted) return;
+      if (current.id != session.id ||
+          current.directory != session.directory ||
+          current.workspaceID != session.workspaceID) {
+        throw StateError('Session location changed. Refresh and try again.');
+      }
+      if (handoff) {
+        await showSessionHandoff(
+          context,
+          controller: widget.controller,
+          sessionID: current.id,
+          projectID: current.projectID,
+        );
+      } else if (related) {
+        final selected = await Navigator.of(context).push<Session>(
+          MaterialPageRoute(
+            builder: (_) => SessionRelationsScreen(
+              controller: widget.controller,
+              sessionID: session.id,
+            ),
+          ),
+        );
+        scope.check(widget.controller);
+        if (!mounted || selected == null) return;
+        if (!RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(selected.id)) {
+          throw StateError('Session reference unavailable.');
+        }
+        await Navigator.of(context).pushNamed('/chat/${selected.id}');
+      } else {
+        await Navigator.of(context).pushNamed('/chat/${session.id}');
+      }
     } catch (error) {
       if (mounted) showProductError(context, error);
     } finally {
-      if (mounted) setState(() => _openingSessionID = null);
+      if (mounted) {
+        setState(() => _openingSessionID = null);
+        _rowFocus[session.id]?.requestFocus();
+      }
     }
   }
 
@@ -228,6 +312,7 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
   Future<void> _steal(GlobalSessionResult result) async {
     final session = result.session;
     if (_stealingSessionID != null || _openingSessionID != null) return;
+    final scope = SessionNavigationScope(widget.controller);
     final title = session.title?.trim().isNotEmpty == true
         ? session.title!.trim()
         : 'Untitled session';
@@ -244,18 +329,26 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
     if (!confirmed || !mounted) return;
     setState(() => _stealingSessionID = session.id);
     try {
+      scope.check(widget.controller);
       final repository = await _repository();
+      scope.check(widget.controller);
       final stolenID = await repository.stealSessionIntoWorkspace(session.id);
+      scope.check(widget.controller);
       if (!mounted) return;
+      if (!RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(stolenID)) {
+        throw StateError('Session reference unavailable.');
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('“$title” now belongs to this workspace')),
       );
       await Navigator.of(context).pushNamed('/chat/$stolenID');
-      if (mounted) unawaited(_reload());
     } catch (error) {
       if (mounted) showProductError(context, error);
     } finally {
-      if (mounted) setState(() => _stealingSessionID = null);
+      if (mounted) {
+        setState(() => _stealingSessionID = null);
+        _rowFocus[session.id]?.requestFocus();
+      }
     }
   }
 
@@ -419,19 +512,37 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
               ),
             );
           }
-          return _GlobalSessionRow(
-            controller: widget.controller,
-            result: _results[index],
-            opening: _openingSessionID == _results[index].session.id,
-            stealing: _stealingSessionID == _results[index].session.id,
-            onTap: () => _open(_results[index]),
-            // §7 row 7: "Continue here" is steal + sync-start, neither of
-            // which v2 has. A future rebuild is export+import+move.
-            onSteal:
-                widget.controller.capabilities.sessionSteal &&
-                    _isElsewhere(_results[index])
-                ? () => unawaited(_steal(_results[index]))
-                : null,
+          final result = _results[index];
+          final scope = SessionNavigationScope(widget.controller);
+          void guarded(VoidCallback action) {
+            if (!scope.matches(widget.controller)) {
+              showProductError(
+                context,
+                'Session location changed. Return and try again.',
+              );
+              return;
+            }
+            action();
+          }
+
+          return Focus(
+            focusNode: _rowFocus.putIfAbsent(result.session.id, FocusNode.new),
+            child: _GlobalSessionRow(
+              controller: widget.controller,
+              result: _results[index],
+              opening: _openingSessionID == _results[index].session.id,
+              stealing: _stealingSessionID == _results[index].session.id,
+              onTap: () => guarded(() => _open(result)),
+              onRelated: () => guarded(() => _open(result, related: true)),
+              onHandoff: () => guarded(() => _open(result, handoff: true)),
+              // §7 row 7: "Continue here" is steal + sync-start, neither of
+              // which v2 has. A future rebuild is export+import+move.
+              onSteal:
+                  widget.controller.capabilities.sessionSteal &&
+                      _isElsewhere(_results[index])
+                  ? () => guarded(() => unawaited(_steal(result)))
+                  : null,
+            ),
           );
         },
       ),
@@ -446,6 +557,9 @@ class _GlobalSessionsScreenState extends State<GlobalSessionsScreen> {
       ..removeListener(_scrollChanged)
       ..dispose();
     _search.dispose();
+    for (final node in _rowFocus.values) {
+      node.dispose();
+    }
     super.dispose();
   }
 }
@@ -456,6 +570,8 @@ class _GlobalSessionRow extends StatelessWidget {
   final bool opening;
   final bool stealing;
   final VoidCallback onTap;
+  final VoidCallback onRelated;
+  final VoidCallback onHandoff;
 
   /// Non-null only when the session lives outside the active location.
   final VoidCallback? onSteal;
@@ -466,6 +582,8 @@ class _GlobalSessionRow extends StatelessWidget {
     required this.opening,
     this.stealing = false,
     required this.onTap,
+    required this.onRelated,
+    required this.onHandoff,
     this.onSteal,
   });
 
@@ -487,6 +605,10 @@ class _GlobalSessionRow extends StatelessWidget {
       label: 'Open $title. $details',
       onTap: opening ? null : onTap,
       customSemanticsActions: {
+        if (!opening && !stealing) ...{
+          const CustomSemanticsAction(label: 'Open related'): onRelated,
+          const CustomSemanticsAction(label: 'Copy handoff'): onHandoff,
+        },
         if (onSteal != null && !opening && !stealing)
           const CustomSemanticsAction(label: 'Continue here'): onSteal!,
       },
@@ -525,9 +647,27 @@ class _GlobalSessionRow extends StatelessWidget {
                   onSelected: (value) {
                     if (value == 'open') onTap();
                     if (value == 'steal') onSteal?.call();
+                    if (value == 'related') onRelated();
+                    if (value == 'handoff') onHandoff();
                   },
                   itemBuilder: (_) => [
                     const PopupMenuItem(value: 'open', child: Text('Open')),
+                    PopupMenuItem(
+                      value: 'related',
+                      child: Text(
+                        lookupAppLocalizations(
+                          Localizations.localeOf(context),
+                        ).sessionOpenRelated,
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'handoff',
+                      child: Text(
+                        lookupAppLocalizations(
+                          Localizations.localeOf(context),
+                        ).sessionCopyHandoff,
+                      ),
+                    ),
                     if (onSteal != null)
                       PopupMenuItem(
                         key: ValueKey('steal-session-${session.id}'),

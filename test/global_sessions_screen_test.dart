@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
@@ -27,6 +28,7 @@ class _FinderRepository implements ProductRepository {
   final Future<ServerPage<GlobalSessionResult>> Function(_SessionQuery query)?
   pageHandler;
   final calls = <_SessionQuery>[];
+  final details = <String, Session>{};
   final stealCalls = <String>[];
   Object? stealError;
 
@@ -55,9 +57,17 @@ class _FinderRepository implements ProductRepository {
       limit: limit,
     );
     calls.add(query);
-    if (pageHandler != null) return pageHandler!(query);
-    return ServerPage(items: await handler!(query));
+    final page = pageHandler != null
+        ? await pageHandler!(query)
+        : ServerPage(items: await handler!(query));
+    for (final result in page.items) {
+      details[result.session.id] = result.session;
+    }
+    return page;
   }
+
+  @override
+  Future<Session> getSessionDetails(String id) async => details[id]!;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -109,7 +119,16 @@ GlobalSessionResult _result(
 Future<_FinderController> _controller(ProductRepository repository) async {
   SharedPreferences.setMockInitialValues({});
   final preferences = await SharedPreferences.getInstance();
-  return _FinderController(ProfileStore(prefs: preferences))
+  final store = ProfileStore(prefs: preferences);
+  await store.upsert(
+    ServerProfile(
+      id: 'server',
+      name: 'Test server',
+      baseUrl: 'http://localhost',
+    ),
+  );
+  await store.setActiveId('server');
+  return _FinderController(store)
     ..repository = repository
     ..status = StreamStatus.connected;
 }
@@ -132,6 +151,17 @@ Widget _app(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  const secureChannel = MethodChannel(
+    'plugins.it_nomads.com/flutter_secure_storage',
+  );
+  setUp(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(secureChannel, (_) async => null);
+  });
+  tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(secureChannel, null);
+  });
 
   testWidgets('empty and duplicate pages keep their continuation reachable', (
     tester,
@@ -381,7 +411,7 @@ void main() {
     expect(find.text('Opened session'), findsOneWidget);
   });
 
-  testWidgets('wake refresh searches through the replacement repository', (
+  testWidgets('retained search refreshes through the replacement repository', (
     tester,
   ) async {
     final retained = _FinderRepository((_) async => [_result(1)]);
@@ -397,9 +427,41 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(retained.calls, hasLength(1));
+    expect(replacement.calls, isEmpty);
+    expect(find.text('Session 1'), findsOneWidget);
+    await tester.drag(find.byType(ListView), const Offset(0, 400));
+    await tester.pumpAndSettle();
     expect(replacement.calls, hasLength(1));
     expect(find.text('Session 1'), findsNothing);
     expect(find.text('Session 2'), findsOneWidget);
+  });
+
+  testWidgets('retained search results stay openable after reconnecting', (
+    tester,
+  ) async {
+    final result = _result(1);
+    final retained = _FinderRepository((_) async => [result]);
+    final replacement = _FinderRepository((_) async => [result])
+      ..details[result.session.id] = result.session;
+    final controller = await _controller(retained);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      _app(
+        controller,
+        routes: {
+          '/chat/ses_1': (_) => const Scaffold(body: Text('Opened session')),
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    controller.locationRevision++;
+    controller.signalRepository(replacement);
+    await tester.pumpAndSettle();
+    expect(replacement.calls, isEmpty);
+    await tester.tap(find.text('Session 1'));
+    await tester.pumpAndSettle();
+    expect(find.text('Opened session'), findsOneWidget);
   });
 
   testWidgets('unavailable finder stays scoped on a compact large-text phone', (

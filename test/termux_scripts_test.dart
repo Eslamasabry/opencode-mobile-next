@@ -26,6 +26,7 @@ void main() {
       'diagnostics.sh': TermuxBridge.diagnosticsScript(),
       'snapshot.sh': TermuxBridge.setupSnapshotScript(),
       'status.sh': TermuxBridge.statusScript(),
+      'installation.sh': TermuxBridge.installationScript(),
       'wake-lock.sh': TermuxBridge.ensureWakeLockScript,
       'unlock.sh': TermuxBridge.unlockCommand,
       'stop.sh': TermuxBridge.stopScript(port: 4096),
@@ -209,6 +210,149 @@ message=This belongs to the terminal
     );
     expect(manager, contains('opencode models --refresh'));
     expect(manager, contains('refreshing_models'));
+  });
+
+  test(
+    'Ubuntu npm install requires its matching pinned binary and cleans cache',
+    () {
+      final manager = TermuxBridge.managerScriptForTesting();
+      final block = manager.substring(
+        manager.indexOf('install_opencode() {'),
+        manager.indexOf('\ninstall_opencode ||'),
+      );
+      final directory = Directory.systemTemp.createTempSync('oc-npm-test-');
+      addTearDown(() => directory.deleteSync(recursive: true));
+      final calls = File('${directory.path}/calls');
+      for (final scenario in [
+        ('arm64', 0, 'opencode-linux-arm64'),
+        ('x64', 0, 'opencode-linux-x64-baseline'),
+        ('arm64', 7, 'opencode-linux-arm64'),
+        ('arm', 0, ''),
+      ]) {
+        calls.writeAsStringSync('');
+        final prelude = r'''
+set -eu
+node() { printf '%s\n' "$MOCK_ARCH"; }
+npm() {
+  printf '%s\n' "$@" >> "$NPM_CALLS"
+  return "$MOCK_NPM_EXIT"
+}
+''';
+        final script = '$prelude$block\ninstall_opencode\n';
+        final result = Process.runSync(
+          'bash',
+          ['-c', script],
+          environment: {
+            'MOCK_ARCH': scenario.$1,
+            'MOCK_NPM_EXIT': '${scenario.$2}',
+            'NPM_CALLS': calls.path,
+            'OC_REQUESTED_VERSION': TermuxBridge.defaultOpenCodeVersion,
+          },
+        );
+        expect(
+          result.exitCode,
+          scenario.$1 == 'arm' ? 64 : scenario.$2,
+          reason: '${result.stdout}\n${result.stderr}',
+        );
+        final arguments = calls.readAsLinesSync();
+        if (scenario.$1 == 'arm') {
+          expect(arguments, isEmpty);
+          continue;
+        }
+        expect(
+          arguments,
+          containsAll([
+            'install',
+            '-g',
+            '--include=optional',
+            '--foreground-scripts',
+            '--fetch-retries=5',
+            '--fetch-timeout=300000',
+            '${scenario.$3}@${TermuxBridge.defaultOpenCodeVersion}',
+            'opencode-ai@${TermuxBridge.defaultOpenCodeVersion}',
+          ]),
+        );
+        expect(arguments.where((value) => value.contains('musl')), isEmpty);
+        expect(arguments, isNot(contains('--force')));
+        final cache = arguments[arguments.indexOf('--cache') + 1];
+        expect(cache, startsWith('/tmp/opencode-mobile-npm.'));
+        expect(Directory(cache).existsSync(), isFalse);
+      }
+    },
+  );
+
+  test('installation inventory accepts only a single sanitized version', () {
+    final absent = TermuxInstallation.parse('ubuntu=absent\nversion=\n');
+    expect(absent.ubuntuInstalled, isFalse);
+    expect(absent.openCodeVersion, isNull);
+    final ubuntu = TermuxInstallation.parse('ubuntu=installed\nversion=\n');
+    expect(ubuntu.ubuntuInstalled, isTrue);
+    expect(ubuntu.openCodeVersion, isNull);
+    expect(
+      TermuxInstallation.parse(
+        'ubuntu=installed\nversion=1.18.29\n',
+      ).openCodeVersion,
+      '1.18.29',
+    );
+    for (final output in [
+      '',
+      'ubuntu=absent\nversion=1.18.29',
+      'ubuntu=installed\nversion=not a version',
+      'ubuntu=installed\nversion=1.18.29\nextra output',
+    ]) {
+      expect(
+        () => TermuxInstallation.parse(output),
+        throwsA(isA<TermuxBridgeException>()),
+      );
+    }
+  });
+
+  test('installation inventory distinguishes absence from a failed probe', () {
+    final directory = Directory.systemTemp.createTempSync('oc-inventory-test-');
+    addTearDown(() => directory.deleteSync(recursive: true));
+    final calls = File('${directory.path}/calls');
+    final executable = File('${directory.path}/proot-distro')
+      ..writeAsStringSync(r'''#!/bin/bash
+printf '%s\n' "$1" "$2" "$3" "$4" "$5" > "$PROOT_CALLS"
+if [ "$PROBE_EXIT" != 0 ]; then exit "$PROBE_EXIT"; fi
+printf 'ubuntu=installed\nversion=1.18.29\n'
+''');
+    expect(Process.runSync('chmod', ['+x', executable.path]).exitCode, 0);
+    final script = TermuxBridge.installationScript();
+    ProcessResult probe(int code) => Process.runSync(
+      'bash',
+      ['-c', script],
+      environment: {
+        'PREFIX': directory.path,
+        'PROOT_CALLS': calls.path,
+        'PATH': '${directory.path}:${Platform.environment['PATH']}',
+        'PROBE_EXIT': '$code',
+      },
+    );
+    final absent = probe(0);
+    expect(absent.exitCode, 0);
+    expect(
+      TermuxInstallation.parse(absent.stdout as String).ubuntuInstalled,
+      isFalse,
+    );
+    expect(calls.existsSync(), isFalse);
+    Directory(
+      '${directory.path}/var/lib/proot-distro/containers/opencode-ubuntu/rootfs',
+    ).createSync(recursive: true);
+    final installed = probe(0);
+    expect(installed.exitCode, 0, reason: '${installed.stderr}');
+    expect(
+      TermuxInstallation.parse(installed.stdout as String).openCodeVersion,
+      '1.18.29',
+    );
+    expect(calls.readAsLinesSync(), [
+      'login',
+      'opencode-ubuntu',
+      '--',
+      'bash',
+      '-c',
+    ]);
+    expect(probe(9).exitCode, 9);
   });
 
   test('the npm dist-tag is reachable only by asking for it', () {
