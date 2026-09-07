@@ -3,4 +3,10 @@
     <string name="widget_new_session">+ New</string>
     <string name="widget_empty">Open the app to connect. Sessions appear here.</string>
     <string name="widget_description">Your newest OpenCode sessions, one tap from their chats.</string>
+    <!-- Static launcher shortcuts (res/xml/shortcuts.xml). Short labels
+         must fit a launcher tile: keep them to two words. -->
+    <string name="shortcut_connect_short">Connect</string>
+    <string name="shortcut_connect_long">Choose a server to connect</string>
+    <string name="shortcut_new_task_short">New task</string>
+    <string name="shortcut_new_task_long">Start a new task on the current server</string>
 </resources>

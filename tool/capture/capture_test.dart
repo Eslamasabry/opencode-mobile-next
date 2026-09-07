@@ -136,6 +136,30 @@ void main() {
     }),
   );
 
+  // The same workspace with the checkout run blocked on a permission: the
+  // row leaves Active sessions for a Needs-you section at the top.
+  testWidgets(
+    '02b workspace needs you',
+    (tester) => _onPhone(tester, () async {
+      final controller = await captureController(prefs: await _prefs());
+      controller.permissions = {samplePermission().id: samplePermission()};
+      addTearDown(controller.dispose);
+      final key = GlobalKey();
+      await tester.pumpWidget(
+        captureApp(
+          home: const HomeScreen(),
+          boundaryKey: key,
+          controller: controller,
+        ),
+      );
+      await _settle(tester, 2);
+      await _shot(tester, key, '02b-workspace-needs-you.png');
+      expect(find.byKey(const ValueKey('workspace-needs-you')), findsOneWidget);
+      expect(find.textContaining('Permission needed'), findsOneWidget);
+      expect(find.text('ACTIVE SESSIONS'), findsNothing);
+    }),
+  );
+
   Future<void> chatShot(
     WidgetTester tester, {
     required String name,

@@ -12,7 +12,9 @@ import 'background/live_background.dart';
 import 'desktop/window_icon.dart';
 import 'desktop/window_state.dart';
 import 'diagnostics/app_diagnostics.dart';
+import 'domain/server_gateway.dart' show ProductException;
 import 'l10n/app_localizations.dart';
+import 'platform/launch_shortcut.dart';
 import 'platform/platform_capabilities.dart';
 import 'platform/share_intent.dart';
 import 'state/connection.dart';
@@ -211,12 +213,21 @@ class _AppBootstrapGateState extends State<AppBootstrapGate> {
 }
 
 class OcApp extends ConsumerStatefulWidget {
-  const OcApp({super.key, this.updateService, this.shareIntent});
+  const OcApp({
+    super.key,
+    this.updateService,
+    this.shareIntent,
+    this.launchShortcut,
+  });
 
   final AppUpdateService? updateService;
 
   /// Text shared in from other apps; injectable so tests can drive it.
   final ShareIntent? shareIntent;
+
+  /// Home-screen shortcut actions (Connect, New task); injectable so tests
+  /// can drive it. Absent, the app owns a real [LaunchShortcut].
+  final LaunchShortcut? launchShortcut;
 
   @override
   ConsumerState<OcApp> createState() => _OcAppState();
@@ -235,6 +246,12 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
   bool _shareRouteScheduled = false;
   String? _failedShareText;
   bool _shareWaitingNoticeShown = false;
+  late final LaunchShortcut _launchShortcut;
+  bool _launchRouteScheduled = false;
+  bool _launchWaitingNoticeShown = false;
+  // Tracks the route on top of the shell navigator so a shortcut never
+  // stacks a second servers screen over one already showing.
+  final _routeTracker = _TopRouteTracker();
 
   @override
   void initState() {
@@ -245,6 +262,9 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
     _share = widget.shareIntent ?? ShareIntent();
     _share.pending.addListener(_scheduleShareRoute);
     unawaited(_share.start());
+    _launchShortcut = widget.launchShortcut ?? LaunchShortcut();
+    _launchShortcut.pending.addListener(_scheduleLaunchRoute);
+    unawaited(_launchShortcut.start());
     // Only the Android build is Shorebird-released; desktop gets its update
     // news from the GitHub release check in DesktopReleaseNotice below.
     _updateService =
@@ -286,6 +306,7 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
   void _controllerChanged() {
     _scheduleCodingAlertRoute();
     _scheduleShareRoute();
+    _scheduleLaunchRoute();
   }
 
   /// Text shared from another app becomes the first prompt of a new session.
@@ -391,6 +412,158 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
       }
     });
     WidgetsBinding.instance.ensureVisualUpdate();
+  }
+
+  /// The active connection can open a session right now: transport,
+  /// repository and version are present and nothing is mid-flight. Mirrors
+  /// the readiness the share route waits for.
+  bool get _launchConnectionReady =>
+      _controller.api != null &&
+      _controller.repository != null &&
+      _controller.version != null &&
+      !_controller.connectionLoading &&
+      !_controller.locationLoading;
+
+  bool get _launchProfileNeedsReentry {
+    final profile = _controller.profile;
+    return profile != null &&
+        (profile.requiresPasswordReentry || profile.requiresCodexTokenReentry);
+  }
+
+  /// A saved server is on its way: either a connect is in flight, or nothing
+  /// has failed yet and the root screen is about to start one (cold start).
+  /// A missing profile, a credential re-entry, or a recorded failure is
+  /// final and never counts as waiting.
+  bool get _launchNewTaskWaiting {
+    if (_controller.profile == null || _launchProfileNeedsReentry) return false;
+    if (_launchConnectionReady) return false;
+    if (_controller.connectionLoading || _controller.locationLoading) {
+      return true;
+    }
+    return _controller.lastError == null;
+  }
+
+  /// A home-screen shortcut arrives as an action, never as text. Connect
+  /// opens the servers screen over whatever is showing, leaving the current
+  /// connection alone. New task waits for the saved server to become ready
+  /// and then opens an empty session; nothing is ever sent on the user's
+  /// behalf. An action that cannot complete is consumed with a notice rather
+  /// than left pending indefinitely.
+  void _scheduleLaunchRoute() {
+    if (_launchRouteScheduled) return;
+    final action = _launchShortcut.pending.value;
+    if (action == null) return;
+    if (action == LaunchAction.newTask && _launchNewTaskWaiting) {
+      if (!_launchWaitingNoticeShown) {
+        _launchWaitingNoticeShown = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final context = _navigatorKey.currentContext;
+          if (!mounted || context == null) return;
+          _showLaunchNotice(AppLocalizations.of(context).launchShortcutWaiting);
+        });
+      }
+      return;
+    }
+    _launchRouteScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        if (!mounted) return;
+        final navigator = _navigatorKey.currentState;
+        if (navigator == null) return;
+        final current = _launchShortcut.pending.value;
+        if (current == null) return;
+        switch (current) {
+          case LaunchAction.connect:
+            _consumeLaunchAction(current);
+            _showServersForLaunch(navigator);
+          case LaunchAction.newTask:
+            await _openNewTaskForLaunch(navigator, current);
+        }
+      } finally {
+        _launchRouteScheduled = false;
+        // A retained action re-evaluates against the current state; a
+        // consumed one returns immediately.
+        if (mounted) _scheduleLaunchRoute();
+      }
+    });
+    WidgetsBinding.instance.ensureVisualUpdate();
+  }
+
+  Future<void> _openNewTaskForLaunch(
+    NavigatorState navigator,
+    LaunchAction action,
+  ) async {
+    final l10n = AppLocalizations.of(navigator.context);
+    if (_controller.profile == null) {
+      _consumeLaunchAction(action);
+      _showServersForLaunch(navigator);
+      _showLaunchNotice(l10n.launchShortcutNoServer);
+      return;
+    }
+    if (_launchProfileNeedsReentry) {
+      _consumeLaunchAction(action);
+      _showServersForLaunch(navigator);
+      _showLaunchNotice(l10n.launchShortcutReentry);
+      return;
+    }
+    if (!_launchConnectionReady) {
+      // The state moved between scheduling and this frame; the listener
+      // re-evaluates the retained action when the connection settles.
+      if (_launchNewTaskWaiting) return;
+      _consumeLaunchAction(action);
+      _showServersForLaunch(navigator);
+      _showLaunchNotice(l10n.launchShortcutConnectionFailed);
+      return;
+    }
+    final location = _controller.locationRevision;
+    final api = _controller.api;
+    final repository = _controller.repository;
+    try {
+      final session = await _controller.createSession();
+      if (!mounted) return;
+      if (location != _controller.locationRevision ||
+          !identical(api, _controller.api) ||
+          !identical(repository, _controller.repository)) {
+        throw const ProductException('The connection changed.');
+      }
+      _consumeLaunchAction(action);
+      unawaited(
+        navigator.pushNamed(
+          '/chat/${session.id}',
+          arguments: const ChatRouteArguments.newlyCreated(),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      _consumeLaunchAction(action);
+      _showLaunchNotice(
+        l10n.launchShortcutNewTaskFailed(productErrorText(error)),
+      );
+    }
+  }
+
+  /// Consumes [action] only if it is still the pending one, so an action that
+  /// arrived while this one was being handled is not swallowed with it.
+  void _consumeLaunchAction(LaunchAction action) {
+    _launchWaitingNoticeShown = false;
+    if (_launchShortcut.pending.value == action) _launchShortcut.take();
+  }
+
+  /// Pushes the servers screen unless one is already on top. Routes beneath
+  /// stay: an open chat keeps its draft, and the connection is untouched.
+  void _showServersForLaunch(NavigatorState navigator) {
+    final top = _routeTracker.topName;
+    final rootShowsServers =
+        top == '/' &&
+        (_controller.profile == null || _launchProfileNeedsReentry);
+    if (top == '/servers' || rootShowsServers) return;
+    unawaited(navigator.pushNamed('/servers'));
+  }
+
+  void _showLaunchNotice(String message) {
+    _messengerKey.currentState
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _scheduleCodingAlertRoute() {
@@ -598,6 +771,7 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
           final pack = effectiveThemePack(_controller.themePack.value);
           return MaterialApp(
             navigatorKey: _navigatorKey,
+            navigatorObservers: [_routeTracker],
             scaffoldMessengerKey: _messengerKey,
             builder: (context, child) {
               // Global text-scale safety net: the system setting passes
@@ -708,7 +882,46 @@ class _OcAppState extends ConsumerState<OcApp> with WidgetsBindingObserver {
     _controller.removeListener(_controllerChanged);
     _share.pending.removeListener(_scheduleShareRoute);
     if (widget.shareIntent == null) _share.dispose();
+    _launchShortcut.pending.removeListener(_scheduleLaunchRoute);
+    if (widget.launchShortcut == null) _launchShortcut.dispose();
     super.dispose();
+  }
+}
+
+/// Remembers which route sits on top of the shell navigator. Only the name
+/// matters: unnamed routes (dialogs, sheets, pushed pages) report null.
+class _TopRouteTracker extends NavigatorObserver {
+  final List<Route<dynamic>> _stack = [];
+
+  String? get topName => _stack.isEmpty ? null : _stack.last.settings.name;
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _stack.add(route);
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _stack.remove(route);
+  }
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _stack.remove(route);
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    final index = oldRoute == null ? -1 : _stack.indexOf(oldRoute);
+    if (index >= 0) {
+      if (newRoute == null) {
+        _stack.removeAt(index);
+      } else {
+        _stack[index] = newRoute;
+      }
+    } else if (newRoute != null) {
+      _stack.add(newRoute);
+    }
   }
 }
 

@@ -3103,6 +3103,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mobileTaskCancelled => 'Cancelled';
 
   @override
+  String mobileTasksProgress(int done, int total) {
+    return '$done of $total done';
+  }
+
+  @override
+  String get mobileTasksCopyAll => 'Copy all tasks';
+
+  @override
+  String get mobileTasksCopied => 'All tasks copied';
+
+  @override
+  String get mobileTasksCopyFailed => 'Could not copy the task list.';
+
+  @override
+  String get mobileTaskPriorityHigh => 'High priority';
+
+  @override
+  String get mobileTaskPriorityMedium => 'Medium priority';
+
+  @override
+  String get mobileTaskPriorityLow => 'Low priority';
+
+  @override
   String get pluginMappingClearAll => 'Clear personal links';
 
   @override
@@ -3372,4 +3395,131 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get projectConfiguredFolder => 'Configured folder';
+
+  @override
+  String get termuxGuideTitle => 'Connect Termux once';
+
+  @override
+  String get termuxGuideIntro =>
+      'We copy the command for you. Here is what to do when Termux opens.';
+
+  @override
+  String get termuxGuideAutomaticCheck =>
+      'When you return, we will check the connection automatically.';
+
+  @override
+  String get termuxGuideShowCommand => 'Show command';
+
+  @override
+  String get termuxGuideOpening => 'Opening Termux...';
+
+  @override
+  String get termuxGuideCopyTitle => '1. Copy & open';
+
+  @override
+  String get termuxGuideCopyDescription =>
+      'Tap Copy & open Termux above. Allow Android\'s permission request if shown.';
+
+  @override
+  String get termuxGuidePasteTitle => '2. Press and hold, then Paste';
+
+  @override
+  String get termuxGuidePasteDescription =>
+      'In Termux, press and hold near the blinking cursor. Tap Paste in the menu.';
+
+  @override
+  String get termuxGuideEnterTitle => '3. Enter, then return';
+
+  @override
+  String get termuxGuideEnterDescription =>
+      'Press the keyboard Enter or return key. When Termux shows bridge-unlocked, switch back to this app.';
+
+  @override
+  String get termuxGuideCopied => 'Command copied';
+
+  @override
+  String get termuxGuidePaste => 'Paste';
+
+  @override
+  String get termuxGuideEnterKey => 'Enter';
+
+  @override
+  String get termuxGuideIllustrationNote =>
+      'Illustrations only. Your keyboard and Paste menu may look different.';
+
+  @override
+  String get termuxGuideOpenFailed =>
+      'The command was copied, but Termux could not open. Open Termux yourself or try Copy & open Termux again.';
+
+  @override
+  String get termuxGuideCopyOpenFailed =>
+      'Could not copy the command or open Termux.';
+
+  @override
+  String get termuxPermissionDenied =>
+      'Android denied the Termux command permission. Allow it in OpenCode app settings.';
+
+  @override
+  String get launchShortcutWaiting =>
+      'Connecting to the saved server. The new task opens when it is ready.';
+
+  @override
+  String get launchShortcutNoServer =>
+      'Choose a server, then start a new task.';
+
+  @override
+  String get launchShortcutReentry =>
+      'Enter the credentials for the saved server, then start a new task.';
+
+  @override
+  String get launchShortcutConnectionFailed =>
+      'Could not connect to the saved server. Choose or fix a server, then start a new task.';
+
+  @override
+  String launchShortcutNewTaskFailed(String error) {
+    return 'Could not start a new task. $error';
+  }
+
+  @override
+  String get queuedSending => 'Sending…';
+
+  @override
+  String get queuedDeliveryUnconfirmed =>
+      'Delivery unconfirmed — review before resending';
+
+  @override
+  String queuedDeliveryUnconfirmedWithError(String error) {
+    return 'Delivery unconfirmed: $error';
+  }
+
+  @override
+  String get queuedResendTooltip => 'Send again';
+
+  @override
+  String get queuedResendTitle => 'Send this draft again?';
+
+  @override
+  String get queuedResendMessage =>
+      'It may already have reached OpenCode. Sending again can duplicate it.';
+
+  @override
+  String get queuedResendConfirm => 'Send again';
+
+  @override
+  String get queuedKeepForReview => 'Keep for review';
+
+  @override
+  String get queuedDiscardUnconfirmedMessage =>
+      'Its earlier send was never confirmed; it may already be in the session.';
+
+  @override
+  String queuedBannerReview(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count drafts with an unconfirmed send to review.',
+      one: '1 draft with an unconfirmed send to review.',
+    );
+    return '$_temp0';
+  }
 }

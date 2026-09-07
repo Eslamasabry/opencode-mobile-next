@@ -70,7 +70,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       builder: (context, _) {
         final l10n = AppLocalizations.of(context);
         final group0 = <_DestinationRow>[
-          if (controller.capabilities.serverCatalog)
+          if (controller.capabilities.serverCatalog) ...[
             _DestinationRow(
               icon: Icons.model_training_outlined,
               title: l10n.libraryModelsAgentsTitle,
@@ -78,37 +78,38 @@ class _LibraryScreenState extends State<LibraryScreen> {
               onTap: () =>
                   _open(context, CatalogScreen(controller: controller)),
             ),
-          _DestinationRow(
-            icon: Icons.cloud_outlined,
-            title: l10n.libraryProvidersTitle,
-            keywords: 'API keys authentication connect',
-            onTap: () => _open(
-              context,
-              IntegrationsScreen(
-                controller: controller,
-                mode: IntegrationsMode.providers,
+            _DestinationRow(
+              icon: Icons.cloud_outlined,
+              title: l10n.libraryProvidersTitle,
+              keywords: 'API keys authentication connect',
+              onTap: () => _open(
+                context,
+                IntegrationsScreen(
+                  controller: controller,
+                  mode: IntegrationsMode.providers,
+                ),
               ),
             ),
-          ),
-          _DestinationRow(
-            icon: Icons.hub_outlined,
-            title: l10n.libraryMcpTitle,
-            keywords: 'integrations servers',
-            onTap: () => _open(
-              context,
-              IntegrationsScreen(
-                controller: controller,
-                mode: IntegrationsMode.mcp,
+            _DestinationRow(
+              icon: Icons.hub_outlined,
+              title: l10n.libraryMcpTitle,
+              keywords: 'integrations servers',
+              onTap: () => _open(
+                context,
+                IntegrationsScreen(
+                  controller: controller,
+                  mode: IntegrationsMode.mcp,
+                ),
               ),
             ),
-          ),
-          _DestinationRow(
-            icon: Icons.build_circle_outlined,
-            title: l10n.libraryCommandsToolsTitle,
-            keywords: 'slash skills references capabilities',
-            onTap: () =>
-                _open(context, CapabilitiesScreen(controller: controller)),
-          ),
+            _DestinationRow(
+              icon: Icons.build_circle_outlined,
+              title: l10n.libraryCommandsToolsTitle,
+              keywords: 'slash skills references capabilities',
+              onTap: () =>
+                  _open(context, CapabilitiesScreen(controller: controller)),
+            ),
+          ],
           if (controller.capabilities.pluginInventory)
             _DestinationRow(
               icon: Icons.extension_outlined,

@@ -9,7 +9,133 @@ String _processStart(int pid) {
   return fields[19];
 }
 
+ProcessResult _runManagerClockProbe(String commands) {
+  final directory = Directory.systemTemp.createTempSync('oc-manager-clock-');
+  addTearDown(() => directory.deleteSync(recursive: true));
+  final home = Directory('${directory.path}/home')..createSync();
+  final manager = TermuxBridge.managerScriptForTesting();
+  final functions = manager.substring(
+    0,
+    manager.indexOf('\ncase "\${1:-status}" in'),
+  );
+  final probe = File('${directory.path}/probe.sh')
+    ..writeAsStringSync('$functions\n$commands\n');
+  return Process.runSync(
+    'bash',
+    [probe.path],
+    environment: {...Platform.environment, 'HOME': home.path},
+  );
+}
+
 void main() {
+  test('setup clock tolerates legacy and malformed timestamps', () {
+    expect(
+      TermuxSetupStatus.parse('phase=preparing').startedAtEpochSeconds,
+      isNull,
+    );
+    for (final value in [
+      '',
+      'unknown',
+      '-1',
+      '1.5',
+      '0xff',
+      '+1',
+      '999999999999999999999999',
+    ]) {
+      expect(
+        TermuxSetupStatus.parse(
+          'phase=preparing\nstarted_at=$value',
+        ).startedAtEpochSeconds,
+        isNull,
+        reason: value,
+      );
+    }
+    expect(TermuxSetupStatus.parse('started_at=0').startedAtEpochSeconds, 0);
+    expect(
+      TermuxSetupStatus.parse('started_at=1788800000').startedAtEpochSeconds,
+      1788800000,
+    );
+  });
+
+  test('install dispatch starts its clock only after accepting the launch', () {
+    final script = TermuxBridge.installAndServeScript(
+      password: 'test-password',
+    );
+    final dispatch = script.substring(script.indexOf('\nOC_MANAGER_EOF\n'));
+    final clock = dispatch.indexOf(r'started_at=$(date +%s)');
+    expect(clock, greaterThan(dispatch.indexOf('trap cleanup_dispatch EXIT')));
+    expect(
+      clock,
+      greaterThan(dispatch.lastIndexOf('manager-already-running:')),
+    );
+    expect(clock, lessThan(dispatch.indexOf("printf 'phase=queued")));
+    expect(dispatch, contains(r'started_at=%s'));
+    expect(dispatch.split(r'$(date +%s)').length - 1, 1);
+  });
+
+  test('manager clock survives phase writes and a fresh status process', () {
+    final result = _runManagerClockProbe(r'''
+if [ "${1:-}" = reopened ]; then
+  status
+  exit 0
+fi
+printf 'started_at=100\n' > "$STATE"
+for phase in preparing installing_dependencies installing_ubuntu installing_opencode refreshing_models starting_server ready; do
+  write_state "$phase" 'Clock probe' 4096
+  [ "$(read_state_value started_at)" = 100 ] || exit 81
+done
+# A fresh status shell detects missing server ownership and writes failed.
+# That transition must retain the operation clock too.
+bash "$0" reopened
+''');
+    expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
+    final status = TermuxSetupStatus.parse(result.stdout as String);
+    expect(status.phase, 'failed');
+    expect(status.startedAtEpochSeconds, 100);
+  });
+
+  test('legacy manager state stays without an invented clock', () {
+    final result = _runManagerClockProbe(r'''
+write_state preparing 'Legacy operation' 4096
+status
+''');
+    expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
+    expect(
+      TermuxSetupStatus.parse(result.stdout as String).startedAtEpochSeconds,
+      isNull,
+    );
+  });
+
+  test('restart renews the clock only after launch rejection gates', () {
+    final result = _runManagerClockProbe(r'''
+printf 'phase=stopped\nstarted_at=100\n' > "$STATE"
+claim_direct_lock() { [ "${REJECT_LOCK:-0}" = 0 ]; }
+recovery_preflight() { return 1; }
+release_setup_lock() { :; }
+cleanup_setup() { :; }
+process_start() { printf '1'; }
+process_group() { printf '%s' "$$"; }
+ubuntu_usable() { return 1; }
+date() { printf '%s' "$CLOCK"; }
+CLOCK=200
+if (restart 4096 'invalid!'); then exit 82; fi
+[ "$(read_state_value started_at)" = 100 ] || exit 83
+REJECT_LOCK=1
+if (restart 4096 duplicate); then exit 84; fi
+[ "$(read_state_value started_at)" = 100 ] || exit 85
+REJECT_LOCK=0
+if (restart 4096 revoked expected token); then exit 86; fi
+[ "$(read_state_value started_at)" = 100 ] || exit 87
+# Accepted operations stop at stubbed Ubuntu preflight, after writing the clock.
+if (restart 4096 first); then exit 88; fi
+[ "$(read_state_value started_at)" = 200 ] || exit 89
+CLOCK=300
+if (restart 4096 second); then exit 90; fi
+[ "$(read_state_value started_at)" = 300 ] || exit 91
+''');
+    expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
+  });
+
   test('generated termux scripts pass bash syntax validation', () {
     final directory = Directory.systemTemp.createTempSync('oc-scripts-');
     addTearDown(() => directory.deleteSync(recursive: true));
@@ -210,6 +336,52 @@ message=This belongs to the terminal
     );
     expect(manager, contains('opencode models --refresh'));
     expect(manager, contains('refreshing_models'));
+  });
+
+  test('Ubuntu bootstrap disables io_uring before Node and npm run', () {
+    final manager = TermuxBridge.managerScriptForTesting();
+    final start = manager.indexOf("bash -s <<'OC_PROOT_SETUP'");
+    final bootstrap = manager.substring(
+      start,
+      manager.indexOf('\nOC_PROOT_SETUP', start),
+    );
+    final compatibility = bootstrap.indexOf('export UV_USE_IO_URING=0');
+    expect(compatibility, greaterThanOrEqualTo(0));
+    expect(compatibility, lessThan(bootstrap.indexOf('node -p')));
+    expect(compatibility, lessThan(bootstrap.indexOf('npm install -g')));
+  });
+
+  test('Ubuntu bootstrap trims recommendations but retains coding tools', () {
+    final manager = TermuxBridge.managerScriptForTesting();
+    final bootstrap = manager.substring(
+      manager.indexOf("bash -s <<'OC_PROOT_SETUP'"),
+      manager.indexOf('\ninstall_opencode() {'),
+    );
+    final joined = bootstrap.replaceAll(RegExp(r'\\\r?\n'), ' ');
+    final install = RegExp(
+      r'apt-get install[^\r\n]*',
+    ).firstMatch(joined)!.group(0)!;
+    final arguments = install.split(RegExp(r'\s+'));
+
+    expect(arguments, contains('--no-install-recommends'));
+    expect(arguments, contains('Acquire::Retries=5'));
+    expect(
+      arguments,
+      containsAll([
+        'nodejs',
+        'npm',
+        'curl',
+        'ca-certificates',
+        'git',
+        'openssh-client',
+      ]),
+    );
+    for (final command in ['node', 'npm', 'curl', 'git', 'ssh']) {
+      expect(bootstrap, contains('! command -v $command >/dev/null 2>&1'));
+    }
+    expect(bootstrap, contains('[ ! -s /etc/ssl/certs/ca-certificates.crt ]'));
+    expect(bootstrap, contains('apt-get update -y -o Acquire::Retries=5'));
+    expect(bootstrap, isNot(contains('--allow-unauthenticated')));
   });
 
   test(

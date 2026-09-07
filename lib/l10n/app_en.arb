@@ -1136,6 +1136,20 @@
   "mobileTaskInProgress": "In progress",
   "mobileTaskCompleted": "Completed",
   "mobileTaskCancelled": "Cancelled",
+  "mobileTasksProgress": "{done} of {total} done",
+  "@mobileTasksProgress": {
+    "description": "Task card progress caption and progress-bar semantics label: completed tasks out of tracked (non-cancelled) tasks",
+    "placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}
+  },
+  "mobileTasksCopyAll": "Copy all tasks",
+  "@mobileTasksCopyAll": {"description": "Task card button: copies the full server-reported task list as plain text, ignoring the local unfinished-only filter"},
+  "mobileTasksCopied": "All tasks copied",
+  "@mobileTasksCopied": {"description": "Snackbar after the task list was placed on the clipboard"},
+  "mobileTasksCopyFailed": "Could not copy the task list.",
+  "@mobileTasksCopyFailed": {"description": "Snackbar when the clipboard write fails"},
+  "mobileTaskPriorityHigh": "High priority",
+  "mobileTaskPriorityMedium": "Medium priority",
+  "mobileTaskPriorityLow": "Low priority",
   "pluginMappingClearAll": "Clear personal links",
   "pluginMappingClearTitle": "Clear all personal command links?",
   "pluginMappingClearDescription": "Remove personal plugin-command links for every location in this server profile, including previous locations. Server plugins and commands stay installed.",
@@ -1229,5 +1243,95 @@
   "connectionCloseEditor": "Close server editor",
   "connectionCredentialUnavailable": "A saved connection credential can no longer be read. Edit the active server and re-enter it before connecting.",
   "projectContextTitle": "Project context",
-  "projectConfiguredFolder": "Configured folder"
+  "projectConfiguredFolder": "Configured folder",
+  "termuxGuideTitle": "Connect Termux once",
+  "termuxGuideIntro": "We copy the command for you. Here is what to do when Termux opens.",
+  "termuxGuideAutomaticCheck": "When you return, we will check the connection automatically.",
+  "termuxGuideShowCommand": "Show command",
+  "termuxGuideOpening": "Opening Termux...",
+  "termuxGuideCopyTitle": "1. Copy & open",
+  "termuxGuideCopyDescription": "Tap Copy & open Termux above. Allow Android's permission request if shown.",
+  "termuxGuidePasteTitle": "2. Press and hold, then Paste",
+  "termuxGuidePasteDescription": "In Termux, press and hold near the blinking cursor. Tap Paste in the menu.",
+  "termuxGuideEnterTitle": "3. Enter, then return",
+  "termuxGuideEnterDescription": "Press the keyboard Enter or return key. When Termux shows bridge-unlocked, switch back to this app.",
+  "@termuxGuideEnterDescription": {
+    "description": "Keep bridge-unlocked unchanged: it is the literal terminal command output."
+  },
+  "termuxGuideCopied": "Command copied",
+  "termuxGuidePaste": "Paste",
+  "termuxGuideEnterKey": "Enter",
+  "termuxGuideIllustrationNote": "Illustrations only. Your keyboard and Paste menu may look different.",
+  "termuxGuideOpenFailed": "The command was copied, but Termux could not open. Open Termux yourself or try Copy & open Termux again.",
+  "termuxGuideCopyOpenFailed": "Could not copy the command or open Termux.",
+  "termuxPermissionDenied": "Android denied the Termux command permission. Allow it in OpenCode app settings.",
+  "launchShortcutWaiting": "Connecting to the saved server. The new task opens when it is ready.",
+  "@launchShortcutWaiting": {
+    "description": "Snackbar shown once when the New task home-screen shortcut arrives while the saved server is still connecting"
+  },
+  "launchShortcutNoServer": "Choose a server, then start a new task.",
+  "@launchShortcutNoServer": {
+    "description": "Snackbar shown on the servers screen when the New task shortcut arrives with no saved server selected"
+  },
+  "launchShortcutReentry": "Enter the credentials for the saved server, then start a new task.",
+  "@launchShortcutReentry": {
+    "description": "Snackbar shown on the servers screen when the New task shortcut arrives while the saved server needs its password or token entered again"
+  },
+  "launchShortcutConnectionFailed": "Could not connect to the saved server. Choose or fix a server, then start a new task.",
+  "@launchShortcutConnectionFailed": {
+    "description": "Snackbar shown on the servers screen when the New task shortcut arrives after the saved server connection failed"
+  },
+  "launchShortcutNewTaskFailed": "Could not start a new task. {error}",
+  "@launchShortcutNewTaskFailed": {
+    "description": "Snackbar shown when the New task shortcut reached a connected server but creating the session failed",
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "queuedSending": "Sending…",
+  "@queuedSending": {
+    "description": "Queued draft bubble label while the offline flush is dispatching it"
+  },
+  "queuedDeliveryUnconfirmed": "Delivery unconfirmed — review before resending",
+  "@queuedDeliveryUnconfirmed": {
+    "description": "Queued draft bubble label for a send that left the device without a confirmed outcome; never resent automatically"
+  },
+  "queuedDeliveryUnconfirmedWithError": "Delivery unconfirmed: {error}",
+  "@queuedDeliveryUnconfirmedWithError": {
+    "description": "Queued draft bubble label for an unconfirmed send that also recorded a transport error",
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "queuedResendTooltip": "Send again",
+  "@queuedResendTooltip": {
+    "description": "Tooltip on the queued draft bubble's explicit resend action"
+  },
+  "queuedResendTitle": "Send this draft again?",
+  "@queuedResendTitle": {
+    "description": "Confirmation dialog title before resending an unconfirmed queued draft"
+  },
+  "queuedResendMessage": "It may already have reached OpenCode. Sending again can duplicate it.",
+  "@queuedResendMessage": {
+    "description": "Confirmation dialog body before resending an unconfirmed queued draft"
+  },
+  "queuedResendConfirm": "Send again",
+  "@queuedResendConfirm": {
+    "description": "Confirmation dialog affirmative button for resending an unconfirmed queued draft"
+  },
+  "queuedKeepForReview": "Keep for review",
+  "@queuedKeepForReview": {
+    "description": "Cancel label on the resend and discard dialogs for an unconfirmed queued draft; the draft stays queued for review"
+  },
+  "queuedDiscardUnconfirmedMessage": "Its earlier send was never confirmed; it may already be in the session.",
+  "@queuedDiscardUnconfirmedMessage": {
+    "description": "Discard sheet body for a queued draft whose send was never confirmed"
+  },
+  "queuedBannerReview": "{count, plural, =1{1 draft with an unconfirmed send to review.} other{{count} drafts with an unconfirmed send to review.}}",
+  "@queuedBannerReview": {
+    "description": "Connection banner line counting queued drafts whose send was never confirmed",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  }
 }

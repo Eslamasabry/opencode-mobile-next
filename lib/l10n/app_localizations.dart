@@ -5241,6 +5241,48 @@ abstract class AppLocalizations {
   /// **'Cancelled'**
   String get mobileTaskCancelled;
 
+  /// Task card progress caption and progress-bar semantics label: completed tasks out of tracked (non-cancelled) tasks
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} done'**
+  String mobileTasksProgress(int done, int total);
+
+  /// Task card button: copies the full server-reported task list as plain text, ignoring the local unfinished-only filter
+  ///
+  /// In en, this message translates to:
+  /// **'Copy all tasks'**
+  String get mobileTasksCopyAll;
+
+  /// Snackbar after the task list was placed on the clipboard
+  ///
+  /// In en, this message translates to:
+  /// **'All tasks copied'**
+  String get mobileTasksCopied;
+
+  /// Snackbar when the clipboard write fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy the task list.'**
+  String get mobileTasksCopyFailed;
+
+  /// No description provided for @mobileTaskPriorityHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High priority'**
+  String get mobileTaskPriorityHigh;
+
+  /// No description provided for @mobileTaskPriorityMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium priority'**
+  String get mobileTaskPriorityMedium;
+
+  /// No description provided for @mobileTaskPriorityLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low priority'**
+  String get mobileTaskPriorityLow;
+
   /// No description provided for @pluginMappingClearAll.
   ///
   /// In en, this message translates to:
@@ -5702,6 +5744,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Configured folder'**
   String get projectConfiguredFolder;
+
+  /// No description provided for @termuxGuideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Termux once'**
+  String get termuxGuideTitle;
+
+  /// No description provided for @termuxGuideIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'We copy the command for you. Here is what to do when Termux opens.'**
+  String get termuxGuideIntro;
+
+  /// No description provided for @termuxGuideAutomaticCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'When you return, we will check the connection automatically.'**
+  String get termuxGuideAutomaticCheck;
+
+  /// No description provided for @termuxGuideShowCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'Show command'**
+  String get termuxGuideShowCommand;
+
+  /// No description provided for @termuxGuideOpening.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening Termux...'**
+  String get termuxGuideOpening;
+
+  /// No description provided for @termuxGuideCopyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Copy & open'**
+  String get termuxGuideCopyTitle;
+
+  /// No description provided for @termuxGuideCopyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap Copy & open Termux above. Allow Android\'s permission request if shown.'**
+  String get termuxGuideCopyDescription;
+
+  /// No description provided for @termuxGuidePasteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Press and hold, then Paste'**
+  String get termuxGuidePasteTitle;
+
+  /// No description provided for @termuxGuidePasteDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'In Termux, press and hold near the blinking cursor. Tap Paste in the menu.'**
+  String get termuxGuidePasteDescription;
+
+  /// No description provided for @termuxGuideEnterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'3. Enter, then return'**
+  String get termuxGuideEnterTitle;
+
+  /// Keep bridge-unlocked unchanged: it is the literal terminal command output.
+  ///
+  /// In en, this message translates to:
+  /// **'Press the keyboard Enter or return key. When Termux shows bridge-unlocked, switch back to this app.'**
+  String get termuxGuideEnterDescription;
+
+  /// No description provided for @termuxGuideCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Command copied'**
+  String get termuxGuideCopied;
+
+  /// No description provided for @termuxGuidePaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get termuxGuidePaste;
+
+  /// No description provided for @termuxGuideEnterKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter'**
+  String get termuxGuideEnterKey;
+
+  /// No description provided for @termuxGuideIllustrationNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Illustrations only. Your keyboard and Paste menu may look different.'**
+  String get termuxGuideIllustrationNote;
+
+  /// No description provided for @termuxGuideOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The command was copied, but Termux could not open. Open Termux yourself or try Copy & open Termux again.'**
+  String get termuxGuideOpenFailed;
+
+  /// No description provided for @termuxGuideCopyOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy the command or open Termux.'**
+  String get termuxGuideCopyOpenFailed;
+
+  /// No description provided for @termuxPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Android denied the Termux command permission. Allow it in OpenCode app settings.'**
+  String get termuxPermissionDenied;
+
+  /// Snackbar shown once when the New task home-screen shortcut arrives while the saved server is still connecting
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting to the saved server. The new task opens when it is ready.'**
+  String get launchShortcutWaiting;
+
+  /// Snackbar shown on the servers screen when the New task shortcut arrives with no saved server selected
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a server, then start a new task.'**
+  String get launchShortcutNoServer;
+
+  /// Snackbar shown on the servers screen when the New task shortcut arrives while the saved server needs its password or token entered again
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the credentials for the saved server, then start a new task.'**
+  String get launchShortcutReentry;
+
+  /// Snackbar shown on the servers screen when the New task shortcut arrives after the saved server connection failed
+  ///
+  /// In en, this message translates to:
+  /// **'Could not connect to the saved server. Choose or fix a server, then start a new task.'**
+  String get launchShortcutConnectionFailed;
+
+  /// Snackbar shown when the New task shortcut reached a connected server but creating the session failed
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start a new task. {error}'**
+  String launchShortcutNewTaskFailed(String error);
+
+  /// Queued draft bubble label while the offline flush is dispatching it
+  ///
+  /// In en, this message translates to:
+  /// **'Sending…'**
+  String get queuedSending;
+
+  /// Queued draft bubble label for a send that left the device without a confirmed outcome; never resent automatically
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery unconfirmed — review before resending'**
+  String get queuedDeliveryUnconfirmed;
+
+  /// Queued draft bubble label for an unconfirmed send that also recorded a transport error
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery unconfirmed: {error}'**
+  String queuedDeliveryUnconfirmedWithError(String error);
+
+  /// Tooltip on the queued draft bubble's explicit resend action
+  ///
+  /// In en, this message translates to:
+  /// **'Send again'**
+  String get queuedResendTooltip;
+
+  /// Confirmation dialog title before resending an unconfirmed queued draft
+  ///
+  /// In en, this message translates to:
+  /// **'Send this draft again?'**
+  String get queuedResendTitle;
+
+  /// Confirmation dialog body before resending an unconfirmed queued draft
+  ///
+  /// In en, this message translates to:
+  /// **'It may already have reached OpenCode. Sending again can duplicate it.'**
+  String get queuedResendMessage;
+
+  /// Confirmation dialog affirmative button for resending an unconfirmed queued draft
+  ///
+  /// In en, this message translates to:
+  /// **'Send again'**
+  String get queuedResendConfirm;
+
+  /// Cancel label on the resend and discard dialogs for an unconfirmed queued draft; the draft stays queued for review
+  ///
+  /// In en, this message translates to:
+  /// **'Keep for review'**
+  String get queuedKeepForReview;
+
+  /// Discard sheet body for a queued draft whose send was never confirmed
+  ///
+  /// In en, this message translates to:
+  /// **'Its earlier send was never confirmed; it may already be in the session.'**
+  String get queuedDiscardUnconfirmedMessage;
+
+  /// Connection banner line counting queued drafts whose send was never confirmed
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 draft with an unconfirmed send to review.} other{{count} drafts with an unconfirmed send to review.}}'**
+  String queuedBannerReview(int count);
 }
 
 class _AppLocalizationsDelegate

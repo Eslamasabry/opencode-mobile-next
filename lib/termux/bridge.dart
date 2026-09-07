@@ -336,7 +336,8 @@ password_tmp="\$OC_DIR/server.password.tmp.\$\$"
 printf '%s' $quotedPassword > "\$password_tmp"
 chmod 600 "\$password_tmp"
 mv "\$password_tmp" "\$OC_DIR/server.password"
-printf 'phase=queued\nmessage=Setup queued\nport=$port\nrunner=proot\nversion=\npid=\n' > "\$OC_DIR/state"
+started_at=\$(date +%s)
+printf 'phase=queued\nmessage=Setup queued\nport=$port\nrunner=proot\nversion=\npid=\nstarted_at=%s\n' "\$started_at" > "\$OC_DIR/state"
 # From this point a stale dispatcher lock is safer than deleting a lock while
 # the child is claiming it. Stop & retry handles stale ownership explicitly.
 trap - EXIT
@@ -753,10 +754,13 @@ write_state() {
   local version="${5:-}"
   local pid="${6:-}"
   local operation_result="${7:-}"
+  # Phase/status writers retain the accepted operation's clock. Only a new
+  # dispatcher or accepted restart initializes it; legacy state stays unknown.
+  local started_at="${CURRENT_STARTED_AT-$(read_state_value started_at)}"
   local tmp="$STATE.tmp.$$"
-  printf 'phase=%s\nmessage=%s\nport=%s\nrunner=%s\nversion=%s\npid=%s\noperation=%s\noperation_result=%s\nfailure_kind=%s\nrecovery_token=%s\n' \
+  printf 'phase=%s\nmessage=%s\nport=%s\nrunner=%s\nversion=%s\npid=%s\noperation=%s\noperation_result=%s\nfailure_kind=%s\nrecovery_token=%s\nstarted_at=%s\n' \
     "$phase" "$message" "$port" "$runner" "$version" "$pid" \
-    "${CURRENT_OPERATION:-}" "$operation_result" "${8:-${CURRENT_RECOVERY:+recovery}}" "${CURRENT_RECOVERY:-}" > "$tmp"
+    "${CURRENT_OPERATION:-}" "$operation_result" "${8:-${CURRENT_RECOVERY:+recovery}}" "${CURRENT_RECOVERY:-}" "$started_at" > "$tmp"
   mv "$tmp" "$STATE"
 }
 
@@ -1312,9 +1316,19 @@ setup() {
   proot-distro login "$PROOT_NAME" -- env OC_REQUESTED_VERSION="$requested_version" bash -s <<'OC_PROOT_SETUP'
 set -Eeuo pipefail
 export DEBIAN_FRONTEND=noninteractive
-if ! command -v npm >/dev/null 2>&1 || ! command -v curl >/dev/null 2>&1; then
+# Keep Node filesystem calls visible to PRoot's path translation.
+export UV_USE_IO_URING=0
+if ! command -v node >/dev/null 2>&1 ||
+   ! command -v npm >/dev/null 2>&1 ||
+   ! command -v curl >/dev/null 2>&1 ||
+   ! command -v git >/dev/null 2>&1 ||
+   ! command -v ssh >/dev/null 2>&1 ||
+   [ ! -s /etc/ssl/certs/ca-certificates.crt ]; then
   apt-get update -y -o Acquire::Retries=5
-  apt-get install -y nodejs npm curl ca-certificates -o Acquire::Retries=5
+  # Skip optional distro tooling, but retain Git and SSH explicitly for coding
+  # projects: these must not depend on npm/git's recommended-package defaults.
+  apt-get install -y --no-install-recommends -o Acquire::Retries=5 \
+    nodejs npm curl ca-certificates git openssh-client
 fi
 export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--dns-result-order=ipv4first"
 install_opencode() {
@@ -1515,6 +1529,7 @@ restart() {
       return 75
     fi
   fi
+  CURRENT_STARTED_AT=$(date +%s)
   printf '%s %s\n' "$$" "$(process_start "$$")" > "$MANAGER_PID"
   trap on_setup_error ERR
   trap cleanup_setup EXIT
@@ -1842,6 +1857,7 @@ class TermuxSetupStatus {
   final String runner;
   final String version;
   final int? pid;
+  final int? startedAtEpochSeconds;
   final String operationID;
   final String operationResult;
   final String failureKind;
@@ -1853,6 +1869,7 @@ class TermuxSetupStatus {
     required this.runner,
     required this.version,
     required this.pid,
+    this.startedAtEpochSeconds,
     this.operationID = '',
     this.operationResult = '',
     this.failureKind = '',
@@ -1883,6 +1900,10 @@ class TermuxSetupStatus {
       if (separator <= 0) continue;
       values[line.substring(0, separator)] = line.substring(separator + 1);
     }
+    final rawStartedAt = values['started_at'] ?? '';
+    final startedAt = RegExp(r'^[0-9]+$').hasMatch(rawStartedAt)
+        ? int.tryParse(rawStartedAt)
+        : null;
     return TermuxSetupStatus(
       phase: values['phase'] ?? 'unknown',
       message: values['message'] ?? 'Unknown setup state',
@@ -1890,6 +1911,9 @@ class TermuxSetupStatus {
       runner: values['runner'] ?? '',
       version: values['version'] ?? '',
       pid: int.tryParse(values['pid'] ?? ''),
+      startedAtEpochSeconds: startedAt != null && startedAt >= 0
+          ? startedAt
+          : null,
       operationID: values['operation'] ?? '',
       operationResult: values['operation_result'] ?? '',
       failureKind: values['failure_kind'] ?? '',

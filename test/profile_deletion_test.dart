@@ -347,6 +347,113 @@ void main() {
     expect(prefs.getString('oc.sessionDrafts'), contains('half-written'));
   });
 
+  group('queued prompts awaiting delivery review', () {
+    // Entries the flush marked as dispatched but never confirmed removed.
+    // They still hold prompt text and attachment data for the server being
+    // removed, so the sweep must take them; the other profile's marker must
+    // survive untouched so its own review is still possible.
+    Map<String, Object> seed() => {
+      'oc.profiles': _seed()['oc.profiles']!,
+      'oc.activeProfile': 'doomed',
+      'oc.offlineQueue': jsonEncode([
+        {
+          'id': 'doomed-unconfirmed',
+          'profileID': 'doomed',
+          'sessionID': 'ses_a',
+          'text': 'secret prompt',
+          'attachments': [
+            {
+              'mime': 'image/png',
+              'filename': 'screenshot.png',
+              'url': 'data:image/png;base64,AAAA',
+            },
+          ],
+          'createdAt': 1,
+          'dispatchedAt': 1700000000000,
+        },
+        {
+          'id': 'doomed-plain',
+          'profileID': 'doomed',
+          'sessionID': 'ses_b',
+          'text': 'another',
+          'createdAt': 2,
+        },
+        {
+          'id': 'keeper-unconfirmed',
+          'profileID': 'keeper',
+          'sessionID': 'ses_c',
+          'text': 'keep me',
+          'createdAt': 3,
+          'dispatchedAt': 1700000000001,
+        },
+      ]),
+    };
+
+    test('are swept with the profile and counted in the disclosure', () async {
+      SharedPreferences.setMockInitialValues(seed());
+      final prefs = await SharedPreferences.getInstance();
+      final store = ProfileStore(prefs: prefs);
+      await store.load();
+      final controller = ConnectionController(store);
+      addTearDown(controller.dispose);
+
+      // The confirmation copy must own up to unconfirmed sends too.
+      expect(controller.queuedPromptCountForProfile('doomed'), 2);
+
+      final result = await controller.deleteProfileAndLocalData('doomed');
+
+      expect(result.removedQueuedPrompts, 2);
+      expect(result.complete, isTrue);
+      final queue = prefs.getString('oc.offlineQueue') ?? '';
+      expect(queue, isNot(contains('doomed')));
+      expect(queue, isNot(contains('secret prompt')));
+      expect(queue, isNot(contains('data:image/png')));
+
+      final remaining = OfflineQueueStore(prefs: prefs).load().single;
+      expect(remaining.id, 'keeper-unconfirmed');
+      expect(remaining.dispatchedAt, 1700000000001);
+      expect(controller.queuedPromptCountForProfile('keeper'), 1);
+    });
+
+    test(
+      'stay on the device, marker intact, when the sweep is refused',
+      () async {
+        SharedPreferences.setMockInitialValues(seed());
+        final seeded = await SharedPreferencesStorePlatform.instance.getAll();
+        SharedPreferencesStorePlatform.instance = _RefusingStore(seeded, {
+          'oc.offlineQueue',
+        });
+        SharedPreferences.resetStatic();
+        final prefs = await SharedPreferences.getInstance();
+        final store = ProfileStore(prefs: prefs);
+        await store.load();
+        final controller = ConnectionController(store);
+        addTearDown(controller.dispose);
+
+        final result = await controller.deleteProfileAndLocalData('doomed');
+
+        expect(result.removedProfile, isFalse);
+        expect(result.failures, ['2 queued prompts']);
+        final raw = (await SharedPreferencesStorePlatform.instance
+            .getAll())['flutter.oc.offlineQueue'];
+        final held = [
+          for (final entry in jsonDecode(raw! as String) as List)
+            QueuedPrompt.fromJson(entry)!,
+        ];
+        expect(held.map((entry) => entry.id), [
+          'doomed-unconfirmed',
+          'doomed-plain',
+          'keeper-unconfirmed',
+        ]);
+        // Neither refusal nor retry may turn an unconfirmed send back into a
+        // draft that the next connection would resend.
+        expect(held.first.dispatchedAt, 1700000000000);
+        expect(held.last.dispatchedAt, 1700000000001);
+        expect(controller.queuedPromptCountForProfile('doomed'), 2);
+      },
+    );
+  });
+
   test('a widget snapshot with no owner is cleared rather than left', () async {
     SharedPreferences.setMockInitialValues({
       'oc.widgetSessions': jsonEncode({

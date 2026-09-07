@@ -27,6 +27,17 @@ class QueuedPrompt {
   /// The last declared server failure from a flush attempt, shown inline.
   final String? error;
 
+  /// Unix milliseconds when a flush handed this entry to the transport, or
+  /// null while it has never been dispatched.
+  ///
+  /// The marker is persisted before the send leaves the device and only
+  /// cleared by positive evidence: the server accepted the prompt (the entry
+  /// is removed) or the user explicitly resends. While set, the entry never
+  /// auto-flushes — not in this process and not after a restart — because
+  /// a socket that dropped after the request left may still have delivered
+  /// it, and no status code proves otherwise.
+  final int? dispatchedAt;
+
   const QueuedPrompt({
     required this.id,
     required this.profileID,
@@ -40,6 +51,7 @@ class QueuedPrompt {
     this.variant,
     required this.createdAt,
     this.error,
+    this.dispatchedAt,
   }) : _attachments = attachments,
        _mentions = mentions;
 
@@ -58,27 +70,42 @@ class QueuedPrompt {
       agent = source.agent,
       variant = source.variant,
       createdAt = source.createdAt,
-      error = source.error;
+      error = source.error,
+      dispatchedAt = source.dispatchedAt;
 
   List<PromptAttachment> get attachments => List.unmodifiable(_attachments);
   List<PromptAgentMention> get mentions => List.unmodifiable(_mentions);
 
-  QueuedPrompt withError(String? error) => QueuedPrompt._snapshot(
-    QueuedPrompt(
-      id: id,
-      profileID: profileID,
-      sessionID: sessionID,
-      text: text,
-      attachments: _attachments,
-      mentions: _mentions,
-      modelProviderID: modelProviderID,
-      modelID: modelID,
-      agent: agent,
-      variant: variant,
-      createdAt: createdAt,
-      error: error,
-    ),
-  );
+  /// Whether a send left the device without a confirmed outcome. Such an
+  /// entry waits for the user's review instead of the next flush.
+  bool get dispatched => dispatchedAt != null;
+
+  /// Copy with a new [error]; the dispatch marker is preserved.
+  QueuedPrompt withError(String? error) =>
+      _copy(error: error, dispatchedAt: dispatchedAt);
+
+  /// Copy with a new dispatch marker; [error] is preserved.
+  QueuedPrompt withDispatchedAt(int? dispatchedAt) =>
+      _copy(error: error, dispatchedAt: dispatchedAt);
+
+  QueuedPrompt _copy({required String? error, required int? dispatchedAt}) =>
+      QueuedPrompt._snapshot(
+        QueuedPrompt(
+          id: id,
+          profileID: profileID,
+          sessionID: sessionID,
+          text: text,
+          attachments: _attachments,
+          mentions: _mentions,
+          modelProviderID: modelProviderID,
+          modelID: modelID,
+          agent: agent,
+          variant: variant,
+          createdAt: createdAt,
+          error: error,
+          dispatchedAt: dispatchedAt,
+        ),
+      );
 
   ModelRef? get model => modelProviderID != null && modelID != null
       ? ModelRef(providerID: modelProviderID!, modelID: modelID!)
@@ -117,6 +144,7 @@ class QueuedPrompt {
     'variant': variant,
     'createdAt': createdAt,
     'error': error,
+    'dispatchedAt': dispatchedAt,
   };
 
   static QueuedPrompt? fromJson(Object? value) {
@@ -158,6 +186,7 @@ class QueuedPrompt {
         variant: value['variant']?.toString(),
         createdAt: (value['createdAt'] as num?)?.toInt() ?? 0,
         error: value['error']?.toString(),
+        dispatchedAt: (value['dispatchedAt'] as num?)?.toInt(),
       ),
     );
   }

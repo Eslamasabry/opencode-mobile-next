@@ -18,6 +18,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 class _CodexApi extends OpenCodeApi with CompleteMessageHistory {
   _CodexApi() : super(baseUrl: 'http://localhost');
 
+  List<MessageWithParts> history = const [];
+
+  @override
+  Future<List<MessageWithParts>> messages(String id) async => history;
+
   @override
   ServerCapabilities get capabilities => codexServerCapabilities;
 
@@ -163,6 +168,103 @@ void main() {
     expect(find.text('Subagent sessions'), findsNothing);
     expect(find.text('Share session'), findsNothing);
     expect(find.text('Reload messages'), findsOneWidget);
+  });
+
+  testWidgets('Codex command launcher hides unsupported server catalogs', (
+    tester,
+  ) async {
+    await _pumpChat(tester, _CodexApi());
+    await tester.tap(find.byKey(const Key('composer-tools-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('composer-tool-commands')));
+    await tester.pumpAndSettle();
+
+    for (final query in ['mcp', 'connect', 'skills']) {
+      await tester.enterText(
+        find.byKey(const Key('command-launcher-search')),
+        query,
+      );
+      await tester.pump();
+      expect(find.byKey(const Key('command-mobile-mcps')), findsNothing);
+      expect(find.byKey(const Key('command-mobile-connect')), findsNothing);
+      expect(find.byKey(const Key('command-mobile-skills')), findsNothing);
+    }
+    await tester.enterText(
+      find.byKey(const Key('command-launcher-search')),
+      'editor',
+    );
+    await tester.pump();
+    expect(find.byKey(const Key('command-mobile-editor')), findsOneWidget);
+  });
+
+  testWidgets('Codex timeline keeps message navigation without fork actions', (
+    tester,
+  ) async {
+    final api = _CodexApi()
+      ..history = [
+        MessageWithParts(
+          info: MessageInfo(
+            id: 'saved-user',
+            sessionID: 'thread-1',
+            role: 'user',
+            time: MsgTime(created: 1),
+          ),
+          parts: [Part(type: 'text', text: 'Saved prompt')],
+        ),
+      ];
+    await _pumpChat(tester, api);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Session menu'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Timeline'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('timeline-row-saved-user')), findsOneWidget);
+    expect(find.byTooltip('Fork from this prompt'), findsNothing);
+    expect(find.textContaining('Fork restores'), findsNothing);
+    await tester.tap(find.byKey(const Key('timeline-row-saved-user')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('timeline-search')), findsNothing);
+    expect(find.text('Saved prompt'), findsOneWidget);
+  });
+
+  testWidgets('Codex prompt editor can edit text and remove restored files', (
+    tester,
+  ) async {
+    await _pumpChat(
+      tester,
+      _CodexApi(),
+      initialText: 'Original draft',
+      initialAttachments: const [
+        PromptAttachment(
+          mime: 'text/plain',
+          filename: 'draft.txt',
+          url: 'data:text/plain;base64,ZA==',
+        ),
+      ],
+    );
+    await tester.tap(find.byKey(const Key('prompt-editor-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('prompt-editor-attach')), findsNothing);
+    expect(find.text('draft.txt'), findsOneWidget);
+    await tester.tap(find.byTooltip('Remove attachment draft.txt'));
+    await tester.enterText(
+      find.byKey(const Key('prompt-editor-field')),
+      'Edited text-only draft',
+    );
+    await tester.tap(find.byKey(const Key('prompt-editor-done')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('prompt-editor-screen')), findsNothing);
+    expect(find.text('draft.txt'), findsNothing);
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('chat-composer-field')))
+          .controller!
+          .text,
+      'Edited text-only draft',
+    );
   });
 
   testWidgets('Codex approval sheet has no persistent grant action', (

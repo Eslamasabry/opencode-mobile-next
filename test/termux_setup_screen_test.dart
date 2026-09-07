@@ -120,8 +120,50 @@ class _SetupProgressFixture {
   bool permissionGranted = true;
   bool inventoryFails = false;
   int commandCalls = 0;
+  final handoffCalls = <String>[];
+  bool permissionResult = true;
+  bool openResult = true;
+  bool bridgeUnlocked = true;
+  int bridgeChecks = 0;
+  Completer<bool>? pendingPermission;
+  Completer<bool>? pendingOpen;
+  PlatformException? openFailure;
+  PlatformException? clipboardFailure;
+  String? copiedCommand;
+  int? startedAtEpochSeconds;
+
+  void watchClipboard() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+          if (call.method == 'Clipboard.setData') {
+            handoffCalls.add('copy');
+            if (clipboardFailure != null) throw clipboardFailure!;
+            copiedCommand = (call.arguments as Map)['text'] as String;
+          }
+          return null;
+        });
+    addTearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, null);
+    });
+  }
 
   Future<Object?> handle(MethodCall call) async {
+    if (call.method == 'requestRunCommandPermission') {
+      handoffCalls.add('permission');
+      permissionGranted =
+          await (pendingPermission?.future ?? Future.value(permissionResult));
+      return permissionGranted;
+    }
+    if (call.method == 'openTermux') {
+      handoffCalls.add('open');
+      if (openFailure != null) throw openFailure!;
+      return pendingOpen?.future ?? Future.value(openResult);
+    }
+    if (call.method == 'openAppSettings') {
+      handoffCalls.add('settings');
+      return true;
+    }
     if (call.method == 'getCapabilities') {
       return <String, Object>{
         'installed': termuxInstalled,
@@ -140,6 +182,13 @@ class _SetupProgressFixture {
           _commandResult(stdout: inventoryOutput);
     }
     if (script.contains("printf 'opencode-bridge-ok'")) {
+      bridgeChecks++;
+      if (!bridgeUnlocked) {
+        throw PlatformException(
+          code: 'command_timeout',
+          message: 'Termux did not answer. Paste the command and try again.',
+        );
+      }
       return pendingBridge?.future ??
           Future.value(_commandResult(stdout: 'opencode-bridge-ok'));
     }
@@ -187,6 +236,7 @@ port=4096
 runner=proot
 version=
 pid=123
+${startedAtEpochSeconds == null ? '' : 'started_at=$startedAtEpochSeconds'}
 __OC_SETUP_OUTPUT__
 [oc] Installing packages
 '''
@@ -200,7 +250,11 @@ __OC_SETUP_OUTPUT__
 ''',
   );
 
-  Future<void> mount(WidgetTester tester, {double textScale = 1}) async {
+  Future<void> mount(
+    WidgetTester tester, {
+    double textScale = 1,
+    DateTime Function()? now,
+  }) async {
     const channel = MethodChannel('oc/termux');
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, handle);
@@ -228,7 +282,7 @@ __OC_SETUP_OUTPUT__
             '/servers': (_) =>
                 const Scaffold(body: Text('Server address entry')),
           },
-          home: const TermuxSetupScreen(),
+          home: TermuxSetupScreen(now: now),
         ),
       ),
     );
@@ -245,9 +299,330 @@ Future<_SetupProgressFixture> _setupFixture() async {
   );
 }
 
+Future<void> _revealGuideTarget(WidgetTester tester, Finder finder) async {
+  await tester.scrollUntilVisible(finder, 200, maxScrolls: 80);
+  // ensureVisible changes the scroll offset; the new layout needs a frame
+  // before a tap can use the target's on-screen position.
+  await tester.pump();
+  await tester.ensureVisible(finder);
+  await tester.pump();
+  expect(finder.hitTestable(), findsOneWidget);
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   const channel = MethodChannel('oc/termux');
+
+  for (final layout in [
+    (width: 800.0, textScale: 1.0),
+    (width: 390.0, textScale: 1.0),
+    (width: 390.0, textScale: 2.0),
+  ]) {
+    testWidgets(
+      'paste guide is inspectable at width ${layout.width}, text scale ${layout.textScale}',
+      (tester) async {
+        tester.view.physicalSize = Size(layout.width, 844);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final fixture = await _setupFixture();
+        fixture.permissionGranted = false;
+        await fixture.mount(tester, textScale: layout.textScale);
+        if (layout.textScale == 1) {
+          // The next action should not require scrolling through the guide.
+          expect(
+            find.byKey(const Key('termux-copy-open')).hitTestable(),
+            findsOneWidget,
+          );
+        }
+        for (final title in [
+          '1. Copy & open',
+          '2. Press and hold, then Paste',
+          '3. Enter, then return',
+        ]) {
+          await _revealGuideTarget(tester, find.text(title));
+        }
+        expect(find.text(TermuxBridge.unlockCommand), findsNothing);
+        await _revealGuideTarget(tester, find.text('Show command'));
+        await tester.tap(find.text('Show command'));
+        await tester.pumpAndSettle();
+        expect(find.text(TermuxBridge.unlockCommand), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        expect(fixture.handoffCalls, isEmpty);
+        expect(fixture.commandCalls, 0);
+        expect(fixture.store.savedProfiles, isEmpty);
+      },
+    );
+  }
+
+  testWidgets(
+    'permission precedes copy and open, return verifies without installing',
+    (tester) async {
+      final fixture = await _setupFixture();
+      fixture.permissionGranted = false;
+      fixture.pendingPermission = Completer<bool>();
+      fixture.watchClipboard();
+      await fixture.mount(tester);
+      final copyOpen = find.byKey(const Key('termux-copy-open'));
+      await _revealGuideTarget(tester, copyOpen);
+      await tester.tap(copyOpen);
+      await tester.pump();
+      expect(fixture.handoffCalls, ['permission']);
+      expect(tester.widget<FilledButton>(copyOpen).onPressed, isNull);
+      // Android permission dialogs can also pause/resume the activity.
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+      expect(fixture.bridgeChecks, 0);
+      fixture.pendingPermission!.complete(true);
+      await tester.pumpAndSettle();
+      expect(fixture.handoffCalls, ['permission', 'copy', 'open']);
+      expect(fixture.copiedCommand, TermuxBridge.unlockCommand);
+      expect(fixture.commandCalls, 0);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expect(fixture.bridgeChecks, 1);
+      expect(find.text('Install & start'), findsOneWidget);
+      expect(fixture.handoffCalls, ['permission', 'copy', 'open']);
+      expect(fixture.launchCalls, 0);
+      expect(fixture.store.savedProfiles, isEmpty);
+    },
+  );
+
+  testWidgets(
+    'permission denial leaves clipboard alone and settings and retry usable',
+    (tester) async {
+      final fixture = await _setupFixture();
+      fixture.permissionGranted = false;
+      fixture.permissionResult = false;
+      fixture.watchClipboard();
+      await fixture.mount(tester);
+      final copyOpen = find.byKey(const Key('termux-copy-open'));
+      await _revealGuideTarget(tester, copyOpen);
+      await tester.tap(copyOpen);
+      await tester.pumpAndSettle();
+      expect(fixture.handoffCalls, ['permission']);
+      expect(fixture.copiedCommand, isNull);
+      expect(find.textContaining('Android denied'), findsOneWidget);
+      // Android can deliver the permission result before its resume callback.
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Android denied'), findsOneWidget);
+      expect(fixture.commandCalls, 0);
+      await _revealGuideTarget(tester, find.text('App settings'));
+      await tester.tap(find.text('App settings'));
+      await tester.pumpAndSettle();
+      expect(fixture.handoffCalls, ['permission', 'settings']);
+      fixture.permissionResult = true;
+      await _revealGuideTarget(tester, copyOpen);
+      await tester.tap(copyOpen);
+      await tester.pumpAndSettle();
+      expect(fixture.handoffCalls, [
+        'permission',
+        'settings',
+        'permission',
+        'copy',
+        'open',
+      ]);
+      expect(fixture.commandCalls, 0);
+      expect(fixture.launchCalls, 0);
+    },
+  );
+
+  for (final failure in [
+    'open false',
+    'open exception',
+    'clipboard exception',
+  ]) {
+    testWidgets('copy/open failure is recoverable: $failure', (tester) async {
+      final fixture = await _setupFixture();
+      fixture.permissionGranted = false;
+      fixture.openResult = failure != 'open false';
+      if (failure == 'open exception') {
+        fixture.openFailure = PlatformException(
+          code: 'open_failed',
+          message: 'Termux could not open. Try again.',
+        );
+      }
+      if (failure == 'clipboard exception') {
+        fixture.clipboardFailure = PlatformException(
+          code: 'clipboard_failed',
+          message: 'Could not copy the command. Try again.',
+        );
+      }
+      fixture.watchClipboard();
+      await fixture.mount(tester);
+      final copyOpen = find.byKey(const Key('termux-copy-open'));
+      await _revealGuideTarget(tester, copyOpen);
+      await tester.tap(copyOpen);
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining(
+          failure == 'clipboard exception'
+              ? 'Could not copy the command'
+              : 'could not open',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        fixture.handoffCalls,
+        failure == 'clipboard exception'
+            ? ['permission', 'copy']
+            : ['permission', 'copy', 'open'],
+      );
+      expect(tester.takeException(), isNull);
+      fixture.openResult = true;
+      fixture.openFailure = null;
+      fixture.clipboardFailure = null;
+      fixture.handoffCalls.clear();
+      await _revealGuideTarget(tester, copyOpen);
+      await tester.tap(copyOpen);
+      await tester.pumpAndSettle();
+      expect(fixture.handoffCalls, ['permission', 'copy', 'open']);
+      expect(fixture.copiedCommand, TermuxBridge.unlockCommand);
+      expect(fixture.commandCalls, 0);
+      expect(fixture.launchCalls, 0);
+    });
+  }
+
+  testWidgets(
+    'late permission resume does not verify before Termux backgrounds and returns',
+    (tester) async {
+      final fixture = await _setupFixture();
+      fixture.permissionGranted = false;
+      fixture.pendingPermission = Completer<bool>();
+      fixture.pendingOpen = Completer<bool>();
+      fixture.watchClipboard();
+      await fixture.mount(tester);
+      final copyOpen = find.byKey(const Key('termux-copy-open'));
+      await _revealGuideTarget(tester, copyOpen);
+      await tester.tap(copyOpen);
+      await tester.pump();
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      fixture.pendingPermission!.complete(true);
+      await tester.pump();
+      expect(fixture.handoffCalls, ['permission', 'copy', 'open']);
+      // This belongs to the permission dialog, before Termux backgrounds us.
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+      expect(fixture.bridgeChecks, 0);
+      fixture.pendingOpen!.complete(true);
+      await tester.pumpAndSettle();
+      expect(fixture.bridgeChecks, 0);
+      // Inactive alone can still be a dialog, not a Termux round trip.
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expect(fixture.bridgeChecks, 0);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expect(fixture.bridgeChecks, 1);
+      expect(find.text('Install & start'), findsOneWidget);
+      expect(fixture.launchCalls, 0);
+      expect(fixture.store.savedProfiles, isEmpty);
+    },
+  );
+
+  testWidgets(
+    'early return verifies after open completes and failed verification can retry',
+    (tester) async {
+      final fixture = await _setupFixture();
+      fixture.permissionGranted = false;
+      fixture.bridgeUnlocked = false;
+      fixture.pendingOpen = Completer<bool>();
+      fixture.watchClipboard();
+      await fixture.mount(tester);
+      final copyOpen = find.byKey(const Key('termux-copy-open'));
+      await _revealGuideTarget(tester, copyOpen);
+      await tester.tap(copyOpen);
+      await tester.pump();
+      expect(fixture.handoffCalls, ['permission', 'copy', 'open']);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+      expect(fixture.bridgeChecks, 0);
+      fixture.pendingOpen!.complete(true);
+      await tester.pumpAndSettle();
+      expect(fixture.bridgeChecks, 1);
+      expect(find.textContaining('Termux did not answer'), findsOneWidget);
+      final verify = find.byKey(const Key('termux-verify-unlock'));
+      expect(tester.widget<FilledButton>(verify).onPressed, isNotNull);
+      fixture.bridgeUnlocked = true;
+      await _revealGuideTarget(tester, verify);
+      await tester.tap(verify);
+      await tester.pumpAndSettle();
+      expect(fixture.bridgeChecks, 2);
+      expect(find.text('Install & start'), findsOneWidget);
+      expect(fixture.launchCalls, 0);
+      expect(fixture.store.savedProfiles, isEmpty);
+    },
+  );
+
+  testWidgets(
+    'elapsed uses persisted start across background and route recreation',
+    (tester) async {
+      var now = DateTime.utc(2026, 9, 7, 12);
+      final startedAt =
+          now.subtract(const Duration(seconds: 125)).millisecondsSinceEpoch ~/
+          1000;
+      final fixture = await _setupFixture();
+      fixture.launched = true;
+      fixture.startedAtEpochSeconds = startedAt;
+      await fixture.mount(tester, now: () => now);
+      expect(find.text('2m 5s elapsed'), findsOneWidget);
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      // Time passes with no foreground timer callbacks.
+      now = now.add(const Duration(minutes: 3));
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+      expect(find.text('5m 5s elapsed'), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      now = now.add(const Duration(minutes: 1));
+      final reopened = _SetupProgressFixture(fixture.store);
+      reopened.launched = true;
+      reopened.startedAtEpochSeconds = startedAt;
+      await reopened.mount(tester, now: () => now);
+      expect(find.text('6m 5s elapsed'), findsOneWidget);
+      expect(fixture.launchCalls + reopened.launchCalls, 0);
+      expect(fixture.store.savedProfiles, isEmpty);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets(
+    'elapsed hides legacy total and follows authoritative operation timestamps',
+    (tester) async {
+      var now = DateTime.utc(2026, 9, 7, 12);
+      final fixture = await _setupFixture();
+      fixture.launched = true;
+      await fixture.mount(tester, now: () => now);
+      expect(find.textContaining('elapsed'), findsNothing);
+      fixture.startedAtEpochSeconds =
+          now.add(const Duration(seconds: 60)).millisecondsSinceEpoch ~/ 1000;
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text('0s elapsed'), findsOneWidget);
+      now = now.add(const Duration(seconds: 90));
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text('30s elapsed'), findsOneWidget);
+      // A new accepted operation has a new persisted start, not the old total.
+      fixture.startedAtEpochSeconds = now.millisecondsSinceEpoch ~/ 1000;
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text('0s elapsed'), findsOneWidget);
+      now = now.add(const Duration(minutes: 2));
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text('2m 0s elapsed'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 
   testWidgets(
     'install shows immediate progress throughout slow native startup',
@@ -266,14 +641,14 @@ void main() {
 
       expect(find.text('Preparing setup'), findsOneWidget);
       expect(find.text('Checking Termux connection'), findsOneWidget);
-      expect(find.text('0s elapsed'), findsOneWidget);
+      expect(find.textContaining('elapsed'), findsNothing);
       expect(find.text('LIVE OUTPUT'), findsOneWidget);
       expect(find.text('Install & start'), findsNothing);
       expect(fixture.launchCalls, 0);
       expect(fixture.statusReads, 0);
 
       await tester.pump(const Duration(seconds: 21));
-      expect(find.text('21s elapsed'), findsOneWidget);
+      expect(find.textContaining('elapsed'), findsNothing);
       expect(find.text('Checking Termux connection'), findsOneWidget);
       expect(fixture.statusReads, 0);
 
@@ -529,6 +904,8 @@ void main() {
     tester,
   ) async {
     final fixture = await _setupFixture();
+    fixture.startedAtEpochSeconds =
+        DateTime.now().millisecondsSinceEpoch ~/ 1000;
     fixture.inventoryOutput = 'ubuntu=installed\nversion=1.18.29\n';
     await fixture.mount(tester);
     final reinstall = find.widgetWithText(OutlinedButton, 'Reinstall & start');

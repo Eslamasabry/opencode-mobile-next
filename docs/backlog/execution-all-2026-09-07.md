@@ -1,5 +1,12 @@
 # Full backlog execution — 2026-09-07
 
+Historical wave assignments and their evidence follow. For current remaining
+work use [the reconciled delivery ledger](current-state-2026-09-07.md).
+In particular, E6 search, E13 quota monitoring and F7 existing-server access
+are integrated; Codex profile/controller/chat integration landed in `499c0e1`.
+Earlier "drafted", "queued" and "unexposed" labels below describe their wave,
+not the current source. The Codex final verification checkpoint remains open.
+
 Maintainer direction: implement the remaining backlog with a dedicated agent
 assignment per item. The lead coordinates ownership, audits implementation and
 runs integration checks; feature code belongs to the assigned workers. Start

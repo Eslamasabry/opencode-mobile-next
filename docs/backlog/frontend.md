@@ -1,5 +1,9 @@
 # Frontend backlog
 
+Use [the current delivery ledger](current-state-2026-09-07.md) for remaining
+work. FE-001–FE-011 below are implemented; older release-scope prose retains
+historical requirements and must not re-enqueue those implementations.
+
 Code-reviewed findings for the ongoing review, implement, and push cycle. IDs stay stable across passes. Scope: Flutter presentation and everyday user flows. No emulator sessions or tests were run for this review.
 
 Pass 2 reviewed Commands, Skills, References, Terminal, and Settings. The open GitHub issue inventory was checked on 2026-09-05. FE-005 through FE-008 are specific implementation gaps outside the existing feature issues; they do not create duplicate GitHub issues. The older audit's general refresh-retention guidance is narrowed to the concrete failure in FE-006.

@@ -230,7 +230,9 @@ class CodexGateway implements ServerGateway, ServerOperationsGateway {
     _remember(thread, context.scope, context.locationEpoch);
     if (turns) {
       _turns.remove(id);
-      for (final raw in codexList(thread['turns'])) {
+      final history = codexList(thread['turns']);
+      if (history.isNotEmpty) _newEmptyThreads.remove(id);
+      for (final raw in history) {
         final turn = codexObject(raw);
         if (turn['status'] == 'inProgress') {
           _turns[id] = codexString(turn['id'], max: 256);
@@ -427,15 +429,15 @@ class CodexGateway implements ServerGateway, ServerOperationsGateway {
     }
     final scope = _scope;
     final epoch = _locationEpoch;
+    final prompt = codexString(text, max: 1024 * 1024);
+    // Once dispatch begins, even an unacknowledged first turn must recover
+    // authoritatively. It is no longer safe to treat this as an empty thread.
+    _newEmptyThreads.remove(sessionID);
     try {
       final result = await transport.request('turn/start', {
         'threadId': sessionID,
         'input': [
-          {
-            'type': 'text',
-            'text': codexString(text, max: 1024 * 1024),
-            'text_elements': <Object>[],
-          },
+          {'type': 'text', 'text': prompt, 'text_elements': <Object>[]},
         ],
         if (model != null) 'model': model.modelID,
         if (variant != null && variant.isNotEmpty) 'effort': variant,
@@ -844,6 +846,14 @@ class CodexGateway implements ServerGateway, ServerOperationsGateway {
       var failed = false;
       for (final id in _resumed.toList()) {
         if (_closed || !_listening) return;
+        if (_newEmptyThreads.contains(id) && !_uncertain.contains(id)) {
+          // A never-dispatched thread may have no persisted rollout. Retire
+          // it before any automatic thread RPC, without interpreting errors
+          // as proof of absence. Keep metadata and local drafts; explicit
+          // session/history/prompt access must read the server again.
+          _resumed.remove(id);
+          continue;
+        }
         try {
           await _resume(id);
         } on CodexFailure {

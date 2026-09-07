@@ -2303,7 +2303,10 @@ class _PendingSendsStrip extends StatelessWidget {
   const _PendingSendsStrip({
     required this.drafts,
     required this.inboxItems,
+    required this.isSending,
+    required this.isAcceptedUnrecorded,
     required this.onEdit,
+    required this.onResend,
     required this.onDiscard,
     required this.onCancelInbox,
     required this.onFlipDelivery,
@@ -2311,7 +2314,17 @@ class _PendingSendsStrip extends StatelessWidget {
 
   final List<QueuedPrompt> drafts;
   final List<Api2InboxItem> inboxItems;
+
+  /// Whether a flush is dispatching a draft or persisting its outcome.
+  final bool Function(QueuedPrompt entry) isSending;
+
+  /// Whether the server accepted a draft's send but the device could not
+  /// record it; resending it would be a certain duplicate.
+  final bool Function(QueuedPrompt entry) isAcceptedUnrecorded;
   final ValueChanged<QueuedPrompt> onEdit;
+
+  /// Explicit resend of a draft whose earlier send was never confirmed.
+  final ValueChanged<QueuedPrompt> onResend;
   final ValueChanged<QueuedPrompt> onDiscard;
   final ValueChanged<Api2InboxItem> onCancelInbox;
   final ValueChanged<Api2InboxItem> onFlipDelivery;
@@ -2326,7 +2339,10 @@ class _PendingSendsStrip extends StatelessWidget {
           child: _QueuedPromptBubble(
             key: ValueKey('queued-send-$index'),
             entry: drafts[index],
+            sending: isSending(drafts[index]),
+            acceptedUnrecorded: isAcceptedUnrecorded(drafts[index]),
             onEdit: () => onEdit(drafts[index]),
+            onResend: () => onResend(drafts[index]),
             onDiscard: () => onDiscard(drafts[index]),
           ),
         ),
@@ -2468,7 +2484,10 @@ class _PendingSendAction extends StatelessWidget {
 
   final IconData icon;
   final String tooltip;
-  final VoidCallback onPressed;
+
+  /// Null renders the action disabled — a draft whose send is on the wire
+  /// must not be edited into a second send or discarded as unsent.
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) => IconButton(
@@ -2482,44 +2501,82 @@ class _PendingSendAction extends StatelessWidget {
   );
 }
 
+/// A queued draft in one of three states: waiting for the next flush,
+/// on the wire right now, or dispatched without a confirmed outcome. The
+/// last state never resends on its own — the socket may have dropped after
+/// the prompt reached the server — so it offers an explicit resend beside
+/// the usual edit and discard.
 class _QueuedPromptBubble extends StatelessWidget {
   const _QueuedPromptBubble({
     super.key,
     required this.entry,
+    required this.sending,
+    required this.acceptedUnrecorded,
     required this.onEdit,
+    required this.onResend,
     required this.onDiscard,
   });
 
   final QueuedPrompt entry;
+  final bool sending;
+  final bool acceptedUnrecorded;
   final VoidCallback onEdit;
+  final VoidCallback onResend;
   final VoidCallback onDiscard;
 
   @override
   Widget build(BuildContext context) {
-    final label = entry.error == null
-        ? 'Queued — will send when reconnected'
-        : 'Failed: ${entry.error}';
+    final error = entry.error;
+    final review = entry.dispatched && !sending;
+    final l10n = _chatL10n(context);
+    final String label;
+    final IconData icon;
+    if (sending) {
+      label = l10n.queuedSending;
+      icon = Icons.upload_rounded;
+    } else if (review && acceptedUnrecorded) {
+      // The controller's recorded reason names the acceptance; the generic
+      // "unconfirmed" copy would invite a resend that is a certain duplicate.
+      label = error ?? l10n.queuedDeliveryUnconfirmed;
+      icon = Icons.cloud_done_outlined;
+    } else if (review) {
+      label = error == null
+          ? l10n.queuedDeliveryUnconfirmed
+          : l10n.queuedDeliveryUnconfirmedWithError(error);
+      icon = Icons.help_outline_rounded;
+    } else if (error != null) {
+      label = 'Failed: $error';
+      icon = Icons.error_outline_rounded;
+    } else {
+      label = 'Queued — will send when reconnected';
+      icon = Icons.schedule_rounded;
+    }
     return _PendingSendBubble(
       text: entry.text,
       attachmentCount: entry.attachments.length,
-      icon: entry.error == null
-          ? Icons.schedule_rounded
-          : Icons.error_outline_rounded,
+      icon: icon,
       label: label,
-      error: entry.error != null,
+      error: review || (!sending && error != null),
       semanticsLabel: 'Queued draft. $label',
       actions: [
+        if (review && !acceptedUnrecorded)
+          _PendingSendAction(
+            key: const ValueKey('queued-action-resend'),
+            icon: Icons.send_rounded,
+            tooltip: l10n.queuedResendTooltip,
+            onPressed: onResend,
+          ),
         _PendingSendAction(
           key: const ValueKey('queued-action-edit'),
           icon: Icons.edit_outlined,
           tooltip: 'Edit draft',
-          onPressed: onEdit,
+          onPressed: sending ? null : onEdit,
         ),
         _PendingSendAction(
           key: const ValueKey('queued-action-discard'),
           icon: Icons.delete_outline_rounded,
           tooltip: 'Discard draft',
-          onPressed: onDiscard,
+          onPressed: sending ? null : onDiscard,
         ),
       ],
     );

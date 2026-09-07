@@ -35,6 +35,7 @@ class _TimelineSheet extends StatefulWidget {
   const _TimelineSheet({
     required this.messages,
     required this.forkMode,
+    required this.forkAvailable,
     this.hasOlder = false,
     this.loadingOlder = false,
     this.olderNeedsReload = false,
@@ -44,6 +45,7 @@ class _TimelineSheet extends StatefulWidget {
 
   final List<MessageWithParts> messages;
   final bool forkMode;
+  final bool forkAvailable;
   final bool hasOlder;
   final bool loadingOlder;
   final bool olderNeedsReload;
@@ -153,7 +155,9 @@ class _TimelineSheetState extends State<_TimelineSheet> {
                           Text(
                             widget.forkMode
                                 ? 'Choose a prompt to restore it in a new session.'
-                                : 'Jump anywhere. Fork restores a prompt for editing.',
+                                : widget.forkAvailable
+                                ? 'Jump anywhere. Fork restores a prompt for editing.'
+                                : 'Jump anywhere in this conversation.',
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -267,7 +271,7 @@ class _TimelineSheetState extends State<_TimelineSheet> {
                             ),
                           ),
                           subtitle: Text(footer),
-                          trailing: _isForkable(message)
+                          trailing: widget.forkAvailable && _isForkable(message)
                               ? widget.forkMode
                                     ? const Icon(Icons.call_split_rounded)
                                     : IconButton(

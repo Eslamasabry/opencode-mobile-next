@@ -105,8 +105,8 @@ Future<void> _pumpFrames(WidgetTester tester) async {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('workspace row says Needs you, in the attention tone, while a '
-      'permission is pending', (tester) async {
+  testWidgets('workspace row moves under Needs you and names the permission, '
+      'in the attention tone, while it is pending', (tester) async {
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -121,7 +121,8 @@ void main() {
     );
     await _pumpFrames(tester);
     expect(find.textContaining('Working'), findsOneWidget);
-    expect(find.textContaining('Needs you'), findsNothing);
+    expect(find.byKey(const ValueKey('workspace-needs-you')), findsNothing);
+    expect(find.textContaining('Permission needed'), findsNothing);
     // The quick-ask placeholder loses its timestamp everywhere.
     expect(
       find.descendant(
@@ -136,12 +137,15 @@ void main() {
     await _pumpFrames(tester);
 
     expect(find.textContaining('Working'), findsNothing);
-    final subtitle = find.textContaining('Needs you');
+    // The section says "Needs you"; the row says what it needs.
+    expect(find.byKey(const ValueKey('workspace-needs-you')), findsOneWidget);
+    expect(find.text('ACTIVE SESSIONS'), findsNothing);
+    final subtitle = find.textContaining('Permission needed');
     expect(subtitle, findsOneWidget);
     final theme = Theme.of(tester.element(subtitle));
     final span = tester.widget<Text>(subtitle).textSpan! as TextSpan;
     final status = span.children!.first as TextSpan;
-    expect(status.text, 'Needs you');
+    expect(status.text, 'Permission needed');
     expect(
       status.style?.color,
       AppTheme.statusColor(theme, AppStatusTone.attention),

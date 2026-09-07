@@ -34,6 +34,9 @@ class MainActivity : FlutterActivity() {
     private var pendingSharedText: String? = null
     private var shareChannel: MethodChannel? = null
     private var shareDartReady = false
+    private var pendingLaunchAction: String? = null
+    private var shortcutChannel: MethodChannel? = null
+    private var shortcutDartReady = false
     private var readAloud: ReadAloudBridge? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -42,6 +45,26 @@ class MainActivity : FlutterActivity() {
         readAloud = ReadAloudBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         captureCodingAlertOpen(intent)
         captureSharedText(intent)
+        captureLaunchAction(intent)
+        shortcutDartReady = false
+        shortcutChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SHORTCUT_CHANNEL_NAME)
+            .also { channel ->
+                channel.setMethodCallHandler { call, result ->
+                    when (call.method) {
+                        "consumeLaunchAction" -> {
+                            // Readiness acknowledgment, mirroring the share
+                            // channel: Dart's inbound handler is installed
+                            // before this call, so later shortcut taps can be
+                            // pushed live instead of parked.
+                            shortcutDartReady = true
+                            val action = pendingLaunchAction
+                            pendingLaunchAction = null
+                            result.success(action)
+                        }
+                        else -> result.notImplemented()
+                    }
+                }
+            }
         shareDartReady = false
         shareChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SHARE_CHANNEL_NAME)
             .also { channel ->
@@ -226,6 +249,8 @@ class MainActivity : FlutterActivity() {
         if (backgroundChannel != null) backgroundChannel = null
         shareChannel = null
         shareDartReady = false
+        shortcutChannel = null
+        shortcutDartReady = false
         super.cleanUpFlutterEngine(flutterEngine)
     }
 
@@ -259,6 +284,31 @@ class MainActivity : FlutterActivity() {
                 channel.invokeMethod("shared", text)
             }
         }
+        if (captureLaunchAction(intent)) {
+            // Same delivery rule as shares: live when Dart is listening,
+            // otherwise parked until consumeLaunchAction.
+            val channel = shortcutChannel
+            val action = pendingLaunchAction
+            if (shortcutDartReady && channel != null && action != null) {
+                pendingLaunchAction = null
+                channel.invokeMethod("launched", action)
+            }
+        }
+    }
+
+    /// A static launcher shortcut (res/xml/shortcuts.xml) tapped from the
+    /// home screen. Only the whitelisted action ids are accepted; anything
+    /// else is dropped. The extra is removed so a configuration change does
+    /// not replay the tap, and the bridge itself never connects, creates a
+    /// session or sends anything: Dart decides where the action goes.
+    private fun captureLaunchAction(intent: Intent?): Boolean {
+        if (intent == null) return false
+        if (!intent.hasExtra(EXTRA_LAUNCH_ACTION)) return false
+        val action = intent.getStringExtra(EXTRA_LAUNCH_ACTION)?.trim().orEmpty()
+        intent.removeExtra(EXTRA_LAUNCH_ACTION)
+        if (action !in LAUNCH_ACTIONS) return false
+        pendingLaunchAction = action
+        return true
     }
 
     /// Text shared from another app through the system share sheet. Only
@@ -659,6 +709,11 @@ class MainActivity : FlutterActivity() {
         private const val CAMERA_CHANNEL_NAME = "oc/camera"
         private const val BACKGROUND_CHANNEL_NAME = "oc/background"
         private const val SHARE_CHANNEL_NAME = "oc/share"
+        private const val SHORTCUT_CHANNEL_NAME = "oc/shortcut"
+        // Intent extra set by res/xml/shortcuts.xml; values are the shortcut
+        // ids Dart's LaunchAction enum understands.
+        private const val EXTRA_LAUNCH_ACTION = "oc.shortcut"
+        private val LAUNCH_ACTIONS = setOf("connect", "new_task")
         private const val TERMUX_PACKAGE = "com.termux"
         private const val TERMUX_HOME = "/data/data/com.termux/files/home"
         private const val TERMUX_BASH = "/data/data/com.termux/files/usr/bin/bash"

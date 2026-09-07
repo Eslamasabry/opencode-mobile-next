@@ -68,6 +68,12 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
+            <!-- Static launcher shortcuts (Connect, New task). The shortcut
+                 intents are explicit and carry the oc.shortcut extra that
+                 MainActivity whitelists and forwards to Dart. -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
         <service
             android:name=".TermuxResultService"

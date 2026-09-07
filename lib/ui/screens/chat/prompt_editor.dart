@@ -19,7 +19,7 @@ class _PromptEditorScreen extends StatefulWidget {
 
   final TextEditingValue initialValue;
   final List<PromptAttachment> initialAttachments;
-  final _AttachmentChooser chooseAttachment;
+  final _AttachmentChooser? chooseAttachment;
 
   @override
   State<_PromptEditorScreen> createState() => _PromptEditorScreenState();
@@ -57,8 +57,10 @@ class _PromptEditorScreenState extends State<_PromptEditorScreen> {
   }
 
   Future<void> _addAttachment() async {
+    final chooseAttachment = widget.chooseAttachment;
+    if (chooseAttachment == null) return;
     try {
-      final attachment = await widget.chooseAttachment(_attachments);
+      final attachment = await chooseAttachment(_attachments);
       if (!mounted || attachment == null) return;
       setState(() => _attachments.add(attachment));
     } catch (error) {
@@ -115,16 +117,17 @@ class _PromptEditorScreenState extends State<_PromptEditorScreen> {
           ),
           title: const Text('Prompt editor'),
           actions: [
-            IconButton(
-              key: const Key('prompt-editor-attach'),
-              tooltip: _attachments.length >= _maxAttachmentCount
-                  ? 'Attachment limit reached'
-                  : 'Attach file',
-              onPressed: _attachments.length >= _maxAttachmentCount
-                  ? null
-                  : _addAttachment,
-              icon: const Icon(Icons.attach_file_rounded),
-            ),
+            if (widget.chooseAttachment != null)
+              IconButton(
+                key: const Key('prompt-editor-attach'),
+                tooltip: _attachments.length >= _maxAttachmentCount
+                    ? 'Attachment limit reached'
+                    : 'Attach file',
+                onPressed: _attachments.length >= _maxAttachmentCount
+                    ? null
+                    : _addAttachment,
+                icon: const Icon(Icons.attach_file_rounded),
+              ),
             TextButton(
               key: const Key('prompt-editor-done'),
               onPressed: _save,

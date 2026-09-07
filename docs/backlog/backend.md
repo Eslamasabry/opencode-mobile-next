@@ -1,5 +1,10 @@
 # Backend backlog
 
+Use [the current delivery ledger](current-state-2026-09-07.md) for remaining
+work. BE-001–BE-011 below are implemented; older release-scope and follow-up
+prose describes its dated checkpoint. Verify residual acceptance against the
+ledger and source before treating that prose as an implementation queue.
+
 Read-only reviews of the Flutter client's API adapters, domain and persisted state. IDs stay stable across review and implementation cycles. Status records implementation ownership; it is not a claim that an item passed verification.
 
 ## BE-001 — Keep queued drafts when persistence fails

@@ -18,7 +18,11 @@ import '../widgets/confirm_sheet.dart';
 import '../widgets/setup_terminal.dart';
 
 class TermuxSetupScreen extends ConsumerStatefulWidget {
-  const TermuxSetupScreen({super.key});
+  const TermuxSetupScreen({super.key, this.now});
+
+  /// Tests can advance wall time independently of foreground timer callbacks.
+  @visibleForTesting
+  final DateTime Function()? now;
 
   @override
   ConsumerState<TermuxSetupScreen> createState() => _TermuxSetupScreenState();
@@ -57,17 +61,17 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
   bool _restarting = false;
   String? _restartOperationID;
   int _snapshotFailures = 0;
-  int _elapsedSeconds = 0;
   String? _error;
   String? _lastLaunchOutput;
   String _setupOutput = '';
 
-  /// Set once "Copy & open Termux" hands off to Termux; flipped to
-  /// [_returnedFromTermux] when the app resumes, so the unlock step can
-  /// promote "Verify & continue" to the primary action the moment the user
-  /// is back and has (probably) pasted the line.
+  /// Tracks the Termux round trip separately from Android permission dialogs.
+  /// On return we verify automatically and keep a manual verification retry.
   bool _openedTermux = false;
   bool _returnedFromTermux = false;
+  bool _copyingToTermux = false;
+  bool _verifyOnReturn = false;
+  bool _termuxWentToBackground = false;
   final ScrollController _outputScrollController = ScrollController();
 
   @override
@@ -79,10 +83,23 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused && _openedTermux) {
+      _termuxWentToBackground = true;
+    }
     if (state == AppLifecycleState.resumed) {
-      if (_openedTermux && !_returnedFromTermux) {
-        setState(() => _returnedFromTermux = true);
+      // A permission dialog also resumes the app. Only verify after the
+      // actual Termux background/return, even if the permission result arrived
+      // before its resume callback. Inactive alone can be a permission dialog.
+      if (_openedTermux) {
+        if (!_termuxWentToBackground) return;
+        if (_busy) {
+          _verifyOnReturn = true;
+          return;
+        }
+        _verifyAfterTermuxReturn();
+        return;
       }
+      if (_busy) return;
       unawaited(_refresh());
     }
   }
@@ -100,7 +117,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
     // Off Android the build below is the unsupported card; there is no state
     // worth polling for and no channel to poll.
     if (!platformCapabilities.supportsTermux) return;
-    if (_refreshing || _launching) return;
+    if (_refreshing || _launching || _busy) return;
     final epoch = _statusEpoch;
     _refreshing = true;
     try {
@@ -129,7 +146,8 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
         _stopPolling();
         setState(() {
           _phase = _Phase.needUnlock;
-          _error = null;
+          // A denied permission dialog can resume after its result arrives.
+          // Keep its actionable error visible across that refresh.
         });
         return;
       }
@@ -170,38 +188,81 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
   }
 
   Future<void> _openTermuxAndCopy() async {
-    await Clipboard.setData(
-      const ClipboardData(text: TermuxBridge.unlockCommand),
-    );
-    final opened = await TermuxBridge.openTermux();
-    if (!mounted) return;
-    if (opened) setState(() => _openedTermux = true);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          opened
-              ? 'Paste the copied line in Termux, press Enter, then return here.'
-              : 'Could not open Termux.',
-        ),
-        duration: const Duration(seconds: 5),
-      ),
-    );
+    if (_busy) return;
+    final l10n = AppLocalizations.of(context);
+    setState(() {
+      _busy = true;
+      _copyingToTermux = true;
+      _error = null;
+      _openedTermux = false;
+      _returnedFromTermux = false;
+      _verifyOnReturn = false;
+      _termuxWentToBackground = false;
+    });
+    try {
+      await _requestTermuxPermission();
+      if (!mounted) return;
+      await Clipboard.setData(
+        const ClipboardData(text: TermuxBridge.unlockCommand),
+      );
+      if (!mounted) return;
+      _openedTermux = true;
+      final opened = await TermuxBridge.openTermux();
+      if (!mounted) return;
+      if (!opened) {
+        throw TermuxBridgeException(l10n.termuxGuideOpenFailed);
+      }
+    } on TermuxBridgeException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _openedTermux = false;
+        _verifyOnReturn = false;
+        _error = error.message;
+      });
+    } on PlatformException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _openedTermux = false;
+        _verifyOnReturn = false;
+        _error = error.message ?? l10n.termuxGuideCopyOpenFailed;
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _copyingToTermux = false;
+        });
+        if (_verifyOnReturn) _verifyAfterTermuxReturn();
+      }
+    }
   }
 
-  Future<void> _verifyUnlock() async {
+  Future<void> _requestTermuxPermission() async {
+    final deniedMessage = AppLocalizations.of(context).termuxPermissionDenied;
+    if (!await TermuxBridge.requestPermission()) {
+      throw TermuxBridgeException(deniedMessage, code: 'permission_denied');
+    }
+  }
+
+  void _verifyAfterTermuxReturn() {
+    setState(() {
+      _openedTermux = false;
+      _verifyOnReturn = false;
+      _termuxWentToBackground = false;
+      _returnedFromTermux = true;
+    });
+    unawaited(_verifyUnlock(requestPermission: false));
+  }
+
+  Future<void> _verifyUnlock({bool requestPermission = true}) async {
     if (_busy) return;
     setState(() {
       _busy = true;
       _error = null;
     });
     try {
-      final granted = await TermuxBridge.requestPermission();
-      if (!granted) {
-        throw const TermuxBridgeException(
-          'Android denied the Termux command permission. Allow it in OpenCode app settings.',
-          code: 'permission_denied',
-        );
-      }
+      if (requestPermission) await _requestTermuxPermission();
+      if (!mounted) return;
       await TermuxBridge.verifyBridge();
       await _refreshStatus();
       if (mounted && (_phase == _Phase.ready || _phase == _Phase.failed)) {
@@ -269,7 +330,6 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       _status = null;
       _launchMessage = 'Checking Termux connection';
       _error = null;
-      _elapsedSeconds = 0;
       _monitoringFailed = false;
       _snapshotFailures = 0;
       _setupOutput = '';
@@ -428,7 +488,6 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       _restartOperationID = operationID;
       _phase = _Phase.installing;
       _error = null;
-      _elapsedSeconds = 0;
       _monitoringFailed = false;
       _snapshotFailures = 0;
       _setupOutput = '';
@@ -604,8 +663,17 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
 
   void _startElapsedTimer() {
     _elapsedTimer ??= Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() => _elapsedSeconds += 1);
+      // Repaint from wall time, rather than counting callbacks that stop in
+      // the background or when this route is closed.
+      if (mounted) setState(() {});
     });
+  }
+
+  int? get _elapsedSeconds {
+    final startedAt = _status?.startedAtEpochSeconds;
+    if (startedAt == null) return null;
+    final now = widget.now?.call() ?? DateTime.now();
+    return max(0, now.millisecondsSinceEpoch ~/ 1000 - startedAt);
   }
 
   void _startPolling() {
@@ -1085,7 +1153,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
               const SizedBox(height: 8),
               _stepTile(
                 n: 2,
-                title: 'Let the app control Termux',
+                title: l10n.termuxGuideTitle,
                 state: _phase == _Phase.needUnlock
                     ? _StepState.idle
                     : _phase == _Phase.checking || _phase == _Phase.needTermux
@@ -1096,17 +1164,17 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                     ? Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Termux requires one local setting before Android can send it commands. '
-                            'Copy the line, run it once in Termux, then verify here.',
-                          ),
-                          const SizedBox(height: 10),
-                          const CmdPreview(),
+                          Text(l10n.termuxGuideIntro),
                           if (_error != null) ...[
                             const SizedBox(height: 10),
-                            Text(
-                              friendlyError(_error!),
-                              style: TextStyle(color: theme.colorScheme.error),
+                            Semantics(
+                              liveRegion: true,
+                              child: Text(
+                                friendlyError(_error!),
+                                style: TextStyle(
+                                  color: theme.colorScheme.error,
+                                ),
+                              ),
                             ),
                           ],
                           const SizedBox(height: 10),
@@ -1120,7 +1188,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                                 FilledButton.icon(
                                   key: const Key('termux-verify-unlock'),
                                   onPressed: _busy ? null : _verifyUnlock,
-                                  icon: _busy
+                                  icon: _busy && !_copyingToTermux
                                       ? const SizedBox.square(
                                           dimension: 18,
                                           child: CircularProgressIndicator(
@@ -1129,7 +1197,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                                         )
                                       : const Icon(Icons.check_rounded),
                                   label: Text(
-                                    _busy
+                                    _busy && !_copyingToTermux
                                         ? 'Verifying...'
                                         : 'Verify & continue',
                                   ),
@@ -1138,20 +1206,28 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                                   key: const Key('termux-copy-open'),
                                   onPressed: _busy ? null : _openTermuxAndCopy,
                                   icon: const Icon(Icons.open_in_new_rounded),
-                                  label: const Text('Copy & open Termux'),
+                                  label: Text(
+                                    _copyingToTermux
+                                        ? l10n.termuxGuideOpening
+                                        : 'Copy & open Termux',
+                                  ),
                                 ),
                               ] else ...[
                                 FilledButton.icon(
                                   key: const Key('termux-copy-open'),
                                   onPressed: _busy ? null : _openTermuxAndCopy,
                                   icon: const Icon(Icons.open_in_new_rounded),
-                                  label: const Text('Copy & open Termux'),
+                                  label: Text(
+                                    _copyingToTermux
+                                        ? l10n.termuxGuideOpening
+                                        : 'Copy & open Termux',
+                                  ),
                                 ),
                                 OutlinedButton(
                                   key: const Key('termux-verify-unlock'),
                                   onPressed: _busy ? null : _verifyUnlock,
                                   child: Text(
-                                    _busy
+                                    _busy && !_copyingToTermux
                                         ? 'Verifying...'
                                         : 'Verify & continue',
                                   ),
@@ -1164,6 +1240,15 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                                 child: const Text('App settings'),
                               ),
                             ],
+                          ),
+                          const SizedBox(height: 12),
+                          const _TermuxPasteGuide(),
+                          const SizedBox(height: 12),
+                          Text(l10n.termuxGuideAutomaticCheck),
+                          ExpansionTile(
+                            tilePadding: EdgeInsets.zero,
+                            title: Text(l10n.termuxGuideShowCommand),
+                            children: const [CmdPreview()],
                           ),
                         ],
                       )
@@ -1509,9 +1594,12 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
     final message = _launching
         ? _launchMessage
         : _status?.message ?? 'Reading setup progress';
-    final elapsed = _elapsedSeconds < 60
-        ? '${_elapsedSeconds}s elapsed'
-        : '${_elapsedSeconds ~/ 60}m ${_elapsedSeconds % 60}s elapsed';
+    final elapsedSeconds = _elapsedSeconds;
+    final elapsed = elapsedSeconds == null
+        ? null
+        : elapsedSeconds < 60
+        ? '${elapsedSeconds}s elapsed'
+        : '${elapsedSeconds ~/ 60}m ${elapsedSeconds % 60}s elapsed';
     final summary = Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
       child: Column(
@@ -1545,10 +1633,12 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          // Elapsed feedback is visible, but does not interrupt a screen
-          // reader every second while it is reading the current stage.
-          Text(elapsed, style: theme.textTheme.labelLarge),
+          if (elapsed != null) ...[
+            const SizedBox(height: 10),
+            // Do not interrupt a screen reader every second. Legacy status
+            // without a start timestamp cannot supply an elapsed total.
+            Text(elapsed, style: theme.textTheme.labelLarge),
+          ],
           const SizedBox(height: 10),
           Text(
             _launching
@@ -1713,6 +1803,199 @@ class _ProgressLine extends StatelessWidget {
       Expanded(child: Text(text)),
     ],
   );
+}
+
+class _TermuxPasteGuide extends StatelessWidget {
+  const _TermuxPasteGuide();
+
+  // This terminal output must match unlockCommand; it is not translated.
+  static const _successOutput = 'bridge-unlocked';
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final terminalStyle = theme.textTheme.bodyMedium?.copyWith(
+      fontFamily: AppTheme.monoFamily,
+    );
+    return Column(
+      children: [
+        _PasteGuideStep(
+          title: l10n.termuxGuideCopyTitle,
+          description: l10n.termuxGuideCopyDescription,
+          illustration: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.appTitle),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Icon(Icons.copy_rounded, color: theme.colorScheme.primary),
+                  Text(l10n.termuxGuideCopied),
+                  const Icon(Icons.open_in_new_rounded),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        _PasteGuideStep(
+          title: l10n.termuxGuidePasteTitle,
+          description: l10n.termuxGuidePasteDescription,
+          illustration: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('~ \$ ▋', style: terminalStyle),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.secondaryContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: Text(
+                        l10n.termuxGuidePaste,
+                        style: TextStyle(
+                          color: theme.colorScheme.onSecondaryContainer,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const Icon(Icons.touch_app_rounded),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        _PasteGuideStep(
+          title: l10n.termuxGuideEnterTitle,
+          description: l10n.termuxGuideEnterDescription,
+          illustration: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(_successOutput, style: terminalStyle),
+              const SizedBox(height: 8),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Wrap(
+                    spacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.keyboard_return_rounded,
+                        color: theme.colorScheme.onPrimaryContainer,
+                      ),
+                      Text(
+                        l10n.termuxGuideEnterKey,
+                        style: TextStyle(
+                          color: theme.colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          l10n.termuxGuideIllustrationNote,
+          style: theme.textTheme.bodySmall,
+        ),
+      ],
+    );
+  }
+}
+
+class _PasteGuideStep extends StatelessWidget {
+  const _PasteGuideStep({
+    required this.title,
+    required this.description,
+    required this.illustration,
+  });
+
+  final String title;
+  final String description;
+  final Widget illustration;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final instructions = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Semantics(
+                header: true,
+                child: Text(title, style: theme.textTheme.titleSmall),
+              ),
+              const SizedBox(height: 6),
+              Text(description),
+            ],
+          );
+          final preview = ExcludeSemantics(
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: illustration,
+            ),
+          );
+          // Keep the illustrations alongside the instructions when there is
+          // room; large text and small phones use a single reading column.
+          if (constraints.maxWidth >= 300 &&
+              MediaQuery.textScalerOf(context).scale(16) <= 20) {
+            return Row(
+              children: [
+                Expanded(child: instructions),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: constraints.maxWidth >= 440 ? 190 : 136,
+                  child: preview,
+                ),
+              ],
+            );
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [instructions, const SizedBox(height: 12), preview],
+          );
+        },
+      ),
+    );
+  }
 }
 
 class CmdPreview extends StatelessWidget {

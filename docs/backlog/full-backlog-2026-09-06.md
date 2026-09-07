@@ -4,8 +4,9 @@
 `b618d30` (protocol contract, state/privacy, platform, UI/design-system);
 story claims corrected where the code or contract disagreed.*
 
-**Lead correction:** the [execution plan](roadmap-2026-09-06.md) now owns
-ordering and evidence levels. This inventory preserves scope, not commitments
+**Current entry point:** the [delivery ledger](current-state-2026-09-07.md)
+owns current implementation status; the [execution plan](roadmap-2026-09-06.md)
+preserves historical ordering and evidence guidance. This inventory preserves scope, not commitments
 or readiness. Earlier review conclusions are leads until their cited code,
 contract, or device result supports the specific claim. Sizes remain estimates.
 
@@ -72,25 +73,26 @@ not a prerequisite to all feature research. E3/E4 serialize shared adapters.
 
 **Goal.** Run a recorded device journey against an identified, verified
 candidate and attach evidence only to the requirements actually exercised.
-The `v1.0.34+35` source tag alone does not prove a signed APK is available.
+Identify the actual candidate and installed signer before testing. The broken
+`v1.0.34+35` release is not the current upgrade target.
 **Validation.** Within one cycle: every readiness row cites a dated artifact
 under `docs/qa/` or `docs/verification/`; zero rows still say "pending" for
 the covered scope.
 
 **E1-S1 · Post-tag doc sweep** — *As a* new installer, *I want* current docs,
 *so that* I follow the real release path, not the previous one.
-- **Given** the `v1.0.34+35` tag exists **When** I read README "Where things
-  stand", `docs/backlog/backend.md:142`, and readiness row 5 **Then** all three
+- **Given** an identified candidate and its actual delivery evidence **When** I
+  read README, the current delivery ledger, and release readiness **Then** all three
   describe the current release state (or explicitly mark publication pending).
 - Touch: README.md, backend.md one-liner, readiness row, release-alpha-notes.
 
-**E1-S2 · Install/upgrade smoke** — *As a* user on `v1.0.33+34`, *I want* the
-documented one-uninstall path, *so that* I can move to the new signer line
-without mystery.
-- **Given** a device with `v1.0.33+34` installed **When** I install the signed
-  `1.0.34+35` APK following README instructions **Then** the observed behavior
-  matches the documented signer-mismatch/data-loss notes exactly, recorded in
-  `docs/qa/`.
+**E1-S2 · Install/upgrade smoke** — *As a* user with the maintained app installed,
+*I want* a compatible update, *so that* my connections and saved input survive.
+- **Given** the installed package/version/certificate are recorded **When** an
+  explicitly approved candidate with the required matching certificate is
+  installed **Then** installation and retained connections/drafts/stash are
+  verified in `docs/qa/`. Follow the fixed signer in `AGENTS.md`; do not rotate
+  certificates or use an uninstall as a substitute for upgrade verification.
 
 **E1-S3 · Core journey device pass** — *As a* developer away from my desk,
 *I want* the whole repeat journey on a physical device, *so that* release

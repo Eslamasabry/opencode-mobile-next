@@ -245,13 +245,21 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     return parts.isEmpty ? path : parts.last;
   }
 
-  /// A permission, question, or form is waiting on the session: the row
-  /// must say so rather than "Working", since nothing moves until the user
-  /// answers.
-  bool _needsAttention(String sessionID) =>
-      widget.controller.permissionsForSession(sessionID).isNotEmpty ||
-      widget.controller.questionForSession(sessionID) != null ||
-      widget.controller.formForSession(sessionID) != null;
+  /// What a session is blocked on, or null when nothing is waiting. A run
+  /// waiting on a permission, question, or form is not making progress, so
+  /// the row names the blocker rather than saying "Working". Permission
+  /// outranks question outranks form, the order Activity answers them in.
+  String? _blocker(String sessionID, AppLocalizations l10n) {
+    final controller = widget.controller;
+    if (controller.permissionsForSession(sessionID).isNotEmpty) {
+      return l10n.monitorPermission;
+    }
+    if (controller.questionForSession(sessionID) != null) {
+      return l10n.monitorQuestion;
+    }
+    if (controller.formForSession(sessionID) != null) return l10n.monitorForm;
+    return null;
+  }
 
   Future<void> _createSession() async {
     if (_creating) return;
@@ -278,16 +286,31 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     // list, or the route that finds sessions in other directories.
     // Rows swiped to Archive vanish immediately and come back on Undo; the
     // server call only happens once the snackbar has gone.
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final sessions = widget.controller
         .sortedSessions()
         .where((session) => !_pendingArchive.contains(session.id))
         .toList();
+    // A blocked session appears once, at the top, whatever else it is: the
+    // pin or the run resumes its usual place once the request is answered,
+    // because every section below is cut from the same sorted list.
+    final blockers = <String, String>{
+      for (final session in sessions) session.id: ?_blocker(session.id, l10n),
+    };
+    final attention = sessions
+        .where((session) => blockers.containsKey(session.id))
+        .toList();
     final pinned = sessions
-        .where((session) => widget.controller.isSessionPinned(session.id))
+        .where(
+          (session) =>
+              !blockers.containsKey(session.id) &&
+              widget.controller.isSessionPinned(session.id),
+        )
         .toList();
     final active = sessions
         .where(
           (session) =>
+              !blockers.containsKey(session.id) &&
               widget.controller.busySessions.contains(session.id) &&
               !widget.controller.isSessionPinned(session.id),
         )
@@ -295,12 +318,12 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     final recent = sessions
         .where(
           (session) =>
+              !blockers.containsKey(session.id) &&
               !widget.controller.busySessions.contains(session.id) &&
               !widget.controller.isSessionPinned(session.id),
         )
         .toList();
     final archived = widget.controller.archivedSessions();
-    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final capabilities = widget.controller.capabilities;
     final partial =
         widget.controller.hasMoreSessions || widget.controller.sessionsLoading;
@@ -468,7 +491,36 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     ],
                   ),
                 ),
-                // 2. Continue active sessions, with their live state.
+                // 2. Work waiting on the user, first: the persona's top job
+                // is seeing what needs them, and a blocked run reads as
+                // "Working" anywhere else.
+                if (attention.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: SectionLabel(
+                      'Needs you',
+                      key: const ValueKey('workspace-needs-you'),
+                      trailing: Text('${attention.length}'),
+                    ),
+                  ),
+                if (attention.isNotEmpty)
+                  SliverList.builder(
+                    itemCount: attention.length,
+                    itemBuilder: (context, index) => _SessionRow(
+                      controller: widget.controller,
+                      session: attention[index],
+                      busy: widget.controller.busySessions.contains(
+                        attention[index].id,
+                      ),
+                      blocker: blockers[attention[index].id],
+                      onOpen: _openSession,
+                      onAction: _sessionAction,
+                      sharingAvailable:
+                          widget.controller.capabilities.sessionShare,
+                      archiveAvailable:
+                          widget.controller.capabilities.sessionArchive,
+                    ),
+                  ),
+                // 3. Continue active sessions, with their live state.
                 if (pinned.isNotEmpty)
                   SliverToBoxAdapter(
                     child: SectionLabel(
@@ -485,7 +537,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       busy: widget.controller.busySessions.contains(
                         pinned[index].id,
                       ),
-                      needsAttention: _needsAttention(pinned[index].id),
                       onOpen: _openSession,
                       onAction: _sessionAction,
                       sharingAvailable:
@@ -508,7 +559,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       controller: widget.controller,
                       session: active[index],
                       busy: true,
-                      needsAttention: _needsAttention(active[index].id),
                       onOpen: _openSession,
                       onAction: _sessionAction,
                       sharingAvailable:
@@ -517,58 +567,24 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           widget.controller.capabilities.sessionArchive,
                     ),
                   ),
-                // 3. Recent sessions.
+                // 4. Recent sessions. Search stays a one-tap icon; the
+                // occasional actions sit behind one labelled menu so the
+                // caption keeps its width on a phone at large text.
                 SliverToBoxAdapter(
                   child: SectionLabel(
                     'Recent sessions',
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (capabilities.globalSessionSearch)
-                          IconButton(
-                            key: const ValueKey('search-all-sessions'),
-                            tooltip: 'Search all sessions',
-                            onPressed: _openAllSessions,
-                            icon: const Icon(
-                              Icons.manage_search_rounded,
-                              size: 21,
-                            ),
-                          ),
-                        IconButton(
-                          tooltip: 'Refresh sessions',
-                          onPressed: widget.controller.sessionsLoading
-                              ? null
-                              : widget.controller.refreshSessions,
-                          icon: const Icon(Icons.refresh_rounded, size: 19),
-                        ),
-                        // Terminal gave its navigation slot to Activity; this
-                        // keeps it one tap from the workspace it runs in.
-                        if (capabilities.terminal)
-                          IconButton(
-                            key: const ValueKey('workspace-terminal'),
-                            tooltip: 'Terminal',
-                            onPressed: _openTerminal,
-                            icon: const Icon(Icons.terminal_outlined, size: 20),
-                          ),
-                        // Whether runs keep updating after the app closes
-                        // was only discoverable two levels into Settings;
-                        // say it where the runs are.
-                        if (platformCapabilities.supportsBackgroundService)
-                          IconButton(
-                            key: const ValueKey('workspace-background-toggle'),
-                            tooltip: widget.controller.keepLiveInBackground
-                                ? 'Stays connected in the background'
-                                : 'Background updates off',
-                            onPressed: _openBackgroundSettings,
-                            isSelected: widget.controller.keepLiveInBackground,
-                            icon: Icon(
-                              widget.controller.keepLiveInBackground
-                                  ? Icons.cloud_sync_outlined
-                                  : Icons.cloud_off_outlined,
-                              size: 20,
-                            ),
-                          ),
-                      ],
+                    trailing: _SectionActions(
+                      controller: widget.controller,
+                      onSearch: capabilities.globalSessionSearch
+                          ? _openAllSessions
+                          : null,
+                      onOpenTerminal: capabilities.terminal
+                          ? _openTerminal
+                          : null,
+                      onOpenBackgroundSettings:
+                          platformCapabilities.supportsBackgroundService
+                          ? _openBackgroundSettings
+                          : null,
                     ),
                   ),
                 ),
@@ -602,7 +618,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                         controller: widget.controller,
                         session: recent[index],
                         busy: false,
-                        needsAttention: _needsAttention(recent[index].id),
                         onOpen: _openSession,
                         onAction: _sessionAction,
                         sharingAvailable:
@@ -1089,8 +1104,9 @@ class _SessionRow extends StatelessWidget {
   final Session session;
   final bool busy;
 
-  /// The run is blocked on a permission, question, or form.
-  final bool needsAttention;
+  /// What the run is blocked on (permission, question, form), already
+  /// worded for the row; null when nothing is waiting.
+  final String? blocker;
   final ValueChanged<Session> onOpen;
   final Future<void> Function(String, Session) onAction;
 
@@ -1102,7 +1118,7 @@ class _SessionRow extends StatelessWidget {
     required this.controller,
     required this.session,
     required this.busy,
-    this.needsAttention = false,
+    this.blocker,
     required this.onOpen,
     required this.onAction,
     this.sharingAvailable = true,
@@ -1115,6 +1131,7 @@ class _SessionRow extends StatelessWidget {
     final updated = session.time?.updated ?? session.time?.created;
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final pinned = controller.isSessionPinned(session.id);
+    final needsAttention = blocker != null;
     final location = controller.locationRevision;
     Future<void> togglePin() async {
       try {
@@ -1167,10 +1184,10 @@ class _SessionRow extends StatelessWidget {
           children: [
             SessionUnreadBadge(controller: controller, session: session),
             _SessionRowSubtitle(
-              // "Needs you" outranks "Working": a run waiting on an answer is
-              // not making progress, and the colour says so.
+              // The blocker outranks "Working": a run waiting on an answer
+              // is not making progress, and the colour says so.
               status: needsAttention
-                  ? 'Needs you'
+                  ? blocker
                   : session.compactingSince != null
                   ? 'Compacting…'
                   : busy
@@ -1328,6 +1345,125 @@ class _SessionRowSubtitle extends StatelessWidget {
       ),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
+    );
+  }
+}
+
+enum _SectionAction { refresh, terminal, background }
+
+/// The Recent-sessions caption's controls: Search as a one-tap icon, and the
+/// occasional actions (reload, terminal, background updates) behind a single
+/// menu with visible labels. Two 48px targets leave the caption most of a
+/// 320px row even at 2x text; four unlabelled icons did not.
+///
+/// Its own enum keeps `find.byType(PopupMenuButton<String>)` in existing
+/// tests pointing at session rows only.
+class _SectionActions extends StatelessWidget {
+  const _SectionActions({
+    required this.controller,
+    required this.onSearch,
+    required this.onOpenTerminal,
+    required this.onOpenBackgroundSettings,
+  });
+
+  final ConnectionController controller;
+
+  /// Null hides the icon: the server has no cross-directory session search.
+  final VoidCallback? onSearch;
+
+  /// Null omits the entry: the server has no terminal.
+  final VoidCallback? onOpenTerminal;
+
+  /// Null omits the entry: this platform has no background service.
+  final VoidCallback? onOpenBackgroundSettings;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    final keepLive = controller.keepLiveInBackground;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (onSearch case final onSearch?)
+          IconButton(
+            key: const ValueKey('search-all-sessions'),
+            tooltip: l10n.workspaceSearchAllSessions,
+            onPressed: onSearch,
+            icon: const Icon(Icons.manage_search_rounded, size: 21),
+          ),
+        PopupMenuButton<_SectionAction>(
+          key: const ValueKey('workspace-section-menu'),
+          onSelected: (action) {
+            switch (action) {
+              case _SectionAction.refresh:
+                unawaited(controller.refreshSessions());
+              case _SectionAction.terminal:
+                onOpenTerminal?.call();
+              case _SectionAction.background:
+                onOpenBackgroundSettings?.call();
+            }
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              key: const ValueKey('workspace-refresh-sessions'),
+              value: _SectionAction.refresh,
+              enabled: !controller.sessionsLoading,
+              child: _MenuRow(
+                icon: Icons.refresh_rounded,
+                label: l10n.sessionsReload,
+              ),
+            ),
+            // Terminal gave its navigation slot to Activity; this keeps it
+            // one tap from the workspace it runs in.
+            if (onOpenTerminal != null)
+              PopupMenuItem(
+                key: const ValueKey('workspace-terminal'),
+                value: _SectionAction.terminal,
+                child: _MenuRow(
+                  icon: Icons.terminal_outlined,
+                  label: l10n.libraryTerminalTitle,
+                ),
+              ),
+            // Whether runs keep updating after the app closes was only
+            // discoverable two levels into Settings; say it where the runs
+            // are.
+            if (onOpenBackgroundSettings != null)
+              PopupMenuItem(
+                key: const ValueKey('workspace-background-toggle'),
+                value: _SectionAction.background,
+                child: _MenuRow(
+                  icon: keepLive
+                      ? Icons.cloud_sync_outlined
+                      : Icons.cloud_off_outlined,
+                  label: keepLive
+                      ? 'Stays connected in the background'
+                      : 'Background updates off',
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// A menu entry with a leading icon; the label wraps rather than clips at
+/// large text.
+class _MenuRow extends StatelessWidget {
+  const _MenuRow({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 20),
+        const SizedBox(width: 12),
+        Flexible(child: Text(label)),
+      ],
     );
   }
 }

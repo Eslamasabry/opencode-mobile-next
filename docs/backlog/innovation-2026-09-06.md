@@ -5,7 +5,8 @@ state/privacy, platform, UI/design-system); corrections folded in with
 evidence. F2's feasibility probe is answered from the contract snapshot.*
 
 New work streams behind the [full backlog](full-backlog-2026-09-06.md).
-The [lead execution plan](roadmap-2026-09-06.md) owns ordering. Both E and F
+The [current delivery ledger](current-state-2026-09-07.md) owns current status;
+the [lead execution plan](roadmap-2026-09-06.md) preserves historical ordering. Both E and F
 are planning identifiers, not automatic delivery commitments. Earlier
 "promote-now" labels mean candidates for refinement, not low-risk approvals.
 Keep the requested innovation scope, but prove each backend, permission and

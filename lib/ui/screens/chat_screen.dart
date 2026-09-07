@@ -498,6 +498,8 @@ class _ChatScreenState extends State<ChatScreen>
     _ChatCommandAction.undo ||
     _ChatCommandAction.redo => _conn.capabilities.sessionRevert,
     _ChatCommandAction.references => _conn.capabilities.fileBrowsing,
+    _ChatCommandAction.integrations ||
+    _ChatCommandAction.skills => _conn.capabilities.serverCatalog,
     _ChatCommandAction.model => true,
     _ => true,
   };
@@ -2156,45 +2158,113 @@ class _ChatScreenState extends State<ChatScreen>
     return queued;
   }
 
+  /// Removes a queued draft. False when storage refused or when the
+  /// controller declined because a flush is dispatching the entry — the
+  /// bubble already shows that state, so the refusal needs no notice.
   Future<bool> _removeQueuedDraft(String id) async {
     try {
-      await _conn.removeQueuedPrompt(id);
-      return true;
+      return await _conn.removeQueuedPrompt(id);
     } on OfflineQueueWriteException {
       if (mounted) _showActionError(_chatL10n(context).queueRemoveFailed);
       return false;
     }
   }
 
+  /// The entry as the controller holds it now, not as the tap saw it. A
+  /// reconnect can mark and dispatch a draft while a sheet is open.
+  QueuedPrompt? _liveQueuedPrompt(String id) {
+    for (final entry in _conn.queuedPromptsFor(widget.sessionID)) {
+      if (entry.id == id) return entry;
+    }
+    return null;
+  }
+
+  /// Edit takes the draft out of the queue and into the composer; nothing
+  /// is sent until the user presses Send. A draft whose send was never
+  /// confirmed still leaves with a note that sending again may duplicate.
   Future<void> _editQueuedPrompt(QueuedPrompt entry) async {
-    if (!await _removeQueuedDraft(entry.id)) return;
+    final live = _liveQueuedPrompt(entry.id);
+    if (live == null) return;
+    if (!await _removeQueuedDraft(live.id)) return;
     if (!mounted) return;
     setState(() {
       _attachments
         ..clear()
-        ..addAll(entry.attachments);
+        ..addAll(live.attachments);
     });
     final current = _composer.text;
     _composer.text = current.trim().isEmpty
-        ? entry.text
-        : '${entry.text}\n$current';
+        ? live.text
+        : '${live.text}\n$current';
     _composer.selection = TextSelection.collapsed(
       offset: _composer.text.length,
     );
     _focus.requestFocus();
+    if (live.dispatched) {
+      _showComposerNote(
+        _chatL10n(context).queuedResendMessage,
+        key: const Key('queued-edit-unconfirmed-note'),
+      );
+    }
   }
 
   Future<void> _discardQueuedPrompt(QueuedPrompt entry) async {
-    final confirmed = await showConfirmSheet(
+    if (!await _confirmDiscardQueuedPrompt(entry)) return;
+    if (!mounted) return;
+    var live = _liveQueuedPrompt(entry.id);
+    if (live == null) return;
+    // The sheet promised "not sent" but a flush dispatched the draft
+    // meanwhile: ask once more with the copy that matches its real state.
+    // A marker never comes off without the user's own resend, so a second
+    // premise change is impossible and one re-ask is enough.
+    if (live.dispatched && !entry.dispatched) {
+      if (!await _confirmDiscardQueuedPrompt(live)) return;
+      if (!mounted) return;
+      live = _liveQueuedPrompt(entry.id);
+      if (live == null) return;
+    }
+    await _removeQueuedDraft(live.id);
+  }
+
+  /// The discard sheet, worded for the entry's state at the moment it opens.
+  Future<bool> _confirmDiscardQueuedPrompt(QueuedPrompt asked) {
+    final l10n = _chatL10n(context);
+    return showConfirmSheet(
       context,
       icon: Icons.delete_sweep_outlined,
       title: 'Discard queued draft?',
-      message: 'This draft has not been sent to OpenCode.',
+      message: asked.dispatched
+          ? l10n.queuedDiscardUnconfirmedMessage
+          : 'This draft has not been sent to OpenCode.',
       confirmLabel: 'Discard draft',
-      cancelLabel: 'Keep it queued',
+      cancelLabel: asked.dispatched
+          ? l10n.queuedKeepForReview
+          : 'Keep it queued',
       destructive: true,
     );
-    if (confirmed) await _removeQueuedDraft(entry.id);
+  }
+
+  /// The explicit resend for a draft whose send was never confirmed. Only
+  /// the user's confirmation clears the dispatch marker; a duplicate is the
+  /// risk they accept here, so the sheet names it. The controller declines
+  /// silently when the entry is no longer in review by the time they
+  /// confirm; the bubble shows why.
+  Future<void> _resendQueuedPrompt(QueuedPrompt entry) async {
+    final l10n = _chatL10n(context);
+    final confirmed = await showConfirmSheet(
+      context,
+      icon: Icons.send_rounded,
+      title: l10n.queuedResendTitle,
+      message: l10n.queuedResendMessage,
+      confirmLabel: l10n.queuedResendConfirm,
+      cancelLabel: l10n.queuedKeepForReview,
+    );
+    if (!confirmed) return;
+    try {
+      await _conn.resendQueuedPrompt(entry.id);
+    } on OfflineQueueWriteException {
+      if (mounted) _showActionError(_chatL10n(context).queueSaveFailed);
+    }
   }
 
   /// Cancels a pending server send; its text returns to the composer as a
@@ -3049,7 +3119,9 @@ class _ChatScreenState extends State<ChatScreen>
         builder: (_) => _PromptEditorScreen(
           initialValue: _composer.value,
           initialAttachments: _attachments,
-          chooseAttachment: _chooseAttachment,
+          chooseAttachment: _supportsPromptAttachments
+              ? _chooseAttachment
+              : null,
         ),
       ),
     );
@@ -3217,6 +3289,7 @@ class _ChatScreenState extends State<ChatScreen>
         builder: (context, _) => _TimelineSheet(
           messages: List.of(_visibleHistory),
           forkMode: forkMode,
+          forkAvailable: _conn.capabilities.sessionFork,
           hasOlder: _olderCursor != null,
           loadingOlder: _loading || _loadingOlder,
           olderError: _olderError,
@@ -5774,11 +5847,13 @@ class _ChatScreenState extends State<ChatScreen>
   /// The offline banner's queue line: drafts the next flush will send,
   /// plus drafts a flush will deliberately skip for other servers.
   String? _queuedNote() {
-    final mine = _conn.queuedPromptCount;
+    final review = _conn.queuedPromptReviewCount;
+    final mine = _conn.queuedPromptCount - review;
     final others = _conn.queuedPromptCountForOtherProfiles;
     final parts = <String>[
       if (mine > 0)
         '$mine draft${mine == 1 ? '' : 's'} queued to send on reconnect.',
+      if (review > 0) _chatL10n(context).queuedBannerReview(review),
       if (others > 0)
         '$others draft${others == 1 ? '' : 's'} waiting for other servers.',
     ];
@@ -6423,7 +6498,12 @@ class _ChatScreenState extends State<ChatScreen>
                               _PendingSendsStrip(
                                 drafts: pendingSends.drafts,
                                 inboxItems: pendingSends.inbox,
+                                isSending: (entry) =>
+                                    _conn.queuedPromptSending(entry.id),
+                                isAcceptedUnrecorded: (entry) => _conn
+                                    .queuedPromptAcceptedUnrecorded(entry.id),
                                 onEdit: _editQueuedPrompt,
+                                onResend: _resendQueuedPrompt,
                                 onDiscard: _discardQueuedPrompt,
                                 onCancelInbox: _cancelInboxSend,
                                 onFlipDelivery: _flipInboxDelivery,

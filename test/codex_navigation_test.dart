@@ -9,6 +9,7 @@ import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/ui/screens/home_screen.dart';
+import 'package:opencode_mobile/ui/screens/library_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _CodexApi extends OpenCodeApi {
@@ -111,6 +112,17 @@ Widget _app(ConnectionController controller) => ProviderScope(
   ),
 );
 
+/// The hit-testable tap target of a NavigationRail destination, found from
+/// its label. The rail's destination ink is a private InkResponse subclass,
+/// so match by type hierarchy rather than exact type.
+Finder _railDestination(String label) => find
+    .ancestor(
+      of: find.text(label),
+      matching: find.byWidgetPredicate((widget) => widget is InkResponse),
+    )
+    .first
+    .hitTestable();
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -151,9 +163,25 @@ void main() {
       // The project catalog is not queried when project management is absent.
       expect(repository.listProjectsCalls, 0);
       expect(find.byKey(const ValueKey('search-all-sessions')), findsNothing);
+      // Terminal is a section-menu entry, so its absence only means
+      // something with the menu open.
+      await tester.tap(find.byKey(const ValueKey('workspace-section-menu')));
+      await tester.pumpAndSettle();
+      expect(find.text('Reload recent sessions'), findsOneWidget);
       expect(find.byKey(const ValueKey('workspace-terminal')), findsNothing);
+      await tester.tapAt(const Offset(4, 4));
+      await tester.pumpAndSettle();
+      expect(find.text('Reload recent sessions'), findsNothing);
+      // The menu route is gone: only the shell's navigator page remains.
+      expect(
+        find.byWidgetPredicate((widget) => widget is PopupMenuItem),
+        findsNothing,
+      );
 
-      await tester.tap(find.text('Activity'));
+      // At the 800px test surface the shell uses a NavigationRail, whose
+      // labels are zero-size semantics-only boxes; tap the destination's
+      // ink well, which is what a pointer actually reaches.
+      await tester.tap(_railDestination('Activity'));
       await tester.pumpAndSettle();
       expect(
         tester
@@ -161,11 +189,33 @@ void main() {
             .data,
         'Activity',
       );
+      expect(
+        tester
+            .widget<NavigationRail>(find.byType(NavigationRail))
+            .selectedIndex,
+        1,
+        reason: 'Files is hidden, so Activity is the second rail destination',
+      );
 
-      await tester.tap(find.text('More'));
+      await tester.tap(_railDestination('More'));
       await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<Text>(find.byKey(const ValueKey('current-tab-title')))
+            .data,
+        'More',
+      );
+      expect(
+        tester
+            .widget<NavigationRail>(find.byType(NavigationRail))
+            .selectedIndex,
+        2,
+      );
       expect(find.text('Settings'), findsOneWidget);
       expect(find.text('Models & agents'), findsNothing);
+      expect(find.text('Providers'), findsNothing);
+      expect(find.text('MCP'), findsNothing);
+      expect(find.text('Commands & tools'), findsNothing);
       expect(find.byKey(const ValueKey('library-terminal')), findsNothing);
       expect(
         find.byKey(const ValueKey('library-import-session')),
@@ -173,4 +223,31 @@ void main() {
       );
     },
   );
+
+  testWidgets('OpenCode keeps server catalogs even without credential writes', (
+    tester,
+  ) async {
+    final controller = await _controller(_CodexRepository());
+    addTearDown(controller.dispose);
+    controller.api = _CodexApi(
+      const ServerCapabilities(
+        integrationCredentials: false,
+        mcpConfigWrites: false,
+        mcpOAuth: false,
+      ),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(body: LibraryScreen(controller: controller)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Models & agents'), findsOneWidget);
+    expect(find.text('Providers'), findsOneWidget);
+    expect(find.text('MCP'), findsOneWidget);
+    expect(find.text('Commands & tools'), findsOneWidget);
+  });
 }

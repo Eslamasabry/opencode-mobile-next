@@ -535,6 +535,18 @@ class ConnectionController extends ChangeNotifier {
   OfflineQueueStore? _offlineQueueStore;
   bool _flushingOfflineQueue = false;
 
+  /// The queued prompt a flush is working on: from the moment its dispatch
+  /// marker write is queued until its acceptance or failure has been
+  /// persisted. Removal and resend refuse this id inside the queue's
+  /// serialization, so a confirmation sheet that was opened before the
+  /// flush started cannot act on a prompt that is now on the wire.
+  String? _queuedPromptInFlight;
+
+  /// Queued prompts the server accepted but whose removal the store refused.
+  /// In memory only: after a restart the marker alone remains, which reads
+  /// as an unconfirmed send — the honest statement once this is lost.
+  final _queuedPromptsAcceptedUnrecorded = <String>{};
+
   /// Composer text typed in a chat but never sent, kept per session so
   /// navigating between sessions loses nothing. Loaded lazily from
   /// [SessionDraftStore] and kept in memory afterward.
@@ -4461,6 +4473,7 @@ class ConnectionController extends ChangeNotifier {
     if (_queue.isEmpty && _queueStore.readable) return true;
     if (!await _queueStore.save(const [])) return false;
     _offlineQueue = [];
+    _queuedPromptsAcceptedUnrecorded.clear();
     notifyListeners();
     return true;
   });
@@ -4495,6 +4508,25 @@ class ConnectionController extends ChangeNotifier {
     if (profileID == null) return 0;
     return _queue.where((entry) => entry.profileID == profileID).length;
   }
+
+  /// Queued prompts of the active profile that left the device without a
+  /// confirmed outcome. A flush skips these; only the user's explicit
+  /// resend, edit, or discard moves them.
+  int get queuedPromptReviewCount {
+    final profileID = profile?.id;
+    if (profileID == null) return 0;
+    return _queue
+        .where((entry) => entry.profileID == profileID && entry.dispatched)
+        .length;
+  }
+
+  /// Whether a flush is dispatching this entry or persisting its outcome.
+  bool queuedPromptSending(String id) => _queuedPromptInFlight == id;
+
+  /// Whether the server accepted this entry's send but the device could not
+  /// record it. Resending such an entry is a guaranteed duplicate.
+  bool queuedPromptAcceptedUnrecorded(String id) =>
+      _queuedPromptsAcceptedUnrecorded.contains(id);
 
   /// Queued prompts that belong to profiles other than the active one. A
   /// flush never sends these; the count lets banners and the flush notice
@@ -4545,15 +4577,80 @@ class ConnectionController extends ChangeNotifier {
         return true;
       });
 
-  Future<void> removeQueuedPrompt(String id) => _serializeQueueChange(() async {
+  /// Removes a queued prompt. Returns false, removing nothing, when a flush
+  /// is dispatching that entry right now: the decision was made against a
+  /// bubble that said "queued", and the entry's real state is on the wire.
+  /// The check runs inside the queue's serialization, after any marker
+  /// write ahead of it. A storage refusal throws
+  /// [OfflineQueueWriteException].
+  Future<bool> removeQueuedPrompt(String id) => _serializeQueueChange(() async {
+    if (_queuedPromptInFlight == id) return false;
     final kept = _queue.where((entry) => entry.id != id).toList();
-    if (kept.length == _queue.length) return;
+    if (kept.length == _queue.length) return true;
     if (!await _queueStore.save(kept)) {
       throw const OfflineQueueWriteException();
     }
     _offlineQueue = kept;
+    _queuedPromptsAcceptedUnrecorded.remove(id);
     notifyListeners();
+    return true;
   });
+
+  /// The user's explicit answer to an unconfirmed send: clear the dispatch
+  /// marker so the next flush delivers the entry again, and start that
+  /// flush. Returns false without changing anything when the entry is not
+  /// in review any more — it is being dispatched, was removed, or its send
+  /// is known to have been accepted. A storage refusal throws
+  /// [OfflineQueueWriteException] and leaves the entry in review; nothing
+  /// is sent until the marker is persisted as cleared.
+  Future<bool> resendQueuedPrompt(String id) async {
+    final cleared = await _serializeQueueChange(() async {
+      if (_queuedPromptInFlight == id ||
+          _queuedPromptsAcceptedUnrecorded.contains(id)) {
+        return false;
+      }
+      final index = _queue.indexWhere((entry) => entry.id == id);
+      if (index < 0 || !_queue[index].dispatched) return false;
+      final next = [..._queue]..[index] = _queue[index].withDispatchedAt(null);
+      if (!await _queueStore.save(next)) {
+        throw const OfflineQueueWriteException();
+      }
+      _offlineQueue = next;
+      if (!_disposed) notifyListeners();
+      return true;
+    });
+    if (cleared) unawaited(flushOfflineQueue());
+    return cleared;
+  }
+
+  /// Persists a replacement for one queue entry. Returns null when the entry
+  /// is no longer queued, false when the store refused the write (memory
+  /// and storage both stay as they were), true when the change persisted.
+  Future<bool?> _replaceQueuedPrompt(
+    String id,
+    QueuedPrompt Function(QueuedPrompt entry) update,
+  ) => _serializeQueueChange(() async {
+    final index = _queue.indexWhere((entry) => entry.id == id);
+    if (index < 0) return null;
+    final next = [..._queue]..[index] = update(_queue[index]);
+    if (!await _queueStore.save(next)) return false;
+    _offlineQueue = next;
+    if (!_disposed) notifyListeners();
+    return true;
+  });
+
+  /// Persists the queue without [id]. Returns false when the store refused
+  /// the write; a stale in-memory removal is never applied over a persisted
+  /// entry, because that entry would resend after the next restart.
+  Future<bool> _persistQueuedPromptRemoval(String id) =>
+      _serializeQueueChange(() async {
+        final kept = _queue.where((entry) => entry.id != id).toList();
+        if (kept.length == _queue.length) return true;
+        if (!await _queueStore.save(kept)) return false;
+        _offlineQueue = kept;
+        if (!_disposed) notifyListeners();
+        return true;
+      });
 
   SessionDraftStore get _draftStore =>
       _sessionDraftStore ??= SessionDraftStore(prefs: store.prefs);
@@ -4825,14 +4922,19 @@ class ConnectionController extends ChangeNotifier {
     _widgetSnapshotSuspended = true;
     try {
       // 1. Queued prompts — the largest and most sensitive blob, holding
-      //    prompt text and attachment data URLs.
-      final keptQueue = [
-        for (final entry in _queue)
-          if (entry.profileID != profileId) entry,
-      ];
-      final removedQueued = _queue.length - keptQueue.length;
+      //    prompt text and attachment data URLs. Serialized with every other
+      //    queue write: a flush may be persisting a dispatch marker for the
+      //    active profile at this moment, and a rewrite computed from the
+      //    pre-marker list would strip that marker from disk while the
+      //    prompt is on the wire.
       var clearedQueued = 0;
-      if (removedQueued > 0) {
+      await _serializeQueueChange(() async {
+        final keptQueue = [
+          for (final entry in _queue)
+            if (entry.profileID != profileId) entry,
+        ];
+        final removedQueued = _queue.length - keptQueue.length;
+        if (removedQueued == 0) return;
         if (await _queueStore.save(keptQueue)) {
           _offlineQueue = keptQueue;
           clearedQueued = removedQueued;
@@ -4842,7 +4944,7 @@ class ConnectionController extends ChangeNotifier {
             '${removedQueued == 1 ? 'prompt' : 'prompts'}',
           );
         }
-      }
+      });
 
       // 2. Composer drafts.
       var clearedDrafts = 0;
@@ -4936,26 +5038,41 @@ class ConnectionController extends ChangeNotifier {
     }
   }
 
+  /// Set when a flush is requested while one is running, so the running
+  /// flush starts another pass when it finishes. An explicit resend that
+  /// lands mid-flush must not wait for the next reconnect.
+  bool _flushOfflineQueueAgain = false;
+
   /// Sends queued prompts for the active profile, oldest first, through the
   /// wake-reconciled transport. A connectivity failure stops the flush (the
   /// server is still unreachable); a declared server failure keeps that
   /// entry with its error inline and continues with the next.
+  ///
+  /// Every send is bracketed by two persisted writes: the dispatch marker
+  /// goes to storage before the request leaves the device, and the entry's
+  /// removal goes to storage as soon as the server accepts it. A refusal of
+  /// either write stops the batch instead of sending on state the next
+  /// launch cannot see. Entries whose marker is set are never sent here;
+  /// only the user's explicit resend clears it — see
+  /// [QueuedPrompt.dispatchedAt].
   Future<void> flushOfflineQueue() async {
-    if (_flushingOfflineQueue ||
-        _disposed ||
-        !capabilities.offlinePromptQueue) {
+    if (_disposed || !capabilities.offlinePromptQueue) return;
+    if (_flushingOfflineQueue) {
+      _flushOfflineQueueAgain = true;
       return;
     }
     final profileID = profile?.id;
     if (profileID == null) return;
     final origin = (profileID, profile?.baseUrl, directory, workspace);
-    if (!_queue.any((entry) => entry.profileID == profileID)) return;
+    bool eligible(QueuedPrompt entry) =>
+        entry.profileID == profileID && !entry.dispatched;
+    if (!_queue.any(eligible)) return;
     _flushingOfflineQueue = true;
-    var mutated = false;
     var sent = 0;
+    var touched = false;
     try {
       for (final entry in List.of(_queue)) {
-        if (entry.profileID != profileID) continue;
+        if (!eligible(entry)) continue;
         final currentApi = await prepareActionTransport();
         await _queueChanges;
         if (_disposed ||
@@ -4965,8 +5082,26 @@ class ConnectionController extends ChangeNotifier {
             origin != (profile?.id, profile?.baseUrl, directory, workspace)) {
           break;
         }
-        if (!_queue.any((queued) => queued.id == entry.id)) continue;
+        if (!_queue.any(
+          (queued) => queued.id == entry.id && !queued.dispatched,
+        )) {
+          continue;
+        }
+        // Set once the dispatch marker is persisted: from here on every
+        // failure is an uncertain outcome that keeps the marker.
+        var dispatched = false;
+        // Set once the transport reported the prompt accepted.
         var delivered = false;
+        // Set once the accepted entry's removal reached storage.
+        var recorded = false;
+        // Set when the store refused the marker write; nothing was sent.
+        var markerRefused = false;
+        var stop = false;
+        touched = true;
+        // Held until this entry's outcome — removal or error — is persisted,
+        // so the bubble never offers review actions on a prompt whose fate
+        // this device has not yet recorded.
+        _queuedPromptInFlight = entry.id;
         try {
           if (supportsStagedRevert) {
             final fresh = await currentApi.session(entry.sessionID);
@@ -4990,15 +5125,40 @@ class ConnectionController extends ChangeNotifier {
               );
             }
           }
-          Future<void> send() => currentApi.promptAsync(
-            entry.sessionID,
-            text: entry.text,
-            model: entry.model,
-            agent: entry.agent?.isNotEmpty == true ? entry.agent : null,
-            variant: entry.variant?.isNotEmpty == true ? entry.variant : null,
-            attachments: entry.attachments,
-            agentMentions: entry.mentions,
-          );
+          // Persists the dispatch marker, then — only if storage accepted
+          // it — puts the prompt on the wire, and records the acceptance
+          // before anything else (a selection refresh, a session reload)
+          // gets to run. Runs after model/agent prep so those preflight
+          // failures stay ordinary retryable errors.
+          Future<void> dispatch() async {
+            final marked = await _replaceQueuedPrompt(
+              entry.id,
+              (queued) => queued.withDispatchedAt(
+                DateTime.now().millisecondsSinceEpoch,
+              ),
+            );
+            if (marked == null) return;
+            if (!marked) {
+              markerRefused = true;
+              return;
+            }
+            dispatched = true;
+            await currentApi.promptAsync(
+              entry.sessionID,
+              text: entry.text,
+              model: entry.model,
+              agent: entry.agent?.isNotEmpty == true ? entry.agent : null,
+              variant: entry.variant?.isNotEmpty == true ? entry.variant : null,
+              attachments: entry.attachments,
+              agentMentions: entry.mentions,
+            );
+            delivered = true;
+            // Until this write lands the persisted marker keeps the entry
+            // out of every future flush, so a refusal or a process death
+            // here can only cost a review — never a duplicate send.
+            recorded = await _persistQueuedPromptRemoval(entry.id);
+          }
+
           if (currentApi is SessionSelectionGateway) {
             await _mutateSessionSelection(entry.sessionID, (gateway) async {
               await _queueChanges;
@@ -5026,45 +5186,83 @@ class ConnectionController extends ChangeNotifier {
               }
               await _queueChanges;
               if (!_queue.any((queued) => queued.id == entry.id)) return true;
-              await send();
-              delivered = true;
+              await dispatch();
               return true;
             }, requireConfirmation: false);
           } else {
-            await send();
-            delivered = true;
+            await dispatch();
           }
-          if (!delivered) continue;
-          await _serializeQueueChange(() async {
-            _queue.removeWhere((queued) => queued.id == entry.id);
-            mutated = true;
-          });
-          sent += 1;
         } on ApiException catch (error) {
-          if (error.statusCode == null) break;
-          await _serializeQueueChange(() async {
-            final index = _queue.indexWhere((queued) => queued.id == entry.id);
-            if (index >= 0) {
-              _queue[index] = entry.withError(error.message);
-              mutated = true;
+          // Once delivered, whatever failed afterwards (a session refresh, a
+          // changed connection) does not undo the acceptance.
+          if (!delivered && !dispatched) {
+            // Preflight failure: nothing left the device, so the entry stays
+            // unmarked and the next flush retries it.
+            if (error.statusCode == null) {
+              stop = true;
+            } else {
+              await _replaceQueuedPrompt(
+                entry.id,
+                (queued) => queued.withError(error.message),
+              );
             }
-          });
-        } catch (_) {
-          break;
+          } else if (!delivered) {
+            // After dispatch nothing proves non-delivery: neither prompt
+            // endpoint offers an idempotency or receipt contract, and a
+            // status code only says who answered, not whether the prompt
+            // was enqueued first. The marker stays; only the user's review
+            // moves this entry.
+            await _replaceQueuedPrompt(
+              entry.id,
+              (queued) => queued.withError(error.message),
+            );
+            if (error.statusCode == null) stop = true;
+          }
+        } catch (error) {
+          if (!delivered) {
+            if (dispatched) {
+              await _replaceQueuedPrompt(
+                entry.id,
+                (queued) => queued.withError(error.toString()),
+              );
+            }
+            stop = true;
+          }
         }
+        if (delivered && !recorded) {
+          // The server has this prompt; the device could not record that.
+          // Say so — a plain "unconfirmed" would invite a resend that is a
+          // certain duplicate — and keep the marker whatever the store says.
+          _queuedPromptsAcceptedUnrecorded.add(entry.id);
+          await _replaceQueuedPrompt(
+            entry.id,
+            (queued) => queued.withError(
+              'OpenCode accepted this prompt, but this device could not '
+              'update the queue.',
+            ),
+          );
+        }
+        _queuedPromptInFlight = null;
+        if (!_disposed) notifyListeners();
+        if (markerRefused) break;
+        if (delivered) {
+          if (!recorded) break;
+          sent += 1;
+        }
+        if (stop) break;
       }
     } finally {
+      _queuedPromptInFlight = null;
       _flushingOfflineQueue = false;
       if (sent > 0) {
         lastFlushedPromptCount = sent;
         lastFlushSkippedForOtherProfiles = queuedPromptCountForOtherProfiles;
         offlineFlushRevision += 1;
       }
-      if (mutated) {
-        await _serializeQueueChange(() async {
-          await _queueStore.save(_queue);
-          if (!_disposed) notifyListeners();
-        });
+      if (touched && !_disposed) notifyListeners();
+      if (_flushOfflineQueueAgain) {
+        _flushOfflineQueueAgain = false;
+        if (!_disposed) unawaited(flushOfflineQueue());
       }
     }
   }

@@ -157,8 +157,9 @@ class _UncertainNewThreadFixture {
   );
   Map<String, dynamic> thread = _thread(turns: const []);
   bool loseNextTurn = false;
+  final bool failEmptyThreadReads;
 
-  _UncertainNewThreadFixture() {
+  _UncertainNewThreadFixture({this.failEmptyThreadReads = false}) {
     first.handler = (request) => _respond(first, request);
     replacement.handler = (request) => _respond(replacement, request);
   }
@@ -172,11 +173,28 @@ class _UncertainNewThreadFixture {
     } else if (method == 'thread/start') {
       socket.result(id, {'thread': thread});
     } else if (method == 'thread/read' || method == 'thread/resume') {
-      socket.result(id, {'thread': thread});
+      final threadID = request['params']['threadId'];
+      if (threadID == 'thread-durable') {
+        socket.result(id, {
+          'thread': {
+            ..._thread(turns: [_turn()]),
+            'id': threadID,
+          },
+        });
+      } else if (failEmptyThreadReads && (thread['turns'] as List).isEmpty) {
+        socket.input.add(
+          jsonEncode({
+            'id': id,
+            'error': {'code': -32603, 'message': 'Synthetic read failure'},
+          }),
+        );
+      } else {
+        socket.result(id, {'thread': thread});
+      }
     } else if (method == 'turn/start') {
       if (loseNextTurn) {
         loseNextTurn = false;
-        thread = _thread(turns: [_turn()]);
+        if (!failEmptyThreadReads) thread = _thread(turns: [_turn()]);
         unawaited(socket.close());
       } else {
         socket.result(id, {'turn': _turn(status: 'inProgress')});
@@ -241,7 +259,9 @@ class _RecoveryFixture {
     directory: '/project',
   );
 
-  _RecoveryFixture() {
+  final String? genericFailureMethod;
+
+  _RecoveryFixture({this.genericFailureMethod}) {
     first.handler = (request) => _respond(first, request);
     second.handler = (request) => _respond(second, request, failResume: true);
   }
@@ -253,13 +273,22 @@ class _RecoveryFixture {
   }) {
     final id = request['id'];
     if (id == null || request['method'] == null) return;
+    if (failResume && request['method'] == genericFailureMethod) {
+      socket.input.add(
+        jsonEncode({
+          'id': id,
+          'error': {'code': -32603, 'message': 'Synthetic recovery failure'},
+        }),
+      );
+      return;
+    }
     final result = switch (request['method']) {
       'initialize' => <String, dynamic>{'userAgent': 'codex/0.153.4'},
       'thread/read' => <String, dynamic>{
         'thread': _thread(turns: [_turn()]),
       },
       'thread/resume' => <String, dynamic>{
-        'thread': failResume
+        'thread': failResume && genericFailureMethod == null
             ? {..._thread(), 'id': 'other-thread'}
             : _thread(turns: [_turn()]),
       },
@@ -660,12 +689,182 @@ void main() {
     },
   );
 
+  for (final method in ['thread/read', 'thread/resume']) {
+    test('generic $method failure keeps reconnect degraded', () async {
+      final fixture = _RecoveryFixture(genericFailureMethod: method);
+      final statuses = <StreamStatus>[];
+      final channel = fixture.gateway.openEventChannel(
+        onEvent: (_) {},
+        onStatus: statuses.add,
+      );
+      try {
+        channel.start();
+        await pumpEventQueue(times: 5);
+        await fixture.gateway.messages('thread-1');
+        await fixture.first.close();
+        await Future<void>.delayed(const Duration(milliseconds: 1100));
+        await pumpEventQueue(times: 5);
+
+        expect(fixture.transport.connected, isTrue);
+        expect(
+          fixture.second.sent.where((request) => request['method'] == method),
+          hasLength(1),
+        );
+        expect(statuses.last, StreamStatus.reconnecting);
+        expect(
+          statuses.where((status) => status == StreamStatus.connected),
+          hasLength(1),
+        );
+        expect(
+          fixture.second.sent.where(
+            (request) =>
+                request['method'] == 'thread/start' ||
+                request['method'] == 'turn/start',
+          ),
+          isEmpty,
+        );
+      } finally {
+        await channel.dispose();
+        fixture.gateway.close();
+      }
+    });
+  }
+
   test('read to resume never crosses a location generation', () async {
     await _expectReadMutationScopeRace(
       (fixture) => fixture.gateway.messages('thread-1').then<void>((_) {}),
       forbiddenMethod: 'thread/resume',
     );
   });
+
+  for (final uncertainFirstTurn in [false, true]) {
+    test(
+      uncertainFirstTurn
+          ? 'an unavailable uncertain first turn still blocks reconnect recovery'
+          : 'a never-dispatched empty thread retires before automatic recovery RPCs',
+      () async {
+        final fixture = _UncertainNewThreadFixture(failEmptyThreadReads: true);
+        final statuses = <StreamStatus>[];
+        final events = <String>[];
+        final channel = fixture.gateway.openEventChannel(
+          onEvent: (event) => events.add(event.type),
+          onStatus: statuses.add,
+        );
+        try {
+          channel.start();
+          await pumpEventQueue(times: 5);
+          await fixture.gateway.messages('thread-durable');
+          final created = await fixture.gateway.createSession();
+
+          if (uncertainFirstTurn) {
+            fixture.loseNextTurn = true;
+            await expectLater(
+              fixture.gateway.promptAsync(created.id, text: 'First attempt'),
+              throwsA(
+                isA<CodexFailure>().having(
+                  (error) => error.kind,
+                  'kind',
+                  CodexFailureKind.deliveryUnknown,
+                ),
+              ),
+            );
+          } else {
+            await fixture.first.close();
+          }
+          await Future<void>.delayed(const Duration(milliseconds: 1100));
+          await pumpEventQueue(times: 5);
+
+          expect(
+            statuses.last,
+            uncertainFirstTurn
+                ? StreamStatus.reconnecting
+                : StreamStatus.connected,
+          );
+          expect(
+            fixture.replacement.sent.where(
+              (request) =>
+                  request['method'] == 'thread/resume' &&
+                  request['params']['threadId'] == 'thread-durable',
+            ),
+            hasLength(1),
+          );
+          expect(
+            fixture.replacement.sent.where(
+              (request) =>
+                  request['method'] == 'thread/read' &&
+                  request['params']['threadId'] == created.id,
+            ),
+            hasLength(uncertainFirstTurn ? 1 : 0),
+          );
+          expect(
+            fixture.replacement.sent.where(
+              (request) =>
+                  request['method'] == 'thread/resume' &&
+                  request['params']['threadId'] == created.id,
+            ),
+            isEmpty,
+          );
+          expect(
+            fixture.replacement.sent.where(
+              (request) =>
+                  request['method'] == 'thread/start' ||
+                  request['method'] == 'turn/start',
+            ),
+            isEmpty,
+          );
+          // Recovery must not emit deletion or mutate the session identity
+          // used by the controller's separately persisted local draft.
+          expect(events, isNot(contains('session.deleted')));
+          expect(await fixture.gateway.sessionStatuses(), contains(created.id));
+
+          if (!uncertainFirstTurn) {
+            // Retired metadata must not satisfy explicit details/history
+            // through the old empty-thread shortcut.
+            for (final access in [
+              () => fixture.gateway.session(created.id),
+              () => fixture.gateway.messages(created.id),
+            ]) {
+              final before = fixture.replacement.sent.length;
+              await expectLater(access(), throwsA(isA<CodexFailure>()));
+              expect(fixture.replacement.sent, hasLength(before + 1));
+              expect(fixture.replacement.sent.last['method'], 'thread/read');
+            }
+          }
+
+          final readsBeforeExplicitSend = fixture.replacement.sent
+              .where((request) => request['method'] == 'thread/read')
+              .length;
+          await expectLater(
+            fixture.gateway.promptAsync(created.id, text: 'Explicit retry'),
+            throwsA(
+              isA<CodexFailure>().having(
+                (error) => error.kind,
+                'kind',
+                uncertainFirstTurn
+                    ? CodexFailureKind.deliveryUnknown
+                    : CodexFailureKind.unavailable,
+              ),
+            ),
+          );
+          expect(
+            fixture.replacement.sent
+                .where((request) => request['method'] == 'thread/read')
+                .length,
+            readsBeforeExplicitSend + (uncertainFirstTurn ? 0 : 1),
+          );
+          expect(
+            fixture.replacement.sent.where(
+              (request) => request['method'] == 'turn/start',
+            ),
+            isEmpty,
+          );
+        } finally {
+          await channel.dispose();
+          fixture.gateway.close();
+        }
+      },
+    );
+  }
 
   test('read to delete never crosses a location generation', () async {
     await _expectReadMutationScopeRace(
