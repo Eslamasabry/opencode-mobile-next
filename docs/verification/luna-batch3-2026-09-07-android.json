@@ -1,0 +1,13 @@
+{
+  "queue_count_unknown": true,
+  "queue_clear_cancel_preserves_data": true,
+  "queue_clear_confirm_removes_unreadable_data": true,
+  "queue_recovery_large_text_scroll": true,
+  "file_read_error_visible": true,
+  "explicit_file_retry_recovers": true,
+  "prompt_requests": 0,
+  "app": "1.0.36+37 debug",
+  "device": "emulator-5554 Android14 x86_64",
+  "fixture": "127.0.0.1:4125 synthetic v1",
+  "apk_sha256": "b3d7b5b2a931599f6883d13dcbc858bdc386e516991165c69c432f325ea3807a"
+}
