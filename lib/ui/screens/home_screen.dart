@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/sse.dart';
+import '../../domain/server_gateway.dart' show ServerCapabilities;
 import '../../state/connection.dart';
 import '../app_theme.dart';
 import '../desktop/shortcuts.dart';
@@ -37,8 +38,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   void initState() {
     super.initState();
-    _tab = widget.initialTab.clamp(0, 3);
     final conn = ref.read(connProvider);
+    _tab = _safeTab(widget.initialTab, conn.capabilities);
     conn.addListener(_onConnChanged);
     // If the SSE stream cannot connect at all, fall back to polling.
     if (conn.status == StreamStatus.disconnected) {
@@ -52,12 +53,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   bool onAppShortcut(Intent intent) {
     switch (intent) {
       case SelectDestinationIntent(:final index) when index >= 0 && index <= 3:
-        if (_tab != index) setState(() => _tab = index);
+        final conn = ref.read(connProvider);
+        final next = _safeTab(index, conn.capabilities);
+        if (_tab != next) setState(() => _tab = next);
         return true;
-      case FindInSurfaceIntent() when _tab == 1:
+      case FindInSurfaceIntent()
+          when _tab == 1 && ref.read(connProvider).capabilities.fileBrowsing:
         _findInFiles.value++;
         return true;
-      case OpenTerminalIntent():
+      case OpenTerminalIntent()
+          when ref.read(connProvider).capabilities.terminal:
         Navigator.of(context).push(
           MaterialPageRoute<void>(
             builder: (_) => TerminalPage(controller: ref.read(connProvider)),
@@ -71,7 +76,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   void _onConnChanged() {
     if (!mounted) return;
-    setState(() {});
+    final next = _safeTab(_tab, ref.read(connProvider).capabilities);
+    setState(() => _tab = next);
+  }
+
+  static int _safeTab(int requested, ServerCapabilities capabilities) {
+    final tab = requested.clamp(0, 3);
+    return tab == 1 && !capabilities.fileBrowsing ? 0 : tab;
   }
 
   @override
@@ -87,48 +98,68 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget build(BuildContext context) {
     final conn = ref.watch(connProvider);
     final navigator = Navigator.of(context);
+    final activeTab = _safeTab(_tab, conn.capabilities);
 
     // Audit §5: Activity replaces Terminal in primary navigation; Terminal is
     // reachable from Session and the More hub. One destination, one badge.
-    final tabs = [
+    final tabs = <Widget>[
       WorkspaceScreen(controller: conn),
-      FilesScreen(
-        controller: conn,
-        focusSearchSignal: _findInFiles,
-        backController: _filesBack,
-      ),
+      if (conn.capabilities.fileBrowsing)
+        FilesScreen(
+          controller: conn,
+          focusSearchSignal: _findInFiles,
+          backController: _filesBack,
+        )
+      else
+        const SizedBox.shrink(),
       ActivityScreen(controller: conn, embedded: true),
       LibraryScreen(controller: conn),
     ];
     final pending = conn.unifiedAttentionCount;
-    final destinations = [
-      const NavigationDestination(
-        icon: Icon(Icons.workspaces_outline),
-        selectedIcon: Icon(Icons.workspaces_rounded),
-        label: 'Workspace',
-      ),
-      const NavigationDestination(
-        icon: Icon(Icons.folder_outlined),
-        selectedIcon: Icon(Icons.folder_rounded),
-        label: 'Files',
-      ),
-      NavigationDestination(
-        icon: _ActivityIcon(
-          pending: pending,
-          icon: Icons.notifications_outlined,
+    final destinations = <({int id, NavigationDestination destination})>[
+      (
+        id: 0,
+        destination: const NavigationDestination(
+          icon: Icon(Icons.workspaces_outline),
+          selectedIcon: Icon(Icons.workspaces_rounded),
+          label: 'Workspace',
         ),
-        selectedIcon: _ActivityIcon(
-          pending: pending,
-          icon: Icons.notifications_rounded,
-        ),
-        label: 'Activity',
       ),
-      const NavigationDestination(
-        icon: Icon(Icons.more_horiz_rounded),
-        selectedIcon: Icon(Icons.more_rounded),
-        label: 'More',
+      if (conn.capabilities.fileBrowsing)
+        (
+          id: 1,
+          destination: const NavigationDestination(
+            icon: Icon(Icons.folder_outlined),
+            selectedIcon: Icon(Icons.folder_rounded),
+            label: 'Files',
+          ),
+        ),
+      (
+        id: 2,
+        destination: NavigationDestination(
+          icon: _ActivityIcon(
+            pending: pending,
+            icon: Icons.notifications_outlined,
+          ),
+          selectedIcon: _ActivityIcon(
+            pending: pending,
+            icon: Icons.notifications_rounded,
+          ),
+          label: 'Activity',
+        ),
+      ),
+      (
+        id: 3,
+        destination: const NavigationDestination(
+          icon: Icon(Icons.more_horiz_rounded),
+          selectedIcon: Icon(Icons.more_rounded),
+          label: 'More',
+        ),
       ),
     ];
+    final selectedDestination = destinations.indexWhere(
+      (entry) => entry.id == activeTab,
+    );
 
     return PopScope(
       canPop: false,
@@ -137,7 +168,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         appBar: AppBar(
           title: _WorkspaceAppBarTitle(
             profileName: conn.profile?.name ?? 'OpenCode',
-            tabTitle: _titles[_tab],
+            tabTitle: _titles[activeTab],
             status: conn.status,
             compact: MediaQuery.sizeOf(context).width < 600,
           ),
@@ -177,7 +208,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 if (conn.status != StreamStatus.connected)
                   ConnectionStatusBanner(controller: conn),
                 Expanded(
-                  child: IndexedStack(index: _tab, children: tabs),
+                  child: IndexedStack(index: activeTab, children: tabs),
                 ),
               ],
             );
@@ -185,16 +216,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             return Row(
               children: [
                 NavigationRail(
-                  selectedIndex: _tab,
+                  selectedIndex: selectedDestination,
                   extended: constraints.maxWidth >= 1040,
                   onDestinationSelected: (index) =>
-                      setState(() => _tab = index),
+                      setState(() => _tab = destinations[index].id),
                   destinations: [
-                    for (final destination in destinations)
+                    for (final entry in destinations)
                       NavigationRailDestination(
-                        icon: destination.icon,
-                        selectedIcon: destination.selectedIcon,
-                        label: Text(destination.label),
+                        icon: entry.destination.icon,
+                        selectedIcon: entry.destination.selectedIcon,
+                        label: Text(entry.destination.label),
                       ),
                   ],
                 ),
@@ -206,9 +237,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         ),
         bottomNavigationBar: MediaQuery.sizeOf(context).width < 760
             ? NavigationBar(
-                selectedIndex: _tab,
-                onDestinationSelected: (i) => setState(() => _tab = i),
-                destinations: destinations,
+                selectedIndex: selectedDestination,
+                onDestinationSelected: (i) =>
+                    setState(() => _tab = destinations[i].id),
+                destinations: [
+                  for (final entry in destinations) entry.destination,
+                ],
               )
             : null,
       ),
@@ -219,7 +253,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   /// Guards against losing a connected session to an accidental gesture.
   void _onRootPop(bool didPop, Object? result) {
     if (didPop) return;
-    if (_tab == 1 && _filesBack.handleBack()) {
+    if (_tab == 1 &&
+        ref.read(connProvider).capabilities.fileBrowsing &&
+        _filesBack.handleBack()) {
       _lastBackAt = null;
       return;
     }

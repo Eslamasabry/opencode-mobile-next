@@ -10,6 +10,7 @@ import '../../demo/demo_copy.dart';
 import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
+import '../../state/codex_connection_probe.dart';
 import '../../state/pairing.dart';
 import '../../state/profiles.dart';
 import '../../termux/bridge.dart';
@@ -25,6 +26,9 @@ import 'pairing_scanner_screen.dart';
 /// profile reached the store, and the product-facing failure to show inline
 /// when connecting (or saving) did not work out.
 typedef _SubmitOutcome = ({bool saved, String? failure});
+
+AppLocalizations _connectionL10n(BuildContext context) =>
+    lookupAppLocalizations(Localizations.localeOf(context));
 
 /// Manage opencode server profiles and connect.
 class ServersScreen extends ConsumerStatefulWidget {
@@ -80,8 +84,11 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
 
   Future<void> _connect(ServerProfile p) async {
     if (_busy) return;
-    if (p.requiresPasswordReentry) {
-      await _edit(existing: p);
+    if (p.requiresPasswordReentry || p.requiresCodexTokenReentry) {
+      await _edit(
+        existing: p,
+        focusPassword: p.backend == ServerBackend.openCode,
+      );
       return;
     }
     setState(() {
@@ -132,14 +139,14 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
       ),
     );
     if (result == null || !mounted) return;
-    if (isNew) {
+    if (isNew || result.backend == ServerBackend.codex) {
       Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
     }
   }
 
-  /// Saves [result] and, for a brand-new or the active profile, connects it.
-  /// A brand-new profile promises "Save to finish", so saving it also
-  /// connects it; edits of existing non-active profiles keep saving only.
+  /// Saves [result] and connects profiles whose submit action promises it.
+  /// A brand-new profile and every Codex profile promise "Save & connect";
+  /// edits of existing non-active OpenCode profiles keep saving only.
   Future<_SubmitOutcome> _saveAndConnect(
     ServerProfile result, {
     required bool isNew,
@@ -154,7 +161,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
     try {
       await store.upsert(result);
       saved = true;
-      if (wasActive || isNew) {
+      if (wasActive || isNew || result.backend == ServerBackend.codex) {
         final savedProfile = store.profiles.firstWhere(
           (profile) => profile.id == result.id,
         );
@@ -266,9 +273,9 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
               color: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(width: 10),
-            const Flexible(
+            Flexible(
               child: Text(
-                'OpenCode',
+                _connectionL10n(context).openCodeConnectionLabel,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -334,21 +341,31 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
             );
           }
           final activeId = store.activeId;
-          final needsPassword = store.profiles.any(
+          final needsCredential = store.profiles.any(
             (profile) =>
-                profile.id == activeId && profile.requiresPasswordReentry,
+                profile.id == activeId &&
+                (profile.backend == ServerBackend.codex
+                    ? profile.requiresCodexTokenReentry
+                    : profile.requiresPasswordReentry),
+          );
+          final needsToken = store.profiles.any(
+            (profile) =>
+                profile.id == activeId &&
+                profile.backend == ServerBackend.codex &&
+                profile.requiresCodexTokenReentry,
           );
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
               const SectionLabel.inline('Servers'),
-              if (needsPassword) ...[
+              if (needsCredential) ...[
                 Semantics(
                   container: true,
                   liveRegion: true,
                   excludeSemantics: true,
-                  label:
-                      'Password re-entry required for the active server. Edit the server and save its password before connecting.',
+                  label: needsToken
+                      ? 'Connection token re-entry required for the active server. Edit the server and save its token before connecting.'
+                      : 'Password re-entry required for the active server. Edit the server and save its password before connecting.',
                   child: Container(
                     key: const Key('password-reentry-banner'),
                     margin: const EdgeInsets.only(bottom: 10),
@@ -367,7 +384,9 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            'A saved password can no longer be read. Edit the active server and re-enter its password before connecting.',
+                            _connectionL10n(
+                              context,
+                            ).connectionCredentialUnavailable,
                             style: TextStyle(
                               color: Theme.of(
                                 context,
@@ -409,7 +428,9 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                   child: ListTile(
                     enabled: !_busy,
                     onTap: _busy ? null : () => _connect(p),
-                    isThreeLine: p.requiresPasswordReentry,
+                    isThreeLine:
+                        p.requiresPasswordReentry ||
+                        p.requiresCodexTokenReentry,
                     leading: CircleAvatar(
                       backgroundColor: p.id == activeId
                           ? Theme.of(context).colorScheme.primary
@@ -447,6 +468,24 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                           Text(
                             'Password re-entry required',
                             key: ValueKey('password-reentry-${p.id}'),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        if (p.backend == ServerBackend.codex)
+                          Text(
+                            'Codex${p.codexDirectory.isEmpty ? '' : ' · ${p.codexDirectory}'}',
+                            key: ValueKey('codex-profile-${p.id}'),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        if (p.requiresCodexTokenReentry)
+                          Text(
+                            'Connection token re-entry required',
+                            key: ValueKey('codex-token-reentry-${p.id}'),
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.error,
                               fontWeight: FontWeight.w600,
@@ -745,6 +784,8 @@ class _ProfileEditorScreen extends StatefulWidget {
 }
 
 class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
+  late ServerBackend _backend =
+      widget.existing?.backend ?? ServerBackend.openCode;
   late final TextEditingController _name = TextEditingController(
     text: widget.existing?.name ?? '',
   );
@@ -759,10 +800,18 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
   late final TextEditingController _pass = TextEditingController(
     text: widget.existing?.password ?? '',
   );
+  late final TextEditingController _codexDirectory = TextEditingController(
+    text: widget.existing?.codexDirectory ?? '',
+  );
+  late final TextEditingController _codexToken = TextEditingController(
+    text: widget.existing?.codexToken ?? '',
+  );
   final _urlFocus = FocusNode();
   final _nameFocus = FocusNode();
   final _userFocus = FocusNode();
   final _passFocus = FocusNode();
+  final _codexDirectoryFocus = FocusNode();
+  final _codexTokenFocus = FocusNode();
   String? _error;
   bool _obscurePassword = true;
   bool _closing = false;
@@ -781,6 +830,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
   /// that stored but could not connect no longer counts as unsaved edits.
   ServerProfile? _savedProfile;
   ServerProbeResult? _testResult;
+  CodexConnectionProbeResult? _codexTestResult;
   int _urlLength = 0;
   int _probeGeneration = 0;
 
@@ -796,7 +846,13 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
   /// put the server behind TLS.
   String? _pairingFailure;
 
-  bool get _needsPassword => widget.existing?.requiresPasswordReentry ?? false;
+  bool get _isCodex => _backend == ServerBackend.codex;
+
+  bool get _needsPassword =>
+      !_isCodex && (widget.existing?.requiresPasswordReentry ?? false);
+
+  bool get _needsCodexToken =>
+      _isCodex && (widget.existing?.requiresCodexTokenReentry ?? false);
 
   Future<void> _probeSecureStorage() async {
     final probe = widget.secureStorageProbe;
@@ -807,14 +863,14 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
     } catch (_) {
       notice = null;
     }
-    if (!mounted || notice == null) return;
+    if (!mounted || notice == null || _isCodex) return;
     setState(() => _secureStorageNotice = notice);
   }
 
   @override
   void initState() {
     super.initState();
-    _probeSecureStorage();
+    if (!_isCodex) _probeSecureStorage();
     _urlLength = _url.text.length;
   }
 
@@ -828,6 +884,21 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
   /// payload is routed to [_applyPairing].
   void _urlChanged(String value) {
     setState(_invalidateProbe);
+    if (_isCodex) {
+      final pasted = value.length - _urlLength >= 4;
+      _urlLength = value.length;
+      if (pasted && !value.contains('://')) {
+        final normalized = normalizeCodexServerUrl(value);
+        if (normalized != value.trim()) {
+          _urlLength = normalized.length;
+          _url.value = TextEditingValue(
+            text: normalized,
+            selection: TextSelection.collapsed(offset: normalized.length),
+          );
+        }
+      }
+      return;
+    }
     if (looksLikePairingPayload(value)) {
       final parsed = parsePairingPayload(value);
       _url.value = TextEditingValue.empty;
@@ -859,15 +930,21 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
   void _invalidateProbe() {
     _probeGeneration += 1;
     _testing = false;
+    _submitFailure = null;
     _pairing = false;
     _error = null;
     _testResult = null;
+    _codexTestResult = null;
     _pairingNotice = null;
     _pairingFailure = null;
   }
 
   Future<void> _testConnection() async {
     if (_testing) return;
+    if (_isCodex) {
+      await _testCodexConnection();
+      return;
+    }
     final url = normalizeServerProfileUrl(_url.text);
     if (url != _url.text.trim()) {
       _urlLength = url.length;
@@ -903,6 +980,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
     if (!mounted || generation != _probeGeneration) return;
     setState(() {
       _testing = false;
+      _submitFailure = null;
       _testResult = result;
     });
     // Per the v2 auth taxonomy: a 401 without a password sends the user to
@@ -915,6 +993,62 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
         );
       }
       _passFocus.requestFocus();
+    }
+  }
+
+  Future<void> _testCodexConnection() async {
+    var url = normalizeCodexServerUrl(_url.text);
+    if (url != _url.text.trim()) {
+      _urlLength = url.length;
+      _url.value = TextEditingValue(
+        text: url,
+        selection: TextSelection.collapsed(offset: url.length),
+      );
+    }
+    final error =
+        validateCodexServerUrl(url) ??
+        validateCodexProjectDirectory(_codexDirectory.text.trim()) ??
+        validateCodexConnectionToken(_codexToken.text);
+    if (error != null) {
+      setState(() {
+        _error = error;
+        _codexTestResult = null;
+      });
+      if (validateCodexServerUrl(url) != null) {
+        _urlFocus.requestFocus();
+      } else if (validateCodexProjectDirectory(_codexDirectory.text.trim()) !=
+          null) {
+        _codexDirectoryFocus.requestFocus();
+      } else {
+        _codexTokenFocus.requestFocus();
+      }
+      return;
+    }
+    final generation = ++_probeGeneration;
+    setState(() {
+      _testing = true;
+      _codexTestResult = null;
+      _error = null;
+    });
+    try {
+      final result = await probeCodexConnection(
+        baseUrl: url,
+        token: _codexToken.text,
+        directory: _codexDirectory.text.trim(),
+      );
+      if (!mounted || generation != _probeGeneration) return;
+      setState(() {
+        _testing = false;
+        _submitFailure = null;
+        _codexTestResult = result;
+      });
+      if (!result.ok) _codexTokenFocus.requestFocus();
+    } catch (error) {
+      if (!mounted || generation != _probeGeneration) return;
+      setState(() {
+        _testing = false;
+        _error = productErrorText(error);
+      });
     }
   }
 
@@ -1075,7 +1209,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
     if (text.toLowerCase().startsWith(prefix)) {
       text = text.substring(prefix.length).trim();
     }
-    if (text.isEmpty || !mounted) return;
+    if (text.isEmpty || !mounted || _submitting) return;
     setState(() {
       _invalidateProbe();
       _pass.text = text;
@@ -1085,10 +1219,13 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
 
   bool get _dirty {
     final baseline = _savedProfile ?? widget.existing;
-    return _name.text != (baseline?.name ?? '') ||
+    return _backend != (baseline?.backend ?? ServerBackend.openCode) ||
+        _name.text != (baseline?.name ?? '') ||
         _url.text != (baseline?.baseUrl ?? '') ||
         _user.text != (baseline?.username ?? '') ||
-        _pass.text != (baseline?.password ?? '');
+        _pass.text != (baseline?.password ?? '') ||
+        _codexDirectory.text != (baseline?.codexDirectory ?? '') ||
+        _codexToken.text != (baseline?.codexToken ?? '');
   }
 
   @override
@@ -1097,15 +1234,19 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
     _url.dispose();
     _user.dispose();
     _pass.dispose();
+    _codexDirectory.dispose();
+    _codexToken.dispose();
     _urlFocus.dispose();
     _nameFocus.dispose();
     _userFocus.dispose();
     _passFocus.dispose();
+    _codexDirectoryFocus.dispose();
+    _codexTokenFocus.dispose();
     super.dispose();
   }
 
   Future<void> _close() async {
-    if (_closing) return;
+    if (_closing || _submitting) return;
     if (!_dirty) {
       Navigator.pop(context);
       return;
@@ -1125,6 +1266,10 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
 
   Future<void> _save() async {
     if (_submitting) return;
+    if (_isCodex) {
+      await _saveCodex();
+      return;
+    }
     var url = normalizeServerProfileUrl(_url.text);
     final error = validateServerProfileUrl(
       url,
@@ -1157,7 +1302,9 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
       flavor: detected,
       serverVersion: probed?.version ?? widget.existing?.serverVersion,
     );
+    FocusScope.of(context).unfocus();
     setState(() {
+      _invalidateProbe();
       _submitting = true;
       _submitFailure = null;
     });
@@ -1174,10 +1321,216 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
     });
   }
 
+  Future<void> _saveCodex() async {
+    var url = normalizeCodexServerUrl(_url.text);
+    final error =
+        validateCodexServerUrl(url) ??
+        validateCodexProjectDirectory(_codexDirectory.text.trim()) ??
+        validateCodexConnectionToken(_codexToken.text);
+    if (error != null) {
+      setState(() => _error = error);
+      return;
+    }
+    final uri = Uri.parse(url);
+    url = uri.toString().replaceAll(RegExp(r'/$'), '');
+    final probed = _codexTestResult;
+    final profile = ServerProfile(
+      id:
+          _savedProfile?.id ??
+          widget.existing?.id ??
+          DateTime.now().microsecondsSinceEpoch.toString(),
+      name: _name.text.trim().isEmpty ? uri.host : _name.text.trim(),
+      baseUrl: url,
+      backend: ServerBackend.codex,
+      codexDirectory: _codexDirectory.text.trim(),
+      codexToken: _codexToken.text,
+      serverVersion: probed?.version ?? widget.existing?.serverVersion,
+    );
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _invalidateProbe();
+      _submitting = true;
+      _submitFailure = null;
+    });
+    final outcome = await widget.onSubmit(profile);
+    if (!mounted) return;
+    if (outcome.saved) _savedProfile = profile;
+    if (outcome.failure == null) {
+      Navigator.pop(context, profile);
+      return;
+    }
+    setState(() {
+      _submitting = false;
+      _submitFailure = outcome.failure;
+    });
+  }
+
+  Future<void> _pasteCodexToken() async {
+    final value = (await Clipboard.getData(Clipboard.kTextPlain))?.text?.trim();
+    if (value == null || value.isEmpty || !mounted || _submitting) return;
+    setState(() {
+      _invalidateProbe();
+      _codexToken.text = value;
+    });
+    _codexTokenFocus.requestFocus();
+  }
+
+  List<Widget> _buildCodexFields(ThemeData theme) => [
+    const SizedBox(height: 12),
+    TextField(
+      enabled: !_submitting,
+      key: const ValueKey('codex-server-name-field'),
+      controller: _name,
+      focusNode: _nameFocus,
+      textInputAction: TextInputAction.next,
+      onSubmitted: (_) => _urlFocus.requestFocus(),
+      onChanged: (_) => setState(_invalidateProbe),
+      decoration: InputDecoration(
+        labelText: _connectionL10n(context).connectionDisplayName,
+        hintText: _connectionL10n(context).connectionDisplayNameHint,
+      ),
+    ),
+    const SizedBox(height: 20),
+    TextField(
+      enabled: !_submitting,
+      key: const ValueKey('codex-server-address-field'),
+      controller: _url,
+      focusNode: _urlFocus,
+      autofocus: widget.existing == null,
+      keyboardType: TextInputType.url,
+      textInputAction: TextInputAction.next,
+      onSubmitted: (_) => _codexDirectoryFocus.requestFocus(),
+      onChanged: _urlChanged,
+      decoration: InputDecoration(
+        labelText: _connectionL10n(context).connectionServerAddress,
+        hintText: _connectionL10n(context).codexAddressHint,
+        errorText: _error,
+        errorMaxLines: 3,
+        helperText: _connectionL10n(context).codexAddressHelp,
+        helperMaxLines: 3,
+      ),
+    ),
+    const SizedBox(height: 20),
+    TextField(
+      enabled: !_submitting,
+      key: const ValueKey('codex-project-directory-field'),
+      controller: _codexDirectory,
+      focusNode: _codexDirectoryFocus,
+      textInputAction: TextInputAction.next,
+      onSubmitted: (_) => _codexTokenFocus.requestFocus(),
+      onChanged: (_) => setState(_invalidateProbe),
+      decoration: InputDecoration(
+        labelText: _connectionL10n(context).codexProjectFolder,
+        hintText: '/work/my-project',
+      ),
+    ),
+    const SizedBox(height: 20),
+    TextField(
+      enabled: !_submitting,
+      key: const ValueKey('codex-connection-token-field'),
+      controller: _codexToken,
+      focusNode: _codexTokenFocus,
+      autofocus: _needsCodexToken || widget.focusPassword,
+      onChanged: (_) => setState(_invalidateProbe),
+      obscureText: _obscurePassword,
+      autocorrect: false,
+      enableSuggestions: false,
+      keyboardType: TextInputType.visiblePassword,
+      style: _obscurePassword
+          ? null
+          : const TextStyle(fontFamily: AppTheme.monoFamily),
+      textInputAction: TextInputAction.done,
+      onSubmitted: (_) => _save(),
+      decoration: InputDecoration(
+        labelText: _needsCodexToken
+            ? _connectionL10n(context).codexTokenReentry
+            : _connectionL10n(context).codexTokenLabel,
+        helperText: _connectionL10n(context).codexTokenStorageHelp,
+        helperMaxLines: 2,
+        suffixIcon: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              key: const ValueKey('codex-token-visibility'),
+              tooltip: _obscurePassword
+                  ? _connectionL10n(context).codexShowToken
+                  : _connectionL10n(context).codexHideToken,
+              onPressed: () =>
+                  setState(() => _obscurePassword = !_obscurePassword),
+              icon: Icon(
+                _obscurePassword
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined,
+              ),
+            ),
+            IconButton(
+              key: const ValueKey('codex-token-paste'),
+              tooltip: _connectionL10n(context).codexPasteToken,
+              onPressed: () => unawaited(_pasteCodexToken()),
+              icon: const Icon(Icons.content_paste_rounded),
+            ),
+          ],
+        ),
+      ),
+    ),
+    const SizedBox(height: 24),
+  ];
+
+  Widget _buildCodexProbeVerdict(ThemeData theme) {
+    final result = _codexTestResult!;
+    return Semantics(
+      key: const ValueKey('codex-probe-verdict'),
+      container: true,
+      liveRegion: true,
+      child: Container(
+        key: ValueKey(result.ok ? 'codex-test-success' : 'codex-test-failure'),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: result.ok
+              ? AppTheme.successOf(theme).withValues(alpha: .14)
+              : theme.colorScheme.errorContainer,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              result.ok
+                  ? Icons.check_circle_outline_rounded
+                  : Icons.error_outline_rounded,
+              size: 20,
+              color: result.ok
+                  ? AppTheme.successOf(theme)
+                  : theme.colorScheme.onErrorContainer,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                result.ok
+                    ? lookupAppLocalizations(
+                        Localizations.localeOf(context),
+                      ).codexConnectionVerified
+                    : result.message,
+                style: TextStyle(
+                  color: result.ok
+                      ? theme.colorScheme.onSurface
+                      : theme.colorScheme.onErrorContainer,
+                  height: 1.35,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final title = widget.existing == null
         ? 'Add server'
+        : _needsCodexToken
+        ? _connectionL10n(context).codexTokenReentry
         : _needsPassword
         ? 'Re-enter password'
         : 'Edit server';
@@ -1194,8 +1547,8 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
         key: const ValueKey('server-profile-editor'),
         appBar: AppBar(
           leading: IconButton(
-            tooltip: 'Close server editor',
-            onPressed: _close,
+            tooltip: _connectionL10n(context).connectionCloseEditor,
+            onPressed: _submitting ? null : _close,
             icon: const Icon(Icons.close_rounded),
           ),
           title: Text(title),
@@ -1206,6 +1559,8 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
               child: Text(
                 _submitting
                     ? 'Saving…'
+                    : _isCodex
+                    ? 'Save & connect'
                     : widget.existing == null && !compact
                     ? 'Save server'
                     : 'Save',
@@ -1214,304 +1569,384 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
             const SizedBox(width: 4),
           ],
         ),
-        body: SafeArea(
-          top: false,
-          child: ListView(
-            key: const ValueKey('server-profile-fields'),
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-            children: [
-              // A save or connect that failed is shown first, where it is
-              // seen without scrolling, in the same verdict style as Test
-              // connection.
-              if (_submitFailure case final failure?) ...[
-                _InlineFailureCard(
-                  key: const ValueKey('server-save-failure'),
-                  message: failure,
-                ),
-                const SizedBox(height: 12),
-              ],
-              if (_secureStorageNotice case final notice?) ...[
-                _InlineFailureCard(
-                  key: const ValueKey('server-secure-storage-notice'),
-                  message: notice,
-                ),
-                const SizedBox(height: 12),
-              ],
-              if (_needsPassword) ...[
-                const SizedBox(height: 4),
-                Semantics(
-                  container: true,
-                  liveRegion: true,
-                  excludeSemantics: true,
-                  label:
-                      'The saved password is unavailable. Enter it again, or leave it empty only if this server no longer requires a password.',
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.errorContainer,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      'The saved password is unavailable. Enter it again, or leave it empty only if this server no longer requires one.',
-                      style: TextStyle(
-                        color: theme.colorScheme.onErrorContainer,
-                      ),
+        body: AbsorbPointer(
+          absorbing: _submitting,
+          child: SafeArea(
+            top: false,
+            child: ListView(
+              key: const ValueKey('server-profile-fields'),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+              children: [
+                if (widget.existing == null) ...[
+                  Text(
+                    _connectionL10n(context).connectionTypeLabel,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      letterSpacing: 1,
                     ),
                   ),
-                ),
-              ],
-              const SizedBox(height: 12),
-              _PairingActions(
-                busy: _pairing,
-                notice: _pairingNotice,
-                failure: _pairingFailure,
-                onPaste: _pairing ? null : () => unawaited(_pastePairing()),
-                // Rendered only where a camera path exists. Desktop gets no
-                // affordance at all rather than one that opens and fails.
-                onScan: platformCapabilities.supportsQrPairing
-                    ? () => unawaited(_scanPairing())
-                    : null,
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                key: const ValueKey('server-url-field'),
-                controller: _url,
-                focusNode: _urlFocus,
-                autofocus: widget.existing == null && !_needsPassword,
-                keyboardType: TextInputType.url,
-                textInputAction: TextInputAction.next,
-                onSubmitted: (_) => _nameFocus.requestFocus(),
-                onChanged: _urlChanged,
-                decoration: InputDecoration(
-                  labelText: 'Server URL',
-                  hintText: '192.0.2.20:4096 or https://…',
-                  errorText: _error,
-                  errorMaxLines: 3,
-                  helperText:
-                      'Use HTTPS for remote machines. HTTP is limited to localhost or 127.0.0.1.',
-                  helperMaxLines: 3,
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                key: const ValueKey('server-name-field'),
-                controller: _name,
-                focusNode: _nameFocus,
-                textInputAction: TextInputAction.next,
-                onSubmitted: (_) => _userFocus.requestFocus(),
-                decoration: const InputDecoration(
-                  labelText: 'Display name (optional)',
-                  hintText: 'Defaults to the server host',
-                ),
-              ),
-              const SizedBox(height: 28),
-              Text(
-                'AUTHENTICATION',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  letterSpacing: 1,
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                key: const ValueKey('server-username-field'),
-                controller: _user,
-                focusNode: _userFocus,
-                textInputAction: TextInputAction.next,
-                onSubmitted: (_) => _passFocus.requestFocus(),
-                onChanged: (_) => setState(_invalidateProbe),
-                decoration: const InputDecoration(
-                  labelText: 'Username (optional)',
-                  hintText: 'opencode',
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                key: const ValueKey('server-password-field'),
-                controller: _pass,
-                focusNode: _passFocus,
-                autofocus: _needsPassword || widget.focusPassword,
-                onChanged: (_) => setState(_invalidateProbe),
-                obscureText: _obscurePassword,
-                autocorrect: false,
-                enableSuggestions: false,
-                keyboardType: TextInputType.visiblePassword,
-                style: _obscurePassword
-                    ? null
-                    : const TextStyle(fontFamily: AppTheme.monoFamily),
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _save(),
-                decoration: InputDecoration(
-                  labelText: _needsPassword
-                      ? 'Re-enter password'
-                      : 'Server password',
-                  helperText: _needsPassword
-                      ? 'Leave empty only if this server no longer uses a password.'
-                      : 'Printed by opencode2 serve at startup '
-                            '("server password …"). Optional for servers '
-                            'without one.',
-                  helperMaxLines: 3,
-                  suffixIcon: Row(
-                    mainAxisSize: MainAxisSize.min,
+                  const SizedBox(height: 8),
+                  Wrap(
+                    key: const ValueKey('server-backend-selector'),
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
-                      IconButton(
-                        key: const ValueKey('server-password-visibility'),
-                        tooltip: _obscurePassword
-                            ? 'Show server password'
-                            : 'Hide server password',
-                        onPressed: () => setState(
-                          () => _obscurePassword = !_obscurePassword,
+                      ChoiceChip(
+                        label: Text(
+                          _connectionL10n(context).openCodeConnectionLabel,
                         ),
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                        ),
+                        selected: !_isCodex,
+                        onSelected: _submitting
+                            ? null
+                            : (_) => setState(() {
+                                _backend = ServerBackend.openCode;
+                                _invalidateProbe();
+                              }),
                       ),
-                      // Paste is the primary affordance for the per-run
-                      // random serve password, so it sits closest to the
-                      // field edge.
-                      IconButton(
-                        key: const ValueKey('server-password-paste'),
-                        tooltip: 'Paste server password',
-                        onPressed: () => unawaited(_pastePassword()),
-                        icon: const Icon(Icons.content_paste_rounded),
+                      ChoiceChip(
+                        label: Text(
+                          _connectionL10n(context).codexExperimentalLabel,
+                        ),
+                        selected: _isCodex,
+                        onSelected: _submitting
+                            ? null
+                            : (_) => setState(() {
+                                _backend = ServerBackend.codex;
+                                _invalidateProbe();
+                              }),
                       ),
                     ],
                   ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              FilledButton.tonalIcon(
-                key: const ValueKey('test-server-connection'),
-                onPressed: _testing ? null : _testConnection,
-                icon: _testing
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.network_check_rounded),
-                label: Text(_testing ? 'Testing…' : 'Test connection'),
-              ),
-              if (_testResult case final result?) ...[
-                const SizedBox(height: 12),
-                Semantics(
-                  key: const ValueKey('server-probe-verdict'),
-                  container: true,
-                  liveRegion: true,
-                  child: Container(
-                    key: ValueKey(
-                      result.ok ? 'server-test-success' : 'server-test-failure',
-                    ),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: result.ok
-                          ? AppTheme.successOf(theme).withValues(alpha: .14)
-                          : theme.colorScheme.errorContainer,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          result.ok
-                              ? Icons.check_circle_outline_rounded
-                              : Icons.error_outline_rounded,
-                          size: 20,
-                          color: result.ok
-                              ? AppTheme.successOf(theme)
-                              : theme.colorScheme.onErrorContainer,
+                  const SizedBox(height: 8),
+                ],
+                // A save or connect that failed is shown first, where it is
+                // seen without scrolling, in the same verdict style as Test
+                // connection.
+                if (_submitFailure case final failure?) ...[
+                  _InlineFailureCard(
+                    key: const ValueKey('server-save-failure'),
+                    message: failure,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                if (_secureStorageNotice case final notice?) ...[
+                  _InlineFailureCard(
+                    key: const ValueKey('server-secure-storage-notice'),
+                    message: notice,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                if (_needsPassword) ...[
+                  const SizedBox(height: 4),
+                  Semantics(
+                    container: true,
+                    liveRegion: true,
+                    excludeSemantics: true,
+                    label:
+                        'The saved password is unavailable. Enter it again, or leave it empty only if this server no longer requires a password.',
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.errorContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'The saved password is unavailable. Enter it again, or leave it empty only if this server no longer requires one.',
+                        style: TextStyle(
+                          color: theme.colorScheme.onErrorContainer,
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (result.ok) ...[
-                                Text(
-                                  result.flavor == ServerFlavor.v2
-                                      ? 'OpenCode 2 · '
-                                            '${result.version ?? 'unknown version'}'
-                                      : 'OpenCode 1 · '
-                                            '${result.version ?? 'unknown version'}'
-                                            ' — limited feature set',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    height: 1.35,
-                                  ),
-                                ),
-                                if (result.flavor == ServerFlavor.v1) ...[
-                                  const SizedBox(height: 2),
+                      ),
+                    ),
+                  ),
+                ],
+                if (_isCodex) ...[
+                  ..._buildCodexFields(theme),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Text(
+                      lookupAppLocalizations(
+                        Localizations.localeOf(context),
+                      ).codexApprovalRecoveryNotice,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+                if (!_isCodex) ...[
+                  const SizedBox(height: 12),
+                  _PairingActions(
+                    busy: _pairing,
+                    notice: _pairingNotice,
+                    failure: _pairingFailure,
+                    onPaste: _pairing ? null : () => unawaited(_pastePairing()),
+                    // Rendered only where a camera path exists. Desktop gets no
+                    // affordance at all rather than one that opens and fails.
+                    onScan: platformCapabilities.supportsQrPairing
+                        ? () => unawaited(_scanPairing())
+                        : null,
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    enabled: !_submitting,
+                    key: const ValueKey('server-url-field'),
+                    controller: _url,
+                    focusNode: _urlFocus,
+                    autofocus: widget.existing == null && !_needsPassword,
+                    keyboardType: TextInputType.url,
+                    textInputAction: TextInputAction.next,
+                    onSubmitted: (_) => _nameFocus.requestFocus(),
+                    onChanged: _urlChanged,
+                    decoration: InputDecoration(
+                      labelText: 'Server URL',
+                      hintText: '192.0.2.20:4096 or https://…',
+                      errorText: _error,
+                      errorMaxLines: 3,
+                      helperText:
+                          'Use HTTPS for remote machines. HTTP is limited to localhost or 127.0.0.1.',
+                      helperMaxLines: 3,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    enabled: !_submitting,
+                    key: const ValueKey('server-name-field'),
+                    controller: _name,
+                    focusNode: _nameFocus,
+                    textInputAction: TextInputAction.next,
+                    onSubmitted: (_) => _userFocus.requestFocus(),
+                    onChanged: (_) => setState(_invalidateProbe),
+                    decoration: InputDecoration(
+                      labelText: _connectionL10n(context).connectionDisplayName,
+                      hintText: _connectionL10n(
+                        context,
+                      ).connectionDisplayNameHint,
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  Text(
+                    'AUTHENTICATION',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    enabled: !_submitting,
+                    key: const ValueKey('server-username-field'),
+                    controller: _user,
+                    focusNode: _userFocus,
+                    textInputAction: TextInputAction.next,
+                    onSubmitted: (_) => _passFocus.requestFocus(),
+                    onChanged: (_) => setState(_invalidateProbe),
+                    decoration: const InputDecoration(
+                      labelText: 'Username (optional)',
+                      hintText: 'opencode',
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    enabled: !_submitting,
+                    key: const ValueKey('server-password-field'),
+                    controller: _pass,
+                    focusNode: _passFocus,
+                    autofocus: _needsPassword || widget.focusPassword,
+                    onChanged: (_) => setState(_invalidateProbe),
+                    obscureText: _obscurePassword,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    keyboardType: TextInputType.visiblePassword,
+                    style: _obscurePassword
+                        ? null
+                        : const TextStyle(fontFamily: AppTheme.monoFamily),
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _save(),
+                    decoration: InputDecoration(
+                      labelText: _needsPassword
+                          ? 'Re-enter password'
+                          : 'Server password',
+                      helperText: _needsPassword
+                          ? 'Leave empty only if this server no longer uses a password.'
+                          : 'Printed by opencode2 serve at startup '
+                                '("server password …"). Optional for servers '
+                                'without one.',
+                      helperMaxLines: 3,
+                      suffixIcon: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            key: const ValueKey('server-password-visibility'),
+                            tooltip: _obscurePassword
+                                ? 'Show server password'
+                                : 'Hide server password',
+                            onPressed: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                            ),
+                          ),
+                          // Paste is the primary affordance for the per-run
+                          // random serve password, so it sits closest to the
+                          // field edge.
+                          IconButton(
+                            key: const ValueKey('server-password-paste'),
+                            tooltip: 'Paste server password',
+                            onPressed: () => unawaited(_pastePassword()),
+                            icon: const Icon(Icons.content_paste_rounded),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+                FilledButton.tonalIcon(
+                  key: const ValueKey('test-server-connection'),
+                  onPressed: _testing ? null : _testConnection,
+                  icon: _testing
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.network_check_rounded),
+                  label: Text(_testing ? 'Testing…' : 'Test connection'),
+                ),
+                if (_isCodex && _codexTestResult != null) ...[
+                  const SizedBox(height: 12),
+                  _buildCodexProbeVerdict(theme),
+                ],
+                if (_testResult case final result?) ...[
+                  const SizedBox(height: 12),
+                  Semantics(
+                    key: const ValueKey('server-probe-verdict'),
+                    container: true,
+                    liveRegion: true,
+                    child: Container(
+                      key: ValueKey(
+                        result.ok
+                            ? 'server-test-success'
+                            : 'server-test-failure',
+                      ),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: result.ok
+                            ? AppTheme.successOf(theme).withValues(alpha: .14)
+                            : theme.colorScheme.errorContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            result.ok
+                                ? Icons.check_circle_outline_rounded
+                                : Icons.error_outline_rounded,
+                            size: 20,
+                            color: result.ok
+                                ? AppTheme.successOf(theme)
+                                : theme.colorScheme.onErrorContainer,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (result.ok) ...[
                                   Text(
-                                    'This app targets OpenCode 2; some '
-                                    'features are unavailable on v1 servers.',
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                      height: 1.35,
-                                    ),
-                                  ),
-                                ],
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Connected — save to finish.',
-                                  style: TextStyle(
-                                    color: theme.colorScheme.onSurface,
-                                    height: 1.35,
-                                  ),
-                                ),
-                              ] else ...[
-                                if (result.flavor == ServerFlavor.v2) ...[
-                                  Text(
-                                    'This is an OpenCode 2 server.',
+                                    result.flavor == ServerFlavor.v2
+                                        ? 'OpenCode 2 · '
+                                              '${result.version ?? 'unknown version'}'
+                                        : 'OpenCode 1 · '
+                                              '${result.version ?? 'unknown version'}'
+                                              ' — limited feature set',
                                     style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: theme.colorScheme.onErrorContainer,
                                       fontWeight: FontWeight.w600,
                                       height: 1.35,
                                     ),
                                   ),
+                                  if (result.flavor == ServerFlavor.v1) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'This app targets OpenCode 2; some '
+                                      'features are unavailable on v1 servers.',
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                            height: 1.35,
+                                          ),
+                                    ),
+                                  ],
                                   const SizedBox(height: 2),
+                                  Text(
+                                    'Connected — save to finish.',
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onSurface,
+                                      height: 1.35,
+                                    ),
+                                  ),
+                                ] else ...[
+                                  if (result.flavor == ServerFlavor.v2) ...[
+                                    Text(
+                                      'This is an OpenCode 2 server.',
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color: theme
+                                                .colorScheme
+                                                .onErrorContainer,
+                                            fontWeight: FontWeight.w600,
+                                            height: 1.35,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                  ],
+                                  Text(
+                                    result.message!,
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onErrorContainer,
+                                      height: 1.35,
+                                    ),
+                                  ),
                                 ],
-                                Text(
-                                  result.message!,
-                                  style: TextStyle(
-                                    color: theme.colorScheme.onErrorContainer,
-                                    height: 1.35,
+                                if (!result.ok &&
+                                    result.suggestsMissingServer) ...[
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'No server there yet? The setup guide '
+                                    'shows how to start one.',
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onErrorContainer,
+                                      height: 1.35,
+                                    ),
                                   ),
-                                ),
+                                  TextButton(
+                                    key: const ValueKey('server-test-guide'),
+                                    style: TextButton.styleFrom(
+                                      padding: EdgeInsets.zero,
+                                      foregroundColor:
+                                          theme.colorScheme.onErrorContainer,
+                                    ),
+                                    onPressed: () =>
+                                        Navigator.pushNamed(context, '/guide'),
+                                    child: const Text('Open the setup guide'),
+                                  ),
+                                ],
                               ],
-                              if (!result.ok &&
-                                  result.suggestsMissingServer) ...[
-                                const SizedBox(height: 6),
-                                Text(
-                                  'No server there yet? The setup guide '
-                                  'shows how to start one.',
-                                  style: TextStyle(
-                                    color: theme.colorScheme.onErrorContainer,
-                                    height: 1.35,
-                                  ),
-                                ),
-                                TextButton(
-                                  key: const ValueKey('server-test-guide'),
-                                  style: TextButton.styleFrom(
-                                    padding: EdgeInsets.zero,
-                                    foregroundColor:
-                                        theme.colorScheme.onErrorContainer,
-                                  ),
-                                  onPressed: () =>
-                                      Navigator.pushNamed(context, '/guide'),
-                                  child: const Text('Open the setup guide'),
-                                ),
-                              ],
-                            ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

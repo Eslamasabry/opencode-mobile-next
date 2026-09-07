@@ -177,6 +177,8 @@ void main() {
     await tester.pumpWidget(_app(store, controller, textScale: 2));
 
     expect(find.byKey(const ValueKey('first-run-welcome')), findsOneWidget);
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('welcome-guide-card')),
       200,
@@ -232,6 +234,8 @@ void main() {
       'box.example:4096',
     );
     await tester.pump();
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('test-server-connection')),
       200,
@@ -269,6 +273,8 @@ void main() {
       'https://box.example:4096',
     );
     await tester.pump();
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('test-server-connection')),
       200,
@@ -323,6 +329,8 @@ void main() {
       'https://box.example:4096',
     );
     await tester.pump();
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('test-server-connection')),
       200,
@@ -334,6 +342,8 @@ void main() {
     expect(find.byKey(const ValueKey('server-test-failure')), findsOneWidget);
     expect(find.textContaining('No server there yet?'), findsOneWidget);
 
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('server-test-guide')),
       200,
@@ -366,6 +376,8 @@ void main() {
       'https://box.exampel:4096',
     );
     await tester.pump();
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('test-server-connection')),
       200,
@@ -399,6 +411,8 @@ void main() {
       'ftp://box.example',
     );
     await tester.pump();
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('test-server-connection')),
       200,

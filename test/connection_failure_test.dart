@@ -6,11 +6,15 @@ void main() {
     String error, {
     String url = 'http://127.0.0.1:4096',
     bool termux = true,
+    bool codex = false,
+    bool tokenRequired = false,
     int attempts = 1,
   }) => ConnectionFailure.diagnose(
     error: error,
     baseUrl: url,
     supportsTermux: termux,
+    usesConnectionToken: codex,
+    requiresTokenReentry: tokenRequired,
     attempts: attempts,
   );
 
@@ -40,6 +44,59 @@ void main() {
     final f = d('Health check failed (HTTP 401)', url: 'https://dev.tail.net');
     expect(f.title, 'Password rejected');
     expect(f.primary, ConnectionFailureAction.updatePassword);
+  });
+
+  test(
+    'a missing Codex token asks for the token without a connection guess',
+    () {
+      final f = d('connection refused', codex: true, tokenRequired: true);
+      expect(f.title, 'Connection token required');
+      expect(f.primary, ConnectionFailureAction.updateToken);
+      expect(f.checks.join(' '), contains('connection token'));
+      expect(f.checks.join(' '), isNot(contains('Termux')));
+    },
+  );
+
+  test('a rejected Codex token has a token recovery action', () {
+    final f = d(
+      'Codex authentication failed: token rejected',
+      url: 'wss://codex.example',
+      codex: true,
+    );
+    expect(f.title, 'Connection token rejected');
+    expect(f.primary, ConnectionFailureAction.updateToken);
+    expect(f.checks.join(' '), isNot(contains('password')));
+  });
+
+  test('Codex local refusal points at its listener or tunnel', () {
+    final f = d('connection refused', codex: true);
+    expect(f.title, 'Codex listener unavailable');
+    expect(f.primary, ConnectionFailureAction.retry);
+    final checks = f.checks.join(' ');
+    expect(checks, contains('Codex listener'));
+    expect(checks, contains('tunnel'));
+    expect(checks, isNot(contains('Termux')));
+    expect(checks, isNot(contains('opencode')));
+    expect(checks, isNot(contains('HTTPS')));
+    expect(checks, isNot(contains('pair')));
+  });
+
+  test('remote Codex refusal recommends a wss endpoint', () {
+    final f = d(
+      'connection refused',
+      url: 'https://codex.example:443',
+      codex: true,
+    );
+    expect(f.title, 'Codex endpoint unreachable');
+    expect(f.checks.join(' '), contains('wss://'));
+    expect(f.checks.join(' '), isNot(contains('HTTPS')));
+  });
+
+  test('unknown Codex loopback errors stay an honest generic failure', () {
+    final f = d('Health check failed', codex: true);
+    expect(f.title, 'Could not connect');
+    expect(f.checks.join(' '), contains('Codex listener'));
+    expect(f.checks.join(' '), isNot(contains('Nothing is listening')));
   });
 
   test('certificate problems name the certificate', () {

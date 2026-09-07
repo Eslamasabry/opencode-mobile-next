@@ -55,7 +55,9 @@ class _NoKeyringStorage extends FlutterSecureStorage {
 }
 
 class _MemoryStorage extends FlutterSecureStorage {
-  const _MemoryStorage();
+  final values = <String, String>{};
+
+  _MemoryStorage();
 
   @override
   Future<String?> read({
@@ -66,7 +68,51 @@ class _MemoryStorage extends FlutterSecureStorage {
     WebOptions? webOptions,
     AppleOptions? mOptions,
     WindowsOptions? wOptions,
-  }) async => null;
+  }) async => values[key];
+
+  @override
+  Future<void> write({
+    required String key,
+    required String? value,
+    AppleOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    AppleOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) async {
+    if (value == null) {
+      values.remove(key);
+    } else {
+      values[key] = value;
+    }
+  }
+
+  @override
+  Future<void> delete({
+    required String key,
+    AppleOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    AppleOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) async {
+    values.remove(key);
+  }
+}
+
+class _DeleteFailingStorage extends _MemoryStorage {
+  @override
+  Future<void> delete({
+    required String key,
+    AppleOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    AppleOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) => throw _libsecretFailure();
 }
 
 Future<ProfileStore> _store(FlutterSecureStorage secure) async {
@@ -142,7 +188,7 @@ void main() {
       SecureStorageUnavailable.linuxMessage,
     );
     expect(
-      await (await _store(const _MemoryStorage())).secureStorageProblem(),
+      await (await _store(_MemoryStorage())).secureStorageProblem(),
       isNull,
     );
 
@@ -152,6 +198,125 @@ void main() {
       isNull,
     );
   });
+
+  test('Codex token is isolated from password storage and JSON', () async {
+    final secure = _MemoryStorage();
+    final store = await _store(secure);
+    final profile = ServerProfile(
+      id: 'codex-1',
+      name: 'Codex',
+      baseUrl: 'wss://codex.example:4141',
+      backend: ServerBackend.codex,
+      password: 'must-not-be-used',
+      codexToken: 'codex-secret',
+      codexDirectory: '/work/acme',
+    );
+
+    await store.upsert(profile);
+
+    expect(secure.values['oc.codexToken.codex-1'], 'codex-secret');
+    expect(secure.values.containsKey('pw.codex-1'), isFalse);
+    final saved = store.prefs.getString('oc.profiles')!;
+    expect(saved, contains('"backend":"codex"'));
+    expect(saved, contains('"codexDirectory":"/work/acme"'));
+    expect(saved, isNot(contains('codex-secret')));
+    expect(saved, isNot(contains('must-not-be-used')));
+
+    final restored = ProfileStore(prefs: store.prefs, secure: secure);
+    final loaded = await restored.load();
+    expect(loaded.single.codexToken, 'codex-secret');
+    expect(loaded.single.password, isEmpty);
+    expect(loaded.single.requiresCodexTokenReentry, isFalse);
+  });
+
+  test(
+    'missing Codex token requests reentry without exposing metadata',
+    () async {
+      final secure = _MemoryStorage();
+      final store = await _store(secure);
+      await store.upsert(
+        ServerProfile(
+          id: 'codex-2',
+          name: 'Codex',
+          baseUrl: 'wss://codex.example:4141',
+          backend: ServerBackend.codex,
+          codexDirectory: '/work/acme',
+        ),
+      );
+
+      final restored = ProfileStore(prefs: store.prefs, secure: secure);
+      final loaded = await restored.load();
+      expect(loaded.single.codexToken, isEmpty);
+      expect(loaded.single.requiresCodexTokenReentry, isTrue);
+    },
+  );
+
+  test(
+    'Codex save rolls metadata back when its token cannot be stored',
+    () async {
+      final store = await _store(const _NoKeyringStorage());
+      final profile = ServerProfile(
+        id: 'codex-3',
+        name: 'Codex',
+        baseUrl: 'wss://codex.example:4141',
+        backend: ServerBackend.codex,
+        codexToken: 'codex-secret',
+        codexDirectory: '/work/acme',
+      );
+
+      await expectLater(
+        store.upsert(profile),
+        throwsA(isA<SecureStorageUnavailable>()),
+      );
+      expect(store.profiles, isEmpty);
+      expect(store.prefs.getString('oc.profiles'), isNull);
+    },
+  );
+
+  test('Codex deletion removes only its token', () async {
+    final secure = _MemoryStorage();
+    final store = await _store(secure);
+    await store.upsert(
+      ServerProfile(
+        id: 'codex-4',
+        name: 'Codex',
+        baseUrl: 'wss://codex.example:4141',
+        backend: ServerBackend.codex,
+        codexToken: 'codex-secret',
+        codexDirectory: '/work/acme',
+      ),
+    );
+    await store.remove('codex-4');
+    expect(secure.values.containsKey('oc.codexToken.codex-4'), isFalse);
+    expect(secure.values.containsKey('pw.codex-4'), isFalse);
+    expect(store.profiles, isEmpty);
+  });
+
+  test(
+    'Codex deletion rolls metadata back when its token cannot be deleted',
+    () async {
+      final secure = _DeleteFailingStorage();
+      final store = await _store(secure);
+      await store.upsert(
+        ServerProfile(
+          id: 'codex-5',
+          name: 'Codex',
+          baseUrl: 'wss://codex.example:4141',
+          backend: ServerBackend.codex,
+          codexToken: 'codex-secret',
+          codexDirectory: '/work/acme',
+        ),
+      );
+
+      await expectLater(
+        store.remove('codex-5'),
+        throwsA(isA<SecureStorageUnavailable>()),
+      );
+      expect(store.profiles.single.id, 'codex-5');
+      expect(store.prefs.getString('oc.profiles'), contains('"codex"'));
+      expect(secure.values['oc.codexToken.codex-5'], 'codex-secret');
+    },
+  );
 
   testWidgets(
     'the Servers editor warns about the missing keyring before and after save',

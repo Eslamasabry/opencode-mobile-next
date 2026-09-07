@@ -5540,6 +5540,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Saved queued data could not be read. The number of queued prompts is unknown.'**
   String get queueStorageCountUnknown;
+
+  /// No description provided for @codexConnectionVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection verified. Save and connect to continue.'**
+  String get codexConnectionVerified;
+
+  /// No description provided for @codexApprovalRecoveryNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'After reconnecting, review any pending approvals on your computer.'**
+  String get codexApprovalRecoveryNotice;
+
+  /// No description provided for @connectionTokenRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection token was rejected. Update it to reconnect.'**
+  String get connectionTokenRejected;
+
+  /// No description provided for @updateConnectionToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Update token'**
+  String get updateConnectionToken;
+
+  /// No description provided for @codexDraftReconnectNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Review draft stays here; nothing is sent automatically.'**
+  String get codexDraftReconnectNotice;
+
+  /// No description provided for @codexTextOnlyPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'This connection supports text only. Remove attachments before sending.'**
+  String get codexTextOnlyPrompt;
+
+  /// No description provided for @codexOfflineDraftSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnect before sending. Your draft is kept on this device.'**
+  String get codexOfflineDraftSaved;
+
+  /// No description provided for @codexReconnectBeforeSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnect before sending.'**
+  String get codexReconnectBeforeSending;
+
+  /// No description provided for @connectionTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'CONNECTION TYPE'**
+  String get connectionTypeLabel;
+
+  /// No description provided for @openCodeConnectionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode'**
+  String get openCodeConnectionLabel;
+
+  /// No description provided for @codexExperimentalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Codex (experimental)'**
+  String get codexExperimentalLabel;
+
+  /// No description provided for @connectionDisplayName.
+  ///
+  /// In en, this message translates to:
+  /// **'Display name (optional)'**
+  String get connectionDisplayName;
+
+  /// No description provided for @connectionDisplayNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Defaults to the server host'**
+  String get connectionDisplayNameHint;
+
+  /// No description provided for @connectionServerAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Server address'**
+  String get connectionServerAddress;
+
+  /// No description provided for @codexAddressHint.
+  ///
+  /// In en, this message translates to:
+  /// **'wss://codex.example or ws://127.0.0.1:4500'**
+  String get codexAddressHint;
+
+  /// No description provided for @codexAddressHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Use wss:// for remote servers. ws:// is limited to this device.'**
+  String get codexAddressHelp;
+
+  /// No description provided for @codexProjectFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Project folder on server'**
+  String get codexProjectFolder;
+
+  /// No description provided for @codexTokenReentry.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enter connection token'**
+  String get codexTokenReentry;
+
+  /// No description provided for @codexTokenLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection token'**
+  String get codexTokenLabel;
+
+  /// No description provided for @codexTokenStorageHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored securely on this device and sent only to this Codex server.'**
+  String get codexTokenStorageHelp;
+
+  /// No description provided for @codexShowToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Show connection token'**
+  String get codexShowToken;
+
+  /// No description provided for @codexHideToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide connection token'**
+  String get codexHideToken;
+
+  /// No description provided for @codexPasteToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste connection token'**
+  String get codexPasteToken;
+
+  /// No description provided for @connectionCloseEditor.
+  ///
+  /// In en, this message translates to:
+  /// **'Close server editor'**
+  String get connectionCloseEditor;
+
+  /// No description provided for @connectionCredentialUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'A saved connection credential can no longer be read. Edit the active server and re-enter it before connecting.'**
+  String get connectionCredentialUnavailable;
+
+  /// No description provided for @projectContextTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Project context'**
+  String get projectContextTitle;
+
+  /// No description provided for @projectConfiguredFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Configured folder'**
+  String get projectConfiguredFolder;
 }
 
 class _AppLocalizationsDelegate

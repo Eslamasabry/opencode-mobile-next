@@ -741,7 +741,11 @@ class _RootState extends ConsumerState<_Root> {
     if (_started) return;
     final conn = _controller;
     final profile = conn.profile;
-    if (profile == null || profile.requiresPasswordReentry) return;
+    if (profile == null ||
+        profile.requiresPasswordReentry ||
+        profile.requiresCodexTokenReentry) {
+      return;
+    }
     _started = true;
     _attempts += 1;
     WidgetsBinding.instance.addPostFrameCallback((_) => conn.connect(profile));
@@ -754,7 +758,8 @@ class _RootState extends ConsumerState<_Root> {
     if (conn.api != null && conn.repository != null && conn.version != null) {
       return const HomeScreen();
     }
-    if (conn.profile!.requiresPasswordReentry) {
+    if (conn.profile!.requiresPasswordReentry ||
+        conn.profile!.requiresCodexTokenReentry) {
       return const ServersScreen();
     }
     _connectSaved();
@@ -763,20 +768,29 @@ class _RootState extends ConsumerState<_Root> {
       body: SafeArea(
         child: SavedServerConnectionCard(
           profileName: conn.profile!.name,
+          usesConnectionToken: conn.usesConnectionToken,
+          requiresTokenReentry: conn.profile!.requiresCodexTokenReentry,
           baseUrl: conn.profile!.baseUrl,
           error: conn.lastError == null
               ? null
               : productErrorText(conn.lastError!),
           attempts: _attempts,
-          supportsTermux: platformCapabilities.supportsTermux,
+          supportsTermux:
+              !conn.usesConnectionToken && platformCapabilities.supportsTermux,
           onChangeServer: () =>
               navigator.pushNamedAndRemoveUntil('/servers', (_) => false),
+          onUpdateToken: () => navigator.pushNamedAndRemoveUntil(
+            '/servers',
+            (_) => false,
+            arguments: 'edit-active',
+          ),
           onUpdatePassword: () => navigator.pushNamedAndRemoveUntil(
             '/servers',
             (_) => false,
             arguments: 'edit-active',
           ),
-          onOpenTermuxSetup: platformCapabilities.supportsTermux
+          onOpenTermuxSetup:
+              !conn.usesConnectionToken && platformCapabilities.supportsTermux
               ? () => navigator.pushNamed('/termux-setup')
               : null,
           onRetry: () {

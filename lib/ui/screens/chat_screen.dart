@@ -478,6 +478,30 @@ class _ChatScreenState extends State<ChatScreen>
     return agents;
   }
 
+  bool get _supportsPromptAttachments => _conn.capabilities.promptAttachments;
+  bool get _supportsPromptAgentMentions =>
+      _conn.capabilities.promptAgentMentions;
+  bool get _supportsOfflinePromptQueue => _conn.capabilities.offlinePromptQueue;
+  bool get _supportsSessionCompact => _conn.capabilities.sessionCompact;
+
+  bool _chatCommandSupported(_ChatCommand command) => switch (command.action) {
+    _ChatCommandAction.sessions => _conn.capabilities.globalSessionSearch,
+    _ChatCommandAction.workspaces ||
+    _ChatCommandAction.move ||
+    _ChatCommandAction.warp ||
+    _ChatCommandAction.projectHealth => _conn.capabilities.projectManagement,
+    _ChatCommandAction.files => _conn.capabilities.fileBrowsing,
+    _ChatCommandAction.terminal => _conn.capabilities.terminal,
+    _ChatCommandAction.diff => _conn.capabilities.sessionDiff,
+    _ChatCommandAction.fork => _conn.capabilities.sessionFork,
+    _ChatCommandAction.compact => _supportsSessionCompact,
+    _ChatCommandAction.undo ||
+    _ChatCommandAction.redo => _conn.capabilities.sessionRevert,
+    _ChatCommandAction.references => _conn.capabilities.fileBrowsing,
+    _ChatCommandAction.model => true,
+    _ => true,
+  };
+
   @override
   void initState() {
     super.initState();
@@ -523,7 +547,9 @@ class _ChatScreenState extends State<ChatScreen>
       _handoff.store.addListener(_onHandoffChanged); // UX-103 review handoff
     }
     _load();
-    unawaited(_loadServerCommands());
+    if (_conn.capabilities.serverCatalog) {
+      unawaited(_loadServerCommands());
+    }
     unawaited(_loadBackgroundSupport());
     unawaited(_loadRunningShells());
     _sub = _conn.events.listen(_onEvent);
@@ -740,7 +766,7 @@ class _ChatScreenState extends State<ChatScreen>
   };
 
   Future<void> _loadRunningShells() async {
-    if (_conn.isIsolated) return;
+    if (_conn.isIsolated || !_conn.capabilities.terminal) return;
     if (_conn.status != StreamStatus.connected) return;
     final repo = _conn.repository;
     if (repo == null) return;
@@ -770,6 +796,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _openRunningWork() async {
+    if (!_conn.capabilities.projectManagement) return;
     final targetID = await showRunningWorkSheet(
       context,
       controller: _conn,
@@ -1103,7 +1130,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _loadBackgroundSupport() async {
-    if (_conn.isIsolated) return;
+    if (_conn.isIsolated || !_conn.capabilities.projectManagement) return;
     final repository = _conn.repository;
     _backgroundRepository = repository;
     _backgroundLocationRevision = _conn.locationRevision;
@@ -2308,12 +2335,29 @@ class _ChatScreenState extends State<ChatScreen>
     }
     _applyStagedReferences(); // UX-103 review handoff
     if (_composer.text.trim().isEmpty && _attachments.isEmpty) return;
+    if (!_supportsPromptAttachments && _attachments.isNotEmpty) {
+      _showComposerNote(_chatL10n(context).codexTextOnlyPrompt);
+      return;
+    }
     if (_conn.status != StreamStatus.connected) {
       // Offline compose: the draft queues instead of failing, and flushes
       // through the same send path when the connection returns.
+      if (!_supportsOfflinePromptQueue) {
+        final persisted = await _persistDraft();
+        if (mounted) {
+          _showComposerNote(
+            persisted && _draftSaveFailure == null
+                ? _chatL10n(context).codexOfflineDraftSaved
+                : _chatL10n(context).codexReconnectBeforeSending,
+          );
+        }
+        return;
+      }
       final draftText = _composer.text.trim();
       final draftAttachments = List<PromptAttachment>.from(_attachments);
-      final draftMentions = _promptAgentMentions(draftText, _subagents);
+      final draftMentions = _supportsPromptAgentMentions
+          ? _promptAgentMentions(draftText, _subagents)
+          : const <PromptAgentMention>[];
       if (await _queueDraft(draftText, draftAttachments, draftMentions)) {
         if (!mounted) return;
         setState(() => _attachments.clear());
@@ -2346,7 +2390,9 @@ class _ChatScreenState extends State<ChatScreen>
       return;
     }
     final attachments = List<PromptAttachment>.from(_attachments);
-    final agentMentions = _promptAgentMentions(text, _subagents);
+    final agentMentions = _supportsPromptAgentMentions
+        ? _promptAgentMentions(text, _subagents)
+        : const <PromptAgentMention>[];
     var selection = _conn.selectionForSession(widget.sessionID);
     final selectionProfileID = _conn.profile?.id;
     var promptStarted = false;
@@ -2434,6 +2480,7 @@ class _ChatScreenState extends State<ChatScreen>
       if (!voiceSendCurrent()) return;
       if (!conversationSend &&
           promptStarted &&
+          _supportsOfflinePromptQueue &&
           e is ApiException &&
           e.statusCode == null) {
         if (await _queueDraft(
@@ -2463,6 +2510,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   void _insertAgentMention(CatalogAgent agent) {
+    if (!_supportsPromptAgentMentions) return;
     final current = _composer.value;
     final query = _activeAgentQuery(current);
     final selection = current.selection;
@@ -2642,7 +2690,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _addWebSources() async {
-    if (_conn.isIsolated) return;
+    if (_conn.isIsolated || !_conn.capabilities.webSearch) return;
     if (_sending || _promptShelfBusy || _voiceConversation) return;
     final source = _speechScopeNow;
     final snapshot = _snapshotPrompt();
@@ -2685,6 +2733,10 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<void> _pickAttachment() async {
     if (_conn.isIsolated) return;
+    if (!_supportsPromptAttachments) {
+      _showComposerNote(_chatL10n(context).codexTextOnlyPrompt);
+      return;
+    }
     if (_promptShelfBusy) return;
     final location = _conn.locationRevision;
     setState(() => _photoBusy = true);
@@ -2760,7 +2812,12 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _pickPhoto(ImageSource source) async {
-    if (_conn.isIsolated) return;
+    if (_conn.isIsolated || !_supportsPromptAttachments) {
+      if (!_conn.isIsolated && !_supportsPromptAttachments) {
+        _showComposerNote(_chatL10n(context).codexTextOnlyPrompt);
+      }
+      return;
+    }
     if (_promptShelfBusy || !platformCapabilities.supportsPromptPhotos) return;
     if (_attachments.length >= _maxAttachmentCount ||
         _attachments.fold<int>(
@@ -2816,6 +2873,10 @@ class _ChatScreenState extends State<ChatScreen>
     PendingPromptPhoto photo, {
     bool fromPicker = false,
   }) async {
+    if (!_supportsPromptAttachments) {
+      _showComposerNote(_chatL10n(context).codexTextOnlyPrompt);
+      return;
+    }
     if (_promptShelfBusy && !fromPicker) return;
     if (!_photoMatches(photo)) {
       _showActionError(_chatL10n(context).photoOtherLocation);
@@ -2855,6 +2916,10 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _reviewPendingPhoto(PendingPromptPhoto photo) async {
+    if (!_supportsPromptAttachments) {
+      _showComposerNote(_chatL10n(context).codexTextOnlyPrompt);
+      return;
+    }
     if (_photoBusy) return;
     setState(() => _photoBusy = true);
     try {
@@ -2887,6 +2952,10 @@ class _ChatScreenState extends State<ChatScreen>
   /// ignored rather than half-attached.
   Future<void> _handleInsertedContent(KeyboardInsertedContent content) async {
     if (_conn.isIsolated) return;
+    if (!_supportsPromptAttachments) {
+      _showComposerNote(_chatL10n(context).codexTextOnlyPrompt);
+      return;
+    }
     final bytes = content.data;
     if (bytes == null || bytes.isEmpty) return;
     final mime = content.mimeType.isEmpty ? 'image/png' : content.mimeType;
@@ -2913,6 +2982,10 @@ class _ChatScreenState extends State<ChatScreen>
   Future<PromptAttachment?> _chooseAttachment(
     List<PromptAttachment> current,
   ) async {
+    if (!_supportsPromptAttachments) {
+      _showComposerNote(_chatL10n(context).codexTextOnlyPrompt);
+      return null;
+    }
     final unsupportedAttachment = _chatL10n(context).chatAttachmentUnsupported;
     if (current.length >= _maxAttachmentCount) {
       throw ProductException(
@@ -3112,6 +3185,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _fork() async {
+    if (!_conn.capabilities.sessionFork) return;
     try {
       final repository = await _requireActionRepository();
       final id = await repository.forkSession(widget.sessionID);
@@ -3132,6 +3206,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<void> _openTimeline({bool forkMode = false}) async {
     if (_messages.isEmpty) return;
+    forkMode = forkMode && _conn.capabilities.sessionFork;
     final selection = await showModalBottomSheet<_TimelineSelection>(
       context: context,
       isScrollControlled: true,
@@ -3557,7 +3632,7 @@ class _ChatScreenState extends State<ChatScreen>
         icon: AppIcons.copy,
         onSelected: () => unawaited(_copyMessageText(message)),
       ),
-    if (message.info.role == 'user')
+    if (message.info.role == 'user' && _conn.capabilities.sessionFork)
       ContextMenuAction(
         menuKey: const ValueKey('message-menu-fork'),
         label: 'Fork from this prompt',
@@ -3585,7 +3660,8 @@ class _ChatScreenState extends State<ChatScreen>
     if (_conn.isIsolated) return;
     final source = _speechScopeNow;
     final copy = _messageCopy(message);
-    final canFork = message.info.role == 'user';
+    final canFork =
+        message.info.role == 'user' && _conn.capabilities.sessionFork;
     final theme = Theme.of(context);
     final action = await showModalBottomSheet<String>(
       context: context,
@@ -3695,7 +3771,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _forkFromMessage(MessageWithParts message) async {
-    if (message.info.role != 'user') return;
+    if (!_conn.capabilities.sessionFork || message.info.role != 'user') return;
     final text = message.parts
         .where((part) => part.type == 'text' && !part.synthetic)
         .map((part) => part.text)
@@ -3747,6 +3823,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _compact() async {
+    if (!_supportsSessionCompact) return;
     final model = _conn.modelForSession(widget.sessionID);
     if (model == null && !_conn.serverOwnsSessionSelection) {
       _showActionError('Select a model before compacting this session.');
@@ -3793,6 +3870,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _revertLast() async {
+    if (!_conn.capabilities.sessionRevert) return;
     MessageWithParts? target;
     for (final message in _visibleHistory.toList().reversed) {
       if (message.info.role == 'user' &&
@@ -3828,6 +3906,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _restore() async {
+    if (!_conn.capabilities.sessionRevert) return;
     if (_conn.supportsStagedRevert) {
       await _reviewStagedRevert();
       return;
@@ -3906,6 +3985,10 @@ class _ChatScreenState extends State<ChatScreen>
         target?.parts.where((part) => part.type == 'file').toList() ??
         const <Part>[];
     if (text.trim().isEmpty && files.isEmpty) return;
+    if (!_supportsPromptAttachments && files.isNotEmpty) {
+      _showComposerNote(_chatL10n(context).codexTextOnlyPrompt);
+      return;
+    }
     final attachments = <PromptAttachment>[];
     for (final file in files) {
       final url = file.url;
@@ -4047,6 +4130,7 @@ class _ChatScreenState extends State<ChatScreen>
       }
       return false;
     }
+    if (!_supportsPromptAttachments) return true;
     if (_attachmentNoteActive) return true;
     if (_attachmentNoteShownSessions.contains(widget.sessionID)) return false;
     _attachmentNoteActive = true;
@@ -4144,6 +4228,7 @@ class _ChatScreenState extends State<ChatScreen>
       showQuestionSheet(context, _conn, question);
 
   Future<void> _runShellDialog() async {
+    if (!_conn.capabilities.terminal) return;
     final ctrl = TextEditingController();
     final cmd = await showDialog<String>(
       context: context,
@@ -4193,7 +4278,9 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _loadServerCommands() {
-    if (_conn.isIsolated) return Future.value();
+    if (_conn.isIsolated || !_conn.capabilities.serverCatalog) {
+      return Future.value();
+    }
     final existing = _serverCommandsRequest;
     if (existing != null) return existing;
     late final Future<void> request;
@@ -4540,11 +4627,13 @@ class _ChatScreenState extends State<ChatScreen>
         action: _ChatCommandAction.help,
       ),
     ];
+    final supported = builtins.where(_chatCommandSupported).toList();
+    if (!_conn.capabilities.serverCatalog) return supported;
     final dynamic = [
       for (final command in _serverCommands ?? const <CommandInfo>[])
         _ChatCommand.server(command),
     ];
-    return [...builtins, ...dynamic];
+    return [...supported, ...dynamic];
   }
 
   /// Ctrl+K in a session opens the session's own command launcher rather than
@@ -4612,8 +4701,14 @@ class _ChatScreenState extends State<ChatScreen>
     _ComposerToolTab initialTab = _ComposerToolTab.commands,
   }) async {
     if (_conn.isIsolated) return;
+    if (!_supportsPromptAgentMentions &&
+        initialTab == _ComposerToolTab.agents) {
+      return;
+    }
     FocusManager.instance.primaryFocus?.unfocus();
-    unawaited(_conn.refreshCatalog());
+    if (_conn.capabilities.serverCatalog) {
+      unawaited(_conn.refreshCatalog());
+    }
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -4633,6 +4728,7 @@ class _ChatScreenState extends State<ChatScreen>
           _selectChatCommand(command);
         },
         onAgentSelected: (agent) {
+          if (!_supportsPromptAgentMentions) return;
           FocusManager.instance.primaryFocus?.unfocus();
           Navigator.pop(sheetContext);
           _insertAgentMention(agent);
@@ -4642,7 +4738,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   void _selectChatCommand(_ChatCommand command) {
-    if (!command.enabled) return;
+    if (!command.enabled || !_chatCommandSupported(command)) return;
     if (command.serverCommand case final serverCommand?) {
       _composer.value = TextEditingValue(
         text: '/${serverCommand.name} ',
@@ -4914,6 +5010,10 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   void _attachReference(ReferenceInfo reference) {
+    if (!_conn.capabilities.fileBrowsing) {
+      _showComposerNote(_chatL10n(context).codexTextOnlyPrompt);
+      return;
+    }
     final attachment = PromptAttachment.reference(
       name: reference.name,
       path: reference.path,
@@ -5068,6 +5168,12 @@ class _ChatScreenState extends State<ChatScreen>
             reasoningExpanded: _conn.transcriptReasoningExpanded,
             timestampsVisible: _conn.transcriptTimestampsVisible,
             todosAvailable: _conn.capabilities.sessionTodos,
+            changesAvailable: _conn.capabilities.sessionDiff,
+            forkAvailable: _conn.capabilities.sessionFork,
+            revertAvailable: _conn.capabilities.sessionRevert,
+            compactAvailable: _supportsSessionCompact,
+            terminalAvailable: _conn.capabilities.terminal,
+            subagentsAvailable: _conn.capabilities.projectManagement,
             reverted: reverted,
             stagedRevert: _conn.supportsStagedRevert,
             notesAvailable: _conn.supportsSessionNotes,
@@ -5170,6 +5276,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _showSubagents() async {
+    if (!_conn.capabilities.projectManagement) return;
     final target = await Navigator.of(context).push<Session>(
       MaterialPageRoute<Session>(
         builder: (_) => SessionRelationsScreen(
@@ -5186,7 +5293,10 @@ class _ChatScreenState extends State<ChatScreen>
   /// carries the subagent's session id), fetching it when the list has not
   /// caught up with a freshly spawned subagent yet.
   Future<void> _openSubagentSession(String sessionID) async {
-    if (sessionID == widget.sessionID) return;
+    if (!_conn.capabilities.projectManagement ||
+        sessionID == widget.sessionID) {
+      return;
+    }
     try {
       final target =
           _conn.sessionsById[sessionID] ??
@@ -5199,6 +5309,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _openParentSession() async {
+    if (!_conn.capabilities.projectManagement) return;
     final parentID = _conn.sessionsById[widget.sessionID]?.parentID;
     if (parentID == null) return;
     try {
@@ -5214,7 +5325,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _openRelatedSession(Session target) async {
-    if (_conn.isIsolated) return;
+    if (_conn.isIsolated || !_conn.capabilities.projectManagement) return;
     if (_conn.directory != target.directory ||
         _conn.workspace != target.workspaceID) {
       await _conn.selectLocation(
@@ -5227,6 +5338,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _showDiff() async {
+    if (!_conn.capabilities.sessionDiff) return;
     if (_conn.isIsolated) {
       final api = await _conn.prepareActionTransport();
       if (api == null) return;
@@ -5340,7 +5452,9 @@ class _ChatScreenState extends State<ChatScreen>
   final Map<String, DateTime> _pathLinkMissAt = {};
 
   Future<bool> _validatePathLink(String path) {
-    if (_conn.isIsolated) return Future.value(false);
+    if (_conn.isIsolated || !_conn.capabilities.fileBrowsing) {
+      return Future.value(false);
+    }
     final missedAt = _pathLinkMissAt[path];
     if (missedAt != null &&
         DateTime.now().difference(missedAt) > _pathLinkNegativeTtl) {
@@ -5382,7 +5496,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _openPathLink(String raw) async {
-    if (_conn.isIsolated) return;
+    if (_conn.isIsolated || !_conn.capabilities.fileBrowsing) return;
     final path = stripPathLineSuffix(raw);
     final name = path.substring(path.lastIndexOf('/') + 1);
     try {
@@ -5447,6 +5561,10 @@ class _ChatScreenState extends State<ChatScreen>
     FilePreviewData data,
   ) async {
     if (_conn.isIsolated) return;
+    if (!_supportsPromptAttachments) {
+      _showComposerNote(_chatL10n(context).codexTextOnlyPrompt);
+      return;
+    }
     await _addPreviewAttachment(
       filename: file.displayName,
       mimeType: data.mimeType ?? file.mimeType,
@@ -5458,11 +5576,15 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _attachProjectFile(String path, FilePreviewData data) =>
-      _addPreviewAttachment(
-        filename: path.split('/').last,
-        mimeType: data.mimeType,
-        data: data,
-      );
+      !_supportsPromptAttachments
+      ? Future<void>.sync(
+          () => _showComposerNote(_chatL10n(context).codexTextOnlyPrompt),
+        )
+      : _addPreviewAttachment(
+          filename: path.split('/').last,
+          mimeType: data.mimeType,
+          data: data,
+        );
 
   /// Files dropped onto the composer from the desktop file manager.
   ///
@@ -5472,6 +5594,10 @@ class _ChatScreenState extends State<ChatScreen>
   /// an oversized file is refused without ever being read into memory.
   Future<void> _handleDroppedFiles(List<DroppedFile> files) async {
     if (_conn.isIsolated) return;
+    if (!_supportsPromptAttachments) {
+      _showComposerNote(_chatL10n(context).codexTextOnlyPrompt);
+      return;
+    }
     for (final file in files) {
       try {
         if (await file.length() > _maxAttachmentBytes) {
@@ -5505,6 +5631,10 @@ class _ChatScreenState extends State<ChatScreen>
     required String? mimeType,
     required FilePreviewData data,
   }) async {
+    if (!_supportsPromptAttachments) {
+      _showComposerNote(_chatL10n(context).codexTextOnlyPrompt);
+      return;
+    }
     final bytes = data.exportBytes;
     if (data.error != null || bytes == null) {
       throw ProductException(
@@ -5748,6 +5878,8 @@ class _ChatScreenState extends State<ChatScreen>
       _conn.isIsolated ? child : DesktopSelectionArea(child: child);
 
   Widget _composerDropTarget({required Widget child}) => _conn.isIsolated
+      ? child
+      : !_supportsPromptAttachments
       ? child
       : DesktopFileDropTarget(onDrop: _handleDroppedFiles, child: child);
 
@@ -6107,11 +6239,14 @@ class _ChatScreenState extends State<ChatScreen>
                                                       filePreviewLoader:
                                                           _loadToolOutputFile,
                                                       onAttachFile:
-                                                          _attachToolOutputFile,
+                                                          _supportsPromptAttachments
+                                                          ? _attachToolOutputFile
+                                                          : null,
                                                       onDownloadFile:
                                                           _downloadToolOutputFile,
                                                       onCompact:
-                                                          _conn.isIsolated
+                                                          _conn.isIsolated ||
+                                                              !_supportsSessionCompact
                                                           ? null
                                                           : _compact,
                                                       onOpenProviders:
@@ -6133,7 +6268,10 @@ class _ChatScreenState extends State<ChatScreen>
                                                                   .sessionID,
                                                             ),
                                                       onOpenSession:
-                                                          _conn.isIsolated
+                                                          _conn.isIsolated ||
+                                                              !_conn
+                                                                  .capabilities
+                                                                  .projectManagement
                                                           ? null
                                                           : _openSubagentSession,
                                                     );
@@ -6513,7 +6651,9 @@ class _ChatScreenState extends State<ChatScreen>
                                     controller: _composer,
                                     focusNode: _focus,
                                     commands: _chatCommands,
-                                    agents: _subagents,
+                                    agents: _supportsPromptAgentMentions
+                                        ? _subagents
+                                        : const <CatalogAgent>[],
                                     onSelectCommand: _selectChatCommand,
                                     onSelectAgent: _insertAgentMention,
                                     onOpenCommands: _openCommandLauncher,
@@ -6552,6 +6692,10 @@ class _ChatScreenState extends State<ChatScreen>
                                         _promptShelfOperationBusy ||
                                         _restoringDraftAttachments,
                                     attachments: _attachments,
+                                    promptAttachmentsSupported:
+                                        _supportsPromptAttachments,
+                                    webSourcesSupported:
+                                        _conn.capabilities.webSearch,
                                     busy: busy,
                                     sending: _sending,
                                     // OpenCode 1 runs a send made mid-turn

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
+import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/state/profile_monitor.dart';
 
 import 'support/profile_monitor_fixture.dart';
@@ -22,6 +23,48 @@ void main() {
           const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
           null,
         ),
+  );
+  test(
+    'enabled legacy Codex rules remain unavailable without factory or alert work',
+    () async {
+      final store = await monitorStore(count: 1);
+      store.profiles.single.backend = ServerBackend.codex;
+      await store.prefs.setString(
+        ProfileMonitor.rulesKey('profile-1'),
+        jsonEncode(const ProfileNotifyRules(enabled: true).toJson()),
+      );
+      var factories = 0;
+      var alerts = 0;
+      final monitor = ProfileMonitor(
+        store: store,
+        isReadable: (_) => true,
+        createGateway: (_) {
+          factories++;
+          throw StateError('Codex must not enter monitoring transport');
+        },
+        networkWifi: () async => throw StateError('Codex must not probe Wi-Fi'),
+        alert: (_, r, k, t) async {
+          alerts++;
+          return true;
+        },
+        dismiss: (_) async => true,
+      );
+      addTearDown(monitor.dispose);
+
+      monitor.setRuntime(foreground: false, backgroundAllowed: true);
+      await monitor.refresh();
+
+      expect(monitor.supportsProfile(store.profiles.single), isFalse);
+      expect(factories, 0);
+      expect(alerts, 0);
+      expect(
+        monitor.snapshotFor('profile-1').status,
+        ProfileMonitorStatus.unavailable,
+      );
+      expect(monitor.snapshotFor('profile-1').pendingCount, isNull);
+      expect(monitor.unknownProfileCount, 1);
+      expect(monitor.rulesFor('profile-1').enabled, isTrue);
+    },
   );
   test(
     'off by default; explicit opt-in persists and zero is a known observation',

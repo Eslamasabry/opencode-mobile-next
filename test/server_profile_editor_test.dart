@@ -137,7 +137,14 @@ void main() {
         find.byKey(const ValueKey('server-password-field')),
         'test-secret',
       );
-      await tester.tap(find.byKey(const ValueKey('server-password-visibility')));
+      await tester.pump();
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('server-password-visibility')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('server-password-visibility')),
+      );
       await tester.pump();
 
       expect(

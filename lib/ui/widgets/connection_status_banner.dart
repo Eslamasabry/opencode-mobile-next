@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../api/sse.dart';
 import '../../state/connection.dart';
+import '../../l10n/app_localizations.dart';
 
 /// A shared, flat connection state for retained product surfaces.
 class ConnectionStatusBanner extends StatelessWidget {
@@ -22,8 +23,33 @@ class ConnectionStatusBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     if (controller.status == StreamStatus.connected) {
       return const SizedBox.shrink();
+    }
+
+    // A rejected Codex token cannot self-heal through retries: surface the
+    // one action that fixes it and keep it a banner, never a modal.
+    if (controller.passwordRejected && controller.usesConnectionToken) {
+      return Semantics(
+        container: true,
+        liveRegion: true,
+        label: 'The connection token was rejected',
+        child: MaterialBanner(
+          key: const ValueKey('connection-status-banner'),
+          leading: const Icon(Icons.key_off_outlined),
+          content: Text(l10n.connectionTokenRejected),
+          actions: [
+            TextButton(
+              key: const ValueKey('banner-update-token'),
+              onPressed: () => Navigator.of(
+                context,
+              ).pushNamed('/servers', arguments: 'edit-active'),
+              child: Text(l10n.updateConnectionToken),
+            ),
+          ],
+        ),
+      );
     }
 
     // A rotated v2 serve password cannot self-heal through retries: surface
@@ -63,6 +89,12 @@ class ConnectionStatusBanner extends StatelessWidget {
     final message = reconnecting
         ? 'Reconnecting to $server…'
         : 'Connection lost';
+    final codexReconnect = controller.usesConnectionToken && reconnecting;
+    final content = codexReconnect
+        ? '$message\nReview draft stays here; nothing is sent automatically.${note == null || note!.isEmpty ? '' : '\n${note!}'}'
+        : note == null || note!.isEmpty
+        ? message
+        : '$message\n${note!}';
 
     return Semantics(
       container: true,
@@ -77,8 +109,8 @@ class ConnectionStatusBanner extends StatelessWidget {
               )
             : const Icon(Icons.cloud_off_outlined),
         content: Text(
-          note == null || note!.isEmpty ? message : '$message\n${note!}',
-          maxLines: 2,
+          content,
+          maxLines: codexReconnect && note != null && note!.isNotEmpty ? 3 : 2,
           overflow: TextOverflow.ellipsis,
         ),
         actions: [

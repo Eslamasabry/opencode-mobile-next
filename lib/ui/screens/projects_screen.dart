@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
+import '../../l10n/app_localizations.dart';
 import '../widgets/product_states.dart';
 
 class ProjectsScreen extends StatefulWidget {
@@ -32,12 +33,15 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   void initState() {
     super.initState();
     _search.addListener(_searchChanged);
-    unawaited(_load());
+    if (widget.controller.capabilities.projectManagement) {
+      unawaited(_load());
+    }
   }
 
   void _searchChanged() => setState(() {});
 
   Future<void> _load() async {
+    if (!widget.controller.capabilities.projectManagement) return;
     final generation = ++_loadGeneration;
     setState(() => _loading = true);
     final repository = await widget.controller.prepareActionRepository();
@@ -81,6 +85,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   }
 
   Future<void> _select(WorkspaceProject project) async {
+    if (!widget.controller.capabilities.projectManagement) return;
     if (_busyProjectID != null) return;
     if (project.id == widget.selectedProjectID &&
         widget.controller.directory == project.directory &&
@@ -101,6 +106,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   }
 
   Future<void> _rename(WorkspaceProject project) async {
+    if (!widget.controller.capabilities.projectManagement) return;
     if (_busyProjectID != null) return;
     final next = await showDialog<String>(
       context: context,
@@ -117,7 +123,9 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     setState(() => _busyProjectID = project.id);
     try {
       final repository = await widget.controller.prepareActionRepository();
-      if (repository == null) throw const ProductException('OpenCode is reconnecting.');
+      if (repository == null) {
+        throw const ProductException('OpenCode is reconnecting.');
+      }
       final updated = await repository.renameProject(
         projectID: project.id,
         projectDirectory: project.directory,
@@ -153,6 +161,47 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!widget.controller.capabilities.projectManagement) {
+      final directory = widget.controller.directory;
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            lookupAppLocalizations(
+              Localizations.localeOf(context),
+            ).projectContextTitle,
+          ),
+        ),
+        body: ListView(
+          key: const ValueKey('projects-context-list'),
+          padding: const EdgeInsets.only(bottom: 32),
+          children: [
+            ListTile(
+              key: const ValueKey('projects-configured-folder'),
+              leading: const Icon(Icons.folder_rounded),
+              title: Text(
+                lookupAppLocalizations(
+                  Localizations.localeOf(context),
+                ).projectConfiguredFolder,
+              ),
+              subtitle: Text(
+                directory == null || directory.isEmpty
+                    ? 'The server’s default directory'
+                    : directory,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const ProductEmptyState(
+              icon: Icons.folder_open_outlined,
+              title: 'Project switching is unavailable',
+              message:
+                  'This connection keeps the configured folder for sessions. '
+                  'Open a new task from Workspace to continue.',
+            ),
+          ],
+        ),
+      );
+    }
     final projects = _projects;
     final visible = _visibleProjects;
     return Scaffold(

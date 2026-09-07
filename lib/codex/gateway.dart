@@ -9,6 +9,23 @@ import 'mappers.dart';
 import 'transport.dart';
 
 const codexServerCapabilities = ServerCapabilities(
+  promptAttachments: false,
+  promptAgentMentions: false,
+  offlinePromptQueue: false,
+  fileBrowsing: false,
+  terminal: false,
+  projectManagement: false,
+  globalSessionSearch: false,
+  sessionDiff: false,
+  sessionFork: false,
+  sessionCompact: false,
+  persistentPermissionGrants: false,
+  messageCompletionEndsRun: false,
+  sessionRevert: false,
+  sessionImportExport: false,
+  sessionNotes: false,
+  serverCatalog: false,
+  profileAttentionPolling: false,
   managedWorkspaces: false,
   workspaceWarp: false,
   sessionSteal: false,
@@ -49,6 +66,18 @@ class _CodexApproval {
   final PermissionRequest permission;
   final String turnID;
   _CodexApproval(this.request, this.permission, this.turnID);
+}
+
+class _CodexOperationContext {
+  final String scope;
+  final int locationEpoch;
+  final int transportEpoch;
+
+  const _CodexOperationContext({
+    required this.scope,
+    required this.locationEpoch,
+    required this.transportEpoch,
+  });
 }
 
 class CodexGateway implements ServerGateway, ServerOperationsGateway {
@@ -140,6 +169,32 @@ class CodexGateway implements ServerGateway, ServerOperationsGateway {
     }
   }
 
+  Future<_CodexOperationContext> _captureOperation() async {
+    final scope = _scope;
+    final locationEpoch = _locationEpoch;
+    await transport.connect();
+    _checkLocation(scope, locationEpoch);
+    return _CodexOperationContext(
+      scope: scope,
+      locationEpoch: locationEpoch,
+      transportEpoch: transport.epoch,
+    );
+  }
+
+  void _checkOperation(
+    _CodexOperationContext operation, {
+    bool mutation = false,
+  }) {
+    _checkLocation(operation.scope, operation.locationEpoch);
+    if (!transport.connected || transport.epoch != operation.transportEpoch) {
+      throw CodexFailure(
+        mutation
+            ? CodexFailureKind.deliveryUnknown
+            : CodexFailureKind.disconnected,
+      );
+    }
+  }
+
   Session _remember(Map<String, dynamic> thread, String scope, int epoch) {
     _checkLocation(scope, epoch);
     final session = codexSession(thread, directory: scope);
@@ -158,19 +213,21 @@ class CodexGateway implements ServerGateway, ServerOperationsGateway {
   Future<Map<String, dynamic>> _readThread(
     String id, {
     bool turns = false,
+    _CodexOperationContext? operation,
   }) async {
     codexString(id, max: 256);
-    final scope = _scope;
-    final epoch = _locationEpoch;
+    final context = operation ?? await _captureOperation();
+    _checkOperation(context);
     final result = await transport.request('thread/read', {
       'threadId': id,
       'includeTurns': turns,
     });
+    _checkOperation(context);
     final thread = codexObject(result['thread']);
     if (thread['id'] != id) {
       throw CodexFailure(CodexFailureKind.invalidResponse);
     }
-    _remember(thread, scope, epoch);
+    _remember(thread, context.scope, context.locationEpoch);
     if (turns) {
       _turns.remove(id);
       for (final raw in codexList(thread['turns'])) {
@@ -193,15 +250,16 @@ class CodexGateway implements ServerGateway, ServerOperationsGateway {
   }
 
   Future<Map<String, dynamic>> _resume(String id) async {
-    await _readThread(id, turns: true);
-    final scope = _scope;
-    final epoch = _locationEpoch;
+    final context = await _captureOperation();
+    await _readThread(id, turns: true, operation: context);
+    _checkOperation(context);
     final result = await transport.request('thread/resume', {'threadId': id});
+    _checkOperation(context);
     final thread = codexObject(result['thread']);
     if (thread['id'] != id) {
       throw CodexFailure(CodexFailureKind.invalidResponse);
     }
-    _remember(thread, scope, epoch);
+    _remember(thread, context.scope, context.locationEpoch);
     _resumed.remove(id);
     _resumed.add(id);
     while (_resumed.length > 8) {
@@ -284,8 +342,11 @@ class CodexGateway implements ServerGateway, ServerOperationsGateway {
   Future<Session> getSessionDetails(String id) => session(id);
   @override
   Future<void> deleteSession(String id) async {
-    await _readThread(id);
+    final context = await _captureOperation();
+    await _readThread(id, operation: context);
+    _checkOperation(context, mutation: true);
     await transport.request('thread/delete', {'threadId': id}, mutation: true);
+    _checkOperation(context, mutation: true);
     _sessions.remove(id);
     _statuses.remove(id);
     _resumed.remove(id);
@@ -296,11 +357,14 @@ class CodexGateway implements ServerGateway, ServerOperationsGateway {
 
   @override
   Future<void> renameSession(String id, String title) async {
-    await _readThread(id);
+    final context = await _captureOperation();
+    await _readThread(id, operation: context);
+    _checkOperation(context, mutation: true);
     await transport.request('thread/name/set', {
       'threadId': id,
       'name': codexString(title, max: 4096),
     }, mutation: true);
+    _checkOperation(context, mutation: true);
   }
 
   @override
@@ -309,7 +373,8 @@ class CodexGateway implements ServerGateway, ServerOperationsGateway {
   Future<List<MessageWithParts>> messages(String id) async {
     if (_resumed.contains(id) &&
         _newEmptyThreads.contains(id) &&
-        _sessions.containsKey(id)) {
+        _sessions.containsKey(id) &&
+        !_uncertain.contains(id)) {
       // thread/start itself does not persist an empty conversation. Once a turn
       // has started, authoritative resume is always used.
       return const [];
@@ -317,6 +382,7 @@ class CodexGateway implements ServerGateway, ServerOperationsGateway {
     final thread = await _resume(id);
     final result = codexMessages(thread);
     _uncertain.remove(id);
+    _newEmptyThreads.remove(id);
     return result;
   }
 
@@ -389,15 +455,22 @@ class CodexGateway implements ServerGateway, ServerOperationsGateway {
 
   @override
   Future<void> abort(String sessionID) async {
-    final thread = await _readThread(sessionID, turns: true);
+    final context = await _captureOperation();
+    final thread = await _readThread(
+      sessionID,
+      turns: true,
+      operation: context,
+    );
     final active = codexList(
       thread['turns'],
     ).map(codexObject).where((turn) => turn['status'] == 'inProgress').toList();
     if (active.length != 1) throw CodexFailure(CodexFailureKind.staleRequest);
+    _checkOperation(context, mutation: true);
     await transport.request('turn/interrupt', {
       'threadId': sessionID,
       'turnId': codexString(active.single['id'], max: 256),
     }, mutation: true);
+    _checkOperation(context, mutation: true);
   }
 
   @override
@@ -795,7 +868,10 @@ class CodexGateway implements ServerGateway, ServerOperationsGateway {
             ? StreamStatus.disconnected
             : StreamStatus.reconnecting,
       );
-      if (error.kind == CodexFailureKind.authentication) _listening = false;
+      if (error.kind == CodexFailureKind.authentication) {
+        if (_events.hasListener) _events.addError(error);
+        _listening = false;
+      }
     }
   }
 
@@ -806,7 +882,12 @@ class CodexGateway implements ServerGateway, ServerOperationsGateway {
     void Function(Object)? onError,
   }) {
     _listening = true;
-    final events = _events.stream.listen(onEvent, onError: onError);
+    final events = _events.stream.listen(
+      onEvent,
+      // A channel without an error callback still needs to consume the
+      // terminal authentication error emitted during reconnect.
+      onError: onError ?? (Object _) {},
+    );
     final states = _streamStates.stream.listen(onStatus);
     return _CodexEventChannel(
       () async {

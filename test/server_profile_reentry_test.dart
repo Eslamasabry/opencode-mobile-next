@@ -152,6 +152,38 @@ Widget _serversApp(
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  testWidgets('Codex token re-entry opens setup without a network attempt', (
+    tester,
+  ) async {
+    final (store, connection) = await _memoryState();
+    store.profile
+      ..backend = ServerBackend.codex
+      ..baseUrl = 'ws://127.0.0.1:4141'
+      ..codexDirectory = '/work/project'
+      ..requiresCodexTokenReentry = true;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          bootstrapProvider.overrideWithValue(AppBootstrap(store)),
+          connProvider.overrideWithValue(connection),
+        ],
+        child: const OcApp(),
+      ),
+    );
+    await tester.pump();
+    expect(connection.connectCalls, 0);
+    expect(find.text('Connection token re-entry required'), findsOneWidget);
+    expect(find.text('Nothing is listening on this device'), findsNothing);
+    await tester.tap(find.text('Workstation'));
+    await tester.pumpAndSettle();
+    expect(find.text('Re-enter connection token'), findsNWidgets(2));
+    expect(find.text('/work/project'), findsOneWidget);
+    expect(connection.connectCalls, 0);
+    await tester.pumpWidget(const SizedBox.shrink());
+    connection.dispose();
+    await tester.pump();
+  });
+
   testWidgets(
     'startup does not auto-connect when the active password needs re-entry',
     (tester) async {

@@ -311,6 +311,7 @@ class _MonitorProfileState extends State<_MonitorProfile> {
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final monitor = widget.controller.profileMonitor, id = widget.profile.id;
     final rules = monitor.rulesFor(id), snapshot = monitor.snapshotFor(id);
+    final supported = monitor.supportsProfile(widget.profile);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -328,13 +329,17 @@ class _MonitorProfileState extends State<_MonitorProfile> {
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           title: Text(l10n.monitorOptIn),
-          subtitle: Text(l10n.monitorOptInDetail),
+          subtitle: Text(
+            supported
+                ? l10n.monitorOptInDetail
+                : ProfileMonitor.unsupportedProfileMessage,
+          ),
           value: rules.enabled,
-          onChanged: _saving
+          onChanged: !supported || _saving
               ? null
               : (value) => _save(rules.copyWith(enabled: value)),
         ),
-        if (rules.enabled) ...[
+        if (supported && rules.enabled) ...[
           Text(
             l10n.monitorLabeledTime(
               l10n.monitorLastChecked,

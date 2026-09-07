@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_theme.dart';
+import '../../l10n/app_localizations.dart';
 import 'connection_failure.dart';
 
 /// The card the app opens on when a saved server is being reconnected, and
@@ -15,10 +16,13 @@ class SavedServerConnectionCard extends StatefulWidget {
     required this.error,
     required this.attempts,
     required this.supportsTermux,
+    this.usesConnectionToken = false,
+    this.requiresTokenReentry = false,
     required this.onChangeServer,
     required this.onRetry,
     this.onOpenTermuxSetup,
     this.onUpdatePassword,
+    this.onUpdateToken,
   });
 
   final String profileName;
@@ -30,10 +34,13 @@ class SavedServerConnectionCard extends StatefulWidget {
   /// How many attempts have failed in a row, including this one.
   final int attempts;
   final bool supportsTermux;
+  final bool usesConnectionToken;
+  final bool requiresTokenReentry;
   final VoidCallback onChangeServer;
   final VoidCallback onRetry;
   final VoidCallback? onOpenTermuxSetup;
   final VoidCallback? onUpdatePassword;
+  final VoidCallback? onUpdateToken;
 
   @override
   State<SavedServerConnectionCard> createState() =>
@@ -48,14 +55,16 @@ class _SavedServerConnectionCardState extends State<SavedServerConnectionCard> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final error = widget.error;
-    final failure = error == null
-        ? null
-        : ConnectionFailure.diagnose(
-            error: error,
+    final failure = widget.requiresTokenReentry || error != null
+        ? ConnectionFailure.diagnose(
+            error: error ?? 'Connection token is required',
             baseUrl: widget.baseUrl,
             supportsTermux: widget.supportsTermux,
+            usesConnectionToken: widget.usesConnectionToken,
+            requiresTokenReentry: widget.requiresTokenReentry,
             attempts: widget.attempts,
-          );
+          )
+        : null;
     final failed = failure != null;
 
     return Semantics(
@@ -150,6 +159,7 @@ class _SavedServerConnectionCardState extends State<SavedServerConnectionCard> {
                         onRetry: widget.onRetry,
                         onOpenTermuxSetup: widget.onOpenTermuxSetup,
                         onUpdatePassword: widget.onUpdatePassword,
+                        onUpdateToken: widget.onUpdateToken,
                       ),
                     ],
                   ],
@@ -306,12 +316,14 @@ class _Actions extends StatelessWidget {
     required this.onRetry,
     required this.onOpenTermuxSetup,
     required this.onUpdatePassword,
+    required this.onUpdateToken,
   });
   final ConnectionFailure failure;
   final VoidCallback onChangeServer;
   final VoidCallback onRetry;
   final VoidCallback? onOpenTermuxSetup;
   final VoidCallback? onUpdatePassword;
+  final VoidCallback? onUpdateToken;
 
   @override
   Widget build(BuildContext context) {
@@ -341,6 +353,17 @@ class _Actions extends StatelessWidget {
           icon: const Icon(Icons.key_rounded, size: 19),
           label: const Text('Update password'),
         ),
+      ConnectionFailureAction.updateToken when onUpdateToken != null =>
+        FilledButton.icon(
+          key: const ValueKey('saved-server-update-token'),
+          onPressed: onUpdateToken,
+          icon: const Icon(Icons.key_rounded, size: 19),
+          label: Text(
+            lookupAppLocalizations(
+              Localizations.localeOf(context),
+            ).updateConnectionToken,
+          ),
+        ),
       ConnectionFailureAction.changeServer => FilledButton.icon(
         key: const ValueKey('saved-server-change-primary'),
         onPressed: onChangeServer,
@@ -359,7 +382,9 @@ class _Actions extends StatelessWidget {
         (failure.primary == ConnectionFailureAction.openTermuxSetup &&
             onOpenTermuxSetup == null) ||
         (failure.primary == ConnectionFailureAction.updatePassword &&
-            onUpdatePassword == null);
+            onUpdatePassword == null) ||
+        (failure.primary == ConnectionFailureAction.updateToken &&
+            onUpdateToken == null);
     final primaryIsChange =
         failure.primary == ConnectionFailureAction.changeServer;
     final stacked = AppTheme.stackedActions(context);

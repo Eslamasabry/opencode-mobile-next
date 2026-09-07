@@ -3282,4 +3282,94 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get queueStorageCountUnknown =>
       'Saved queued data could not be read. The number of queued prompts is unknown.';
+
+  @override
+  String get codexConnectionVerified =>
+      'Connection verified. Save and connect to continue.';
+
+  @override
+  String get codexApprovalRecoveryNotice =>
+      'After reconnecting, review any pending approvals on your computer.';
+
+  @override
+  String get connectionTokenRejected =>
+      'The connection token was rejected. Update it to reconnect.';
+
+  @override
+  String get updateConnectionToken => 'Update token';
+
+  @override
+  String get codexDraftReconnectNotice =>
+      'Review draft stays here; nothing is sent automatically.';
+
+  @override
+  String get codexTextOnlyPrompt =>
+      'This connection supports text only. Remove attachments before sending.';
+
+  @override
+  String get codexOfflineDraftSaved =>
+      'Reconnect before sending. Your draft is kept on this device.';
+
+  @override
+  String get codexReconnectBeforeSending => 'Reconnect before sending.';
+
+  @override
+  String get connectionTypeLabel => 'CONNECTION TYPE';
+
+  @override
+  String get openCodeConnectionLabel => 'OpenCode';
+
+  @override
+  String get codexExperimentalLabel => 'Codex (experimental)';
+
+  @override
+  String get connectionDisplayName => 'Display name (optional)';
+
+  @override
+  String get connectionDisplayNameHint => 'Defaults to the server host';
+
+  @override
+  String get connectionServerAddress => 'Server address';
+
+  @override
+  String get codexAddressHint => 'wss://codex.example or ws://127.0.0.1:4500';
+
+  @override
+  String get codexAddressHelp =>
+      'Use wss:// for remote servers. ws:// is limited to this device.';
+
+  @override
+  String get codexProjectFolder => 'Project folder on server';
+
+  @override
+  String get codexTokenReentry => 'Re-enter connection token';
+
+  @override
+  String get codexTokenLabel => 'Connection token';
+
+  @override
+  String get codexTokenStorageHelp =>
+      'Stored securely on this device and sent only to this Codex server.';
+
+  @override
+  String get codexShowToken => 'Show connection token';
+
+  @override
+  String get codexHideToken => 'Hide connection token';
+
+  @override
+  String get codexPasteToken => 'Paste connection token';
+
+  @override
+  String get connectionCloseEditor => 'Close server editor';
+
+  @override
+  String get connectionCredentialUnavailable =>
+      'A saved connection credential can no longer be read. Edit the active server and re-enter it before connecting.';
+
+  @override
+  String get projectContextTitle => 'Project context';
+
+  @override
+  String get projectConfiguredFolder => 'Configured folder';
 }

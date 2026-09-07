@@ -19,14 +19,27 @@ class SessionModelChoice {
 }
 
 /// One opencode server the user can connect to.
+enum ServerBackend { openCode, codex }
+
 class ServerProfile {
   final String id;
   String name;
   String baseUrl;
+  ServerBackend backend;
   String username;
   String password; // kept in secure storage, mirrored here at runtime
   /// Runtime-only signal that the saved password could not be decrypted.
   bool requiresPasswordReentry;
+
+  /// Runtime-only Codex connection secret. It is kept in secure storage under
+  /// its own key and is intentionally excluded from profile JSON.
+  String codexToken;
+
+  /// Codex project directory stored as profile metadata, never as a secret.
+  String codexDirectory;
+
+  /// Runtime-only signal that the saved Codex token could not be restored.
+  bool requiresCodexTokenReentry;
 
   /// Protocol generation detected at Test/connect time. Additive: profiles
   /// saved before flavor detection default to [ServerFlavor.v1]. Cached so a
@@ -41,9 +54,13 @@ class ServerProfile {
     required this.id,
     required this.name,
     required this.baseUrl,
+    this.backend = ServerBackend.openCode,
     this.username = '',
     this.password = '',
     this.requiresPasswordReentry = false,
+    this.codexToken = '',
+    this.codexDirectory = '',
+    this.requiresCodexTokenReentry = false,
     this.flavor = ServerFlavor.v1,
     this.serverVersion,
   });
@@ -52,7 +69,9 @@ class ServerProfile {
     'id': id,
     'name': name,
     'baseUrl': baseUrl,
+    'backend': backend.name,
     'username': username,
+    if (backend == ServerBackend.codex) 'codexDirectory': codexDirectory,
     'flavor': flavor.name,
     if (serverVersion != null) 'serverVersion': serverVersion,
   };
@@ -61,7 +80,11 @@ class ServerProfile {
     id: j['id'] as String,
     name: (j['name'] ?? '').toString(),
     baseUrl: (j['baseUrl'] ?? '').toString(),
+    backend: j['backend'] == ServerBackend.codex.name
+        ? ServerBackend.codex
+        : ServerBackend.openCode,
     username: (j['username'] ?? '').toString(),
+    codexDirectory: (j['codexDirectory'] ?? '').toString(),
     flavor: j['flavor'] == ServerFlavor.v2.name
         ? ServerFlavor.v2
         : ServerFlavor.v1,
@@ -171,6 +194,71 @@ String? validateServerProfileUrl(
   return null;
 }
 
+/// Normalizes a bare Codex WebSocket authority without changing already
+/// explicit URLs. Loopback is intentionally the only cleartext origin.
+String normalizeCodexServerUrl(String value) {
+  final raw = value.trim();
+  if (raw.isEmpty || raw.contains('://')) return raw;
+  final bare = RegExp(r'^\[?[A-Za-z0-9._\-:]+\]?(:\d{1,5})?$');
+  if (!bare.hasMatch(raw)) return raw;
+  final parsed = _bareAuthority(raw);
+  if (parsed == null) return raw;
+  final scheme = isLoopbackHost(parsed.host) ? 'ws' : 'wss';
+  return '$scheme://${parsed.authority}';
+}
+
+/// Validates a Codex origin and returns fixed, non-sensitive copy on failure.
+String? validateCodexServerUrl(String value) {
+  final raw = value.trim();
+  if (raw.isEmpty) return 'Enter a Codex server URL.';
+  final uri = Uri.tryParse(raw);
+  if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
+    return 'Enter a complete Codex server URL.';
+  }
+  if (uri.scheme != 'wss' && uri.scheme != 'ws') {
+    return 'Codex server URLs must use wss://, or ws:// for a local server.';
+  }
+  if (uri.userInfo.isNotEmpty) {
+    return 'Do not put credentials in the Codex URL.';
+  }
+  if (uri.query.isNotEmpty || uri.fragment.isNotEmpty) {
+    return 'Remove query parameters and fragments from the Codex URL.';
+  }
+  if (uri.path.isNotEmpty && uri.path != '/') {
+    return 'Remove the path from the Codex server URL.';
+  }
+  if (uri.scheme == 'ws' && !isLoopbackHost(uri.host)) {
+    return 'Plain WebSocket is allowed only for a local Codex server.';
+  }
+  return null;
+}
+
+/// Validates the Codex project directory without interpreting or logging it.
+bool _containsControlCharacter(String value) => value.runes.any(
+  (character) => character <= 0x1f || (character >= 0x7f && character <= 0x9f),
+);
+
+String? validateCodexProjectDirectory(String value) {
+  if (value.isEmpty ||
+      value.length > 4096 ||
+      _containsControlCharacter(value) ||
+      (!value.startsWith('/') && !RegExp(r'^[A-Za-z]:[\\/]').hasMatch(value))) {
+    return 'Enter an absolute Codex project directory.';
+  }
+  return null;
+}
+
+/// Validates a Codex connection token without returning the token in errors.
+String? validateCodexConnectionToken(String value) {
+  if (value.isEmpty ||
+      value.length > 16384 ||
+      _containsControlCharacter(value) ||
+      RegExp(r'\s').hasMatch(value)) {
+    return 'Enter a valid Codex connection token.';
+  }
+  return null;
+}
+
 enum AppAppearance { system, light, dark }
 
 /// Selectable color identity; palettes live in lib/ui/theme_packs.dart.
@@ -276,6 +364,8 @@ class SecureStorageUnavailable implements Exception {
 class ProfileStore {
   static const _profilesKey = 'oc.profiles';
   static const _activeKey = 'oc.activeProfile';
+  static const _passwordKey = 'pw.';
+  static const _codexTokenKey = 'oc.codexToken.';
   static const _modelKey = 'oc.model.'; // + profileId -> "providerID|modelID"
   static const _modelExplicitKey = 'oc.modelExplicit.'; // + profileId
   static const _agentKey = 'oc.agent.'; // + profileId
@@ -318,14 +408,32 @@ class ProfileStore {
     // Restore secrets.
     for (final p in _cache) {
       try {
-        p.password = await secure.read(key: 'pw.${p.id}') ?? '';
-        p.requiresPasswordReentry = false;
+        if (p.backend == ServerBackend.codex) {
+          p.codexToken = await secure.read(key: '$_codexTokenKey${p.id}') ?? '';
+          p.requiresCodexTokenReentry = p.codexToken.isEmpty;
+          p.password = '';
+          p.requiresPasswordReentry = false;
+        } else {
+          p.password = await secure.read(key: '$_passwordKey${p.id}') ?? '';
+          p.requiresPasswordReentry = false;
+          p.codexToken = '';
+          p.requiresCodexTokenReentry = false;
+        }
       } catch (_) {
         // Keystore entries can become unreadable after a device restore or a
         // lock-screen security change. Keep the non-secret profile usable so
         // the user can re-enter its password instead of failing app startup.
-        p.password = '';
-        p.requiresPasswordReentry = true;
+        if (p.backend == ServerBackend.codex) {
+          p.codexToken = '';
+          p.requiresCodexTokenReentry = true;
+          p.password = '';
+          p.requiresPasswordReentry = false;
+        } else {
+          p.password = '';
+          p.requiresPasswordReentry = true;
+          p.codexToken = '';
+          p.requiresCodexTokenReentry = false;
+        }
       }
     }
     return _cache;
@@ -356,10 +464,22 @@ class ProfileStore {
       throw StateError('Could not save the server profile');
     }
     try {
-      if (profile.password.isEmpty) {
-        await secure.delete(key: 'pw.${profile.id}');
+      if (profile.backend == ServerBackend.codex) {
+        if (profile.codexToken.isEmpty) {
+          await secure.delete(key: '$_codexTokenKey${profile.id}');
+        } else {
+          await secure.write(
+            key: '$_codexTokenKey${profile.id}',
+            value: profile.codexToken,
+          );
+        }
+      } else if (profile.password.isEmpty) {
+        await secure.delete(key: '$_passwordKey${profile.id}');
       } else {
-        await secure.write(key: 'pw.${profile.id}', value: profile.password);
+        await secure.write(
+          key: '$_passwordKey${profile.id}',
+          value: profile.password,
+        );
       }
     } catch (error) {
       await _restoreProfiles(previousRaw);
@@ -372,6 +492,7 @@ class ProfileStore {
       rethrow;
     }
     profile.requiresPasswordReentry = false;
+    profile.requiresCodexTokenReentry = false;
     _cache = next;
   }
 
@@ -443,7 +564,7 @@ class ProfileStore {
     return failed;
   }
 
-  /// Removes the profile, its active-profile pointer, its Keystore password,
+  /// Removes the profile, its active-profile pointer, its Keystore secret,
   /// and every preference key scoped to it.
   ///
   /// Profile metadata and the password stay transactional: if the Keystore
@@ -464,9 +585,19 @@ class ProfileStore {
     if (!await prefs.setString(_profilesKey, _encode(next))) {
       throw StateError('Could not remove the server profile');
     }
+    ServerProfile? removedProfile;
+    for (final profile in _cache) {
+      if (profile.id == id) {
+        removedProfile = profile;
+        break;
+      }
+    }
+    final secretKey = removedProfile?.backend == ServerBackend.codex
+        ? '$_codexTokenKey$id'
+        : '$_passwordKey$id';
     try {
       if (previousActive == id) await setActiveId(null);
-      await secure.delete(key: 'pw.$id');
+      await secure.delete(key: secretKey);
     } catch (error) {
       await _restoreProfiles(previousRaw);
       if (previousActive == id &&

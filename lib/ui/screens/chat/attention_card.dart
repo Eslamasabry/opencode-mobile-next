@@ -513,6 +513,12 @@ class _SessionMenuSheet extends StatelessWidget {
     required this.reasoningExpanded,
     required this.timestampsVisible,
     required this.todosAvailable,
+    required this.changesAvailable,
+    required this.forkAvailable,
+    required this.revertAvailable,
+    required this.compactAvailable,
+    required this.terminalAvailable,
+    required this.subagentsAvailable,
     required this.reverted,
     required this.shared,
     required this.sharingAvailable,
@@ -524,6 +530,12 @@ class _SessionMenuSheet extends StatelessWidget {
   final bool reasoningExpanded;
   final bool timestampsVisible;
   final bool todosAvailable;
+  final bool changesAvailable;
+  final bool forkAvailable;
+  final bool revertAvailable;
+  final bool compactAvailable;
+  final bool terminalAvailable;
+  final bool subagentsAvailable;
   final bool reverted;
   final bool shared;
   final bool sharingAvailable;
@@ -565,22 +577,24 @@ class _SessionMenuSheet extends StatelessWidget {
                     label: 'Context usage',
                     value: 'context',
                   ),
-                  _SessionMenuChip(
-                    icon: Icons.difference_outlined,
-                    label: 'Changes',
-                    value: 'changes',
-                  ),
+                  if (changesAvailable)
+                    _SessionMenuChip(
+                      icon: Icons.difference_outlined,
+                      label: 'Changes',
+                      value: 'changes',
+                    ),
                   if (todosAvailable)
                     _SessionMenuChip(
                       icon: Icons.checklist_rounded,
                       label: 'Todos',
                       value: 'todos',
                     ),
-                  _SessionMenuChip(
-                    icon: Icons.account_tree_outlined,
-                    label: 'Subagent sessions',
-                    value: 'subagents',
-                  ),
+                  if (subagentsAvailable)
+                    _SessionMenuChip(
+                      icon: Icons.account_tree_outlined,
+                      label: 'Subagent sessions',
+                      value: 'subagents',
+                    ),
                 ],
               ),
             ),
@@ -608,38 +622,42 @@ class _SessionMenuSheet extends StatelessWidget {
               label: 'Retry last prompt',
               value: 'retry',
             ),
-            _SessionSheetRow(
-              icon: reverted
-                  ? Icons.settings_backup_restore_rounded
-                  : Icons.history_rounded,
-              label: reverted
-                  ? (stagedRevert
-                        ? _chatL10n(context).revertReviewTitle
-                        : 'Restore messages')
-                  : 'Revert last prompt',
-              value: reverted ? 'restore' : 'revert',
-            ),
-            _SessionSheetRow(
-              icon: Icons.fork_right_rounded,
-              label: 'Fork session',
-              value: 'fork',
-            ),
-            _SessionSheetRow(
-              icon: Icons.compress_rounded,
-              label: 'Compact context',
-              value: 'compact',
-            ),
+            if (revertAvailable)
+              _SessionSheetRow(
+                icon: reverted
+                    ? Icons.settings_backup_restore_rounded
+                    : Icons.history_rounded,
+                label: reverted
+                    ? (stagedRevert
+                          ? _chatL10n(context).revertReviewTitle
+                          : 'Restore messages')
+                    : 'Revert last prompt',
+                value: reverted ? 'restore' : 'revert',
+              ),
+            if (forkAvailable)
+              _SessionSheetRow(
+                icon: Icons.fork_right_rounded,
+                label: 'Fork session',
+                value: 'fork',
+              ),
+            if (compactAvailable)
+              _SessionSheetRow(
+                icon: Icons.compress_rounded,
+                label: 'Compact context',
+                value: 'compact',
+              ),
             if (sharingAvailable)
               _SessionSheetRow(
                 icon: shared ? Icons.public_off_rounded : Icons.public_rounded,
                 label: shared ? 'Stop sharing' : 'Share session',
                 value: shared ? 'unshare' : 'share',
               ),
-            _SessionSheetRow(
-              icon: Icons.terminal_rounded,
-              label: 'Run shell command',
-              value: 'shell',
-            ),
+            if (terminalAvailable)
+              _SessionSheetRow(
+                icon: Icons.terminal_rounded,
+                label: 'Run shell command',
+                value: 'shell',
+              ),
             _SessionSheetRow(
               icon: AppIcons.run,
               label: 'Commands',

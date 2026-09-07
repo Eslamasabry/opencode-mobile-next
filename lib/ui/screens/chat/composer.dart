@@ -41,6 +41,8 @@ class _ChatComposer extends StatelessWidget {
     this.shelfBusy = false,
     this.shelfLoading = true,
     required this.attachments,
+    required this.promptAttachmentsSupported,
+    required this.webSourcesSupported,
     required this.busy,
     required this.sending,
     this.canSendWhileBusy = false,
@@ -98,6 +100,8 @@ class _ChatComposer extends StatelessWidget {
   final bool shelfBusy;
   final bool shelfLoading;
   final List<PromptAttachment> attachments;
+  final bool promptAttachmentsSupported;
+  final bool webSourcesSupported;
   final bool busy;
   final bool sending;
 
@@ -352,7 +356,9 @@ class _ChatComposer extends StatelessWidget {
                       padding: const EdgeInsets.fromLTRB(14, 6, 14, 0),
                       child: Text(
                         key: const Key('composer-attachment-draft-note'),
-                        _chatL10n(context).draftAttachmentsLocal,
+                        promptAttachmentsSupported
+                            ? _chatL10n(context).draftAttachmentsLocal
+                            : _chatL10n(context).codexTextOnlyPrompt,
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: AppTheme.mutedOf(theme),
                         ),
@@ -390,6 +396,7 @@ class _ChatComposer extends StatelessWidget {
           constraints: BoxConstraints(maxHeight: maxInputHeight),
           child: _ComposerField(
             isolated: isolated,
+            promptAttachmentsSupported: promptAttachmentsSupported,
             controller: controller,
             focusNode: focusNode,
             onContentInserted: onContentInserted,
@@ -408,8 +415,11 @@ class _ChatComposer extends StatelessWidget {
               if (!isolated && !conversationMode)
                 _PromptToolsButton(
                   voiceOpening: voiceOpening,
+                  attachmentsSupported: promptAttachmentsSupported,
                   onSelected: _openTool,
-                  onAttach: _attachBlocked ? null : onAttach,
+                  onAttach: _attachBlocked || !promptAttachmentsSupported
+                      ? null
+                      : onAttach,
                 ),
               const SizedBox(width: 2),
               // The model/agent reads as context, not as a fifth equal
@@ -469,6 +479,8 @@ class _ChatComposer extends StatelessWidget {
       constraints: const BoxConstraints(maxWidth: 720),
       builder: (_) => _PromptToolsSheet(
         attachBlocked: _attachBlocked,
+        attachmentsSupported: promptAttachmentsSupported,
+        webSourcesSupported: webSourcesSupported,
         voiceBlocked: busy || sending,
         attachmentCount: attachments.length,
         canReusePrompt: onReusePrompt != null,
@@ -589,6 +601,7 @@ class _ComposerField extends StatelessWidget {
     this.onSubmitShortcut,
     this.readOnly = false,
     this.isolated = false,
+    this.promptAttachmentsSupported = true,
   });
 
   final TextEditingController controller;
@@ -604,6 +617,7 @@ class _ComposerField extends StatelessWidget {
   final VoidCallback? onSubmitShortcut;
   final bool readOnly;
   final bool isolated;
+  final bool promptAttachmentsSupported;
 
   @override
   Widget build(BuildContext context) {
@@ -617,7 +631,7 @@ class _ComposerField extends StatelessWidget {
       // Accepts images committed by the IME (Android commitContent): the
       // default allowed mime types cover the common raster image formats.
       enableInteractiveSelection: !isolated,
-      contentInsertionConfiguration: isolated
+      contentInsertionConfiguration: isolated || !promptAttachmentsSupported
           ? null
           : ContentInsertionConfiguration(onContentInserted: onContentInserted),
       textCapitalization: TextCapitalization.sentences,
@@ -656,6 +670,7 @@ class _ComposerField extends StatelessWidget {
 class _PromptToolsButton extends StatelessWidget {
   const _PromptToolsButton({
     required this.voiceOpening,
+    required this.attachmentsSupported,
     required this.onSelected,
     this.onAttach,
   });
@@ -663,6 +678,7 @@ class _PromptToolsButton extends StatelessWidget {
   /// Voice opening is the one tool with a visible pending state, so the
   /// collapsed button reports it rather than hiding it behind the sheet.
   final bool voiceOpening;
+  final bool attachmentsSupported;
   final Future<void> Function(BuildContext context) onSelected;
 
   /// Long press skips the sheet and opens the file picker directly; null
@@ -674,11 +690,13 @@ class _PromptToolsButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final label = attachmentsSupported ? tooltipText : 'Prompt tools';
     // The tooltip is manual so its own long-press recognizer cannot swallow
     // the attach gesture; hover still shows it on desktop, and the message
     // stays in semantics.
     return Tooltip(
-      message: tooltipText,
+      key: const Key('prompt-tools-tooltip'),
+      message: label,
       triggerMode: TooltipTriggerMode.manual,
       child: GestureDetector(
         onLongPress: onAttach,
@@ -691,13 +709,13 @@ class _PromptToolsButton extends StatelessWidget {
           // look for it.
           icon: voiceOpening
               ? Semantics(
-                  label: tooltipText,
+                  label: label,
                   child: SizedBox.square(
                     dimension: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                 )
-              : const Icon(Icons.add_rounded, semanticLabel: tooltipText),
+              : Icon(Icons.add_rounded, semanticLabel: label),
         ),
       ),
     );
@@ -710,6 +728,8 @@ class _PromptToolsButton extends StatelessWidget {
 class _PromptToolsSheet extends StatelessWidget {
   const _PromptToolsSheet({
     required this.attachBlocked,
+    required this.attachmentsSupported,
+    required this.webSourcesSupported,
     required this.voiceBlocked,
     required this.attachmentCount,
     this.canReusePrompt = false,
@@ -722,6 +742,8 @@ class _PromptToolsSheet extends StatelessWidget {
   /// Voice stays unavailable while a turn is in flight; Attach only where
   /// Send itself has to wait (no inbox).
   final bool attachBlocked;
+  final bool attachmentsSupported;
+  final bool webSourcesSupported;
   final bool voiceBlocked;
   final int attachmentCount;
   final bool canReusePrompt;
@@ -752,23 +774,25 @@ class _PromptToolsSheet extends StatelessWidget {
               subtitle: const Text('Slash commands and agents'),
               onTap: () => Navigator.pop(context, _PromptTool.commands),
             ),
-            ListTile(
-              key: const Key('composer-tool-attach'),
-              enabled: !attachBlocked,
-              leading: const Icon(Icons.attach_file_rounded),
-              title: const Text('Attach file'),
-              subtitle: Text(
-                attachBlocked
-                    ? 'Available when the current run finishes'
-                    : attachmentCount == 0
-                    ? 'Add an image or file to the prompt'
-                    : '$attachmentCount attached',
+            if (attachmentsSupported)
+              ListTile(
+                key: const Key('composer-tool-attach'),
+                enabled: !attachBlocked,
+                leading: const Icon(Icons.attach_file_rounded),
+                title: const Text('Attach file'),
+                subtitle: Text(
+                  attachBlocked
+                      ? 'Available when the current run finishes'
+                      : attachmentCount == 0
+                      ? 'Add an image or file to the prompt'
+                      : '$attachmentCount attached',
+                ),
+                onTap: attachBlocked
+                    ? null
+                    : () => Navigator.pop(context, _PromptTool.attach),
               ),
-              onTap: attachBlocked
-                  ? null
-                  : () => Navigator.pop(context, _PromptTool.attach),
-            ),
-            if (platformCapabilities.supportsPromptPhotos) ...[
+            if (attachmentsSupported &&
+                platformCapabilities.supportsPromptPhotos) ...[
               ListTile(
                 key: const Key('composer-tool-gallery'),
                 enabled: !attachBlocked,
@@ -808,15 +832,16 @@ class _PromptToolsSheet extends StatelessWidget {
                     ? null
                     : () => Navigator.pop(context, _PromptTool.voice),
               ),
-            ListTile(
-              enabled: !attachBlocked,
-              leading: const Icon(Icons.link_rounded),
-              title: Text(_chatL10n(context).webSourcesTitle),
-              subtitle: Text(_chatL10n(context).webSourcesEntryDetail),
-              onTap: attachBlocked
-                  ? null
-                  : () => Navigator.pop(context, _PromptTool.webSources),
-            ),
+            if (webSourcesSupported)
+              ListTile(
+                enabled: !attachBlocked,
+                leading: const Icon(Icons.link_rounded),
+                title: Text(_chatL10n(context).webSourcesTitle),
+                subtitle: Text(_chatL10n(context).webSourcesEntryDetail),
+                onTap: attachBlocked
+                    ? null
+                    : () => Navigator.pop(context, _PromptTool.webSources),
+              ),
             if (platformCapabilities.supportsVoiceConversation)
               ListTile(
                 key: const Key('composer-tool-conversation'),

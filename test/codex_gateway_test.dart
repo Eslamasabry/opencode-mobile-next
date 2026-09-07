@@ -76,6 +76,21 @@ class _Fixture {
     directory: '/project',
   );
   Map<String, dynamic> thread = _thread(turns: [_turn()]);
+  String? gatedMethod;
+  Completer<void>? gate;
+
+  void gateNext(String method) {
+    gatedMethod = method;
+    gate = Completer<void>();
+  }
+
+  void releaseGate() {
+    final pending = gate;
+    gate = null;
+    gatedMethod = null;
+    pending?.complete();
+  }
+
   _Fixture() {
     socket.handler = (request) {
       final id = request['id'];
@@ -92,8 +107,124 @@ class _Fixture {
         'turn/start' => <String, dynamic>{'turn': _turn(status: 'inProgress')},
         _ => <String, dynamic>{},
       };
+      if (request['method'] == gatedMethod) {
+        final pending = gate!;
+        gatedMethod = null;
+        unawaited(pending.future.then((_) => socket.result(id, result)));
+        return;
+      }
       socket.result(id, result);
     };
+  }
+}
+
+class _AuthenticationRecoveryFixture {
+  final first = _Socket();
+  var connectionAttempts = 0;
+  late final transport = CodexTransport(
+    endpoint: 'wss://fixture.invalid',
+    token: 'fixture-token',
+    socketFactory: (_, _) async {
+      if (connectionAttempts++ == 0) return first;
+      throw CodexFailure(CodexFailureKind.authentication);
+    },
+  );
+  late final gateway = CodexGateway(
+    transport: transport,
+    directory: '/project',
+  );
+
+  _AuthenticationRecoveryFixture() {
+    first.handler = (request) {
+      if (request['method'] == 'initialize') {
+        first.result(request['id'], {'userAgent': 'codex/0.153.4'});
+      }
+    };
+  }
+}
+
+class _UncertainNewThreadFixture {
+  final first = _Socket();
+  final replacement = _Socket();
+  late final transport = CodexTransport(
+    endpoint: 'wss://fixture.invalid',
+    token: 'fixture-token',
+    socketFactory: (_, _) async => first.closed ? replacement : first,
+  );
+  late final gateway = CodexGateway(
+    transport: transport,
+    directory: '/project',
+  );
+  Map<String, dynamic> thread = _thread(turns: const []);
+  bool loseNextTurn = false;
+
+  _UncertainNewThreadFixture() {
+    first.handler = (request) => _respond(first, request);
+    replacement.handler = (request) => _respond(replacement, request);
+  }
+
+  void _respond(_Socket socket, Map<String, dynamic> request) {
+    final id = request['id'];
+    final method = request['method'];
+    if (id == null || method is! String) return;
+    if (method == 'initialize') {
+      socket.result(id, {'userAgent': 'codex/0.153.4'});
+    } else if (method == 'thread/start') {
+      socket.result(id, {'thread': thread});
+    } else if (method == 'thread/read' || method == 'thread/resume') {
+      socket.result(id, {'thread': thread});
+    } else if (method == 'turn/start') {
+      if (loseNextTurn) {
+        loseNextTurn = false;
+        thread = _thread(turns: [_turn()]);
+        unawaited(socket.close());
+      } else {
+        socket.result(id, {'turn': _turn(status: 'inProgress')});
+      }
+    }
+  }
+}
+
+Future<void> _expectReadMutationScopeRace(
+  Future<void> Function(_Fixture) operation, {
+  required String forbiddenMethod,
+  bool activeTurn = false,
+}) async {
+  final fixture = _Fixture();
+  fixture.thread = _thread(
+    turns: activeTurn ? [_turn(status: 'inProgress')] : [_turn()],
+  );
+  fixture.gateNext('thread/read');
+  try {
+    final pending = operation(fixture);
+    await pumpEventQueue(times: 3);
+    expect(
+      fixture.socket.sent.where(
+        (request) => request['method'] == 'thread/read',
+      ),
+      hasLength(1),
+    );
+    fixture.gateway.setLocation(directory: '/replacement');
+    fixture.releaseGate();
+    await expectLater(
+      pending,
+      throwsA(
+        isA<CodexFailure>().having(
+          (error) => error.kind,
+          'kind',
+          CodexFailureKind.scopeMismatch,
+        ),
+      ),
+    );
+    expect(
+      fixture.socket.sent.where(
+        (request) => request['method'] == forbiddenMethod,
+      ),
+      isEmpty,
+    );
+  } finally {
+    fixture.releaseGate();
+    fixture.gateway.close();
   }
 }
 
@@ -139,6 +270,26 @@ class _RecoveryFixture {
 }
 
 void main() {
+  test('Codex capabilities hide unsupported product operations', () {
+    final capabilities = codexServerCapabilities;
+    expect([
+      capabilities.promptAttachments,
+      capabilities.promptAgentMentions,
+      capabilities.offlinePromptQueue,
+      capabilities.fileBrowsing,
+      capabilities.terminal,
+      capabilities.projectManagement,
+      capabilities.globalSessionSearch,
+      capabilities.sessionDiff,
+      capabilities.sessionFork,
+      capabilities.sessionRevert,
+      capabilities.sessionImportExport,
+      capabilities.sessionNotes,
+      capabilities.serverCatalog,
+      capabilities.profileAttentionPolling,
+    ], everyElement(isFalse));
+  });
+
   test('endpoint policy rejects remote cleartext and URL credentials', () {
     for (final url in [
       'ws://192.168.1.8:4099',
@@ -504,6 +655,124 @@ void main() {
         expect(statuses.last, StreamStatus.reconnecting);
       } finally {
         await channel.dispose();
+        fixture.gateway.close();
+      }
+    },
+  );
+
+  test('read to resume never crosses a location generation', () async {
+    await _expectReadMutationScopeRace(
+      (fixture) => fixture.gateway.messages('thread-1').then<void>((_) {}),
+      forbiddenMethod: 'thread/resume',
+    );
+  });
+
+  test('read to delete never crosses a location generation', () async {
+    await _expectReadMutationScopeRace(
+      (fixture) => fixture.gateway.deleteSession('thread-1'),
+      forbiddenMethod: 'thread/delete',
+    );
+  });
+
+  test('read to rename never crosses a location generation', () async {
+    await _expectReadMutationScopeRace(
+      (fixture) => fixture.gateway.renameSession('thread-1', 'renamed'),
+      forbiddenMethod: 'thread/name/set',
+    );
+  });
+
+  test('read to abort never crosses a location generation', () async {
+    await _expectReadMutationScopeRace(
+      (fixture) => fixture.gateway.abort('thread-1'),
+      forbiddenMethod: 'turn/interrupt',
+      activeTurn: true,
+    );
+  });
+
+  test(
+    'reconnect authentication failure reaches the event error channel',
+    () async {
+      final fixture = _AuthenticationRecoveryFixture();
+      final errors = <Object>[];
+      final statuses = <StreamStatus>[];
+      final channel = fixture.gateway.openEventChannel(
+        onEvent: (_) {},
+        onStatus: statuses.add,
+        onError: errors.add,
+      );
+      try {
+        channel.start();
+        await pumpEventQueue(times: 5);
+        expect(fixture.transport.connected, isTrue);
+        await fixture.first.close();
+        await Future<void>.delayed(const Duration(milliseconds: 1100));
+        expect(errors, hasLength(1));
+        expect(errors.single, isA<CodexFailure>());
+        expect(
+          (errors.single as CodexFailure).kind,
+          CodexFailureKind.authentication,
+        );
+        expect(statuses, contains(StreamStatus.disconnected));
+      } finally {
+        await channel.dispose();
+        fixture.gateway.close();
+      }
+    },
+  );
+
+  test(
+    'uncertain first turn on a new thread requires history recovery without resend',
+    () async {
+      final fixture = _UncertainNewThreadFixture();
+      try {
+        final created = await fixture.gateway.createSession();
+        fixture.loseNextTurn = true;
+        await expectLater(
+          fixture.gateway.promptAsync(created.id, text: 'first attempt'),
+          throwsA(
+            isA<CodexFailure>().having(
+              (error) => error.kind,
+              'kind',
+              CodexFailureKind.deliveryUnknown,
+            ),
+          ),
+        );
+        expect(
+          fixture.first.sent.where(
+            (request) => request['method'] == 'turn/start',
+          ),
+          hasLength(1),
+        );
+
+        final recovered = await fixture.gateway.messages(created.id);
+        expect(recovered, isNotEmpty);
+        expect(
+          fixture.replacement.sent.where(
+            (request) => request['method'] == 'thread/read',
+          ),
+          hasLength(1),
+        );
+        expect(
+          fixture.replacement.sent.where(
+            (request) => request['method'] == 'thread/resume',
+          ),
+          hasLength(1),
+        );
+        expect(
+          fixture.replacement.sent.where(
+            (request) => request['method'] == 'turn/start',
+          ),
+          isEmpty,
+        );
+
+        await fixture.gateway.promptAsync(created.id, text: 'after recovery');
+        expect(
+          fixture.replacement.sent.where(
+            (request) => request['method'] == 'turn/start',
+          ),
+          hasLength(1),
+        );
+      } finally {
         fixture.gateway.close();
       }
     },

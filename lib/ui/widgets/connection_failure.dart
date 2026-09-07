@@ -11,6 +11,7 @@ enum ConnectionFailureAction {
   retry,
   openTermuxSetup,
   updatePassword,
+  updateToken,
   changeServer,
 }
 
@@ -50,6 +51,8 @@ class ConnectionFailure {
     required String error,
     required String baseUrl,
     required bool supportsTermux,
+    bool usesConnectionToken = false,
+    bool requiresTokenReentry = false,
     int attempts = 1,
   }) {
     final uri = Uri.tryParse(baseUrl);
@@ -73,12 +76,73 @@ class ConnectionFailure {
     final serverError = RegExp(r'http 5\d\d').hasMatch(lower);
     final unhealthy = lower.contains('unhealthy');
     final loopback = _loopback(uri);
+    final tokenRejected =
+        usesConnectionToken &&
+        (unauthorized ||
+            lower.contains('authentication') ||
+            lower.contains('token') &&
+                (lower.contains('reject') || lower.contains('invalid')));
 
     final retried = attempts >= 3
         ? 'Tried $attempts times. Retrying will not start a server that is '
               'not running.'
         : null;
 
+    if (usesConnectionToken && requiresTokenReentry) {
+      return ConnectionFailure(
+        title: 'Connection token required',
+        explanation:
+            'This Codex server needs a connection token before the app can '
+            'connect.',
+        checks: [
+          'Open server settings and enter the Codex connection token.',
+          ?retried,
+        ],
+        primary: ConnectionFailureAction.updateToken,
+        rawError: error,
+      );
+    }
+    if (tokenRejected) {
+      return ConnectionFailure(
+        title: 'Connection token rejected',
+        explanation:
+            'The Codex server answered, but it did not accept the saved '
+            'connection token.',
+        checks: [
+          'Open server settings and enter a current Codex connection token.',
+          ?retried,
+        ],
+        primary: ConnectionFailureAction.updateToken,
+        rawError: error,
+      );
+    }
+    if (usesConnectionToken && (nothingAnswered || timedOut)) {
+      final local = loopback;
+      return ConnectionFailure(
+        title: local
+            ? 'Codex listener unavailable'
+            : 'Codex endpoint unreachable',
+        explanation: local
+            ? '$hostLabel:$port is a local Codex listener, but nothing '
+                  'answered.'
+            : 'Nothing answered at the remote Codex endpoint $hostLabel:$port.',
+        checks: local
+            ? [
+                'Start the Codex listener on this device.',
+                'If it is behind a tunnel, keep the tunnel running and verify '
+                    'its local endpoint.',
+                ?retried,
+              ]
+            : [
+                'Use the Codex wss:// endpoint or an active secure tunnel.',
+                'Check that the remote Codex listener is reachable from this '
+                    'device.',
+                ?retried,
+              ],
+        primary: ConnectionFailureAction.retry,
+        rawError: error,
+      );
+    }
     if (unauthorized) {
       return ConnectionFailure(
         title: 'Password rejected',
@@ -110,7 +174,8 @@ class ConnectionFailure {
         rawError: error,
       );
     }
-    if (loopback &&
+    if (!usesConnectionToken &&
+        loopback &&
         (nothingAnswered || timedOut || !serverError && !unhealthy)) {
       return ConnectionFailure(
         title: 'Nothing is listening on this device',
@@ -186,7 +251,9 @@ class ConnectionFailure {
       title: 'Could not connect',
       explanation: 'The connection to $hostLabel failed. Details below.',
       checks: [
-        'Is opencode serve running, and is this the right address?',
+        usesConnectionToken
+            ? 'Is the Codex listener running, and is this the right address?'
+            : 'Is opencode serve running, and is this the right address?',
         ?retried,
       ],
       primary: ConnectionFailureAction.retry,

@@ -70,12 +70,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
       builder: (context, _) {
         final l10n = AppLocalizations.of(context);
         final group0 = <_DestinationRow>[
-          _DestinationRow(
-            icon: Icons.model_training_outlined,
-            title: l10n.libraryModelsAgentsTitle,
-            keywords: 'AI reasoning favorites recent',
-            onTap: () => _open(context, CatalogScreen(controller: controller)),
-          ),
+          if (controller.capabilities.serverCatalog)
+            _DestinationRow(
+              icon: Icons.model_training_outlined,
+              title: l10n.libraryModelsAgentsTitle,
+              keywords: 'AI reasoning favorites recent',
+              onTap: () =>
+                  _open(context, CatalogScreen(controller: controller)),
+            ),
           _DestinationRow(
             icon: Icons.cloud_outlined,
             title: l10n.libraryProvidersTitle,
@@ -117,16 +119,18 @@ class _LibraryScreenState extends State<LibraryScreen> {
             ),
           // §5: Terminal gives up its navigation slot to Activity and
           // is reached from here (and from a session) instead.
-          _DestinationRow(
-            key: const ValueKey('library-terminal'),
-            icon: Icons.terminal_outlined,
-            title: l10n.libraryTerminalTitle,
-            keywords: 'shell command line',
-            onTap: () => _open(context, TerminalPage(controller: controller)),
-          ),
+          if (controller.capabilities.terminal)
+            _DestinationRow(
+              key: const ValueKey('library-terminal'),
+              icon: Icons.terminal_outlined,
+              title: l10n.libraryTerminalTitle,
+              keywords: 'shell command line',
+              onTap: () => _open(context, TerminalPage(controller: controller)),
+            ),
         ].where((card) => card.matches(_query)).toList();
         final group1 = <_DestinationRow>[
-          if (controller.repository is SessionImportGateway &&
+          if (controller.capabilities.sessionImportExport &&
+              controller.repository is SessionImportGateway &&
               (controller.repository as SessionImportGateway)
                   .sessionImportSupported)
             _DestinationRow(

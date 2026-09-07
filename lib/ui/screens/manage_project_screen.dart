@@ -22,10 +22,9 @@ class ManageProjectScreen extends StatefulWidget {
     required this.project,
   });
 
-  /// §7 rule 1: a destination whose whole contents are gated away is noise.
-  /// Switching projects and project health have a backend on every protocol
-  /// generation, so the route is never an empty dead end — but the entry row
-  /// asks first rather than assuming it.
+  /// The route remains useful as a read-only context surface when a backend
+  /// cannot manage projects. It shows the configured folder without exposing
+  /// actions that would call unsupported project APIs.
   static bool isAvailable(ServerCapabilities capabilities) => true;
 
   @override
@@ -64,29 +63,31 @@ class _ManageProjectScreenState extends State<ManageProjectScreen> {
             ),
             const Divider(height: 1),
             const SectionLabel('Project'),
-            ListTile(
-              key: const ValueKey('switch-project-entry'),
-              leading: const Icon(Icons.swap_horiz_rounded),
-              title: const Text('Switch project'),
-              subtitle: const Text(
-                'Choose another project opened by this server',
+            if (capabilities.projectManagement) ...[
+              ListTile(
+                key: const ValueKey('switch-project-entry'),
+                leading: const Icon(Icons.swap_horiz_rounded),
+                title: const Text('Switch project'),
+                subtitle: const Text(
+                  'Choose another project opened by this server',
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: _switchProject,
               ),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: _switchProject,
-            ),
-            const SectionLabel('Coding'),
-            ListTile(
-              key: const ValueKey('worktrees-entry'),
-              leading: const Icon(Icons.call_split_rounded),
-              title: const Text('Worktrees'),
-              subtitle: Text(
-                project == null
-                    ? 'Choose a project first'
-                    : 'Create and manage isolated Git branches',
+              const SectionLabel('Coding'),
+              ListTile(
+                key: const ValueKey('worktrees-entry'),
+                leading: const Icon(Icons.call_split_rounded),
+                title: const Text('Worktrees'),
+                subtitle: Text(
+                  project == null
+                      ? 'Choose a project first'
+                      : 'Create and manage isolated Git branches',
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: project == null ? null : _openWorktrees,
               ),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: project == null ? null : _openWorktrees,
-            ),
+            ],
             // §7 rows 1–4: no workspace inventory, adapter discovery or sync
             // on v2, so the whole destination goes.
             if (capabilities.managedWorkspaces)
@@ -102,16 +103,17 @@ class _ManageProjectScreenState extends State<ManageProjectScreen> {
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: project == null ? null : _openManagedWorkspaces,
               ),
-            ListTile(
-              key: const ValueKey('project-health-entry'),
-              leading: const Icon(Icons.monitor_heart_outlined),
-              title: const Text('Project health'),
-              subtitle: const Text(
-                'Branch, changed files, language services, and formatters',
+            if (capabilities.projectManagement)
+              ListTile(
+                key: const ValueKey('project-health-entry'),
+                leading: const Icon(Icons.monitor_heart_outlined),
+                title: const Text('Project health'),
+                subtitle: const Text(
+                  'Branch, changed files, language services, and formatters',
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: _openProjectHealth,
               ),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: _openProjectHealth,
-            ),
           ],
         ),
       ),
@@ -119,6 +121,7 @@ class _ManageProjectScreenState extends State<ManageProjectScreen> {
   }
 
   Future<void> _switchProject() async {
+    if (!widget.controller.capabilities.projectManagement) return;
     final changed = await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
         builder: (_) => ProjectsScreen(
@@ -138,6 +141,7 @@ class _ManageProjectScreenState extends State<ManageProjectScreen> {
   }
 
   Future<void> _openWorktrees() async {
+    if (!widget.controller.capabilities.projectManagement) return;
     final project = widget.project;
     if (project == null) return;
     await Navigator.of(context).push<bool>(
@@ -150,6 +154,7 @@ class _ManageProjectScreenState extends State<ManageProjectScreen> {
   }
 
   Future<void> _openManagedWorkspaces() async {
+    if (!widget.controller.capabilities.managedWorkspaces) return;
     final project = widget.project;
     if (project == null) return;
     final changed = await Navigator.of(context).push<bool>(
@@ -164,6 +169,7 @@ class _ManageProjectScreenState extends State<ManageProjectScreen> {
   }
 
   Future<void> _openProjectHealth() async {
+    if (!widget.controller.capabilities.projectManagement) return;
     final repository = await widget.controller.prepareActionRepository();
     if (!mounted) return;
     if (repository == null) return;

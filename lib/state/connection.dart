@@ -7,6 +7,8 @@ import 'package:opencode_sdk/opencode_sdk.dart' as sdk;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/models.dart';
+import '../codex/gateway.dart';
+import '../codex/transport.dart' show CodexFailure, CodexFailureKind;
 import '../api/opencode_api.dart';
 import '../api2/models.dart' show Api2Delivery, Api2FormInfo, Api2InboxItem;
 import '../api/product_repository.dart';
@@ -324,7 +326,8 @@ class ConnectionController extends ChangeNotifier {
         targetProfile.baseUrl != target.serverUrl ||
         target.sourceIdentity !=
             ProfileMonitor.routeSourceIdentity(targetProfile) ||
-        targetProfile.requiresPasswordReentry) {
+        targetProfile.requiresPasswordReentry ||
+        !profileMonitor.supportsProfile(targetProfile)) {
       return false;
     }
     final before = (connectionRevision, locationRevision, profile?.id);
@@ -476,6 +479,7 @@ class ConnectionController extends ChangeNotifier {
   final OpenCodeApiFactory _apiFactory;
   final ProductRepositoryFactory _repositoryFactory;
   final V2GatewayPairFactory _v2GatewayFactory;
+  final V2GatewayPairFactory _codexGatewayFactory;
   final EventStreamFactory _eventStreamFactory;
   final EventStreamFactory? _globalEventStreamFactory;
   final LocalWakeLockEnsurer _localWakeLockEnsurer;
@@ -721,6 +725,7 @@ class ConnectionController extends ChangeNotifier {
     MonitorGatewayFactory? monitorGatewayFactory,
     ProductRepositoryFactory? repositoryFactory,
     V2GatewayPairFactory? v2GatewayFactory,
+    V2GatewayPairFactory? codexGatewayFactory,
     EventStreamFactory? eventStreamFactory,
     EventStreamFactory? globalEventStreamFactory,
     BackgroundLiveController? backgroundLive,
@@ -739,6 +744,7 @@ class ConnectionController extends ChangeNotifier {
        _apiFactory = apiFactory ?? _createApi,
        _repositoryFactory = repositoryFactory ?? _createRepository,
        _v2GatewayFactory = v2GatewayFactory ?? _createV2GatewayPair,
+       _codexGatewayFactory = codexGatewayFactory ?? _createCodexGatewayPair,
        _eventStreamFactory = eventStreamFactory ?? _createEventStream,
        _globalEventStreamFactory =
            globalEventStreamFactory ??
@@ -1083,7 +1089,11 @@ class ConnectionController extends ChangeNotifier {
   Future<void> _ensureLocalServerWakeLock() async {
     if (_disposed || !keepLiveInBackground) return;
     final profile = _connectedProfile;
-    if (profile == null || !_isLoopbackUrl(profile.baseUrl)) return;
+    if (profile == null ||
+        profile.backend == ServerBackend.codex ||
+        !_isLoopbackUrl(profile.baseUrl)) {
+      return;
+    }
     try {
       await _localWakeLockEnsurer();
     } catch (_) {
@@ -1125,6 +1135,16 @@ class ConnectionController extends ChangeNotifier {
     );
   }
 
+  static ({ServerGateway gateway, ServerOperationsGateway operations})
+  _createCodexGatewayPair(ServerProfile profile) {
+    final gateway = CodexGateway.connect(
+      baseUrl: profile.baseUrl,
+      token: profile.codexToken,
+      directory: profile.codexDirectory,
+    );
+    return (gateway: gateway, operations: gateway);
+  }
+
   /// Constructs the transport pair for [profile]'s cached flavor. The two
   /// v1 factories stay the injected test seams; v2 goes through
   /// [_v2GatewayFactory].
@@ -1134,6 +1154,9 @@ class ConnectionController extends ChangeNotifier {
       throw StateError(
         'An isolated session cannot create a network transport.',
       );
+    }
+    if (profile.backend == ServerBackend.codex) {
+      return _codexGatewayFactory(profile);
     }
     if (profile.flavor == ServerFlavor.v2) return _v2GatewayFactory(profile);
     final v1Api = _apiFactory(profile);
@@ -1194,10 +1217,16 @@ class ConnectionController extends ChangeNotifier {
 
   /// Feature switches for the live transport. Screens gate on these — never on
   /// [serverFlavor], which is only ever copy ("OpenCode 2 servers"). Before a
-  /// connection exists we report the v1 superset so nothing flickers away while
-  /// connecting; the gateway narrows them once attached.
+  /// connection exists a Codex profile retains its restricted capability set;
+  /// attaching the live gateway supplies the authoritative set.
   ServerCapabilities get capabilities =>
-      api?.capabilities ?? ServerCapabilities.allV1;
+      api?.capabilities ??
+      ((_connectedProfile ?? profile)?.backend == ServerBackend.codex
+          ? codexServerCapabilities
+          : ServerCapabilities.allV1);
+
+  bool get usesConnectionToken =>
+      (_connectedProfile ?? profile)?.backend == ServerBackend.codex;
 
   void _acceptRunningServerVersion(String? rawVersion) {
     final next = rawVersion?.trim() ?? '';
@@ -1448,11 +1477,18 @@ class ConnectionController extends ChangeNotifier {
     _lifecycleSuspended = false;
     _lifecycleWasBackgrounded = false;
     _lifecycleResume = null;
-    final validationError = validateServerProfileUrl(
-      profile.baseUrl,
-      username: profile.username,
-      password: profile.password,
-    );
+    final isCodex = profile.backend == ServerBackend.codex;
+    final validationError = isCodex
+        ? (profile.requiresCodexTokenReentry
+              ? 'The saved connection token is unavailable. Enter it again.'
+              : validateCodexServerUrl(profile.baseUrl) ??
+                    validateCodexConnectionToken(profile.codexToken) ??
+                    validateCodexProjectDirectory(profile.codexDirectory))
+        : validateServerProfileUrl(
+            profile.baseUrl,
+            username: profile.username,
+            password: profile.password,
+          );
     if (validationError != null) {
       _beginGeneration();
       _retireTransport();
@@ -1463,17 +1499,20 @@ class ConnectionController extends ChangeNotifier {
     }
     final generation = _beginGeneration();
     _retireTransport();
+    // The folder edited in a Codex connection is authoritative on connect.
+    // Restoring an older OpenCode-style selection would undo that user edit.
+    final initialDirectory = isCodex ? profile.codexDirectory : null;
     final pair = _buildTransportPair(profile);
     final currentApi = pair.gateway
-      ..setLocation(directory: null, workspace: null);
+      ..setLocation(directory: initialDirectory, workspace: null);
     final currentRepository = pair.operations
-      ..setLocation(directory: null, workspace: null);
+      ..setLocation(directory: initialDirectory, workspace: null);
     api = currentApi;
     repository = currentRepository;
     _connectedProfile = profile;
     availableServerVersion = null;
     installedServerVersion = null;
-    directory = null;
+    directory = initialDirectory;
     workspace = null;
     locationRevision += 1;
     _clearLocationData();
@@ -1506,7 +1545,8 @@ class ConnectionController extends ChangeNotifier {
       _acceptRunningServerVersion(health.version);
     } catch (e) {
       if (!_isCurrent(generation, currentApi)) return;
-      if (redetectOnFailure && _suggestsWrongFlavor(e)) {
+      _noteAuthFailure(e);
+      if (!isCodex && redetectOnFailure && _suggestsWrongFlavor(e)) {
         final corrected = await _redetectFlavor(profile);
         if (!_isCurrent(generation, currentApi)) return;
         if (corrected != null) {
@@ -1536,12 +1576,14 @@ class ConnectionController extends ChangeNotifier {
     sessionModels = store.sessionModelsFor(profile.id);
     _modelLibrary = store.modelLibraryFor(profile.id);
 
-    final savedLocation = await _validatedSavedLocation(
-      profile,
-      currentRepository,
-      generation,
-      currentApi,
-    );
+    final savedLocation = isCodex
+        ? null
+        : await _validatedSavedLocation(
+            profile,
+            currentRepository,
+            generation,
+            currentApi,
+          );
     if (!_isCurrent(generation, currentApi)) return;
     if (savedLocation != null) {
       await _selectLocation(
@@ -2006,11 +2048,18 @@ class ConnectionController extends ChangeNotifier {
   /// Marks a mid-session Basic-auth rejection from the v2 transport so the
   /// connection banner can offer "Update password" instead of retry loops.
   void _noteAuthFailure(Object error) {
-    if (error is Api2AuthRequired ||
+    if ((error is CodexFailure &&
+            error.kind == CodexFailureKind.authentication) ||
+        error is Api2AuthRequired ||
         (error is ApiException &&
             error.statusCode == 401 &&
-            _connectedProfile?.flavor == ServerFlavor.v2)) {
+            (_connectedProfile?.flavor == ServerFlavor.v2 ||
+                _connectedProfile?.backend == ServerBackend.codex))) {
       passwordRejected = true;
+      final rejectedProfile = _connectedProfile;
+      if (rejectedProfile?.backend == ServerBackend.codex) {
+        rejectedProfile!.requiresCodexTokenReentry = true;
+      }
     }
   }
 
@@ -2029,6 +2078,7 @@ class ConnectionController extends ChangeNotifier {
   /// address actually speaks. Returns the probe result when it disagrees with
   /// the profile's cached flavor (persisting the correction), null otherwise.
   Future<ServerProbeResult?> _redetectFlavor(ServerProfile profile) async {
+    if (profile.backend == ServerBackend.codex) return null;
     try {
       final result = await serverProbe(
         baseUrl: profile.baseUrl,
@@ -2283,11 +2333,15 @@ class ConnectionController extends ChangeNotifier {
             final working =
                 (msg.time == null || !msg.time!.isDone) &&
                 msg.errorText == null;
-            if (working) {
-              busySessions.add(msg.sessionID);
-              _markSessionAttentionActive(msg.sessionID);
-            } else {
-              busySessions.remove(msg.sessionID);
+            // A Codex turn can contain several completed items and still be
+            // running. Its explicit session status owns the busy state.
+            if (capabilities.messageCompletionEndsRun) {
+              if (working) {
+                busySessions.add(msg.sessionID);
+                _markSessionAttentionActive(msg.sessionID);
+              } else {
+                busySessions.remove(msg.sessionID);
+              }
             }
             notifyListeners();
           }
@@ -4474,6 +4528,8 @@ class ConnectionController extends ChangeNotifier {
   /// caller can keep the composer and explain why it was not saved.
   Future<bool> queuePrompt(QueuedPrompt prompt) =>
       _serializeQueueChange(() async {
+        final target = store.profiles.where((p) => p.id == prompt.profileID);
+        if (target.any((p) => p.backend == ServerBackend.codex)) return false;
         if (prompt.payloadBytes > OfflineQueueStore.maxEntryBytes) return false;
         final eviction = OfflineQueueStore.enforceLimits([..._queue, prompt]);
         // The new entry losing its own eviction pass means the queue could not
@@ -4885,7 +4941,11 @@ class ConnectionController extends ChangeNotifier {
   /// server is still unreachable); a declared server failure keeps that
   /// entry with its error inline and continues with the next.
   Future<void> flushOfflineQueue() async {
-    if (_flushingOfflineQueue || _disposed) return;
+    if (_flushingOfflineQueue ||
+        _disposed ||
+        !capabilities.offlinePromptQueue) {
+      return;
+    }
     final profileID = profile?.id;
     if (profileID == null) return;
     final origin = (profileID, profile?.baseUrl, directory, workspace);
@@ -6508,6 +6568,15 @@ class ConnectionController extends ChangeNotifier {
   }) async {
     final profile = _connectedProfile;
     if (profile == null || api == null) return;
+    if (profile.backend == ServerBackend.codex) {
+      directory ??= profile.codexDirectory;
+      if (workspace != null ||
+          validateCodexProjectDirectory(directory) != null) {
+        locationError = 'Choose a valid project folder for this connection.';
+        notifyListeners();
+        return;
+      }
+    }
     if (!preserveNotice) locationNotice = null;
     if (this.directory == directory && this.workspace == workspace) {
       try {

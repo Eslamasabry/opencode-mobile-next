@@ -61,6 +61,8 @@ Future<void> showPermissionSheet(
           supportsRejectMessage: controller.permissionSupportsRejectMessage(
             permission.id,
           ),
+          allowPersistentPermission:
+              controller.capabilities.persistentPermissionGrants,
           contextLabel: contextLabel,
           onShowSource: onShowSource,
         ),
@@ -77,6 +79,7 @@ class PermissionSheet extends StatefulWidget {
     required this.permission,
     required this.onReply,
     required this.supportsRejectMessage,
+    this.allowPersistentPermission = true,
     this.contextLabel = 'in this chat',
     this.onShowSource,
     this.routes,
@@ -86,6 +89,7 @@ class PermissionSheet extends StatefulWidget {
   final PermissionRequest permission;
   final Future<void> Function(String reply, {String? message}) onReply;
   final bool supportsRejectMessage;
+  final bool allowPersistentPermission;
   final String contextLabel;
   final VoidCallback? onShowSource;
   final RequestRoutes? routes;
@@ -117,6 +121,7 @@ class _PermissionSheetState extends State<PermissionSheet> {
   }
 
   Future<void> _reply(String reply, {String? message}) async {
+    if (reply == 'always' && !widget.allowPersistentPermission) return;
     if (_replying || !_routes.isPending) return;
     setState(() {
       _replying = true;
@@ -323,7 +328,8 @@ class _PermissionSheetState extends State<PermissionSheet> {
                   const SizedBox(height: 12),
                   resources,
                 ],
-                if (permission.always.isNotEmpty) ...[
+                if (widget.allowPersistentPermission &&
+                    permission.always.isNotEmpty) ...[
                   const SizedBox(height: 14),
                   Text(
                     'Always allow would also cover',
@@ -478,11 +484,12 @@ class _PermissionSheetState extends State<PermissionSheet> {
               : const Text('Allow once'),
         ),
         const SizedBox(height: 8),
-        OutlinedButton(
-          key: const Key('permission-allow-always'),
-          onPressed: _replying ? null : () => _reply('always'),
-          child: const Text('Always allow'),
-        ),
+        if (widget.allowPersistentPermission)
+          OutlinedButton(
+            key: const Key('permission-allow-always'),
+            onPressed: _replying ? null : () => _reply('always'),
+            child: const Text('Always allow'),
+          ),
         const SizedBox(height: 4),
         TextButton(
           key: const Key('permission-reject'),

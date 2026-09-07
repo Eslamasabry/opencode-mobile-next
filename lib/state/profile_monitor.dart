@@ -28,6 +28,9 @@ typedef MonitorAlert =
 /// Sequential, bounded snapshots: no subscriptions, active-connection mutation,
 /// persistent session titles, or background-service ownership.
 class ProfileMonitor extends ChangeNotifier {
+  static const unsupportedProfileMessage =
+      'Background attention is unavailable for this connection. Open the conversation to review current requests.';
+
   ProfileMonitor({
     required this.store,
     required this.createGateway,
@@ -105,6 +108,12 @@ class ProfileMonitor extends ChangeNotifier {
   Map<String, ProfileAttentionSnapshot> get snapshots =>
       Map.unmodifiable(_snapshots);
 
+  /// Background attention needs a pollable pending-request surface. Codex
+  /// sessions do not expose one, so an enabled legacy rule remains stored but
+  /// is retired before any transport factory or credential path is touched.
+  bool supportsProfile(ServerProfile profile) =>
+      profile.backend != ServerBackend.codex;
+
   int _beginPoll(String id) {
     final generation = (_pollGenerations[id] ?? 0) + 1;
     _pollGenerations[id] = generation;
@@ -141,13 +150,13 @@ class ProfileMonitor extends ChangeNotifier {
       return null;
     }
     try {
+      final profile = store.profiles.where((p) => p.id == id).firstOrNull;
+      if (profile == null || !supportsProfile(profile)) return null;
       final route = MonitoredRoute.fromJson(
         id,
         Map<String, dynamic>.from(_routes(id)[token] as Map),
       );
-      final profile = store.profiles.where((p) => p.id == id).firstOrNull;
-      if (profile == null ||
-          (_sources.containsKey(id) && !_sameSource(id)) ||
+      if ((_sources.containsKey(id) && !_sameSource(id)) ||
           route.createdAt.isAfter(_now()) ||
           profile.baseUrl != route.serverUrl ||
           route.sourceIdentity != routeSourceIdentity(profile) ||
@@ -207,6 +216,13 @@ class ProfileMonitor extends ChangeNotifier {
       return ProfileAttentionSnapshot(
         profileID: id,
         status: ProfileMonitorStatus.disabled,
+      );
+    }
+    final profile = store.profiles.where((p) => p.id == id).firstOrNull;
+    if (profile == null || !supportsProfile(profile)) {
+      return ProfileAttentionSnapshot(
+        profileID: id,
+        status: ProfileMonitorStatus.unavailable,
       );
     }
     final value = _sameSource(id) ? _snapshots[id] : null;
@@ -276,7 +292,8 @@ class ProfileMonitor extends ChangeNotifier {
     if (_disposed ||
         !runningAllowed ||
         !store.profiles.any(
-          (p) => rulesFor(p.id).enabled && isReadable(p.id),
+          (p) =>
+              rulesFor(p.id).enabled && isReadable(p.id) && supportsProfile(p),
         )) {
       return;
     }
@@ -289,7 +306,12 @@ class ProfileMonitor extends ChangeNotifier {
   Future<void> setEnabled(String id, bool enabled) =>
       setRules(id, rulesFor(id).copyWith(enabled: enabled));
   Future<void> setRules(String id, ProfileNotifyRules value) {
-    if (_disposed || _blocked.contains(id) || !isReadable(id)) {
+    final profile = store.profiles.where((p) => p.id == id).firstOrNull;
+    if (_disposed ||
+        _blocked.contains(id) ||
+        !isReadable(id) ||
+        profile == null ||
+        !supportsProfile(profile)) {
       return Future.error(StateError('Server unavailable'));
     }
     final operation = (_writes[id] ?? Future<void>.value())
@@ -381,6 +403,7 @@ class ProfileMonitor extends ChangeNotifier {
           (p) =>
               rulesFor(p.id).enabled &&
               isReadable(p.id) &&
+              supportsProfile(p) &&
               !_blocked.contains(p.id),
         )
         .toList();
@@ -471,6 +494,7 @@ class ProfileMonitor extends ChangeNotifier {
   }
 
   Future<void> _poll(ServerProfile profile, int generation) async {
+    if (!supportsProfile(profile)) return;
     final id = profile.id, epoch = _epochs[profile.id] ?? 0;
     final location = store.locationFor(id);
     final address = (

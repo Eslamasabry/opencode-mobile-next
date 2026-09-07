@@ -901,7 +901,7 @@ class _ToolCallGroup extends StatefulWidget {
   final List<Part> parts;
   final Map<String, bool> expansionStore;
   final ToolOutputFileLoader filePreviewLoader;
-  final ToolOutputFileAction onAttachFile;
+  final ToolOutputFileAction? onAttachFile;
   final ToolOutputFileAction onDownloadFile;
 
   /// Opens a subagent's child session from a `task` card; null hides it.
@@ -1165,7 +1165,7 @@ class _AssistantMessagePart extends StatelessWidget {
   final bool streaming;
   final Map<String, bool> expansionStore;
   final ToolOutputFileLoader filePreviewLoader;
-  final ToolOutputFileAction onAttachFile;
+  final ToolOutputFileAction? onAttachFile;
   final ToolOutputFileAction onDownloadFile;
 
   @override
@@ -1282,7 +1282,7 @@ class _MessageView extends StatelessWidget {
   /// sheet [onLongPress] opens.
   final List<ContextMenuAction> Function()? contextActions;
   final ToolOutputFileLoader filePreviewLoader;
-  final ToolOutputFileAction onAttachFile;
+  final ToolOutputFileAction? onAttachFile;
   final ToolOutputFileAction onDownloadFile;
 
   /// Recovery actions for typed assistant errors: compact the session after

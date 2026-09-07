@@ -70,6 +70,17 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
   Future<void> _load() async {
     final generation = ++_loadGeneration;
+    if (!widget.controller.capabilities.projectManagement) {
+      if (mounted) {
+        setState(() {
+          _projects = const [];
+          _workspaces = const [];
+          _projectError = null;
+          _workspaceError = null;
+        });
+      }
+      return;
+    }
     final repository = await widget.controller.prepareActionRepository();
     if (!mounted || generation != _loadGeneration) return;
     if (repository == null) {
@@ -290,6 +301,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         .toList();
     final archived = widget.controller.archivedSessions();
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
+    final capabilities = widget.controller.capabilities;
     final partial =
         widget.controller.hasMoreSessions || widget.controller.sessionsLoading;
 
@@ -317,7 +329,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       // The project catalog and session inventory are separate.
                       // An empty catalog must not hide existing conversations,
                       // inventory errors, or the server-wide session finder.
-                      if (_projects == null && _projectError == null)
+                      if (capabilities.projectManagement &&
+                          _projects == null &&
+                          _projectError == null)
                         Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
@@ -327,15 +341,17 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                                 label: 'Loading projects',
                                 child: const LinearProgressIndicator(),
                               ),
-                              TextButton.icon(
-                                onPressed: _openAllSessions,
-                                icon: const Icon(Icons.manage_search_rounded),
-                                label: Text(l10n.workspaceSearchAllSessions),
-                              ),
+                              if (capabilities.globalSessionSearch)
+                                TextButton.icon(
+                                  onPressed: _openAllSessions,
+                                  icon: const Icon(Icons.manage_search_rounded),
+                                  label: Text(l10n.workspaceSearchAllSessions),
+                                ),
                             ],
                           ),
                         ),
-                      if (_projectError != null)
+                      if (capabilities.projectManagement &&
+                          _projectError != null)
                         Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
@@ -362,34 +378,42 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                                     icon: const Icon(Icons.refresh_rounded),
                                     label: Text(l10n.workspaceRetryProjects),
                                   ),
-                                  TextButton.icon(
-                                    onPressed: _openAllSessions,
-                                    icon: const Icon(
-                                      Icons.manage_search_rounded,
+                                  if (capabilities.globalSessionSearch)
+                                    TextButton.icon(
+                                      onPressed: _openAllSessions,
+                                      icon: const Icon(
+                                        Icons.manage_search_rounded,
+                                      ),
+                                      label: Text(
+                                        l10n.workspaceSearchAllSessions,
+                                      ),
                                     ),
-                                    label: Text(
-                                      l10n.workspaceSearchAllSessions,
-                                    ),
-                                  ),
                                 ],
                               ),
                             ],
                           ),
                         ),
-                      if (_projects?.isEmpty == true)
+                      if (capabilities.projectManagement &&
+                          _projects?.isEmpty == true)
                         Padding(
                           padding: const EdgeInsets.all(16),
                           child: ProductInlineEmpty(
                             icon: Icons.folder_off_outlined,
                             title: 'No projects opened',
-                            message:
-                                'The server returned no projects. Search all '
-                                'sessions to find previous conversations.',
-                            actionLabel: 'Search all sessions',
-                            onAction: _openAllSessions,
+                            message: capabilities.globalSessionSearch
+                                ? 'The server returned no projects. Search all '
+                                      'sessions to find previous conversations.'
+                                : 'The server returned no projects.',
+                            actionLabel: capabilities.globalSessionSearch
+                                ? 'Search all sessions'
+                                : null,
+                            onAction: capabilities.globalSessionSearch
+                                ? _openAllSessions
+                                : null,
                           ),
                         )
-                      else if (_projects?.isNotEmpty == true)
+                      else if (capabilities.projectManagement &&
+                          _projects?.isNotEmpty == true)
                         ListTile(
                           key: const ValueKey('current-project-entry'),
                           leading: const Icon(Icons.folder_rounded),
@@ -406,7 +430,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                         ),
                       // Still context, not management: the session is running
                       // somewhere other than the project root.
-                      if (_hasExternalSessionDirectory)
+                      if (capabilities.projectManagement &&
+                          _hasExternalSessionDirectory)
                         ListTile(
                           key: const ValueKey('active-session-directory'),
                           leading: const Icon(Icons.subdirectory_arrow_right),
@@ -417,7 +442,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                      if (_workspaceError != null)
+                      if (capabilities.projectManagement &&
+                          _workspaceError != null)
                         Padding(
                           padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                           child: Text(
@@ -427,15 +453,29 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                             ),
                           ),
                         ),
-                      // 2. Continue active sessions, with their live state.
-                      if (pinned.isNotEmpty)
-                        SectionLabel(
-                          l10n.sessionPinned,
-                          trailing: Text('${pinned.length}'),
+                      if (!capabilities.projectManagement &&
+                          widget.controller.directory?.isNotEmpty == true)
+                        ListTile(
+                          key: const ValueKey('restricted-directory-context'),
+                          leading: const Icon(Icons.folder_rounded),
+                          title: Text(_basename(widget.controller.directory!)),
+                          subtitle: Text(
+                            widget.controller.directory!,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                     ],
                   ),
                 ),
+                // 2. Continue active sessions, with their live state.
+                if (pinned.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: SectionLabel(
+                      l10n.sessionPinned,
+                      trailing: Text('${pinned.length}'),
+                    ),
+                  ),
                 if (pinned.isNotEmpty)
                   SliverList.builder(
                     itemCount: pinned.length,
@@ -484,15 +524,16 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        IconButton(
-                          key: const ValueKey('search-all-sessions'),
-                          tooltip: 'Search all sessions',
-                          onPressed: _openAllSessions,
-                          icon: const Icon(
-                            Icons.manage_search_rounded,
-                            size: 21,
+                        if (capabilities.globalSessionSearch)
+                          IconButton(
+                            key: const ValueKey('search-all-sessions'),
+                            tooltip: 'Search all sessions',
+                            onPressed: _openAllSessions,
+                            icon: const Icon(
+                              Icons.manage_search_rounded,
+                              size: 21,
+                            ),
                           ),
-                        ),
                         IconButton(
                           tooltip: 'Refresh sessions',
                           onPressed: widget.controller.sessionsLoading
@@ -502,12 +543,13 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                         ),
                         // Terminal gave its navigation slot to Activity; this
                         // keeps it one tap from the workspace it runs in.
-                        IconButton(
-                          key: const ValueKey('workspace-terminal'),
-                          tooltip: 'Terminal',
-                          onPressed: _openTerminal,
-                          icon: const Icon(Icons.terminal_outlined, size: 20),
-                        ),
+                        if (capabilities.terminal)
+                          IconButton(
+                            key: const ValueKey('workspace-terminal'),
+                            tooltip: 'Terminal',
+                            onPressed: _openTerminal,
+                            icon: const Icon(Icons.terminal_outlined, size: 20),
+                          ),
                         // Whether runs keep updating after the app closes
                         // was only discoverable two levels into Settings;
                         // say it where the runs are.
@@ -590,9 +632,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 // 5. Everything management sits below the sessions, behind one
                 // labelled route: worktrees, managed workspaces, project
                 // health, and project switching.
-                if (ManageProjectScreen.isAvailable(
-                  widget.controller.capabilities,
-                ))
+                if (capabilities.projectManagement &&
+                    ManageProjectScreen.isAvailable(
+                      widget.controller.capabilities,
+                    ))
                   SliverToBoxAdapter(
                     child: ListTile(
                       key: const ValueKey('manage-project-entry'),

@@ -819,6 +819,28 @@ class ProductException implements Exception {
 /// protocol generation. The v1 server exposes every listed feature, so its
 /// gateway reports [allV1]; a v2 gateway narrows these per endpoint support.
 class ServerCapabilities {
+  // Core operations differ across supported server backends.
+  final bool promptAttachments;
+  final bool promptAgentMentions;
+  final bool offlinePromptQueue;
+  final bool fileBrowsing;
+  final bool terminal;
+  final bool projectManagement;
+  final bool globalSessionSearch;
+  final bool sessionDiff;
+  final bool sessionFork;
+  final bool sessionCompact;
+  final bool persistentPermissionGrants;
+
+  /// Whether a completed assistant message ends the current run.
+  /// Item-based backends report run completion separately.
+  final bool messageCompletionEndsRun;
+  final bool sessionRevert;
+  final bool sessionImportExport;
+  final bool sessionNotes;
+  final bool serverCatalog;
+  final bool profileAttentionPolling;
+
   final bool managedWorkspaces;
   final bool workspaceWarp;
   final bool sessionSteal;
@@ -864,6 +886,24 @@ class ServerCapabilities {
   final bool inbox;
 
   const ServerCapabilities({
+    this.promptAttachments = true,
+    this.promptAgentMentions = true,
+    this.offlinePromptQueue = true,
+    this.fileBrowsing = true,
+    this.terminal = true,
+    this.projectManagement = true,
+    this.globalSessionSearch = true,
+    this.sessionDiff = true,
+    this.sessionFork = true,
+    this.sessionCompact = true,
+    this.persistentPermissionGrants = true,
+    this.messageCompletionEndsRun = true,
+    this.sessionRevert = true,
+    this.sessionImportExport = true,
+    this.sessionNotes = true,
+    this.serverCatalog = true,
+    this.profileAttentionPolling = true,
+
     this.managedWorkspaces = true,
     this.workspaceWarp = true,
     this.sessionSteal = true,
