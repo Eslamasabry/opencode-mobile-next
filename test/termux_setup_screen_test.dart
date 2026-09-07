@@ -496,47 +496,50 @@ void main() {
     await tester.pump();
   });
 
-  testWidgets('successful setup exposes continue and normal stop controls', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({});
-    final store = _MemoryProfileStore(
-      prefs: await SharedPreferences.getInstance(),
-    );
-    final connection = _LocalConnectionController(store);
-    addTearDown(connection.dispose);
-    var launched = false;
-    var launchCalls = 0;
-    var restartCalls = 0;
-    var restartShouldFail = false;
-    var restartOperation = '';
-    var restartResult = '';
-    var stopCalls = 0;
+  testWidgets(
+    'successful setup exposes controls and stops despite recovery cleanup failure',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final store = _MemoryProfileStore(
+        prefs: await SharedPreferences.getInstance(),
+      );
+      final connection = _LocalConnectionController(store);
+      addTearDown(connection.dispose);
+      var launched = false;
+      var launchCalls = 0;
+      var restartCalls = 0;
+      var restartShouldFail = false;
+      var restartOperation = '';
+      var restartResult = '';
+      var stopCalls = 0;
 
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, (call) async {
-          if (call.method == 'getCapabilities') {
-            return <String, Object>{
-              'installed': true,
-              'version': '0.118',
-              'serviceAvailable': true,
-              'protocolSupported': true,
-              'permissionGranted': true,
-            };
-          }
-          if (call.method != 'runInTermux') return true;
-          final arguments = call.arguments as Map<Object?, Object?>;
-          final script = arguments['script']! as String;
-          if (script.contains('ubuntu=absent')) {
-            return _commandResult(stdout: 'ubuntu=absent\nversion=\n');
-          }
-          if (script.contains("printf 'opencode-bridge-ok'")) {
-            return _commandResult(stdout: 'opencode-bridge-ok');
-          }
-          if (script.contains('__OC_SETUP_OUTPUT__')) {
-            return _commandResult(
-              stdout: launched
-                  ? '''phase=ready
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            if (call.method == 'getCapabilities') {
+              return <String, Object>{
+                'installed': true,
+                'version': '0.118',
+                'serviceAvailable': true,
+                'protocolSupported': true,
+                'permissionGranted': true,
+              };
+            }
+            if (call.method != 'runInTermux') return true;
+            final arguments = call.arguments as Map<Object?, Object?>;
+            final script = arguments['script']! as String;
+            if (script.contains('exec "\$MANAGER" recovery-disarm')) {
+              return {..._commandResult(), 'exitCode': 75};
+            }
+            if (script.contains('ubuntu=absent')) {
+              return _commandResult(stdout: 'ubuntu=absent\nversion=\n');
+            }
+            if (script.contains("printf 'opencode-bridge-ok'")) {
+              return _commandResult(stdout: 'opencode-bridge-ok');
+            }
+            if (script.contains('__OC_SETUP_OUTPUT__')) {
+              return _commandResult(
+                stdout: launched
+                    ? '''phase=ready
 message=OpenCode is ready
 port=4096
 runner=proot
@@ -547,7 +550,7 @@ operation_result=$restartResult
 __OC_SETUP_OUTPUT__
 [oc] authenticated server ready
 '''
-                  : '''phase=idle
+                    : '''phase=idle
 message=No setup has been started
 port=4096
 runner=
@@ -555,173 +558,182 @@ version=
 pid=
 __OC_SETUP_OUTPUT__
 ''',
-            );
-          }
-          if (script.contains("manager.sh\" stop '4096'")) {
-            launched = false;
-            stopCalls++;
-            return _commandResult(stdout: '[oc] server stopped');
-          }
-          if (script.contains("\"\$MANAGER\" restart '4096' ")) {
-            restartCalls++;
-            restartOperation = RegExp(
-              r"restart '4096' '([^']+)'",
-            ).firstMatch(script)!.group(1)!;
-            if (restartShouldFail) {
-              restartResult = 'not_performed';
-              return {
-                ..._commandResult(),
-                'stderr': 'The installed OpenCode command is unavailable',
-                'exitCode': 1,
-              };
+              );
             }
-            restartResult = 'completed';
-            launched = true;
-            return _commandResult(stdout: '[oc] authenticated server ready');
-          }
-          if (script.contains('manager_tmp=')) {
-            restartOperation = '';
-            restartResult = '';
-            launched = true;
-            launchCalls++;
-            return _commandResult(stdout: 'manager-started:123');
-          }
-          if (script.contains('exec "') && script.contains(' status')) {
-            return _commandResult(
-              stdout: launched
-                  ? '''phase=ready
+            if (script.contains("manager.sh\" stop '4096'")) {
+              launched = false;
+              stopCalls++;
+              return _commandResult(stdout: '[oc] server stopped');
+            }
+            if (script.contains("\"\$MANAGER\" restart '4096' ")) {
+              restartCalls++;
+              restartOperation = RegExp(
+                r"restart '4096' '([^']+)'",
+              ).firstMatch(script)!.group(1)!;
+              if (restartShouldFail) {
+                restartResult = 'not_performed';
+                return {
+                  ..._commandResult(),
+                  'stderr': 'The installed OpenCode command is unavailable',
+                  'exitCode': 1,
+                };
+              }
+              restartResult = 'completed';
+              launched = true;
+              return _commandResult(stdout: '[oc] authenticated server ready');
+            }
+            if (script.contains('manager_tmp=')) {
+              restartOperation = '';
+              restartResult = '';
+              launched = true;
+              launchCalls++;
+              return _commandResult(stdout: 'manager-started:123');
+            }
+            if (script.contains('exec "') && script.contains(' status')) {
+              return _commandResult(
+                stdout: launched
+                    ? '''phase=ready
 message=OpenCode is ready
 port=4096
 runner=proot
 version=1.18.21
 pid=321
 '''
-                  : '''phase=idle
+                    : '''phase=idle
 message=No setup has been started
 port=4096
 runner=
 version=
 pid=
 ''',
-            );
-          }
-          return _commandResult();
-        });
-    addTearDown(
-      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(channel, null),
-    );
+              );
+            }
+            return _commandResult();
+          });
+      addTearDown(
+        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, null),
+      );
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          bootstrapProvider.overrideWithValue(AppBootstrap(store)),
-          connProvider.overrideWithValue(connection),
-        ],
-        child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: const TermuxSetupScreen(),
-          routes: {'/home': (_) => const Scaffold(body: Text('Home'))},
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            bootstrapProvider.overrideWithValue(AppBootstrap(store)),
+            connProvider.overrideWithValue(connection),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const TermuxSetupScreen(),
+            routes: {'/home': (_) => const Scaffold(body: Text('Home'))},
+          ),
         ),
-      ),
-    );
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.text('Install & start'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Install & start'), 250);
-    await tester.pump();
-    await tester.tap(find.text('Install & start'));
-    await tester.pump();
-    await tester.pump(const Duration(seconds: 1));
+      expect(find.text('Install & start'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('Install & start'), 250);
+      await tester.pump();
+      await tester.tap(find.text('Install & start'));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
 
-    expect(find.text('OpenCode is running on this phone.'), findsOneWidget);
-    expect(find.text('Continue to app'), findsOneWidget);
-    expect(find.text('Stop local server'), findsOneWidget);
-    expect(find.text('Restart local server'), findsOneWidget);
-    expect(find.textContaining('Version 1.18.21'), findsOneWidget);
+      expect(find.text('OpenCode is running on this phone.'), findsOneWidget);
+      expect(find.text('Continue to app'), findsOneWidget);
+      expect(find.text('Stop local server'), findsOneWidget);
+      expect(find.text('Restart local server'), findsOneWidget);
+      expect(find.textContaining('Version 1.18.21'), findsOneWidget);
 
-    await tester.ensureVisible(
-      find.byKey(const Key('restart-managed-opencode')),
-    );
-    connection.busySessions.add('busy-session');
-    await tester.tap(find.byKey(const Key('restart-managed-opencode')));
-    await tester.pumpAndSettle();
-    expect(find.text('Restart the local server?'), findsOneWidget);
-    expect(
-      find.textContaining(
-        '1 session is generating. Restarting will interrupt it.',
-      ),
-      findsOneWidget,
-    );
-    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
-    await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.byKey(const Key('restart-managed-opencode')),
+      );
+      connection.busySessions.add('busy-session');
+      await tester.tap(find.byKey(const Key('restart-managed-opencode')));
+      await tester.pumpAndSettle();
+      expect(find.text('Restart the local server?'), findsOneWidget);
+      expect(
+        find.textContaining(
+          '1 session is generating. Restarting will interrupt it.',
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+      await tester.pumpAndSettle();
 
-    await tester.ensureVisible(
-      find.byKey(const Key('update-managed-opencode')),
-    );
-    connection.busySessions.add('busy-session');
-    await tester.tap(find.byKey(const Key('update-managed-opencode')));
-    await tester.pump();
-    expect(
-      find.text('Stop active generation before updating OpenCode.'),
-      findsOneWidget,
-    );
-    expect(launchCalls, 1);
-    connection.busySessions.clear();
+      await tester.ensureVisible(
+        find.byKey(const Key('update-managed-opencode')),
+      );
+      connection.busySessions.add('busy-session');
+      await tester.tap(find.byKey(const Key('update-managed-opencode')));
+      await tester.pump();
+      expect(
+        find.text('Stop active generation before updating OpenCode.'),
+        findsOneWidget,
+      );
+      expect(launchCalls, 1);
+      connection.busySessions.clear();
 
-    await tester.ensureVisible(
-      find.byKey(const Key('restart-managed-opencode')),
-    );
-    connection.retriesToFail = 1;
-    await tester.tap(find.byKey(const Key('restart-managed-opencode')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Restart'));
-    await tester.pumpAndSettle();
-    expect(restartCalls, 1);
-    expect(connection.retryCalls, 2);
-    expect(launchCalls, 1);
-    expect(find.text('OpenCode is running on this phone.'), findsOneWidget);
+      await tester.ensureVisible(
+        find.byKey(const Key('restart-managed-opencode')),
+      );
+      connection.retriesToFail = 1;
+      await tester.tap(find.byKey(const Key('restart-managed-opencode')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Restart'));
+      await tester.pumpAndSettle();
+      expect(restartCalls, 1);
+      expect(connection.retryCalls, 2);
+      expect(launchCalls, 1);
+      expect(find.text('OpenCode is running on this phone.'), findsOneWidget);
 
-    restartShouldFail = true;
-    await tester.tap(find.byKey(const Key('restart-managed-opencode')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Restart'));
-    await tester.pumpAndSettle();
-    expect(restartCalls, 2);
-    expect(connection.retryCalls, 2);
-    expect(find.text('OpenCode is running on this phone.'), findsOneWidget);
-    restartShouldFail = false;
+      restartShouldFail = true;
+      await tester.tap(find.byKey(const Key('restart-managed-opencode')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Restart'));
+      await tester.pumpAndSettle();
+      expect(restartCalls, 2);
+      expect(connection.retryCalls, 2);
+      expect(find.text('OpenCode is running on this phone.'), findsOneWidget);
+      restartShouldFail = false;
 
-    await tester.tap(find.byKey(const Key('update-managed-opencode')));
-    await tester.pumpAndSettle();
-    expect(find.text('Update managed OpenCode?'), findsOneWidget);
-    // The dialog names the exact pinned release, not "latest": the user is
-    // agreeing to install a specific server version.
-    expect(
-      find.textContaining(
-        'OpenCode ${TermuxBridge.defaultOpenCodeVersion} — the release this '
-        'app version is tested against',
-      ),
-      findsOneWidget,
-    );
-    await tester.tap(find.widgetWithText(FilledButton, 'Update'));
-    await tester.pump();
-    await tester.pump(const Duration(seconds: 1));
-    expect(launchCalls, 2);
-    expect(find.text('OpenCode is running on this phone.'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('update-managed-opencode')));
+      await tester.pumpAndSettle();
+      expect(find.text('Update managed OpenCode?'), findsOneWidget);
+      // The dialog names the exact pinned release, not "latest": the user is
+      // agreeing to install a specific server version.
+      expect(
+        find.textContaining(
+          'OpenCode ${TermuxBridge.defaultOpenCodeVersion} — the release this '
+          'app version is tested against',
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.widgetWithText(FilledButton, 'Update'));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      expect(launchCalls, 2);
+      expect(find.text('OpenCode is running on this phone.'), findsOneWidget);
 
-    await tester.ensureVisible(find.text('Stop local server'));
-    await tester.tap(find.text('Stop local server'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+      await store.prefs.setString(
+        'oc.managedServerRecovery.${store.profiles.first.id}',
+        '{"enabled":true,"token":"synthetic-permit"}',
+      );
+      await tester.ensureVisible(find.text('Stop local server'));
+      await tester.tap(find.text('Stop local server'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
-    expect(stopCalls, 1);
-    expect(connection.api, isNull);
-    expect(find.textContaining('local server is stopped'), findsOneWidget);
-    expect(find.text('Install & start'), findsOneWidget);
-  });
+      expect(stopCalls, 1);
+      expect(connection.api, isNull);
+      expect(find.textContaining('local server is stopped'), findsOneWidget);
+      expect(
+        find.textContaining('Recovery settings could not be fully cleared'),
+        findsOneWidget,
+      );
+      expect(find.text('Install & start'), findsOneWidget);
+    },
+  );
 
   for (final staleReady in [true, false]) {
     testWidgets(

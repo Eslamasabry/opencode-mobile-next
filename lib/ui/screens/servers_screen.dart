@@ -475,6 +475,12 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                     (p) => TermuxBridge.managesServerUrl(p.baseUrl),
                   ))
                 ManagedServerHealth(
+                  prefs: store.prefs,
+                  profileID: store.profiles
+                      .firstWhere(
+                        (p) => TermuxBridge.managesServerUrl(p.baseUrl),
+                      )
+                      .id,
                   onManage: () => Navigator.pushNamed(context, '/termux-setup'),
                 ),
               OutlinedButton.icon(

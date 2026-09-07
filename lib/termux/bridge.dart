@@ -150,6 +150,40 @@ class TermuxBridge {
     return TermuxSetupStatus.parse(result.stdout);
   }
 
+  static Future<TermuxStorageSnapshot> storage() async {
+    final result = await run(
+      storageScript(),
+      timeout: const Duration(seconds: 8),
+    );
+    return TermuxStorageSnapshot.parse(result.stdout);
+  }
+
+  static String storageScript() =>
+      '''
+set -euo pipefail
+LC_ALL=C timeout -k 1s 5s df -Pk '$termuxHome' | awk 'NR == 2 { printf "total_kib=%s\\navailable_kib=%s\\n", \$2, \$4 }'
+''';
+
+  /// Grant/revoke only this app's managed-server recovery permit.
+  static String recoveryControlScript(String token, {required bool enable}) {
+    if (!RegExp(r'^[a-zA-Z0-9_-]{1,64}$').hasMatch(token)) {
+      throw ArgumentError.value(token, 'token');
+    }
+    return '''
+set -eu
+MANAGER="$_managerPath"
+[ -x "\$MANAGER" ] || { echo 'managed-server-missing' >&2; exit 75; }
+${enable ? '[ ! -e "$termuxHome/.oc/setup.lock" ] || exit 75' : ''}
+manager_tmp="\$MANAGER.tmp.\$\$"
+cat > "\$manager_tmp" <<'OC_MANAGER_EOF'
+$_managerScript
+OC_MANAGER_EOF
+chmod 700 "\$manager_tmp"
+mv "\$manager_tmp" "\$MANAGER"
+exec "\$MANAGER" ${enable ? 'recovery-arm' : 'recovery-disarm'} '$token'
+''';
+  }
+
   static Future<TermuxSetupSnapshot> setupSnapshot() async {
     final result = await run(setupSnapshotScript());
     return TermuxSetupSnapshot.parse(result.stdout);
@@ -427,6 +461,8 @@ tail -n 80 "\$OC_DIR/server.log" 2>/dev/null || true
   static String restartScript({
     int port = managedServerPort,
     required String operationID,
+    String? recoveryToken,
+    String? expectedOperationID,
   }) {
     if (port < 1024 || port > 65535) {
       throw ArgumentError.value(
@@ -442,6 +478,15 @@ tail -n 80 "\$OC_DIR/server.log" 2>/dev/null || true
         'Invalid restart ID',
       );
     }
+    if (recoveryToken != null &&
+        (!RegExp(r'^[a-zA-Z0-9_-]{1,64}$').hasMatch(recoveryToken) ||
+            expectedOperationID == null ||
+            !RegExp(r'^[a-zA-Z0-9_-]{0,64}$').hasMatch(expectedOperationID))) {
+      throw ArgumentError('Invalid recovery identity');
+    }
+    final recoveryArgs = recoveryToken == null
+        ? ''
+        : ' ${_shellQuote(expectedOperationID!)} ${_shellQuote(recoveryToken)}';
     return '''
 set -eu
 OC_DIR="$termuxHome/.oc"
@@ -486,7 +531,7 @@ mv "\$manager_tmp" "\$MANAGER"
   exit 74
 }
 set -m
-"\$MANAGER" restart '$port' '$operationID' &
+"\$MANAGER" restart '$port' '$operationID'$recoveryArgs &
 operation_pid=\$!
 wait "\$operation_pid"
 ''';
@@ -494,6 +539,7 @@ wait "\$operation_pid"
 
   static String stopScript({int port = 4096}) =>
       '''
+rm -f "$termuxHome/.oc/recovery-permit"
 if [ -x "$_managerPath" ]; then
   exec "$_managerPath" stop '$port'
 fi
@@ -610,6 +656,7 @@ SERVER_PID="$OC_DIR/server.pid"
 SERVER_LOG="$OC_DIR/server.log"
 SERVER_LOG_ACTIVE="$OC_DIR/server-log.active"
 PASSWORD_FILE="$OC_DIR/server.password"
+RECOVERY_PERMIT="$OC_DIR/recovery-permit"
 LEGACY_MARKER="$OC_DIR/legacy-install"
 UBUNTU_INSTALL_MARKER="$OC_DIR/opencode-ubuntu-installing"
 SERVER_RUNNER="$OC_DIR/server-runner.sh"
@@ -707,9 +754,9 @@ write_state() {
   local pid="${6:-}"
   local operation_result="${7:-}"
   local tmp="$STATE.tmp.$$"
-  printf 'phase=%s\nmessage=%s\nport=%s\nrunner=%s\nversion=%s\npid=%s\noperation=%s\noperation_result=%s\n' \
+  printf 'phase=%s\nmessage=%s\nport=%s\nrunner=%s\nversion=%s\npid=%s\noperation=%s\noperation_result=%s\nfailure_kind=%s\nrecovery_token=%s\n' \
     "$phase" "$message" "$port" "$runner" "$version" "$pid" \
-    "${CURRENT_OPERATION:-}" "$operation_result" > "$tmp"
+    "${CURRENT_OPERATION:-}" "$operation_result" "${8:-${CURRENT_RECOVERY:+recovery}}" "${CURRENT_RECOVERY:-}" > "$tmp"
   mv "$tmp" "$STATE"
 }
 
@@ -1325,6 +1372,9 @@ start_server() {
   local installed_version="$1"
   local starting_phase="${2:-starting_server}"
   local password
+  if [ -n "${CURRENT_RECOVERY:-}" ]; then
+    recovery_permitted "$CURRENT_RECOVERY" || fail_setup 'Automatic recovery was disabled' "$CURRENT_PORT"
+  fi
   password=$(cat "$PASSWORD_FILE")
   install_server_runner
   : > "$SERVER_LOG_ACTIVE"
@@ -1379,9 +1429,74 @@ OC_AUTH_CHECK
   fail_setup 'OpenCode server did not become authenticated and ready within 30 seconds' "$CURRENT_PORT"
 }
 
+recovery_permitted() {
+  [ -f "$RECOVERY_PERMIT" ] && [ "$(cat "$RECOVERY_PERMIT")" = "$1" ]
+}
+
+recovery_port_busy() {
+  (exec 3<>"/dev/tcp/127.0.0.1/$CURRENT_PORT") 2>/dev/null
+}
+
+recovery_server_absent() {
+  local tracked_pid='' tracked_start=''
+  read -r tracked_pid tracked_start < "$SERVER_PID" 2>/dev/null || true
+  if [ -n "$tracked_pid" ] && kill -0 "$tracked_pid" 2>/dev/null; then return 75; fi
+  if recovery_port_busy; then return 75; fi
+  return 0
+}
+
+recovery_preflight() {
+  local expected_operation="$1" token="$2"
+  recovery_permitted "$token" || return 75
+  [ "$(read_state_value operation)" = "$expected_operation" ] || return 75
+  [ "$(read_state_value phase)" = failed ] || return 75
+  [ "$(read_state_value runner)" = proot ] || return 75
+  [ "$(read_state_value port)" = "$CURRENT_PORT" ] || return 75
+  case "$(read_state_value failure_kind)" in crash|recovery) ;; *) return 75 ;; esac
+  # A live PID, even one whose identity no longer matches, is never stopped
+  # by automatic recovery. Manual management can explain that conflict.
+  recovery_server_absent
+}
+
+recovery_arm() {
+  local token="$1" pid='' saved_start=''
+  [[ "$token" =~ ^[a-zA-Z0-9_-]{1,64}$ ]] || return 64
+  [ ! -e "$LOCK_DIR" ] || return 75
+  [ "$(read_state_value phase)" = ready ] || return 75
+  [ "$(read_state_value runner)" = proot ] || return 75
+  read -r pid saved_start < "$SERVER_PID" 2>/dev/null || return 75
+  [ -n "$saved_start" ] && [ "$(process_start "$pid" 2>/dev/null || true)" = "$saved_start" ] || return 75
+  server_process "$pid" "$(read_state_value port)" || return 75
+  umask 077
+  printf '%s' "$token" > "$RECOVERY_PERMIT.tmp.$$"
+  mv "$RECOVERY_PERMIT.tmp.$$" "$RECOVERY_PERMIT"
+  cat "$STATE"
+}
+
+recovery_disarm() {
+  local token="$1"
+  if [ -f "$RECOVERY_PERMIT" ] && ! recovery_permitted "$token"; then return 0; fi
+  rm -f "$RECOVERY_PERMIT"
+  # A dispatched recovery may still be in preflight/startup. Revoke first,
+  # then cancel only the operation that carries this permit, using the
+  # manager's PID/start-time and process-group ownership checks.
+  if [ "$(read_state_value recovery_token)" = "$token" ]; then
+    case "$(read_state_value phase)" in
+      restarting|starting_server)
+        stop_setup || return 75
+        stop_server "$(read_state_value port)" || return 75
+        CURRENT_OPERATION=$(read_state_value operation)
+        write_state stopped 'Automatic recovery disabled' "$(read_state_value port)"
+        ;;
+    esac
+  fi
+}
+
 restart() {
   CURRENT_PORT="${1:-4096}"
   CURRENT_OPERATION="${2:-}"
+  local expected_operation="${3:-}"
+  CURRENT_RECOVERY="${4:-}"
   [[ "$CURRENT_OPERATION" =~ ^[a-zA-Z0-9_-]{1,64}$ ]] || return 64
   SETUP_SUCCEEDED=0
   SERVER_STARTED=0
@@ -1392,6 +1507,13 @@ restart() {
   if ! claim_direct_lock; then
     echo 'another-managed-operation-is-running' >&2
     return 75
+  fi
+  if [ -n "$CURRENT_RECOVERY" ]; then
+    if ! recovery_preflight "$expected_operation" "$CURRENT_RECOVERY"; then
+      release_setup_lock
+      echo 'recovery-owner-or-state-changed' >&2
+      return 75
+    fi
   fi
   printf '%s %s\n' "$$" "$(process_start "$$")" > "$MANAGER_PID"
   trap on_setup_error ERR
@@ -1424,8 +1546,13 @@ restart() {
   fi
   [ -n "$installed_version" ] || fail_restart_preflight 'The installed OpenCode command is unavailable'
 
-  stop_server "$CURRENT_PORT" ||
-    fail_restart_preflight 'The tracked process is not the managed OpenCode server'
+  if [ -n "$CURRENT_RECOVERY" ]; then
+    recovery_permitted "$CURRENT_RECOVERY" && recovery_server_absent ||
+      fail_restart_preflight 'The server changed before automatic recovery; no replacement was started'
+  else
+    stop_server "$CURRENT_PORT" ||
+      fail_restart_preflight 'The tracked process is not the managed OpenCode server'
+  fi
   OLD_SERVER_LIVE=0
   KEEP_WAKE_LOCK_ON_FAILURE=0
   termux-wake-lock >/dev/null 2>&1 || true
@@ -1465,7 +1592,7 @@ status() {
     if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null ||
        { [ -n "$saved_start" ] && [ "$saved_start" != "$current_start" ]; } ||
        ! server_process "$pid" "$(read_state_value port)"; then
-      write_state failed 'The local OpenCode server stopped unexpectedly' "$(read_state_value port)"
+      write_state failed 'The local OpenCode server stopped unexpectedly' "$(read_state_value port)" proot '' '' '' crash
       rm -f "$SERVER_PID" "$SERVER_LOG_ACTIVE"
       termux-wake-unlock >/dev/null 2>&1 || true
     elif [ -z "$saved_start" ] && [ -n "$current_start" ]; then
@@ -1501,8 +1628,10 @@ server_exited() {
   current_start=""
   read -r current_pid current_start < "$SERVER_PID" 2>/dev/null || true
   [ -n "$runner_pid" ] && [ "$current_pid" = "$runner_pid" ] || return 0
+  [ -n "$current_start" ] && [ "$(process_start "$runner_pid" 2>/dev/null || true)" = "$current_start" ] || return 0
+  CURRENT_OPERATION=$(read_state_value operation)
   rm -f "$SERVER_PID" "$SERVER_LOG_ACTIVE"
-  write_state failed "OpenCode server exited (code $code)" "$port"
+  write_state failed "OpenCode server exited (code $code)" "$port" proot '' '' '' crash
   termux-wake-unlock >/dev/null 2>&1 || true
 }
 
@@ -1538,6 +1667,8 @@ stop() {
 case "${1:-status}" in
   setup) shift; setup "$@" ;;
   restart) shift; restart "$@" ;;
+  recovery-arm) shift; recovery_arm "$@" ;;
+  recovery-disarm) shift; recovery_disarm "$@" ;;
   status) status ;;
   diagnostics) diagnostics ;;
   stop) shift; stop "$@" ;;
@@ -1550,6 +1681,43 @@ esac
 }
 
 /// The installed app-owned environment, independent of server running state.
+class TermuxStorageSnapshot {
+  const TermuxStorageSnapshot({
+    required this.totalBytes,
+    required this.availableBytes,
+  });
+  final int totalBytes;
+  final int availableBytes;
+
+  factory TermuxStorageSnapshot.parse(String output) {
+    final values = <String, int>{};
+    for (final line in output.trim().split('\n')) {
+      final match = RegExp(
+        r'^(total_kib|available_kib)=([0-9]{1,13})$',
+      ).firstMatch(line);
+      if (match == null || values.containsKey(match[1])) {
+        throw const TermuxBridgeException(
+          'Could not read Termux storage.',
+          code: 'invalid_storage',
+        );
+      }
+      values[match[1]!] = int.parse(match[2]!);
+    }
+    final total = values['total_kib'];
+    final available = values['available_kib'];
+    if (total == null || available == null || total <= 0 || available > total) {
+      throw const TermuxBridgeException(
+        'Could not read Termux storage.',
+        code: 'invalid_storage',
+      );
+    }
+    return TermuxStorageSnapshot(
+      totalBytes: total * 1024,
+      availableBytes: available * 1024,
+    );
+  }
+}
+
 class TermuxInstallation {
   final bool ubuntuInstalled;
   final String? openCodeVersion;
@@ -1676,6 +1844,7 @@ class TermuxSetupStatus {
   final int? pid;
   final String operationID;
   final String operationResult;
+  final String failureKind;
 
   const TermuxSetupStatus({
     required this.phase,
@@ -1686,6 +1855,7 @@ class TermuxSetupStatus {
     required this.pid,
     this.operationID = '',
     this.operationResult = '',
+    this.failureKind = '',
   });
 
   bool get isRunning => const {
@@ -1700,6 +1870,11 @@ class TermuxSetupStatus {
   }.contains(phase);
   bool get isReady => phase == 'ready';
   bool get isFailed => phase == 'failed';
+  bool get canRecover =>
+      isFailed &&
+      runner == 'proot' &&
+      port == TermuxBridge.managedServerPort &&
+      (failureKind == 'crash' || failureKind == 'recovery');
 
   factory TermuxSetupStatus.parse(String output) {
     final values = <String, String>{};
@@ -1717,6 +1892,7 @@ class TermuxSetupStatus {
       pid: int.tryParse(values['pid'] ?? ''),
       operationID: values['operation'] ?? '',
       operationResult: values['operation_result'] ?? '',
+      failureKind: values['failure_kind'] ?? '',
     );
   }
 }

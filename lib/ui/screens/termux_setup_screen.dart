@@ -12,6 +12,7 @@ import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
 import '../../state/profiles.dart';
 import '../../termux/bridge.dart';
+import '../../termux/managed_server_recovery.dart';
 import '../app_theme.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/setup_terminal.dart';
@@ -884,13 +885,34 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       _error = null;
     });
     try {
+      final store = ref.read(bootstrapProvider).store;
+      var recoveryCleanupFailed = false;
+      for (final profile in store.profiles.where(
+        (p) => TermuxBridge.managesServerUrl(p.baseUrl),
+      )) {
+        try {
+          await ManagedServerRecovery.disableForProfile(
+            store.prefs,
+            profile.id,
+          );
+        } catch (_) {
+          recoveryCleanupFailed = true;
+        }
+      }
+      // Explicit Stop remains available even when preference storage or permit
+      // revocation fails. The stop script revokes the permit before stopping
+      // the manager, and its checked result decides whether the server stopped.
       await TermuxBridge.run(TermuxBridge.stopScript(port: port));
       await ref.read(connProvider).disconnect();
       if (!mounted) return;
       setState(() {
         _status = null;
         _phase = _Phase.ready;
-        _error = 'The local server is stopped. Its installed files are kept.';
+        _error = recoveryCleanupFailed
+            ? lookupAppLocalizations(
+                Localizations.localeOf(context),
+              ).managedRecoveryStoppedWithCleanupError
+            : 'The local server is stopped. Its installed files are kept.';
       });
     } on TermuxBridgeException catch (error) {
       if (!mounted) return;

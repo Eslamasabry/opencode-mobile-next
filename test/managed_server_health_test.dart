@@ -21,6 +21,14 @@ void main() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (call) async {
           calls.add(call);
+          if ((call.arguments as Map)['script'] ==
+              TermuxBridge.storageScript()) {
+            return {
+              'exitCode': 0,
+              'stdout': 'total_kib=10485760\navailable_kib=5242880\n',
+              'stderr': '',
+            };
+          }
           return response?.future ??
               {
                 'exitCode': 0,
@@ -50,7 +58,7 @@ void main() {
       );
 
   testWidgets(
-    'checking is explicit, bounded to status, and never starts setup',
+    'checking is explicit, reads Termux storage, and never starts setup',
     (tester) async {
       await pump(tester);
       expect(calls, isEmpty);
@@ -59,11 +67,19 @@ void main() {
       expect(find.text('Server process running'), findsOneWidget);
       expect(find.text('OpenCode 1.18.29'), findsOneWidget);
       expect(find.textContaining('Last checked at'), findsOneWidget);
-      expect(calls, hasLength(1));
-      expect(calls.single.method, 'runInTermux');
       expect(
-        (calls.single.arguments as Map)['script'],
+        find.text('Termux storage: 5.0 GiB free of 10.0 GiB'),
+        findsOneWidget,
+      );
+      expect(calls, hasLength(2));
+      expect(calls.first.method, 'runInTermux');
+      expect(
+        (calls.first.arguments as Map)['script'],
         TermuxBridge.statusScript(),
+      );
+      expect(
+        (calls.last.arguments as Map)['script'],
+        TermuxBridge.storageScript(),
       );
     },
   );
