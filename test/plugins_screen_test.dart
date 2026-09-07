@@ -29,13 +29,14 @@ class _Repository implements ProductRepository, PluginGateway {
   Completer<List<PluginInfo>>? gate;
   bool fail = false;
   int commandCalls = 0;
+  Completer<List<CommandInfo>>? commandGate;
   List<CommandInfo> commands = const [
     CommandInfo(name: 'review', subtask: false),
   ];
   @override
   Future<List<CommandInfo>> listCommands() async {
     commandCalls++;
-    return commands;
+    return commandGate?.future ?? commands;
   }
 
   List<PluginInfo> plugins = [];
@@ -257,6 +258,45 @@ void main() {
     expect(find.text('reviewer'), findsNothing);
     expect(find.text('No plugins reported for this location.'), findsOneWidget);
     expect(repository.calls, 2);
+  });
+
+  testWidgets('late inventory after disposal is ignored', (tester) async {
+    final repository = _Repository()..gate = Completer<List<PluginInfo>>();
+    final controller = await _controller(repository);
+    await tester.pumpWidget(_app(controller));
+    await tester.pump();
+    final lateResponse = repository.gate!;
+    await tester.pumpWidget(const SizedBox.shrink());
+    lateResponse.complete([_plugin]);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('late review validation cannot open a prior-location dialog', (
+    tester,
+  ) async {
+    final repository = _Repository()..plugins = [_plugin];
+    final controller = await _controller(repository);
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Link commands'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('/review'));
+    await tester.tap(find.text('Save links'));
+    await tester.pumpAndSettle();
+
+    repository.commandGate = Completer<List<CommandInfo>>();
+    await tester.tap(find.text('Review /review'));
+    await tester.pump();
+    controller.directory = '/new-location';
+    controller.locationRevision++;
+    controller.notifyListeners();
+    repository.commandGate!.complete(repository.commands);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('command-arguments')), findsNothing);
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.textContaining('no longer available here'), findsNothing);
   });
 
   testWidgets('plugin events and reconnect refetch current inventory', (

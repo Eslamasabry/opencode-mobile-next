@@ -10,15 +10,53 @@ class _Store extends InMemorySharedPreferencesStore {
   _Store() : super.withData({});
   bool refuse = false;
   bool refuseRemove = false;
+  bool mutateThenRefuse = false;
+  bool removeThenRefuse = false;
+  bool gateRollbackReload = false;
+  Completer<void>? rollbackReloadGate;
+  Completer<void>? capturedRollbackReloadGate;
+  final rollbackReloadStarted = Completer<void>();
+  var setCalls = 0;
+
   @override
-  Future<bool> remove(String key) async =>
-      refuseRemove ? false : super.remove(key);
+  Future<Map<String, Object>> getAll() async {
+    final gate = rollbackReloadGate;
+    if (gate != null) {
+      capturedRollbackReloadGate = gate;
+      rollbackReloadGate = null;
+      if (!rollbackReloadStarted.isCompleted) {
+        rollbackReloadStarted.complete();
+      }
+      await gate.future;
+    }
+    return super.getAll();
+  }
+
+  @override
+  Future<bool> remove(String key) async {
+    if (removeThenRefuse) {
+      removeThenRefuse = false;
+      await super.remove(key);
+      return false;
+    }
+    return refuseRemove ? false : super.remove(key);
+  }
+
   Completer<void>? gate;
   final started = Completer<void>();
   @override
   Future<bool> setValue(String type, String key, Object value) async {
+    setCalls++;
     if (!started.isCompleted) started.complete();
     await gate?.future;
+    if (mutateThenRefuse) {
+      mutateThenRefuse = false;
+      if (gateRollbackReload) {
+        rollbackReloadGate = Completer<void>();
+      }
+      await super.setValue(type, key, value);
+      return false;
+    }
     return refuse ? false : super.setValue(type, key, value);
   }
 }
@@ -161,6 +199,42 @@ void main() {
       'one': ['review'],
     });
   });
+  test('failed mutations restore the prior value across restart', () async {
+    await make().set(scope, 'one', ['review']);
+
+    platform.mutateThenRefuse = true;
+    await expectLater(make().set(scope, 'one', ['test']), throwsStateError);
+    await prefs.reload();
+    expect(make().load(scope), {
+      'one': ['review'],
+    });
+
+    platform.removeThenRefuse = true;
+    await expectLater(make().clear(), throwsStateError);
+    await prefs.reload();
+    expect(make().load(scope), {
+      'one': ['review'],
+    });
+  });
+  test(
+    'deletion during rollback reload does not resurrect the prior mapping',
+    () async {
+      await make().set(scope, 'one', ['review']);
+      platform.mutateThenRefuse = true;
+      platform.gateRollbackReload = true;
+
+      final failed = make().set(scope, 'one', ['test']);
+      final expectation = expectLater(failed, throwsStateError);
+      await platform.rollbackReloadStarted.future;
+      readable = false;
+      await prefs.remove(make().key);
+      platform.capturedRollbackReloadGate!.complete();
+
+      await expectation;
+      expect(platform.setCalls, 2);
+      expect(prefs.containsKey(make().key), isFalse);
+    },
+  );
   test(
     'deletion during dispatched write cannot resurrect profile data',
     () async {

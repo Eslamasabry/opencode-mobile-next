@@ -253,7 +253,9 @@ class _PluginsScreenState extends State<PluginsScreen> {
       await store.clear();
       if (mounted && scope == _scope) setState(() => _mappings = {});
     } catch (_) {
-      if (mounted) _mappingError(_l10n.pluginMappingClearFailed);
+      if (mounted && scope == _scope) {
+        _mappingError(_l10n.pluginMappingClearFailed);
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -359,17 +361,22 @@ class _PluginsScreenState extends State<PluginsScreen> {
                             error = null;
                           });
                           try {
-                            if (scope != _scope) {
+                            if (!mounted || scope != _scope) {
                               throw StateError('Location changed.');
                             }
                             await store.set(mappingScope, plugin.id!, selected);
                             if (!dialogContext.mounted) return;
-                            if (scope != _scope) {
-                              throw StateError('Location changed.');
+                            if (!mounted || scope != _scope) {
+                              Navigator.pop(dialogContext);
+                              return;
                             }
                             Navigator.pop(dialogContext, true);
                           } catch (_) {
                             if (dialogContext.mounted) {
+                              if (!mounted || scope != _scope) {
+                                Navigator.pop(dialogContext);
+                                return;
+                              }
                               update(() {
                                 saving = false;
                                 error = _l10n.pluginMappingSaveFailed;
@@ -417,6 +424,9 @@ class _PluginsScreenState extends State<PluginsScreen> {
         return false;
       }
       final plugins = await (repository as PluginGateway).listPlugins();
+      if (!mounted || scope != _scope || !_supported || !_connected) {
+        return false;
+      }
       final commands = await repository.listCommands();
       return mounted &&
           scope == _scope &&
@@ -429,7 +439,9 @@ class _PluginsScreenState extends State<PluginsScreen> {
 
     try {
       if (!await valid()) {
-        if (mounted) _mappingError(_l10n.pluginMappingUnavailable);
+        if (mounted && scope == _scope) {
+          _mappingError(_l10n.pluginMappingUnavailable);
+        }
         return;
       }
       if (!mounted) return;
@@ -444,7 +456,9 @@ class _PluginsScreenState extends State<PluginsScreen> {
         Navigator.of(context).pushNamed('/chat/$sessionID');
       }
     } catch (_) {
-      if (mounted) _mappingError(_l10n.pluginMappingUnavailable);
+      if (mounted && scope == _scope) {
+        _mappingError(_l10n.pluginMappingUnavailable);
+      }
     } finally {
       if (mounted) {
         setState(() {

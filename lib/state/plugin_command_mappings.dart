@@ -109,6 +109,7 @@ class PluginCommandMappings {
       if (!isReadable()) throw StateError('Profile removed.');
       await preferences.reload();
       if (!isReadable()) throw StateError('Profile removed.');
+      final previousRaw = preferences.getString(key);
       final rows = update(_read());
       try {
         final saved = rows.isEmpty
@@ -119,7 +120,7 @@ class PluginCommandMappings {
               );
         if (!saved) throw StateError('Could not save personal mapping.');
       } catch (_) {
-        await preferences.reload();
+        await _restore(previousRaw);
         rethrow;
       } finally {
         // A deletion racing a platform write must not resurrect this key.
@@ -133,6 +134,25 @@ class PluginCommandMappings {
       await next;
     } finally {
       if (identical(_writes[key], tail)) _writes.remove(key);
+    }
+  }
+
+  Future<void> _restore(String? previousRaw) async {
+    await preferences.reload();
+    if (!isReadable()) return;
+    if (preferences.getString(key) == previousRaw) return;
+    if (!isReadable()) return;
+    final restored = previousRaw == null
+        ? await preferences.remove(key)
+        : await preferences.setString(key, previousRaw);
+    if (!isReadable()) return;
+    if (!restored) {
+      throw StateError('Could not restore personal mapping.');
+    }
+    await preferences.reload();
+    if (!isReadable()) return;
+    if (preferences.getString(key) != previousRaw) {
+      throw StateError('Could not restore personal mapping.');
     }
   }
 }
