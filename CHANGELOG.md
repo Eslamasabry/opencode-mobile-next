@@ -2,14 +2,52 @@
 
 This project is in public alpha. Only the newest preview is supported.
 
-## 1.0.36+37 — Unreleased
+## 1.0.37+38 — Unreleased
 
 Changes since **1.0.34+35** (2026-09-06), whose source is tagged
 [`v1.0.34+35`](https://github.com/Eslamasabry/opencode-mobile-next/tree/v1.0.34%2B35)
 at `b618d30`. This section describes the development candidate, including the
-quota batch and subsequent integration work. It is **not** an announcement of
-available downloads: local verification is in progress and CI packaging is held
-under the maintainer's CI-budget instruction.
+quota batch and subsequent integration work. Downloads are not yet available:
+the combined verification and fresh Android installation checks are in progress.
+
+### Reading and working from a phone
+
+- Keep streamed Markdown readable while you scroll away from new messages.
+  Horizontal code/table gestures do not change whether the conversation follows
+  new content. Use **Jump to latest** when you are ready to catch up.
+- Wrap code, open a full-screen snapshot with stable selection, or copy its
+  original fenced body. Copy failures have a retry. Tables grow to fit their
+  content, including large text and inline-code headings; code starts at the
+  beginning of the line in both left-to-right and right-to-left layouts.
+- Add a **Context capsule** from Chat Add: collect labeled notes, errors, code
+  and selected screenshots, review them, then append to the existing draft.
+  Cancel preserves that draft, and applying never sends it.
+- Put permission, question and form blockers together under **Needs you** in
+  Workspace, with each session shown once. Keep Search directly accessible and
+  move occasional section actions into a labeled menu.
+- Add Android **Connect** and **New task** launcher shortcuts. New task opens a
+  blank conversation on the current server and preserves other saved drafts.
+
+### Results, return visits and development services
+
+- Add **Run results** to Activity digests: inspect server-recorded outcomes,
+  command exit codes when supplied, and file evidence from completed tools.
+  Incomplete history and missing outcomes remain explicit; an idle session does
+  not become a success claim. Open the recorded output or original conversation.
+- Show a compact Workspace return brief for unreviewed sessions and outstanding
+  decisions. Review results, answer, or continue directly. Dismissal is saved for
+  the exact displayed work and does not mark conversations read or resolve requests.
+- Start a blank task in a fresh Git worktree on supported OpenCode 1 servers.
+  Show preparation, failure and unconfirmed states, allow an explicit open-anyway
+  choice, and leave created worktrees intact when the user stops waiting.
+- Add **Manage project → Development services**. Save a command and visit URL
+  without executing it; supported OpenCode 2 servers can start a managed service,
+  inspect bounded output, and stop or restart the exact service the app created.
+  Lost responses are reconciled before another start. Other servers retain the
+  save/copy/visit actions.
+- Keep queued prompts whose delivery was not confirmed for review instead of
+  automatically sending them again after reconnect or restart. Review, edit,
+  explicitly resend, or discard; a failed local write keeps the recoverable draft.
 
 ### Backlog follow-through
 
@@ -32,14 +70,18 @@ under the maintainer's CI-budget instruction.
 
 - Show setup progress immediately, including while Termux is still responding.
   Use a flat page with readable, colored output that fills the available height.
-- Inspect the managed Ubuntu installation before choosing a path. Reuse installed
-  OpenCode without reinstalling, install the tested OpenCode 1 in Ubuntu, or
-  connect an existing OpenCode 1/2 server. OpenCode 2 and musl installation remain
-  unavailable until their runtime paths are verified.
+- Inspect the managed Ubuntu installation before choosing a path. A fresh install
+  offers OpenCode 1 (**1.18.29**, the default) or OpenCode 2 beta
+  (**0.0.0-beta-18600**). Existing installations retain their runtime choice across
+  repair, stop and restart; the app does not silently migrate them.
+- Guide the first Termux connection with copy/open, paste and keyboard-Enter
+  illustrations. Verify automatically after returning from Termux, with explicit
+  permission, error and retry states.
+- Keep the installation elapsed time tied to the accepted operation, including
+  backgrounding and reopening the setup screen. Reduce optional Ubuntu package
+  installation while retaining Git, SSH, certificates and the pinned runtime.
 - Require the compatible Ubuntu binary package explicitly during npm setup,
   retain version pinning and temporary-cache cleanup, and expose install output.
-  The reported musl error is an upstream fallback; its original glibc failure
-  could not be reconstructed from that log alone.
 - Keep prior sessions and global search accessible when the project list is empty.
   This session fix also appeared in the focused 1.0.35+36 CI APK.
 
@@ -124,7 +166,11 @@ under the maintainer's CI-budget instruction.
   reject oversized input instead of silently truncating it.
 - Add a foreground **Voice conversation** loop using existing local dictation:
   listen, review/edit, insert, explicitly Send, and optionally read a reply.
-  There is no automatic listening, sending, reading or voice-only tool approval.
+- Add an optional, temporary **Speak replies** switch. After consent and explicit
+  Send, compatible OpenCode 1 connections can read the completed reply to that
+  exact dispatched message. Unsupported or ambiguous reply ownership stays
+  manual. Stop, Exit, backgrounding and scope changes retire pending speech.
+  The microphone never opens automatically, and tool approvals remain visual.
 - Pause for pending decisions, active turns or a disconnected transport. Stop
   playback before microphone capture, and invalidate stale audio/transcript
   results on interruption, backgrounding or source changes.
@@ -174,8 +220,7 @@ under the maintainer's CI-budget instruction.
   This is preparation—not a released or device-verified iPhone app.
 - Update the managed Termux OpenCode pin from **1.18.25 to 1.18.29**. New managed
   installs use it; existing installations update through the Termux update flow.
-  Remote computer-hosted servers remain independently managed. Dependency
-  versions are unchanged in this candidate.
+  Remote computer-hosted servers remain independently managed.
 
 ### Upgrade and delivery notes
 
@@ -187,6 +232,8 @@ under the maintainer's CI-budget instruction.
   a recovery window of at most **24 hours**. Expiry or local forgetting does not
   cancel a remote process or revoke provider credentials. Profile deletion
   removes local recovery data only.
+- Older app versions do not understand the queued-send dispatch marker and can
+  retry an unconfirmed entry. Review those entries before downgrading.
 - Intended Android CI downloads are **test-signed**, not production-signed.
   Updating an existing installation requires a compatible signing certificate;
   do not uninstall an existing app with unsaved local data just to force an
