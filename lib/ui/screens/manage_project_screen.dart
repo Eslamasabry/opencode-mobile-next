@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import '../../api/product_repository.dart';
 import '../../domain/server_gateway.dart';
 import '../../state/connection.dart';
+import '../../l10n/app_localizations.dart';
 import '../widgets/product_states.dart';
 import 'managed_workspaces_screen.dart';
 import 'project_health_screen.dart';
 import 'projects_screen.dart';
 import 'worktrees_screen.dart';
+import 'development_services_screen.dart';
 
 /// Audit UX-P0-02 / UX-101: every low-frequency project management surface —
 /// project switching, worktrees, managed workspaces, and project health —
@@ -38,6 +40,7 @@ class _ManageProjectScreenState extends State<ManageProjectScreen> {
   Widget build(BuildContext context) {
     final project = widget.project;
     final capabilities = widget.controller.capabilities;
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -63,6 +66,21 @@ class _ManageProjectScreenState extends State<ManageProjectScreen> {
             ),
             const Divider(height: 1),
             const SectionLabel('Project'),
+            ListTile(
+              leading: const Icon(Icons.developer_board_rounded),
+              title: Text(l10n.servicesTitle),
+              subtitle: Text(l10n.servicesSubtitle),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: widget.controller.directory?.isNotEmpty == true
+                  ? () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => DevelopmentServicesScreen(
+                          controller: widget.controller,
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
             if (capabilities.projectManagement) ...[
               ListTile(
                 key: const ValueKey('switch-project-entry'),

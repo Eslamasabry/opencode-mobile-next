@@ -94,6 +94,228 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('en')];
 
+  /// No description provided for @servicesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Development services'**
+  String get servicesTitle;
+
+  /// No description provided for @servicesCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy command'**
+  String get servicesCopy;
+
+  /// No description provided for @servicesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Project commands, logs, and preview links'**
+  String get servicesSubtitle;
+
+  /// No description provided for @servicesIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your project\'s development commands and preview links together. Saving a service does not start it.'**
+  String get servicesIntro;
+
+  /// No description provided for @servicesAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Register service'**
+  String get servicesAdd;
+
+  /// No description provided for @servicesName.
+  ///
+  /// In en, this message translates to:
+  /// **'Service name'**
+  String get servicesName;
+
+  /// No description provided for @servicesCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'Development command'**
+  String get servicesCommand;
+
+  /// No description provided for @servicesCommandHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a foreground command, such as npm run dev. Background or detached commands cannot be tracked.'**
+  String get servicesCommandHint;
+
+  /// No description provided for @servicesUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview URL (optional)'**
+  String get servicesUrl;
+
+  /// No description provided for @servicesUrlHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use an address this phone can reach. localhost points to this phone. No ports are exposed or forwarded for you.'**
+  String get servicesUrlHint;
+
+  /// No description provided for @servicesSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save service'**
+  String get servicesSave;
+
+  /// No description provided for @servicesInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name, a foreground command, and an optional HTTP or HTTPS URL without credentials.'**
+  String get servicesInvalid;
+
+  /// No description provided for @servicesUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This connection cannot start and track development commands. You can save commands and review their preview links here.'**
+  String get servicesUnavailable;
+
+  /// No description provided for @servicesScopeChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The server or project changed. Reopen Development services from the intended project.'**
+  String get servicesScopeChanged;
+
+  /// No description provided for @servicesNotStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Not started'**
+  String get servicesNotStarted;
+
+  /// No description provided for @servicesRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Running command'**
+  String get servicesRunning;
+
+  /// No description provided for @servicesStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get servicesStopped;
+
+  /// No description provided for @servicesUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Status unknown'**
+  String get servicesUnknown;
+
+  /// No description provided for @servicesStatusHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Command status does not confirm that your app is ready or reachable.'**
+  String get servicesStatusHint;
+
+  /// No description provided for @servicesStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get servicesStart;
+
+  /// No description provided for @servicesStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get servicesStop;
+
+  /// No description provided for @servicesRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart'**
+  String get servicesRestart;
+
+  /// No description provided for @servicesLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs'**
+  String get servicesLogs;
+
+  /// No description provided for @servicesVisit.
+  ///
+  /// In en, this message translates to:
+  /// **'Visit'**
+  String get servicesVisit;
+
+  /// No description provided for @servicesRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove configuration'**
+  String get servicesRemove;
+
+  /// No description provided for @servicesRemoveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this saved service and its local ownership record? This does not stop its command on the server. Stop it first if needed.'**
+  String get servicesRemoveHint;
+
+  /// No description provided for @servicesStartHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Run this saved command in the project shown below? It uses the server\'s environment. Keep it in the foreground; this panel cannot manage detached processes.'**
+  String get servicesStartHint;
+
+  /// No description provided for @servicesStopHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop this service\'s tracked command? The server also removes its retained logs. Other commands are not affected.'**
+  String get servicesStopHint;
+
+  /// No description provided for @servicesRestartHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop this tracked command, remove its server log, then start the saved command again?'**
+  String get servicesRestartHint;
+
+  /// No description provided for @servicesForget.
+  ///
+  /// In en, this message translates to:
+  /// **'Forget last run'**
+  String get servicesForget;
+
+  /// No description provided for @servicesForgetHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the local run record? This does not stop any server process. Starting again may create a duplicate if the previous command is still running.'**
+  String get servicesForgetHint;
+
+  /// No description provided for @servicesUnknownHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The last run could not be confirmed. Refresh to reconcile it before starting again.'**
+  String get servicesUnknownHint;
+
+  /// No description provided for @servicesLogEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No captured output is available yet.'**
+  String get servicesLogEmpty;
+
+  /// No description provided for @servicesLogTail.
+  ///
+  /// In en, this message translates to:
+  /// **'Bounded log tail. Earlier output may be omitted. Logs are kept on the server, not saved on this phone.'**
+  String get servicesLogTail;
+
+  /// No description provided for @servicesWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating service…'**
+  String get servicesWorking;
+
+  /// No description provided for @servicesExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Recorded exit code: {code}'**
+  String servicesExit(int code);
+
+  /// No description provided for @servicesRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh status'**
+  String get servicesRefresh;
+
   /// Application title shown in the task switcher / window title
   ///
   /// In en, this message translates to:
