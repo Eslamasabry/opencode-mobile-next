@@ -10,6 +10,7 @@ class SessionReadStore {
   final SharedPreferences preferences;
   final _profiles = <String, Map<String, int>>{};
   final _writes = <String, Future<void>>{};
+  final _dirty = <String>{};
 
   Map<String, int> _load(String profileID) => _profiles.putIfAbsent(
     profileID,
@@ -36,24 +37,35 @@ class SessionReadStore {
 
   Future<void> record(String profileID, String key, int idle) async {
     final entries = _load(profileID);
-    if ((entries[key] ?? 0) >= idle) return;
-    entries[key] = idle;
+    final previous = _writes[profileID] ?? Future<void>.value();
+    final current = entries[key] ?? 0;
+    if (current >= idle &&
+        !_dirty.contains(profileID) &&
+        !_writes.containsKey(profileID)) {
+      return;
+    }
+    if (current < idle) entries[key] = idle;
     if (entries.length > maxEntries) {
       final oldest = entries.keys.toList()
         ..sort((a, b) => entries[a]!.compareTo(entries[b]!));
-      for (final key in oldest.take(entries.length - maxEntries)) {
-        entries.remove(key);
+      for (final oldKey in oldest.take(entries.length - maxEntries)) {
+        entries.remove(oldKey);
       }
     }
     // Retain the in-memory watermark if storage fails; callers can still show
     // truthful read state for this process. Never turn a cache failure into a
     // server acknowledgement or drop the user's transcript.
     final snapshot = jsonEncode(entries);
-    final previous = _writes[profileID] ?? Future<void>.value();
     final writing = previous.catchError((Object _) {}).then((_) async {
       try {
-        await preferences.setString('$prefix$profileID', snapshot);
+        final saved = await preferences.setString(
+          '$prefix$profileID',
+          snapshot,
+        );
+        if (!saved) throw StateError('Read state storage rejected the write');
+        _dirty.remove(profileID);
       } catch (_) {
+        _dirty.add(profileID);
         // Keep reading usable even when platform storage rejects this write.
         // A later record writes the complete retained in-memory snapshot.
       }
@@ -68,5 +80,8 @@ class SessionReadStore {
 
   Future<void> drain(String profileID) => _writes[profileID] ?? Future.value();
 
-  void forgetProfile(String profileID) => _profiles.remove(profileID);
+  void forgetProfile(String profileID) {
+    _profiles.remove(profileID);
+    _dirty.remove(profileID);
+  }
 }

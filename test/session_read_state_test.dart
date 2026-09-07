@@ -11,9 +11,19 @@ import 'package:opencode_mobile/api2/gateway_mappers.dart';
 import 'package:opencode_mobile/api2/models.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/state/session_read_state.dart';
 import 'package:opencode_mobile/ui/screens/settings_screen.dart';
 import 'package:opencode_mobile/ui/widgets/session_read_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
+
+class _RefusingStore extends InMemorySharedPreferencesStore {
+  _RefusingStore() : super.withData({});
+  bool refuse = true;
+  @override
+  Future<bool> setValue(String valueType, String key, Object value) async =>
+      refuse ? false : super.setValue(valueType, key, value);
+}
 
 class _Repository extends ProductRepository implements SessionReadStateGateway {
   final views = <(String, int)>[];
@@ -186,6 +196,31 @@ void main() {
         .single;
     expect(event.type, 'session.viewed');
     expect(event.properties, {'sessionID': 'ses_1', 'idle': 180});
+  });
+
+  test('a false read-state write is retried at the same watermark', () async {
+    final backend = _RefusingStore();
+    SharedPreferences.resetStatic();
+    SharedPreferencesStorePlatform.instance = backend;
+    final prefs = await SharedPreferences.getInstance();
+    final reads = SessionReadStore(prefs);
+
+    await reads.record('profile-a', 'ses-1', 100);
+    expect(reads.viewed('profile-a', 'ses-1'), 100);
+    expect(
+      (await backend.getAll())['flutter.oc.sessionViews.profile-a'],
+      isNull,
+    );
+
+    backend.refuse = false;
+    await reads.record('profile-a', 'ses-1', 100);
+    expect(
+      (await backend.getAll())['flutter.oc.sessionViews.profile-a'],
+      '{"ses-1":100}',
+    );
+    SharedPreferences.resetStatic();
+    final reloaded = await SharedPreferences.getInstance();
+    expect(SessionReadStore(reloaded).viewed('profile-a', 'ses-1'), 100);
   });
 
   test(
