@@ -27,8 +27,9 @@ class _SessionRelationsScreenState extends State<SessionRelationsScreen> {
   List<Session>? _children;
   Object? _error;
   int _generation = 0;
+  int _routeOperationGeneration = 0;
   int _dataRefreshRevision = 0;
-  late final SessionNavigationScope _scope;
+  late SessionNavigationScope _scope;
   bool _selecting = false;
 
   @override
@@ -57,48 +58,107 @@ class _SessionRelationsScreenState extends State<SessionRelationsScreen> {
     unawaited(_load());
   }
 
+  @override
+  void didUpdateWidget(covariant SessionRelationsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (identical(oldWidget.controller, widget.controller) &&
+        oldWidget.sessionID == widget.sessionID) {
+      return;
+    }
+    oldWidget.controller.removeListener(_controllerChanged);
+    ++_routeOperationGeneration;
+    ++_generation;
+    _scope = SessionNavigationScope(widget.controller);
+    _dataRefreshRevision = widget.controller.dataRefreshRevision;
+    _parent = null;
+    _children = null;
+    _error = null;
+    _selecting = false;
+    widget.controller.addListener(_controllerChanged);
+    unawaited(_load());
+  }
+
+  bool _routeIsCurrent(
+    int generation,
+    ConnectionController controller,
+    String sessionID,
+  ) =>
+      mounted &&
+      generation == _routeOperationGeneration &&
+      identical(widget.controller, controller) &&
+      widget.sessionID == sessionID;
+
+  bool _relationIsListed(String id) =>
+      _parent?.id == id ||
+      (_children?.any((session) => session.id == id) ?? false);
+
   Future<void> _load() async {
+    if (!mounted) return;
+    final controller = widget.controller;
+    final sessionID = widget.sessionID;
+    final routeGeneration = _routeOperationGeneration;
     final generation = ++_generation;
     setState(() => _error = null);
     try {
-      _scope.check(widget.controller);
-      final repository = await widget.controller.prepareActionRepository();
-      _scope.check(widget.controller);
+      _scope.check(controller);
+      final repository = await controller.prepareActionRepository();
+      if (!_routeIsCurrent(routeGeneration, controller, sessionID)) return;
+      _scope.check(controller);
       if (repository == null) {
         throw const ProductException('OpenCode is reconnecting. Try again.');
       }
-      final current = await repository.getSessionDetails(widget.sessionID);
-      _scope.check(widget.controller);
+      final current = await repository.getSessionDetails(sessionID);
+      if (!_routeIsCurrent(routeGeneration, controller, sessionID)) return;
+      _scope.check(controller);
       final parentID = current.parentID ?? current.id;
-      var parent = widget.controller.sessionsById[parentID];
+      var parent = controller.sessionsById[parentID];
       parent ??= parentID == current.id
           ? current
           : await repository.getSessionDetails(parentID);
       final children = await repository.listSessionChildren(parentID);
-      _scope.check(widget.controller);
-      if (!mounted || generation != _generation) return;
+      _scope.check(controller);
+      if (!mounted ||
+          generation != _generation ||
+          !_routeIsCurrent(routeGeneration, controller, sessionID)) {
+        return;
+      }
       setState(() {
         _parent = parent;
         _children = children;
       });
     } catch (error) {
-      if (!mounted || generation != _generation) return;
+      if (!mounted ||
+          generation != _generation ||
+          !_routeIsCurrent(routeGeneration, controller, sessionID)) {
+        return;
+      }
       setState(() => _error = error);
     }
   }
 
   Future<void> _select(Session session) async {
     if (_selecting) return;
+    final controller = widget.controller;
+    final sessionID = widget.sessionID;
+    final routeGeneration = _routeOperationGeneration;
+    final scope = _scope;
+    bool routeIsCurrent() =>
+        _routeIsCurrent(routeGeneration, controller, sessionID);
     setState(() => _selecting = true);
     try {
-      _scope.check(widget.controller);
-      final repository = await widget.controller.prepareActionRepository();
-      _scope.check(widget.controller);
+      scope.check(controller);
+      final repository = await controller.prepareActionRepository();
+      if (!routeIsCurrent()) return;
+      scope.check(controller);
       if (repository == null) {
         throw StateError('OpenCode is reconnecting. Try again.');
       }
       final current = await repository.getSessionDetails(session.id);
-      _scope.check(widget.controller);
+      if (!routeIsCurrent()) return;
+      scope.check(controller);
+      if (!_relationIsListed(session.id)) {
+        throw StateError('Session is no longer related to this session.');
+      }
       if (current.id != session.id ||
           current.directory != session.directory ||
           current.workspaceID != session.workspaceID) {
@@ -106,7 +166,7 @@ class _SessionRelationsScreenState extends State<SessionRelationsScreen> {
       }
       if (mounted) Navigator.of(context).pop(current);
     } catch (_) {
-      if (mounted) {
+      if (routeIsCurrent()) {
         setState(
           () => _error = StateError(
             'Session unavailable or location changed. Return or refresh to try again.',
@@ -114,32 +174,48 @@ class _SessionRelationsScreenState extends State<SessionRelationsScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() => _selecting = false);
+      if (routeIsCurrent()) setState(() => _selecting = false);
     }
   }
 
   Future<void> _pin(Session session) async {
+    final controller = widget.controller;
+    final sessionID = widget.sessionID;
+    final routeGeneration = _routeOperationGeneration;
+    final scope = _scope;
+    bool routeIsCurrent() =>
+        _routeIsCurrent(routeGeneration, controller, sessionID);
     try {
-      _scope.check(widget.controller);
-      final repository = await widget.controller.prepareActionRepository();
-      _scope.check(widget.controller);
+      scope.check(controller);
+      final repository = await controller.prepareActionRepository();
+      if (!routeIsCurrent()) return;
+      scope.check(controller);
       if (repository == null) {
         throw StateError('OpenCode is reconnecting. Try again.');
       }
       final current = await repository.getSessionDetails(session.id);
-      _scope.check(widget.controller);
+      if (!routeIsCurrent()) return;
+      scope.check(controller);
+      if (!_relationIsListed(session.id)) {
+        throw StateError('Session is no longer related to this session.');
+      }
       if (current.id != session.id ||
           current.directory != session.directory ||
           current.workspaceID != session.workspaceID) {
         throw StateError('Session location changed. Return and try again.');
       }
-      await widget.controller.setSessionPinned(
+      // Recheck immediately before the mutating call. A route replacement or
+      // location change during the identity read must not pin the new route's
+      // session using the old tile's decision.
+      if (!routeIsCurrent()) return;
+      scope.check(controller);
+      await controller.setSessionPinned(
         session.id,
-        !widget.controller.isSessionPinned(session.id),
-        locationRevision: _scope.revision,
+        !controller.isSessionPinned(session.id),
+        locationRevision: scope.revision,
       );
     } catch (_) {
-      if (mounted) {
+      if (mounted && routeIsCurrent()) {
         showProductError(
           context,
           'Could not update the pin. Return and try again.',
@@ -264,6 +340,7 @@ class _SessionRelationsScreenState extends State<SessionRelationsScreen> {
   @override
   void dispose() {
     _generation++;
+    _routeOperationGeneration++;
     widget.controller.removeListener(_controllerChanged);
     super.dispose();
   }
