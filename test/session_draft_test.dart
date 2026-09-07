@@ -421,6 +421,67 @@ void main() {
     },
   );
 
+  test(
+    'draft save snapshots caller attachment metadata before waiting',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final store = SessionDraftStore(prefs: prefs);
+      final attachments = <DraftAttachmentRef>[
+        const DraftAttachmentRef(
+          filename: 'first.txt',
+          mime: 'text/plain',
+          url: 'file:///first.txt',
+        ),
+      ];
+      final draft = SessionDraft(
+        sessionID: 's',
+        text: 'draft',
+        updatedAt: 1,
+        attachments: attachments,
+      );
+      final save = store.save({'s': draft});
+      attachments.add(
+        const DraftAttachmentRef(
+          filename: 'mutated.txt',
+          mime: 'text/plain',
+          url: 'file:///mutated.txt',
+        ),
+      );
+      expect(
+        () => draft.attachments.add(attachments.last),
+        throwsUnsupportedError,
+      );
+      expect(await save, isTrue);
+      expect(
+        SessionDraftStore(prefs: prefs).load().values.single.attachments,
+        hasLength(1),
+      );
+    },
+  );
+
+  test('serialized remove cannot be overtaken by a stale save', () async {
+    late _DraftStorage disk;
+    SharedPreferences.setMockInitialValues({});
+    disk = _DraftStorage(
+      await SharedPreferencesStorePlatform.instance.getAll(),
+    );
+    SharedPreferencesStorePlatform.instance = disk;
+    SharedPreferences.resetStatic();
+    final prefs = await SharedPreferences.getInstance();
+    final store = SessionDraftStore(prefs: prefs);
+    const old = SessionDraft(sessionID: 's', text: 'old', updatedAt: 1);
+    await store.save({'s': old});
+    disk.gate = Completer<void>();
+    final staleSave = store.save({'s': old});
+    await Future<void>.delayed(Duration.zero);
+    final remove = store.save({});
+    disk.gate!.complete();
+    expect(await staleSave, isTrue);
+    expect(await remove, isTrue);
+    expect(SessionDraftStore(prefs: prefs).load(), isEmpty);
+  });
+
   test('overlapping saves and clear preserve invocation order', () async {
     late _DraftStorage disk;
     final c = await _controller(

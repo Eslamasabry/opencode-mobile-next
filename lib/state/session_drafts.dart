@@ -26,7 +26,7 @@ class SessionDraft {
   final String profileID;
   final String text;
   final int updatedAt;
-  final List<DraftAttachmentRef> attachments;
+  final List<DraftAttachmentRef> _attachments;
   final String? directory;
   final String? workspace;
 
@@ -35,10 +35,26 @@ class SessionDraft {
     this.profileID = '',
     required this.text,
     required this.updatedAt,
-    this.attachments = const [],
+    List<DraftAttachmentRef> attachments = const [],
     this.directory,
     this.workspace,
-  });
+  }) : _attachments = attachments;
+
+  /// A runtime defensive copy used at persistence boundaries. The unnamed
+  /// constructor stays const for source compatibility with existing callers;
+  /// writes always pass through this snapshot before any await.
+  SessionDraft._snapshot(SessionDraft source)
+    : sessionID = source.sessionID,
+      profileID = source.profileID,
+      text = source.text,
+      updatedAt = source.updatedAt,
+      _attachments = List.unmodifiable(source._attachments),
+      directory = source.directory,
+      workspace = source.workspace;
+
+  /// Attachment metadata is exposed as a read-only view. Persistence uses a
+  /// separate defensive snapshot so a caller cannot mutate an in-flight save.
+  List<DraftAttachmentRef> get attachments => List.unmodifiable(_attachments);
 
   String get storageKey => keyFor(profileID, sessionID);
   static String keyFor(String profileID, String sessionID) =>
@@ -64,14 +80,16 @@ class SessionDraft {
         DraftAttachmentRef.fromJson(Map<String, dynamic>.from(a as Map)),
     ];
     if (sessionID.isEmpty || (text.isEmpty && attachments.isEmpty)) return null;
-    return SessionDraft(
-      sessionID: sessionID,
-      profileID: value['profileID']?.toString() ?? '',
-      text: text,
-      updatedAt: (value['updatedAt'] as num?)?.toInt() ?? 0,
-      attachments: attachments,
-      directory: value['directory'] as String?,
-      workspace: value['workspace'] as String?,
+    return SessionDraft._snapshot(
+      SessionDraft(
+        sessionID: sessionID,
+        profileID: value['profileID']?.toString() ?? '',
+        text: text,
+        updatedAt: (value['updatedAt'] as num?)?.toInt() ?? 0,
+        attachments: attachments,
+        directory: value['directory'] as String?,
+        workspace: value['workspace'] as String?,
+      ),
     );
   }
 }
@@ -86,6 +104,7 @@ class SessionDraftStore {
   static const maxDrafts = 50;
 
   final SharedPreferences prefs;
+  Future<void> _writeTail = Future<void>.value();
   bool _readFailed = false;
   bool get readable {
     load();
@@ -148,6 +167,19 @@ class SessionDraftStore {
   };
 
   Future<bool> save(Map<String, SessionDraft> drafts) async {
+    // Copy values before entering the serialized write lane. This protects a
+    // caller that reuses or mutates its map/list while the platform write is
+    // pending, and keeps a later remove from being overtaken by a stale save.
+    final snapshot = <String, SessionDraft>{
+      for (final entry in drafts.entries)
+        entry.key: SessionDraft._snapshot(entry.value),
+    };
+    final write = _writeTail.then((_) => _saveSnapshot(snapshot));
+    _writeTail = write.then<void>((_) {}, onError: (_) {});
+    return write;
+  }
+
+  Future<bool> _saveSnapshot(Map<String, SessionDraft> drafts) async {
     try {
       if (!readable) return false;
       if (drafts.length > maxDrafts) return false;
