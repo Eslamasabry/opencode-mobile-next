@@ -3644,6 +3644,11 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   bool _onTranscriptScroll(ScrollNotification notification) {
+    // Code/table readers own nested scrollables. Their gestures must not
+    // change whether the transcript follows the latest message.
+    if (notification.depth != 0 || notification.metrics.axis != Axis.vertical) {
+      return false;
+    }
     // The list is reversed, so pixel offset measures distance scrolled away
     // from the newest message.
     final away = notification.metrics.pixels > 480;

@@ -4129,4 +4129,32 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get capsuleTextLimit =>
       'Keep each excerpt under 16,000 characters and the bundle under 32,000.';
+
+  @override
+  String get markdownCopyCode => 'Copy code';
+
+  @override
+  String get markdownCopied => 'Code copied';
+
+  @override
+  String get markdownCopyFailed => 'Could not copy code. Try again.';
+
+  @override
+  String get markdownCopyRetry => 'Retry';
+
+  @override
+  String get markdownWrapCode => 'Wrap lines';
+
+  @override
+  String get markdownScrollCode => 'Scroll lines';
+
+  @override
+  String get markdownExpandCode => 'Full screen';
+
+  @override
+  String get markdownReaderTitle => 'Code reader';
+
+  @override
+  String get markdownSnapshot =>
+      'Snapshot of the code when opened. Close and reopen to read later updates.';
 }
