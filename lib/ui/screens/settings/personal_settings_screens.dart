@@ -274,6 +274,10 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
               final queued = _controller.totalQueuedPromptCount;
               final drafts = _controller.totalSessionDraftCount;
               final queuedBytes = _controller.queuedPromptBytes;
+              final queueReadable = _controller.queuedPromptStorageReadable;
+              final l10n = lookupAppLocalizations(
+                Localizations.localeOf(context),
+              );
               final draftBytes = _controller.sessionDraftBytes;
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -283,14 +287,16 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                     leading: const Icon(Icons.sd_storage_outlined),
                     title: const Text('Storage used'),
                     subtitle: Text(
-                      '${formatBytes(queuedBytes + draftBytes)} of unsent '
-                      'work — $queued queued '
-                      '${queued == 1 ? 'prompt' : 'prompts'} '
-                      '(${formatBytes(queuedBytes)}) and $drafts '
-                      '${drafts == 1 ? 'draft' : 'drafts'} '
-                      '(${formatBytes(draftBytes)}). Queued prompts are '
-                      'discarded after '
-                      '${OfflineQueueStore.maxAge.inDays} days.',
+                      !queueReadable
+                          ? l10n.queueStorageCountUnknown
+                          : '${formatBytes(queuedBytes + draftBytes)} of unsent '
+                                'work — $queued queued '
+                                '${queued == 1 ? 'prompt' : 'prompts'} '
+                                '(${formatBytes(queuedBytes)}) and $drafts '
+                                '${drafts == 1 ? 'draft' : 'drafts'} '
+                                '(${formatBytes(draftBytes)}). Queued prompts are '
+                                'discarded after '
+                                '${OfflineQueueStore.maxAge.inDays} days.',
                     ),
                   ),
                   ListTile(
@@ -298,21 +304,24 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                     leading: const Icon(Icons.outbox_outlined),
                     title: const Text('Clear queued prompts'),
                     subtitle: Text(
-                      queued == 0
+                      !queueReadable
+                          ? l10n.queueStorageUnreadable
+                          : queued == 0
                           ? 'Nothing is waiting to send'
                           : 'Deletes all $queued unsent '
                                 '${queued == 1 ? 'prompt' : 'prompts'} and '
                                 'their attachments, for every server',
                     ),
-                    enabled: queued > 0 && !_busy,
+                    enabled: (queued > 0 || !queueReadable) && !_busy,
                     onTap: () => _confirmAndClear(
                       title: 'Delete queued prompts?',
-                      body:
-                          'This deletes $queued unsent '
-                          '${queued == 1 ? 'prompt' : 'prompts'} and any '
-                          'attachments they carry, for every server. They '
-                          'will never be sent. Nothing on the server is '
-                          'affected.',
+                      body: !queueReadable
+                          ? l10n.queueStorageDiscardUnreadable
+                          : 'This deletes $queued unsent '
+                                '${queued == 1 ? 'prompt' : 'prompts'} and any '
+                                'attachments they carry, for every server. They '
+                                'will never be sent. Nothing on the server is '
+                                'affected.',
                       clear: _controller.clearAllQueuedPrompts,
                       cleared: 'Queued prompts deleted',
                       failed:

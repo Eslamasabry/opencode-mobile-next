@@ -16,8 +16,8 @@ class QueuedPrompt {
   final String profileID;
   final String sessionID;
   final String text;
-  final List<PromptAttachment> attachments;
-  final List<PromptAgentMention> mentions;
+  final List<PromptAttachment> _attachments;
+  final List<PromptAgentMention> _mentions;
   final String? modelProviderID;
   final String? modelID;
   final String? agent;
@@ -32,29 +32,52 @@ class QueuedPrompt {
     required this.profileID,
     required this.sessionID,
     required this.text,
-    this.attachments = const [],
-    this.mentions = const [],
+    List<PromptAttachment> attachments = const [],
+    List<PromptAgentMention> mentions = const [],
     this.modelProviderID,
     this.modelID,
     this.agent,
     this.variant,
     required this.createdAt,
     this.error,
-  });
+  }) : _attachments = attachments,
+       _mentions = mentions;
 
-  QueuedPrompt withError(String? error) => QueuedPrompt(
-    id: id,
-    profileID: profileID,
-    sessionID: sessionID,
-    text: text,
-    attachments: attachments,
-    mentions: mentions,
-    modelProviderID: modelProviderID,
-    modelID: modelID,
-    agent: agent,
-    variant: variant,
-    createdAt: createdAt,
-    error: error,
+  /// Runtime defensive copy used when a queue entry crosses an async
+  /// persistence boundary. The unnamed constructor stays const for source
+  /// compatibility with existing callers.
+  QueuedPrompt._snapshot(QueuedPrompt source)
+    : id = source.id,
+      profileID = source.profileID,
+      sessionID = source.sessionID,
+      text = source.text,
+      _attachments = List.unmodifiable(source._attachments),
+      _mentions = List.unmodifiable(source._mentions),
+      modelProviderID = source.modelProviderID,
+      modelID = source.modelID,
+      agent = source.agent,
+      variant = source.variant,
+      createdAt = source.createdAt,
+      error = source.error;
+
+  List<PromptAttachment> get attachments => List.unmodifiable(_attachments);
+  List<PromptAgentMention> get mentions => List.unmodifiable(_mentions);
+
+  QueuedPrompt withError(String? error) => QueuedPrompt._snapshot(
+    QueuedPrompt(
+      id: id,
+      profileID: profileID,
+      sessionID: sessionID,
+      text: text,
+      attachments: _attachments,
+      mentions: _mentions,
+      modelProviderID: modelProviderID,
+      modelID: modelID,
+      agent: agent,
+      variant: variant,
+      createdAt: createdAt,
+      error: error,
+    ),
   );
 
   ModelRef? get model => modelProviderID != null && modelID != null
@@ -102,38 +125,40 @@ class QueuedPrompt {
     final profileID = value['profileID']?.toString() ?? '';
     final sessionID = value['sessionID']?.toString() ?? '';
     if (id.isEmpty || profileID.isEmpty || sessionID.isEmpty) return null;
-    return QueuedPrompt(
-      id: id,
-      profileID: profileID,
-      sessionID: sessionID,
-      text: value['text']?.toString() ?? '',
-      attachments: [
-        if (value['attachments'] is List)
-          for (final raw in value['attachments'] as List)
-            if (raw is Map)
-              PromptAttachment(
-                mime: raw['mime']?.toString() ?? '',
-                filename: raw['filename']?.toString() ?? '',
-                url: raw['url']?.toString() ?? '',
-              ),
-      ],
-      mentions: [
-        if (value['mentions'] is List)
-          for (final raw in value['mentions'] as List)
-            if (raw is Map)
-              PromptAgentMention(
-                name: raw['name']?.toString() ?? '',
-                value: raw['value']?.toString() ?? '',
-                start: (raw['start'] as num?)?.toInt() ?? 0,
-                end: (raw['end'] as num?)?.toInt() ?? 0,
-              ),
-      ],
-      modelProviderID: value['modelProviderID']?.toString(),
-      modelID: value['modelID']?.toString(),
-      agent: value['agent']?.toString(),
-      variant: value['variant']?.toString(),
-      createdAt: (value['createdAt'] as num?)?.toInt() ?? 0,
-      error: value['error']?.toString(),
+    return QueuedPrompt._snapshot(
+      QueuedPrompt(
+        id: id,
+        profileID: profileID,
+        sessionID: sessionID,
+        text: value['text']?.toString() ?? '',
+        attachments: [
+          if (value['attachments'] is List)
+            for (final raw in value['attachments'] as List)
+              if (raw is Map)
+                PromptAttachment(
+                  mime: raw['mime']?.toString() ?? '',
+                  filename: raw['filename']?.toString() ?? '',
+                  url: raw['url']?.toString() ?? '',
+                ),
+        ],
+        mentions: [
+          if (value['mentions'] is List)
+            for (final raw in value['mentions'] as List)
+              if (raw is Map)
+                PromptAgentMention(
+                  name: raw['name']?.toString() ?? '',
+                  value: raw['value']?.toString() ?? '',
+                  start: (raw['start'] as num?)?.toInt() ?? 0,
+                  end: (raw['end'] as num?)?.toInt() ?? 0,
+                ),
+        ],
+        modelProviderID: value['modelProviderID']?.toString(),
+        modelID: value['modelID']?.toString(),
+        agent: value['agent']?.toString(),
+        variant: value['variant']?.toString(),
+        createdAt: (value['createdAt'] as num?)?.toInt() ?? 0,
+        error: value['error']?.toString(),
+      ),
     );
   }
 }
@@ -210,6 +235,13 @@ class OfflineQueueStore {
   static const maxAge = Duration(days: 14);
 
   final SharedPreferences prefs;
+  Future<void> _writeTail = Future<void>.value();
+  bool _readFailed = false;
+
+  bool get readable {
+    load();
+    return !_readFailed;
+  }
 
   OfflineQueueStore({required this.prefs});
 
@@ -261,13 +293,24 @@ class OfflineQueueStore {
   }
 
   List<QueuedPrompt> load() {
-    final raw = prefs.getString(_key);
-    if (raw == null || raw.isEmpty) return [];
+    _readFailed = false;
     try {
+      final raw = prefs.getString(_key);
+      if (raw == null || raw.isEmpty) return [];
       final decoded = jsonDecode(raw);
-      if (decoded is! List) return [];
-      return [for (final entry in decoded) ?QueuedPrompt.fromJson(entry)];
+      if (decoded is! List) throw const FormatException('Invalid queue');
+      final entries = <QueuedPrompt>[];
+      final seen = <String>{};
+      for (final entry in decoded) {
+        final prompt = QueuedPrompt.fromJson(entry);
+        if (prompt == null || !seen.add(prompt.id)) {
+          throw const FormatException('Invalid queue entry');
+        }
+        entries.add(prompt);
+      }
+      return entries;
     } catch (_) {
+      _readFailed = true;
       return [];
     }
   }
@@ -275,16 +318,48 @@ class OfflineQueueStore {
   /// Bytes the persisted queue occupies, for the storage readout in
   /// settings. Measures the encoded blob, not the sum of the entries, so it
   /// matches what the device actually holds.
-  int storedBytes() => prefs.getString(_key)?.length ?? 0;
+  int storedBytes() {
+    try {
+      return prefs.getString(_key)?.length ?? 0;
+    } catch (_) {
+      // A preference with the wrong platform type is unreadable, just like a
+      // malformed JSON blob. Do not let a settings read claim the queue is
+      // healthy or surface the platform type error to the UI.
+      _readFailed = true;
+      return 0;
+    }
+  }
 
   Future<bool> save(List<QueuedPrompt> entries) async {
+    // Capture the complete send before waiting on platform storage. Writes
+    // are serialized so an older save cannot resurrect a prompt removed by a
+    // later invocation.
+    final snapshot = [
+      for (final entry in entries) QueuedPrompt._snapshot(entry),
+    ];
+    final write = _writeTail.then((_) => _saveSnapshot(snapshot));
+    _writeTail = write.then<void>((_) {}, onError: (_) {});
+    return write;
+  }
+
+  Future<bool> _saveSnapshot(List<QueuedPrompt> entries) async {
     try {
-      if (entries.isEmpty) return await prefs.remove(_key);
-      return await prefs.setString(
-        _key,
-        jsonEncode([for (final entry in entries) entry.toJson()]),
-      );
+      // An explicit empty save is the recovery/clear operation for a corrupt
+      // blob. Non-empty writes must fail closed so unknown queued work is not
+      // overwritten by a caller that saw load() return an empty list.
+      if (entries.isNotEmpty && !readable) return false;
+      final saved = entries.isEmpty
+          ? await prefs.remove(_key)
+          : await prefs.setString(
+              _key,
+              jsonEncode([for (final entry in entries) entry.toJson()]),
+            );
+      if (!saved) await prefs.reload();
+      return saved;
     } catch (_) {
+      try {
+        await prefs.reload();
+      } catch (_) {}
       return false;
     }
   }

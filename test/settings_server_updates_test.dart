@@ -714,6 +714,53 @@ void main() {
     expect(find.text('Drafts deleted'), findsOneWidget);
   });
 
+  testWidgets(
+    'unreadable queue can be explicitly cleared from privacy settings',
+    (tester) async {
+      final controller = await _controllerFor(
+        'http://127.0.0.1:4096',
+        repository: _EmptyPermissionRepository(),
+      );
+      addTearDown(controller.dispose);
+      await controller.store.prefs.setString('oc.offlineQueue', '{broken');
+      expect(controller.totalQueuedPromptCount, 0);
+      expect(controller.queuedPromptStorageReadable, isFalse);
+      await tester.pumpWidget(
+        MaterialApp(home: SettingsScreen(controller: controller)),
+      );
+      await tester.pumpAndSettle();
+      await _openCategory(tester, 'settings-category-privacy');
+      final clear = find.byKey(const ValueKey('clear-queued-prompts'));
+      await tester.scrollUntilVisible(
+        clear,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(tester.widget<ListTile>(clear).enabled, isTrue);
+      expect(
+        find.textContaining('number of queued prompts is unknown'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('0 queued prompts'), findsNothing);
+      expect(
+        find.textContaining('Saved queued prompts could not be read'),
+        findsOneWidget,
+      );
+      await tester.tap(clear);
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('contents and count are unknown'),
+        findsOneWidget,
+      );
+      expect(controller.store.prefs.getString('oc.offlineQueue'), '{broken');
+      await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+      await tester.pumpAndSettle();
+      expect(controller.store.prefs.getString('oc.offlineQueue'), isNull);
+      expect(controller.queuedPromptStorageReadable, isTrue);
+      expect(tester.widget<ListTile>(clear).enabled, isFalse);
+    },
+  );
+
   testWidgets('the clear rows are inert when there is nothing to clear', (
     tester,
   ) async {

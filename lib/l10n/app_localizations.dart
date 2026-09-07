@@ -5510,6 +5510,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Install & restart'**
   String get setupInstallRestart;
+
+  /// No description provided for @queueStorageUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved queued prompts could not be read. New prompts cannot be queued until this device data is cleared.'**
+  String get queueStorageUnreadable;
+
+  /// No description provided for @queueStorageDiscardUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes the unreadable queued prompts and their attachments from this device. Their contents and count are unknown. Nothing on the server is affected.'**
+  String get queueStorageDiscardUnreadable;
+
+  /// No description provided for @filesViewerScopeChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection changed. Close and reopen this file.'**
+  String get filesViewerScopeChanged;
+
+  /// No description provided for @filesViewerPathChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'File context changed. Close and reopen this file.'**
+  String get filesViewerPathChanged;
+
+  /// No description provided for @queueStorageCountUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved queued data could not be read. The number of queued prompts is unknown.'**
+  String get queueStorageCountUnknown;
 }
 
 class _AppLocalizationsDelegate

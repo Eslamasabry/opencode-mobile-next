@@ -4396,13 +4396,15 @@ class ConnectionController extends ChangeNotifier {
   /// Bytes this device is holding for unsent work, for the settings readout.
   int get queuedPromptBytes => _queueStore.storedBytes();
 
+  bool get queuedPromptStorageReadable => _queueStore.readable;
+
   int get sessionDraftBytes => _draftStore.storedBytes();
 
   /// Drops every queued prompt, for every profile. Returns whether the
   /// store accepted the write; a refusal leaves the queue intact rather
   /// than reporting a clear that did not happen.
   Future<bool> clearAllQueuedPrompts() => _serializeQueueChange(() async {
-    if (_queue.isEmpty) return true;
+    if (_queue.isEmpty && _queueStore.readable) return true;
     if (!await _queueStore.save(const [])) return false;
     _offlineQueue = [];
     notifyListeners();

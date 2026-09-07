@@ -39,12 +39,20 @@ class _QueueController extends ConnectionController {
 class _RefusingQueueStore extends InMemorySharedPreferencesStore {
   _RefusingQueueStore(super.data) : super.withData();
   bool _blocks(String key) => key.endsWith('oc.offlineQueue');
+  Completer<void>? gate;
+  bool allowRemove = false;
   @override
-  Future<bool> setValue(String type, String key, Object value) async =>
-      _blocks(key) ? false : super.setValue(type, key, value);
+  Future<bool> setValue(String type, String key, Object value) async {
+    if (_blocks(key)) {
+      await gate?.future;
+      return false;
+    }
+    return super.setValue(type, key, value);
+  }
+
   @override
   Future<bool> remove(String key) async =>
-      _blocks(key) ? false : super.remove(key);
+      _blocks(key) && !allowRemove ? false : super.remove(key);
 }
 
 class _FakeApi extends OpenCodeApi with CompleteMessageHistory {
@@ -120,12 +128,14 @@ QueuedPrompt _entry(
   String text = 'queued text',
   String? error,
   List<PromptAttachment> attachments = const [],
+  List<PromptAgentMention> mentions = const [],
 }) => QueuedPrompt(
   id: id,
   profileID: profileID,
   sessionID: sessionID,
   text: text,
   attachments: attachments,
+  mentions: mentions,
   createdAt: 1,
   error: error,
 );
@@ -185,6 +195,114 @@ void main() {
       'data:text/plain;base64,bm90ZXM=',
     );
     expect(reloaded.last.error, 'declared failure');
+  });
+
+  test(
+    'corrupt persisted queue fails closed until explicitly cleared',
+    () async {
+      final raw = jsonEncode([
+        {
+          'id': 'valid',
+          'profileID': 'profile-1',
+          'sessionID': 'session-1',
+          'text': 'keep me',
+          'createdAt': 1,
+        },
+        {'id': 'missing-session'},
+      ]);
+      SharedPreferences.setMockInitialValues({'oc.offlineQueue': raw});
+      final prefs = await SharedPreferences.getInstance();
+      final store = OfflineQueueStore(prefs: prefs);
+      expect(store.load(), isEmpty);
+      expect(store.readable, isFalse);
+      expect(await store.save([_entry('replacement')]), isFalse);
+      expect(prefs.getString('oc.offlineQueue'), raw);
+      expect(await store.save(const []), isTrue);
+      expect(store.load(), isEmpty);
+    },
+  );
+
+  test(
+    'wrongly typed persisted queue fails closed until explicitly cleared',
+    () async {
+      SharedPreferences.setMockInitialValues({'oc.offlineQueue': 42});
+      final prefs = await SharedPreferences.getInstance();
+      final store = OfflineQueueStore(prefs: prefs);
+
+      expect(store.load(), isEmpty);
+      expect(store.readable, isFalse);
+      expect(store.storedBytes(), 0);
+      expect(await store.save([_entry('replacement')]), isFalse);
+      expect(await store.save(const []), isTrue);
+      expect(store.load(), isEmpty);
+      expect(store.readable, isTrue);
+    },
+  );
+
+  test('queue save snapshots caller attachments and mentions', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final store = OfflineQueueStore(prefs: prefs);
+    final attachments = <PromptAttachment>[
+      const PromptAttachment(
+        mime: 'text/plain',
+        filename: 'first.txt',
+        url: 'data:text/plain;base64,Zmlyc3Q=',
+      ),
+    ];
+    final mentions = <PromptAgentMention>[
+      const PromptAgentMention(name: 'agent', value: 'build', start: 0, end: 6),
+    ];
+    final entry = _entry(
+      'snapshot',
+      attachments: attachments,
+      mentions: mentions,
+    );
+    final save = store.save([entry]);
+    attachments.add(
+      const PromptAttachment(
+        mime: 'text/plain',
+        filename: 'mutated.txt',
+        url: 'data:text/plain;base64,bXV0YXRlZA==',
+      ),
+    );
+    mentions.add(
+      const PromptAgentMention(name: 'agent', value: 'plan', start: 0, end: 4),
+    );
+    expect(
+      () => entry.attachments.add(attachments.last),
+      throwsUnsupportedError,
+    );
+    expect(() => entry.mentions.add(mentions.last), throwsUnsupportedError);
+    expect(await save, isTrue);
+    final restored = OfflineQueueStore(prefs: prefs).load().single;
+    expect(restored.attachments, hasLength(1));
+    expect(restored.mentions, hasLength(1));
+  });
+
+  test('queue remove follows an in-flight stale save', () async {
+    SharedPreferences.setMockInitialValues({});
+    await SharedPreferences.getInstance();
+    final originalPlatform = SharedPreferencesStorePlatform.instance;
+    final disk = _RefusingQueueStore(await originalPlatform.getAll());
+    disk.gate = Completer<void>();
+    SharedPreferencesStorePlatform.instance = disk;
+    SharedPreferences.resetStatic();
+    addTearDown(
+      () => SharedPreferencesStorePlatform.instance = originalPlatform,
+    );
+    final store = OfflineQueueStore(
+      prefs: await SharedPreferences.getInstance(),
+    );
+    final entry = _entry('stale');
+    final stale = store.save([entry]);
+    await Future<void>.delayed(Duration.zero);
+    final remove = store.save([]);
+    disk.allowRemove = true;
+    disk.gate!.complete();
+    expect(await stale, isFalse);
+    expect(await remove, isTrue);
+    expect(store.load(), isEmpty);
   });
 
   test('oversized drafts are rejected instead of queued', () async {

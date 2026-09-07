@@ -3262,4 +3262,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get setupInstallRestart => 'Install & restart';
+
+  @override
+  String get queueStorageUnreadable =>
+      'Saved queued prompts could not be read. New prompts cannot be queued until this device data is cleared.';
+
+  @override
+  String get queueStorageDiscardUnreadable =>
+      'This permanently deletes the unreadable queued prompts and their attachments from this device. Their contents and count are unknown. Nothing on the server is affected.';
+
+  @override
+  String get filesViewerScopeChanged =>
+      'Connection changed. Close and reopen this file.';
+
+  @override
+  String get filesViewerPathChanged =>
+      'File context changed. Close and reopen this file.';
+
+  @override
+  String get queueStorageCountUnknown =>
+      'Saved queued data could not be read. The number of queued prompts is unknown.';
 }

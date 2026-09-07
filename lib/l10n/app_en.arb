@@ -1197,5 +1197,10 @@
       }
     }
   },
-  "setupInstallRestart": "Install & restart"
+  "setupInstallRestart": "Install & restart",
+  "queueStorageUnreadable": "Saved queued prompts could not be read. New prompts cannot be queued until this device data is cleared.",
+  "queueStorageDiscardUnreadable": "This permanently deletes the unreadable queued prompts and their attachments from this device. Their contents and count are unknown. Nothing on the server is affected.",
+  "filesViewerScopeChanged": "Connection changed. Close and reopen this file.",
+  "filesViewerPathChanged": "File context changed. Close and reopen this file.",
+  "queueStorageCountUnknown": "Saved queued data could not be read. The number of queued prompts is unknown."
 }
