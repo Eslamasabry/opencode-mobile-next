@@ -87,6 +87,7 @@ class DemoGateway implements ServerGateway, ServerOperationsGateway {
     configuredProviderFallback: false,
     globalEventStream: false,
     worktreeReset: false,
+    worktreeCreate: false,
     legacyQuestionRequests: false,
   );
 

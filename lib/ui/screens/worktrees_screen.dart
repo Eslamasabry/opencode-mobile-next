@@ -163,7 +163,7 @@ class _WorktreesScreenState extends State<WorktreesScreen> {
   }
 
   Future<void> _create() async {
-    if (_creating) return;
+    if (_creating || !widget.controller.capabilities.worktreeCreate) return;
     final name = await showDialog<String>(
       context: context,
       builder: (context) => const _CreateWorktreeDialog(),
@@ -362,17 +362,21 @@ class _WorktreesScreenState extends State<WorktreesScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        key: const ValueKey('create-worktree'),
-        onPressed: _creating ? null : _create,
-        icon: _creating
-            ? const SizedBox.square(
-                dimension: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Icon(Icons.add_rounded),
-        label: const Text('New worktree'),
-      ),
+      // Create is offered only where the create call is contract-proven
+      // (`worktreeCreate`); listing, opening and inspection stay available.
+      floatingActionButton: widget.controller.capabilities.worktreeCreate
+          ? FloatingActionButton.extended(
+              key: const ValueKey('create-worktree'),
+              onPressed: _creating ? null : _create,
+              icon: _creating
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.add_rounded),
+              label: const Text('New worktree'),
+            )
+          : null,
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(

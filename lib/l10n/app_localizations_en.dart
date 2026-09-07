@@ -136,6 +136,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get servicesRefresh => 'Refresh status';
 
   @override
+  String get isolatedTaskScopeChanged =>
+      'The server or project changed. Close this sheet and reopen the task from the intended project.';
+
+  @override
   String get appTitle => 'OpenCode Mobile';
 
   @override
@@ -3711,4 +3715,109 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get isolatedTaskAction => 'Start a task in a fresh worktree';
+
+  @override
+  String get isolatedTaskTitle => 'New task in a fresh worktree';
+
+  @override
+  String isolatedTaskIntro(String project) {
+    return 'OpenCode creates a new Git worktree and branch for $project and runs the project\'s setup. The worktree stays listed under Manage project until you remove it there.';
+  }
+
+  @override
+  String get isolatedTaskNameLabel => 'Worktree name (optional)';
+
+  @override
+  String get isolatedTaskNameHelper =>
+      'Leave empty to let OpenCode choose a name.';
+
+  @override
+  String get isolatedTaskStart => 'Create and start';
+
+  @override
+  String get isolatedTaskCreating => 'Creating the worktree…';
+
+  @override
+  String get isolatedTaskCreatingHint =>
+      'Stopping now cannot undo a create the server may already be running.';
+
+  @override
+  String isolatedTaskPreparing(String name) {
+    return '$name was created. OpenCode is preparing it…';
+  }
+
+  @override
+  String isolatedTaskReady(String name) {
+    return '$name is ready. Opening a blank session…';
+  }
+
+  @override
+  String isolatedTaskReadyIdle(String name) {
+    return '$name is ready.';
+  }
+
+  @override
+  String isolatedTaskUnconfirmed(String name) {
+    return '$name was created, but its setup status is not confirmed.';
+  }
+
+  @override
+  String get isolatedTaskUnconfirmedHint =>
+      'You can keep waiting or open it now. Setup may still be running.';
+
+  @override
+  String get isolatedTaskFailed => 'OpenCode could not prepare the worktree.';
+
+  @override
+  String get isolatedTaskCreateFailed => 'The worktree could not be created.';
+
+  @override
+  String isolatedTaskFailedKept(String name) {
+    return '$name stays listed under Manage project. Nothing was deleted.';
+  }
+
+  @override
+  String get isolatedTaskCancelled => 'Stopped waiting.';
+
+  @override
+  String isolatedTaskCancelledKept(String name) {
+    return '$name was created and stays listed under Manage project.';
+  }
+
+  @override
+  String get isolatedTaskCancelledUnknown =>
+      'If OpenCode created the worktree, it appears under Manage project.';
+
+  @override
+  String isolatedTaskOpening(String name) {
+    return 'Opening a blank session in $name…';
+  }
+
+  @override
+  String isolatedTaskOpened(String name) {
+    return 'Session ready in $name. Nothing has been sent.';
+  }
+
+  @override
+  String isolatedTaskBranch(String branch) {
+    return 'Branch $branch';
+  }
+
+  @override
+  String get isolatedTaskStopWaiting => 'Stop waiting';
+
+  @override
+  String get isolatedTaskKeepWaiting => 'Keep waiting';
+
+  @override
+  String get isolatedTaskOpenAnyway => 'Open anyway';
+
+  @override
+  String get isolatedTaskRetryOpen => 'Try again';
+
+  @override
+  String get isolatedTaskClose => 'Close';
 }

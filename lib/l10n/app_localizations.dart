@@ -315,6 +315,11 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Refresh status'**
   String get servicesRefresh;
+  /// No description provided for @isolatedTaskScopeChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The server or project changed. Close this sheet and reopen the task from the intended project.'**
+  String get isolatedTaskScopeChanged;
 
   /// Application title shown in the task switcher / window title
   ///
@@ -6266,6 +6271,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 draft with an unconfirmed send to review.} other{{count} drafts with an unconfirmed send to review.}}'**
   String queuedBannerReview(int count);
+
+  /// Tooltip and accessibility label of the workspace action that opens the fresh-worktree task sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Start a task in a fresh worktree'**
+  String get isolatedTaskAction;
+
+  /// Title of the fresh-worktree task sheet
+  ///
+  /// In en, this message translates to:
+  /// **'New task in a fresh worktree'**
+  String get isolatedTaskTitle;
+
+  /// Explanation shown before the user starts a fresh-worktree task
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode creates a new Git worktree and branch for {project} and runs the project\'s setup. The worktree stays listed under Manage project until you remove it there.'**
+  String isolatedTaskIntro(String project);
+
+  /// Label of the optional worktree name field
+  ///
+  /// In en, this message translates to:
+  /// **'Worktree name (optional)'**
+  String get isolatedTaskNameLabel;
+
+  /// Helper text under the optional worktree name field
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty to let OpenCode choose a name.'**
+  String get isolatedTaskNameHelper;
+
+  /// Primary button that creates the worktree and waits for it
+  ///
+  /// In en, this message translates to:
+  /// **'Create and start'**
+  String get isolatedTaskStart;
+
+  /// Status while the create request is in flight
+  ///
+  /// In en, this message translates to:
+  /// **'Creating the worktree…'**
+  String get isolatedTaskCreating;
+
+  /// Caution under the creating status: cancelling does not imply server rollback
+  ///
+  /// In en, this message translates to:
+  /// **'Stopping now cannot undo a create the server may already be running.'**
+  String get isolatedTaskCreatingHint;
+
+  /// Status after the server returned the worktree, before its readiness event
+  ///
+  /// In en, this message translates to:
+  /// **'{name} was created. OpenCode is preparing it…'**
+  String isolatedTaskPreparing(String name);
+
+  /// Status once the worktree reported ready and the session is being opened
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is ready. Opening a blank session…'**
+  String isolatedTaskReady(String name);
+
+  /// Status when the worktree is ready but the last open attempt failed and nothing is in flight
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is ready.'**
+  String isolatedTaskReadyIdle(String name);
+
+  /// Status when no readiness event arrived within the wait
+  ///
+  /// In en, this message translates to:
+  /// **'{name} was created, but its setup status is not confirmed.'**
+  String isolatedTaskUnconfirmed(String name);
+
+  /// Explanation under the unconfirmed status
+  ///
+  /// In en, this message translates to:
+  /// **'You can keep waiting or open it now. Setup may still be running.'**
+  String get isolatedTaskUnconfirmedHint;
+
+  /// Status when the server reported worktree.failed
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode could not prepare the worktree.'**
+  String get isolatedTaskFailed;
+
+  /// Status when the create request itself failed
+  ///
+  /// In en, this message translates to:
+  /// **'The worktree could not be created.'**
+  String get isolatedTaskCreateFailed;
+
+  /// Note under a failed preparation: the created worktree is kept
+  ///
+  /// In en, this message translates to:
+  /// **'{name} stays listed under Manage project. Nothing was deleted.'**
+  String isolatedTaskFailedKept(String name);
+
+  /// Status after the user stopped waiting for readiness
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped waiting.'**
+  String get isolatedTaskCancelled;
+
+  /// Note after stopping when the server had already returned the worktree
+  ///
+  /// In en, this message translates to:
+  /// **'{name} was created and stays listed under Manage project.'**
+  String isolatedTaskCancelledKept(String name);
+
+  /// Note after stopping before the create request answered
+  ///
+  /// In en, this message translates to:
+  /// **'If OpenCode created the worktree, it appears under Manage project.'**
+  String get isolatedTaskCancelledUnknown;
+
+  /// Status while switching scope and creating the session
+  ///
+  /// In en, this message translates to:
+  /// **'Opening a blank session in {name}…'**
+  String isolatedTaskOpening(String name);
+
+  /// Status once the blank session exists in the worktree
+  ///
+  /// In en, this message translates to:
+  /// **'Session ready in {name}. Nothing has been sent.'**
+  String isolatedTaskOpened(String name);
+
+  /// Branch line under the worktree status
+  ///
+  /// In en, this message translates to:
+  /// **'Branch {branch}'**
+  String isolatedTaskBranch(String branch);
+
+  /// Button that stops waiting for readiness without deleting anything
+  ///
+  /// In en, this message translates to:
+  /// **'Stop waiting'**
+  String get isolatedTaskStopWaiting;
+
+  /// Button that waits another period for the readiness event
+  ///
+  /// In en, this message translates to:
+  /// **'Keep waiting'**
+  String get isolatedTaskKeepWaiting;
+
+  /// Button that opens a session in a worktree whose setup is unconfirmed
+  ///
+  /// In en, this message translates to:
+  /// **'Open anyway'**
+  String get isolatedTaskOpenAnyway;
+
+  /// Button that retries opening the session after an open error
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get isolatedTaskRetryOpen;
+
+  /// Close action on the fresh-worktree task sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get isolatedTaskClose;
 }
 
 class _AppLocalizationsDelegate
