@@ -11,10 +11,18 @@ changes from your Android phone. OpenCode Mobile connects to
 [OpenCode](https://opencode.ai) running on your computer or on the phone
 itself through Termux.
 
-**[Download for Android](https://github.com/Eslamasabry/opencode-mobile-next/releases)**
+**[Android release history](https://github.com/Eslamasabry/opencode-mobile-next/releases)**
 · [Set up your connection](#getting-started)
 · [Watch the demo](video/public/opencode-mobile-demo.mp4)
 · [Get help](SUPPORT.md)
+
+> **Release status (September 7, 2026):**
+> [1.0.34+35 is marked BROKEN](https://github.com/Eslamasabry/opencode-mobile-next/releases/tag/v1.0.34%2B35):
+> a connected server with no opened projects can hide access to existing sessions.
+> The focused **1.0.35+36 CI APK** was delivered with the same stable CI signer;
+> [build and verification evidence](docs/verification/empty-project-session-recovery-2026-09-07.md).
+> Current `dev` source declares **1.0.36+37 and is unreleased**. Its changes are
+> not included in that earlier APK. This source batch does not build or publish an APK.
 
 > **Public alpha.** Android is the primary target; desktop builds are experimental.
 > OpenCode Mobile is an independent community project. It is not built,
@@ -120,9 +128,9 @@ and provider do the work.
 
 ### Connect to your computer
 
-1. **Install the app.** Grab the arm64 APK from the
-   [latest release](https://github.com/Eslamasabry/opencode-mobile-next/releases).
-   Android will warn that it is not from the Play Store. That is expected.
+1. **Install a verified APK matching your installed signer.** Check the
+   [release status above](#opencode-mobile); do not choose the broken 1.0.34+35
+   release. Android warns about sideloading outside the Play Store.
 2. **With OpenCode 2 installed on your computer, start pairing.**
    ```bash
    opencode2 pair
@@ -151,8 +159,9 @@ the server as a service on a Linux box are all covered in
 - **No models appear:** configure a provider on the server, then use
   **Refresh models** in the model picker. If a connected provider is listed
   as unloaded, use **Reload providers** there.
-- **An APK will not update:** check the signer notes below. Keep a copy of
-  your connection details before uninstalling; uninstalling erases local data.
+- **An APK will not update:** compare its certificate with **Settings → About**
+  and obtain an APK with the same signer. Preserve your installation and local
+  data; uninstalling is not a session-recovery step.
 
 ## Compatibility
 
@@ -181,15 +190,16 @@ This is an alpha. Here is what that means, plainly:
   what happened.
 - **English only** for now. The plan to change that is written down in
   [docs/localization-todo.md](docs/localization-todo.md).
-- **Public releases and CI artifacts are different channels.** The current
-  `v1.0.33+34` release signer is
-  `8F51FBCA8101DE600C0E878DF7E2CC65DFA29ADD58A1771D776908349CD82053`.
-  Starting with `v1.0.34+35`, the recoverable permanent release signer is
+- **Public releases and CI artifacts have different signing histories.**
+  The historical `v1.0.33+34` public signer was
+  `8F51FBCA8101DE600C0E878DF7E2CC65DFA29ADD58A1771D776908349CD82053`;
+  its private key was lost. The broken `v1.0.34+35` public release used
   `842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C`.
-  Moving from `v1.0.33+34` therefore requires one final uninstall.
-  Android updates in place only when the package ID and signer both match.
-  CI artifacts are test-only and may require uninstalling first, which erases
-  local app data. Verify the installed signer in **Settings → About**.
+  The maintainer's installed app and delivered `1.0.35+36` update use the stable
+  CI signer **`2D010C2103CB2F78ABAACA690EAD4D45F8003A6C0A02082CD2A2AE62FD18D0EC`**.
+  Replacement APKs for that installation must always retain this signer; never
+  substitute or rotate it. Android updates in place require matching package ID
+  and signer. Verify **Settings → About** before choosing an update.
 - **Automated checks run in GitHub Actions** on `master` and `dev`. Android CI
   uploads a short-lived, non-production APK to prove the release build compiles.
 

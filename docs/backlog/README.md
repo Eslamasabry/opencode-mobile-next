@@ -2,6 +2,9 @@
 
 The review and implementation cycle keeps two focused queues:
 
+- [Current delivery state](current-state-2026-09-07.md): reconciled source,
+  remaining story acceptance and the active verification record.
+
 - [Execution order and evidence guardrails](roadmap-2026-09-06.md): lead-curated
   next slices, evidence corrections, and held read-only specialist review plan.
 - [Epic/story inventory](full-backlog-2026-09-06.md) and

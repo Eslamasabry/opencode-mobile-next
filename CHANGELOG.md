@@ -8,7 +8,25 @@ Changes since **1.0.34+35** (2026-09-06), whose source is tagged
 [`v1.0.34+35`](https://github.com/Eslamasabry/opencode-mobile-next/tree/v1.0.34%2B35)
 at `b618d30`. This section describes the development candidate, including the
 quota batch and subsequent integration work. It is **not** an announcement of
-available downloads: final verification and CI packaging are still in progress.
+available downloads: local verification is in progress and CI packaging is held
+under the maintainer's CI-budget instruction.
+
+### Backlog follow-through
+
+- Inspect installed plugins from Library on supported OpenCode 2 servers.
+  Read status and safe package/source details; changing location or reconnecting
+  clears old-source results and refreshes the inventory.
+- View MiniMax general subscription-pool percentages through an explicitly
+  configured collector. The app requests fresh consent for the selected provider;
+  missing, unsupported or unverified allowances never become a zero balance.
+- Check the app-managed Termux server's observed process state and version from
+  Servers, with direct access to setup controls and no automatic restart.
+- Copy a reviewed, safely quoted OpenCode 1 attach command for a reachable HTTPS
+  server. The command contains no password and is revalidated before copying.
+  Unsupported connections retain the metadata reference.
+- Run the offline demo through production chat, streaming, edit permissions and
+  diff review with its own in-memory gateway and stores. Reset and exit dispose
+  the simulation while preserving saved servers and unsent work.
 
 ### On-device setup and session recovery
 
@@ -136,8 +154,9 @@ available downloads: final verification and CI packaging are still in progress.
   user-pasted excerpts. No page is fetched and no prompt is sent automatically.
   This is URL review, not an implemented web-search adapter.
 - Improve global/related-session navigation and add confirmed **Copy handoff**
-  metadata references. These contain session/project IDs, not sign-in secrets;
-  they are not CLI commands, public share links or automatic execution links.
+  with reviewed attach commands where supported and session/project metadata
+  references as the fallback. Neither includes sign-in secrets or executes
+  a command automatically.
 
 ### Desktop, iOS preparation and fixes
 

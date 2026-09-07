@@ -2,8 +2,12 @@
 
 Objective: release the app with complete feature parity and polished UI/UX.
 This is an active delivery checklist, not a claim that the release is ready.
-The app currently declares `1.0.34+35`; a version number alone does not establish
-stable-release readiness.
+Current `dev` source declares **1.0.36+37 and is unreleased**. This source batch
+has no new APK, CI/native build, signing or publication. The focused 1.0.35+36
+CI APK was previously delivered; [its verification](verification/empty-project-session-recovery-2026-09-07.md)
+does not validate subsequent source changes. The public
+[1.0.34+35 release is marked BROKEN](https://github.com/Eslamasabry/opencode-mobile-next/releases/tag/v1.0.34%2B35)
+for hidden session access when no projects appear.
 
 Use the [target user and product priorities](product-persona.md) to sequence work:
 the primary Android journey is resume, compose, monitor, unblock and review.
@@ -20,9 +24,9 @@ Supporting and advanced features remain in the full parity scope.
 | UI is usable at compact widths and enlarged text | Purposeful rendered review of welcome, chat/composer, providers, workspace/files, permissions/forms, review, and settings | Partial: existing composer evidence plus focused layout checks. Cycle 18 adds inline transcript find, match navigation/highlights, long-message source excerpts and cancellable full-history search; see [search evidence](verification/transcript-search.md). New final release candidate needs a visual pass covering changed flows. |
 | Usage totals reflect the selected period and project | Server aggregation, device timezone, empty/error states and capability checks | Cycle 12 implements Settings usage and cost with four calendar ranges, all/current-project scope, tokens, models and tool reliability. Thirty focused checks and the [pinned-server fixture](verification/usage-beta-18600.md) passed. Native timezone plugin integration still needs platform CI and the final device smoke. |
 | Complete conversation export and transfer | Full server response, truthful redaction, explicit import destination and conflict behavior | Cycle 14 implements JSON export and verifies both redaction modes against pinned beta-18600. Sanitization replaces original text with placeholders; the UI explains the unredacted backup option. Cycle 15 implements import review and verifies transfer between two servers, source preservation and parent/conflict behavior. Native picker/device smoke remains; mobile import is limited to 128 MiB. See [export evidence](verification/export-beta-18600.md) and [import evidence](verification/import-beta-18600.md). |
-| Existing users can install the release predictably | Exact APK package/version/signer/checksum; install and upgrade smoke evidence with data-preservation behavior documented | Not verified for a final release candidate. Follow the existing signing-lineage requirements; never substitute the CI signer for the public signer. |
+| Existing users can install the release predictably | Exact APK package/version/signer/checksum; install and upgrade smoke evidence with data-preservation behavior documented | Not verified for a final release candidate. Preserve the installed signer. Maintainer replacements must retain stable CI certificate `2D010C2103CB2F78ABAACA690EAD4D45F8003A6C0A02082CD2A2AE62FD18D0EC`; never substitute or rotate it. Historical public signing provenance is in the [release notes](release-alpha-notes.md). |
 | Final source and artifacts pass release gates | Clean merged commit, full platform CI, Android release build/lint, signed artifact verification and physical-device smoke | Pending final candidate. Prior clean builds are supporting evidence only. |
-| Public release is available and accurately documented | Published GitHub release, verified downloadable artifacts, matching tag/source/version, current notes and compatibility limits | Pending stable v1. A test-signed `dev-06447b6` prerelease now provides an anonymously verified direct APK download, fixing the failed Actions link. It is not the final candidate and excludes cycle 14 onward. |
+| Public release is available and accurately documented | Published GitHub release, verified downloadable artifacts, matching tag/source/version, current notes and compatibility limits | Pending stable v1. Public 1.0.34+35 is marked BROKEN; focused 1.0.35+36 was delivered as a stable-CI-signed APK. Neither contains current 1.0.36+37 source changes. Historical preview artifacts are not current readiness evidence. |
 
 ## Delivery order
 
@@ -35,11 +39,12 @@ Supporting and advanced features remain in the full parity scope.
    behavior. Verify claims about MCP persistence before describing them in UI.
 3. Perform the final purposeful mobile UX pass, resolve its concrete findings,
    and update release notes from the actual shipped behavior.
-4. Build and verify a signed final candidate through the existing release
-   workflow, exercise install/upgrade and core flows, then publish and verify the
-   release. Keep the goal active until all requirements above are evidenced.
+4. At a separately approved shipping milestone, build and verify a signed
+   candidate through the appropriate workflow, preserve its installed signing
+   lineage, and exercise install/upgrade and core flows. Public publication
+   requires its own approved release milestone; none is part of this source batch.
 
-Release sources: [release notes draft](release-alpha-notes.md),
+Release sources: [historical release notes](release-alpha-notes.md),
 [Android release workflow](../.github/workflows/android-release.yml),
 [release preflight](../scripts/release.sh), and
 [draft release helper](../scripts/cut-alpha.sh). Old public-launch audits contain

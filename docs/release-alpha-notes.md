@@ -1,15 +1,24 @@
-# Release notes source - Alpha 1.0.34+35
+# Historical release notes — BROKEN Alpha 1.0.34+35
 
-The tag workflow extracts the section below for `v1.0.34+35` and appends
-the verified source commit, APK checksum, package ID, and signing certificate.
-Publication evidence belongs on the GitHub release. Device checks that have
-not been performed must remain disclosed rather than implied by passing CI.
+**Current source: `dev`, version 1.0.36+37, unreleased.** This batch is source
+work only: no new APK, CI/native build, signing, tag or publication.
+The focused 1.0.35+36 CI APK was already delivered with the stable installed
+signer; see [verification](verification/empty-project-session-recovery-2026-09-07.md).
+
+The notes below preserve the historical `v1.0.34+35` release and its signing
+provenance. [That public release is marked BROKEN](https://github.com/Eslamasabry/opencode-mobile-next/releases/tag/v1.0.34%2B35).
+They are not current installation advice or release notes for 1.0.36+37.
+Publication evidence remains on the historical GitHub release.
 
 ---
 
-# OpenCode Mobile - Alpha 1.0.34+35
+# [BROKEN] OpenCode Mobile - Alpha 1.0.34+35
 
-This release makes it easier to resume coding from your phone: keep unfinished
+**Known regression:** a connected server with no opened projects can hide
+existing sessions. Do not install this version to recover session access.
+The feature summary below records the original release claims.
+
+This release aimed to make it easier to resume coding from your phone: keep unfinished
 prompts and attachments, find earlier work, review what the agent sees, and
 move conversations between supported servers.
 
@@ -81,8 +90,8 @@ are experimental, and full OpenCode feature parity is not complete.
 
 ## Android download and upgrade
 
-Download **`opencode-mobile-1.0.34+35.apk`** from this release's assets.
-Use **`SHA256SUMS`** to verify it. This is a standalone sideload APK.
+Historical assets **`opencode-mobile-1.0.34+35.apk`** and **`SHA256SUMS`**
+remain on the broken release for provenance. They are not the replacement APK.
 
 **Check the signing identity before replacing an existing installation.**
 The package is `io.github.eslamasabry.opencode_mobile`. This release uses the
@@ -92,15 +101,18 @@ permanent public signer:
 842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C
 ```
 
-- Builds already using this signer can update in place.
+- Android permits in-place updates only when the package ID and signer match;
+  this does not make the broken release a recommended update.
 - The previous `1.0.33+34` public APK used signer `8F51FBCA…C82053`;
   its private key was lost, so it cannot update in place to this release.
 - CI previews, including `dev-06447b6`, use signer `2D010C21…18D0EC`;
   they also cannot update in place to this public build.
+- The maintainer's replacement APKs must always use the installed stable CI
+  signer `2D010C2103CB2F78ABAACA690EAD4D45F8003A6C0A02082CD2A2AE62FD18D0EC`.
+  The delivered 1.0.35+36 CI APK preserves it; do not substitute the public signer.
 - **Uninstalling erases local profiles, drafts, stashed/queued prompts, and
-  other local app data.** Copy or export work you need and record connection
-  details before removing an older installation. Server-side conversations
-  are stored separately. After reinstalling, pair your servers again.
+  other local app data.** Preserve the existing installation and obtain a
+  matching-signer update. Uninstalling is not a fix for the session-list regression.
 
 Settings → About shows the version, package ID, and certificate in builds that
 support this view. Notification-based tool approval requires device
