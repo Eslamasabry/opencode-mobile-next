@@ -257,8 +257,27 @@ class ManagedServerRecovery extends ChangeNotifier with WidgetsBindingObserver {
     _foreground = state == AppLifecycleState.resumed;
     ++_epoch;
     _timer?.cancel();
+    if (!_foreground && _pendingOperation.isNotEmpty && _token.isNotEmpty) {
+      _paused = true;
+      error = ManagedRecoveryError.uncertainResult;
+      final token = _token;
+      final epoch = _epoch;
+      unawaited(_revokeBackgroundRecovery(token, epoch));
+    }
     _notify();
     _schedule();
+  }
+
+  Future<void> _revokeBackgroundRecovery(String token, int epoch) async {
+    try {
+      await TermuxBridge.run(
+        TermuxBridge.recoveryControlScript(token, enable: false),
+      );
+    } catch (_) {}
+    if (_disposed || _token != token || _epoch != epoch || !_paused) return;
+    try {
+      await _save();
+    } catch (_) {}
   }
 
   void _schedule() {
@@ -319,12 +338,31 @@ class ManagedServerRecovery extends ChangeNotifier with WidgetsBindingObserver {
       if (now.isBefore(nextAttemptAt!)) return;
       // Reserve and durably consume the attempt before dispatch. App death
       // cannot grant a fresh budget for an operation with an unknown outcome.
+      final savedAttempts = attempts;
+      final savedNextAttemptAt = nextAttemptAt;
+      final savedPendingOperation = _pendingOperation;
       attempts++;
       _pendingOperation = '${_token.substring(0, 16)}-$attempts';
       nextAttemptAt = attempts < maxAttempts
           ? now.add(backoff[attempts])
           : null;
-      await _save();
+      try {
+        await _save();
+      } catch (_) {
+        // No native command was dispatched: do not claim an attempt that the
+        // durable record could not acknowledge. Keep recovery paused until a
+        // later explicit check can persist a trustworthy state.
+        if (!current()) return;
+        attempts = savedAttempts;
+        nextAttemptAt = savedNextAttemptAt;
+        _pendingOperation = savedPendingOperation;
+        _paused = true;
+        error = ManagedRecoveryError.settingsUnreadable;
+        try {
+          await _save();
+        } catch (_) {}
+        return;
+      }
       if (!current()) return;
       await TermuxBridge.run(
         TermuxBridge.restartScript(

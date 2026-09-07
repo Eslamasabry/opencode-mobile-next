@@ -12,10 +12,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 class _FailingPreferences implements SharedPreferences {
   final values = <String, String>{};
   bool fail = false;
+  bool failGatedWrite = false;
+  Completer<void>? writeGate;
+  Completer<void>? writeEntered;
   @override
   String? getString(String key) => values[key];
   @override
   Future<bool> setString(String key, String value) async {
+    final gate = writeGate;
+    if (gate != null) {
+      writeGate = null;
+      if (!(writeEntered?.isCompleted ?? true)) writeEntered!.complete();
+      await gate.future;
+      if (failGatedWrite) {
+        failGatedWrite = false;
+        throw StateError('synthetic gated disk failure');
+      }
+    }
     if (fail) throw StateError('synthetic disk failure');
     values[key] = value;
     return true;
@@ -173,6 +186,65 @@ void main() {
   });
 
   testWidgets(
+    'background during a dispatched recovery revokes its permit before return',
+    (tester) async {
+      final recovery = service();
+      await recovery.setEnabled(true);
+      snapshot = state('failed', failure: 'crash');
+      await recovery.checkNow();
+      now = now.add(const Duration(minutes: 1));
+      final nativeRestart = Completer<Map<String, Object>>();
+      var dispatched = false;
+      var revoked = false;
+      binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
+        call,
+      ) async {
+        final script = (call.arguments as Map)['script'] as String;
+        scripts.add(script);
+        if (script == TermuxBridge.statusScript()) return result(snapshot);
+        if (script.contains('"\$MANAGER" restart')) {
+          dispatched = true;
+          return nativeRestart.future;
+        }
+        if (script.contains('exec "\$MANAGER" recovery-disarm')) {
+          revoked = true;
+        }
+        return result('');
+      });
+      final checking = recovery.checkNow();
+      await tester.pump();
+      expect(dispatched, isTrue);
+
+      binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      await tester.pump();
+      expect(revoked, isTrue);
+      expect(recovery.paused, isTrue);
+      expect(recovery.error, ManagedRecoveryError.uncertainResult);
+
+      nativeRestart.complete(result(''));
+      await checking;
+      expect(
+        scripts.where((script) => script.contains('"\$MANAGER" restart')),
+        hasLength(1),
+      );
+      final persisted =
+          jsonDecode(
+                prefs.getString(ManagedServerRecovery.preferenceKey('local'))!,
+              )
+              as Map;
+      expect(persisted['paused'], isTrue);
+      ManagedServerRecovery.disposeForPreferences(prefs);
+      final restarted = service();
+      expect(restarted.paused, isTrue);
+      await restarted.checkNow();
+      expect(
+        scripts.where((script) => script.contains('"\$MANAGER" restart')),
+        hasLength(1),
+      );
+    },
+  );
+
+  testWidgets(
     'unknown command outcome pauses without blindly spending remaining budget',
     (tester) async {
       final recovery = service();
@@ -232,6 +304,100 @@ void main() {
     await checking;
     expect(recovery.enabled, isFalse);
   });
+
+  testWidgets(
+    'failed attempt reservation does not spend budget and restart retries once',
+    (tester) async {
+      final failing = _FailingPreferences();
+      final recovery = ManagedServerRecovery.forProfile(
+        failing,
+        'local',
+        now: () => now,
+      );
+      addTearDown(() => ManagedServerRecovery.disposeForPreferences(failing));
+      await recovery.setEnabled(true);
+      snapshot = state('failed', failure: 'crash');
+      await recovery.checkNow();
+      now = now.add(const Duration(minutes: 1));
+      final key = ManagedServerRecovery.preferenceKey('local');
+      final before = failing.values[key];
+      failing.fail = true;
+      await recovery.checkNow();
+
+      expect(recovery.attempts, 0);
+      expect(recovery.paused, isTrue);
+      expect(recovery.error, ManagedRecoveryError.settingsUnreadable);
+      expect(failing.values[key], before);
+      expect(
+        scripts.where((script) => script.contains('"\$MANAGER" restart')),
+        isEmpty,
+      );
+
+      failing.fail = false;
+      ManagedServerRecovery.disposeForPreferences(failing);
+      final restarted = ManagedServerRecovery.forProfile(
+        failing,
+        'local',
+        now: () => now,
+      );
+      await restarted.checkNow();
+      expect(restarted.attempts, 1);
+      expect(
+        scripts.where((script) => script.contains('"\$MANAGER" restart')),
+        hasLength(1),
+      );
+      expect(restarted.paused, isFalse);
+      ManagedServerRecovery.disposeForPreferences(failing);
+    },
+  );
+
+  testWidgets(
+    'stale reservation failure cannot restore state after stop supersedes it',
+    (tester) async {
+      final failing = _FailingPreferences();
+      final recovery = ManagedServerRecovery.forProfile(
+        failing,
+        'local',
+        now: () => now,
+      );
+      addTearDown(() => ManagedServerRecovery.disposeForPreferences(failing));
+      await recovery.setEnabled(true);
+      snapshot = state('failed', failure: 'crash');
+      await recovery.checkNow();
+      now = now.add(const Duration(minutes: 1));
+
+      final gate = Completer<void>();
+      addTearDown(() {
+        if (!gate.isCompleted) gate.complete();
+      });
+      failing.writeGate = gate;
+      failing.writeEntered = Completer<void>();
+      failing.failGatedWrite = true;
+      final checking = recovery.checkNow();
+      await failing.writeEntered!.future;
+
+      // Stop changes the enabled state while the reservation write is still
+      // in flight. Its newer state must survive the stale write completion.
+      await recovery.setEnabled(false);
+      gate.complete();
+      await checking;
+
+      expect(recovery.enabled, isFalse);
+      expect(recovery.attempts, 1);
+      expect(recovery.nextAttemptAt, isNotNull);
+      expect(
+        scripts.where((script) => script.contains('"\$MANAGER" restart')),
+        isEmpty,
+      );
+      final persisted =
+          jsonDecode(
+                failing.values[ManagedServerRecovery.preferenceKey('local')]!,
+              )
+              as Map;
+      expect(persisted['enabled'], isFalse);
+      expect(persisted['attempts'], 1);
+    },
+  );
 
   testWidgets('nonzero native revocation fails deletion and can be retried', (
     tester,
