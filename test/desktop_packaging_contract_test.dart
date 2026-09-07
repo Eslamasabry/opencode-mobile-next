@@ -61,7 +61,9 @@ void main() {
       // ...and it reaches both artifact names.
       expect(
         script,
-        contains(r'readonly TAR_NAME="opencode-mobile-linux-x64-$version"'),
+        contains(
+          r'readonly TAR_NAME="opencode-mobile-linux-$bundle_target-$version"',
+        ),
       );
       expect(script, contains(r'${DEB_PACKAGE}_${version}_${arch}.deb'));
     });

@@ -4,8 +4,8 @@
 #   scripts/package-linux.sh [options]
 #
 # Produces, in build/linux/packages:
-#   opencode-mobile-linux-x64-<version>.tar.gz   bundle + desktop integration
-#   opencode-mobile_<version>_amd64.deb          same payload under /usr
+#   opencode-mobile-linux-<x64|arm64>-<version>.tar.gz   bundle + desktop integration
+#   opencode-mobile_<version>_<amd64|arm64>.deb          same payload under /usr
 #   SHA256SUMS                            checksums for both
 #
 # The script never builds by itself unless asked (--build): CI builds once and
@@ -19,7 +19,7 @@
 # artifacts CI actually uploaded rather than ones regenerated later.
 #
 # Options:
-#   --bundle DIR    built bundle (default build/linux/x64/release/bundle)
+#   --bundle DIR    built bundle (default build/linux/<host arch>/release/bundle)
 #   --out DIR       output directory (default build/linux/packages)
 #   --version V     override the version (default: from pubspec.yaml)
 #   --build         run `flutter build linux --release` first
@@ -34,7 +34,12 @@ readonly DEB_PACKAGE="$INSTALL_NAME"
 readonly ICON_SIZES=(16 24 32 48 64 128 256 512)
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-bundle_dir="$repo_root/build/linux/x64/release/bundle"
+case "$(uname -m)" in
+  x86_64) host_target=x64 ;;
+  aarch64|arm64) host_target=arm64 ;;
+  *) host_target=unknown ;;
+esac
+bundle_dir="$repo_root/build/linux/$host_target/release/bundle"
 out_dir="$repo_root/build/linux/packages"
 packaging_dir="$repo_root/linux/packaging"
 version=""
@@ -62,7 +67,7 @@ while (($#)); do
   esac
 done
 
-for tool in tar gzip sha256sum sed awk find; do
+for tool in tar gzip sha256sum sed awk find readelf; do
   command -v "$tool" >/dev/null 2>&1 || fail "missing required tool: $tool"
 done
 
@@ -72,6 +77,8 @@ pubspec_version="$(
 )"
 [ -n "$pubspec_version" ] || fail "could not read version from pubspec.yaml"
 version="${version:-$pubspec_version}"
+[[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+\+[0-9]+$ ]] ||
+  fail "version must be major.minor.patch+buildNumber"
 # `1.0.29+30` -> marketing `1.0.29`, build `30`. The build number is the
 # project's monotonic release ordering and is what lib/update/
 # desktop_release_check.dart compares against the GitHub release tag, so it
@@ -91,7 +98,7 @@ if ((do_build)); then
     export CXXFLAGS="${CXXFLAGS:-} --gcc-install-dir=$gcc_dir"
     export LDFLAGS="${LDFLAGS:-} --gcc-install-dir=$gcc_dir"
   fi
-  flutter build linux --release
+  (cd "$repo_root" && flutter build linux --release)
 fi
 
 # ----------------------------------------------------------------- verify ---
@@ -99,6 +106,36 @@ fi
 [ -x "$bundle_dir/$BINARY_NAME" ] || fail "no executable $bundle_dir/$BINARY_NAME"
 [ -d "$bundle_dir/data" ] || fail "no $bundle_dir/data"
 [ -d "$bundle_dir/lib" ] || fail "no $bundle_dir/lib"
+
+# A bundle can be copied from another build host. Label its ELF architecture,
+# never the packaging host's architecture, and reject mixed native libraries.
+elf_target() {
+  local object="$1" header machine
+  header="$(LC_ALL=C readelf -h "$object" 2>/dev/null)" ||
+    fail "invalid ELF object: $object"
+  [[ "$header" =~ Class:[[:space:]]+ELF64 ]] ||
+    fail "expected a 64-bit ELF object: $object"
+  [[ "$header" == *"2's complement, little endian"* ]] ||
+    fail "expected a little-endian ELF object: $object"
+  machine="$(printf '%s\n' "$header" | sed -n 's/^[[:space:]]*Machine:[[:space:]]*//p')"
+  case "$machine" in
+    'Advanced Micro Devices X86-64') printf 'x64\n' ;;
+    AArch64) printf 'arm64\n' ;;
+    *) fail "unsupported ELF machine '$machine': $object" ;;
+  esac
+}
+
+bundle_target="$(elf_target "$bundle_dir/$BINARY_NAME")"
+case "$bundle_target" in
+  x64) arch=amd64 ;;
+  arm64) arch=arm64 ;;
+esac
+while IFS= read -r -d '' object; do
+  object_target="$(elf_target "$object")"
+  [ "$object_target" = "$bundle_target" ] ||
+    fail "mixed bundle architectures: $object is $object_target, runner is $bundle_target"
+done < <(find "$bundle_dir/lib" \( -type f -o -type l \) -name '*.so*' -print0)
+note "verified Linux $bundle_target bundle (Debian $arch)"
 
 # Refuse to ship a bundle from a different version than the one being
 # labelled. version.json is what package_info_plus reads on Linux, which is
@@ -159,7 +196,7 @@ stage_share() {
 }
 
 # ---------------------------------------------------------------- tarball ---
-readonly TAR_NAME="opencode-mobile-linux-x64-$version"
+readonly TAR_NAME="opencode-mobile-linux-$bundle_target-$version"
 tar_root="$work/$TAR_NAME"
 note "staging tarball tree"
 install -d "$tar_root/lib/$INSTALL_NAME"
@@ -193,7 +230,6 @@ if ((skip_deb)); then
 elif ! command -v dpkg-deb >/dev/null 2>&1; then
   note "skipping .deb (dpkg-deb not installed)"
 else
-  arch="$(dpkg --print-architecture 2>/dev/null || echo amd64)"
   deb_root="$work/deb"
   note "staging .deb tree ($arch)"
   install -d "$deb_root/usr/lib/$INSTALL_NAME" "$deb_root/usr/bin" "$deb_root/DEBIAN"
@@ -232,7 +268,7 @@ EOF
       printf '%s\n' "$deb_root/usr/lib/$INSTALL_NAME/$BINARY_NAME"
       find "$deb_root/usr/lib/$INSTALL_NAME/lib" -name '*.so' -print | sort
     )
-    if (cd "$shlib_dir" && dpkg-shlibdeps \
+    if (cd "$shlib_dir" && DEB_HOST_ARCH="$arch" dpkg-shlibdeps \
           --ignore-missing-info \
           -l"$deb_root/usr/lib/$INSTALL_NAME/lib" \
           -O -e"${elf_objects[@]}" > "$work/shlibdeps.txt" 2> "$work/shlibdeps.log"); then

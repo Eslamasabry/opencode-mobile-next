@@ -92,14 +92,22 @@ Output lands in `build/linux/packages`:
 
 | Artifact | Contents |
 |---|---|
-| `opencode-mobile-linux-x64-<version>.tar.gz` | runtime, icons, `.desktop`, AppStream file, `install.sh`, `uninstall.sh`, README, LICENSE |
-| `opencode-mobile_<version>_amd64.deb` | the same payload under `/usr` |
+| `opencode-mobile-linux-<x64 or arm64>-<version>.tar.gz` | runtime, icons, `.desktop`, AppStream file, `install.sh`, `uninstall.sh`, README, LICENSE |
+| `opencode-mobile_<version>_<amd64 or arm64>.deb` | the same payload under `/usr` |
 | `SHA256SUMS` | checksums for both |
 
 The script refuses to run if `data/flutter_assets/version.json` in the
 bundle disagrees with `pubspec.yaml`, so a stale bundle can never be shipped
 under a new version number, and it validates the generated `.desktop` entry
 with `desktop-file-validate` when that tool is installed.
+
+The default bundle path follows the packaging host (`build/linux/x64/release/bundle`
+or `build/linux/arm64/release/bundle`). Use `--bundle DIR` to package a copied
+bundle. Artifact architecture comes from the runner's ELF header, and every
+bundled `.so`/versioned `.so` must match; the host's Debian architecture never
+labels a foreign bundle. Packaging requires `readelf` from `binutils`.
+This check establishes package identity, not runtime compatibility. ARM64 and
+x64 still need separate launch and installation evidence on suitable desktops.
 
 ### Installing from the tarball
 
