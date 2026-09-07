@@ -575,10 +575,9 @@ class _TranscriptNoticeState extends State<TranscriptNotice> {
                   ],
                 ),
                 if (body.isNotEmpty)
-                  AnimatedSize(
-                    duration: reduceMotion
-                        ? Duration.zero
-                        : const Duration(milliseconds: 200),
+                  _chatSizeTransition(
+                    reduceMotion: reduceMotion,
+                    duration: const Duration(milliseconds: 200),
                     curve: Curves.easeOutCubic,
                     alignment: Alignment.topCenter,
                     child: Padding(

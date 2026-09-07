@@ -13,6 +13,7 @@ extension _ChatVoiceConversation on _ChatScreenState {
       _chatL10n(context).voiceConversationPausedDetail;
 
   Future<void> _startVoiceConversation() async {
+    if (_conn.isIsolated) return;
     if (!platformCapabilities.supportsVoiceConversation ||
         _sending ||
         _voiceOpening ||

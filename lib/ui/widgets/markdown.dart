@@ -14,6 +14,25 @@ import 'transcript_highlight.dart';
 // The chat transcript (a `part` of chat_screen.dart) reaches the glossary
 // through this library, which it already imports.
 
+/// Restricts markdown to local presentation in isolated previews. Defaults to
+/// normal product interaction when no scope is installed.
+class MarkdownInteractionScope extends InheritedWidget {
+  const MarkdownInteractionScope({
+    super.key,
+    required this.enabled,
+    required super.child,
+  });
+  final bool enabled;
+  static bool enabledOf(BuildContext context) =>
+      context
+          .dependOnInheritedWidgetOfExactType<MarkdownInteractionScope>()
+          ?.enabled ??
+      true;
+  @override
+  bool updateShouldNotify(MarkdownInteractionScope oldWidget) =>
+      enabled != oldWidget.enabled;
+}
+
 /// Installed by screens that can resolve server file paths. Inline code
 /// spans that look like paths stay plain until [validate] confirms the file
 /// is actually readable on the connected server; only then do they render
@@ -31,7 +50,9 @@ class MarkdownFileLinks extends InheritedWidget {
   final void Function(String path) open;
 
   static MarkdownFileLinks? maybeOf(BuildContext context) =>
-      context.dependOnInheritedWidgetOfExactType<MarkdownFileLinks>();
+      MarkdownInteractionScope.enabledOf(context)
+      ? context.dependOnInheritedWidgetOfExactType<MarkdownFileLinks>()
+      : null;
 
   @override
   bool updateShouldNotify(MarkdownFileLinks oldWidget) =>
@@ -133,7 +154,14 @@ class _MarkdownTextState extends State<MarkdownText> {
         ? content
         : DefaultTextStyle.merge(style: widget.baseStyle, child: content);
     // The scope carries the live handler so parsed blocks stay cacheable.
-    return AgentChoiceScope(onChoice: widget.onChoice, child: styled);
+    final interactive = MarkdownInteractionScope.enabledOf(context);
+    return IgnorePointer(
+      ignoring: !interactive,
+      child: ExcludeFocus(
+        excluding: !interactive,
+        child: AgentChoiceScope(onChoice: widget.onChoice, child: styled),
+      ),
+    );
   }
 
   List<Widget> _splitBlocks(String src) {
@@ -588,8 +616,10 @@ class _InlineParser {
       if (m.group(7) != null) {
         // [label](url)
         final url = m.group(8)!;
-        final gesture = TapGestureRecognizer()
-          ..onTap = () => openExternalLink(context, url);
+        final gesture = MarkdownInteractionScope.enabledOf(context)
+            ? (TapGestureRecognizer()
+                ..onTap = () => openExternalLink(context, url))
+            : null;
         spans.add(
           TextSpan(
             text: m.group(7),
@@ -952,23 +982,24 @@ class CodeBlock extends StatelessWidget {
                     ),
                   ),
                 const Spacer(),
-                IconButton(
-                  tooltip: 'Copy code',
-                  visualDensity: VisualDensity.compact,
-                  iconSize: 16,
-                  icon: Icon(AppIcons.copy, color: muted),
-                  onPressed: () async {
-                    await Clipboard.setData(ClipboardData(text: code));
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Copied ${language ?? 'code'}'),
-                          duration: const Duration(seconds: 1),
-                        ),
-                      );
-                    }
-                  },
-                ),
+                if (MarkdownInteractionScope.enabledOf(context))
+                  IconButton(
+                    tooltip: 'Copy code',
+                    visualDensity: VisualDensity.compact,
+                    iconSize: 16,
+                    icon: Icon(AppIcons.copy, color: muted),
+                    onPressed: () async {
+                      await Clipboard.setData(ClipboardData(text: code));
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Copied ${language ?? 'code'}'),
+                            duration: const Duration(seconds: 1),
+                          ),
+                        );
+                      }
+                    },
+                  ),
               ],
             ),
           ),

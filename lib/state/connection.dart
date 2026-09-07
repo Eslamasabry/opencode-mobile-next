@@ -456,8 +456,41 @@ class ConnectionController extends ChangeNotifier {
   final _eventBus = StreamController<EventEnvelope>.broadcast();
   Stream<EventEnvelope> get events => _eventBus.stream;
 
+  /// An in-memory product walkthrough with no native publishing or reconnection.
+  /// Its caller supplies a separate in-memory store and gateway pair.
+  final bool isIsolated;
+
+  factory ConnectionController.isolated(
+    ProfileStore store, {
+    required ServerGateway gateway,
+    required ServerOperationsGateway operations,
+    required ServerProfile profile,
+    DraftAttachmentVault? draftAttachmentVault,
+    DraftAttachmentVault? stashAttachmentVault,
+    PromptPhotoStore? promptPhotoStore,
+  }) {
+    final controller = ConnectionController(
+      store,
+      isIsolated: true,
+      draftAttachmentVault: draftAttachmentVault,
+      stashAttachmentVault: stashAttachmentVault,
+      promptPhotoStore: promptPhotoStore,
+      backgroundLive: BackgroundLiveController(
+        preferences: store.prefs,
+        invoke: (method, [arguments]) async => const {},
+      ),
+    );
+    controller._connectedProfile = profile;
+    controller.api = gateway;
+    controller.repository = operations;
+    controller.status = StreamStatus.connected;
+    controller._startEvents(controller._generation, gateway);
+    return controller;
+  }
+
   ConnectionController(
     this.store, {
+    this.isIsolated = false,
     OpenCodeApiFactory? apiFactory,
     ProductRepositoryFactory? repositoryFactory,
     V2GatewayPairFactory? v2GatewayFactory,
@@ -494,7 +527,9 @@ class ConnectionController extends ChangeNotifier {
     transcriptReasoningExpanded = store.transcriptReasoningExpanded;
     transcriptTimestampsVisible = store.transcriptTimestampsVisible;
     this.backgroundLive.addListener(_backgroundLiveChanged);
-    this.backgroundLive.bindActionHandler(_handleCodingAlertAction);
+    if (!isIsolated) {
+      this.backgroundLive.bindActionHandler(_handleCodingAlertAction);
+    }
   }
 
   /// Resolves an Android notification action while the app stays
@@ -592,10 +627,10 @@ class ConnectionController extends ChangeNotifier {
     return null;
   }
 
-  bool get keepLiveInBackground => backgroundLive.enabled;
+  bool get keepLiveInBackground => !isIsolated && backgroundLive.enabled;
 
   Future<bool> setKeepLiveInBackground(bool enabled) =>
-      backgroundLive.setEnabled(enabled);
+      isIsolated ? Future.value(false) : backgroundLive.setEnabled(enabled);
 
   CodingAlertOpen? get pendingCodingAlertOpen => _pendingCodingAlertOpen;
 
@@ -606,11 +641,13 @@ class ConnectionController extends ChangeNotifier {
   }
 
   Future<void> restoreBackgroundLiveMode() async {
+    if (isIsolated) return;
     await backgroundLive.restore();
     await consumeCodingAlertOpen();
   }
 
   Future<void> consumeCodingAlertOpen() async {
+    if (isIsolated) return;
     final value = await backgroundLive.consumeCodingAlertOpen();
     if (_disposed || value == null) return;
     // Home-screen widget rows outlive profile switches: a tap stamped with
@@ -840,6 +877,11 @@ class ConnectionController extends ChangeNotifier {
   /// [_v2GatewayFactory].
   ({ServerGateway gateway, ServerOperationsGateway operations})
   _buildTransportPair(ServerProfile profile) {
+    if (isIsolated) {
+      throw StateError(
+        'An isolated session cannot create a network transport.',
+      );
+    }
     if (profile.flavor == ServerFlavor.v2) return _v2GatewayFactory(profile);
     final v1Api = _apiFactory(profile);
     return (gateway: v1Api, operations: _repositoryFactory(v1Api));
@@ -1146,6 +1188,9 @@ class ConnectionController extends ChangeNotifier {
     ServerProfile profile, {
     bool redetectOnFailure = true,
   }) async {
+    if (isIsolated) {
+      throw StateError('An isolated session cannot connect to a server.');
+    }
     _lifecycleSuspended = false;
     _lifecycleWasBackgrounded = false;
     _lifecycleResume = null;
@@ -3943,7 +3988,7 @@ class ConnectionController extends ChangeNotifier {
   /// Stops all network work while the application is backgrounded without
   /// clearing the selected profile, location, or already-rendered data.
   void suspendForLifecycle() {
-    if (_disposed) return;
+    if (_disposed || isIsolated) return;
     _lifecycleWasBackgrounded = true;
     if (keepLiveInBackground) {
       _attentionActiveSessions.addAll(busySessions);
@@ -3965,7 +4010,7 @@ class ConnectionController extends ChangeNotifier {
   /// Recreates one transport for the profile/location retained by
   /// [suspendForLifecycle]. Concurrent resume signals share the same future.
   Future<void> resumeFromLifecycle() {
-    if (_disposed) return Future.value();
+    if (_disposed || isIsolated) return Future.value();
     final inFlight = _lifecycleResume;
     if (inFlight != null) return inFlight;
     if (!_lifecycleSuspended) {
@@ -3993,7 +4038,7 @@ class ConnectionController extends ChangeNotifier {
   /// Reconnects the active profile without discarding the selected location
   /// or already-rendered product data. Repeated taps share one operation.
   Future<void> retryConnection() {
-    if (_disposed) return Future.value();
+    if (_disposed || isIsolated) return Future.value();
     final inFlight = _manualReconnect ?? _lifecycleResume;
     if (inFlight != null) return inFlight;
 
@@ -5847,7 +5892,7 @@ class ConnectionController extends ChangeNotifier {
     // truth; the writer itself skips unchanged payloads. Profile deletion
     // suspends this: the sessions it would republish belong to the profile
     // being erased.
-    if (!_disposed && !_widgetSnapshotSuspended) {
+    if (!_disposed && !_widgetSnapshotSuspended && !isIsolated) {
       // Retained so a caller that must observe the settled snapshot — profile
       // deletion — can wait for this write instead of racing it.
       final write = _widgetSnapshot.update(

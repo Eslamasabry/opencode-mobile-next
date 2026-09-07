@@ -50,6 +50,7 @@ Future<void> showPermissionSheet(
         ),
         child: PermissionSheet(
           permission: permission,
+          allowDeviceActions: !controller.isIsolated,
           routes: routes,
           onReply: (reply, {message}) => controller.answerPermission(
             permission.id,
@@ -79,6 +80,7 @@ class PermissionSheet extends StatefulWidget {
     this.contextLabel = 'in this chat',
     this.onShowSource,
     this.routes,
+    this.allowDeviceActions = true,
   });
 
   final PermissionRequest permission;
@@ -87,6 +89,7 @@ class PermissionSheet extends StatefulWidget {
   final String contextLabel;
   final VoidCallback? onShowSource;
   final RequestRoutes? routes;
+  final bool allowDeviceActions;
 
   @override
   State<PermissionSheet> createState() => _PermissionSheetState();
@@ -240,7 +243,10 @@ class _PermissionSheetState extends State<PermissionSheet> {
     if (!_routes.isPending) return;
     final route = MaterialPageRoute<void>(
       fullscreenDialog: true,
-      builder: (_) => DiffView.single(_pendingDiff(diff)),
+      builder: (_) => DiffView.single(
+        _pendingDiff(diff),
+        allowCopy: widget.allowDeviceActions,
+      ),
     );
     _routes.own(route);
     Navigator.of(context).push(route);
@@ -294,11 +300,17 @@ class _PermissionSheetState extends State<PermissionSheet> {
                 Text(contextLine, style: theme.textTheme.bodyMedium),
                 if (permission.commandPreview case final command?) ...[
                   const SizedBox(height: 12),
-                  _CommandPreview(command: command),
+                  _CommandPreview(
+                    command: command,
+                    allowCopy: widget.allowDeviceActions,
+                  ),
                 ],
                 if (permission.filePath case final path?) ...[
                   const SizedBox(height: 12),
-                  _FilePathRow(path: path),
+                  _FilePathRow(
+                    path: path,
+                    allowCopy: widget.allowDeviceActions,
+                  ),
                 ],
                 if (_diffPreview case final diff?) ...[
                   const SizedBox(height: 12),
@@ -401,17 +413,18 @@ class _PermissionSheetState extends State<PermissionSheet> {
                         ),
                       ),
                     ),
-                    IconButton(
-                      tooltip: 'Copy $resource',
-                      constraints: const BoxConstraints.tightFor(
-                        width: 48,
-                        height: 48,
+                    if (widget.allowDeviceActions)
+                      IconButton(
+                        tooltip: 'Copy $resource',
+                        constraints: const BoxConstraints.tightFor(
+                          width: 48,
+                          height: 48,
+                        ),
+                        onPressed: () => unawaited(
+                          Clipboard.setData(ClipboardData(text: resource)),
+                        ),
+                        icon: const Icon(AppIcons.copy, size: 18),
                       ),
-                      onPressed: () => unawaited(
-                        Clipboard.setData(ClipboardData(text: resource)),
-                      ),
-                      icon: const Icon(AppIcons.copy, size: 18),
-                    ),
                   ],
                 ),
               ),
@@ -427,6 +440,7 @@ class _PermissionSheetState extends State<PermissionSheet> {
   }
 
   Widget _applyBar(ThemeData theme, bool reduceMotion) {
+    final controls = _rejecting ? _rejectPane(theme) : _triad(theme);
     return Material(
       key: const Key('permission-apply-bar'),
       color: theme.colorScheme.surfaceContainerHigh,
@@ -435,14 +449,14 @@ class _PermissionSheetState extends State<PermissionSheet> {
         top: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          child: AnimatedSize(
-            duration: reduceMotion
-                ? Duration.zero
-                : const Duration(milliseconds: 240),
-            curve: Curves.easeOutCubic,
-            alignment: Alignment.topCenter,
-            child: _rejecting ? _rejectPane(theme) : _triad(theme),
-          ),
+          child: reduceMotion
+              ? controls
+              : AnimatedSize(
+                  duration: const Duration(milliseconds: 240),
+                  curve: Curves.easeOutCubic,
+                  alignment: Alignment.topCenter,
+                  child: controls,
+                ),
         ),
       ),
     );
@@ -525,7 +539,8 @@ class _PermissionSheetState extends State<PermissionSheet> {
 /// The shell command awaiting approval, highlighted as bash in a mono block
 /// so quoting and pipes read at a glance before the user allows it.
 class _CommandPreview extends StatelessWidget {
-  const _CommandPreview({required this.command});
+  const _CommandPreview({required this.command, this.allowCopy = true});
+  final bool allowCopy;
 
   final String command;
 
@@ -565,7 +580,7 @@ class _CommandPreview extends StatelessWidget {
               ),
             ),
           ),
-          _CopyButton(text: command, label: 'Copy command'),
+          if (allowCopy) _CopyButton(text: command, label: 'Copy command'),
         ],
       ),
     );
@@ -590,7 +605,8 @@ class _CopyButton extends StatelessWidget {
 
 /// The file an edit/write/read ask concerns: folder glyph plus the mono path.
 class _FilePathRow extends StatelessWidget {
-  const _FilePathRow({required this.path});
+  const _FilePathRow({required this.path, this.allowCopy = true});
+  final bool allowCopy;
 
   final String path;
 
@@ -616,7 +632,7 @@ class _FilePathRow extends StatelessWidget {
             ),
           ),
         ),
-        _CopyButton(text: path, label: 'Copy $path'),
+        if (allowCopy) _CopyButton(text: path, label: 'Copy $path'),
       ],
     );
   }

@@ -20,6 +20,8 @@ enum _PromptTool {
 class _ChatComposer extends StatelessWidget {
   const _ChatComposer({
     required this.compact,
+    this.isolated = false,
+    this.maxInputHeight = double.infinity,
     required this.allowInlineCommands,
     required this.controller,
     required this.focusNode,
@@ -75,6 +77,8 @@ class _ChatComposer extends StatelessWidget {
   });
 
   final bool compact;
+  final bool isolated;
+  final double maxInputHeight;
   final bool allowInlineCommands;
   final TextEditingController controller;
   final FocusNode focusNode;
@@ -167,21 +171,23 @@ class _ChatComposer extends StatelessWidget {
   final double? contextUsage;
   final Widget? modelSwitch;
 
-  Widget _modelControls(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Flexible(
-        child: _ModelContextChip(
-          label: _contextLabel,
-          tooltip: _rawContextLabel,
-          costLine: _costLine,
-          trailing: _contextPercent(context),
-          onPressed: onChooseModel,
-        ),
-      ),
-      ?modelSwitch,
-    ],
-  );
+  Widget _modelControls(BuildContext context) => isolated
+      ? Text(_contextLabel, maxLines: 1, overflow: TextOverflow.ellipsis)
+      : Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: _ModelContextChip(
+                label: _contextLabel,
+                tooltip: _rawContextLabel,
+                costLine: _costLine,
+                trailing: _contextPercent(context),
+                onPressed: onChooseModel,
+              ),
+            ),
+            ?modelSwitch,
+          ],
+        );
 
   bool get _hasPrompt =>
       controller.text.trim().isNotEmpty ||
@@ -380,22 +386,26 @@ class _ChatComposer extends StatelessWidget {
           ),
         if (shelfBusy && shelfLoading)
           const LinearProgressIndicator(minHeight: 2),
-        _ComposerField(
-          controller: controller,
-          focusNode: focusNode,
-          onContentInserted: onContentInserted,
-          minLines: compact ? 1 : 2,
-          maxLines: compact ? 3 : 6,
-          contentPadding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-          onSubmitShortcut: _submitFromKeyboard,
-          readOnly: shelfBusy,
+        ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxInputHeight),
+          child: _ComposerField(
+            isolated: isolated,
+            controller: controller,
+            focusNode: focusNode,
+            onContentInserted: onContentInserted,
+            minLines: compact ? 1 : 2,
+            maxLines: compact ? 3 : 6,
+            contentPadding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+            onSubmitShortcut: _submitFromKeyboard,
+            readOnly: shelfBusy,
+          ),
         ),
         if (contextUsage case final usage?) _ContextMeterLine(usage: usage),
         Padding(
           padding: const EdgeInsets.fromLTRB(6, 0, 6, 6),
           child: Row(
             children: [
-              if (!conversationMode)
+              if (!isolated && !conversationMode)
                 _PromptToolsButton(
                   voiceOpening: voiceOpening,
                   onSelected: _openTool,
@@ -411,17 +421,20 @@ class _ChatComposer extends StatelessWidget {
                   child: _modelControls(context),
                 ),
               ),
-              IconButton(
-                key: const Key('prompt-editor-button'),
-                tooltip: 'Open full-screen prompt editor',
-                onPressed: shelfBusy || conversationMode ? null : onOpenEditor,
-                icon: const Icon(Icons.open_in_full_rounded, size: 19),
-                style: IconButton.styleFrom(
-                  foregroundColor: Theme.of(
-                    context,
-                  ).colorScheme.onSurfaceVariant,
+              if (!isolated)
+                IconButton(
+                  key: const Key('prompt-editor-button'),
+                  tooltip: 'Open full-screen prompt editor',
+                  onPressed: shelfBusy || conversationMode
+                      ? null
+                      : onOpenEditor,
+                  icon: const Icon(Icons.open_in_full_rounded, size: 19),
+                  style: IconButton.styleFrom(
+                    foregroundColor: Theme.of(
+                      context,
+                    ).colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
               const SizedBox(width: 2),
               _ComposerSubmit(
                 busy: busy,
@@ -445,7 +458,7 @@ class _ChatComposer extends StatelessWidget {
   /// closed, so a tool that opens its own sheet (Commands, Voice) never
   /// races the dismissal of this one.
   Future<void> _openTool(BuildContext context) async {
-    if (shelfBusy || conversationMode) return;
+    if (isolated || shelfBusy || conversationMode) return;
     final tool = await showModalBottomSheet<_PromptTool>(
       context: context,
       useSafeArea: true,
@@ -575,6 +588,7 @@ class _ComposerField extends StatelessWidget {
     required this.contentPadding,
     this.onSubmitShortcut,
     this.readOnly = false,
+    this.isolated = false,
   });
 
   final TextEditingController controller;
@@ -589,6 +603,7 @@ class _ComposerField extends StatelessWidget {
   /// multiline field.
   final VoidCallback? onSubmitShortcut;
   final bool readOnly;
+  final bool isolated;
 
   @override
   Widget build(BuildContext context) {
@@ -601,9 +616,10 @@ class _ComposerField extends StatelessWidget {
       maxLines: maxLines,
       // Accepts images committed by the IME (Android commitContent): the
       // default allowed mime types cover the common raster image formats.
-      contentInsertionConfiguration: ContentInsertionConfiguration(
-        onContentInserted: onContentInserted,
-      ),
+      enableInteractiveSelection: !isolated,
+      contentInsertionConfiguration: isolated
+          ? null
+          : ContentInsertionConfiguration(onContentInserted: onContentInserted),
       textCapitalization: TextCapitalization.sentences,
       decoration: InputDecoration(
         hintText: 'Ask OpenCode…',
@@ -615,7 +631,7 @@ class _ComposerField extends StatelessWidget {
       ),
     );
     final onSubmit = onSubmitShortcut;
-    if (onSubmit == null) return field;
+    if (isolated || onSubmit == null) return field;
     return CallbackShortcuts(
       bindings: {
         const SingleActivator(LogicalKeyboardKey.enter, control: true):

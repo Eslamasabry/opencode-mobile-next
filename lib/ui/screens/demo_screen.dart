@@ -1,13 +1,18 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../demo/demo_copy.dart';
+import '../../demo/demo_gateway.dart';
+import '../../demo/demo_store.dart';
+import '../../l10n/app_localizations.dart';
+import '../../state/connection.dart';
+import '../../state/review_handoff.dart';
+import 'chat_screen.dart';
 
-enum _DemoPhase { prompt, streaming, review, complete }
-
-/// An in-memory walkthrough, deliberately independent of ChatScreen, Riverpod,
-/// profiles, gateways and native bridges. Opening this route performs no I/O.
+/// Production chat backed by a route-owned gateway and ephemeral stores.
+/// Nothing replaces the real connection, profile store or plugin singleton.
 class DemoScreen extends StatefulWidget {
   const DemoScreen({super.key});
 
@@ -16,228 +21,137 @@ class DemoScreen extends StatefulWidget {
 }
 
 class _DemoScreenState extends State<DemoScreen> {
-  _DemoPhase _phase = _DemoPhase.prompt;
-  Timer? _timer;
-  int _visibleWords = 0;
-  bool _allowed = false;
-  bool _reducedMotion = false;
-  final _scroll = ScrollController();
-  static final _words = DemoCopy.reply.split(' ');
+  late DemoGateway _gateway;
+  late DemoProfileStore _store;
+  late ConnectionController _controller;
+  late ReviewHandoffStore _handoff;
+  var _generation = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _create();
+  }
+
+  void _create() {
+    _gateway = DemoGateway();
+    _store = DemoProfileStore();
+    _handoff = ReviewHandoffStore();
+    _controller =
+        ConnectionController.isolated(
+            _store,
+            gateway: _gateway,
+            operations: _gateway,
+            profile: _store.profiles.single,
+          )
+          ..sessionsById = {DemoGateway.sessionID: DemoGateway.sampleSession}
+          ..catalog = DemoGateway.catalog
+          ..selectedModel = DemoGateway.model;
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _reducedMotion =
+    _gateway.reducedMotion =
         MediaQuery.disableAnimationsOf(context) ||
         MediaQuery.accessibleNavigationOf(context);
-    if (_reducedMotion && _phase == _DemoPhase.streaming) {
-      _timer?.cancel();
-      _timer = null;
-      _visibleWords = _words.length;
-      _phase = _DemoPhase.review;
-    }
-  }
-
-  void _send() {
-    if (_phase != _DemoPhase.prompt) return;
-    setState(() {
-      _visibleWords = _reducedMotion ? _words.length : 1;
-      _phase = _reducedMotion ? _DemoPhase.review : _DemoPhase.streaming;
-    });
-    if (_reducedMotion) return;
-    _timer = Timer.periodic(const Duration(milliseconds: 100), (_) {
-      if (!mounted) return;
-      setState(() {
-        _visibleWords++;
-        if (_visibleWords >= _words.length) {
-          _timer?.cancel();
-          _timer = null;
-          _phase = _DemoPhase.review;
-        }
-      });
-    });
-  }
-
-  void _showReply() {
-    _timer?.cancel();
-    _timer = null;
-    setState(() {
-      _visibleWords = _words.length;
-      _phase = _DemoPhase.review;
-    });
-  }
-
-  void _decide(bool allow) {
-    if (_phase != _DemoPhase.review) return;
-    setState(() {
-      _allowed = allow;
-      _phase = _DemoPhase.complete;
-    });
   }
 
   void _reset() {
-    _timer?.cancel();
-    _timer = null;
+    final previous = _controller;
+    final previousStore = _store;
+    _gateway.close();
     setState(() {
-      _phase = _DemoPhase.prompt;
-      _visibleWords = 0;
-      _allowed = false;
+      _generation++;
+      _create();
+      _gateway.reducedMotion =
+          MediaQuery.disableAnimationsOf(context) ||
+          MediaQuery.accessibleNavigationOf(context);
     });
-    if (_scroll.hasClients) _scroll.jumpTo(0);
+    // Let the old chat remove its listeners before releasing its controller.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      previous.dispose();
+      unawaited(previousStore.prefs.clear());
+    });
   }
 
   void _exit() {
-    _timer?.cancel();
-    _timer = null;
+    _gateway.close();
     Navigator.of(context).pop();
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
-    _scroll.dispose();
+    _gateway.close();
+    _controller.dispose();
+    unawaited(_store.prefs.clear());
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final buttonStyle = FilledButton.styleFrom(
-      minimumSize: const Size(48, 48),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      tapTargetSize: MaterialTapTargetSize.padded,
-    );
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text(DemoCopy.title),
-        actions: [
-          IconButton(
-            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-            tooltip: DemoCopy.exit,
-            onPressed: _exit,
-            icon: const Icon(Icons.close_rounded),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        top: false,
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 640),
-            child: ListView(
-              controller: _scroll,
-              padding: const EdgeInsets.all(16),
+  Widget build(BuildContext context) => Scaffold(
+    // The production chat owns keyboard avoidance; avoid subtracting it twice.
+    resizeToAvoidBottomInset: false,
+    body: SafeArea(
+      bottom: false,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 4, 0),
+            child: Row(
               children: [
-                Text(DemoCopy.title, style: theme.textTheme.headlineSmall),
-                const SizedBox(height: 8),
-                const Text(DemoCopy.disclosure),
-                const SizedBox(height: 16),
-                _card(context, DemoCopy.promptTitle, [
-                  const Text(DemoCopy.prompt),
-                  if (_phase == _DemoPhase.prompt) ...[
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      style: buttonStyle,
-                      onPressed: _send,
-                      child: const Text(DemoCopy.send),
-                    ),
-                  ],
-                ]),
-                if (_phase != _DemoPhase.prompt)
-                  _card(context, DemoCopy.replyTitle, [
-                    // Do not announce every streamed word to assistive tech.
-                    Semantics(
-                      label: _phase == _DemoPhase.streaming
-                          ? DemoCopy.streaming
-                          : DemoCopy.reply,
-                      excludeSemantics: true,
-                      child: Text(_words.take(_visibleWords).join(' ')),
-                    ),
-                    if (_phase == _DemoPhase.streaming) ...[
-                      const SizedBox(height: 12),
-                      const Text(DemoCopy.streaming),
-                      TextButton(
-                        style: buttonStyle,
-                        onPressed: _showReply,
-                        child: const Text(DemoCopy.showReply),
-                      ),
-                    ],
-                  ]),
-                if (_phase == _DemoPhase.review ||
-                    _phase == _DemoPhase.complete)
-                  _card(context, DemoCopy.reviewTitle, [
-                    const Text(DemoCopy.before),
-                    const SizedBox(height: 8),
-                    const Text(DemoCopy.after),
-                    if (_phase == _DemoPhase.review) ...[
-                      const SizedBox(height: 16),
-                      Semantics(
-                        liveRegion: true,
-                        child: const Text(DemoCopy.permission),
-                      ),
-                      const SizedBox(height: 12),
-                      FilledButton(
-                        style: buttonStyle,
-                        onPressed: () => _decide(true),
-                        child: const Text(DemoCopy.allow),
-                      ),
-                      const SizedBox(height: 8),
-                      OutlinedButton(
-                        style: buttonStyle,
-                        onPressed: () => _decide(false),
-                        child: const Text(DemoCopy.deny),
-                      ),
-                    ],
-                  ]),
-                if (_phase == _DemoPhase.complete)
-                  Semantics(
-                    liveRegion: true,
-                    child: _card(context, DemoCopy.complete, [
-                      Text(_allowed ? DemoCopy.allowed : DemoCopy.denied),
-                    ]),
-                  ),
-                const SizedBox(height: 8),
-                OutlinedButton(
-                  style: buttonStyle,
+                const Icon(Icons.science_outlined, size: 20),
+                const SizedBox(width: 8),
+                const Expanded(child: Text(DemoCopy.title)),
+                IconButton(
+                  tooltip: DemoCopy.reset,
                   onPressed: _reset,
-                  child: const Text(DemoCopy.reset),
+                  icon: const Icon(Icons.restart_alt_rounded),
                 ),
-                const SizedBox(height: 8),
-                TextButton(
-                  style: buttonStyle,
+                IconButton(
+                  tooltip: DemoCopy.exit,
                   onPressed: _exit,
-                  child: const Text(DemoCopy.exit),
+                  icon: const Icon(Icons.close_rounded),
                 ),
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _card(BuildContext context, String title, List<Widget> children) {
-    return Card.filled(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Semantics(
-              header: true,
-              child: Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium,
+          if (MediaQuery.viewInsetsOf(context).bottom == 0)
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Text(DemoCopy.disclosure),
+            ),
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (context, _) =>
+                _gateway.hasFinished &&
+                    MediaQuery.viewInsetsOf(context).bottom == 0
+                ? TextButton(
+                    onPressed: _exit,
+                    child: Text(
+                      lookupAppLocalizations(
+                        Localizations.localeOf(context),
+                      ).demoSetUpServer,
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+          Expanded(
+            child: ProviderScope(
+              key: ValueKey(_generation),
+              overrides: [
+                connProvider.overrideWithValue(_controller),
+                bootstrapProvider.overrideWithValue(AppBootstrap(_store)),
+              ],
+              child: ChatScreen(
+                sessionID: DemoGateway.sessionID,
+                initialText: DemoCopy.prompt,
+                handoffStore: _handoff,
               ),
             ),
-            const SizedBox(height: 12),
-            ...children,
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
 }

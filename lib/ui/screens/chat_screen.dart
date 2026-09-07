@@ -103,6 +103,23 @@ const _maxAggregateAttachmentBytes = 20 * 1024 * 1024;
 AppLocalizations _chatL10n(BuildContext context) =>
     lookupAppLocalizations(Localizations.localeOf(context));
 
+// Zero-duration AnimatedSize still restarts its controller during layout.
+// Reduced motion uses the final layout directly, with no size animator.
+Widget _chatSizeTransition({
+  required bool reduceMotion,
+  required Duration duration,
+  required Widget child,
+  Curve curve = Curves.linear,
+  AlignmentGeometry alignment = Alignment.center,
+}) => reduceMotion
+    ? child
+    : AnimatedSize(
+        duration: duration,
+        curve: curve,
+        alignment: alignment,
+        child: child,
+      );
+
 @visibleForTesting
 Future<Uint8List?> readAttachmentBytesWithinLimit(
   PlatformFile file, {
@@ -349,7 +366,9 @@ class _ChatScreenState extends State<ChatScreen>
   // structured references here; the composer renders them as chips and
   // `_applyStagedReferences` folds them into the prompt text on send.
   late final ReviewHandoffSession _handoff = ReviewHandoffSession(
-    store: widget.handoffStore ?? ReviewHandoffStore.instance,
+    store: _conn.isIsolated
+        ? ReviewHandoffStore()
+        : widget.handoffStore ?? ReviewHandoffStore.instance,
     sessionID: widget.sessionID,
   );
 
@@ -464,15 +483,17 @@ class _ChatScreenState extends State<ChatScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _composer.text = widget.initialText;
-    _attachments.addAll(widget.initialAttachments);
     _conn = _readConn();
-    _conn.promptPhotos.addListener(_onPhotosChanged);
+    if (!_conn.isIsolated) {
+      _attachments.addAll(widget.initialAttachments);
+      _conn.promptPhotos.addListener(_onPhotosChanged);
+    }
     _draftProfileID = _conn.profile?.id ?? _conn.store.activeId ?? '';
     _draftLocation = _conn.locationRevision;
     _draftDirectory = _conn.directory;
     _draftWorkspace = _conn.workspace;
     _offlineFlushRevision = _conn.offlineFlushRevision;
-    if (widget.initialText.isEmpty) {
+    if (!_conn.isIsolated && widget.initialText.isEmpty) {
       final draft = _conn.sessionDraft(widget.sessionID);
       if (draft != null) {
         _composer.text = draft;
@@ -481,8 +502,9 @@ class _ChatScreenState extends State<ChatScreen>
     }
     _lastDraftText = _composer.text;
     _lastDraftAttachments = List.of(_attachments);
-    _draftTrackingEnabled = true;
-    if (widget.initialText.isEmpty &&
+    _draftTrackingEnabled = !_conn.isIsolated;
+    if (!_conn.isIsolated &&
+        widget.initialText.isEmpty &&
         widget.initialAttachments.isEmpty &&
         (_conn.savedSessionDraft(widget.sessionID)?.attachments.isNotEmpty ??
             false)) {
@@ -497,7 +519,9 @@ class _ChatScreenState extends State<ChatScreen>
       unawaited(_conn.ensureSession(widget.sessionID));
     }
     _syncRetryTicker();
-    _handoff.store.addListener(_onHandoffChanged); // UX-103 review handoff
+    if (!_conn.isIsolated) {
+      _handoff.store.addListener(_onHandoffChanged); // UX-103 review handoff
+    }
     _load();
     unawaited(_loadServerCommands());
     unawaited(_loadBackgroundSupport());
@@ -505,16 +529,21 @@ class _ChatScreenState extends State<ChatScreen>
     _sub = _conn.events.listen(_onEvent);
     _wasBusy = _conn.busySessions.contains(widget.sessionID);
     final injectedVoice = widget.voiceController;
-    if (injectedVoice != null) {
+    if (!_conn.isIsolated && injectedVoice != null) {
       _voice = injectedVoice;
       _voiceFuture = Future.value(injectedVoice);
     }
-    if (widget.initialText.isNotEmpty || widget.initialAttachments.isNotEmpty) {
+    if (!_conn.isIsolated &&
+        (widget.initialText.isNotEmpty ||
+            widget.initialAttachments.isNotEmpty)) {
       _draftSaveTimer = Timer(const Duration(milliseconds: 600), _persistDraft);
     }
   }
 
   Future<VoiceComposerController> _getVoice() {
+    if (_conn.isIsolated) {
+      return Future.error(StateError('Voice input is unavailable.'));
+    }
     return _voiceFuture ??= VoiceComposerController.create().then((voice) {
       if (!mounted) {
         voice.dispose();
@@ -564,7 +593,7 @@ class _ChatScreenState extends State<ChatScreen>
     _draftSaveTimer?.cancel();
     // Conversation review is transient. Only an explicit Send publishes text;
     // lifecycle, debounce and route persistence must not save an utterance.
-    if (_voiceConversation) return true;
+    if (_conn.isIsolated || _voiceConversation) return true;
     final sessionID = widget.sessionID;
     final generation = ++_draftWriteGeneration;
     final text = _promptHistory.original?.text ?? _composer.text;
@@ -711,6 +740,7 @@ class _ChatScreenState extends State<ChatScreen>
   };
 
   Future<void> _loadRunningShells() async {
+    if (_conn.isIsolated) return;
     if (_conn.status != StreamStatus.connected) return;
     final repo = _conn.repository;
     if (repo == null) return;
@@ -771,6 +801,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   KeyEventResult _navigatePromptHistory(KeyEvent event) {
+    if (_conn.isIsolated) return KeyEventResult.ignored;
     final value = _composer.value;
     if (_sending ||
         _promptShelfBusy ||
@@ -802,6 +833,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _rememberSentPrompt(String profile, String text) async {
+    if (_conn.isIsolated) return;
     try {
       await _conn.rememberSentPrompt(profile, text);
     } catch (_) {
@@ -1071,6 +1103,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _loadBackgroundSupport() async {
+    if (_conn.isIsolated) return;
     final repository = _conn.repository;
     _backgroundRepository = repository;
     _backgroundLocationRevision = _conn.locationRevision;
@@ -1100,6 +1133,7 @@ class _ChatScreenState extends State<ChatScreen>
       '${part.messageID}/${part.id ?? part.callID}';
 
   bool get _canBackgroundWork =>
+      !_conn.isIsolated &&
       !_backgrounding &&
       _backgroundLocationRevision == _conn.locationRevision &&
       _conn.status == StreamStatus.connected &&
@@ -2245,14 +2279,17 @@ class _ChatScreenState extends State<ChatScreen>
             !hasStagedReferences)) {
       return;
     }
-    unawaited(HapticFeedback.lightImpact());
-    if (_attachments.isEmpty &&
+    if (!_conn.isIsolated) unawaited(HapticFeedback.lightImpact());
+    if (!_conn.isIsolated &&
+        _attachments.isEmpty &&
         _composer.text.trimLeft().startsWith('/') &&
         _serverCommands == null) {
       await _loadServerCommands();
       if (!mounted) return;
     }
-    final typedCommand = _typedChatCommand(_composer.text.trim());
+    final typedCommand = _conn.isIsolated
+        ? null
+        : _typedChatCommand(_composer.text.trim());
     if (_attachments.isEmpty && typedCommand != null) {
       // A command is not a prompt: a server command's arguments feed its own
       // template and a mobile command takes none, so references cannot ride
@@ -2528,6 +2565,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _openVoice() async {
+    if (_conn.isIsolated) return;
     // The tools sheet hides the entry point off Android; this keeps a
     // programmatic call (a shortcut, a restored intent) from starting a model
     // download for a recognizer that can never be fed.
@@ -2604,6 +2642,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _addWebSources() async {
+    if (_conn.isIsolated) return;
     if (_sending || _promptShelfBusy || _voiceConversation) return;
     final source = _speechScopeNow;
     final snapshot = _snapshotPrompt();
@@ -2645,6 +2684,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _pickAttachment() async {
+    if (_conn.isIsolated) return;
     if (_promptShelfBusy) return;
     final location = _conn.locationRevision;
     setState(() => _photoBusy = true);
@@ -2720,6 +2760,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _pickPhoto(ImageSource source) async {
+    if (_conn.isIsolated) return;
     if (_promptShelfBusy || !platformCapabilities.supportsPromptPhotos) return;
     if (_attachments.length >= _maxAttachmentCount ||
         _attachments.fold<int>(
@@ -2845,6 +2886,7 @@ class _ChatScreenState extends State<ChatScreen>
   /// platform plugin. Content without inline bytes (a URI-only commit) is
   /// ignored rather than half-attached.
   Future<void> _handleInsertedContent(KeyboardInsertedContent content) async {
+    if (_conn.isIsolated) return;
     final bytes = content.data;
     if (bytes == null || bytes.isEmpty) return;
     final mime = content.mimeType.isEmpty ? 'image/png' : content.mimeType;
@@ -2926,6 +2968,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _openPromptEditor() async {
+    if (_conn.isIsolated) return;
     if (_promptShelfBusy) return;
     final result = await Navigator.of(context).push<_PromptEditorResult>(
       MaterialPageRoute<_PromptEditorResult>(
@@ -2988,7 +3031,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<void> _abort() async {
     if (_aborting) return;
-    unawaited(HapticFeedback.mediumImpact());
+    if (!_conn.isIsolated) unawaited(HapticFeedback.mediumImpact());
     setState(() => _aborting = true);
     final actionApi = await _conn.prepareActionTransport();
     if (!mounted) return;
@@ -3539,6 +3582,7 @@ class _ChatScreenState extends State<ChatScreen>
   ];
 
   Future<void> _showMessageActions(MessageWithParts message) async {
+    if (_conn.isIsolated) return;
     final source = _speechScopeNow;
     final copy = _messageCopy(message);
     final canFork = message.info.role == 'user';
@@ -3728,6 +3772,7 @@ class _ChatScreenState extends State<ChatScreen>
   /// The providers/integrations screen, reached from a provider-auth error
   /// card; the same destination the `/integrations` command opens.
   Future<void> _openProviders() async {
+    if (_conn.isIsolated) return;
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => IntegrationsScreen(controller: _conn),
@@ -3964,6 +4009,7 @@ class _ChatScreenState extends State<ChatScreen>
   /// A light haptic when this session goes from busy to idle. Keep the
   /// editor in place and respect reduced motion.
   void _noteRunFinished() {
+    if (_conn.isIsolated) return;
     final busy = _conn.busySessions.contains(widget.sessionID);
     final finished = _wasBusy && !busy;
     _wasBusy = busy;
@@ -4147,6 +4193,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _loadServerCommands() {
+    if (_conn.isIsolated) return Future.value();
     final existing = _serverCommandsRequest;
     if (existing != null) return existing;
     late final Future<void> request;
@@ -4505,6 +4552,7 @@ class _ChatScreenState extends State<ChatScreen>
   /// here. Everything else falls through to the shell.
   @override
   bool onAppShortcut(Intent intent) {
+    if (_conn.isIsolated) return true;
     if (intent is! OpenCommandPaletteIntent) return false;
     unawaited(_openCommandLauncher());
     return true;
@@ -4514,6 +4562,7 @@ class _ChatScreenState extends State<ChatScreen>
     bool reverse = false,
     bool favoritesOnly = false,
   }) async {
+    if (_conn.isIsolated) return;
     final revision = _conn.connectionRevision;
     try {
       final next = await _conn.cycleModelForSession(
@@ -4539,6 +4588,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Widget? _modelCycleButton() {
+    if (_conn.isIsolated) return null;
     final library = _conn.modelLibrary;
     final current = _conn.modelForSession(widget.sessionID);
     final hasRecent =
@@ -4561,6 +4611,7 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _openCommandLauncher({
     _ComposerToolTab initialTab = _ComposerToolTab.commands,
   }) async {
+    if (_conn.isIsolated) return;
     FocusManager.instance.primaryFocus?.unfocus();
     unawaited(_conn.refreshCatalog());
     await showModalBottomSheet<void>(
@@ -5005,6 +5056,7 @@ class _ChatScreenState extends State<ChatScreen>
     required bool reverted,
     required bool shared,
   }) async {
+    if (_conn.isIsolated) return;
     final menuLocation = _conn.locationRevision;
     final action = await showModalBottomSheet<String>(
       context: context,
@@ -5162,6 +5214,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _openRelatedSession(Session target) async {
+    if (_conn.isIsolated) return;
     if (_conn.directory != target.directory ||
         _conn.workspace != target.workspaceID) {
       await _conn.selectLocation(
@@ -5174,6 +5227,18 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _showDiff() async {
+    if (_conn.isIsolated) {
+      final api = await _conn.prepareActionTransport();
+      if (api == null) return;
+      final diffs = await api.diff(widget.sessionID);
+      if (!mounted) return;
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (_) => DiffView(diffs: diffs, allowCopy: false),
+        ),
+      );
+      return;
+    }
     final prompt = await Navigator.of(context).push<String>(
       MaterialPageRoute<String>(
         builder: (_) => ReviewWorkspace(
@@ -5275,6 +5340,7 @@ class _ChatScreenState extends State<ChatScreen>
   final Map<String, DateTime> _pathLinkMissAt = {};
 
   Future<bool> _validatePathLink(String path) {
+    if (_conn.isIsolated) return Future.value(false);
     final missedAt = _pathLinkMissAt[path];
     if (missedAt != null &&
         DateTime.now().difference(missedAt) > _pathLinkNegativeTtl) {
@@ -5316,6 +5382,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<void> _openPathLink(String raw) async {
+    if (_conn.isIsolated) return;
     final path = stripPathLineSuffix(raw);
     final name = path.substring(path.lastIndexOf('/') + 1);
     try {
@@ -5345,6 +5412,13 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<FilePreviewData> _loadToolOutputFile(ToolOutputFile file) async {
+    if (_conn.isIsolated) {
+      return FilePreviewData(
+        name: file.displayName,
+        mimeType: file.mimeType,
+        error: 'Files are unavailable in this preview.',
+      );
+    }
     final path = file.path;
     final api = await _conn.prepareActionTransport();
     if (path == null || path.isEmpty || api == null) {
@@ -5372,6 +5446,7 @@ class _ChatScreenState extends State<ChatScreen>
     ToolOutputFile file,
     FilePreviewData data,
   ) async {
+    if (_conn.isIsolated) return;
     await _addPreviewAttachment(
       filename: file.displayName,
       mimeType: data.mimeType ?? file.mimeType,
@@ -5396,6 +5471,7 @@ class _ChatScreenState extends State<ChatScreen>
   /// identically. The size is checked from the drop's own metadata first, so
   /// an oversized file is refused without ever being read into memory.
   Future<void> _handleDroppedFiles(List<DroppedFile> files) async {
+    if (_conn.isIsolated) return;
     for (final file in files) {
       try {
         if (await file.length() > _maxAttachmentBytes) {
@@ -5470,6 +5546,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   Future<String?> _discardUntouchedMobileSession() async {
+    if (_conn.isIsolated) return null;
     if (!widget.discardIfUntouched ||
         _messages.isNotEmpty ||
         _pendingSends.isNotEmpty ||
@@ -5548,6 +5625,7 @@ class _ChatScreenState extends State<ChatScreen>
     ToolOutputFile file,
     FilePreviewData data,
   ) async {
+    if (_conn.isIsolated) return;
     final bytes = data.exportBytes;
     if (data.error != null || bytes == null) {
       throw ProductException(data.error ?? 'The file has no content to save.');
@@ -5628,10 +5706,9 @@ class _ChatScreenState extends State<ChatScreen>
   ) {
     final permission = pendingPermissions.firstOrNull;
     final question = _conn.questionForSession(widget.sessionID);
-    return AnimatedSize(
-      duration: reduceMotion
-          ? Duration.zero
-          : const Duration(milliseconds: 220),
+    return _chatSizeTransition(
+      reduceMotion: reduceMotion,
+      duration: const Duration(milliseconds: 220),
       curve: Curves.easeOutCubic,
       alignment: Alignment.bottomCenter,
       child: AnimatedSwitcher(
@@ -5666,6 +5743,13 @@ class _ChatScreenState extends State<ChatScreen>
       ),
     );
   }
+
+  Widget _transcriptSelectionArea({required Widget child}) =>
+      _conn.isIsolated ? child : DesktopSelectionArea(child: child);
+
+  Widget _composerDropTarget({required Widget child}) => _conn.isIsolated
+      ? child
+      : DesktopFileDropTarget(onDrop: _handleDroppedFiles, child: child);
 
   @override
   Widget build(BuildContext context) {
@@ -5718,7 +5802,7 @@ class _ChatScreenState extends State<ChatScreen>
             .length;
 
     final screen = PopScope(
-      canPop: _allowRoutePop,
+      canPop: _conn.isIsolated || _allowRoutePop,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) unawaited(_leaveChat());
       },
@@ -5741,22 +5825,29 @@ class _ChatScreenState extends State<ChatScreen>
                 icon: Icon(AppIcons.stop, color: theme.colorScheme.error),
                 onPressed: _aborting ? null : _abort,
               ),
-            IconButton(
-              key: const ValueKey('session-actions-button'),
-              tooltip: 'Session menu',
-              icon: const Icon(Icons.more_vert_rounded),
-              onPressed: () => unawaited(
-                _openSessionMenu(
-                  reverted: session?.reverted == true,
-                  shared: shareUrl != null,
+            if (_conn.isIsolated)
+              IconButton(
+                tooltip: _chatL10n(context).demoReviewChanges,
+                icon: const Icon(Icons.difference_outlined),
+                onPressed: _showDiff,
+              ),
+            if (!_conn.isIsolated)
+              IconButton(
+                key: const ValueKey('session-actions-button'),
+                tooltip: 'Session menu',
+                icon: const Icon(Icons.more_vert_rounded),
+                onPressed: () => unawaited(
+                  _openSessionMenu(
+                    reverted: session?.reverted == true,
+                    shared: shareUrl != null,
+                  ),
                 ),
               ),
-            ),
           ],
         ),
         body: Column(
           children: [
-            if (_conn.status != StreamStatus.connected)
+            if (!_conn.isIsolated && _conn.status != StreamStatus.connected)
               ConnectionStatusBanner(controller: _conn, note: _queuedNote()),
             // At most one contextual strip below the connection truth, so
             // banners cannot stack three deep over the transcript: a prompt
@@ -5766,22 +5857,26 @@ class _ChatScreenState extends State<ChatScreen>
               _PromptErrorBanner(
                 message: promptError,
                 onDismiss: () => setState(() => _promptError = null),
-                onChooseModel: () => showModelPicker(
-                  context,
-                  applyScope: _modelApplyScope,
-                  sessionID: widget.sessionID,
-                ),
+                onChooseModel: _conn.isIsolated
+                    ? null
+                    : () => showModelPicker(
+                        context,
+                        applyScope: _modelApplyScope,
+                        sessionID: widget.sessionID,
+                      ),
               )
-            else if (parentID != null)
+            else if (!_conn.isIsolated && parentID != null)
               _SubagentContextBanner(
                 position: siblingIndex < 0 ? null : siblingIndex + 1,
                 total: siblings.isEmpty ? null : siblings.length,
                 onParent: _openParentSession,
                 onAll: _showSubagents,
               )
-            else if (shareUrl != null)
+            else if (!_conn.isIsolated && shareUrl != null)
               _SharedSessionBanner(url: shareUrl, onStop: _stopSharing),
-            if (_conn.supportsStagedRevert && session?.reverted == true)
+            if (!_conn.isIsolated &&
+                _conn.supportsStagedRevert &&
+                session?.reverted == true)
               Material(
                 color: theme.colorScheme.secondaryContainer,
                 child: Padding(
@@ -5871,7 +5966,7 @@ class _ChatScreenState extends State<ChatScreen>
                                   ? _EmptyTranscript(
                                       onSuggestion: _insertSuggestion,
                                     )
-                                  : DesktopSelectionArea(
+                                  : _transcriptSelectionArea(
                                       child: MarkdownFileLinks(
                                         validate: _validatePathLink,
                                         open: _openPathLink,
@@ -5994,37 +6089,53 @@ class _ChatScreenState extends State<ChatScreen>
                                                               _findCursor + 1,
                                                               _findHits.length,
                                                             ),
-                                                      onLongPress: () =>
-                                                          unawaited(
-                                                            _showMessageActions(
-                                                              m,
+                                                      onLongPress:
+                                                          _conn.isIsolated
+                                                          ? null
+                                                          : () => unawaited(
+                                                              _showMessageActions(
+                                                                m,
+                                                              ),
                                                             ),
-                                                          ),
-                                                      contextActions: () =>
-                                                          _messageContextActions(
-                                                            m,
-                                                          ),
+                                                      contextActions:
+                                                          _conn.isIsolated
+                                                          ? null
+                                                          : () =>
+                                                                _messageContextActions(
+                                                                  m,
+                                                                ),
                                                       filePreviewLoader:
                                                           _loadToolOutputFile,
                                                       onAttachFile:
                                                           _attachToolOutputFile,
                                                       onDownloadFile:
                                                           _downloadToolOutputFile,
-                                                      onCompact: _compact,
+                                                      onCompact:
+                                                          _conn.isIsolated
+                                                          ? null
+                                                          : _compact,
                                                       onOpenProviders:
-                                                          _openProviders,
+                                                          _conn.isIsolated
+                                                          ? null
+                                                          : _openProviders,
                                                       onContinue:
-                                                          _continueTruncated,
-                                                      onChooseModel: () =>
-                                                          showModelPicker(
-                                                            context,
-                                                            applyScope:
-                                                                _modelApplyScope,
-                                                            sessionID: widget
-                                                                .sessionID,
-                                                          ),
+                                                          _conn.isIsolated
+                                                          ? null
+                                                          : _continueTruncated,
+                                                      onChooseModel:
+                                                          _conn.isIsolated
+                                                          ? null
+                                                          : () => showModelPicker(
+                                                              context,
+                                                              applyScope:
+                                                                  _modelApplyScope,
+                                                              sessionID: widget
+                                                                  .sessionID,
+                                                            ),
                                                       onOpenSession:
-                                                          _openSubagentSession,
+                                                          _conn.isIsolated
+                                                          ? null
+                                                          : _openSubagentSession,
                                                     );
                                                   },
                                                 ),
@@ -6117,7 +6228,32 @@ class _ChatScreenState extends State<ChatScreen>
                                   ],
                                 ),
                               ),
-                            _attentionRegion(reduceMotion, pendingPermissions),
+                            // On short keyboard layouts the request shares the
+                            // remaining height with the transcript, after the
+                            // composer is measured. Keep its actions reachable
+                            // by scrolling instead of pushing Send off screen.
+                            if (bodyConstraints.maxHeight < 420 &&
+                                (pendingPermissions.isNotEmpty ||
+                                    _conn.questionForSession(
+                                          widget.sessionID,
+                                        ) !=
+                                        null ||
+                                    _retryState != null))
+                              Flexible(
+                                fit: FlexFit.loose,
+                                child: SingleChildScrollView(
+                                  reverse: true,
+                                  child: _attentionRegion(
+                                    reduceMotion,
+                                    pendingPermissions,
+                                  ),
+                                ),
+                              )
+                            else
+                              _attentionRegion(
+                                reduceMotion,
+                                pendingPermissions,
+                              ),
                             // §7 rule 5: v2-only surfaces stay silent on v1.
                             // The map is already empty there, but the gate is
                             // explicit so a stale entry cannot leak a form
@@ -6154,53 +6290,57 @@ class _ChatScreenState extends State<ChatScreen>
                                 onCancelInbox: _cancelInboxSend,
                                 onFlipDelivery: _flipInboxDelivery,
                               ),
-                            if (_conn.promptPhotos.pending case final photo?
-                                when photo.profileID == _draftProfileID &&
-                                    photo.sessionID == widget.sessionID)
-                              Padding(
-                                key: const ValueKey('pending-photo-recovery'),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 4,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: TextButton(
-                                        onPressed: _photoBusy
-                                            ? null
-                                            : () => _reviewPendingPhoto(photo),
-                                        child: Text(
-                                          photo.name ??
-                                              _chatL10n(
-                                                context,
-                                              ).photoPendingTitle,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
+                            if (!_conn.isIsolated)
+                              if (_conn.promptPhotos.pending case final photo?
+                                  when photo.profileID == _draftProfileID &&
+                                      photo.sessionID == widget.sessionID)
+                                Padding(
+                                  key: const ValueKey('pending-photo-recovery'),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 4,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: TextButton(
+                                          onPressed: _photoBusy
+                                              ? null
+                                              : () =>
+                                                    _reviewPendingPhoto(photo),
+                                          child: Text(
+                                            photo.name ??
+                                                _chatL10n(
+                                                  context,
+                                                ).photoPendingTitle,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    IconButton(
-                                      tooltip: _chatL10n(
-                                        context,
-                                      ).photoAddToDraft,
-                                      onPressed: _promptShelfBusy
-                                          ? null
-                                          : () => _applyPendingPhoto(photo),
-                                      icon: const Icon(
-                                        Icons.add_photo_alternate_outlined,
+                                      IconButton(
+                                        tooltip: _chatL10n(
+                                          context,
+                                        ).photoAddToDraft,
+                                        onPressed: _promptShelfBusy
+                                            ? null
+                                            : () => _applyPendingPhoto(photo),
+                                        icon: const Icon(
+                                          Icons.add_photo_alternate_outlined,
+                                        ),
                                       ),
-                                    ),
-                                    IconButton(
-                                      tooltip: _chatL10n(context).photoDiscard,
-                                      onPressed: _photoBusy
-                                          ? null
-                                          : () => _discardPendingPhoto(photo),
-                                      icon: const Icon(Icons.close_rounded),
-                                    ),
-                                  ],
+                                      IconButton(
+                                        tooltip: _chatL10n(
+                                          context,
+                                        ).photoDiscard,
+                                        onPressed: _photoBusy
+                                            ? null
+                                            : () => _discardPendingPhoto(photo),
+                                        icon: const Icon(Icons.close_rounded),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
                             if (_draftSaveFailure case final failure?)
                               Padding(
                                 key: const ValueKey('draft-save-error'),
@@ -6260,10 +6400,9 @@ class _ChatScreenState extends State<ChatScreen>
                                   ],
                                 ),
                               ),
-                            AnimatedSize(
-                              duration: reduceMotion
-                                  ? Duration.zero
-                                  : const Duration(milliseconds: 160),
+                            _chatSizeTransition(
+                              reduceMotion: reduceMotion,
+                              duration: const Duration(milliseconds: 160),
                               curve: Curves.easeOutCubic,
                               child: _composerNote == null
                                   ? const SizedBox.shrink()
@@ -6316,7 +6455,7 @@ class _ChatScreenState extends State<ChatScreen>
                                   ),
                                 ),
                               ),
-                            if (runningWorkCount > 0)
+                            if (!_conn.isIsolated && runningWorkCount > 0)
                               Center(
                                 child: ConstrainedBox(
                                   constraints: const BoxConstraints(
@@ -6357,11 +6496,18 @@ class _ChatScreenState extends State<ChatScreen>
                                 constraints: const BoxConstraints(
                                   maxWidth: 860,
                                 ),
-                                child: DesktopFileDropTarget(
-                                  onDrop: _handleDroppedFiles,
+                                child: _composerDropTarget(
                                   child: _ChatComposer(
+                                    isolated: _conn.isIsolated,
                                     compact: compactComposer,
+                                    // The multiline field scrolls within its
+                                    // budget at large text scales, leaving room
+                                    // for the model context and Send controls.
+                                    maxInputHeight: compactComposer
+                                        ? bodyConstraints.maxHeight * .45
+                                        : double.infinity,
                                     allowInlineCommands:
+                                        !_conn.isIsolated &&
                                         !_voiceConversation &&
                                         bodyConstraints.maxHeight >= 300,
                                     controller: _composer,
@@ -6456,11 +6602,15 @@ class _ChatScreenState extends State<ChatScreen>
                                     conversationMode: _voiceConversation,
                                     onSend: _send,
                                     onStop: _abort,
-                                    onChooseModel: () => showModelPicker(
-                                      context,
-                                      applyScope: _modelApplyScope,
-                                      sessionID: widget.sessionID,
-                                    ),
+                                    onChooseModel: () {
+                                      if (!_conn.isIsolated) {
+                                        showModelPicker(
+                                          context,
+                                          applyScope: _modelApplyScope,
+                                          sessionID: widget.sessionID,
+                                        );
+                                      }
+                                    },
                                     contextUsage: _contextWindowUsage(),
                                     modelSwitch: _modelCycleButton(),
                                     onRemoveAttachment: (attachment) =>
@@ -6484,6 +6634,9 @@ class _ChatScreenState extends State<ChatScreen>
         ),
       ),
     );
+    if (_conn.isIsolated) {
+      return MarkdownInteractionScope(enabled: false, child: screen);
+    }
     return Actions(
       actions: {
         FindInSurfaceIntent: CallbackAction<FindInSurfaceIntent>(
@@ -6531,13 +6684,17 @@ class _ChatScreenState extends State<ChatScreen>
     _conn.profileDataChanges.removeListener(_readAloudScopeChanged);
     _readAloud?.removeListener(_readAloudChanged);
     _readAloud?.dispose();
-    _conn.promptPhotos.removeListener(_onPhotosChanged);
+    if (!_conn.isIsolated) _conn.promptPhotos.removeListener(_onPhotosChanged);
     _draftTrackingEnabled = false;
     _persistDraft();
     _composer.removeListener(_scheduleDraftSave);
     WidgetsBinding.instance.removeObserver(this);
     _conn.removeListener(_onConnectionChanged);
-    _handoff.store.removeListener(_onHandoffChanged); // UX-103 review handoff
+    if (_conn.isIsolated) {
+      _handoff.store.dispose();
+    } else {
+      _handoff.store.removeListener(_onHandoffChanged);
+    } // UX-103 review handoff
     _sub.cancel();
     _streamFlushTimer?.cancel();
     _highlightTimer?.cancel();

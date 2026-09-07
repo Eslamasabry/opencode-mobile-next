@@ -16,6 +16,7 @@ extension _ChatReadAloud on _ChatScreenState {
   }
 
   bool _canReadReply(MessageWithParts message) =>
+      !_conn.isIsolated &&
       platformCapabilities.supportsReadAloud &&
       !_voiceOpening &&
       (!_voiceConversation || _conversationCanSend) &&

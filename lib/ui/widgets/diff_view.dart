@@ -16,12 +16,23 @@ import '../app_theme.dart';
 /// Pushed as a route (`MaterialPageRoute(fullscreenDialog: true)`) so it
 /// never stacks a sheet on a sheet.
 class DiffView extends StatelessWidget {
-  const DiffView({super.key, required this.diffs, this.title});
+  const DiffView({
+    super.key,
+    required this.diffs,
+    this.title,
+    this.allowCopy = true,
+  });
 
-  DiffView.single(FileDiff diff, {Key? key})
-    : this(key: key, diffs: [diff], title: diff.file.split('/').last);
+  DiffView.single(FileDiff diff, {Key? key, bool allowCopy = true})
+    : this(
+        key: key,
+        diffs: [diff],
+        title: diff.file.split('/').last,
+        allowCopy: allowCopy,
+      );
 
   final List<FileDiff> diffs;
+  final bool allowCopy;
 
   /// Centred app-bar title; defaults to "Diff", or the file name for one file.
   final String? title;
@@ -53,9 +64,11 @@ class DiffView extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
-          if (single != null)
+          if (allowCopy && single != null)
             IconButton(
-              tooltip: single.after != null ? 'Copy updated file' : 'Copy patch',
+              tooltip: single.after != null
+                  ? 'Copy updated file'
+                  : 'Copy patch',
               icon: const Icon(AppIcons.copy),
               onPressed: copyText == null || copyText.isEmpty
                   ? null
@@ -335,12 +348,7 @@ class _DiffModel {
         final text = line.startsWith(' ') ? line.substring(1) : line;
         if (text.isEmpty && line.isEmpty) continue;
         segments.add(
-          DiffRow(
-            text,
-            DiffRowKind.context,
-            oldNo: oldNo++,
-            newNo: newNo++,
-          ),
+          DiffRow(text, DiffRowKind.context, oldNo: oldNo++, newNo: newNo++),
         );
       }
     }
@@ -546,11 +554,7 @@ class _DiffFileLinesState extends State<_DiffFileLines> {
 }
 
 class _LineRow extends StatelessWidget {
-  const _LineRow({
-    required this.row,
-    required this.gutter,
-    required this.wrap,
-  });
+  const _LineRow({required this.row, required this.gutter, required this.wrap});
 
   final DiffRow row;
   final double gutter;
