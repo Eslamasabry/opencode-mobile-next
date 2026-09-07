@@ -122,6 +122,19 @@ class _ThrowingSinkStore extends _MemoryStore {
       _ThrowingSink();
 }
 
+class _CancellingOnCloseStore extends _MemoryStore {
+  _CancellingOnCloseStore(this.cancellation);
+
+  final VoiceCancellationToken cancellation;
+
+  @override
+  Future<VoiceByteSink> openWrite(String path, {required bool append}) async =>
+      _MemorySink((bytes) {
+        files[path] = bytes;
+        cancellation.cancel();
+      }, append ? files[path] ?? const [] : const []);
+}
+
 class _FakeHttp implements VoiceHttpTransport {
   _FakeHttp(this.handler);
 
@@ -652,4 +665,32 @@ void main() {
       );
     },
   );
+
+  test('cancellation during finalization cleans a truncated partial', () async {
+    final cancellation = VoiceCancellationToken();
+    final store = _CancellingOnCloseStore(cancellation);
+    final downloader = VoiceModelDownloader(
+      store: store,
+      http: _FakeHttp(
+        (_) => VoiceHttpResponse(
+          statusCode: 200,
+          contentLength: 5,
+          headers: const {},
+          body: Stream.value(utf8.encode('hel')),
+        ),
+      ),
+    );
+
+    await expectLater(
+      downloader.download(
+        '/models',
+        _pack,
+        cancellation: cancellation,
+        onProgress: (_) {},
+        onVerifying: () {},
+      ),
+      throwsA(isA<VoiceDownloadCancelled>()),
+    );
+    expect(store.files, isEmpty);
+  });
 }

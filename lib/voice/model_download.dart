@@ -614,6 +614,7 @@ class VoiceModelDownloader {
       await sink.close();
       response.abort?.call();
     }
+    cancellation.throwIfCancelled();
     if (received != file.length) {
       throw VoiceDownloadException(
         'Incomplete ${file.name}: received $received of ${file.length} bytes.',

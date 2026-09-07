@@ -154,6 +154,14 @@ class FakeVoiceRecognizer implements VoiceRecognizer {
   }
 }
 
+class _CancellingVoiceRecognizer implements VoiceRecognizer {
+  @override
+  Future<VoiceRecognitionHandle> start(
+    VoiceRecognitionRequest request, {
+    required void Function() onLoaded,
+  }) async => throw const VoiceRecognitionCancelled();
+}
+
 void main() {
   test(
     'selected model pack and language persist across manager instances',
@@ -231,6 +239,72 @@ void main() {
       expect(recorder.cancelCalls, greaterThan(0));
       expect(controller.state, VoiceComposerState.error);
       expect(controller.draft, isEmpty);
+    },
+  );
+
+  test(
+    'recognizer cancellation during startup returns to idle without an error',
+    () async {
+      final recorder = FakeVoiceRecorder();
+      final controller = VoiceComposerController(
+        models: await readyVoiceModelManager(),
+        recorder: recorder,
+        recognizer: _CancellingVoiceRecognizer(),
+      );
+      addTearDown(controller.dispose);
+
+      await controller.startListening();
+      recorder.addSamples();
+      await controller.stopListening();
+
+      expect(controller.state, VoiceComposerState.idle);
+      expect(controller.error, isNull);
+      expect(controller.draft, isEmpty);
+    },
+  );
+
+  test(
+    'unexpected recorder stream completion leaves listening with a recovery error',
+    () async {
+      final recorder = FakeVoiceRecorder();
+      final controller = VoiceComposerController(
+        models: await readyVoiceModelManager(),
+        recorder: recorder,
+        recognizer: FakeVoiceRecognizer(),
+      );
+      addTearDown(controller.dispose);
+
+      await controller.startListening();
+      recorder.audioController!.close();
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(controller.state, VoiceComposerState.error);
+      expect(controller.error, isA<StateError>());
+      expect(controller.draft, isEmpty);
+    },
+  );
+
+  test(
+    'a canceled recorder stream cannot reset a newer listening generation',
+    () async {
+      final recorder = FakeVoiceRecorder();
+      final controller = VoiceComposerController(
+        models: await readyVoiceModelManager(),
+        recorder: recorder,
+        recognizer: FakeVoiceRecognizer(),
+      );
+      addTearDown(controller.dispose);
+
+      await controller.startListening();
+      final oldAudio = recorder.audioController!;
+      await controller.cancel();
+      await controller.startListening();
+      oldAudio.close();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(controller.state, VoiceComposerState.listening);
+      expect(controller.error, isNull);
     },
   );
 

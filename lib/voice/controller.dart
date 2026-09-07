@@ -176,6 +176,10 @@ class VoiceComposerController extends ChangeNotifier {
         },
         onDone: () {
           if (_audioDone?.isCompleted == false) _audioDone?.complete();
+          if (generation == _generation &&
+              state == VoiceComposerState.listening) {
+            unawaited(stopListening());
+          }
         },
       );
       _clock = Timer.periodic(const Duration(milliseconds: 100), (_) {
@@ -260,7 +264,13 @@ class VoiceComposerController extends ChangeNotifier {
       state = VoiceComposerState.draft;
       notifyListeners();
     } on VoiceRecognitionCancelled {
-      // Cancellation deliberately discards stale worker output.
+      if (_disposed || generation != _generation) return;
+      _recognition = null;
+      models.markReady();
+      state = models.isReady
+          ? VoiceComposerState.idle
+          : VoiceComposerState.modelRequired;
+      notifyListeners();
     } catch (exception) {
       if (_disposed || generation != _generation) return;
       _recognition = null;
