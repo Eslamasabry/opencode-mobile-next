@@ -50,15 +50,17 @@ void main() {
   final deleted = <String>{};
   final dismissed = <String>[];
   bool? wifi = true;
-  bool wifiThrows = false, shown = true;
+  bool alertThrows = false, wifiThrows = false, shown = true;
   Completer<ProviderQuotaSnapshot>? pending;
   ProviderQuotaSnapshot sample({
     String account = 'a',
     bool noReset = false,
     int? fetched,
     double percent = 100,
+    QuotaProvider provider = QuotaProvider.codex,
   }) {
     final data = providerQuotaFixture(
+      provider: provider,
       fetchedAtMs: fetched ?? now.millisecondsSinceEpoch,
     );
     (data['account'] as Map)['ref'] = account * 64;
@@ -87,6 +89,9 @@ void main() {
       return wifi;
     },
     alert: ({required profileID, required key, required token}) async {
+      if (alertThrows) {
+        throw StateError('fixture-alert-sink-failure');
+      }
       alerts.add({'profileID': profileID, 'key': key, 'token': token});
       return shown;
     },
@@ -115,6 +120,7 @@ void main() {
     deleted.clear();
     dismissed.clear();
     wifi = true;
+    alertThrows = false;
     wifiThrows = false;
     shown = true;
     pending = null;
@@ -235,6 +241,54 @@ void main() {
   );
 
   test(
+    'password and re-entry changes retire old observations and preserve markers',
+    () async {
+      response = sample(noReset: true);
+      await monitor.enroll('profile', response, notifications: true);
+      monitor.setRuntime(foreground: false, backgroundAllowed: true);
+      await monitor.refresh();
+      expect(alerts, hasLength(1));
+      final token = alerts.single['token']!;
+      final rules = monitor.rulesFor('profile', QuotaProvider.codex)!;
+      expect(rules.alerted, isNotEmpty);
+      final persisted = store.memory.getString(
+        ProviderQuotaMonitor.key('profile'),
+      )!;
+      expect(persisted, contains(rules.source));
+      expect(persisted, isNot(contains('private-fixture-password')));
+      expect(persisted, isNot(contains('rotated-password')));
+
+      store.entries.single.password = 'rotated-password';
+      expect(
+        monitor.observationFor('profile', QuotaProvider.codex).status,
+        QuotaMonitorStatus.sourceChanged,
+      );
+      expect(monitor.routeForToken('profile', token), isNull);
+      await monitor.refresh();
+      expect(alerts, hasLength(1));
+      expect(
+        monitor.rulesFor('profile', QuotaProvider.codex)!.alerted,
+        isNotEmpty,
+      );
+      expect(
+        monitor.rulesFor('profile', QuotaProvider.codex)!.source,
+        rules.source,
+      );
+      expect(
+        store.memory.getString(ProviderQuotaMonitor.key('profile')),
+        persisted,
+      );
+
+      store.entries.single.requiresPasswordReentry = true;
+      expect(
+        monitor.observationFor('profile', QuotaProvider.codex).status,
+        QuotaMonitorStatus.sourceChanged,
+      );
+      expect(monitor.routeForToken('profile', token), isNull);
+    },
+  );
+
+  test(
     'three-source cycles rotate fairly without relabelling the active server',
     () async {
       for (var i = 0; i < 4; i++) {
@@ -248,6 +302,91 @@ void main() {
       await monitor.refresh();
       expect(reads, hasLength(6));
       expect(reads.toSet(), hasLength(5));
+    },
+  );
+
+  test(
+    'alert sink failures roll back the claim for a later truthful retry',
+    () async {
+      response = sample(noReset: true);
+      await monitor.enroll('profile', response, notifications: true);
+      monitor.setRuntime(foreground: false, backgroundAllowed: true);
+      alertThrows = true;
+      await monitor.refresh();
+
+      expect(
+        monitor.observationFor('profile', QuotaProvider.codex).status,
+        QuotaMonitorStatus.unavailable,
+      );
+      expect(
+        monitor.rulesFor('profile', QuotaProvider.codex)!.alerted,
+        isEmpty,
+      );
+      expect(alerts, isEmpty);
+
+      alertThrows = false;
+      await monitor.refresh();
+      expect(alerts, hasLength(1));
+      expect(
+        monitor.rulesFor('profile', QuotaProvider.codex)!.alerted,
+        isNotEmpty,
+      );
+    },
+  );
+
+  test(
+    'rotating credentials retires providers independently through disable and reenroll',
+    () async {
+      await monitor.enroll('profile', response, notifications: true);
+      final minimax = sample(provider: QuotaProvider.minimax);
+      await monitor.enroll('profile', minimax, notifications: true);
+      final codexToken = monitor
+          .rulesFor('profile', QuotaProvider.codex)!
+          .token;
+      final minimaxToken = monitor
+          .rulesFor('profile', QuotaProvider.minimax)!
+          .token;
+
+      store.entries.single.password = 'rotated-password';
+      expect(
+        monitor.observationFor('profile', QuotaProvider.codex).status,
+        QuotaMonitorStatus.sourceChanged,
+      );
+      expect(
+        monitor.observationFor('profile', QuotaProvider.minimax).status,
+        QuotaMonitorStatus.sourceChanged,
+      );
+
+      expect(await monitor.disable('profile', QuotaProvider.codex), isTrue);
+      expect(
+        monitor.observationFor('profile', QuotaProvider.codex).status,
+        QuotaMonitorStatus.disabled,
+      );
+      expect(monitor.routeForToken('profile', codexToken), isNull);
+      expect(
+        monitor.observationFor('profile', QuotaProvider.minimax).status,
+        QuotaMonitorStatus.sourceChanged,
+      );
+      expect(monitor.routeForToken('profile', minimaxToken), isNull);
+
+      response = sample(noReset: true);
+      expect(
+        await monitor.enroll('profile', response, notifications: true),
+        isTrue,
+      );
+      final reauthorizedCodexToken = monitor
+          .rulesFor('profile', QuotaProvider.codex)!
+          .token;
+      expect(monitor.routeForToken('profile', codexToken), isNull);
+      expect(
+        monitor.routeForToken('profile', reauthorizedCodexToken),
+        isNotNull,
+      );
+      expect(
+        monitor.observationFor('profile', QuotaProvider.minimax).status,
+        QuotaMonitorStatus.sourceChanged,
+      );
+      expect(monitor.routeForToken('profile', minimaxToken), isNull);
     },
   );
 

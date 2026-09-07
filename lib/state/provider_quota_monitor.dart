@@ -137,6 +137,16 @@ class ProviderQuotaMonitor extends ChangeNotifier {
   final _pausedSources = <String>{};
   final _writes = <String, Future<bool>>{};
   final _expiry = <String, Timer>{};
+  // Credential identity is deliberately process-local. Persisted rules keep
+  // only the durable origin identity; this salted HMAC lets this monitor retire
+  // live observations when a password or re-entry state changes without
+  // creating a reusable credential verifier on disk.
+  final _identitySalt = List<int>.generate(
+    32,
+    (_) => Random.secure().nextInt(256),
+  );
+  final _credentialSources = <String, String>{};
+  final _retiredCredentials = <String>{};
   Future<void>? _refresh;
   ProviderQuotaGateway? _gateway;
   String? _readingProfile;
@@ -166,6 +176,35 @@ class ProviderQuotaMonitor extends ChangeNotifier {
       sha256.convert(utf8.encode(jsonEncode(value))).toString();
   static String _source(ServerProfile profile) =>
       _hash([profile.baseUrl, profile.username]);
+  String _credentialIdentity(ServerProfile profile) =>
+      Hmac(sha256, _identitySalt)
+          .convert(
+            utf8.encode(
+              jsonEncode([
+                profile.baseUrl,
+                profile.username,
+                profile.password,
+                profile.requiresPasswordReentry,
+              ]),
+            ),
+          )
+          .toString();
+  void _reconcileCredential(ServerProfile profile) {
+    final id = profile.id, identity = _credentialIdentity(profile);
+    final prior = _credentialSources[id];
+    if (prior == identity) return;
+    _credentialSources[id] = identity;
+    if (prior == null) return;
+    _epochs[id] = (_epochs[id] ?? 0) + 1;
+    if (_readingProfile == id) _closeGateway();
+    for (final provider in QuotaProvider.values) {
+      _retiredCredentials.add(_id(id, provider));
+      _observations.remove(_id(id, provider));
+      _expiry.remove(_id(id, provider))?.cancel();
+      unawaited(_dismiss(id, provider));
+    }
+  }
+
   bool get runningAllowed => !_disposed && (_foreground || _backgroundAllowed);
   bool get refreshing => _refresh != null;
   ServerProfile? _profile(String id) =>
@@ -195,12 +234,18 @@ class ProviderQuotaMonitor extends ChangeNotifier {
     }
   }
 
-  List<QuotaMonitorTarget> get sources => [
-    for (final profile in store.profiles)
-      for (final provider in QuotaProvider.values)
-        if (rulesFor(profile.id, provider) != null)
-          QuotaMonitorTarget(profile.id, provider),
-  ];
+  List<QuotaMonitorTarget> get sources {
+    final result = <QuotaMonitorTarget>[];
+    for (final profile in store.profiles) {
+      _reconcileCredential(profile);
+      for (final provider in QuotaProvider.values) {
+        if (rulesFor(profile.id, provider) != null) {
+          result.add(QuotaMonitorTarget(profile.id, provider));
+        }
+      }
+    }
+    return result;
+  }
 
   bool _fresh(ProviderQuotaSnapshot snapshot) =>
       snapshot.canShowWindows &&
@@ -212,6 +257,8 @@ class ProviderQuotaMonitor extends ChangeNotifier {
       );
 
   QuotaMonitorObservation observationFor(String id, QuotaProvider provider) {
+    final profile = _profile(id);
+    if (profile != null) _reconcileCredential(profile);
     final rules = rulesFor(id, provider);
     if (rules == null) {
       return const QuotaMonitorObservation(QuotaMonitorStatus.disabled);
@@ -219,8 +266,10 @@ class ProviderQuotaMonitor extends ChangeNotifier {
     if (_pausedSources.contains(_id(id, provider))) {
       return const QuotaMonitorObservation(QuotaMonitorStatus.paused);
     }
-    final profile = _profile(id);
     if (profile == null || _source(profile) != rules.source) {
+      return const QuotaMonitorObservation(QuotaMonitorStatus.sourceChanged);
+    }
+    if (_retiredCredentials.contains(_id(id, provider))) {
       return const QuotaMonitorObservation(QuotaMonitorStatus.sourceChanged);
     }
     if (!runningAllowed) {
@@ -271,7 +320,8 @@ class ProviderQuotaMonitor extends ChangeNotifier {
       quietEnd: quietEnd,
       threshold: threshold,
     );
-    return _save(id, snapshot.provider, rules);
+    _reconcileCredential(profile);
+    return _save(id, snapshot.provider, rules, reauthorize: true);
   }
 
   Future<bool> setPolicy(
@@ -305,14 +355,21 @@ class ProviderQuotaMonitor extends ChangeNotifier {
   }
 
   Future<bool> disable(String id, QuotaProvider provider) =>
-      _save(id, provider, null);
+      _save(id, provider, null, reauthorize: true);
 
   Future<bool> _save(
     String id,
     QuotaProvider provider,
-    QuotaMonitorRules? rules,
-  ) {
-    if (!_readable(id)) {
+    QuotaMonitorRules? rules, {
+    bool reauthorize = false,
+  }) {
+    final profile = _profile(id);
+    if (profile != null) {
+      _reconcileCredential(profile);
+    }
+    final targetID = _id(id, provider);
+    if (!_readable(id) ||
+        (_retiredCredentials.contains(targetID) && !reauthorize)) {
       return Future.value(false);
     }
     if (rules == null) {
@@ -327,6 +384,22 @@ class ProviderQuotaMonitor extends ChangeNotifier {
     }
     final epoch = (_epochs[id] ?? 0) + 1;
     _epochs[id] = epoch;
+    final credentialIdentity = profile == null
+        ? null
+        : _credentialIdentity(profile);
+    bool currentCredential() {
+      final current = _profile(id);
+      return current != null &&
+          credentialIdentity != null &&
+          _credentialIdentity(current) == credentialIdentity &&
+          _epochs[id] == epoch &&
+          _readable(id);
+    }
+
+    bool currentState() =>
+        _readable(id) &&
+        _epochs[id] == epoch &&
+        (credentialIdentity == null || currentCredential());
     if (_readingProfile == id) {
       _closeGateway();
     }
@@ -337,12 +410,15 @@ class ProviderQuotaMonitor extends ChangeNotifier {
           preferences: store.prefs,
           key: key(id),
           changes: {provider.name: rules?.toJson()},
-          isCurrent: () => _readable(id) && _epochs[id] == epoch,
+          isCurrent: currentState,
           isProfilePresent: () => isReadable(id),
         ).then((result) async {
           await _dismiss(id, provider);
           if (result == null) {
             return false;
+          }
+          if (reauthorize && currentCredential()) {
+            _retiredCredentials.remove(targetID);
           }
           _pausedSources.remove(_id(id, provider));
           if (!_disposed) {
@@ -359,11 +435,14 @@ class ProviderQuotaMonitor extends ChangeNotifier {
     if (!_readable(id)) {
       return null;
     }
+    final currentProfile = _profile(id);
+    if (currentProfile != null) _reconcileCredential(currentProfile);
     for (final provider in QuotaProvider.values) {
       final rules = rulesFor(id, provider), profile = _profile(id);
       if (rules != null &&
           profile != null &&
           rules.notifications &&
+          !_retiredCredentials.contains(_id(id, provider)) &&
           !_pausedSources.contains(_id(id, provider)) &&
           _observations[_id(id, provider)]?.status !=
               QuotaMonitorStatus.sourceChanged &&
@@ -500,16 +579,22 @@ class ProviderQuotaMonitor extends ChangeNotifier {
   }
 
   Future<void> _read(String id, QuotaProvider provider) async {
-    final rules = rulesFor(id, provider), profile = _profile(id);
+    final profile = _profile(id);
+    if (profile != null) {
+      _reconcileCredential(profile);
+    }
+    final rules = rulesFor(id, provider);
     if (rules == null ||
         profile == null ||
+        _retiredCredentials.contains(_id(id, provider)) ||
         _pausedSources.contains(_id(id, provider))) {
       return;
     }
     final epoch = _epochs[id] ?? 0, runtime = _runtimeEpoch;
     final url = profile.baseUrl,
         username = profile.username,
-        password = profile.password;
+        password = profile.password,
+        requiresPasswordReentry = profile.requiresPasswordReentry;
     bool current() {
       final p = _profile(id), r = rulesFor(id, provider);
       return runningAllowed &&
@@ -519,6 +604,8 @@ class ProviderQuotaMonitor extends ChangeNotifier {
           p?.baseUrl == url &&
           p?.username == username &&
           p?.password == password &&
+          p?.requiresPasswordReentry == requiresPasswordReentry &&
+          !_retiredCredentials.contains(_id(id, provider)) &&
           r?.token == rules.token &&
           r?.source == _source(profile);
     }
@@ -683,11 +770,27 @@ class ProviderQuotaMonitor extends ChangeNotifier {
         );
         return;
       }
-      final shown = await alert(
-        profileID: id,
-        key: _alertKey(id, provider),
-        token: rules.token,
-      );
+      bool shown;
+      try {
+        shown = await alert(
+          profileID: id,
+          key: _alertKey(id, provider),
+          token: rules.token,
+        );
+      } catch (_) {
+        // The marker is a claim, not proof of delivery. Roll it back when the
+        // native sink fails so a later refresh can retry the same threshold.
+        if (current() && _fresh(snapshot)) {
+          await BudgetPersistence.update(
+            preferences: store.prefs,
+            key: key(id),
+            changes: {provider.name: rules.toJson()},
+            isCurrent: current,
+            isProfilePresent: () => isReadable(id),
+          );
+        }
+        rethrow;
+      }
       if (!current() || !_fresh(snapshot)) {
         await _dismiss(id, provider);
         return;
@@ -732,6 +835,10 @@ class ProviderQuotaMonitor extends ChangeNotifier {
       _expiry.remove(_id(id, provider))?.cancel();
       unawaited(_dismiss(id, provider));
     }
+    _credentialSources.remove(id);
+    for (final provider in QuotaProvider.values) {
+      _retiredCredentials.remove(_id(id, provider));
+    }
     if (!_disposed) {
       notifyListeners();
     }
@@ -756,6 +863,8 @@ class ProviderQuotaMonitor extends ChangeNotifier {
       timer.cancel();
     }
     _expiry.clear();
+    _credentialSources.clear();
+    _retiredCredentials.clear();
     super.dispose();
   }
 }
