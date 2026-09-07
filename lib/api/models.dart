@@ -486,6 +486,11 @@ class MessageInfo {
   /// Typed classification of [errorText]; null when the message has no error.
   final MessageErrorKind? errorKind;
 
+  /// For an assistant message, the id of the user message it answers (v1
+  /// `parentID`). Null on servers that do not report it; callers that need
+  /// exact turn correlation must treat null as "unknown", not "none".
+  final String? parentID;
+
   MessageInfo({
     required this.id,
     required this.sessionID,
@@ -499,6 +504,7 @@ class MessageInfo {
     this.errorText,
     this.finish,
     MessageErrorKind? errorKind,
+    this.parentID,
   }) : tokens = tokens ?? Tokens(),
        errorKind =
            errorKind ?? (errorText == null ? null : MessageErrorKind.unknown);
@@ -531,6 +537,9 @@ class MessageInfo {
       errorText: errText,
       finish: j['finish']?.toString(),
       errorKind: errKind,
+      parentID: j['parentID'] is String && (j['parentID'] as String).isNotEmpty
+          ? j['parentID'] as String
+          : null,
     );
   }
 }

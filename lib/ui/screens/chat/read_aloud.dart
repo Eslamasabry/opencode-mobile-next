@@ -39,7 +39,13 @@ extension _ChatReadAloud on _ChatScreenState {
     if (!mounted) return;
     final failure = _readAloud?.failure;
     final announce = failure != null && failure != _lastReadAloudFailure;
-    _updateSpeech(() => _lastReadAloudFailure = failure);
+    _updateSpeech(() {
+      _lastReadAloudFailure = failure;
+      if (_voiceReplyPlayback && failure != null) {
+        _voiceReplyState = _VoiceReplyState.failed;
+      }
+      if (_readAloud?.speaking != true) _voiceReplyPlayback = false;
+    });
     if (announce && (ModalRoute.of(context)?.isCurrent ?? true)) {
       _showComposerNote(_speechFailure(failure));
     }
@@ -47,7 +53,14 @@ extension _ChatReadAloud on _ChatScreenState {
 
   Future<void> _stopReading() async {
     _readAloudRequest++;
-    if (mounted) _updateSpeech(() => _readAloudRequestBusy = false);
+    if (mounted) {
+      _updateSpeech(() {
+        _readAloudRequestBusy = false;
+        _voiceReplyWatch = null;
+        _voiceReplyPlayback = false;
+        _voiceReplyState = _VoiceReplyState.idle;
+      });
+    }
     await _readAloud?.stop();
   }
 
@@ -69,35 +82,24 @@ extension _ChatReadAloud on _ChatScreenState {
     _readAloudConsented = false;
     _readAloudVoiceID = null;
     _speechOwnerScope = null;
+    // Consent was scoped to the old server/session; automatic reading was
+    // granted on that consent and lapses with it.
+    _revokeVoiceSpeakReplies();
     unawaited(_stopReading());
   }
 
-  Future<void> _readReply(
-    MessageWithParts message, {
+  /// Consent and voice choice, in that order, each an explicit sheet. True
+  /// when both are in hand and [current] still holds; false when the user
+  /// declined or the scope moved. Never touches the engine before consent.
+  Future<bool> _ensureSpeechReady({
+    required bool Function() current,
     bool chooseVoice = false,
   }) async {
-    if (!_canReadReply(message)) return;
-    final source = _speechScopeNow;
-    final route = ModalRoute.of(context);
-    final request = ++_readAloudRequest;
-    bool current() =>
-        mounted &&
-        request == _readAloudRequest &&
-        source == _speechScopeNow &&
-        (route?.isCurrent ?? true);
-    _speechOwnerScope = source;
-    _updateSpeech(() => _readAloudRequestBusy = true);
-    try {
-      // Never fall back to copy/export text, which can include other part kinds.
-      final prose = markdownProseForSpeech(
-        _ChatScreenState._messageText(message),
-      );
-      if (prose.isEmpty) {
-        _showComposerNote(_chatL10n(context).readAloudNoProse);
-        return;
-      }
-      if (!_readAloudConsented) {
-        final accepted = await showConfirmSheet(
+    if (!_readAloudConsented) {
+      _speechSheetOpen = true;
+      bool accepted;
+      try {
+        accepted = await showConfirmSheet(
           context,
           icon: Icons.volume_up_outlined,
           title: _chatL10n(context).readAloudConsentTitle,
@@ -105,19 +107,25 @@ extension _ChatReadAloud on _ChatScreenState {
           confirmLabel: _chatL10n(context).readAloudContinue,
           cancelLabel: MaterialLocalizations.of(context).cancelButtonLabel,
         );
-        if (!accepted || !current()) return;
-        _readAloudConsented = true;
+      } finally {
+        _speechSheetOpen = false;
       }
-      if (!current()) return;
-      final speech = _readAloud ??= (ReadAloudController()
-        ..addListener(_readAloudChanged));
-      if (_readAloudVoiceID == null || chooseVoice) {
-        final voices = await speech.voices();
-        if (!mounted || !current()) return;
-        if (voices.isEmpty) {
-          throw const ReadAloudException(ReadAloudFailure.noOfflineVoice);
-        }
-        final selected = await showModalBottomSheet<ReadAloudVoice>(
+      if (!accepted || !current()) return false;
+      _readAloudConsented = true;
+    }
+    if (!current()) return false;
+    final speech = _readAloud ??= (ReadAloudController()
+      ..addListener(_readAloudChanged));
+    if (_readAloudVoiceID == null || chooseVoice) {
+      final voices = await speech.voices();
+      if (!mounted || !current()) return false;
+      if (voices.isEmpty) {
+        throw const ReadAloudException(ReadAloudFailure.noOfflineVoice);
+      }
+      _speechSheetOpen = true;
+      ReadAloudVoice? selected;
+      try {
+        selected = await showModalBottomSheet<ReadAloudVoice>(
           context: context,
           isScrollControlled: true,
           useSafeArea: true,
@@ -148,10 +156,46 @@ extension _ChatReadAloud on _ChatScreenState {
             ),
           ),
         );
-        if (selected == null || !current()) return;
-        _readAloudVoiceID = selected.id;
+      } finally {
+        _speechSheetOpen = false;
       }
-      if (!current()) return;
+      if (selected == null || !current()) return false;
+      _readAloudVoiceID = selected.id;
+    }
+    return current();
+  }
+
+  Future<void> _readReply(
+    MessageWithParts message, {
+    bool chooseVoice = false,
+  }) async {
+    if (!_canReadReply(message)) return;
+    final source = _speechScopeNow;
+    final route = ModalRoute.of(context);
+    final request = ++_readAloudRequest;
+    bool current() =>
+        mounted &&
+        request == _readAloudRequest &&
+        source == _speechScopeNow &&
+        (route?.isCurrent ?? true);
+    _speechOwnerScope = source;
+    _updateSpeech(() => _readAloudRequestBusy = true);
+    try {
+      // Never fall back to copy/export text, which can include other part kinds.
+      final prose = markdownProseForSpeech(
+        _ChatScreenState._messageText(message),
+      );
+      if (prose.isEmpty) {
+        _showComposerNote(_chatL10n(context).readAloudNoProse);
+        return;
+      }
+      if (!await _ensureSpeechReady(
+        current: current,
+        chooseVoice: chooseVoice,
+      )) {
+        return;
+      }
+      final speech = _readAloud!;
       await speech.speak(
         '${widget.sessionID}/${message.info.id}',
         prose,

@@ -1578,7 +1578,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voiceConversationDescription =>
-      'Listen, review, then Send. No automatic listening or reading.';
+      'Listen, review, then Send. No automatic listening; replies are read aloud only if you turn that on.';
+
+  @override
+  String get voiceConversationSpeakReplies => 'Speak replies';
+
+  @override
+  String get voiceConversationSpeakRepliesDetail =>
+      'Read a matched reply once after Send. Tap Listen to use the microphone.';
+
+  @override
+  String get voiceConversationWaitingReply => 'Waiting for the reply…';
+
+  @override
+  String get voiceConversationSpeakingReply => 'Speaking the reply';
+
+  @override
+  String get voiceConversationStopReply => 'Stop';
+
+  @override
+  String get voiceConversationReadReply => 'Read reply';
+
+  @override
+  String get voiceConversationReplyReviewNeeded =>
+      'The reply finished, but it could not be matched to your message for certain. Read it if you want.';
+
+  @override
+  String get voiceConversationReplyInterrupted =>
+      'The reply needed a decision on screen, so it was not read automatically.';
+
+  @override
+  String get voiceConversationReplyNoProse =>
+      'The reply has no prose to read. Code and tool details are not spoken.';
+
+  @override
+  String get voiceConversationReplyFailed =>
+      'The reply could not be read aloud.';
 
   @override
   String get voiceConversationPausedTitle => 'Voice conversation paused';
@@ -1622,7 +1657,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voiceConversationInstructions =>
-      'Review and insert your transcript, then tap Send in the composer. Choose Read aloud on a reply; nothing is read automatically. Unsent text is discarded when you leave voice mode, the chat, or the app.';
+      'Review and insert your transcript, then tap Send in the composer. Replies are read aloud only while Speak replies is on, and only the reply to what you just sent. Unsent text is discarded when you leave voice mode, the chat, or the app.';
 
   @override
   String get desktopDropFailedTitle => 'Could not attach dropped files';
