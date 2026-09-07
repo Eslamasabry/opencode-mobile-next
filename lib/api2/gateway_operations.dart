@@ -34,6 +34,10 @@ class Api2OperationsGateway extends ProductRepository
         SessionImportGateway,
         SessionSkillGateway,
         ActiveContextGateway,
+        McpRemovalGateway,
+        IntegrationCredentialGateway,
+        IntegrationCommandGateway,
+        IntegrationAuthRecoveryGateway,
         UsageStatisticsGateway {
   final Api2Client client;
 
@@ -1196,6 +1200,16 @@ class Api2OperationsGateway extends ProductRepository
   );
 
   @override
+  Future<void> removeMcpServer(String name) =>
+      _guard('Could not remove the MCP server', () async {
+        final location = _loc();
+        await _transport.deleteJson(
+          '/mcp/${Uri.encodeComponent(name)}',
+          query: location,
+        );
+      });
+
+  @override
   Future<McpAuthLaunch> startMcpAuthentication(String name) => Future.error(
     const ProductException('MCP authentication is unavailable on this server'),
   );
@@ -1302,6 +1316,52 @@ class Api2OperationsGateway extends ProductRepository
   }
 
   @override
+  Future<void> renameCredential(
+    String id,
+    String label,
+  ) => _guard('Could not rename the credential', () async {
+    final location = _loc();
+    final path = _credentialPath(id);
+    final normalizedLabel = label.trim();
+    if (normalizedLabel.isEmpty ||
+        normalizedLabel.runes.length > 128 ||
+        label.contains(RegExp(r'[\x00-\x1f\x7f-\x9f]'))) {
+      throw const ProductException(
+        'Enter a credential label of 1–128 characters without control characters',
+      );
+    }
+    await _transport.patchJson(
+      path,
+      query: location,
+      body: {'label': normalizedLabel},
+    );
+  });
+
+  @override
+  Future<void> activateCredential(String id) =>
+      _guard('Could not activate the credential', () async {
+        final location = _loc();
+        await _transport.postJson(
+          '${_credentialPath(id)}/activate',
+          query: location,
+        );
+      });
+
+  @override
+  Future<void> removeCredential(String id) =>
+      _guard('Could not remove the credential', () async {
+        final location = _loc();
+        await _transport.deleteJson(_credentialPath(id), query: location);
+      });
+
+  static String _credentialPath(String id) {
+    if (id.trim().isEmpty) {
+      throw const ProductException('Enter a nonempty credential ID');
+    }
+    return '/credential/${Uri.encodeComponent(id)}';
+  }
+
+  @override
   Future<void> connectIntegrationKey(String id, String key, {String? label}) =>
       _guard(
         'Could not connect the integration',
@@ -1344,7 +1404,7 @@ class Api2OperationsGateway extends ProductRepository
     String methodID, {
     Map<String, String> inputs = const {},
     String? label,
-  }) => _guard('Could not start the sign-in', () async {
+  }) => _commandAuthGuard('Could not start the sign-in', () async {
     final location = _loc();
     final json = await _transport.postJson(
       '/integration/${Uri.encodeComponent(id)}/connect/oauth',
@@ -1361,6 +1421,9 @@ class Api2OperationsGateway extends ProductRepository
       throw const ProductException('OpenCode returned no sign-in attempt');
     }
     _oauthAttempts[attemptID] = (integrationID: id, location: location);
+    if (_oauthAttempts.length > 32) {
+      _oauthAttempts.remove(_oauthAttempts.keys.first);
+    }
     _oauthTerminalStatuses.remove(attemptID);
     final time = data['time'];
     return IntegrationAuthLaunch(
@@ -1379,11 +1442,8 @@ class Api2OperationsGateway extends ProductRepository
   ) {
     final attempt = _oauthAttempts[attemptID];
     if (attempt == null) {
-      // Interface friction: the domain contract addresses attempts by ID
-      // only, but v2 attempt routes are integration-scoped. Attempts started
-      // by an earlier app run cannot be resumed.
       throw const ProductException(
-        'This sign-in attempt is no longer tracked — start it again',
+        'This sign-in attempt must be restored at its original location',
       );
     }
     return attempt;
@@ -1391,7 +1451,7 @@ class Api2OperationsGateway extends ProductRepository
 
   @override
   Future<IntegrationAuthStatus> integrationOAuthStatus(String attemptID) =>
-      _guard('Could not check the sign-in status', () async {
+      _commandAuthGuard('Could not check the sign-in status', () async {
         if (_oauthTerminalStatuses[attemptID] case final cached?) return cached;
         final attempt = _attempt(attemptID);
         final json = await _transport.getJson(
@@ -1409,9 +1469,11 @@ class Api2OperationsGateway extends ProductRepository
             'complete' => IntegrationAuthState.complete,
             'failed' => IntegrationAuthState.failed,
             'expired' => IntegrationAuthState.expired,
-            _ => IntegrationAuthState.pending,
+            'pending' => IntegrationAuthState.pending,
+            _ => throw const ProductException(
+              'OpenCode returned an invalid sign-in status',
+            ),
           },
-          message: data['message']?.toString(),
         );
         if (result.state != IntegrationAuthState.pending) {
           _oauthAttempts.remove(attemptID);
@@ -1425,7 +1487,7 @@ class Api2OperationsGateway extends ProductRepository
 
   @override
   Future<void> completeIntegrationOAuth(String attemptID, {String? code}) =>
-      _guard('Could not finish the sign-in', () async {
+      _commandAuthGuard('Could not finish the sign-in', () async {
         if (_oauthTerminalStatuses[attemptID]?.state ==
             IntegrationAuthState.complete) {
           return;
@@ -1441,7 +1503,7 @@ class Api2OperationsGateway extends ProductRepository
 
   @override
   Future<void> cancelIntegrationOAuth(String attemptID) =>
-      _guard('Could not cancel the sign-in', () async {
+      _commandAuthGuard('Could not cancel the sign-in', () async {
         if (_oauthTerminalStatuses.remove(attemptID) != null) return;
         final attempt = _attempt(attemptID);
         await _transport.deleteJson(
@@ -1451,6 +1513,174 @@ class Api2OperationsGateway extends ProductRepository
         );
         _oauthAttempts.remove(attemptID);
       });
+
+  final _commandAttemptLocations = <(String, String), Map<String, dynamic>>{};
+
+  @override
+  void restoreIntegrationAuthAttempt({
+    required String integrationID,
+    required String attemptID,
+    required bool command,
+    String? directory,
+    String? workspace,
+  }) {
+    _validateCommandAuthID(integrationID);
+    _validateCommandAuthID(attemptID);
+    final location = <String, dynamic>{
+      'location[directory]': ?directory,
+      'location[workspace]': ?workspace,
+    };
+    if (command) {
+      _commandAttemptLocations[(integrationID, attemptID)] = location;
+      if (_commandAttemptLocations.length > 32) {
+        _commandAttemptLocations.remove(_commandAttemptLocations.keys.first);
+      }
+    } else {
+      // Attempt IDs alone are not a source identity. A previous location's
+      // terminal cache must never satisfy a restored attempt at another source.
+      _oauthTerminalStatuses.remove(attemptID);
+      _oauthAttempts[attemptID] = (
+        integrationID: integrationID,
+        location: location,
+      );
+      if (_oauthAttempts.length > 32) {
+        _oauthAttempts.remove(_oauthAttempts.keys.first);
+      }
+    }
+  }
+
+  // No browser or local command is involved. Rehydrated attempts retain the
+  // original location even if this gateway later changes its selected location.
+  @override
+  Future<IntegrationAuthLaunch> startIntegrationCommand(
+    String integrationID,
+    String methodID, {
+    String? label,
+  }) => _commandAuthGuard('Could not start command sign-in', () async {
+    final location = _loc();
+    final path = _commandAuthPath(integrationID);
+    _validateCommandAuthID(methodID);
+    final json = await _transport.postJson(
+      path,
+      query: location,
+      body: {'methodID': methodID, 'label': ?label},
+    );
+    final data = _commandAuthData(json);
+    final attemptID = data['attemptID'];
+    if (attemptID is! String) {
+      throw const ProductException(
+        'OpenCode returned an invalid sign-in attempt',
+      );
+    }
+    _validateCommandAuthID(attemptID);
+    _commandAttemptLocations[(integrationID, attemptID)] = location;
+    if (_commandAttemptLocations.length > 32) {
+      _commandAttemptLocations.remove(_commandAttemptLocations.keys.first);
+    }
+    return IntegrationAuthLaunch(
+      attemptID: attemptID,
+      url: '',
+      instructions: '',
+      mode: IntegrationAuthMode.auto,
+      expiresAt: _commandAuthExpiry(data),
+    );
+  });
+
+  @override
+  Future<IntegrationAuthStatus> integrationCommandStatus(
+    String integrationID,
+    String attemptID,
+  ) => _commandAuthGuard('Could not check command sign-in status', () async {
+    final location =
+        _commandAttemptLocations[(integrationID, attemptID)] ?? _loc();
+    final json = await _transport.getJson(
+      _commandAuthPath(integrationID, attemptID),
+      query: location,
+    );
+    final data = _commandAuthData(json);
+    final state = switch (data['status']) {
+      'pending' => IntegrationAuthState.pending,
+      'complete' => IntegrationAuthState.complete,
+      'failed' => IntegrationAuthState.failed,
+      'expired' => IntegrationAuthState.expired,
+      _ => throw const ProductException(
+        'OpenCode returned an invalid command sign-in status',
+      ),
+    };
+    return IntegrationAuthStatus(
+      state: state,
+      // Provider messages can contain credentials or executable commands.
+      message: state == IntegrationAuthState.failed
+          ? 'Command sign-in failed'
+          : null,
+      expiresAt: _commandAuthExpiry(data),
+    );
+  });
+
+  @override
+  Future<void> cancelIntegrationCommand(
+    String integrationID,
+    String attemptID,
+  ) => _commandAuthGuard('Could not cancel command sign-in', () async {
+    final location =
+        _commandAttemptLocations[(integrationID, attemptID)] ?? _loc();
+    await _transport.deleteJson(
+      _commandAuthPath(integrationID, attemptID),
+      query: location,
+    );
+    _commandAttemptLocations.remove((integrationID, attemptID));
+  });
+
+  static void _validateCommandAuthID(String id) {
+    if (id.trim().isEmpty ||
+        id == '.' ||
+        id == '..' ||
+        id.contains(RegExp(r'[\x00-\x1f\x7f-\x9f]'))) {
+      throw const ProductException('Enter a valid command sign-in ID');
+    }
+  }
+
+  static String _commandAuthPath(String integrationID, [String? attemptID]) {
+    _validateCommandAuthID(integrationID);
+    if (attemptID != null) _validateCommandAuthID(attemptID);
+    return '/integration/${Uri.encodeComponent(integrationID)}/connect/command'
+        '${attemptID == null ? '' : '/${Uri.encodeComponent(attemptID)}'}';
+  }
+
+  static Map<dynamic, dynamic> _commandAuthData(dynamic json) {
+    final data = json is Map && json.containsKey('data') ? json['data'] : json;
+    if (data is! Map) {
+      throw const ProductException(
+        'OpenCode returned an invalid command sign-in response',
+      );
+    }
+    return data;
+  }
+
+  static int? _commandAuthExpiry(Map<dynamic, dynamic> data) {
+    final time = data['time'];
+    if (time == null) return null;
+    if (time is Map) {
+      final expires = time['expires'];
+      if (expires == null) return null;
+      if (expires is int && expires >= 0) return expires;
+    }
+    throw const ProductException('OpenCode returned an invalid sign-in expiry');
+  }
+
+  static Future<T> _commandAuthGuard<T>(
+    String message,
+    Future<T> Function() action,
+  ) async {
+    try {
+      return await action();
+    } on ProductException {
+      rethrow;
+    } catch (_) {
+      // Do not retain raw transport/provider errors even as a diagnostic cause.
+      throw ProductException(message);
+    }
+  }
 
   // ---------------- Requests (questions & saved permissions) ----------------
 

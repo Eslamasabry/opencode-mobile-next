@@ -3,6 +3,11 @@ const providerQuotaPath = '/ocmn/quota/v1';
 
 enum QuotaProvider { codex, claude }
 
+/// A parser or historical credential format is not permission to collect data.
+/// Claude subscription collection stays off pending a supported integration.
+bool quotaCollectionAvailable(QuotaProvider provider) =>
+    provider == QuotaProvider.codex;
+
 String quotaPathFor(QuotaProvider provider) => switch (provider) {
   QuotaProvider.codex => providerQuotaPath,
   QuotaProvider.claude => '$providerQuotaPath/claude',

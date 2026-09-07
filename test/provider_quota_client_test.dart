@@ -71,7 +71,7 @@ Matcher _failure(QuotaFailureKind kind) => throwsA(
 
 void main() {
   test(
-    'Claude read uses only its fixed same-origin route and rejects another provider snapshot',
+    'Claude collection is unavailable before any authenticated request',
     () async {
       final adapter = _Adapter(
         (_) =>
@@ -83,22 +83,11 @@ void main() {
         adapter: adapter,
       );
       addTearDown(gateway.close);
-      final snapshot = await gateway.readSnapshot();
-      expect(snapshot.provider, QuotaProvider.claude);
-      expect(adapter.requests.single.uri.path, '/ocmn/quota/v1/claude');
-      expect(adapter.requests.single.uri.host, 'collector.example');
-      expect(adapter.requests.single.uri.hasQuery, isFalse);
-
-      final wrong = HttpProviderQuotaGateway(
-        _profile(),
-        provider: QuotaProvider.claude,
-        adapter: _Adapter((_) => _json()),
-      );
-      addTearDown(wrong.close);
       await expectLater(
-        wrong.readSnapshot(),
-        _failure(QuotaFailureKind.invalidResponse),
+        gateway.readSnapshot(),
+        _failure(QuotaFailureKind.unsupported),
       );
+      expect(adapter.requests, isEmpty);
     },
   );
 

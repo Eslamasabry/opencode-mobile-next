@@ -827,6 +827,11 @@ class ServerCapabilities {
   /// Persistent project/global configuration writes, rather than runtime add.
   final bool mcpConfigWrites;
   final bool mcpRuntimeAdds;
+
+  /// Runtime-only removal; does not delete persistent MCP configuration.
+  final bool mcpRuntimeRemovals;
+  final bool integrationCredentials;
+  final bool integrationCommandAuth;
   final bool sessionShare;
   final bool sessionArchive;
   final bool sessionTodos;
@@ -863,6 +868,9 @@ class ServerCapabilities {
     this.mcpOAuth = true,
     this.mcpConfigWrites = true,
     this.mcpRuntimeAdds = false,
+    this.mcpRuntimeRemovals = false,
+    this.integrationCredentials = false,
+    this.integrationCommandAuth = false,
     this.sessionShare = true,
     this.sessionArchive = true,
     this.sessionTodos = true,
@@ -1244,6 +1252,50 @@ abstract class McpGateway {
     McpServerDraft draft, {
     required McpConfigScope scope,
   });
+}
+
+/// Optional runtime-only MCP removal for the selected location.
+abstract interface class McpRemovalGateway {
+  /// Does not delete persistent configuration or credentials. Callers should
+  /// refetch MCP inventory after success; missing servers remain typed errors.
+  Future<void> removeMcpServer(String name);
+}
+
+/// Optional stored-credential management using IDs from integration metadata.
+/// Successful mutations do not establish which credential is active.
+abstract interface class IntegrationCredentialGateway {
+  Future<void> renameCredential(String id, String label);
+  Future<void> activateCredential(String id);
+  Future<void> removeCredential(String id);
+}
+
+/// Optional metadata-only recovery. Restores routing in a replacement gateway;
+/// it MUST NOT contact the server or start authentication. The controller must
+/// first verify the saved profile/origin and selected original location.
+abstract interface class IntegrationAuthRecoveryGateway {
+  void restoreIntegrationAuthAttempt({
+    required String integrationID,
+    required String attemptID,
+    required bool command,
+    String? directory,
+    String? workspace,
+  });
+}
+
+/// Optional server-run command authentication; never execute or copy a command
+/// locally. Pin the original repository/location throughout the attempt. Poll
+/// after reconnect and refetch integrations/catalog after completion.
+abstract interface class IntegrationCommandGateway {
+  Future<IntegrationAuthLaunch> startIntegrationCommand(
+    String integrationID,
+    String methodID, {
+    String? label,
+  });
+  Future<IntegrationAuthStatus> integrationCommandStatus(
+    String integrationID,
+    String attemptID,
+  );
+  Future<void> cancelIntegrationCommand(String integrationID, String attemptID);
 }
 
 /// Provider integrations: keys, OAuth attempts, and runtime refresh.

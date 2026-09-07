@@ -50,6 +50,54 @@ class UsageOverview extends ChangeNotifier {
   UsageSnapshot? snapshot;
   UsageRange range = UsageRange.thirtyDays;
   UsageScope scope = UsageScope.allProjects;
+  String? _providerFilter;
+  String _modelSearch = '';
+  int filterRevision = 0;
+
+  String? get providerFilter => _providerFilter;
+  String get modelSearch => _modelSearch;
+  bool get hasInspectionFilters =>
+      _providerFilter != null || _modelSearch.isNotEmpty;
+
+  List<UsageModel> get matchingModels {
+    final query = _modelSearch.trim().toLowerCase();
+    return List.unmodifiable(
+      (snapshot?.statistics.models ?? const <UsageModel>[]).where((model) {
+        return (_providerFilter == null ||
+                model.providerID == _providerFilter) &&
+            (query.isEmpty ||
+                [
+                  model.providerID,
+                  model.modelID,
+                  model.variant ?? '',
+                ].any((value) => value.toLowerCase().contains(query)));
+      }),
+    );
+  }
+
+  void setProviderFilter(String? value) {
+    if (_disposed || detached || _providerFilter == value) return;
+    _providerFilter = value;
+    notifyListeners();
+  }
+
+  void setModelSearch(String value) {
+    if (_disposed || detached || _modelSearch == value) return;
+    _modelSearch = value;
+    notifyListeners();
+  }
+
+  void _resetInspectionFilters() {
+    _providerFilter = null;
+    _modelSearch = '';
+    filterRevision++;
+  }
+
+  void clearInspectionFilters() {
+    if (_disposed || detached) return;
+    _resetInspectionFilters();
+    notifyListeners();
+  }
 
   UsageOverview(
     this.connection, {
@@ -75,6 +123,7 @@ class UsageOverview extends ChangeNotifier {
   void _connectionChanged() {
     if (_disposed || connection.locationRevision == _location) return;
     detached = true;
+    _resetInspectionFilters();
     _request++;
     snapshot = null;
     error = null;
@@ -85,6 +134,7 @@ class UsageOverview extends ChangeNotifier {
   Future<void> setRange(UsageRange value) async {
     if (range == value) return;
     range = value;
+    _resetInspectionFilters();
     snapshot = null;
     await refresh();
   }
@@ -92,6 +142,7 @@ class UsageOverview extends ChangeNotifier {
   Future<void> setScope(UsageScope value) async {
     if (scope == value) return;
     scope = value;
+    _resetInspectionFilters();
     snapshot = null;
     await refresh();
   }
@@ -140,6 +191,14 @@ class UsageOverview extends ChangeNotifier {
         timezone: timezone,
         projectID: project?.id,
       );
+      final previous = snapshot;
+      if (previous != null &&
+          (previous.query.projectID != query.projectID ||
+              previous.query.timezone != query.timezone)) {
+        snapshot = null;
+        _resetInspectionFilters();
+        notifyListeners();
+      }
       final statistics = await (repository as UsageStatisticsGateway)
           .loadUsageStatistics(query);
       if (!_current(request)) return;
