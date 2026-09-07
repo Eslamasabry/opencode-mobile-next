@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/codex/gateway.dart';
 import 'package:opencode_mobile/codex/mappers.dart';
 import 'package:opencode_mobile/codex/transport.dart';
+import 'package:opencode_mobile/domain/server_gateway.dart' show StreamStatus;
 
 class _Socket implements CodexSocket {
   final input = StreamController<Object?>.broadcast(sync: true);
@@ -93,6 +94,47 @@ class _Fixture {
       };
       socket.result(id, result);
     };
+  }
+}
+
+class _RecoveryFixture {
+  final first = _Socket();
+  final second = _Socket();
+  late final transport = CodexTransport(
+    endpoint: 'wss://fixture.invalid',
+    token: 'fixture-token',
+    socketFactory: (_, _) async => first.closed ? second : first,
+  );
+  late final gateway = CodexGateway(
+    transport: transport,
+    directory: '/project',
+  );
+
+  _RecoveryFixture() {
+    first.handler = (request) => _respond(first, request);
+    second.handler = (request) => _respond(second, request, failResume: true);
+  }
+
+  void _respond(
+    _Socket socket,
+    Map<String, dynamic> request, {
+    bool failResume = false,
+  }) {
+    final id = request['id'];
+    if (id == null || request['method'] == null) return;
+    final result = switch (request['method']) {
+      'initialize' => <String, dynamic>{'userAgent': 'codex/0.153.4'},
+      'thread/read' => <String, dynamic>{
+        'thread': _thread(turns: [_turn()]),
+      },
+      'thread/resume' => <String, dynamic>{
+        'thread': failResume
+            ? {..._thread(), 'id': 'other-thread'}
+            : _thread(turns: [_turn()]),
+      },
+      _ => <String, dynamic>{},
+    };
+    socket.result(id, result);
   }
 }
 
@@ -363,6 +405,40 @@ void main() {
     }
   });
 
+  test('socket loss invalidates a previously displayed approval', () async {
+    final fixture = _Fixture();
+    try {
+      await fixture.gateway.messages('thread-1');
+      fixture.socket.event('turn/started', {
+        'threadId': 'thread-1',
+        'turn': _turn(status: 'inProgress'),
+      });
+      fixture.socket.event('item/commandExecution/requestApproval', {
+        'threadId': 'thread-1',
+        'turnId': 'turn-1',
+        'itemId': 'command-1',
+        'command': 'echo fixture',
+      }, id: 8);
+      final request = (await fixture.gateway.pendingPermissions()).single;
+      await fixture.socket.close();
+      await pumpEventQueue(times: 5);
+
+      await expectLater(
+        fixture.gateway.respondPermission(request.id, 'once'),
+        throwsA(
+          isA<CodexFailure>().having(
+            (error) => error.kind,
+            'kind',
+            CodexFailureKind.staleRequest,
+          ),
+        ),
+      );
+      expect(await fixture.gateway.pendingPermissions(), isEmpty);
+    } finally {
+      fixture.gateway.close();
+    }
+  });
+
   test(
     'streamed assistant item uses the same IDs as authoritative history',
     () async {
@@ -397,6 +473,35 @@ void main() {
           (await fixture.gateway.messages('thread-1')).last.parts.single.id,
           'agent-1:0',
         );
+      } finally {
+        await channel.dispose();
+        fixture.gateway.close();
+      }
+    },
+  );
+
+  test(
+    'partial reconnect remains degraded when a tracked thread cannot resume',
+    () async {
+      final fixture = _RecoveryFixture();
+      final statuses = <StreamStatus>[];
+      final channel = fixture.gateway.openEventChannel(
+        onEvent: (_) {},
+        onStatus: statuses.add,
+      );
+      try {
+        channel.start();
+        await pumpEventQueue(times: 5);
+        await fixture.gateway.messages('thread-1');
+        await fixture.first.close();
+        await Future<void>.delayed(const Duration(milliseconds: 1100));
+
+        expect(statuses, contains(StreamStatus.reconnecting));
+        expect(
+          statuses.where((status) => status == StreamStatus.connected),
+          hasLength(1),
+        );
+        expect(statuses.last, StreamStatus.reconnecting);
       } finally {
         await channel.dispose();
         fixture.gateway.close();

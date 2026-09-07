@@ -184,7 +184,7 @@ class CodexTransport {
   final Map<int, _PendingRpc> _pending = {};
   CodexSocket? _socket;
   StreamSubscription<Object?>? _subscription;
-  Future<void>? _connecting;
+  Future<int>? _connecting;
   int _epoch = 0;
   int _nextID = 0;
   bool _closed = false;
@@ -205,14 +205,18 @@ class CodexTransport {
   bool get connected => _socket != null && _initialized;
 
   Future<void> connect() {
+    return _connectReady().then<void>((_) {});
+  }
+
+  Future<int> _connectReady() {
     if (_closed) {
       return Future.error(CodexFailure(CodexFailureKind.disconnected));
     }
-    if (connected) return Future.value();
+    if (connected) return Future.value(_epoch);
     return _connecting ??= _connect().whenComplete(() => _connecting = null);
   }
 
-  Future<void> _connect() async {
+  Future<int> _connect() async {
     final epoch = ++_epoch;
     final socket = await socketFactory(endpoint, _token);
     if (_closed || epoch != _epoch) {
@@ -227,12 +231,22 @@ class CodexTransport {
       cancelOnError: true,
     );
     try {
-      await _request('initialize', {
-        'clientInfo': {'name': 'opencode_mobile', 'version': '1.0.0'},
-        'capabilities': {'experimentalApi': false},
-      }, mutation: false);
-      _send({'method': 'initialized', 'params': <String, dynamic>{}});
+      await _request(
+        'initialize',
+        {
+          'clientInfo': {'name': 'opencode_mobile', 'version': '1.0.0'},
+          'capabilities': {'experimentalApi': false},
+        },
+        mutation: false,
+        epoch: epoch,
+        requireInitialized: false,
+      );
+      _send({
+        'method': 'initialized',
+        'params': <String, dynamic>{},
+      }, expectedEpoch: epoch);
       _initialized = true;
+      return epoch;
     } catch (_) {
       _lost(epoch);
       rethrow;
@@ -244,15 +258,37 @@ class CodexTransport {
     Map<String, dynamic> params, {
     bool mutation = false,
   }) async {
-    await connect();
-    return _request(method, params, mutation: mutation);
+    final epoch = await _connectReady();
+    return _request(
+      method,
+      params,
+      mutation: mutation,
+      epoch: epoch,
+      requireInitialized: true,
+    );
   }
 
   Future<Map<String, dynamic>> _request(
     String method,
     Map<String, dynamic> params, {
     required bool mutation,
+    required int epoch,
+    required bool requireInitialized,
   }) {
+    // A request that waited for an earlier connection must never be sent on a
+    // replacement socket after that connection has been invalidated.
+    if (_closed ||
+        epoch != _epoch ||
+        _socket == null ||
+        (requireInitialized && !_initialized)) {
+      return Future.error(
+        CodexFailure(
+          mutation
+              ? CodexFailureKind.deliveryUnknown
+              : CodexFailureKind.disconnected,
+        ),
+      );
+    }
     if (_pending.length >= maxPending) {
       return Future.error(CodexFailure(CodexFailureKind.overloaded));
     }
@@ -270,17 +306,40 @@ class CodexTransport {
       );
     });
     try {
-      _send({'id': id, 'method': method, 'params': params});
+      _send({
+        'id': id,
+        'method': method,
+        'params': params,
+      }, expectedEpoch: epoch);
+    } on CodexFailure catch (error) {
+      _pending.remove(id);
+      pending.timer?.cancel();
+      if (!pending.result.isCompleted) {
+        pending.result.completeError(
+          CodexFailure(
+            mutation
+                ? CodexFailureKind.deliveryUnknown
+                : CodexFailureKind.disconnected,
+          ),
+        );
+      }
+      // Some socket implementations report a send failure without delivering
+      // onDone. Treat that as a loss so the socket and every other pending
+      // frame are invalidated immediately.
+      if (error.kind != CodexFailureKind.invalidResponse) _lost(epoch);
     } catch (_) {
       _pending.remove(id);
       pending.timer?.cancel();
-      pending.result.completeError(
-        CodexFailure(
-          mutation
-              ? CodexFailureKind.deliveryUnknown
-              : CodexFailureKind.disconnected,
-        ),
-      );
+      if (!pending.result.isCompleted) {
+        pending.result.completeError(
+          CodexFailure(
+            mutation
+                ? CodexFailureKind.deliveryUnknown
+                : CodexFailureKind.disconnected,
+          ),
+        );
+      }
+      _lost(epoch);
     }
     return pending.result.future;
   }
@@ -289,7 +348,10 @@ class CodexTransport {
     if (!connected || request.epoch != _epoch || request.requestID == null) {
       throw CodexFailure(CodexFailureKind.staleRequest);
     }
-    _send({'id': request.requestID, 'result': result});
+    _send({
+      'id': request.requestID,
+      'result': result,
+    }, expectedEpoch: request.epoch);
   }
 
   void rejectUnsupported(CodexRpcEvent request) {
@@ -302,16 +364,23 @@ class CodexTransport {
     });
   }
 
-  void _send(Map<String, dynamic> value) {
+  void _send(Map<String, dynamic> value, {int? expectedEpoch}) {
     final socket = _socket;
-    if (_closed || socket == null) {
+    if (_closed ||
+        socket == null ||
+        (expectedEpoch != null && expectedEpoch != _epoch)) {
       throw CodexFailure(CodexFailureKind.disconnected);
     }
     final json = jsonEncode(value);
     if (utf8.encode(json).length > maxFrameBytes) {
       throw CodexFailure(CodexFailureKind.invalidResponse);
     }
-    socket.send(json);
+    try {
+      socket.send(json);
+    } catch (_) {
+      _lost(expectedEpoch ?? _epoch);
+      rethrow;
+    }
   }
 
   void _receive(int epoch, Object? frame) {
@@ -366,6 +435,10 @@ class CodexTransport {
 
   void _lost(int epoch) {
     if (epoch != _epoch || _socket == null) return;
+    final disconnectedEpoch = _epoch;
+    // Invalidate callbacks and frames from the old socket before allowing a
+    // future connect to allocate a replacement epoch.
+    _epoch++;
     final socket = _socket!;
     _socket = null;
     _initialized = false;
@@ -383,7 +456,7 @@ class CodexTransport {
       );
     }
     _pending.clear();
-    if (!_closed) _disconnects.add(epoch);
+    if (!_closed) _disconnects.add(disconnectedEpoch);
   }
 
   Future<void> close() async {

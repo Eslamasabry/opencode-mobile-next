@@ -71,6 +71,7 @@ class CodexGateway implements ServerGateway, ServerOperationsGateway {
   int _retryAttempt = 0;
   int _locationEpoch = 0;
   bool _listening = false;
+  bool _recoveryDegraded = false;
   Future<void>? _recovering;
 
   CodexGateway({required this.transport, String? directory})
@@ -79,6 +80,7 @@ class CodexGateway implements ServerGateway, ServerOperationsGateway {
     _rpcDisconnects = transport.disconnects.listen((_) {
       _approvals.clear();
       _turns.clear();
+      _recoveryDegraded = true;
       _emitState(StreamStatus.reconnecting);
       _scheduleReconnect();
     });
@@ -129,6 +131,7 @@ class CodexGateway implements ServerGateway, ServerOperationsGateway {
     _uncertain.clear();
     _newEmptyThreads.clear();
     _fileChanges.clear();
+    _recoveryDegraded = false;
   }
 
   void _checkLocation(String scope, int epoch) {
@@ -759,23 +762,34 @@ class CodexGateway implements ServerGateway, ServerOperationsGateway {
 
   Future<void> _recover() => _recovering ??= _recoverNow().whenComplete(() {
     _recovering = null;
-    if (!transport.connected) _scheduleReconnect();
+    if (!transport.connected || _recoveryDegraded) _scheduleReconnect();
   });
 
   Future<void> _recoverNow() async {
     try {
       await transport.connect();
+      var failed = false;
       for (final id in _resumed.toList()) {
         if (_closed || !_listening) return;
         try {
           await _resume(id);
         } on CodexFailure {
-          _resumed.remove(id);
+          // Keep the subscription tracked so the next reconnect can retry it.
+          // A replacement socket is not a complete recovery if any thread
+          // still needs authoritative resumption.
+          failed = true;
         }
       }
+      if (failed || !transport.connected) {
+        _recoveryDegraded = true;
+        _emitState(StreamStatus.reconnecting);
+        return;
+      }
+      _recoveryDegraded = false;
       _retryAttempt = 0;
       _emitState(StreamStatus.connected);
     } on CodexFailure catch (error) {
+      _recoveryDegraded = true;
       _emitState(
         error.kind == CodexFailureKind.authentication
             ? StreamStatus.disconnected
