@@ -95,6 +95,33 @@ class _FailingPublicationStore extends _MemoryStore {
   }
 }
 
+class _FailingDeleteStore extends _MemoryStore {
+  String? failingPath;
+
+  @override
+  Future<void> delete(String path) async {
+    if (path == failingPath) {
+      failingPath = null;
+      throw FileSystemException('simulated cleanup failure', path);
+    }
+    await super.delete(path);
+  }
+}
+
+class _ThrowingSink implements VoiceByteSink {
+  @override
+  void add(List<int> bytes) => throw StateError('simulated sink failure');
+
+  @override
+  Future<void> close() async {}
+}
+
+class _ThrowingSinkStore extends _MemoryStore {
+  @override
+  Future<VoiceByteSink> openWrite(String path, {required bool append}) async =>
+      _ThrowingSink();
+}
+
 class _FakeHttp implements VoiceHttpTransport {
   _FakeHttp(this.handler);
 
@@ -486,6 +513,143 @@ void main() {
 
       expect(maximumActiveBodies, 1);
       expect(await first.verifyInstalled('/models', _pack), isTrue);
+    },
+  );
+
+  test(
+    'delete waits for an in-flight install and removes every owned path',
+    () async {
+      final store = _MemoryStore();
+      final bodyStarted = Completer<void>();
+      final releaseBody = Completer<void>();
+      final downloader = VoiceModelDownloader(
+        store: store,
+        http: _FakeHttp(
+          (_) => VoiceHttpResponse(
+            statusCode: 200,
+            contentLength: 5,
+            headers: const {},
+            body: (() async* {
+              bodyStarted.complete();
+              await releaseBody.future;
+              yield utf8.encode('hello');
+            })(),
+          ),
+        ),
+      );
+      final directory = downloader.packDirectory('/models', _pack);
+      store.put(downloader.markerPath('/models', _pack), utf8.encode('stale'));
+      store.put('${downloader.markerPath('/models', _pack)}.tmp', [0]);
+      store.put('${downloader.markerPath('/models', _pack)}.voice-backup', [1]);
+      store.put('$directory.installing/${VoiceModelDownloader.markerName}', [
+        5,
+      ]);
+      store.put(
+        '$directory.installing/${VoiceModelDownloader.markerName}.tmp',
+        [6],
+      );
+      store.put('$directory.installing/${_file.name}', [2]);
+      store.put('$directory.installing/${_file.name}.part', [3]);
+      store.put(
+        '${downloader.filePath('/models', _pack, _file)}.voice-backup',
+        [4],
+      );
+
+      final download = downloader.download(
+        '/models',
+        _pack,
+        replaceExisting: true,
+        cancellation: VoiceCancellationToken(),
+        onProgress: (_) {},
+        onVerifying: () {},
+      );
+      await bodyStarted.future;
+
+      var deleted = false;
+      final deletion = downloader.deletePack('/models', _pack).then((_) {
+        deleted = true;
+      });
+      expect(deleted, isFalse);
+
+      releaseBody.complete();
+      await download;
+      await deletion;
+      expect(store.files, isEmpty);
+    },
+  );
+
+  test(
+    'cleanup failure releases the pack lock for a later operation',
+    () async {
+      final store = _FailingDeleteStore();
+      final downloader = VoiceModelDownloader(
+        store: store,
+        http: _FakeHttp((_) => _response(utf8.encode('hello'))),
+      );
+      final marker = downloader.markerPath('/models', _pack);
+      store.put(marker, utf8.encode('stale'));
+      store.put('${downloader.filePath('/models', _pack, _file)}.part', [1]);
+      store.failingPath = marker;
+
+      await expectLater(
+        downloader.deletePack('/models', _pack),
+        throwsA(isA<FileSystemException>()),
+      );
+      expect(store.files, contains(marker));
+      expect(
+        store.files,
+        isNot(contains('${downloader.filePath('/models', _pack, _file)}.part')),
+      );
+
+      await downloader
+          .download(
+            '/models',
+            _pack,
+            cancellation: VoiceCancellationToken(),
+            onProgress: (_) {},
+            onVerifying: () {},
+          )
+          .timeout(const Duration(seconds: 1));
+      expect(await downloader.verifyInstalled('/models', _pack), isTrue);
+    },
+  );
+
+  test(
+    'response body sink and progress callback failures complete the download',
+    () async {
+      final sinkDownloader = VoiceModelDownloader(
+        store: _ThrowingSinkStore(),
+        http: _FakeHttp((_) => _response(utf8.encode('hello'))),
+      );
+      await expectLater(
+        sinkDownloader
+            .download(
+              '/models',
+              _pack,
+              cancellation: VoiceCancellationToken(),
+              onProgress: (_) {},
+              onVerifying: () {},
+            )
+            .timeout(const Duration(seconds: 1)),
+        throwsA(isA<StateError>()),
+      );
+
+      final callbackDownloader = VoiceModelDownloader(
+        store: _MemoryStore(),
+        http: _FakeHttp((_) => _response(utf8.encode('hello'))),
+      );
+      await expectLater(
+        callbackDownloader
+            .download(
+              '/models',
+              _pack,
+              cancellation: VoiceCancellationToken(),
+              onProgress: (_) => throw StateError('simulated callback failure'),
+              onVerifying: () {},
+            )
+            .timeout(const Duration(seconds: 1)),
+        throwsA(isA<StateError>()),
+      );
     },
   );
 }

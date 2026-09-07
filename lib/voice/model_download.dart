@@ -570,17 +570,28 @@ class VoiceModelDownloader {
       subscription = response.body.listen(
         (chunk) {
           if (bodyDone.isCompleted) return;
-          resetIdleTimer();
-          if (received + chunk.length > file.length) {
-            response.abort?.call();
-            fail(
-              VoiceDownloadException('${file.name} exceeded its pinned size.'),
-            );
-            return;
+          try {
+            resetIdleTimer();
+            if (received + chunk.length > file.length) {
+              response.abort?.call();
+              fail(
+                VoiceDownloadException(
+                  '${file.name} exceeded its pinned size.',
+                ),
+              );
+              return;
+            }
+            sink.add(chunk);
+            received += chunk.length;
+            onProgress(received);
+          } catch (error, stackTrace) {
+            try {
+              response.abort?.call();
+            } catch (_) {
+              // Preserve the callback or sink error as the download result.
+            }
+            fail(error, stackTrace);
           }
-          sink.add(chunk);
-          received += chunk.length;
-          onProgress(received);
         },
         onError: fail,
         onDone: () {
@@ -695,12 +706,42 @@ class VoiceModelDownloader {
   }
 
   Future<void> deletePack(String root, VoiceModelPack pack) async {
-    await store.delete(markerPath(root, pack));
-    for (final file in pack.files) {
-      final path = filePath(root, pack, file);
-      await store.delete(path);
-      await store.delete('$path.part');
-    }
+    await _withInstallLock(packDirectory(root, pack), () async {
+      final directory = packDirectory(root, pack);
+      final stagingDirectory = '$directory.installing';
+      final paths = <String>{
+        markerPath(root, pack),
+        '${markerPath(root, pack)}.tmp',
+        '${markerPath(root, pack)}.voice-backup',
+        '$stagingDirectory/$markerName',
+        '$stagingDirectory/$markerName.tmp',
+        '$stagingDirectory/$markerName.voice-backup',
+      };
+      for (final file in pack.files) {
+        final path = filePath(root, pack, file);
+        paths
+          ..add(path)
+          ..add('$path.part')
+          ..add('$path.voice-backup')
+          ..add('$stagingDirectory/${file.name}')
+          ..add('$stagingDirectory/${file.name}.part')
+          ..add('$stagingDirectory/${file.name}.voice-backup');
+      }
+
+      Object? firstError;
+      StackTrace? firstStackTrace;
+      for (final path in paths) {
+        try {
+          await store.delete(path);
+        } catch (error, stackTrace) {
+          firstError ??= error;
+          firstStackTrace ??= stackTrace;
+        }
+      }
+      if (firstError != null) {
+        Error.throwWithStackTrace(firstError, firstStackTrace!);
+      }
+    });
   }
 }
 
