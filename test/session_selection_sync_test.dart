@@ -234,7 +234,8 @@ void main() {
       );
       final flush = controller.flushOfflineQueue();
       await started.future;
-      await controller.removeQueuedPrompt('cancel');
+      expect(controller.queuedPromptSending('cancel'), isFalse);
+      expect(await controller.removeQueuedPrompt('cancel'), isTrue);
       pending.complete();
       await flush;
       expect(api.writes, ['model:a:p/saved:']);

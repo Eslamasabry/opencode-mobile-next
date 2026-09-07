@@ -5098,10 +5098,6 @@ class ConnectionController extends ChangeNotifier {
         var markerRefused = false;
         var stop = false;
         touched = true;
-        // Held until this entry's outcome — removal or error — is persisted,
-        // so the bubble never offers review actions on a prompt whose fate
-        // this device has not yet recorded.
-        _queuedPromptInFlight = entry.id;
         try {
           if (supportsStagedRevert) {
             final fresh = await currentApi.session(entry.sessionID);
@@ -5131,12 +5127,16 @@ class ConnectionController extends ChangeNotifier {
           // gets to run. Runs after model/agent prep so those preflight
           // failures stay ordinary retryable errors.
           Future<void> dispatch() async {
-            final marked = await _replaceQueuedPrompt(
-              entry.id,
-              (queued) => queued.withDispatchedAt(
+            final marked = await _replaceQueuedPrompt(entry.id, (queued) {
+              // Selection/preflight can still be cancelled. Close removal
+              // only once this serialized dispatch write actually begins,
+              // then hold it through the persisted delivery outcome.
+              _queuedPromptInFlight = entry.id;
+              if (!_disposed) notifyListeners();
+              return queued.withDispatchedAt(
                 DateTime.now().millisecondsSinceEpoch,
-              ),
-            );
+              );
+            });
             if (marked == null) return;
             if (!marked) {
               markerRefused = true;
