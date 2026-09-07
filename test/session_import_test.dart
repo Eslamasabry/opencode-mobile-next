@@ -143,6 +143,149 @@ void main() {
     },
   );
 
+  test('review snapshot isolates nested input and request mutations', () {
+    final payload = transfer();
+    final sourceMessage = (payload['messages'] as List).first as Map;
+    sourceMessage['metadata'] = {
+      'labels': ['original'],
+    };
+    final doc = SessionImportDocument.fromJson(payload);
+
+    ((payload['info'] as Map)['time'] as Map)['archived'] = 99;
+    ((payload['info'] as Map)['location'] as Map)['directory'] = '/changed';
+    (sourceMessage['time'] as Map)['created'] = 99;
+    ((sourceMessage['metadata'] as Map)['labels'] as List)[0] = 'changed';
+
+    final firstBody = doc.requestBody(
+      const SessionImportDestination(directory: '/destination'),
+    );
+    ((firstBody['info'] as Map)['time'] as Map)['created'] = 42;
+    final firstBodyMessage = (firstBody['messages'] as List).first as Map;
+    firstBodyMessage['text'] = 'changed';
+    ((firstBodyMessage['metadata'] as Map)['labels'] as List)[0] = 'request';
+    (firstBody['messages'] as List).clear();
+
+    final secondBody = doc.requestBody(
+      const SessionImportDestination(directory: '/destination'),
+    );
+    expect(doc.archived, isFalse);
+    expect((secondBody['info'] as Map)['location'], {
+      'directory': '/source/private',
+    });
+    expect((secondBody['info'] as Map)['time'], {'created': 1, 'updated': 2});
+    expect((secondBody['messages'] as List).length, 2);
+    expect(
+      ((secondBody['messages'] as List).first as Map)['text'],
+      'Hello العربية',
+    );
+    expect(
+      (((secondBody['messages'] as List).first as Map)['metadata']
+          as Map)['labels'],
+      ['original'],
+    );
+  });
+
+  test('unknown message types and nested protocol fields survive review', () {
+    final payload = transfer();
+    (payload['info'] as Map)['title'] = 'Future\ntranscript';
+    final message = (payload['messages'] as List).first as Map;
+    message
+      ..['type'] = 'future-message-v2'
+      ..['future'] = {
+        'parts': [
+          {
+            'kind': 'vendor-extension',
+            'values': [1, true, null],
+          },
+        ],
+      };
+
+    final doc = SessionImportDocument.fromJson(payload);
+    expect(doc.title, 'Future\ntranscript');
+    final body = doc.requestBody(
+      const SessionImportDestination(directory: '/destination'),
+    );
+    expect((body['messages'] as List).first, message);
+    expect(((body['messages'] as List).first as Map)['future'], {
+      'parts': [
+        {
+          'kind': 'vendor-extension',
+          'values': [1, true, null],
+        },
+      ],
+    });
+  });
+
+  test(
+    'blank, control, and malformed references and destinations are rejected',
+    () {
+      for (final id in ['ses', 'ses\nchild', 'ses child', 'wrong_session']) {
+        final payload = transfer();
+        (payload['info'] as Map)['id'] = id;
+        expect(
+          () => SessionImportDocument.fromJson(payload),
+          throwsA(isA<SessionImportInvalid>()),
+        );
+      }
+      for (final parent in ['', 'ses\nparent', 'message_parent']) {
+        final payload = transfer(parent: parent);
+        expect(
+          () => SessionImportDocument.fromJson(payload),
+          throwsA(isA<SessionImportInvalid>()),
+        );
+      }
+      for (final workspace in ['wrk', 'wrk\tworkspace', 'workspace']) {
+        final payload = transfer();
+        ((payload['info'] as Map)['location'] as Map)['workspaceID'] =
+            workspace;
+        expect(
+          () => SessionImportDocument.fromJson(payload),
+          throwsA(isA<SessionImportInvalid>()),
+        );
+        final doc = SessionImportDocument.fromJson(transfer());
+        expect(
+          () => doc.requestBody(
+            SessionImportDestination(
+              directory: '/destination',
+              workspaceID: workspace,
+            ),
+          ),
+          throwsA(isA<SessionImportInvalid>()),
+        );
+      }
+      final badDirectory = transfer();
+      ((badDirectory['info'] as Map)['location'] as Map)['directory'] =
+          '/bad\n';
+      expect(
+        () => SessionImportDocument.fromJson(badDirectory),
+        throwsA(isA<SessionImportInvalid>()),
+      );
+      final doc = SessionImportDocument.fromJson(transfer());
+      expect(
+        () => doc.requestBody(
+          const SessionImportDestination(directory: '/destination\u0000'),
+        ),
+        throwsA(isA<SessionImportInvalid>()),
+      );
+
+      final cyclic = transfer();
+      final nested = <String, dynamic>{};
+      nested['self'] = nested;
+      ((cyclic['messages'] as List).first as Map)['nested'] = nested;
+      expect(
+        () => SessionImportDocument.fromJson(cyclic),
+        throwsA(isA<SessionImportInvalid>()),
+      );
+      final nonFinite = transfer();
+      ((nonFinite['messages'] as List).first as Map)['futureValue'] =
+          double.nan;
+      expect(
+        () => SessionImportDocument.fromJson(nonFinite),
+        throwsA(isA<SessionImportInvalid>()),
+      );
+    },
+  );
+
   test('identifies redaction and parent without discarding the source', () {
     final doc = SessionImportDocument.fromJson(
       transfer(redacted: true, parent: 'ses_parent'),
