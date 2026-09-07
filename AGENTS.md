@@ -97,6 +97,8 @@ flutter test --concurrency=1    # serial — parallel runs are flaky or killed
 
 ## Workflow
 
+- Replacement APKs for the maintainer must keep the installed stable CI signer: `2D010C2103CB2F78ABAACA690EAD4D45F8003A6C0A02082CD2A2AE62FD18D0EC`. Use the Android quality workflow for these updates, verify the APK certificate before delivery, and never substitute or rotate the signer.
+
 - Work lands on `dev` through PRs; `master` is fast-forwarded only at approved
   milestones — see `docs/verification/` for the branch ledger.
 - Releases/signing go through `scripts/release.sh` / `scripts/cut-alpha.sh`

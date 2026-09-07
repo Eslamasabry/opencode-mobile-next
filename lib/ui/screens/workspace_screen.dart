@@ -272,37 +272,6 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
         onRetry: _refreshWorkspace,
       );
     }
-    if (_projects?.isEmpty == true) {
-      // A fresh server has no projects yet, but it can still host a session:
-      // with no directory selected the session-create call omits the
-      // directory parameter and the server scopes the session to its own
-      // default directory. Keep the quick-ask pill so the first prompt is
-      // never a dead end.
-      return Stack(
-        children: [
-          ProductEmptyState(
-            icon: Icons.folder_off_outlined,
-            title: 'No projects opened',
-            message:
-                'Open a project on this OpenCode server, then refresh here — '
-                'or ask below to start a session in the server’s default '
-                'directory.',
-            actionLabel: 'Refresh',
-            onAction: _refreshWorkspace,
-          ),
-          Positioned(
-            left: 12,
-            right: 12,
-            bottom: 12,
-            child: _QuickAskPill(
-              creating: _creating,
-              onTap: _creating ? null : _createSession,
-            ),
-          ),
-        ],
-      );
-    }
-
     // Rows swiped to Archive vanish immediately and come back on Undo; the
     // server call only happens once the snackbar has gone.
     final sessions = widget.controller
@@ -352,20 +321,37 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                           leading: const Icon(Icons.info_outline_rounded),
                           title: Text(widget.controller.locationNotice!),
                         ),
-                      ListTile(
-                        key: const ValueKey('current-project-entry'),
-                        leading: const Icon(Icons.folder_rounded),
-                        title: Text(
-                          _selectedProject?.name ?? 'Choose a project',
+                      // The project catalog and session inventory are separate.
+                      // An empty catalog must not hide existing conversations,
+                      // inventory errors, or the server-wide session finder.
+                      if (_projects?.isEmpty == true)
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: ProductInlineEmpty(
+                            icon: Icons.folder_off_outlined,
+                            title: 'No projects opened',
+                            message:
+                                'The server returned no projects. Search all '
+                                'sessions to find previous conversations.',
+                            actionLabel: 'Search all sessions',
+                            onAction: _openAllSessions,
+                          ),
+                        )
+                      else
+                        ListTile(
+                          key: const ValueKey('current-project-entry'),
+                          leading: const Icon(Icons.folder_rounded),
+                          title: Text(
+                            _selectedProject?.name ?? 'Choose a project',
+                          ),
+                          subtitle: Text(
+                            _contextSubtitle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: const Icon(Icons.unfold_more_rounded),
+                          onTap: _openContextSheet,
                         ),
-                        subtitle: Text(
-                          _contextSubtitle,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        trailing: const Icon(Icons.unfold_more_rounded),
-                        onTap: _openContextSheet,
-                      ),
                       // Still context, not management: the session is running
                       // somewhere other than the project root.
                       if (_hasExternalSessionDirectory)
@@ -505,6 +491,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                             : 'No recent sessions',
                         message: partial
                             ? l10n.sessionsLoadedOnly
+                            : widget.controller.directory == null
+                            ? 'Start a session in the server’s default directory.'
                             : 'Start a session in the selected workspace.',
                         actionLabel: 'New session',
                         onAction: _createSession,

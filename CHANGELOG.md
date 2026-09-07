@@ -4,6 +4,10 @@ This project is in public alpha. Only the newest preview is supported.
 
 ## Unreleased
 
+- Keep existing sessions, error recovery and older-page controls visible when
+  Workspace reports “No projects opened”. Add a labelled Search all sessions
+  action so previous conversations remain reachable.
+
 - Add Settings → Remaining usage for explicitly trusted, separately
   installed Codex and Claude quota collectors. Report account windows, reset times,
   unknown values and stale results separately from OpenCode consumption.

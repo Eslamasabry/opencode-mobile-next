@@ -182,7 +182,10 @@ void main() {
   testWidgets('workspace lays out at 2.5x', (tester) async {
     final conn = await _controller();
     addTearDown(conn.dispose);
-    await _pumpScaled(tester, _scoped(conn, WorkspaceScreen(controller: conn)));
+    await _pumpScaled(
+      tester,
+      _scoped(conn, Scaffold(body: WorkspaceScreen(controller: conn))),
+    );
 
     expect(tester.takeException(), isNull);
   });
