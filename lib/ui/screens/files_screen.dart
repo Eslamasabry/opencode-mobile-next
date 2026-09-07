@@ -88,6 +88,19 @@ class _FilesScreenState extends State<FilesScreen> {
   int _requestGeneration = 0;
   int _fileStatusesGeneration = 0;
 
+  bool _matchesFileScope({
+    required String? profileID,
+    required int locationRevision,
+    ServerGateway? api,
+    ServerOperationsGateway? repository,
+  }) =>
+      mounted &&
+      widget.controller.profile?.id == profileID &&
+      widget.controller.locationRevision == locationRevision &&
+      (api == null || identical(widget.controller.api, api)) &&
+      (repository == null ||
+          identical(widget.controller.repository, repository));
+
   @override
   void initState() {
     super.initState();
@@ -366,8 +379,17 @@ class _FilesScreenState extends State<FilesScreen> {
   }
 
   Future<void> _retryFileStatuses() async {
+    final profileID = widget.controller.profile?.id;
+    final locationRevision = widget.controller.locationRevision;
     final repository = await widget.controller.prepareActionRepository();
-    if (!mounted) return;
+    if (!mounted ||
+        !_matchesFileScope(
+          profileID: profileID,
+          locationRevision: locationRevision,
+          repository: repository,
+        )) {
+      return;
+    }
     if (repository == null) {
       setState(() {
         _fileStatusesError = 'OpenCode is reconnecting. Try again shortly.';
@@ -401,13 +423,29 @@ class _FilesScreenState extends State<FilesScreen> {
 
   Future<void> _loadFileStatuses(ServerOperationsGateway repository) async {
     final generation = ++_fileStatusesGeneration;
+    final profileID = widget.controller.profile?.id;
+    final locationRevision = widget.controller.locationRevision;
+    if (!_matchesFileScope(
+      profileID: profileID,
+      locationRevision: locationRevision,
+      repository: repository,
+    )) {
+      return;
+    }
     setState(() {
       _fileStatusesLoading = true;
       _fileStatusesError = null;
     });
     try {
       final statuses = await repository.listFileStatuses();
-      if (!mounted || generation != _fileStatusesGeneration) return;
+      if (generation != _fileStatusesGeneration ||
+          !_matchesFileScope(
+            profileID: profileID,
+            locationRevision: locationRevision,
+            repository: repository,
+          )) {
+        return;
+      }
       setState(() {
         _fileStatuses = {
           for (final status in statuses)
@@ -420,14 +458,26 @@ class _FilesScreenState extends State<FilesScreen> {
         };
       });
     } catch (error) {
-      if (!mounted || generation != _fileStatusesGeneration) return;
+      if (generation != _fileStatusesGeneration ||
+          !_matchesFileScope(
+            profileID: profileID,
+            locationRevision: locationRevision,
+            repository: repository,
+          )) {
+        return;
+      }
       setState(() {
         _fileStatusesError = _fileStatuses.isEmpty
             ? 'File change indicators are unavailable on this server.'
             : 'File change indicators could not refresh.';
       });
     } finally {
-      if (mounted && generation == _fileStatusesGeneration) {
+      if (generation == _fileStatusesGeneration &&
+          _matchesFileScope(
+            profileID: profileID,
+            locationRevision: locationRevision,
+            repository: repository,
+          )) {
         setState(() => _fileStatusesLoading = false);
       }
     }
@@ -1126,12 +1176,30 @@ class _FilesScreenState extends State<FilesScreen> {
   Future<void> _attachFile(String path) async {
     final action = widget.onAttachFile;
     if (action == null) return;
+    final profileID = widget.controller.profile?.id;
+    final locationRevision = widget.controller.locationRevision;
+    final initialApi = widget.controller.api;
     try {
       final api = await widget.controller.prepareActionTransport();
       if (api == null) {
         throw const ProductException('The server is not connected.');
       }
+      if ((initialApi != null && !identical(api, initialApi)) ||
+          !_matchesFileScope(
+            profileID: profileID,
+            locationRevision: locationRevision,
+            api: api,
+          )) {
+        return;
+      }
       final content = await api.fileContent(path);
+      if (!_matchesFileScope(
+        profileID: profileID,
+        locationRevision: locationRevision,
+        api: api,
+      )) {
+        return;
+      }
       await action(
         path,
         FilePreviewData(
@@ -1754,6 +1822,11 @@ class __FileViewerState extends State<_FileViewer> {
   FileContent? _content;
   String? _error;
   int _generation = 0;
+  String? _profileID;
+  int _locationRevision = -1;
+  ServerGateway? _api;
+  late final String _path;
+  bool _scopeInvalid = false;
   bool _attaching = false;
   bool _downloading = false;
 
@@ -1762,11 +1835,81 @@ class __FileViewerState extends State<_FileViewer> {
   @override
   void initState() {
     super.initState();
+    _path = widget.path;
+    _captureScope();
+    widget.controller.addListener(_controllerChanged);
     _fetch();
   }
 
+  @override
+  void didUpdateWidget(covariant _FileViewer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (identical(oldWidget.controller, widget.controller) &&
+        oldWidget.path == widget.path) {
+      return;
+    }
+    oldWidget.controller.removeListener(_controllerChanged);
+    widget.controller.addListener(_controllerChanged);
+    _generation++;
+    _scopeInvalid = true;
+    _captureScope();
+    if (!mounted) return;
+    setState(() {
+      _content = null;
+      _error = lookupAppLocalizations(
+        Localizations.localeOf(context),
+      ).filesViewerPathChanged;
+    });
+  }
+
+  void _captureScope() {
+    _profileID = widget.controller.profile?.id;
+    _locationRevision = widget.controller.locationRevision;
+    _api = widget.controller.api;
+  }
+
+  void _controllerChanged() {
+    final profileID = widget.controller.profile?.id;
+    final locationRevision = widget.controller.locationRevision;
+    final api = widget.controller.api;
+    if (profileID == _profileID &&
+        locationRevision == _locationRevision &&
+        identical(api, _api)) {
+      return;
+    }
+    _generation++;
+    _profileID = profileID;
+    _locationRevision = locationRevision;
+    _api = api;
+    _scopeInvalid = true;
+    if (!mounted) return;
+    setState(() {
+      _content = null;
+      _error = lookupAppLocalizations(
+        Localizations.localeOf(context),
+      ).filesViewerScopeChanged;
+    });
+  }
+
+  bool _matchesRequest(
+    int generation,
+    String? profileID,
+    int locationRevision,
+    ServerGateway api,
+  ) =>
+      mounted &&
+      generation == _generation &&
+      widget.controller.profile?.id == profileID &&
+      widget.controller.locationRevision == locationRevision &&
+      identical(widget.controller.api, api);
+
   Future<void> _fetch() async {
+    if (_scopeInvalid) return;
     final generation = ++_generation;
+    final profileID = widget.controller.profile?.id;
+    final locationRevision = widget.controller.locationRevision;
+    final initialApi = _api;
+    ServerGateway? requestApi;
     // Keep the current content on screen during a reload; the skeleton is
     // for the first load only.
     setState(() => _error = null);
@@ -1776,10 +1919,33 @@ class __FileViewerState extends State<_FileViewer> {
       if (api == null) {
         throw const ProductException('The server is not connected.');
       }
-      final c = await api.fileContent(widget.path);
-      if (mounted && generation == _generation) setState(() => _content = c);
+      requestApi = api;
+      if ((initialApi != null && !identical(api, initialApi)) ||
+          !_matchesRequest(generation, profileID, locationRevision, api)) {
+        if (mounted && generation == _generation) {
+          setState(() {
+            _scopeInvalid = true;
+            _content = null;
+            _error = lookupAppLocalizations(
+              Localizations.localeOf(context),
+            ).filesViewerScopeChanged;
+          });
+        }
+        return;
+      }
+      final c = await api.fileContent(_path);
+      if (_matchesRequest(generation, profileID, locationRevision, api)) {
+        setState(() => _content = c);
+      }
     } catch (e) {
       if (!mounted || generation != _generation) return;
+      if (requestApi != null && !identical(widget.controller.api, requestApi)) {
+        return;
+      }
+      if (widget.controller.profile?.id != profileID ||
+          widget.controller.locationRevision != locationRevision) {
+        return;
+      }
       if (_content != null) {
         // A failed reload keeps the stale content visible.
         showProductError(context, e);
@@ -1800,7 +1966,7 @@ class __FileViewerState extends State<_FileViewer> {
   FilePreviewData get _previewData {
     final content = _content!;
     return FilePreviewData(
-      name: widget.path.split('/').last,
+      name: _path.split('/').last,
       mimeType: content.mimeType,
       bytes: content.isBinary ? content.bytes() : null,
       text: content.isBinary ? null : _displayText,
@@ -1810,7 +1976,7 @@ class __FileViewerState extends State<_FileViewer> {
   FilePreviewData get _exportData {
     final content = _content!;
     return FilePreviewData(
-      name: widget.path.split('/').last,
+      name: _path.split('/').last,
       mimeType: content.mimeType,
       bytes: content.isBinary ? content.bytes() : null,
       text: content.isBinary ? null : content.content,
@@ -1822,12 +1988,12 @@ class __FileViewerState extends State<_FileViewer> {
     if (action == null || _content == null || _attaching) return;
     setState(() => _attaching = true);
     try {
-      await action(widget.path, _exportData);
+      await action(_path, _exportData);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '${widget.path.split('/').last} attached. Return to the chat to add your comment.',
+            '${_path.split('/').last} attached. Return to the chat to add your comment.',
           ),
           duration: const Duration(seconds: 3),
         ),
@@ -1885,15 +2051,15 @@ class __FileViewerState extends State<_FileViewer> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.path.split('/').last,
+                          _path.split('/').last,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.titleMedium,
                         ),
                         Text(
                           widget.initialLine == null
-                              ? widget.path
-                              : '${widget.path} · Line ${widget.initialLine}',
+                              ? _path
+                              : '$_path · Line ${widget.initialLine}',
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(
@@ -1971,7 +2137,7 @@ class __FileViewerState extends State<_FileViewer> {
                   TextButton.icon(
                     label: Text(l10n.fileReload),
                     icon: const Icon(Icons.refresh_rounded, size: 18),
-                    onPressed: _fetch,
+                    onPressed: _scopeInvalid ? null : _fetch,
                   ),
                 ],
               ),
@@ -1981,7 +2147,9 @@ class __FileViewerState extends State<_FileViewer> {
               child: _content == null && _error == null
                   ? const LoadingList(rows: 6)
                   : _error != null
-                  ? ProductErrorState(message: _error!, onRetry: _fetch)
+                  ? _scopeInvalid
+                        ? _FileViewerScopeError(message: _error!)
+                        : ProductErrorState(message: _error!, onRetry: _fetch)
                   : FilePreviewBody(
                       data: _previewData,
                       initialLine: widget.initialLine,
@@ -1992,4 +2160,34 @@ class __FileViewerState extends State<_FileViewer> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_controllerChanged);
+    super.dispose();
+  }
+}
+
+class _FileViewerScopeError extends StatelessWidget {
+  const _FileViewerScopeError({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(28),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.sync_problem_rounded,
+            color: Theme.of(context).colorScheme.error,
+          ),
+          const SizedBox(height: 10),
+          Text(message, textAlign: TextAlign.center),
+        ],
+      ),
+    ),
+  );
 }
