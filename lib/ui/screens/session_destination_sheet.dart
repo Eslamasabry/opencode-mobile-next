@@ -6,6 +6,7 @@ import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../state/connection.dart';
 import '../widgets/product_states.dart';
+import '../widgets/session_handoff.dart';
 
 enum SessionDestinationMode { move, warp }
 
@@ -84,22 +85,44 @@ class _SessionDestinationSheetState extends State<_SessionDestinationSheet> {
   Object? _changesError;
   bool _working = false;
   String _query = '';
+  late final SessionNavigationScope _scope;
+  Session? _session;
 
   bool get _moving => widget.mode == SessionDestinationMode.move;
+
   /// Both modes read as "Move" to the user; only the transport differs.
   String get _verb => 'Move';
 
   @override
   void initState() {
     super.initState();
+    _scope = SessionNavigationScope(widget.controller);
     unawaited(_load());
   }
 
   Future<void> _load() async {
+    if (!_scope.matches(widget.controller)) {
+      setState(
+        () => _error = StateError(
+          'Session location changed. Close and reopen this sheet.',
+        ),
+      );
+      return;
+    }
     final repository = await widget.controller.prepareActionRepository();
     if (!mounted) return;
+    if (!_scope.matches(widget.controller)) {
+      setState(
+        () => _error = StateError(
+          'Session location changed. Close and reopen this sheet.',
+        ),
+      );
+      return;
+    }
     if (repository == null) {
-      setState(() => _error = const ProductException('OpenCode is reconnecting.'));
+      setState(
+        () => _error = const ProductException('OpenCode is reconnecting.'),
+      );
       return;
     }
     setState(() {
@@ -109,9 +132,11 @@ class _SessionDestinationSheetState extends State<_SessionDestinationSheet> {
       _changesError = null;
     });
     try {
-      final session = widget.controller.sessionsById[widget.sessionID];
+      final session = await repository.getSessionDetails(widget.sessionID);
+      _scope.check(widget.controller);
+      _session = session;
       final currentDirectory =
-          session?.directory ?? widget.controller.directory ?? '';
+          session.directory ?? widget.controller.directory ?? '';
       final projects = await repository.listProjects();
       if (!mounted) return;
       final project = _projectForSession(projects, session, currentDirectory);
@@ -138,6 +163,7 @@ class _SessionDestinationSheetState extends State<_SessionDestinationSheet> {
         changesError = error;
       }
       if (!mounted) return;
+      _scope.check(widget.controller);
       setState(() {
         _destinations = destinations;
         _changes = changes;
@@ -238,6 +264,21 @@ class _SessionDestinationSheetState extends State<_SessionDestinationSheet> {
     if (transfer == null || !mounted) return;
     setState(() => _working = true);
     try {
+      _scope.check(widget.controller);
+      final repository = await widget.controller.prepareActionRepository();
+      _scope.check(widget.controller);
+      if (repository == null) {
+        throw StateError('OpenCode is reconnecting. Try again.');
+      }
+      final current = await repository.getSessionDetails(widget.sessionID);
+      _scope.check(widget.controller);
+      if (current.id != widget.sessionID ||
+          current.directory != _session?.directory ||
+          current.workspaceID != _session?.workspaceID) {
+        throw StateError(
+          'Session location changed. Close and reopen this sheet.',
+        );
+      }
       if (_moving) {
         await widget.controller.moveSessionToDirectory(
           widget.sessionID,
@@ -255,11 +296,7 @@ class _SessionDestinationSheetState extends State<_SessionDestinationSheet> {
       if (!mounted) return;
       Navigator.of(context).pop();
       messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            'Moved to ${destination.title}',
-          ),
-        ),
+        SnackBar(content: Text('Moved to ${destination.title}')),
       );
     } catch (error) {
       if (mounted) setState(() => _error = error);
@@ -469,7 +506,9 @@ class _ConsoleOrganizationSheetState extends State<_ConsoleOrganizationSheet> {
     final repository = await widget.controller.prepareActionRepository();
     if (!mounted) return;
     if (repository == null) {
-      setState(() => _error = const ProductException('OpenCode is reconnecting.'));
+      setState(
+        () => _error = const ProductException('OpenCode is reconnecting.'),
+      );
       return;
     }
     setState(() {

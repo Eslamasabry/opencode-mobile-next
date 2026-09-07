@@ -378,10 +378,32 @@ class _RelationsProductRepository extends _FakeProductRepository {
   Future<List<Session>> listSessionChildren(String id) async => children;
 }
 
-Future<ConnectionController> _controller(_FakeOpenCodeApi api) async {
-  SharedPreferences.setMockInitialValues({});
+Future<ConnectionController> _controller(
+  _FakeOpenCodeApi api, {
+  bool savedProfile = false,
+}) async {
+  SharedPreferences.setMockInitialValues({
+    if (savedProfile) ...{
+      'oc.profiles': jsonEncode([
+        {'id': 'profile', 'name': 'Synthetic', 'baseUrl': 'http://localhost'},
+      ]),
+      'oc.activeProfile': 'profile',
+    },
+  });
   final prefs = await SharedPreferences.getInstance();
-  return ConnectionController(ProfileStore(prefs: prefs))
+  final store = ProfileStore(prefs: prefs);
+  if (savedProfile) {
+    // Navigation guards require the saved profile whose location they protect.
+    const secure = MethodChannel(
+      'plugins.it_nomads.com/flutter_secure_storage',
+    );
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(secure, (_) async => null);
+    addTearDown(() => messenger.setMockMethodCallHandler(secure, null));
+    await store.load();
+  }
+  return ConnectionController(store)
     ..api = api
     ..status = StreamStatus.connected;
 }
@@ -1272,7 +1294,7 @@ void main() {
       directory: '/work/acme',
       time: SessionTime(created: 3),
     );
-    final controller = await _controller(api)
+    final controller = await _controller(api, savedProfile: true)
       ..directory = '/work/acme'
       ..repository = _RelationsProductRepository(parent, [child, sibling])
       ..sessionsById = {parent.id: parent, child.id: child, sibling.id: sibling}
@@ -2754,7 +2776,7 @@ void main() {
   ) async {
     final api = _FakeOpenCodeApi();
     final repository = _DestinationRepository();
-    final controller = await _controller(api);
+    final controller = await _controller(api, savedProfile: true);
     controller
       ..repository = repository
       ..directory = '/work/acme'
@@ -2831,7 +2853,7 @@ void main() {
   ) async {
     final api = _FakeOpenCodeApi();
     final repository = _DestinationRepository(healthError: true);
-    final controller = await _controller(api);
+    final controller = await _controller(api, savedProfile: true);
     controller
       ..repository = repository
       ..directory = '/work/acme'

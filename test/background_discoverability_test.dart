@@ -62,7 +62,11 @@ void main() {
     final controller = await _controller(enabled: false);
     addTearDown(controller.dispose);
     await tester.pumpWidget(
-      MaterialApp(home: ActivityScreen(controller: controller, embedded: true)),
+      MaterialApp(
+        home: Scaffold(
+          body: ActivityScreen(controller: controller, embedded: true),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -72,7 +76,9 @@ void main() {
       findsOneWidget,
     );
 
-    await tester.tap(find.byKey(const ValueKey('activity-background-settings')));
+    await tester.tap(
+      find.byKey(const ValueKey('activity-background-settings')),
+    );
     await tester.pumpAndSettle();
     expect(find.text('Notifications & background'), findsOneWidget);
     expect(find.text('Stay connected in the background'), findsOneWidget);
@@ -86,12 +92,19 @@ void main() {
     final controller = await _controller(enabled: true);
     addTearDown(controller.dispose);
     await tester.pumpWidget(
-      MaterialApp(home: ActivityScreen(controller: controller, embedded: true)),
+      MaterialApp(
+        home: Scaffold(
+          body: ActivityScreen(controller: controller, embedded: true),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('activity-all-clear')), findsOneWidget);
-    expect(find.byKey(const ValueKey('activity-background-hint')), findsNothing);
+    expect(
+      find.byKey(const ValueKey('activity-background-hint')),
+      findsNothing,
+    );
   });
 
   testWidgets('the settings hub summarises the background state', (
@@ -105,7 +118,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('On · running now'), findsOneWidget);
 
-    await tester.tap(find.byKey(const ValueKey('settings-category-background')));
+    await tester.tap(
+      find.byKey(const ValueKey('settings-category-background')),
+    );
     await tester.pumpAndSettle();
     expect(find.text('Running now'), findsOneWidget);
 

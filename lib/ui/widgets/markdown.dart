@@ -651,6 +651,58 @@ class _InlineParser {
   }
 }
 
+/// Prose-only speech input using the same inline syntax as this renderer.
+/// No link recognizers, URL lookups, code blocks or tool payloads are created.
+String markdownProseForSpeech(String source) {
+  if (source.length > 131072) {
+    throw const FormatException('Speech text is too long');
+  }
+  final output = StringBuffer();
+  final fencePattern = RegExp(r'^\s*(`{3,}|~{3,})');
+  String? fence;
+  for (final line in source.replaceAll('\r\n', '\n').split('\n')) {
+    final marker = fencePattern.firstMatch(line);
+    if (fence != null) {
+      if (marker != null &&
+          marker.group(1)!.startsWith(fence[0]) &&
+          marker.group(1)!.length >= fence.length &&
+          line.substring(marker.end).trim().isEmpty) {
+        fence = null;
+      }
+      continue;
+    }
+    if (marker != null) {
+      fence = marker.group(1);
+      continue;
+    }
+    if (RegExp(r'^\s*(-{3,}|\*{3,}|_{3,})\s*$').hasMatch(line) ||
+        _isTableDelimiter(line)) {
+      continue;
+    }
+    final prose = line.replaceFirst(
+      RegExp(r'^\s*(?:#{1,6}\s+|>\s?|[-*+]\s+|\d+\.\s+)'),
+      '',
+    );
+    output.writeln(
+      prose.replaceAllMapped(_InlineParser._pattern, (match) {
+        if (match.group(6) != null) return ' ';
+        // Link destinations live in group 8 and are deliberately never spoken.
+        return match.group(7) ??
+            match.group(1) ??
+            match.group(2) ??
+            match.group(3) ??
+            match.group(4) ??
+            match.group(5) ??
+            '';
+      }),
+    );
+    if (output.length > 12000) {
+      throw const FormatException('Speech text is too long');
+    }
+  }
+  return output.toString().trim();
+}
+
 /// An inline code chip whose text looks like a file path. Renders exactly
 /// like [_CodeSpan] until the server confirms the file is readable, then
 /// gains link styling and a tap target. Invalid or unreachable paths keep

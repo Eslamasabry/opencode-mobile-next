@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
 import '../app_theme.dart';
 import '../widgets/product_states.dart';
+import 'connection_help_screen.dart';
 
 /// Setup guide. Leads with the one story a first-time user needs — run
 /// `opencode2 pair`, scan or paste, start talking — and folds every other
@@ -15,6 +17,7 @@ class GuideScreen extends StatelessWidget {
 
   Widget _body(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     // The on-device path is Termux, which is Android-only. A desktop reader
     // is told about the one path that exists for them rather than a second
     // one they cannot take.
@@ -79,6 +82,16 @@ class GuideScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.help_outline_rounded),
+          title: Text(l10n.connectionHelpTitle),
+          subtitle: Text(l10n.connectionHelpEntrySubtitle),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () => Navigator.of(context).push<void>(
+            MaterialPageRoute(builder: (_) => const ConnectionHelpScreen()),
+          ),
+        ),
         Theme(
           data: theme.copyWith(dividerColor: Colors.transparent),
           child: ExpansionTile(
@@ -104,13 +117,7 @@ class GuideScreen extends StatelessWidget {
                     'add the resulting https:// URL by hand. Remote HTTP is '
                     'intentionally blocked.',
                   ),
-                  _tip(
-                    context,
-                    'Keep it off the public internet. Use HTTPS through a '
-                    'private network such as Tailscale, or an SSH tunnel:\n'
-                    'ssh -L 4096:127.0.0.1:4096 user@host\n…then connect to '
-                    'http://127.0.0.1:4096 from a port-forward app.',
-                  ),
+                  _tip(context, l10n.connectionHelpGuideTip),
                 ],
               ),
               _Section(
@@ -177,8 +184,9 @@ class GuideScreen extends StatelessWidget {
                     onDevice
                         ? 'Passwords are stored in the Android Keystore on '
                               'this device only.'
-                        : 'Passwords are stored in this desktop’s secret '
-                              'service (libsecret) on this machine only.',
+                        : platformCapabilities.platform == TargetPlatform.iOS
+                        ? l10n.iosKeychainGuide
+                        : l10n.platformSecureStorageGuide,
                   ),
                   const Bullet(
                     'The server can execute commands on its host — treat access like SSH access.',

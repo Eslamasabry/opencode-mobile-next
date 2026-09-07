@@ -43,6 +43,19 @@ class AboutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final largeLabels = AppTheme.stackedActions(context);
+    final theme = Theme.of(context);
+    final labelStyle =
+        theme.tabBarTheme.labelStyle ?? theme.textTheme.titleSmall;
+    // Keep full-size labels and icon clearance rather than clipping text or
+    // shrinking the user's accessibility setting into the stock 72dp tab.
+    final tabHeight = largeLabels
+        ? 48 +
+              MediaQuery.textScalerOf(
+                    context,
+                  ).scale(labelStyle?.fontSize ?? AppTheme.bodyFontSize) *
+                  (labelStyle?.height ?? 1.4)
+        : null;
     return DefaultTabController(
       length: 2,
       initialIndex: initialTab.clamp(0, 1),
@@ -57,10 +70,20 @@ class AboutScreen extends StatelessWidget {
               icon: const Icon(Icons.bug_report_outlined),
             ),
           ],
-          bottom: const TabBar(
+          bottom: TabBar(
+            isScrollable: largeLabels,
+            tabAlignment: largeLabels ? TabAlignment.start : TabAlignment.fill,
             tabs: [
-              Tab(icon: Icon(Icons.privacy_tip_outlined), text: 'Privacy'),
-              Tab(icon: Icon(Icons.code_rounded), text: 'Open source'),
+              Tab(
+                height: tabHeight,
+                icon: const Icon(Icons.privacy_tip_outlined),
+                text: 'Privacy',
+              ),
+              Tab(
+                height: tabHeight,
+                icon: const Icon(Icons.code_rounded),
+                text: 'Open source',
+              ),
             ],
           ),
         ),
@@ -188,6 +211,10 @@ class _DocumentView extends StatelessWidget {
               title: Text(
                 platformCapabilities.supportsVoice
                     ? 'OpenCode for Android'
+                    : platformCapabilities.platform == TargetPlatform.iOS
+                    ? lookupAppLocalizations(
+                        Localizations.localeOf(context),
+                      ).iosAppTitle
                     : 'OpenCode for desktop',
               ),
               subtitle: Text(
@@ -195,6 +222,10 @@ class _DocumentView extends StatelessWidget {
                     ? 'A mobile client for an OpenCode server. Voice '
                           'recognition runs locally after optional model '
                           'downloads.'
+                    : platformCapabilities.platform == TargetPlatform.iOS
+                    ? lookupAppLocalizations(
+                        Localizations.localeOf(context),
+                      ).iosRemoteSummary
                     : 'A desktop client for an OpenCode server.',
               ),
             ),

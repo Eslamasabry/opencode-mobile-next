@@ -140,7 +140,9 @@ class _ProviderQuotaScreenState extends State<ProviderQuotaScreen> {
                     const SizedBox(height: 4),
                     Text(_source(l10n), style: theme.textTheme.bodyMedium),
                     const SizedBox(height: 16),
-                    if (!_overview.consented) ...[
+                    if (!_overview.providerSupported)
+                      _Notice(text: l10n.quotaClaudeUnavailable)
+                    else if (!_overview.consented) ...[
                       Text(
                         l10n.quotaSetupTitle,
                         style: theme.textTheme.titleMedium,

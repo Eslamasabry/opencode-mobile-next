@@ -219,7 +219,11 @@ Future<void> _finishRouteAnimation(
   await tester.pump();
 }
 
-Future<void> _reveal(WidgetTester tester, Finder target) async {
+Future<void> _reveal(
+  WidgetTester tester,
+  Finder target, {
+  double alignment = 0,
+}) async {
   if (target.evaluate().isEmpty) {
     await tester.scrollUntilVisible(
       target,
@@ -227,9 +231,8 @@ Future<void> _reveal(WidgetTester tester, Finder target) async {
       maxScrolls: 60,
       scrollable: find.byType(Scrollable).first,
     );
-  } else {
-    await tester.ensureVisible(target);
   }
+  await Scrollable.ensureVisible(tester.element(target), alignment: alignment);
   await tester.pump();
   expect(target.hitTestable(), findsOneWidget);
 }
@@ -1051,19 +1054,87 @@ void main() {
       await _frames(tester);
       expect(old.closes, 1);
       expect(h.overview.consented, isFalse);
-      expect(tester.widget<Checkbox>(find.byType(Checkbox)).value, isFalse);
+      expect(find.byType(Checkbox), findsNothing);
+      expect(find.text(_l10n.quotaClaudeUnavailable), findsOneWidget);
       old.result.complete(_snapshot());
       await _frames(tester);
       expect(find.text(_l10n.quotaCodexAccount), findsNothing);
       expect(h.gateways, hasLength(1));
-      await _consentAndRead(tester, h);
-      await _finishRead(tester, h, _snapshot(provider: QuotaProvider.claude));
-      expect(find.text(_l10n.quotaClaudeAccount), findsOneWidget);
-      expect(find.text(_l10n.quotaSourceBound), findsOneWidget);
+      await h.overview.allowAndRefresh();
+      await _frames(tester);
+      expect(h.gateways, hasLength(1));
+      expect(_readButton, findsNothing);
+      expect(find.text(_l10n.quotaClaudeAccount), findsNothing);
       expect(find.text(_l10n.quotaCodexAccount), findsNothing);
       expect(tester.takeException(), isNull);
     },
   );
+
+  for (final brightness in Brightness.values) {
+    testWidgets(
+      '${brightness.name} Claude stays unavailable and returning to Codex requires fresh consent at 360x740 and 2.5x',
+      (tester) async {
+        final h = await harness(tester);
+        await _pumpHome(
+          tester,
+          ProviderQuotaScreen(controller: h.connection, overview: h.overview),
+          ownedOverview: h.overview,
+          size: const Size(360, 740),
+          textScale: 2.5,
+          keyboardInset: 320,
+          brightness: brightness,
+          reducedMotion: true,
+        );
+        await _consentAndRead(tester, h);
+        await _finishRead(tester, h, _snapshot());
+        await tester.drag(find.byType(ListView), const Offset(0, 5000));
+        await _frames(tester);
+        final claude = find.widgetWithText(ChoiceChip, _l10n.quotaClaude);
+        await _reveal(tester, claude);
+        expect(tester.getSize(claude).height, greaterThanOrEqualTo(48));
+        await _tabTo(tester, claude);
+        await tester.sendKeyEvent(LogicalKeyboardKey.space);
+        await _frames(tester);
+        expect(h.overview.provider, QuotaProvider.claude);
+        expect(h.overview.consented, isFalse);
+        expect(h.overview.snapshot, isNull);
+        await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+        await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+        final notice = find.text(_l10n.quotaClaudeUnavailable);
+        // This paragraph is taller than the keyboard-reduced viewport. Center
+        // it for the hit-test without requiring all of its text to fit at once.
+        await _reveal(tester, notice, alignment: .5);
+        expect(
+          tester.getSemantics(notice),
+          isSemantics(label: _l10n.quotaClaudeUnavailable, isLiveRegion: true),
+        );
+        await expectLater(tester, meetsGuideline(textContrastGuideline));
+        expect(find.byType(Checkbox), findsNothing);
+        expect(_readButton, findsNothing);
+        expect(_retryButton, findsNothing);
+        expect(_stopButton, findsNothing);
+        expect(_refreshIcon, findsNothing);
+        expect(h.gateways, hasLength(1));
+        expect(h.gateways.single.reads, 1);
+
+        await tester.drag(find.byType(ListView), const Offset(0, 5000));
+        await _frames(tester);
+        final codex = find.widgetWithText(ChoiceChip, _l10n.quotaCodex);
+        await _reveal(tester, codex);
+        await _tabTo(tester, codex);
+        await tester.sendKeyEvent(LogicalKeyboardKey.space);
+        await _frames(tester);
+        expect(h.overview.provider, QuotaProvider.codex);
+        expect(h.overview.consented, isFalse);
+        await _reveal(tester, find.byType(Checkbox));
+        expect(tester.widget<Checkbox>(find.byType(Checkbox)).value, isFalse);
+        await _reveal(tester, _readButton);
+        expect(tester.widget<FilledButton>(_readButton).onPressed, isNull);
+        expect(h.gateways, hasLength(1));
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 
   testWidgets(
     'Settings opens Remaining usage for a saved v1 profile without quota probing',

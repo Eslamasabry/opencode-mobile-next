@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/product_repository.dart' show ProductException;
 import '../../api/server_probe.dart';
+import '../../demo/demo_copy.dart';
+import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
 import '../../state/pairing.dart';
@@ -13,6 +15,8 @@ import '../../state/profiles.dart';
 import '../app_theme.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/product_states.dart';
+import 'demo_screen.dart';
+import 'attention_overview_screen.dart';
 import 'pairing_scanner_screen.dart';
 
 /// What the servers list learns back from the editor's save: whether the
@@ -270,6 +274,37 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
           ],
         ),
         actions: [
+          if (bootstrap.store.profiles.isNotEmpty)
+            IconButton(
+              tooltip: lookupAppLocalizations(
+                Localizations.localeOf(context),
+              ).attentionTitle,
+              icon: const Icon(Icons.notifications_none_rounded),
+              onPressed: _busy
+                  ? null
+                  : () async {
+                      final controller = ref.read(connProvider);
+                      final chosen = await Navigator.of(context).push<String>(
+                        MaterialPageRoute(
+                          builder: (sheetContext) => AttentionOverviewScreen(
+                            controller: controller,
+                            onOpenProfile: (id) =>
+                                Navigator.of(sheetContext).pop(id),
+                          ),
+                        ),
+                      );
+                      if (!mounted ||
+                          chosen == null ||
+                          !controller.isProfileReadable(chosen)) {
+                        return;
+                      }
+                      final matches = bootstrap.store.profiles
+                          .where((profile) => profile.id == chosen)
+                          .toList();
+                      if (matches.length != 1) return;
+                      await _connect(matches.single);
+                    },
+            ),
           IconButton(
             tooltip: 'About and open source notices',
             icon: const Icon(Icons.info_outline_rounded),
@@ -291,6 +326,9 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
               onConnect: () => _edit(),
               onTermux: () => Navigator.pushNamed(context, '/termux-setup'),
               onGuide: () => Navigator.pushNamed(context, '/guide'),
+              onDemo: () => Navigator.of(context).push<void>(
+                MaterialPageRoute<void>(builder: (_) => const DemoScreen()),
+              ),
             );
           }
           final activeId = store.activeId;
@@ -483,12 +521,14 @@ class _WelcomeView extends StatelessWidget {
   final VoidCallback onConnect;
   final VoidCallback onTermux;
   final VoidCallback onGuide;
+  final VoidCallback onDemo;
 
   const _WelcomeView({
     required this.busy,
     required this.onConnect,
     required this.onTermux,
     required this.onGuide,
+    required this.onDemo,
   });
 
   @override
@@ -555,6 +595,24 @@ class _WelcomeView extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 24),
+                    OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(48, 48),
+                        padding: const EdgeInsets.all(16),
+                      ),
+                      onPressed: busy ? null : onDemo,
+                      child: const Column(
+                        children: [
+                          Text(DemoCopy.tryDemo),
+                          SizedBox(height: 4),
+                          Text(
+                            DemoCopy.entryDescription,
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
                     _WelcomeCard(
                       cardKey: const ValueKey('welcome-connect-card'),
                       icon: Icons.dns_rounded,
