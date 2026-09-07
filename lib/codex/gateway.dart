@@ -56,6 +56,7 @@ const codexServerCapabilities = ServerCapabilities(
   configuredProviderFallback: false,
   globalEventStream: false,
   worktreeReset: false,
+  worktreeCreate: false,
   legacyQuestionRequests: false,
   forms: false,
   inbox: false,

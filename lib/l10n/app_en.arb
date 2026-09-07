@@ -1333,5 +1333,143 @@
     "placeholders": {
       "count": {"type": "int"}
     }
+  },
+  "isolatedTaskAction": "Start a task in a fresh worktree",
+  "@isolatedTaskAction": {
+    "description": "Tooltip and accessibility label of the workspace action that opens the fresh-worktree task sheet"
+  },
+  "isolatedTaskTitle": "New task in a fresh worktree",
+  "@isolatedTaskTitle": {
+    "description": "Title of the fresh-worktree task sheet"
+  },
+  "isolatedTaskIntro": "OpenCode creates a new Git worktree and branch for {project} and runs the project's setup. The worktree stays listed under Manage project until you remove it there.",
+  "@isolatedTaskIntro": {
+    "description": "Explanation shown before the user starts a fresh-worktree task",
+    "placeholders": {
+      "project": {"type": "String"}
+    }
+  },
+  "isolatedTaskNameLabel": "Worktree name (optional)",
+  "@isolatedTaskNameLabel": {
+    "description": "Label of the optional worktree name field"
+  },
+  "isolatedTaskNameHelper": "Leave empty to let OpenCode choose a name.",
+  "@isolatedTaskNameHelper": {
+    "description": "Helper text under the optional worktree name field"
+  },
+  "isolatedTaskStart": "Create and start",
+  "@isolatedTaskStart": {
+    "description": "Primary button that creates the worktree and waits for it"
+  },
+  "isolatedTaskCreating": "Creating the worktree…",
+  "@isolatedTaskCreating": {
+    "description": "Status while the create request is in flight"
+  },
+  "isolatedTaskCreatingHint": "Stopping now cannot undo a create the server may already be running.",
+  "@isolatedTaskCreatingHint": {
+    "description": "Caution under the creating status: cancelling does not imply server rollback"
+  },
+  "isolatedTaskPreparing": "{name} was created. OpenCode is preparing it…",
+  "@isolatedTaskPreparing": {
+    "description": "Status after the server returned the worktree, before its readiness event",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "isolatedTaskReady": "{name} is ready. Opening a blank session…",
+  "@isolatedTaskReady": {
+    "description": "Status once the worktree reported ready and the session is being opened",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "isolatedTaskReadyIdle": "{name} is ready.",
+  "@isolatedTaskReadyIdle": {
+    "description": "Status when the worktree is ready but the last open attempt failed and nothing is in flight",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "isolatedTaskUnconfirmed": "{name} was created, but its setup status is not confirmed.",
+  "@isolatedTaskUnconfirmed": {
+    "description": "Status when no readiness event arrived within the wait",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "isolatedTaskUnconfirmedHint": "You can keep waiting or open it now. Setup may still be running.",
+  "@isolatedTaskUnconfirmedHint": {
+    "description": "Explanation under the unconfirmed status"
+  },
+  "isolatedTaskFailed": "OpenCode could not prepare the worktree.",
+  "@isolatedTaskFailed": {
+    "description": "Status when the server reported worktree.failed"
+  },
+  "isolatedTaskCreateFailed": "The worktree could not be created.",
+  "@isolatedTaskCreateFailed": {
+    "description": "Status when the create request itself failed"
+  },
+  "isolatedTaskFailedKept": "{name} stays listed under Manage project. Nothing was deleted.",
+  "@isolatedTaskFailedKept": {
+    "description": "Note under a failed preparation: the created worktree is kept",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "isolatedTaskCancelled": "Stopped waiting.",
+  "@isolatedTaskCancelled": {
+    "description": "Status after the user stopped waiting for readiness"
+  },
+  "isolatedTaskCancelledKept": "{name} was created and stays listed under Manage project.",
+  "@isolatedTaskCancelledKept": {
+    "description": "Note after stopping when the server had already returned the worktree",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "isolatedTaskCancelledUnknown": "If OpenCode created the worktree, it appears under Manage project.",
+  "@isolatedTaskCancelledUnknown": {
+    "description": "Note after stopping before the create request answered"
+  },
+  "isolatedTaskOpening": "Opening a blank session in {name}…",
+  "@isolatedTaskOpening": {
+    "description": "Status while switching scope and creating the session",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "isolatedTaskOpened": "Session ready in {name}. Nothing has been sent.",
+  "@isolatedTaskOpened": {
+    "description": "Status once the blank session exists in the worktree",
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "isolatedTaskBranch": "Branch {branch}",
+  "@isolatedTaskBranch": {
+    "description": "Branch line under the worktree status",
+    "placeholders": {
+      "branch": {"type": "String"}
+    }
+  },
+  "isolatedTaskStopWaiting": "Stop waiting",
+  "@isolatedTaskStopWaiting": {
+    "description": "Button that stops waiting for readiness without deleting anything"
+  },
+  "isolatedTaskKeepWaiting": "Keep waiting",
+  "@isolatedTaskKeepWaiting": {
+    "description": "Button that waits another period for the readiness event"
+  },
+  "isolatedTaskOpenAnyway": "Open anyway",
+  "@isolatedTaskOpenAnyway": {
+    "description": "Button that opens a session in a worktree whose setup is unconfirmed"
+  },
+  "isolatedTaskRetryOpen": "Try again",
+  "@isolatedTaskRetryOpen": {
+    "description": "Button that retries opening the session after an open error"
+  },
+  "isolatedTaskClose": "Close",
+  "@isolatedTaskClose": {
+    "description": "Close action on the fresh-worktree task sheet"
   }
 }

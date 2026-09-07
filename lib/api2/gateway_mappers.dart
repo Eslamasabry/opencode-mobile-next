@@ -62,6 +62,9 @@ const ServerCapabilities api2ServerCapabilities = ServerCapabilities(
   configuredProviderFallback: false,
   globalEventStream: true,
   worktreeReset: false,
+  // The v2 create body ({strategy, directory} required) is unproven against
+  // the adapter's {name}-only request; see ServerCapabilities.worktreeCreate.
+  worktreeCreate: false,
   legacyQuestionRequests: false,
   forms: true,
   inbox: true,

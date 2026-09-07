@@ -17,6 +17,7 @@ import '../widgets/session_title.dart';
 import '../widgets/session_read_state.dart';
 import '../widgets/session_inventory_footer.dart';
 import 'global_sessions_screen.dart';
+import 'isolated_task_sheet.dart';
 import 'manage_project_screen.dart';
 import 'projects_screen.dart';
 import 'settings_screen.dart';
@@ -277,6 +278,37 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     } finally {
       if (mounted) setState(() => _creating = false);
     }
+  }
+
+  /// The project a fresh-worktree task would be created for, or null when
+  /// the action must stay hidden: no contract-proven create on this
+  /// connection, no project selected, or a managed workspace (not a local
+  /// git checkout) is active.
+  WorkspaceProject? get _isolatedTaskProject {
+    final capabilities = widget.controller.capabilities;
+    if (!capabilities.projectManagement || !capabilities.worktreeCreate) {
+      return null;
+    }
+    if (_selectedWorkspaceID != null) return null;
+    final project = _selectedProject;
+    if (project == null || project.directory.trim().isEmpty) return null;
+    return project;
+  }
+
+  Future<void> _startIsolatedTask() async {
+    final project = _isolatedTaskProject;
+    if (_creating || project == null) return;
+    final session = await showIsolatedTaskSheet(
+      context,
+      controller: widget.controller,
+      project: project,
+    );
+    if (!mounted || session == null) return;
+    await Navigator.of(context).pushNamed(
+      '/chat/${session.id}',
+      arguments: const ChatRouteArguments.newlyCreated(),
+    );
+    if (mounted) await widget.controller.refreshSessions();
   }
 
   @override
@@ -677,6 +709,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           child: _QuickAskPill(
             creating: _creating,
             onTap: _creating ? null : _createSession,
+            onIsolatedTask: _isolatedTaskProject == null
+                ? null
+                : _startIsolatedTask,
+            isolatedTaskLabel: l10n.isolatedTaskAction,
           ),
         ),
       ],
@@ -1552,81 +1588,111 @@ class _BreathingDotState extends State<_BreathingDot>
 /// A composer-shaped invitation docked to the workspace: it looks like the
 /// chat input and opens a fresh session in the active project ready to type.
 class _QuickAskPill extends StatelessWidget {
-  const _QuickAskPill({required this.creating, required this.onTap});
+  const _QuickAskPill({
+    required this.creating,
+    required this.onTap,
+    this.onIsolatedTask,
+    this.isolatedTaskLabel,
+  });
 
   final bool creating;
   final VoidCallback? onTap;
+
+  /// Explicit fresh-worktree launch, shown as its own 48dp target beside the
+  /// plain quick-ask tap. Null hides it (capability or project missing).
+  final VoidCallback? onIsolatedTask;
+  final String? isolatedTaskLabel;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    return Semantics(
-      button: true,
-      label: 'New session',
-      child: Material(
-        key: const ValueKey('workspace-quick-ask'),
-        color: scheme.surfaceContainerLow,
-        elevation: 6,
-        shadowColor: scheme.surfaceContainerLowest,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: .85)),
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(24),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(18, 14, 12, 14),
-            child: Row(
-              children: [
-                Text(
-                  '❯',
-                  style: theme.textTheme.titleMedium!.copyWith(
-                    color: scheme.primary,
-                    fontFamily: AppTheme.monoFamily,
-                  ),
+    final isolated = onIsolatedTask;
+    return Material(
+      key: const ValueKey('workspace-quick-ask'),
+      color: scheme.surfaceContainerLow,
+      elevation: 6,
+      shadowColor: scheme.surfaceContainerLowest,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: .85)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Semantics(
+              button: true,
+              label: 'New session',
+              child: InkWell(
+                borderRadius: BorderRadius.circular(24),
+                onTap: onTap,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 14, 12, 14),
+                  child: _pillBody(theme, scheme),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Ask OpenCode…',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: AppTheme.mutedOf(theme),
-                    ),
-                  ),
-                ),
-                if (creating)
-                  const Padding(
-                    padding: EdgeInsets.all(8),
-                    child: SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  )
-                else
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: scheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      Icons.add_rounded,
-                      size: 21,
-                      color: scheme.onPrimaryContainer,
-                    ),
-                  ),
-              ],
+              ),
             ),
           ),
-        ),
+          if (isolated != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: IconButton(
+                key: const ValueKey('workspace-isolated-task'),
+                tooltip: isolatedTaskLabel,
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                onPressed: creating ? null : isolated,
+                icon: const Icon(Icons.account_tree_outlined),
+              ),
+            ),
+        ],
       ),
     );
   }
+
+  Widget _pillBody(ThemeData theme, ColorScheme scheme) => Row(
+    children: [
+      Text(
+        '❯',
+        style: theme.textTheme.titleMedium!.copyWith(
+          color: scheme.primary,
+          fontFamily: AppTheme.monoFamily,
+        ),
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: Text(
+          'Ask OpenCode…',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: AppTheme.mutedOf(theme),
+          ),
+        ),
+      ),
+      if (creating)
+        const Padding(
+          padding: EdgeInsets.all(8),
+          child: SizedBox.square(
+            dimension: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        )
+      else
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: scheme.primaryContainer,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            Icons.add_rounded,
+            size: 21,
+            color: scheme.onPrimaryContainer,
+          ),
+        ),
+    ],
+  );
 }
 
 /// Compact usage labels for a session row: cost to the cent, and the diff

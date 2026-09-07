@@ -26,6 +26,7 @@ import '../background/live_background.dart';
 import '../background/widget_snapshot.dart';
 import '../diagnostics/app_diagnostics.dart';
 import '../termux/bridge.dart';
+import 'isolated_task_launch.dart';
 import 'model_library.dart';
 import 'offline_queue.dart';
 import 'profiles.dart';
@@ -3935,6 +3936,13 @@ class ConnectionController extends ChangeNotifier {
   @visibleForTesting
   void handleEventForTesting(EventEnvelope event) => _onEvent(event);
 
+  /// Marks [profile] as the connected one without a transport, so tests can
+  /// exercise profile-bound guards such as [openSessionInWorktree].
+  @visibleForTesting
+  void adoptConnectedProfileForTesting(ServerProfile profile) {
+    _connectedProfile = profile;
+  }
+
   // ---------------- Sessions ----------------
 
   Future<void> refreshSessions() async {
@@ -6310,8 +6318,15 @@ class ConnectionController extends ChangeNotifier {
     );
   }
 
-  Future<Session> createSession() async {
+  Future<Session> createSession() => _createSession();
+
+  Future<Session> _createSession({bool Function()? scopeIsCurrent}) async {
     final currentApi = await _requireActionTransport();
+    if (scopeIsCurrent != null && !scopeIsCurrent()) {
+      throw const ProductException(
+        'The connection or location changed. Start the task again.',
+      );
+    }
     final generation = _generation;
     final revision = _sessionRevision;
     final session = currentApi is SessionSelectionGateway
@@ -6323,6 +6338,12 @@ class ConnectionController extends ChangeNotifier {
             ),
           )
         : await currentApi.createSession();
+    if (scopeIsCurrent != null && !scopeIsCurrent()) {
+      throw const ProductException(
+        'The connection or location changed while the session was created. '
+        'Find it in the original worktree before using it.',
+      );
+    }
     if (_isCurrent(generation, currentApi) &&
         (_sessionRevisions[session.id] ?? 0) <= revision) {
       _markSessionChanged(session.id);
@@ -6856,6 +6877,145 @@ class ConnectionController extends ChangeNotifier {
     locationLoading = false;
     notifyListeners();
     if (_pendingLocationRevalidation) unawaited(revalidateRestoredLocation());
+  }
+
+  /// Starts an explicit "new task in a fresh worktree" run for [project] on
+  /// the connected profile. The launch subscribes to [events] before the
+  /// create call, and [openSessionInWorktree] is the only route into a
+  /// session. Requires [ServerCapabilities.worktreeCreate]; the caller owns
+  /// the returned launch and disposes it.
+  IsolatedTaskLaunch startIsolatedTask({
+    required WorkspaceProject project,
+    String? name,
+    Duration readinessTimeout = const Duration(seconds: 45),
+  }) {
+    if (!capabilities.worktreeCreate) {
+      throw const ProductException(
+        'Creating worktrees is not available on this connection.',
+      );
+    }
+    final profileID = _connectedProfile?.id;
+    final launchDirectory = directory;
+    final launchWorkspace = workspace;
+    final launchRevision = locationRevision;
+    bool launchScopeIsCurrent() =>
+        profileID != null &&
+        _connectedProfile?.id == profileID &&
+        directory == launchDirectory &&
+        workspace == launchWorkspace &&
+        locationRevision == launchRevision;
+    final trimmed = name?.trim();
+    final requestedName = trimmed?.isNotEmpty == true ? trimmed : null;
+    var openingAttempted = false;
+    final launch = IsolatedTaskLaunch(
+      project: project,
+      requestedName: requestedName,
+      events: events,
+      readinessTimeout: readinessTimeout,
+      create: () async {
+        if (!launchScopeIsCurrent()) {
+          throw const ProductException(
+            'The connection changed. Start the task again.',
+          );
+        }
+        final currentRepository = await prepareActionRepository();
+        if (currentRepository == null || !launchScopeIsCurrent()) {
+          throw const ProductException(
+            'OpenCode is reconnecting. Try again shortly.',
+          );
+        }
+        return currentRepository.createWorktree(
+          projectDirectory: project.directory,
+          name: requestedName,
+        );
+      },
+      open: (directory) {
+        if (!openingAttempted && !launchScopeIsCurrent()) {
+          throw const ProductException(
+            'The connection or location changed. Start the task again.',
+          );
+        }
+        // A retry is an explicit choice to reopen this same destination;
+        // the first attempt may already have switched into the worktree.
+        openingAttempted = true;
+        return openSessionInWorktree(
+          project: project,
+          directory: directory,
+          profileID: profileID,
+        );
+      },
+    );
+    unawaited(launch.start());
+    return launch;
+  }
+
+  /// Switches scope to [directory] and creates a blank session there, only
+  /// while the same profile is connected and the switched scope still
+  /// resolves to [project]. A mismatch throws before any session exists, so
+  /// a connection or scope change cannot retarget the task at another
+  /// project. Nothing is sent to the new session.
+  Future<Session> openSessionInWorktree({
+    required WorkspaceProject project,
+    required String directory,
+    String? profileID,
+  }) async {
+    final profile = _connectedProfile;
+    if (profile == null || (profileID != null && profile.id != profileID)) {
+      throw const ProductException(
+        'The connection changed. Start the task again.',
+      );
+    }
+    if (!capabilities.worktreeCreate) {
+      throw const ProductException(
+        'Creating worktrees is not available on this connection.',
+      );
+    }
+    await selectLocation(directory: directory);
+    if (_connectedProfile?.id != profile.id ||
+        !sameDirectoryPath(this.directory, directory)) {
+      throw const ProductException(
+        'OpenCode did not switch to the new worktree.',
+      );
+    }
+    final currentRepository = await prepareActionRepository();
+    if (currentRepository == null ||
+        _connectedProfile?.id != profile.id ||
+        !sameDirectoryPath(this.directory, directory)) {
+      throw const ProductException(
+        'OpenCode is reconnecting. Try again shortly.',
+      );
+    }
+    final current = await currentRepository.loadCurrentProject();
+    if (current == null || current.id != project.id) {
+      throw const ProductException(
+        'The worktree could not be confirmed for this project. '
+        'No session was started.',
+      );
+    }
+    if (_connectedProfile?.id != profile.id ||
+        !identical(repository, currentRepository) ||
+        !sameDirectoryPath(this.directory, directory)) {
+      throw const ProductException(
+        'The location changed before the session could start.',
+      );
+    }
+    final revision = locationRevision;
+    bool scopeIsCurrent() =>
+        _connectedProfile?.id == profile.id &&
+        locationRevision == revision &&
+        sameDirectoryPath(this.directory, directory);
+    final session = await _createSession(scopeIsCurrent: scopeIsCurrent);
+    final sessionProject = session.projectID?.trim() ?? '';
+    final sessionDirectory = session.directory;
+    if ((sessionProject.isNotEmpty && sessionProject != project.id) ||
+        (sessionDirectory != null &&
+            !sameDirectoryPath(sessionDirectory, directory))) {
+      throw ProductException(
+        'The session opened outside the new worktree, so it was not started '
+        'here. Find it in the session list before using it.',
+      );
+    }
+    return session;
   }
 
   Future<void> moveSessionToDirectory(

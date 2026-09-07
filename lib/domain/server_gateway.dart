@@ -875,6 +875,16 @@ class ServerCapabilities {
   final bool configuredProviderFallback;
   final bool globalEventStream;
   final bool worktreeReset;
+
+  /// Creating a fresh git worktree through a contract-proven call. True on v1,
+  /// whose generated `worktreeCreate` (`POST /experimental/worktree`,
+  /// `WorktreeCreateInput{name?}` → `Worktree{name, directory, branch?}`) is
+  /// pinned to upstream commit `f12e14cf`. False on v2: its
+  /// `POST /api/worktree/{projectID}` requires `{strategy, directory}` that
+  /// the adapter does not send and the snapshot does not enumerate, so the
+  /// create action is not presented as usable there. Listing, opening and
+  /// inspecting worktrees do not depend on this switch.
+  final bool worktreeCreate;
   final bool legacyQuestionRequests;
 
   /// OpenCode 2 structured forms (`/api/session/{id}/form`); replaces the
@@ -934,6 +944,7 @@ class ServerCapabilities {
     this.configuredProviderFallback = true,
     this.globalEventStream = true,
     this.worktreeReset = true,
+    this.worktreeCreate = true,
     this.legacyQuestionRequests = true,
     this.forms = false,
     this.inbox = false,
