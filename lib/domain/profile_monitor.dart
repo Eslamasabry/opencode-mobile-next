@@ -113,6 +113,7 @@ class ObservedBusyInterval {
     this.title,
     this.directory,
     this.workspace,
+    this.reminderClaimed = false,
   });
   final String sessionID;
   final DateTime firstObservedBusyAt;
@@ -120,6 +121,9 @@ class ObservedBusyInterval {
   final String? title;
   final String? directory;
   final String? workspace;
+
+  /// Persisted before native dispatch, independently of notification dismissal.
+  final bool reminderClaimed;
 
   /// Stable within one interval; a later interval for the same session gets
   /// a different id, so a reminder key derived from it fires again for it.
@@ -150,6 +154,17 @@ class ObservedBusyInterval {
     title: title ?? this.title,
     directory: directory ?? this.directory,
     workspace: workspace ?? this.workspace,
+    reminderClaimed: reminderClaimed,
+  );
+
+  ObservedBusyInterval claimReminder() => ObservedBusyInterval(
+    sessionID: sessionID,
+    firstObservedBusyAt: firstObservedBusyAt,
+    lastObservedBusyAt: lastObservedBusyAt,
+    title: title,
+    directory: directory,
+    workspace: workspace,
+    reminderClaimed: true,
   );
 
   MonitoredRequest toRequest() => MonitoredRequest(
@@ -165,9 +180,9 @@ class ObservedBusyInterval {
     'sessionID': sessionID,
     'firstObservedBusyAt': firstObservedBusyAt.millisecondsSinceEpoch,
     'lastObservedBusyAt': lastObservedBusyAt.millisecondsSinceEpoch,
-    'title': title,
     'directory': directory,
     'workspace': workspace,
+    'reminderClaimed': reminderClaimed,
   };
 
   static ObservedBusyInterval? fromJson(Object? value) {
@@ -185,6 +200,7 @@ class ObservedBusyInterval {
       title: value['title']?.toString(),
       directory: value['directory']?.toString(),
       workspace: value['workspace']?.toString(),
+      reminderClaimed: value['reminderClaimed'] == true,
     );
   }
 }

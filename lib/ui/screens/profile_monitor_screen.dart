@@ -166,16 +166,16 @@ class ProfileMonitorInbox extends StatelessWidget {
           ),
         ),
         for (final profile in controller.store.profiles)
-          if (profile.id != controller.profile?.id &&
-              controller.isProfileReadable(profile.id))
+          if (controller.isProfileReadable(profile.id))
             if (monitor.snapshotFor(profile.id) case final snapshot
                 when snapshot.isCurrent) ...[
-              for (final request in snapshot.requests)
-                _MonitorRequestRow(
-                  controller: controller,
-                  profile: profile,
-                  request: request,
-                ),
+              if (profile.id != controller.profile?.id)
+                for (final request in snapshot.requests)
+                  _MonitorRequestRow(
+                    controller: controller,
+                    profile: profile,
+                    request: request,
+                  ),
               for (final interval in snapshot.dueCheckIns(
                 monitor.rulesFor(profile.id),
               ))
@@ -455,33 +455,36 @@ class _MonitorProfileState extends State<_MonitorProfile> {
                   ),
           ),
           if (rules.checkInAfterMinutes != null)
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.monitorCheckInAfter),
-              trailing: DropdownButton<int>(
-                key: ValueKey('monitor-check-in-after-${widget.profile.id}'),
-                value:
-                    ProfileNotifyRules.checkInChoices.contains(
-                      rules.checkInAfterMinutes,
-                    )
-                    ? rules.checkInAfterMinutes
-                    : null,
-                hint: Text(l10n.monitorMinutes(rules.checkInAfterMinutes!)),
-                items: [
-                  for (final minutes in ProfileNotifyRules.checkInChoices)
-                    DropdownMenuItem(
-                      value: minutes,
-                      child: Text(l10n.monitorMinutes(minutes)),
-                    ),
-                ],
-                onChanged: _saving
-                    ? null
-                    : (minutes) {
-                        if (minutes != null) {
-                          _save(rules.copyWith(checkInAfterMinutes: minutes));
-                        }
-                      },
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(l10n.monitorCheckInAfter),
+                DropdownButton<int>(
+                  isExpanded: true,
+                  key: ValueKey('monitor-check-in-after-${widget.profile.id}'),
+                  value:
+                      ProfileNotifyRules.checkInChoices.contains(
+                        rules.checkInAfterMinutes,
+                      )
+                      ? rules.checkInAfterMinutes
+                      : null,
+                  hint: Text(l10n.monitorMinutes(rules.checkInAfterMinutes!)),
+                  items: [
+                    for (final minutes in ProfileNotifyRules.checkInChoices)
+                      DropdownMenuItem(
+                        value: minutes,
+                        child: Text(l10n.monitorMinutes(minutes)),
+                      ),
+                  ],
+                  onChanged: _saving
+                      ? null
+                      : (minutes) {
+                          if (minutes != null) {
+                            _save(rules.copyWith(checkInAfterMinutes: minutes));
+                          }
+                        },
+                ),
+              ],
             ),
           if (snapshot.isCurrent && snapshot.requests.isEmpty)
             Padding(

@@ -2,10 +2,11 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/domain/server_gateway.dart';
 import 'package:opencode_mobile/state/profile_monitor.dart';
 import 'package:opencode_mobile/state/profiles.dart';
+import 'package:opencode_mobile/state/connection.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
 import 'support/profile_monitor_fixture.dart';
 
@@ -45,25 +46,42 @@ class _Harness {
   bool statusFailure = false;
   final alerts = <MonitoredRequest>[];
   final dismissed = <String>[];
+  bool alertResult = true;
+  void Function()? beforeAlert;
 
   ProfileMonitor create() => ProfileMonitor(
     store: store,
     isReadable: (_) => true,
     now: () => now,
+    backgroundInterval: const Duration(minutes: 1),
     createGateway: (_) => (
       gateway: _StatusGateway(statuses, statusFailure: statusFailure),
       operations: MonitorTestOperations(),
     ),
     networkWifi: () async => true,
     alert: (_, request, key, token) async {
+      beforeAlert?.call();
       alerts.add(request);
-      return true;
+      return alertResult;
     },
     dismiss: (key) async {
       dismissed.add(key);
       return true;
     },
   );
+}
+
+class _RefusingClaimStore extends InMemorySharedPreferencesStore {
+  _RefusingClaimStore(super.data) : super.withData();
+  @override
+  Future<bool> setValue(String valueType, String key, Object value) async {
+    if (key.endsWith('oc.monitorBusy.profile-1') &&
+        value is String &&
+        value.contains('"reminderClaimed":true')) {
+      return false;
+    }
+    return super.setValue(valueType, key, value);
+  }
 }
 
 void main() {
@@ -135,7 +153,9 @@ void main() {
       expect(h.alerts, isEmpty);
 
       // Observed for 29 minutes: not due yet.
-      h.now = h.now.add(const Duration(minutes: 29));
+      h.now = h.now.add(const Duration(minutes: 15));
+      await monitor.refresh();
+      h.now = h.now.add(const Duration(minutes: 14));
       await monitor.refresh();
       expect(h.alerts, isEmpty);
 
@@ -174,7 +194,9 @@ void main() {
     await monitor.setRules('profile-1', rules);
     monitor.setRuntime(foreground: false, backgroundAllowed: true);
     await monitor.refresh();
-    h.now = h.now.add(const Duration(minutes: 30));
+    h.now = h.now.add(const Duration(minutes: 15));
+    await monitor.refresh();
+    h.now = h.now.add(const Duration(minutes: 15));
     await monitor.refresh();
     expect(h.alerts, hasLength(1));
     final firstKey = ProfileMonitor.alertKey('profile-1', h.alerts.single);
@@ -193,7 +215,9 @@ void main() {
     h.statuses['ses-1'] = 'busy';
     h.now = h.now.add(const Duration(minutes: 1));
     await monitor.refresh();
-    h.now = h.now.add(const Duration(minutes: 30));
+    h.now = h.now.add(const Duration(minutes: 15));
+    await monitor.refresh();
+    h.now = h.now.add(const Duration(minutes: 15));
     await monitor.refresh();
     expect(h.alerts, hasLength(2));
     expect(
@@ -266,7 +290,9 @@ void main() {
     await monitor.setRules('profile-1', rules);
     monitor.setRuntime(foreground: false, backgroundAllowed: true);
     await monitor.refresh();
-    h.now = h.now.add(const Duration(minutes: 30));
+    h.now = h.now.add(const Duration(minutes: 15));
+    await monitor.refresh();
+    h.now = h.now.add(const Duration(minutes: 15));
     await monitor.refresh();
     expect(h.alerts, hasLength(1));
     monitor.dispose();
@@ -291,7 +317,9 @@ void main() {
       addTearDown(monitor.dispose);
       await monitor.setRules('profile-1', rules);
       await monitor.refresh();
-      h.now = h.now.add(const Duration(minutes: 30));
+      h.now = h.now.add(const Duration(minutes: 15));
+      await monitor.refresh();
+      h.now = h.now.add(const Duration(minutes: 15));
 
       // Foreground: the row is due, no notification.
       await monitor.refresh();
@@ -326,13 +354,22 @@ void main() {
     await monitor.setRules('profile-1', rules);
     monitor.setRuntime(foreground: false, backgroundAllowed: true);
     await monitor.refresh();
-    h.now = h.now.add(const Duration(minutes: 30));
+    h.now = h.now.add(const Duration(minutes: 15));
+    await monitor.refresh();
+    h.now = h.now.add(const Duration(minutes: 15));
     await monitor.refresh();
     final key = ProfileMonitor.alertKey('profile-1', h.alerts.single);
     expect(ProfileMonitor.isCheckInAlertKey(key), isTrue);
     expect(
       ProfileMonitor.isCheckInAlertKey(
-        ProfileMonitor.alertKey('profile-1', request(1)),
+        ProfileMonitor.alertKey(
+          'profile-1',
+          const MonitoredRequest(
+            id: 'request-1',
+            sessionID: 'ses-1',
+            kind: MonitoredRequestKind.permission,
+          ),
+        ),
       ),
       isFalse,
     );
@@ -361,6 +398,147 @@ void main() {
       isNull,
     );
   });
+
+  test(
+    'claim is durable before native dispatch and a refused alert is not retried after restart',
+    () async {
+      final h = await harness();
+      h.alertResult = false;
+      h.beforeAlert = () {
+        final saved = h.store.prefs.getString(
+          ProfileMonitor.busyIntervalsKey('profile-1'),
+        )!;
+        expect(saved, contains('"reminderClaimed":true'));
+        expect(saved, isNot(contains('Title of')));
+      };
+      var monitor = h.create();
+      await monitor.setRules('profile-1', rules);
+      monitor.setRuntime(foreground: false, backgroundAllowed: true);
+      for (var i = 0; i < 3; i++) {
+        await monitor.refresh();
+        h.now = h.now.add(const Duration(minutes: 15));
+      }
+      expect(h.alerts, hasLength(1));
+      monitor.dispose();
+      monitor = h.create();
+      addTearDown(monitor.dispose);
+      monitor.setRuntime(foreground: false, backgroundAllowed: true);
+      await monitor.refresh();
+      expect(h.alerts, hasLength(1));
+      expect(monitor.snapshotFor('profile-1').dueCheckIns(rules), hasLength(1));
+    },
+  );
+
+  test(
+    'clearing notification keys by toggling the rule does not repeat its interval',
+    () async {
+      final h = await harness();
+      final monitor = h.create();
+      addTearDown(monitor.dispose);
+      await monitor.setRules('profile-1', rules);
+      monitor.setRuntime(foreground: false, backgroundAllowed: true);
+      for (var i = 0; i < 3; i++) {
+        await monitor.refresh();
+        h.now = h.now.add(const Duration(minutes: 15));
+      }
+      await monitor.setRules('profile-1', rules.copyWith(clearCheckIn: true));
+      await monitor.setRules(
+        'profile-1',
+        rules.copyWith(checkInAfterMinutes: 15),
+      );
+      await monitor.refresh();
+      expect(h.alerts, hasLength(1));
+    },
+  );
+
+  test(
+    'refused durable claim keeps due row but sends no native alert',
+    () async {
+      final h = await harness();
+      final original = SharedPreferencesStorePlatform.instance;
+      SharedPreferencesStorePlatform.instance = _RefusingClaimStore(
+        await original.getAll(),
+      );
+      addTearDown(() => SharedPreferencesStorePlatform.instance = original);
+      final monitor = h.create();
+      addTearDown(monitor.dispose);
+      await monitor.setRules('profile-1', rules);
+      monitor.setRuntime(foreground: false, backgroundAllowed: true);
+      for (var i = 0; i < 3; i++) {
+        await monitor.refresh();
+        h.now = h.now.add(const Duration(minutes: 15));
+      }
+      await monitor.refresh();
+      expect(h.alerts, isEmpty);
+      expect(monitor.snapshotFor('profile-1').dueCheckIns(rules), hasLength(1));
+    },
+  );
+
+  test(
+    'failed dispatch claims do not starve later sessions past the batch limit',
+    () async {
+      final h = await harness(
+        statuses: {for (var i = 0; i < 9; i++) 'ses-$i': 'busy'},
+      );
+      h.alertResult = false;
+      final monitor = h.create();
+      addTearDown(monitor.dispose);
+      await monitor.setRules('profile-1', rules);
+      monitor.setRuntime(foreground: false, backgroundAllowed: true);
+      for (var i = 0; i < 3; i++) {
+        await monitor.refresh();
+        h.now = h.now.add(const Duration(minutes: 15));
+      }
+      expect(h.alerts, hasLength(8));
+      await monitor.refresh();
+      expect(h.alerts, hasLength(9));
+      expect(h.alerts.map((a) => a.sessionID).toSet(), hasLength(9));
+    },
+  );
+
+  test('profile deletion sweeps interval, rules and route data', () async {
+    final h = await harness();
+    final monitor = h.create();
+    await monitor.setRules('profile-1', rules);
+    await monitor.refresh();
+    monitor.dispose();
+    final controller = ConnectionController(h.store);
+    addTearDown(controller.dispose);
+    await controller.deleteProfileAndLocalData('profile-1');
+    expect(
+      h.store.prefs.getKeys().where((key) => key.endsWith('.profile-1')),
+      isEmpty,
+    );
+  });
+
+  test(
+    'same session in a different workspace starts a new observation',
+    () async {
+      final h = await harness();
+      await h.store.setLocation(
+        'profile-1',
+        directory: '/project',
+        workspace: 'a',
+      );
+      final monitor = h.create();
+      addTearDown(monitor.dispose);
+      await monitor.setRules('profile-1', rules);
+      await monitor.refresh();
+      h.now = h.now.add(const Duration(minutes: 15));
+      await monitor.refresh();
+      await h.store.setLocation(
+        'profile-1',
+        directory: '/project',
+        workspace: 'b',
+      );
+      h.now = h.now.add(const Duration(minutes: 15));
+      await monitor.refresh();
+      final interval = monitor.snapshotFor('profile-1').busyIntervals.single;
+      expect(interval.workspace, 'b');
+      expect(interval.observedFor, Duration.zero);
+      expect(h.alerts, isEmpty);
+    },
+  );
 }
 
 String _lastToken(ProfileStore store) {

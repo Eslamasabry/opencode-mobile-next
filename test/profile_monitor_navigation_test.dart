@@ -61,41 +61,48 @@ void main() {
     },
   );
 
-  test(
-    'monitored native alert carries an opaque profile route with no reply actions',
-    () async {
-      final store = await monitorStore(count: 1);
-      Map<String, dynamic>? posted;
-      final background = BackgroundLiveController(
-        preferences: store.prefs,
-        invoke: (method, [arguments]) async {
-          if (method == 'showCodingAlert') posted = arguments;
-          return {
-            'enabled': true,
-            'active': true,
-            'notificationGranted': true,
-            'shown': true,
-          };
-        },
-      );
-      addTearDown(background.dispose);
-      await background.setEnabled(true);
-      await background.showCodingAlert(
-        kind: CodingAlertKind.permission,
-        sessionID: 'same-session',
-        key: 'monitor:profile-1:request-1',
-        profileID: 'profile-1',
-        monitorToken: 'opaque-token',
-        allowActions: false,
-      );
-      expect(posted, containsPair('profileID', 'profile-1'));
-      expect(posted, containsPair('monitorToken', 'opaque-token'));
-      expect(posted, containsPair('allowActions', false));
-      expect(posted!.keys, isNot(contains('title')));
-      expect(posted!.keys, isNot(contains('password')));
-      final opened = CodingAlertOpen.fromPlatform(posted!);
-      expect(opened?.profileID, 'profile-1');
-      expect(opened?.monitorToken, 'opaque-token');
-    },
-  );
+  for (final kind in [CodingAlertKind.permission, CodingAlertKind.checkIn]) {
+    test(
+      'monitored ${kind.name} alert carries an opaque profile route with no reply actions',
+      () async {
+        final store = await monitorStore(count: 1);
+        Map<String, dynamic>? posted;
+        final background = BackgroundLiveController(
+          preferences: store.prefs,
+          invoke: (method, [arguments]) async {
+            if (method == 'showCodingAlert') posted = arguments;
+            return {
+              'enabled': true,
+              'active': true,
+              'notificationGranted': true,
+              'shown': true,
+            };
+          },
+        );
+        addTearDown(background.dispose);
+        await background.setEnabled(true);
+        await background.showCodingAlert(
+          kind: kind,
+          sessionID: 'same-session',
+          key: 'monitor:profile-1:request-1',
+          profileID: 'profile-1',
+          monitorToken: 'opaque-token',
+          allowActions: false,
+        );
+        expect(posted, containsPair('profileID', 'profile-1'));
+        expect(posted, containsPair('monitorToken', 'opaque-token'));
+        expect(posted, containsPair('allowActions', false));
+        expect(posted!.keys, isNot(contains('title')));
+        expect(posted!.keys, isNot(contains('password')));
+        expect(posted!.keys, isNot(contains('directory')));
+        expect(posted!.keys, isNot(contains('prompt')));
+        if (kind == CodingAlertKind.checkIn) {
+          expect(posted, containsPair('kind', 'checkin'));
+        }
+        final opened = CodingAlertOpen.fromPlatform(posted!);
+        expect(opened?.profileID, 'profile-1');
+        expect(opened?.monitorToken, 'opaque-token');
+      },
+    );
+  }
 }

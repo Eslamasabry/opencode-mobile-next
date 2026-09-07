@@ -158,9 +158,11 @@ class ProfileMonitor extends ChangeNotifier {
           final decoded = jsonDecode(raw);
           if (decoded is! List) return {};
           return {
-            for (final entry in decoded)
-              if (ObservedBusyInterval.fromJson(entry) case final interval?)
-                interval.sessionID: interval,
+            for (final interval
+                in decoded
+                    .map(ObservedBusyInterval.fromJson)
+                    .whereType<ObservedBusyInterval>())
+              interval.sessionID: interval,
           };
         } catch (_) {
           return {};
@@ -188,8 +190,12 @@ class ProfileMonitor extends ChangeNotifier {
       if (entry.value == 'idle') continue;
       final session = sessions[entry.key];
       final prior = previous[entry.key];
+      final observedDirectory = session?.directory ?? directory;
+      final observedWorkspace = session?.workspaceID ?? workspace;
       final continues =
           prior != null &&
+          prior.directory == observedDirectory &&
+          prior.workspace == observedWorkspace &&
           !prior.lastObservedBusyAt.isAfter(now) &&
           now.difference(prior.lastObservedBusyAt) <= busyObservationGap;
       next[entry.key] = continues
@@ -204,14 +210,14 @@ class ProfileMonitor extends ChangeNotifier {
               firstObservedBusyAt: now,
               lastObservedBusyAt: now,
               title: session?.title,
-              directory: session?.directory ?? directory,
-              workspace: session?.workspaceID ?? workspace,
+              directory: observedDirectory,
+              workspace: observedWorkspace,
             );
     }
     _busy[id] = next;
     try {
-      // Best effort: a refused write costs at most one duplicate reminder
-      // after a restart, never a missed idle observation.
+      // Observation persistence is best effort. A reminder separately requires
+      // its complete interval and dispatch claim to be durably saved first.
       if (next.isEmpty) {
         await store.prefs.remove(busyIntervalsKey(id));
       } else {
@@ -230,6 +236,40 @@ class ProfileMonitor extends ChangeNotifier {
     try {
       await store.prefs.remove(busyIntervalsKey(id));
     } catch (_) {}
+  }
+
+  Future<bool> _claimCheckIn(
+    String id,
+    MonitoredRequest request,
+    bool Function() current,
+  ) async {
+    if (!current()) return false;
+    final intervals = _busyIntervals(id);
+    final interval = intervals[request.sessionID];
+    if (interval == null ||
+        interval.id != request.id ||
+        interval.reminderClaimed) {
+      return false;
+    }
+    final claimed = interval.claimReminder();
+    final next = {...intervals, request.sessionID: claimed};
+    try {
+      if (!await store.prefs.setString(
+        busyIntervalsKey(id),
+        jsonEncode([for (final item in next.values) item.toJson()]),
+      )) {
+        await store.prefs.reload();
+        return false;
+      }
+    } catch (_) {
+      try {
+        await store.prefs.reload();
+      } catch (_) {}
+      return false;
+    }
+    if (!current()) return false;
+    _busy[id] = next;
+    return true;
   }
 
   Map<String, dynamic> _routes(String id) {
@@ -829,6 +869,10 @@ class ProfileMonitor extends ChangeNotifier {
       }
       final key = alertKey(id, request);
       if (keys.contains(key)) continue;
+      if (request.kind == MonitoredRequestKind.checkIn &&
+          _busyIntervals(id)[request.sessionID]?.reminderClaimed == true) {
+        continue;
+      }
       if (dispatched >= 8) break;
       dispatched++;
       final String? token;
@@ -839,6 +883,10 @@ class ProfileMonitor extends ChangeNotifier {
       }
       if (!current() || !policy() || token == null) {
         return;
+      }
+      if (request.kind == MonitoredRequestKind.checkIn) {
+        if (!await _claimCheckIn(id, request, current)) continue;
+        if (!current() || !policy()) return;
       }
       final bool delivered;
       try {

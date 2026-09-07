@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
+import 'package:opencode_mobile/state/profile_monitor.dart';
 import 'package:opencode_mobile/ui/screens/profile_monitor_screen.dart';
 import 'support/profile_monitor_fixture.dart';
 
@@ -119,9 +121,95 @@ void main() {
     await tester.tap(quiet.hitTestable());
     await tester.pump();
     expect(controller.profileMonitor.rulesFor('profile-1').quietStart, 22 * 60);
+    final checkIn = find.byKey(const ValueKey('monitor-check-in-profile-1'));
+    await _reveal(tester, checkIn);
+    expect(
+      controller.profileMonitor.rulesFor('profile-1').checkInAfterMinutes,
+      isNull,
+    );
+    await tester.tap(
+      find.descendant(of: checkIn, matching: find.byType(Switch)).hitTestable(),
+    );
+    await tester.pump();
+    expect(
+      controller.profileMonitor.rulesFor('profile-1').checkInAfterMinutes,
+      30,
+    );
+    final duration = find.byKey(
+      const ValueKey('monitor-check-in-after-profile-1'),
+    );
+    await _reveal(tester, duration);
+    await tester.tap(duration.hitTestable());
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('15 minutes').last);
+    await tester.pumpAndSettle();
+    expect(
+      controller.profileMonitor.rulesFor('profile-1').checkInAfterMinutes,
+      15,
+    );
+    expect(
+      jsonDecode(
+        store.prefs.getString(ProfileMonitor.rulesKey('profile-1'))!,
+      )['checkInAfterMinutes'],
+      15,
+    );
     await tester.pumpWidget(const SizedBox.shrink());
     controller.dispose();
     await tester.pump();
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'active server due interval appears in the Inbox without becoming pending attention',
+    (tester) async {
+      final store = await monitorStore(count: 1);
+      await store.setActiveId('profile-1');
+      final now = DateTime.now();
+      await store.prefs.setString(
+        ProfileMonitor.busyIntervalsKey('profile-1'),
+        jsonEncode([
+          ObservedBusyInterval(
+            sessionID: 'same-session',
+            firstObservedBusyAt: now.subtract(const Duration(minutes: 31)),
+            lastObservedBusyAt: now.subtract(const Duration(minutes: 1)),
+          ).toJson(),
+        ]),
+      );
+      await store.prefs.setString(
+        ProfileMonitor.rulesKey('profile-1'),
+        jsonEncode(
+          const ProfileNotifyRules(
+            enabled: true,
+            checkInAfterMinutes: 30,
+          ).toJson(),
+        ),
+      );
+      final controller = ConnectionController(
+        store,
+        monitorGatewayFactory: (_) => (
+          gateway: MonitorTestGateway(),
+          operations: MonitorTestOperations(),
+        ),
+      );
+      await controller.profileMonitor.refresh();
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(body: ProfileMonitorInbox(controller: controller)),
+        ),
+      );
+      await tester.pump();
+      expect(find.text('Private title'), findsOneWidget);
+      expect(find.textContaining('Time to check in'), findsOneWidget);
+      expect(
+        controller.profileMonitor.snapshotFor('profile-1').pendingCount,
+        0,
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+      controller.dispose();
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

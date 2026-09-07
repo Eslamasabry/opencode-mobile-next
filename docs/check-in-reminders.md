@@ -49,12 +49,18 @@ two intervals and can remind twice.
 ## At most once
 
 The reminder's alert key names the observed interval
-(`checkIn:<session>:busy-<first observation ms>`). Posted keys are persisted
-with the other monitor alert keys, and the intervals themselves are persisted
-under `oc.monitorBusy.<profile>`, so a restart continues the interval and does
-not repost. When the interval ends, the key leaves the valid set and the
-notification is dismissed. Turning the rule off or changing its duration
-dismisses posted reminders; the next poll re-evaluates.
+(`checkIn:<session>:busy-<first observation ms>`). Before invoking native
+delivery, the monitor must persist the interval with `reminderClaimed: true`.
+A refused write prevents dispatch. This is at most one dispatch attempt,
+not guaranteed delivery: a crash after the claim or a native refusal can miss
+the notification. The due row remains available in the app.
+
+Restarting, clearing posted notification keys, or changing the duration does
+not repeat a claimed interval. Turning the reminder rule off dismisses its
+notification; enabling it again preserves the claim. Disabling monitoring
+forgets observations, so later opt-in starts a new observed interval. Idle,
+absence, a changed project/workspace or a gap beyond 20 minutes also ends
+continuity. Posted notification keys remain responsible for dismissal.
 
 ## Storage and deletion
 
@@ -63,6 +69,8 @@ dismisses posted reminders; the next poll re-evaluates.
 - Intervals: `oc.monitorBusy.<profile>`. Removed when monitoring is disabled,
   when the profile's credentials change (source reconcile), and by the
   profile-scoped preference sweep on deletion.
+- Interval persistence contains session identity, location, observed times and
+  the dispatch claim. Session titles remain in memory only.
 - Routes and alert keys: unchanged, shared with request alerts.
 
 ## Not in this slice
@@ -70,3 +78,16 @@ dismisses posted reminders; the next poll re-evaluates.
 Desk-presence inference, repeated-approval counting, prompt-language
 conditions, and any automatic prompt or provider call. Exact run timing needs
 a session-event subscription the monitor deliberately does not hold.
+
+## Completion checkpoint — 2026-09-08
+
+The original `91bb994` checkpoint was preserved work in progress, not a passed
+feature. The completed source adds durable dispatch claims, active-server
+Inbox reminders, workspace continuity and narrow-screen settings. Pinned
+Flutter 3.47.2 generation and formatting completed; 85 focused/related tests
+and 10 production capture cases passed, and the analyzer is clean. See the
+[verification record and captures](qa/check-in-reminders/README.md).
+
+Independent review and integration remain with the coordinator. This is
+widget/controller verification, not device notification delivery or a full
+repository gate. No account, provider or live-user-server action was performed.

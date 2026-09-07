@@ -2963,6 +2963,39 @@ class AppLocalizationsEn extends AppLocalizations {
       'Background notifications also require Keep live and notification permission in Background settings.';
 
   @override
+  String get monitorCheckIn => 'Check in on long runs';
+
+  @override
+  String get monitorCheckInDetail =>
+      'Shows when a session has been observed busy for the chosen time. At most one notification is attempted per observed interval, while Keep live is on. Checks follow the monitor\'s schedule; this is not the exact run time.';
+
+  @override
+  String get monitorCheckInDetailForeground =>
+      'Shows a check-in row when a session has been observed busy for the chosen time. This is not the exact run time. This device cannot deliver reminders in the background.';
+
+  @override
+  String get monitorCheckInAfter => 'Check in after';
+
+  @override
+  String monitorMinutes(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes minutes',
+      one: '1 minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get monitorCheckInDue => 'Time to check in';
+
+  @override
+  String monitorObservedBusy(int minutes, String since) {
+    return 'Seen busy for at least $minutes min · first noticed $since';
+  }
+
+  @override
   String get quotaBudgetClearAll => 'Clear saved provider thresholds';
 
   @override

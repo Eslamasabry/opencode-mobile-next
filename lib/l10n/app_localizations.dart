@@ -5013,6 +5013,48 @@ abstract class AppLocalizations {
   /// **'Background notifications also require Keep live and notification permission in Background settings.'**
   String get monitorNoNotifications;
 
+  /// No description provided for @monitorCheckIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Check in on long runs'**
+  String get monitorCheckIn;
+
+  /// No description provided for @monitorCheckInDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows when a session has been observed busy for the chosen time. At most one notification is attempted per observed interval, while Keep live is on. Checks follow the monitor\'s schedule; this is not the exact run time.'**
+  String get monitorCheckInDetail;
+
+  /// No description provided for @monitorCheckInDetailForeground.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows a check-in row when a session has been observed busy for the chosen time. This is not the exact run time. This device cannot deliver reminders in the background.'**
+  String get monitorCheckInDetailForeground;
+
+  /// No description provided for @monitorCheckInAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Check in after'**
+  String get monitorCheckInAfter;
+
+  /// A duration choice for the check-in rule
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes, plural, =1{1 minute} other{{minutes} minutes}}'**
+  String monitorMinutes(int minutes);
+
+  /// No description provided for @monitorCheckInDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Time to check in'**
+  String get monitorCheckInDue;
+
+  /// How long the monitor has observed a session busy; a floor, not the exact run length
+  ///
+  /// In en, this message translates to:
+  /// **'Seen busy for at least {minutes} min · first noticed {since}'**
+  String monitorObservedBusy(int minutes, String since);
+
   /// No description provided for @quotaBudgetClearAll.
   ///
   /// In en, this message translates to:
