@@ -4255,7 +4255,7 @@ abstract class AppLocalizations {
   /// No description provided for @setupUbuntuOption.
   ///
   /// In en, this message translates to:
-  /// **'Ubuntu · OpenCode 1'**
+  /// **'Managed Ubuntu installation'**
   String get setupUbuntuOption;
 
   /// No description provided for @setupOwnOption.
@@ -4267,7 +4267,7 @@ abstract class AppLocalizations {
   /// No description provided for @setupOwnDescription.
   ///
   /// In en, this message translates to:
-  /// **'Connect an existing OpenCode 1 or OpenCode 2 server by address. OpenCode 2 and musl installation are not managed by this app yet; musl also needs a compatible Linux environment.'**
+  /// **'Connect an existing OpenCode 1 or OpenCode 2 server by address. A native musl installation needs a compatible Linux environment and is not managed by this app.'**
   String get setupOwnDescription;
 
   /// No description provided for @setupConnectExisting.
@@ -5936,6 +5936,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Its earlier send was never confirmed; it may already be in the session.'**
   String get queuedDiscardUnconfirmedMessage;
+
+  /// First-time on-device server runtime selection
+  ///
+  /// In en, this message translates to:
+  /// **'Which OpenCode would you like to use?'**
+  String get setupRuntimeTitle;
+
+  /// Existing OpenCode server generation
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode 1'**
+  String get setupRuntimeOne;
+
+  /// Description of the default first-run runtime
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended for the widest feature support in this app.'**
+  String get setupRuntimeOneDetail;
+
+  /// Experimental new OpenCode server generation
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode 2 beta'**
+  String get setupRuntimeTwo;
+
+  /// Honest support note for the optional beta runtime
+  ///
+  /// In en, this message translates to:
+  /// **'Try the new server API. Some features are unavailable in this beta.'**
+  String get setupRuntimeTwoDetail;
+
+  /// Names the exact runtime and pinned version before installation
+  ///
+  /// In en, this message translates to:
+  /// **'Install {runtime} ({version}) in an app-managed Ubuntu environment. Existing Ubuntu files are reused.'**
+  String setupRuntimeInstallDetail(String runtime, String version);
+
+  /// Names the selected runtime and pinned version in the update confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'The app will install {runtime} {version}, restart only the managed local server, and reconnect this profile.'**
+  String setupRuntimeUpdateDetail(String runtime, String version);
 
   /// Connection banner line counting queued drafts whose send was never confirmed
   ///

@@ -144,6 +144,10 @@ if (restart 4096 second); then exit 90; fi
         port: 4096,
         password: 'test-password',
       ),
+      'install-opencode2.sh': TermuxBridge.installAndServeScript(
+        password: 'test-password',
+        runtime: TermuxRuntime.openCode2,
+      ),
       'manager.sh': TermuxBridge.managerScriptForTesting(),
       'restart.sh': TermuxBridge.restartScript(
         port: 4096,
@@ -321,8 +325,9 @@ message=This belongs to the terminal
     // setup that reaches the default by a different route drifts.
     expect(pinned, matches(RegExp(r'^\d+\.\d+\.\d+$')));
     expect(script, contains("setup '4096' '$pinned'"));
-    expect(manager, contains('local requested_version="\${2:-$pinned}"'));
-    expect(manager, contains('"opencode-ai@\$OC_REQUESTED_VERSION"'));
+    expect(manager, contains('opencode1) requested_version=$pinned'));
+    expect(manager, contains('local main_package=opencode-ai'));
+    expect(manager, contains(r'"$main_package@$OC_REQUESTED_VERSION"'));
     expect(
       manager,
       contains(r'npm_cache=$(mktemp -d /tmp/opencode-mobile-npm.XXXXXX)'),
@@ -395,14 +400,21 @@ message=This belongs to the terminal
       final directory = Directory.systemTemp.createTempSync('oc-npm-test-');
       addTearDown(() => directory.deleteSync(recursive: true));
       final calls = File('${directory.path}/calls');
-      for (final scenario in [
-        ('arm64', 0, 'opencode-linux-arm64'),
-        ('x64', 0, 'opencode-linux-x64-baseline'),
-        ('arm64', 7, 'opencode-linux-arm64'),
-        ('arm', 0, ''),
-      ]) {
-        calls.writeAsStringSync('');
-        final prelude = r'''
+      for (final runtime in TermuxRuntime.values) {
+        final mainPackage = runtime == TermuxRuntime.openCode2
+            ? '@opencode-ai/cli'
+            : 'opencode-ai';
+        final binaryPrefix = runtime == TermuxRuntime.openCode2
+            ? '@opencode-ai/cli'
+            : 'opencode';
+        for (final scenario in [
+          ('arm64', 0, '$binaryPrefix-linux-arm64'),
+          ('x64', 0, '$binaryPrefix-linux-x64-baseline'),
+          ('arm64', 7, '$binaryPrefix-linux-arm64'),
+          ('arm', 0, ''),
+        ]) {
+          calls.writeAsStringSync('');
+          final prelude = r'''
 set -eu
 node() { printf '%s\n' "$MOCK_ARCH"; }
 npm() {
@@ -410,45 +422,180 @@ npm() {
   return "$MOCK_NPM_EXIT"
 }
 ''';
-        final script = '$prelude$block\ninstall_opencode\n';
-        final result = Process.runSync(
-          'bash',
-          ['-c', script],
-          environment: {
-            'MOCK_ARCH': scenario.$1,
-            'MOCK_NPM_EXIT': '${scenario.$2}',
-            'NPM_CALLS': calls.path,
-            'OC_REQUESTED_VERSION': TermuxBridge.defaultOpenCodeVersion,
-          },
-        );
-        expect(
-          result.exitCode,
-          scenario.$1 == 'arm' ? 64 : scenario.$2,
-          reason: '${result.stdout}\n${result.stderr}',
-        );
-        final arguments = calls.readAsLinesSync();
-        if (scenario.$1 == 'arm') {
-          expect(arguments, isEmpty);
-          continue;
+          final script = '$prelude$block\ninstall_opencode\n';
+          final result = Process.runSync(
+            'bash',
+            ['-c', script],
+            environment: {
+              'MOCK_ARCH': scenario.$1,
+              'MOCK_NPM_EXIT': '${scenario.$2}',
+              'NPM_CALLS': calls.path,
+              'OC_RUNTIME': runtime.wireName,
+              'OC_REQUESTED_VERSION': runtime.pinnedVersion,
+            },
+          );
+          expect(
+            result.exitCode,
+            scenario.$1 == 'arm' ? 64 : scenario.$2,
+            reason: '${result.stdout}\n${result.stderr}',
+          );
+          final arguments = calls.readAsLinesSync();
+          if (scenario.$1 == 'arm') {
+            expect(arguments, isEmpty);
+            continue;
+          }
+          expect(
+            arguments,
+            containsAll([
+              'install',
+              '-g',
+              '--include=optional',
+              '--foreground-scripts',
+              '--fetch-retries=5',
+              '--fetch-timeout=300000',
+              '${scenario.$3}@${runtime.pinnedVersion}',
+              '$mainPackage@${runtime.pinnedVersion}',
+            ]),
+          );
+          expect(arguments.where((value) => value.contains('musl')), isEmpty);
+          expect(arguments, isNot(contains('--force')));
+          final cache = arguments[arguments.indexOf('--cache') + 1];
+          expect(cache, startsWith('/tmp/opencode-mobile-npm.'));
+          expect(Directory(cache).existsSync(), isFalse);
         }
+      }
+    },
+  );
+
+  test(
+    'runtime selection survives phase writes and a fresh status process',
+    () {
+      final result = _runManagerClockProbe(r'''
+if [ "${1:-}" = reopened ]; then
+  status
+  exit 0
+fi
+printf opencode2 > "$RUNTIME_FILE"
+printf 'started_at=100\n' > "$STATE"
+for phase in preparing installing_opencode starting_server ready; do
+  write_state "$phase" 'Runtime probe' 4096 proot 0.0.0-beta-18600
+  [ "$(read_state_value runtime)" = opencode2 ] || exit 81
+done
+bash "$0" reopened
+''');
+      expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
+      final status = TermuxSetupStatus.parse(result.stdout as String);
+      expect(status.runtime, TermuxRuntime.openCode2);
+      expect(status.startedAtEpochSeconds, 100);
+      expect(status.phase, 'failed');
+    },
+  );
+
+  test(
+    'runtime version uses the recorded command and normalizes its prefix',
+    () {
+      final result = _runManagerClockProbe(r'''
+proot-distro() {
+  [ "$1" = login ] && [ "$2" = opencode-ubuntu ] &&
+    [ "$3" = -- ] && [ "$5" = --version ] || return 83
+  case "$4" in
+    opencode) printf '1.18.29\r\n' ;;
+    opencode2) printf 'opencode2 v0.0.0-beta-18600\r\n' ;;
+    *) return 84 ;;
+  esac
+}
+[ "$(runtime_version)" = 1.18.29 ] || exit 85
+printf opencode2 > "$RUNTIME_FILE"
+[ "$(runtime_version)" = 0.0.0-beta-18600 ] || exit 86
+printf unsupported > "$RUNTIME_FILE"
+if runtime_version; then exit 87; fi
+if write_state preparing bad 4096; then exit 88; fi
+''');
+      expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
+    },
+  );
+
+  test('first-run runtime choice cannot silently migrate an installation', () {
+    final script = TermuxBridge.installAndServeScript(
+      password: 'test-password',
+      runtime: TermuxRuntime.openCode2,
+    );
+    final guard = script.substring(
+      script.indexOf('\nold_runtime='),
+      script.indexOf('\npassword_tmp='),
+    );
+    expect(script, contains("setup '4096' '0.0.0-beta-18600'"));
+    expect(script, contains("\"\$self_start\" 'opencode2'"));
+    expect(
+      script.indexOf(guard),
+      greaterThan(script.indexOf('trap cleanup_dispatch EXIT')),
+    );
+    for (final scenario in [
+      (runtime: '', version: '', exit: 0),
+      (runtime: 'opencode1', version: '', exit: 64),
+      (runtime: '', version: '1.18.29', exit: 64),
+      (runtime: 'opencode2', version: '0.0.0-beta-18600', exit: 0),
+    ]) {
+      final directory = Directory.systemTemp.createTempSync(
+        'oc-runtime-guard-',
+      );
+      addTearDown(() => directory.deleteSync(recursive: true));
+      if (scenario.runtime.isNotEmpty) {
+        File('${directory.path}/runtime').writeAsStringSync(scenario.runtime);
+      }
+      File(
+        '${directory.path}/state',
+      ).writeAsStringSync('version=${scenario.version}\n');
+      final result = Process.runSync(
+        'bash',
+        ['-c', 'set -eu\n$guard'],
+        environment: {'OC_DIR': directory.path},
+      );
+      expect(
+        result.exitCode,
+        scenario.exit,
+        reason: '${result.stdout}\n${result.stderr}',
+      );
+      final recorded = File('${directory.path}/runtime');
+      expect(
+        recorded.existsSync() ? recorded.readAsStringSync() : '',
+        scenario.exit == 0 ? 'opencode2' : scenario.runtime,
+      );
+    }
+  });
+
+  test(
+    'runtime inventory preserves legacy default and explicit beta choice',
+    () {
+      final legacy = TermuxInstallation.parse(
+        'ubuntu=installed\nversion=1.18.29\n',
+      );
+      expect(legacy.runtime, TermuxRuntime.openCode1);
+      expect(legacy.runtimeSelected, isFalse);
+      final beta = TermuxInstallation.parse(
+        'ubuntu=installed\nversion=0.0.0-beta-18600\nruntime=opencode2\n',
+      );
+      expect(beta.runtime, TermuxRuntime.openCode2);
+      expect(beta.runtimeSelected, isTrue);
+      expect(beta.openCodeVersion, '0.0.0-beta-18600');
+      final queued = TermuxInstallation.parse(
+        'ubuntu=absent\nversion=\nruntime=opencode2\n',
+      );
+      expect(queued.ubuntuInstalled, isFalse);
+      expect(queued.runtimeSelected, isTrue);
+      expect(
+        TermuxSetupStatus.parse('phase=ready').runtime,
+        TermuxRuntime.openCode1,
+      );
+      expect(
+        () => TermuxSetupStatus.parse('phase=ready\nruntime=unknown'),
+        throwsA(isA<TermuxBridgeException>()),
+      );
+      for (final suffix in ['runtime=unknown', 'runtime=opencode2\nextra=1']) {
         expect(
-          arguments,
-          containsAll([
-            'install',
-            '-g',
-            '--include=optional',
-            '--foreground-scripts',
-            '--fetch-retries=5',
-            '--fetch-timeout=300000',
-            '${scenario.$3}@${TermuxBridge.defaultOpenCodeVersion}',
-            'opencode-ai@${TermuxBridge.defaultOpenCodeVersion}',
-          ]),
+          () => TermuxInstallation.parse('ubuntu=installed\nversion=\n$suffix'),
+          throwsA(isA<TermuxBridgeException>()),
         );
-        expect(arguments.where((value) => value.contains('musl')), isEmpty);
-        expect(arguments, isNot(contains('--force')));
-        final cache = arguments[arguments.indexOf('--cache') + 1];
-        expect(cache, startsWith('/tmp/opencode-mobile-npm.'));
-        expect(Directory(cache).existsSync(), isFalse);
       }
     },
   );

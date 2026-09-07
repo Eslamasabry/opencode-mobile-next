@@ -11,6 +11,8 @@ import '../api/server_probe.dart' show ServerFlavor;
 import '../platform/platform_capabilities.dart';
 import 'model_library.dart';
 
+export '../api/server_probe.dart' show ServerFlavor;
+
 /// A model (and variant) chosen for one session from inside its chat.
 class SessionModelChoice {
   final ModelRef model;
