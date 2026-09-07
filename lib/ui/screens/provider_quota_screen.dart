@@ -125,6 +125,7 @@ class _ProviderQuotaScreenState extends State<ProviderQuotaScreen> {
                             label: Text(switch (provider) {
                               QuotaProvider.codex => l10n.quotaCodex,
                               QuotaProvider.claude => l10n.quotaClaude,
+                              QuotaProvider.minimax => l10n.quotaMiniMax,
                             }),
                             selected: _overview.provider == provider,
                             onSelected: (_) {
@@ -266,15 +267,18 @@ class _QuotaReport extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          snapshot.provider == QuotaProvider.codex
-              ? l10n.quotaCodexAccount
-              : l10n.quotaClaudeAccount,
-          style: theme.textTheme.titleLarge,
-        ),
+        Text(switch (snapshot.provider) {
+          QuotaProvider.codex => l10n.quotaCodexAccount,
+          QuotaProvider.claude => l10n.quotaClaudeAccount,
+          QuotaProvider.minimax => l10n.quotaMiniMaxAccount,
+        }, style: theme.textTheme.titleLarge),
         if (snapshot.account.status == QuotaAccountStatus.sourceBound) ...[
           const SizedBox(height: 8),
-          Text(l10n.quotaSourceBound),
+          Text(
+            snapshot.provider == QuotaProvider.minimax
+                ? l10n.quotaMiniMaxSourceBound
+                : l10n.quotaSourceBound,
+          ),
         ],
         if (snapshot.account.plan case final plan?) Text(l10n.quotaPlan(plan)),
         const SizedBox(height: 8),

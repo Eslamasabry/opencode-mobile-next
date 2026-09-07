@@ -9,6 +9,8 @@ import { pathToFileURL } from 'node:url';
 
 export const QUOTA_PATH = '/ocmn/quota/v1';
 export const CLAUDE_QUOTA_PATH = '/ocmn/quota/v1/claude';
+export const MINIMAX_QUOTA_PATH = '/ocmn/quota/v1/minimax';
+export const MINIMAX_QUOTA_URL = 'https://www.minimax.io/v1/token_plan/remains';
 export const WHAM_URL = 'https://chatgpt.com/backend-api/wham/usage';
 export const MAX_BYTES = 64 * 1024;
 export const PROVIDER_TIMEOUT_MS = 10_000;
@@ -206,7 +208,8 @@ function normalizeAuth(auth, now) {
 }
 
 function emptySnapshot(status, now, account = { status: 'unverified' }, provider = 'codex') {
-  return { schemaVersion: 1, provider, source: provider === 'claude' ? 'claude.oauth' : 'codex.wham', status,
+  return { schemaVersion: 1, provider, source: provider === 'claude' ? 'claude.oauth'
+    : provider === 'minimax' ? 'minimax.tokenPlan' : 'codex.wham', status,
     freshness: 'none', fetchedAtMs: now, expiresAtMs: now, account,
     ordinaryUsageAllowed: null, windows: [] };
 }
@@ -304,6 +307,75 @@ export function mapClaudeUsage(payload, ref, now) {
     freshness: 'fresh', expiresAtMs: now + CACHE_MS, windows };
 }
 
+// Explicit operator-provisioned Subscription Key only. Pay-as-you-go API keys
+// represent balance, not subscription quota; no CLI OAuth store is discovered.
+export function createMiniMaxKeySource({ filePath, readFile = readBoundedFile } = {}) {
+  return async () => {
+    if (!filePath) return { status: 'unconfigured' };
+    try {
+      const token = decodeBytes(await readFile(filePath)).replace(/\r?\n$/, '');
+      if (!accessToken(token)) return { status: 'authRequired' };
+      if (token.startsWith('sk-api-')) return { status: 'unsupported' };
+      return { status: 'ok', accessToken: token };
+    } catch { return { status: 'authRequired' }; }
+  };
+}
+
+function normalizeMiniMaxAuth(auth) {
+  if (object(auth) && AUTH_STATUSES.has(auth.status)) return { status: auth.status };
+  if (!object(auth) || auth.status !== 'ok' || !accessToken(auth.accessToken)) {
+    return { status: 'authRequired' };
+  }
+  if (auth.accessToken.startsWith('sk-api-')) return { status: 'unsupported' };
+  // An opaque reference binds this snapshot to the configured key, never to a
+  // claimed account identity. Key rotation deliberately changes that reference.
+  return { status: 'ok', accessToken: auth.accessToken,
+    accountId: `minimax:${auth.accessToken}`, userId: null, expiresAtMs: null };
+}
+
+function miniMaxWindow(value, id) {
+  const weekly = id === 'secondary';
+  const prefix = weekly ? 'current_weekly' : 'current_interval';
+  const status = value[`${prefix}_status`];
+  if (status != null && ![1, 2, 3].includes(status)) invalid();
+  const remaining = value[`${prefix}_remaining_percent`];
+  if (remaining != null && (typeof remaining !== 'number' || !Number.isFinite(remaining)
+    || remaining < 0 || remaining > 100)) invalid();
+  const boost = value.weekly_boost_permille;
+  if (weekly && boost != null && (!Number.isSafeInteger(boost) || boost < 0)) invalid();
+  // The current mobile contract cannot express unlimited or boosted capacity.
+  // Preserve unknown instead of coercing either into a 0–100% used window.
+  if (status === 3 || remaining == null || (weekly && boost != null && boost !== 1000)) {
+    return { id, status: 'missing' };
+  }
+  if (status === 2 && remaining !== 0) invalid();
+  const start = value[weekly ? 'weekly_start_time' : 'start_time'];
+  const end = value[weekly ? 'weekly_end_time' : 'end_time'];
+  if (!timestamp(start) || !timestamp(end) || end <= start
+    || (end - start) % 1000 !== 0 || end - start > 315_360_000_000) invalid();
+  return { id, status: 'reported', usedPercent: 100 - remaining,
+    durationSeconds: (end - start) / 1000, resetsAtMs: end };
+}
+
+// Contract: MiniMax-AI/cli bfbb4cb75ec343149eaccfd668c5011aa27bcf2b,
+// src/types/api.ts and src/output/quota-table.ts. Only the shared general pool;
+// never sum model buckets or infer remaining capacity from ambiguous counts.
+export function mapMiniMaxUsage(payload, ref, now) {
+  if (!object(payload) || !Array.isArray(payload.model_remains)
+    || payload.model_remains.length > 64 || payload.model_remains.some((row) => !object(row))) invalid();
+  if (payload.base_resp != null) {
+    if (!object(payload.base_resp) || !Number.isInteger(payload.base_resp.status_code)) invalid();
+    if (payload.base_resp.status_code !== 0) throw new ProviderFailure('unavailable');
+  }
+  const general = payload.model_remains.filter((row) => row.model_name === 'general');
+  if (general.length > 1) invalid();
+  const account = { ref, status: 'sourceBound' };
+  if (general.length === 0) return emptySnapshot('unsupported', now, account, 'minimax');
+  return { ...emptySnapshot('ok', now, account, 'minimax'), freshness: 'fresh',
+    expiresAtMs: now + CACHE_MS,
+    windows: [miniMaxWindow(general[0], 'primary'), miniMaxWindow(general[0], 'secondary')] };
+}
+
 async function readProviderBody(response, signal) {
   const declared = response.headers.get('content-length');
   if (declared != null && (!/^\d+$/.test(declared) || Number(declared) > MAX_BYTES)) invalid();
@@ -340,7 +412,7 @@ async function readProviderBody(response, signal) {
 export function createCollector({ readToken, authSource = async () => ({ status: 'unconfigured' }),
   fetchImpl = globalThis.fetch, clock = Date.now, timeoutMs = PROVIDER_TIMEOUT_MS, provider = 'codex' } = {}) {
   validateReadToken(readToken);
-  if (!['codex', 'claude'].includes(provider)) throw new ConfigurationError('QUOTA_PROVIDER_INVALID');
+  if (!['codex', 'claude', 'minimax'].includes(provider)) throw new ConfigurationError('QUOTA_PROVIDER_INVALID');
   const empty = (status, time, account) => emptySnapshot(status, time, account, provider);
   if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > PROVIDER_TIMEOUT_MS) {
     throw new ConfigurationError('QUOTA_TIMEOUT_INVALID');
@@ -367,7 +439,10 @@ export function createCollector({ readToken, authSource = async () => ({ status:
   function selectAuth() {
     const selection = authQueue.then(async () => {
       let auth;
-      try { auth = normalizeAuth(await authSource(), now()); }
+      try {
+        const source = await authSource();
+        auth = provider === 'minimax' ? normalizeMiniMaxAuth(source) : normalizeAuth(source, now());
+      }
       catch { auth = { status: 'authRequired' }; }
       const key = auth.status === 'ok'
         ? hmac(JSON.stringify([auth.accountId, auth.userId, auth.accessToken, auth.expiresAtMs])) : null;
@@ -393,13 +468,14 @@ export function createCollector({ readToken, authSource = async () => ({ status:
       timer = setTimeout(() => controller.abort(), timeoutMs);
     });
     const request = async () => {
-      const response = await fetchImpl(WHAM_URL, { method: 'GET', redirect: 'error', credentials: 'omit',
+      const url = provider === 'minimax' ? MINIMAX_QUOTA_URL : WHAM_URL;
+      const response = await fetchImpl(url, { method: 'GET', redirect: 'error', credentials: 'omit',
         signal: controller.signal, headers: { Authorization: `Bearer ${auth.accessToken}`,
-          'ChatGPT-Account-Id': auth.accountId,
+          ...(provider === 'codex' ? { 'ChatGPT-Account-Id': auth.accountId } : {}),
           Accept: 'application/json', 'User-Agent': 'ocmn-quota/1' } });
       try {
         if (controller.signal.aborted) throw new ProviderFailure('unavailable');
-        if (response.redirected || (response.url && response.url !== WHAM_URL)) invalid();
+        if (response.redirected || (response.url && response.url !== url)) invalid();
         if (response.status !== 200) {
           const status = response.status === 401 ? 'authRequired'
             : response.status === 429 ? 'rateLimited'
@@ -408,7 +484,8 @@ export function createCollector({ readToken, authSource = async () => ({ status:
           throw new ProviderFailure(status);
         }
         const payload = await readProviderBody(response, controller.signal);
-        return mapWham(payload, auth, ref, now());
+        return provider === 'minimax' ? mapMiniMaxUsage(payload, ref, now())
+          : mapWham(payload, auth, ref, now());
       } finally {
         // Also cancel unread bodies rejected by status, URL or size headers.
         // Never wait on an uncooperative peer's cancellation promise.
@@ -441,7 +518,8 @@ export function createCollector({ readToken, authSource = async () => ({ status:
         const snapshot = await collect(selected.auth, pending.controller);
         await selectAuth();
         if (pending.generation !== generation) return empty('unavailable', now());
-        if (snapshot.status === 'ok' && snapshot.account.status === 'matched'
+        if (snapshot.status === 'ok' && (snapshot.account.status === 'matched'
+          || (provider === 'minimax' && snapshot.account.status === 'sourceBound'))
           && snapshot.freshness === 'fresh') cache = snapshot;
         return snapshot;
       })().finally(() => { if (flight === pending) flight = null; });
@@ -450,7 +528,7 @@ export function createCollector({ readToken, authSource = async () => ({ status:
   };
 }
 
-export function createRequestHandler({ readToken, collector, claudeCollector }) {
+export function createRequestHandler({ readToken, collector, claudeCollector, minimaxCollector }) {
   const authorized = createReadTokenVerifier(readToken);
   return async (request, response) => {
     const send = (status, body) => {
@@ -468,7 +546,8 @@ export function createRequestHandler({ readToken, collector, claudeCollector }) 
     }
     // Exact request-target comparison rejects query strings and absolute URLs.
     const selected = request.url === QUOTA_PATH ? collector
-      : request.url === CLAUDE_QUOTA_PATH ? claudeCollector : null;
+      : request.url === CLAUDE_QUOTA_PATH ? claudeCollector
+      : request.url === MINIMAX_QUOTA_PATH ? minimaxCollector : null;
     if (!selected) { send(404, { error: 'unsupported' }); return; }
     if (request.method !== 'GET') { send(405, { error: 'unsupported' }); return; }
     if (request.headers['transfer-encoding'] != null
@@ -495,10 +574,15 @@ export async function loadConfiguration(env, { readFile = readBoundedFile } = {}
   if (filePath != null && (!filePath || !isAbsolute(filePath))) {
     throw new ConfigurationError('QUOTA_AUTH_FILE_INVALID');
   }
+  const minimaxKeyFile = env.OCMN_MINIMAX_KEY_FILE;
+  if (minimaxKeyFile != null && (!minimaxKeyFile || !isAbsolute(minimaxKeyFile))) {
+    throw new ConfigurationError('QUOTA_MINIMAX_KEY_FILE_INVALID');
+  }
   const tokenPath = env.OCMN_QUOTA_READ_TOKEN_FILE;
   if (!tokenPath) throw new ConfigurationError('QUOTA_READ_TOKEN_FILE_REQUIRED');
   if (!isAbsolute(tokenPath)) throw new ConfigurationError('QUOTA_READ_TOKEN_FILE_INVALID');
   return { host: '127.0.0.1', port: Number(port), format, filePath, ignoredClaudeConfiguration,
+    ...(minimaxKeyFile == null ? {} : { minimaxKeyFile }),
     readToken: await loadReadToken(tokenPath, { readFile }) };
 }
 
@@ -509,8 +593,10 @@ async function main() {
   const collector = createCollector({ readToken: config.readToken,
     authSource: createFileAuthSource(config) });
   const claudeCollector = createCollector({ readToken: config.readToken, provider: 'claude' });
+  const minimaxCollector = createCollector({ readToken: config.readToken, provider: 'minimax',
+    authSource: createMiniMaxKeySource({ filePath: config.minimaxKeyFile }) });
   const server = createServer({ maxHeaderSize: 8192, requestTimeout: 10_000,
-    headersTimeout: 5000, keepAliveTimeout: 1000 }, createRequestHandler({ ...config, collector, claudeCollector }));
+    headersTimeout: 5000, keepAliveTimeout: 1000 }, createRequestHandler({ ...config, collector, claudeCollector, minimaxCollector }));
   server.maxRequestsPerSocket = 100;
   server.on('clientError', (_error, socket) => socket.destroy());
   server.on('error', () => { process.stderr.write('QUOTA_LISTENER_FAILED\n'); process.exitCode = 1; });

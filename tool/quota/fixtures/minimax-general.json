@@ -1,0 +1,19 @@
+{
+  "base_resp": {"status_code": 0, "status_msg": "synthetic success"},
+  "model_remains": [{
+    "model_name": "general",
+    "start_time": 1799992800000,
+    "end_time": 1800010800000,
+    "current_interval_remaining_percent": 72.5,
+    "current_interval_status": 1,
+    "current_interval_total_count": 1000,
+    "current_interval_usage_count": 999,
+    "weekly_start_time": 1799740800000,
+    "weekly_end_time": 1800345600000,
+    "current_weekly_remaining_percent": 40,
+    "current_weekly_status": 1,
+    "current_weekly_total_count": 7000,
+    "current_weekly_usage_count": 1,
+    "weekly_boost_permille": 1000
+  }]
+}

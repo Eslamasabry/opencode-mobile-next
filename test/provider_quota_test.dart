@@ -9,7 +9,11 @@ Map<String, dynamic> providerQuotaFixture({
 }) => <String, dynamic>{
   'schemaVersion': 1,
   'provider': provider.name,
-  'source': provider == QuotaProvider.codex ? 'codex.wham' : 'claude.oauth',
+  'source': switch (provider) {
+    QuotaProvider.codex => 'codex.wham',
+    QuotaProvider.claude => 'claude.oauth',
+    QuotaProvider.minimax => 'minimax.tokenPlan',
+  },
   'status': 'ok',
   'freshness': 'fresh',
   'fetchedAtMs': fetchedAtMs,
@@ -36,6 +40,24 @@ Map<String, dynamic> _window(Map<String, dynamic> fixture) =>
     (fixture['windows'] as List).first as Map<String, dynamic>;
 
 void main() {
+  test(
+    'MiniMax preserves source-bound percentages and rejects invented eligibility',
+    () {
+      final value = providerQuotaFixture(provider: QuotaProvider.minimax);
+      final snapshot = ProviderQuotaSnapshot.fromJson(value);
+      expect(snapshot.provider, QuotaProvider.minimax);
+      expect(snapshot.canShowWindows, isTrue);
+      expect(snapshot.account.status, QuotaAccountStatus.sourceBound);
+      expect(snapshot.windows.first.remainingPercent, 74.5);
+      expect(snapshot.windows.last.remainingPercent, isNull);
+      expect(quotaCollectionAvailable(QuotaProvider.minimax), isTrue);
+      value['ordinaryUsageAllowed'] = true;
+      expect(
+        () => ProviderQuotaSnapshot.fromJson(value),
+        throwsFormatException,
+      );
+    },
+  );
   test(
     'Claude source-bound snapshots do not claim independently matched account identity',
     () {

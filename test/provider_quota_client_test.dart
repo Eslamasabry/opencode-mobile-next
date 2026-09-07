@@ -71,6 +71,35 @@ Matcher _failure(QuotaFailureKind kind) => throwsA(
 
 void main() {
   test(
+    'MiniMax reads its fixed collector route and rejects a different provider',
+    () async {
+      var wrongProvider = false;
+      final adapter = _Adapter(
+        (_) => _json(
+          value: providerQuotaFixture(
+            provider: wrongProvider
+                ? QuotaProvider.codex
+                : QuotaProvider.minimax,
+          ),
+        ),
+      );
+      final gateway = HttpProviderQuotaGateway(
+        _profile(),
+        provider: QuotaProvider.minimax,
+        adapter: adapter,
+      );
+      addTearDown(gateway.close);
+      final snapshot = await gateway.readSnapshot();
+      expect(snapshot.provider, QuotaProvider.minimax);
+      expect(adapter.requests.single.uri.path, '/ocmn/quota/v1/minimax');
+      wrongProvider = true;
+      await expectLater(
+        gateway.readSnapshot(),
+        _failure(QuotaFailureKind.invalidResponse),
+      );
+    },
+  );
+  test(
     'Claude collection is unavailable before any authenticated request',
     () async {
       final adapter = _Adapter(

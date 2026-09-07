@@ -1,4 +1,4 @@
-# Optional Codex quota collector (Node >= 20)
+# Optional provider quota collector (Node >= 20)
 
 **Claude collection is disabled pending a supported, permitted integration.**
 Current OpenCode does not bundle Claude Pro/Max subscription sign-in. Historical
@@ -21,10 +21,13 @@ implements the frozen `lib/domain/provider_quota.dart` contract at exactly:
 ```text
 GET /ocmn/quota/v1
 GET /ocmn/quota/v1/claude
+GET /ocmn/quota/v1/minimax
 ```
 
 The first route reports **core Codex windows on a ChatGPT OAuth account**;
-the second is retained only to return **unsupported** safely. These are not OpenCode
+the second is retained only to return **unsupported** safely. The MiniMax route
+reports explicit percentages for its shared `general` Token Plan pool; see the
+[verified source contract and limitations](#minimax-token-plan). These are not OpenCode
 project consumption, all product/model allowances, an API-key
 budget, or a promise that a model request will succeed. No provider access or
 deployment was performed during implementation; tests use synthetic inputs.
@@ -34,18 +37,18 @@ deployment was performed during implementation; tests use synthetic inputs.
 ```text
 Flutter -- HTTPS + existing OpenCode Basic credentials --> trusted operator proxy
         -- loopback + dedicated collector Bearer token --> this collector
-        -- HTTPS + selected provider OAuth identity --> fixed WHAM usage endpoint
+        -- HTTPS + explicit provider credential --> fixed provider quota endpoint
 ```
 
-The operator explicitly grants this service read access to one chosen Codex
-credential file. Authorized proxy users can see that account's normalized
-windows. The operator must be trusted with both the OpenCode authentication
+The operator explicitly grants this service read access to a chosen Codex
+credential file and/or MiniMax Subscription Key file. Authorized proxy users
+can see the configured sources' normalized windows. The operator must be trusted with both the OpenCode authentication
 boundary and that account. The reverse proxy is part of that security boundary,
 not a transparent, untrusted relay.
 
 The operator's **HTTPS reverse proxy must**:
 
-1. Host the two fixed paths above at the **same origin as the OpenCode server**,
+1. Host the fixed paths above at the **same origin as the OpenCode server**,
    separate from its route table. Route only these exact paths, without
    query parameters, to the collector. Do not rewrite arbitrary paths into it.
 2. Explicitly authenticate the client's HTTP Basic credentials using the
@@ -85,6 +88,7 @@ Configuration consists of file paths and non-secret settings only:
 | `OCMN_QUOTA_AUTH_FILE` | Optional absolute path to the explicitly authorized provider credential file. Without it, return `unconfigured` without provider/file discovery. |
 | `OCMN_QUOTA_AUTH_FORMAT` | `codex` (default) or `opencode`; never inferred from a path. |
 | `OCMN_CLAUDE_AUTH_FILE` / `OCMN_CLAUDE_AUTH_FORMAT` | Retired; ignored with a fixed startup warning. No Claude credential source is retained or read. |
+| `OCMN_MINIMAX_KEY_FILE` | Optional absolute path to an explicitly provisioned MiniMax Subscription Key text file. One trailing newline accepted. No default, discovery, OAuth reuse, or PAYG balance requests. |
 | `OCMN_QUOTA_PORT` | Default `4195`; integer in `1024..65535`. Host is always `127.0.0.1`. |
 
 For example, after configuring those variables through the service manager:
@@ -253,13 +257,13 @@ permission to reuse subscription credentials. Re-enabling collection requires
 a separately reviewed, supported and permitted integration, not a file path
 or an undocumented-endpoint workaround.
 
-GLM, MiniMax and Gemini collectors are not implemented. Their units/auth/reset
+GLM and Gemini collectors are not implemented. Their units/auth/reset
 semantics must be verified separately, rather than guessed from these adapters.
 
 ## Focused verification
 
 ```sh
-node --test tool/quota/collector.test.mjs
+node --test tool/quota/collector.test.mjs tool/quota/minimax.test.mjs
 ```
 
 Tests use injected fetch/auth/clock, fake request/response objects (no listener),
@@ -279,3 +283,70 @@ selection versus other clients' active accounts, actual proxy Basic verification
 secret provisioning/rotation, restart/update policy and signed mobile integration.
 No SDK generation/provenance change is involved. Hand app/repository integration
 and the serial repository gate to the lead; do not run release tooling here.
+
+
+## MiniMax Token Plan
+
+**Implemented with synthetic fixtures; live access and deployment unverified.**
+Source review on September 7, 2026 established an official public quota call:
+`GET https://www.minimax.io/v1/token_plan/remains` with
+`Authorization: Bearer <Subscription Key>`. The current
+[MiniMax FAQ](https://platform.minimax.io/docs/token-plan/faq#how-to-check-token-plan-usage)
+documents this request and distinguishes subscription keys from pay-as-you-go
+keys. The latter are not subscription quota; keys beginning `sk-api-` return
+`unsupported` before any request. No browser credentials or CLI OAuth files
+are read. Operator approval and provisioning are required for live collection.
+
+Schema source is the official MiniMax CLI at commit
+[`bfbb4cb75ec343149eaccfd668c5011aa27bcf2b`](https://github.com/MiniMax-AI/cli/tree/bfbb4cb75ec343149eaccfd668c5011aa27bcf2b):
+[types](https://github.com/MiniMax-AI/cli/blob/bfbb4cb75ec343149eaccfd668c5011aa27bcf2b/src/types/api.ts),
+[quota rendering](https://github.com/MiniMax-AI/cli/blob/bfbb4cb75ec343149eaccfd668c5011aa27bcf2b/src/output/quota-table.ts), and
+[count ambiguity handling](https://github.com/MiniMax-AI/cli/blob/bfbb4cb75ec343149eaccfd668c5011aa27bcf2b/src/utils/quota.ts).
+The adapter deliberately uses explicit remaining percentages only; legacy
+`*_usage_count` fields changed meaning and are not sufficient evidence.
+
+| Provider field | Collector meaning |
+|---|---|
+| `model_remains[]` item named `general` | Shared general subscription pool only; no aggregation of model rows. Missing pool is unsupported; duplicate pool is invalid. |
+| `current_interval_remaining_percent` | Primary used percentage is exactly `100 - reported remaining`. |
+| `current_weekly_remaining_percent` | Secondary used percentage with the same units. |
+| `start_time`, `end_time` | Primary duration and reset in epoch milliseconds. |
+| `weekly_start_time`, `weekly_end_time` | Secondary duration and reset in epoch milliseconds. |
+| Window status `1` / `2` | Limited / exhausted; exhausted must agree with zero remaining. |
+| Window status `3` | Unrepresentable by the current mobile percentage contract; show missing, never fabricated unlimited capacity. |
+| `weekly_boost_permille` other than `1000` | Weekly window missing: boosted capacity can exceed the mobile contract's percentage range. |
+
+The upstream TypeScript interface requires both timestamp boundaries for each
+reported window. Missing boundaries return `invalidResponse` as schema drift,
+as do present nulls or malformed timestamps. No reset or window duration is
+reconstructed from countdowns or known plan names.
+
+Percentages must be finite numbers within 0–100; unknown statuses, invalid
+reset ranges, or contradictory exhaustion are `invalidResponse`. Missing
+percentages remain missing even when counts exist. A passed reset timestamp
+never fabricates replenishment. Snapshot source is `minimax.tokenPlan`, provider
+is `minimax`, and ordinary request availability stays unknown (`null`).
+
+The API supplies no independently matching account ID. Account status is
+`sourceBound`, tied to an opaque HMAC of the configured key. It must not be
+presented as an account identity match. Key rotation changes the reference,
+invalidates cached data, and cancels old in-flight work. Successful responses
+cache for 60 seconds; key state is rechecked before publishing. Existing
+size/time bounds, exact-host no-redirect requests, authenticated loopback route
+and fixed errors apply. Provider payloads, model labels, keys and error strings
+never pass through to the app or logs.
+
+[The fixture](fixtures/minimax-general.json) is synthetic, including deliberately
+contradictory count fields to prove they cannot influence percentages.
+`minimax.test.mjs` covers mapping, missing/unlimited/boosted windows, invalid
+payloads, key loading, fixed-host requests, rotation/cache expiry, HTTP errors,
+authenticated routing and CLI configuration. The lead runs these tests serially.
+
+GLM remains unavailable: the official
+[documentation index](https://docs.z.ai/llms.txt) and
+[Coding Plan FAQ](https://docs.z.ai/devpack/faq) did not establish a supported
+third-party subscription-quota request/schema in this September 7 review.
+The commonly cited `/api/monitor/usage/quota/limit` dashboard endpoint is not
+sufficient by itself. A public supported contract or explicit vendor permission
+with current schema/units/identity evidence is the prerequisite. Gemini was not
+reopened after MiniMax met this slice's feasibility gate.

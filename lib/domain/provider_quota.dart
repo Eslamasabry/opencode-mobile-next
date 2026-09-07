@@ -1,16 +1,17 @@
 /// Optional deployment extension, not an upstream OpenCode API route.
 const providerQuotaPath = '/ocmn/quota/v1';
 
-enum QuotaProvider { codex, claude }
+enum QuotaProvider { codex, claude, minimax }
 
 /// A parser or historical credential format is not permission to collect data.
 /// Claude subscription collection stays off pending a supported integration.
 bool quotaCollectionAvailable(QuotaProvider provider) =>
-    provider == QuotaProvider.codex;
+    provider == QuotaProvider.codex || provider == QuotaProvider.minimax;
 
 String quotaPathFor(QuotaProvider provider) => switch (provider) {
   QuotaProvider.codex => providerQuotaPath,
   QuotaProvider.claude => '$providerQuotaPath/claude',
+  QuotaProvider.minimax => '$providerQuotaPath/minimax',
 };
 
 enum ProviderQuotaStatus {
@@ -83,8 +84,8 @@ class ProviderQuotaWindow {
 }
 
 /// Provider windows are separate from OpenCode project consumption and spend.
-/// A source-bound Claude snapshot is tied to the collector's configured OAuth
-/// identity, not an independently returned account ID (the usage API lacks one).
+/// Source-bound snapshots identify the collector's configured credential,
+/// not an independently returned account ID.
 class ProviderQuotaSnapshot {
   final QuotaProvider provider;
   final ProviderQuotaStatus status;
@@ -112,7 +113,7 @@ class ProviderQuotaSnapshot {
   bool get canShowWindows =>
       status == ProviderQuotaStatus.ok &&
       (account.status == QuotaAccountStatus.matched ||
-          (provider == QuotaProvider.claude &&
+          (provider != QuotaProvider.codex &&
               account.status == QuotaAccountStatus.sourceBound));
 
   factory ProviderQuotaSnapshot.fromJson(Object? value) {
@@ -121,6 +122,7 @@ class ProviderQuotaSnapshot {
     final source = switch (provider) {
       QuotaProvider.codex => 'codex.wham',
       QuotaProvider.claude => 'claude.oauth',
+      QuotaProvider.minimax => 'minimax.tokenPlan',
     };
     if (json['schemaVersion'] != 1 || json['source'] != source) {
       throw const FormatException('Unsupported quota snapshot');
@@ -147,7 +149,7 @@ class ProviderQuotaSnapshot {
       _invalid();
     }
     if (accountStatus == QuotaAccountStatus.sourceBound &&
-        provider != QuotaProvider.claude) {
+        provider == QuotaProvider.codex) {
       _invalid();
     }
     final plan = rawAccount['plan'];
@@ -165,7 +167,7 @@ class ProviderQuotaSnapshot {
     final safePlan = plan is String && plans.contains(plan) ? plan : null;
     final allowed = json['ordinaryUsageAllowed'];
     if (allowed != null && allowed is! bool) _invalid();
-    if (provider == QuotaProvider.claude && allowed != null) _invalid();
+    if (provider != QuotaProvider.codex && allowed != null) _invalid();
 
     final rawWindows = json['windows'];
     if (rawWindows is! List || rawWindows.length > 64) _invalid();
@@ -214,7 +216,7 @@ class ProviderQuotaSnapshot {
     // measurements with an error status or mismatched identity.
     final attributed =
         accountStatus == QuotaAccountStatus.matched ||
-        (provider == QuotaProvider.claude &&
+        (provider != QuotaProvider.codex &&
             accountStatus == QuotaAccountStatus.sourceBound);
     if ((status != ProviderQuotaStatus.ok || !attributed) &&
         (windows.isNotEmpty || allowed != null)) {

@@ -962,6 +962,32 @@ void main() {
     expect(find.text('74.5% remaining'), findsOneWidget);
   });
 
+  testWidgets(
+    'MiniMax requires consent and identifies its subscription-key source',
+    (tester) async {
+      final h = await harness(tester);
+      await _pumpHome(
+        tester,
+        ProviderQuotaScreen(controller: h.connection, overview: h.overview),
+        ownedOverview: h.overview,
+        size: const Size(420, 1600),
+      );
+      final minimax = find.widgetWithText(ChoiceChip, _l10n.quotaMiniMax);
+      await _reveal(tester, minimax);
+      await tester.tap(minimax);
+      await _frames(tester);
+      expect(h.gateways, isEmpty);
+      expect(h.overview.consented, isFalse);
+      expect(find.text('/ocmn/quota/v1/minimax'), findsOneWidget);
+      await _consentAndRead(tester, h);
+      await _finishRead(tester, h, _snapshot(provider: QuotaProvider.minimax));
+      expect(find.text(_l10n.quotaMiniMaxAccount), findsOneWidget);
+      expect(find.text(_l10n.quotaMiniMaxSourceBound), findsOneWidget);
+      expect(find.text(_l10n.quotaClaudeAccount), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   for (final brightness in Brightness.values) {
     testWidgets(
       '${brightness.name} quota semantics and 48dp targets survive reduced motion',
