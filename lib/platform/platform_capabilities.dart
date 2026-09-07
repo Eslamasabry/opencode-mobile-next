@@ -63,6 +63,12 @@ class PlatformCapabilities {
   /// desktop capture path exists yet, so desktop reports honestly unavailable
   /// rather than pretending a microphone is present.
   bool get supportsVoice => isAndroid;
+
+  /// Foreground system TTS with installed offline voices; Android only.
+  bool get supportsReadAloud => isAndroid;
+
+  /// Explicit foreground turns using the existing local dictation path.
+  bool get supportsVoiceConversation => supportsVoice && supportsReadAloud;
   bool get supportsPromptPhotos => isAndroid;
 
   /// The `oc/background` foreground service that keeps a live transport alive

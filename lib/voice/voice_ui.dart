@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 import 'controller.dart';
 import 'audio.dart';
@@ -8,19 +9,22 @@ import 'device.dart';
 import 'model_manager.dart';
 import 'model_manifest.dart';
 import '../ui/app_theme.dart';
+import '../platform/platform_capabilities.dart';
+import '../l10n/app_localizations.dart';
 
 Future<bool> showVoiceModelSetupSheet(
   BuildContext context,
   VoiceModelManager manager,
 ) async =>
-    await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      showDragHandle: true,
-      builder: (context) => _VoiceModelSetupSheet(manager: manager),
-    ) ??
-    false;
+    platformCapabilities.supportsVoice &&
+    (await showModalBottomSheet<bool>(
+          context: context,
+          isScrollControlled: true,
+          useSafeArea: true,
+          showDragHandle: true,
+          builder: (context) => _VoiceModelSetupSheet(manager: manager),
+        ) ??
+        false);
 
 class _VoiceModelSetupSheet extends StatelessWidget {
   const _VoiceModelSetupSheet({required this.manager});
@@ -506,36 +510,89 @@ Future<String?> showVoiceComposerSheet(
 /// dismisses it; either path cancels any recording in flight first.
 Future<VoiceComposerResult?> showVoiceComposerResultSheet(
   BuildContext context,
-  VoiceComposerController controller,
-) => showModalBottomSheet<VoiceComposerResult>(
-  context: context,
-  isScrollControlled: true,
-  useSafeArea: true,
-  showDragHandle: true,
-  isDismissible: true,
-  enableDrag: true,
-  builder: (context) => _VoiceComposerSheet(controller: controller),
-);
+  VoiceComposerController controller, {
+  bool conversation = false,
+  ValueListenable<int>? validity,
+  bool Function()? isCurrent,
+}) => !platformCapabilities.supportsVoice
+    ? Future.value(null)
+    : showModalBottomSheet<VoiceComposerResult>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        showDragHandle: true,
+        isDismissible: true,
+        enableDrag: true,
+        builder: (context) => _VoiceComposerSheet(
+          controller: controller,
+          conversation: conversation,
+          validity: validity,
+          isCurrent: isCurrent,
+        ),
+      );
 
 class _VoiceComposerSheet extends StatefulWidget {
-  const _VoiceComposerSheet({required this.controller});
+  const _VoiceComposerSheet({
+    required this.controller,
+    this.conversation = false,
+    this.validity,
+    this.isCurrent,
+  });
 
   final VoiceComposerController controller;
+  final bool conversation;
+  final ValueListenable<int>? validity;
+  final bool Function()? isCurrent;
 
   @override
   State<_VoiceComposerSheet> createState() => _VoiceComposerSheetState();
 }
 
-class _VoiceComposerSheetState extends State<_VoiceComposerSheet> {
+class _VoiceComposerSheetState extends State<_VoiceComposerSheet>
+    with WidgetsBindingObserver {
   final TextEditingController _draft = TextEditingController();
   String _syncedDraft = '';
+  bool _interrupted = false;
+  bool get _current => !_interrupted && (widget.isCurrent?.call() ?? true);
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    widget.validity?.addListener(_scopeChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) unawaited(widget.controller.startListening());
+      if (mounted && _current && !widget.conversation) {
+        unawaited(widget.controller.startListening());
+      }
     });
+  }
+
+  void _scopeChanged() {
+    if (!_current && mounted) _interrupt();
+  }
+
+  void _interrupt() {
+    _interrupted = true;
+    _draft.clear();
+    _syncedDraft = '';
+    unawaited(widget.controller.cancel());
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) _interrupt();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (!(route?.isCurrent ?? true)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !(route?.isCurrent ?? true)) _interrupt();
+      });
+    }
   }
 
   Future<void> _close() async {
@@ -545,9 +602,9 @@ class _VoiceComposerSheetState extends State<_VoiceComposerSheet> {
 
   Future<void> _insert({required bool send}) async {
     final text = _draft.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty || !_current) return;
     await widget.controller.cancel();
-    if (mounted) {
+    if (mounted && _current) {
       Navigator.pop(context, VoiceComposerResult(text: text, send: send));
     }
   }
@@ -566,6 +623,30 @@ class _VoiceComposerSheetState extends State<_VoiceComposerSheet> {
         animation: widget.controller,
         builder: (context, _) {
           final controller = widget.controller;
+          if (!_current) {
+            return Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    lookupAppLocalizations(
+                      Localizations.localeOf(context),
+                    ).voiceInputInterrupted,
+                  ),
+                  TextButton(
+                    onPressed: _close,
+                    style: _voiceButtonStyle(),
+                    child: Text(
+                      lookupAppLocalizations(
+                        Localizations.localeOf(context),
+                      ).voiceInputClose,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
           if (controller.state == VoiceComposerState.draft &&
               controller.draft != _syncedDraft) {
             _syncedDraft = controller.draft;
@@ -588,6 +669,14 @@ class _VoiceComposerSheetState extends State<_VoiceComposerSheet> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _VoiceStatus(controller: controller),
+                  if (widget.conversation) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      lookupAppLocalizations(
+                        Localizations.localeOf(context),
+                      ).voiceConversationInstructions,
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   if (controller.state == VoiceComposerState.draft)
                     TextField(
@@ -596,13 +685,13 @@ class _VoiceComposerSheetState extends State<_VoiceComposerSheet> {
                       minLines: 3,
                       maxLines: 8,
                       autofocus: true,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Review transcript',
-                        helperText:
-                            'Edit before inserting. Nothing is sent unless '
-                            'you choose Insert & send.',
+                        helperText: lookupAppLocalizations(
+                          Localizations.localeOf(context),
+                        ).voiceReviewExplicitAction,
                         alignLabelWithHint: true,
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
                       ),
                     ),
                   if (controller.state == VoiceComposerState.error) ...[
@@ -655,13 +744,15 @@ class _VoiceComposerSheetState extends State<_VoiceComposerSheet> {
                         icon: const Icon(Icons.add_rounded),
                         label: const Text('Insert'),
                       ),
-                      tertiary: FilledButton.tonalIcon(
-                        key: const Key('insert-voice-draft-send'),
-                        style: _voiceButtonStyle(),
-                        onPressed: () => unawaited(_insert(send: true)),
-                        icon: const Icon(Icons.arrow_upward_rounded),
-                        label: const Text('Insert & send'),
-                      ),
+                      tertiary: widget.conversation
+                          ? null
+                          : FilledButton.tonalIcon(
+                              key: const Key('insert-voice-draft-send'),
+                              style: _voiceButtonStyle(),
+                              onPressed: () => unawaited(_insert(send: true)),
+                              icon: const Icon(Icons.arrow_upward_rounded),
+                              label: const Text('Insert & send'),
+                            ),
                     )
                   else
                     OutlinedButton(
@@ -705,6 +796,9 @@ class _VoiceComposerSheetState extends State<_VoiceComposerSheet> {
 
   @override
   void dispose() {
+    widget.validity?.removeListener(_scopeChanged);
+    WidgetsBinding.instance.removeObserver(this);
+    unawaited(widget.controller.cancel());
     _draft.dispose();
     super.dispose();
   }

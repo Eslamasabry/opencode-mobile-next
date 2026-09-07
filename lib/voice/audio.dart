@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:record/record.dart';
+import 'package:flutter/widgets.dart';
 
 import 'device.dart';
 
@@ -47,13 +48,22 @@ class RecordVoiceRecorder implements VoiceRecorder {
   final StreamController<VoiceRecorderEvent> _events =
       StreamController.broadcast();
   late final StreamSubscription<RecordState> _stateSubscription;
+  int _generation = 0;
+  bool _disposed = false;
 
   @override
   Stream<VoiceRecorderEvent> get events => _events.stream;
 
   @override
   Future<Stream<Uint8List>> start() async {
+    final generation = ++_generation;
     final permission = await _platform.requestMicrophonePermission();
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    if (_disposed ||
+        generation != _generation ||
+        (lifecycle != null && lifecycle != AppLifecycleState.resumed)) {
+      throw StateError('Voice input was interrupted.');
+    }
     if (permission != VoiceMicrophonePermission.granted) {
       throw VoicePermissionDenied(
         permanent: permission == VoiceMicrophonePermission.permanentlyDenied,
@@ -78,10 +88,15 @@ class RecordVoiceRecorder implements VoiceRecorder {
   Future<void> stop() async => _recorder.stop();
 
   @override
-  Future<void> cancel() => _recorder.cancel();
+  Future<void> cancel() {
+    ++_generation;
+    return _recorder.cancel();
+  }
 
   @override
   Future<void> dispose() async {
+    _disposed = true;
+    ++_generation;
     await _stateSubscription.cancel();
     await _recorder.dispose();
     await _events.close();
@@ -141,6 +156,7 @@ class Pcm16Accumulator {
   }
 
   void clear() {
+    _samples.fillRange(0, _length, 0);
     _length = 0;
     _pendingLowByte = null;
     level = 0;

@@ -1,0 +1,86 @@
+# Source/simulator validation only. No Apple account, signing secret, IPA,
+# TestFlight submission, or public release is part of this workflow.
+name: iOS remote-client preparation
+
+on:
+  pull_request:
+    paths:
+      - "ios/**"
+      - "lib/**"
+      - "test/**"
+      - "assets/**"
+      - "packages/opencode_sdk/**"
+      - "LICENSES/**"
+      - "shorebird.yaml"
+      - "tool/branding/**"
+      - ".metadata"
+      - "l10n.yaml"
+      - "PRIVACY.md"
+      - "THIRD_PARTY_NOTICES.md"
+      - "pubspec.yaml"
+      - "pubspec.lock"
+      - ".github/workflows/ios-quality.yml"
+  push:
+    branches: [dev, master]
+    paths:
+      - "ios/**"
+      - "lib/**"
+      - "test/**"
+      - "assets/**"
+      - "packages/opencode_sdk/**"
+      - "LICENSES/**"
+      - "shorebird.yaml"
+      - "tool/branding/**"
+      - ".metadata"
+      - "l10n.yaml"
+      - "PRIVACY.md"
+      - "THIRD_PARTY_NOTICES.md"
+      - "pubspec.yaml"
+      - "pubspec.lock"
+      - ".github/workflows/ios-quality.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  simulator:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: 3.47.2
+          channel: stable
+          cache: true
+      - name: Record native toolchain
+        run: xcodebuild -version
+      - name: Resolve locked dependencies
+        run: flutter pub get --enforce-lockfile
+      - name: Analyze app source
+        run: flutter analyze --no-pub
+      - name: Check remote-client platform boundaries
+        run: >-
+          flutter test --no-pub --concurrency=1
+          test/ios_runner_contract_test.dart
+          test/ios_remote_platform_gating_test.dart
+          test/platform_capabilities_test.dart
+      - name: Build unsigned simulator app
+        run: flutter build ios --simulator --debug --no-codesign
+      - name: Package simulator app preserving permissions
+        run: >-
+          ditto -c -k --sequesterRsrc --keepParent
+          build/ios/iphonesimulator/Runner.app
+          build/ios/opencode-mobile-ios-simulator.zip
+      - name: Upload simulator-only artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: opencode-mobile-ios-simulator-${{ github.sha }}
+          path: build/ios/opencode-mobile-ios-simulator.zip
+          if-no-files-found: error
+          retention-days: 7

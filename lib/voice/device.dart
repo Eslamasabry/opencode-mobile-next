@@ -1,8 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 
 import '../platform/platform_capabilities.dart';
 
 enum VoiceMicrophonePermission { granted, denied, permanentlyDenied }
+
+class VoiceDeviceUnavailable implements Exception {
+  const VoiceDeviceUnavailable();
+
+  @override
+  String toString() =>
+      'Local voice input is unavailable. Stop playback, check microphone settings, and try again.';
+}
 
 class VoiceDeviceInfo {
   const VoiceDeviceInfo({
@@ -63,18 +73,21 @@ class AndroidVoiceDevicePlatform implements VoiceDevicePlatform {
       return const VoiceDeviceInfo.unsupported();
     }
     try {
-      final result = await _channel.invokeMapMethod<String, dynamic>(
-        'getDeviceInfo',
-      );
+      final result = await _channel
+          .invokeMapMethod<String, dynamic>('getDeviceInfo')
+          .timeout(const Duration(seconds: 5));
       return VoiceDeviceInfo(
         availableStorageBytes: (result?['availableStorageBytes'] as num?)
             ?.toInt(),
         memoryClassMb: (result?['memoryClassMb'] as num?)?.toInt(),
         supportedAbis:
-            (result?['supportedAbis'] as List?)?.cast<String>() ?? const [],
+            (result?['supportedAbis'] as List?)?.cast<String>().toList(
+              growable: false,
+            ) ??
+            const [],
         hasMicrophone: result?['hasMicrophone'] as bool? ?? true,
       );
-    } on MissingPluginException {
+    } catch (_) {
       return const VoiceDeviceInfo.unknown();
     }
   }
@@ -88,19 +101,19 @@ class AndroidVoiceDevicePlatform implements VoiceDevicePlatform {
       return VoiceMicrophonePermission.permanentlyDenied;
     }
     try {
-      final status = await _channel.invokeMethod<String>(
-        'requestMicrophonePermission',
-      );
+      final status = await _channel
+          .invokeMethod<String>('requestMicrophonePermission')
+          .timeout(const Duration(seconds: 60));
       return switch (status) {
         'granted' => VoiceMicrophonePermission.granted,
         'permanentlyDenied' => VoiceMicrophonePermission.permanentlyDenied,
-        _ => VoiceMicrophonePermission.denied,
+        'denied' => VoiceMicrophonePermission.denied,
+        _ => throw const VoiceDeviceUnavailable(),
       };
-    } on MissingPluginException {
-      // Android with no handler registered (unit tests, a detached engine).
-      // The recorder plugin performs its own runtime permission check, so
-      // defer to it rather than blocking here.
-      return VoiceMicrophonePermission.granted;
+    } catch (_) {
+      // A missing/stale/malformed bridge cannot authorize capture or bypass
+      // the native playback-stop interlock.
+      throw const VoiceDeviceUnavailable();
     }
   }
 
@@ -108,8 +121,10 @@ class AndroidVoiceDevicePlatform implements VoiceDevicePlatform {
   Future<void> openAppSettings() async {
     if (!platformCapabilities.supportsVoice) return;
     try {
-      await _channel.invokeMethod<void>('openAppSettings');
-    } on MissingPluginException {
+      await _channel
+          .invokeMethod<void>('openAppSettings')
+          .timeout(const Duration(seconds: 5));
+    } catch (_) {
       // The recovery action is Android-only and unavailable in unit tests.
     }
   }

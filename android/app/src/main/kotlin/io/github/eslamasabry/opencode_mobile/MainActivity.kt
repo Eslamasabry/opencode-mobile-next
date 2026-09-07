@@ -31,9 +31,12 @@ class MainActivity : FlutterActivity() {
     private var pendingCodingAlertOpen: Map<String, String>? = null
     private var pendingSharedText: String? = null
     private var shareChannel: MethodChannel? = null
+    private var readAloud: ReadAloudBridge? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        readAloud?.dispose()
+        readAloud = ReadAloudBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         captureCodingAlertOpen(intent)
         captureSharedText(intent)
         shareChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SHARE_CHANNEL_NAME)
@@ -202,8 +205,26 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        readAloud?.dispose()
+        readAloud = null
         if (backgroundChannel != null) backgroundChannel = null
         super.cleanUpFlutterEngine(flutterEngine)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        readAloud?.resume()
+    }
+
+    override fun onPause() {
+        readAloud?.pause()
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        readAloud?.dispose()
+        readAloud = null
+        super.onDestroy()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -287,6 +308,10 @@ class MainActivity : FlutterActivity() {
                 microphonePermissionResult = null
                 val granted = grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED
                 val status = if (granted) {
+                    if (readAloud?.beforeMicrophoneCapture() != true) {
+                        result.error("voice_unavailable", "Local voice input is unavailable.", null)
+                        return
+                    }
                     "granted"
                 } else if (!shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
                     "permanentlyDenied"
@@ -421,6 +446,10 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun requestMicrophonePermission(result: MethodChannel.Result) {
+        if (readAloud?.beforeMicrophoneCapture() != true) {
+            result.error("voice_unavailable", "Local voice input is unavailable.", null)
+            return
+        }
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             result.success("granted")
             return

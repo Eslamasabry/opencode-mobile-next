@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/sse.dart';
+import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
@@ -216,7 +217,14 @@ void main() {
       // are still there and no longer numbered as one of two.
       expect(find.text('Paste the code in this app'), findsOneWidget);
       expect(find.text('OLDER SERVERS WITHOUT PAIRING'), findsOneWidget);
-      expect(find.textContaining('libsecret'), findsOneWidget);
+      expect(
+        find.text(
+          lookupAppLocalizations(const Locale('en')).platformSecureStorageGuide,
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('libsecret'), findsNothing);
+      expect(find.textContaining('Keychain'), findsNothing);
     });
   });
 
@@ -274,10 +282,7 @@ void main() {
 
     testWidgets('offer voice input on Android', (tester) async {
       await pumpChat(tester);
-      expect(
-        find.byTooltip('Add. Hold to attach a file'),
-        findsOneWidget,
-      );
+      expect(find.byTooltip('Add. Hold to attach a file'), findsOneWidget);
       await openTools(tester);
       expect(find.byKey(const Key('composer-tool-voice')), findsOneWidget);
     });

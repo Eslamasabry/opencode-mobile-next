@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 
 import 'desktop_interaction.dart';
 
@@ -49,18 +50,49 @@ class DesktopFileDropTarget extends StatefulWidget {
 
 class DesktopFileDropTargetState extends State<DesktopFileDropTarget> {
   bool _dragging = false;
+  bool _handlingDrop = false;
 
   /// Runs the drop handler as though the window manager had delivered
   /// [files]. Lets a widget test exercise the real attachment pipeline
   /// without a platform channel.
   @visibleForTesting
-  Future<void> debugHandleDrop(List<DroppedFile> files) =>
-      _handle(files);
+  Future<void> debugHandleDrop(List<DroppedFile> files) => _handle(files);
 
   Future<void> _handle(List<DroppedFile> files) async {
     if (mounted) setState(() => _dragging = false);
-    if (files.isEmpty) return;
-    await widget.onDrop(files);
+    if (!mounted || files.isEmpty || _handlingDrop) return;
+    _handlingDrop = true;
+    try {
+      await widget.onDrop(files);
+    } catch (_) {
+      if (!mounted) return;
+      // Never display exception text: it can contain local paths or server
+      // content. Do not retry automatically; some files may already be added.
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(
+            lookupAppLocalizations(
+              Localizations.localeOf(context),
+            ).desktopDropFailedTitle,
+          ),
+          content: Text(
+            lookupAppLocalizations(
+              Localizations.localeOf(context),
+            ).desktopDropFailedRecovery,
+          ),
+          actions: [
+            TextButton(
+              autofocus: true,
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(MaterialLocalizations.of(context).closeButtonLabel),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      _handlingDrop = false;
+    }
   }
 
   @override
