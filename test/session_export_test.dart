@@ -23,6 +23,8 @@ import '../tool/capture/fixtures.dart' show loadCaptureFonts, captureTheme;
 class _Export extends ProductRepository implements SessionExportGateway {
   final bytes = Uint8List.fromList(utf8.encode('{"data":{"messages":[]}}'));
   final options = <bool>[];
+  final ids = <String>[];
+  bool emitInvalidProgress = false;
   Completer<void>? wait;
   CancelToken? token;
   Object? error;
@@ -35,8 +37,13 @@ class _Export extends ProductRepository implements SessionExportGateway {
     CancelToken? cancelToken,
     ProgressCallback? onReceiveProgress,
   }) async {
+    ids.add(id);
     options.add(sanitize);
     token = cancelToken;
+    if (emitInvalidProgress) {
+      onReceiveProgress?.call(-1, 10);
+      onReceiveProgress?.call(20, 10);
+    }
     await wait?.future;
     if (error != null) throw error!;
     return bytes;
@@ -165,7 +172,7 @@ void main() {
     return (controller, gateway);
   }
 
-  testWidgets('JSON defaults to redaction and passes same buffer to saver', (
+  testWidgets('JSON defaults to redaction and passes an isolated buffer', (
     tester,
   ) async {
     Uint8List? saved;
@@ -177,10 +184,87 @@ void main() {
     }, size: const Size(411, 891));
     await tester.tap(find.text('Save file'));
     await tester.pumpAndSettle();
+    gateway.bytes[0] = 0x58;
     expect(gateway.options, [true]);
-    expect(identical(saved, gateway.bytes), isTrue);
+    expect(identical(saved, gateway.bytes), isFalse);
+    expect(utf8.decode(saved!), '{"data":{"messages":[]}}');
     expect(find.text('Conversation saved'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('session scope stays frozen when widget updates in place', (
+    tester,
+  ) async {
+    var oldSaves = 0;
+    var newSaves = 0;
+    final (controller, gateway) = await screen(tester, (
+      name,
+      bytes,
+      mime,
+    ) async {
+      oldSaves++;
+      return Uri.file('/backup.json');
+    });
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SessionExportScreen(
+          controller: controller,
+          sessionID: 'ses_replaced',
+          markdown: () => Uint8List.fromList(utf8.encode('replaced')),
+          saveFile: (name, bytes, mime) async {
+            newSaves++;
+            return Uri.file('/backup.json');
+          },
+        ),
+      ),
+    );
+    await tester.tap(find.text('Save file'));
+    await tester.pumpAndSettle();
+    expect(gateway.ids, ['ses_full']);
+    expect(oldSaves, 1);
+    expect(newSaves, 0);
+  });
+
+  testWidgets(
+    'scope change while destination picker is open cannot report success',
+    (tester) async {
+      final started = Completer<void>();
+      final release = Completer<Uri?>();
+      final (controller, _) = await screen(tester, (name, bytes, mime) {
+        started.complete();
+        return release.future;
+      });
+      await tester.tap(find.text('Save file'));
+      await tester.pump();
+      expect(started.isCompleted, isTrue);
+      controller.repository = _Export();
+      release.complete(Uri.file('/backup.json'));
+      await tester.pumpAndSettle();
+      expect(find.text('Conversation saved'), findsNothing);
+      expect(
+        find.textContaining('connection or location changed'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('progress from transport is clamped before rendering', (
+    tester,
+  ) async {
+    final (_, gateway) = await screen(
+      tester,
+      (name, bytes, mime) async => null,
+    );
+    gateway.emitInvalidProgress = true;
+    gateway.wait = Completer<void>();
+    await tester.tap(find.text('Save file'));
+    await tester.pump();
+    final indicator = tester.widget<LinearProgressIndicator>(
+      find.byType(LinearProgressIndicator),
+    );
+    expect(indicator.value, 1.0);
+    gateway.wait!.complete();
+    await tester.pumpAndSettle();
   });
 
   testWidgets('Markdown uses loaded transcript without a server export', (

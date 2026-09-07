@@ -34,8 +34,12 @@ class SessionExportScreen extends StatefulWidget {
 }
 
 class _SessionExportScreenState extends State<SessionExportScreen> {
-  late final _location = widget.controller.locationRevision;
-  late final _repository = widget.controller.repository;
+  late final ConnectionController _controller;
+  late final int _location;
+  late final ServerOperationsGateway? _repository;
+  late final String _sessionID;
+  late final Uint8List Function() _markdown;
+  late final SaveSessionExport _saveFile;
   bool _json = true;
   bool _sanitize = true;
   bool _busy = false;
@@ -46,8 +50,8 @@ class _SessionExportScreenState extends State<SessionExportScreen> {
   CancelToken? _cancel;
 
   bool get _current =>
-      widget.controller.locationRevision == _location &&
-      identical(widget.controller.repository, _repository);
+      _controller.locationRevision == _location &&
+      identical(_controller.repository, _repository);
   bool get _supported =>
       _repository is SessionExportGateway &&
       (_repository as SessionExportGateway).sessionExportSupported;
@@ -58,7 +62,13 @@ class _SessionExportScreenState extends State<SessionExportScreen> {
   @override
   void initState() {
     super.initState();
-    widget.controller.addListener(_changed);
+    _controller = widget.controller;
+    _location = _controller.locationRevision;
+    _repository = _controller.repository;
+    _sessionID = widget.sessionID;
+    _markdown = widget.markdown;
+    _saveFile = widget.saveFile;
+    _controller.addListener(_changed);
   }
 
   void _changed() {
@@ -68,7 +78,7 @@ class _SessionExportScreenState extends State<SessionExportScreen> {
 
   @override
   void dispose() {
-    widget.controller.removeListener(_changed);
+    _controller.removeListener(_changed);
     _cancel?.cancel();
     super.dispose();
   }
@@ -87,7 +97,7 @@ class _SessionExportScreenState extends State<SessionExportScreen> {
     try {
       final Uint8List bytes;
       if (_json) {
-        final ready = await widget.controller.prepareActionRepository();
+        final ready = await _controller.prepareActionRepository();
         if (!mounted || !_current || token.isCancelled) {
           return;
         }
@@ -95,27 +105,33 @@ class _SessionExportScreenState extends State<SessionExportScreen> {
           throw StateError('Export connection is not ready');
         }
         bytes = await (_repository as SessionExportGateway).exportSession(
-          widget.sessionID,
+          _sessionID,
           sanitize: _sanitize,
           cancelToken: token,
           onReceiveProgress: (received, total) {
-            if (mounted && !token.isCancelled) {
-              setState(() => _progress = total > 0 ? received / total : null);
+            if (mounted && _current && !token.isCancelled) {
+              final value = total > 0
+                  ? (received.clamp(0, total) / total).toDouble()
+                  : null;
+              setState(() => _progress = value);
             }
           },
         );
       } else {
-        bytes = widget.markdown();
+        bytes = _markdown();
       }
       if (!mounted || !_current || token.isCancelled) return;
       setState(() => _saving = true);
-      final id = widget.sessionID.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
-      final result = await widget.saveFile(
+      final id = _sessionID.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
+      final saveBytes = Uint8List.fromList(bytes);
+      final result = await _saveFile(
         'opencode-$id.${_json ? 'json' : 'md'}',
-        bytes,
+        saveBytes,
         _json ? 'application/json' : 'text/markdown',
       );
-      if (mounted) setState(() => _saved = result != null);
+      if (mounted && _current && !token.isCancelled) {
+        setState(() => _saved = result != null);
+      }
     } catch (error) {
       if (!mounted || token.isCancelled) return;
       setState(() {
