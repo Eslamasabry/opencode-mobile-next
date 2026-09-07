@@ -12,8 +12,10 @@ import '../../platform/platform_capabilities.dart';
 import '../../state/connection.dart';
 import '../../state/pairing.dart';
 import '../../state/profiles.dart';
+import '../../termux/bridge.dart';
 import '../app_theme.dart';
 import '../widgets/confirm_sheet.dart';
+import '../widgets/managed_server_health.dart';
 import '../widgets/product_states.dart';
 import 'demo_screen.dart';
 import 'attention_overview_screen.dart';
@@ -468,6 +470,13 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                   ),
                 ),
               const SizedBox(height: 16),
+              if (platformCapabilities.supportsTermux &&
+                  store.profiles.any(
+                    (p) => TermuxBridge.managesServerUrl(p.baseUrl),
+                  ))
+                ManagedServerHealth(
+                  onManage: () => Navigator.pushNamed(context, '/termux-setup'),
+                ),
               OutlinedButton.icon(
                 onPressed: _busy ? null : () => _edit(),
                 icon: const Icon(Icons.add_rounded),
