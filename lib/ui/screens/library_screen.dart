@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../api/models.dart' show ModelRef, Session;
+import '../../api/models.dart' show ModelRef;
 import '../../api/mcp_oauth.dart';
 import '../../l10n/app_localizations.dart';
 import '../../domain/server_gateway.dart' show StreamStatus;
@@ -23,7 +23,7 @@ import '../widgets/info_label.dart';
 import '../widgets/provider_logo.dart';
 import '../widgets/confirm_sheet.dart';
 import '../widgets/product_states.dart';
-import '../widgets/session_inventory_footer.dart';
+import '../widgets/run_command_dialog.dart';
 import '../widgets/pickers.dart';
 import 'capabilities_screen.dart';
 import 'guide_screen.dart';

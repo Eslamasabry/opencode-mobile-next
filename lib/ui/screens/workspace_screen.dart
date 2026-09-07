@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../api/models.dart';
 import '../../api/product_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../platform/platform_capabilities.dart';

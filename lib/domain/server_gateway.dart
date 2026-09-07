@@ -3,6 +3,7 @@ import '../api/models.dart';
 import '../api2/models.dart' show Api2FormInfo, Api2FormState, Api2InboxItem;
 import 'managed_shell.dart';
 
+export '../api/models.dart' show Session;
 export 'managed_shell.dart';
 export 'session_note.dart';
 export 'session_export.dart';

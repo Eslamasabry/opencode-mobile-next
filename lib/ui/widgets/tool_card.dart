@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../../api/models.dart';
+import '../../domain/mobile_tool_view.dart';
+import 'mobile_task_view.dart';
 import '../app_theme.dart';
 import 'agent_color.dart';
 import 'file_preview.dart';
@@ -1090,13 +1092,13 @@ class _ToolContractBody extends StatelessWidget {
 
   Widget _todoBody() {
     final raw = _metadata['todos'] ?? state.input['todos'];
-    if (raw is! List || raw.isEmpty) return _plainOutput('tasks.json');
-    return Column(
-      children: [
-        for (final item in raw.whereType<Map>())
-          _TodoRow(todo: Map<String, dynamic>.from(item)),
-      ],
-    );
+    final view = MobileTaskView.fromTodos(raw);
+    if (view != null) return MobileTaskList(view: view);
+    if (state.output?.isNotEmpty == true) return _plainOutput('tasks.json');
+    final fallback = MobileTaskView.fallback(raw);
+    return fallback.isEmpty
+        ? _plainOutput('tasks.json')
+        : _Mono(text: fallback, name: 'tasks.txt', maxLines: 100);
   }
 
   Widget _questionBody() {
@@ -1734,47 +1736,6 @@ class _DiffPreviewLine extends StatelessWidget {
             height: 1.35,
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _TodoRow extends StatelessWidget {
-  const _TodoRow({required this.todo});
-
-  final Map<String, dynamic> todo;
-
-  @override
-  Widget build(BuildContext context) {
-    final status = _valueString(todo['status']) ?? 'pending';
-    final done = status == 'completed';
-    final active = status == 'in_progress';
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            done
-                ? Icons.check_circle_outline_rounded
-                : active
-                ? Icons.hourglass_top_rounded
-                : Icons.checklist_rounded,
-            size: 17,
-            color: done ? AppTheme.successOf(theme) : AppTheme.mutedOf(theme),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              _valueString(todo['content']) ?? '(untitled task)',
-              style: theme.textTheme.bodySmall?.copyWith(
-                decoration: done ? TextDecoration.lineThrough : null,
-                color: done ? AppTheme.mutedOf(theme) : null,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

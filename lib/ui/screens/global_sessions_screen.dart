@@ -12,7 +12,6 @@ import '../widgets/product_states.dart';
 import '../widgets/session_read_state.dart';
 import '../widgets/session_handoff.dart';
 import 'session_relations_screen.dart';
-import '../../api/models.dart';
 
 class GlobalSessionsScreen extends StatefulWidget {
   final ConnectionController controller;

@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
-import '../../api/models.dart' show Session;
 import '../../api2/transport.dart';
 import '../../domain/server_gateway.dart';
 import '../../l10n/app_localizations.dart';

@@ -8,7 +8,8 @@ import 'package:opencode_mobile/api/models.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/product_repository.dart';
 import 'package:opencode_mobile/domain/plugin_inventory.dart';
-import 'package:opencode_mobile/domain/server_gateway.dart' show StreamStatus;
+import 'package:opencode_mobile/domain/server_gateway.dart'
+    show StreamStatus, CommandInfo;
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
@@ -27,6 +28,16 @@ class _Repository implements ProductRepository, PluginGateway {
   int calls = 0;
   Completer<List<PluginInfo>>? gate;
   bool fail = false;
+  int commandCalls = 0;
+  List<CommandInfo> commands = const [
+    CommandInfo(name: 'review', subtask: false),
+  ];
+  @override
+  Future<List<CommandInfo>> listCommands() async {
+    commandCalls++;
+    return commands;
+  }
+
   List<PluginInfo> plugins = [];
   @override
   Future<List<PluginInfo>> listPlugins() {
@@ -90,6 +101,112 @@ void main() {
     () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(storage, null),
   );
+
+  testWidgets(
+    'personal command links persist and open review without running',
+    (tester) async {
+      final repository = _Repository()..plugins = [_plugin];
+      final controller = await _controller(repository);
+      await tester.pumpWidget(_app(controller));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Link commands'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('personal links apply only'), findsOneWidget);
+      await tester.tap(find.text('/review'));
+      await tester.tap(find.text('Save links'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Your command links · not verified plugin ownership'),
+        findsOneWidget,
+      );
+      expect(
+        controller.store.prefs.getString('oc.pluginCommandMappings.plugins'),
+        contains('review'),
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpWidget(_app(controller));
+      await tester.pumpAndSettle();
+      expect(find.text('Review /review'), findsOneWidget);
+      await tester.tap(find.text('Review /review'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('command-arguments')), findsOneWidget);
+      expect(find.byKey(const ValueKey('command-submit')), findsOneWidget);
+      expect(controller.sortedSessions(), isEmpty);
+    },
+  );
+
+  testWidgets('command removed after review is checked again before Run', (
+    tester,
+  ) async {
+    final repository = _Repository()..plugins = [_plugin];
+    final controller = await _controller(repository);
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Link commands'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('/review'));
+    await tester.tap(find.text('Save links'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Review /review'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('command-arguments')),
+      'keep this draft',
+    );
+    repository.commands = [];
+    await tester.tap(find.byKey(const ValueKey('command-submit')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('no longer available here'), findsOneWidget);
+    expect(find.byKey(const ValueKey('command-arguments')), findsOneWidget);
+    expect(controller.sortedSessions(), isEmpty);
+  });
+
+  testWidgets('clearing personal links requires confirmation', (tester) async {
+    final repository = _Repository()..plugins = [_plugin];
+    final controller = await _controller(repository);
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Link commands'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('/review'));
+    await tester.tap(find.text('Save links'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Clear personal links'));
+    await tester.pumpAndSettle();
+    expect(find.text('Clear all personal command links?'), findsOneWidget);
+    await tester.tap(find.text('Cancel').hitTestable());
+    await tester.pumpAndSettle();
+    expect(find.text('Review /review'), findsOneWidget);
+    await tester.tap(find.text('Clear personal links'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Clear links').hitTestable());
+    await tester.pumpAndSettle();
+    expect(find.text('Review /review'), findsNothing);
+    expect(find.text('reviewer'), findsOneWidget);
+    expect(
+      controller.store.prefs.containsKey('oc.pluginCommandMappings.plugins'),
+      isFalse,
+    );
+  });
+
+  testWidgets('removed command never opens a stale mapped action', (
+    tester,
+  ) async {
+    final repository = _Repository()..plugins = [_plugin];
+    final controller = await _controller(repository);
+    await tester.pumpWidget(_app(controller));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Link commands'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('/review'));
+    await tester.tap(find.text('Save links'));
+    await tester.pumpAndSettle();
+    repository.commands = [];
+    await tester.tap(find.text('Review /review'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('command-submit')), findsNothing);
+    expect(find.textContaining('no longer available here'), findsOneWidget);
+  });
 
   testWidgets('unsupported servers make no plugin request', (tester) async {
     final repository = _Repository();
