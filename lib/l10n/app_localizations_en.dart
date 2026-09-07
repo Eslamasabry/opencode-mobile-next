@@ -2482,4 +2482,153 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get uncertainAuthCloseHint =>
       'Close this sheet and use the unconfirmed sign-in row to clear its local retry block after checking the server.';
+
+  @override
+  String get pluginsTitle => 'Plugins';
+
+  @override
+  String get pluginsDescription =>
+      'Plugins reported for this server location. Inspect status and source here; manage plugins on the server.';
+
+  @override
+  String get pluginsUnsupported =>
+      'This server does not support plugin inspection.';
+
+  @override
+  String get pluginsDisconnected =>
+      'Connect to a server to inspect its plugins.';
+
+  @override
+  String get pluginsEmpty => 'No plugins reported for this location.';
+
+  @override
+  String get pluginsLoadFailed => 'Could not load plugins. Try again.';
+
+  @override
+  String get pluginsRefresh => 'Refresh plugins';
+
+  @override
+  String get pluginsRetry => 'Try again';
+
+  @override
+  String get pluginsUnnamed => 'Plugin without an ID';
+
+  @override
+  String get pluginsStatusActive => 'Active';
+
+  @override
+  String get pluginsStatusFailed => 'Failed';
+
+  @override
+  String get pluginsStatusUnknown => 'Unknown status';
+
+  @override
+  String get pluginsSourceBuiltin => 'Built in';
+
+  @override
+  String get pluginsSourcePackage => 'Package';
+
+  @override
+  String get pluginsSourceLocal => 'Local file (path hidden)';
+
+  @override
+  String get pluginsSourceSdk => 'SDK';
+
+  @override
+  String get pluginsSourceUnknown => 'Unknown source';
+
+  @override
+  String get pluginsTerminalUi => 'Terminal UI declared';
+
+  @override
+  String get pluginsFailureDetail =>
+      'Failure details are hidden because they may contain credentials.';
+
+  @override
+  String get demoReviewChanges => 'Review changes';
+
+  @override
+  String get demoSetUpServer => 'Set up your own server';
+
+  @override
+  String get handoffCommandTitle => 'Continue on computer';
+
+  @override
+  String get handoffCommandDisclosure =>
+      'Run this command in a POSIX shell on a computer with OpenCode installed and access to this server. Set OPENCODE_SERVER_PASSWORD privately on that computer if the server requires it. The clipboard will contain the server address, username, project directory and session ID, but no password.';
+
+  @override
+  String get handoffCopyCommand => 'Copy command';
+
+  @override
+  String get handoffCommandCopied => 'Resume command copied';
+
+  @override
+  String get handoffCommandUnavailable =>
+      'A resume command is unavailable for this connection or workspace. Continuing on another computer needs a supported OpenCode command and a reachable HTTPS server; a localhost address points to each device itself. You can still copy the session metadata below.';
+
+  @override
+  String get quotaMiniMax => 'MiniMax';
+
+  @override
+  String get quotaMiniMaxAccount => 'MiniMax subscription windows';
+
+  @override
+  String get quotaMiniMaxSourceBound =>
+      'Tied to the collector\'s configured MiniMax Subscription Key. The quota response does not independently identify the account. Only reported general-pool percentages are shown; other limits may apply.';
+
+  @override
+  String get managedHealthTitle => 'On-device server';
+
+  @override
+  String get managedHealthUnchecked =>
+      'Check the server managed by this app in Termux.';
+
+  @override
+  String get managedHealthCheck => 'Check status';
+
+  @override
+  String get managedHealthChecking => 'Checking Termux…';
+
+  @override
+  String get managedHealthFailed =>
+      'Could not check Termux. Open setup to check permissions or try again.';
+
+  @override
+  String get managedHealthReady => 'Server process running';
+
+  @override
+  String get managedHealthWorking => 'Setup is in progress';
+
+  @override
+  String get managedHealthStopped => 'Server stopped';
+
+  @override
+  String get managedHealthNeedsSetup => 'Setup needs attention';
+
+  @override
+  String get managedHealthAbsent => 'No managed setup found';
+
+  @override
+  String get managedHealthUnknown => 'Server state unavailable';
+
+  @override
+  String get managedHealthManage => 'Open setup controls';
+
+  @override
+  String managedHealthObserved(String time) {
+    return 'Last checked at $time. Check again for the current state.';
+  }
+
+  @override
+  String managedHealthVersion(String version) {
+    return 'OpenCode $version';
+  }
+
+  @override
+  String get managedHealthUbuntu => 'Runner: Ubuntu';
+
+  @override
+  String get managedHealthLifetime =>
+      'Android may stop either app. Keeping the mobile connection alive does not guarantee the Termux server will keep running overnight.';
 }

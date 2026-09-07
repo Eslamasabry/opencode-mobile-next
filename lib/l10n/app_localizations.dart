@@ -4197,6 +4197,276 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close this sheet and use the unconfirmed sign-in row to clear its local retry block after checking the server.'**
   String get uncertainAuthCloseHint;
+
+  /// No description provided for @pluginsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugins'**
+  String get pluginsTitle;
+
+  /// No description provided for @pluginsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugins reported for this server location. Inspect status and source here; manage plugins on the server.'**
+  String get pluginsDescription;
+
+  /// No description provided for @pluginsUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This server does not support plugin inspection.'**
+  String get pluginsUnsupported;
+
+  /// No description provided for @pluginsDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to a server to inspect its plugins.'**
+  String get pluginsDisconnected;
+
+  /// No description provided for @pluginsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No plugins reported for this location.'**
+  String get pluginsEmpty;
+
+  /// No description provided for @pluginsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load plugins. Try again.'**
+  String get pluginsLoadFailed;
+
+  /// No description provided for @pluginsRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh plugins'**
+  String get pluginsRefresh;
+
+  /// No description provided for @pluginsRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get pluginsRetry;
+
+  /// No description provided for @pluginsUnnamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin without an ID'**
+  String get pluginsUnnamed;
+
+  /// No description provided for @pluginsStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get pluginsStatusActive;
+
+  /// No description provided for @pluginsStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get pluginsStatusFailed;
+
+  /// No description provided for @pluginsStatusUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown status'**
+  String get pluginsStatusUnknown;
+
+  /// No description provided for @pluginsSourceBuiltin.
+  ///
+  /// In en, this message translates to:
+  /// **'Built in'**
+  String get pluginsSourceBuiltin;
+
+  /// No description provided for @pluginsSourcePackage.
+  ///
+  /// In en, this message translates to:
+  /// **'Package'**
+  String get pluginsSourcePackage;
+
+  /// No description provided for @pluginsSourceLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Local file (path hidden)'**
+  String get pluginsSourceLocal;
+
+  /// No description provided for @pluginsSourceSdk.
+  ///
+  /// In en, this message translates to:
+  /// **'SDK'**
+  String get pluginsSourceSdk;
+
+  /// No description provided for @pluginsSourceUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown source'**
+  String get pluginsSourceUnknown;
+
+  /// No description provided for @pluginsTerminalUi.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal UI declared'**
+  String get pluginsTerminalUi;
+
+  /// No description provided for @pluginsFailureDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Failure details are hidden because they may contain credentials.'**
+  String get pluginsFailureDetail;
+
+  /// No description provided for @demoReviewChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Review changes'**
+  String get demoReviewChanges;
+
+  /// No description provided for @demoSetUpServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up your own server'**
+  String get demoSetUpServer;
+
+  /// No description provided for @handoffCommandTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue on computer'**
+  String get handoffCommandTitle;
+
+  /// No description provided for @handoffCommandDisclosure.
+  ///
+  /// In en, this message translates to:
+  /// **'Run this command in a POSIX shell on a computer with OpenCode installed and access to this server. Set OPENCODE_SERVER_PASSWORD privately on that computer if the server requires it. The clipboard will contain the server address, username, project directory and session ID, but no password.'**
+  String get handoffCommandDisclosure;
+
+  /// No description provided for @handoffCopyCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy command'**
+  String get handoffCopyCommand;
+
+  /// No description provided for @handoffCommandCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume command copied'**
+  String get handoffCommandCopied;
+
+  /// No description provided for @handoffCommandUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'A resume command is unavailable for this connection or workspace. Continuing on another computer needs a supported OpenCode command and a reachable HTTPS server; a localhost address points to each device itself. You can still copy the session metadata below.'**
+  String get handoffCommandUnavailable;
+
+  /// No description provided for @quotaMiniMax.
+  ///
+  /// In en, this message translates to:
+  /// **'MiniMax'**
+  String get quotaMiniMax;
+
+  /// No description provided for @quotaMiniMaxAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'MiniMax subscription windows'**
+  String get quotaMiniMaxAccount;
+
+  /// No description provided for @quotaMiniMaxSourceBound.
+  ///
+  /// In en, this message translates to:
+  /// **'Tied to the collector\'s configured MiniMax Subscription Key. The quota response does not independently identify the account. Only reported general-pool percentages are shown; other limits may apply.'**
+  String get quotaMiniMaxSourceBound;
+
+  /// No description provided for @managedHealthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'On-device server'**
+  String get managedHealthTitle;
+
+  /// No description provided for @managedHealthUnchecked.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the server managed by this app in Termux.'**
+  String get managedHealthUnchecked;
+
+  /// No description provided for @managedHealthCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Check status'**
+  String get managedHealthCheck;
+
+  /// No description provided for @managedHealthChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking Termux…'**
+  String get managedHealthChecking;
+
+  /// No description provided for @managedHealthFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not check Termux. Open setup to check permissions or try again.'**
+  String get managedHealthFailed;
+
+  /// No description provided for @managedHealthReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Server process running'**
+  String get managedHealthReady;
+
+  /// No description provided for @managedHealthWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup is in progress'**
+  String get managedHealthWorking;
+
+  /// No description provided for @managedHealthStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Server stopped'**
+  String get managedHealthStopped;
+
+  /// No description provided for @managedHealthNeedsSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup needs attention'**
+  String get managedHealthNeedsSetup;
+
+  /// No description provided for @managedHealthAbsent.
+  ///
+  /// In en, this message translates to:
+  /// **'No managed setup found'**
+  String get managedHealthAbsent;
+
+  /// No description provided for @managedHealthUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Server state unavailable'**
+  String get managedHealthUnknown;
+
+  /// No description provided for @managedHealthManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Open setup controls'**
+  String get managedHealthManage;
+
+  /// No description provided for @managedHealthObserved.
+  ///
+  /// In en, this message translates to:
+  /// **'Last checked at {time}. Check again for the current state.'**
+  String managedHealthObserved(String time);
+
+  /// No description provided for @managedHealthVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode {version}'**
+  String managedHealthVersion(String version);
+
+  /// No description provided for @managedHealthUbuntu.
+  ///
+  /// In en, this message translates to:
+  /// **'Runner: Ubuntu'**
+  String get managedHealthUbuntu;
+
+  /// No description provided for @managedHealthLifetime.
+  ///
+  /// In en, this message translates to:
+  /// **'Android may stop either app. Keeping the mobile connection alive does not guarantee the Termux server will keep running overnight.'**
+  String get managedHealthLifetime;
 }
 
 class _AppLocalizationsDelegate

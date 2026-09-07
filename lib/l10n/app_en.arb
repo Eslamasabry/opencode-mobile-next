@@ -884,5 +884,64 @@
   "uncertainAuthForgetTitle": "Forget uncertain start?",
   "uncertainAuthForgetDetail": "This clears only the local retry block. It does not cancel sign-in on the server. Check the server first to avoid running a second sign-in. No new sign-in will start.",
   "uncertainAuthForget": "Forget uncertain start",
-  "uncertainAuthCloseHint": "Close this sheet and use the unconfirmed sign-in row to clear its local retry block after checking the server."
+  "uncertainAuthCloseHint": "Close this sheet and use the unconfirmed sign-in row to clear its local retry block after checking the server.",
+  "pluginsTitle": "Plugins",
+  "pluginsDescription": "Plugins reported for this server location. Inspect status and source here; manage plugins on the server.",
+  "pluginsUnsupported": "This server does not support plugin inspection.",
+  "pluginsDisconnected": "Connect to a server to inspect its plugins.",
+  "pluginsEmpty": "No plugins reported for this location.",
+  "pluginsLoadFailed": "Could not load plugins. Try again.",
+  "pluginsRefresh": "Refresh plugins",
+  "pluginsRetry": "Try again",
+  "pluginsUnnamed": "Plugin without an ID",
+  "pluginsStatusActive": "Active",
+  "pluginsStatusFailed": "Failed",
+  "pluginsStatusUnknown": "Unknown status",
+  "pluginsSourceBuiltin": "Built in",
+  "pluginsSourcePackage": "Package",
+  "pluginsSourceLocal": "Local file (path hidden)",
+  "pluginsSourceSdk": "SDK",
+  "pluginsSourceUnknown": "Unknown source",
+  "pluginsTerminalUi": "Terminal UI declared",
+  "pluginsFailureDetail": "Failure details are hidden because they may contain credentials.",
+  "demoReviewChanges": "Review changes",
+  "demoSetUpServer": "Set up your own server",
+  "handoffCommandTitle": "Continue on computer",
+  "handoffCommandDisclosure": "Run this command in a POSIX shell on a computer with OpenCode installed and access to this server. Set OPENCODE_SERVER_PASSWORD privately on that computer if the server requires it. The clipboard will contain the server address, username, project directory and session ID, but no password.",
+  "handoffCopyCommand": "Copy command",
+  "handoffCommandCopied": "Resume command copied",
+  "handoffCommandUnavailable": "A resume command is unavailable for this connection or workspace. Continuing on another computer needs a supported OpenCode command and a reachable HTTPS server; a localhost address points to each device itself. You can still copy the session metadata below.",
+  "quotaMiniMax": "MiniMax",
+  "quotaMiniMaxAccount": "MiniMax subscription windows",
+  "quotaMiniMaxSourceBound": "Tied to the collector's configured MiniMax Subscription Key. The quota response does not independently identify the account. Only reported general-pool percentages are shown; other limits may apply.",
+  "managedHealthTitle": "On-device server",
+  "managedHealthUnchecked": "Check the server managed by this app in Termux.",
+  "managedHealthCheck": "Check status",
+  "managedHealthChecking": "Checking Termux…",
+  "managedHealthFailed": "Could not check Termux. Open setup to check permissions or try again.",
+  "managedHealthReady": "Server process running",
+  "managedHealthWorking": "Setup is in progress",
+  "managedHealthStopped": "Server stopped",
+  "managedHealthNeedsSetup": "Setup needs attention",
+  "managedHealthAbsent": "No managed setup found",
+  "managedHealthUnknown": "Server state unavailable",
+  "managedHealthManage": "Open setup controls",
+  "managedHealthObserved": "Last checked at {time}. Check again for the current state.",
+  "@managedHealthObserved": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "managedHealthVersion": "OpenCode {version}",
+  "@managedHealthVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "managedHealthUbuntu": "Runner: Ubuntu",
+  "managedHealthLifetime": "Android may stop either app. Keeping the mobile connection alive does not guarantee the Termux server will keep running overnight."
 }
