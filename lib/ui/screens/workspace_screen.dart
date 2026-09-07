@@ -262,15 +262,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_projects == null && _projectError == null) {
-      return const LoadingList(rows: 6);
-    }
-    if (_projectError != null && _projects == null) {
-      return ProductErrorState(
-        message: _projectError!,
-        onRetry: _refreshWorkspace,
-      );
-    }
+    // Project discovery and session inventory are independent. A pending or
+    // failed catalog must not hide conversations that the server can still
+    // list, or the route that finds sessions in other directories.
     // Rows swiped to Archive vanish immediately and come back on Undo; the
     // server call only happens once the snackbar has gone.
     final sessions = widget.controller
@@ -323,6 +317,66 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                       // The project catalog and session inventory are separate.
                       // An empty catalog must not hide existing conversations,
                       // inventory errors, or the server-wide session finder.
+                      if (_projects == null && _projectError == null)
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Semantics(
+                                label: 'Loading projects',
+                                child: const LinearProgressIndicator(),
+                              ),
+                              TextButton.icon(
+                                onPressed: _openAllSessions,
+                                icon: const Icon(Icons.manage_search_rounded),
+                                label: const Text('Search all sessions'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      if (_projectError != null)
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Semantics(
+                                liveRegion: true,
+                                child: Text(
+                                  'Project list unavailable',
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(_projectError!),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Your conversations can still be available. '
+                                'Search all sessions to find previous work.',
+                              ),
+                              Wrap(
+                                spacing: 8,
+                                children: [
+                                  TextButton.icon(
+                                    onPressed: _load,
+                                    icon: const Icon(Icons.refresh_rounded),
+                                    label: const Text('Retry projects'),
+                                  ),
+                                  TextButton.icon(
+                                    onPressed: _openAllSessions,
+                                    icon: const Icon(
+                                      Icons.manage_search_rounded,
+                                    ),
+                                    label: const Text('Search all sessions'),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
                       if (_projects?.isEmpty == true)
                         Padding(
                           padding: const EdgeInsets.all(16),
@@ -336,7 +390,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                             onAction: _openAllSessions,
                           ),
                         )
-                      else
+                      else if (_projects?.isNotEmpty == true)
                         ListTile(
                           key: const ValueKey('current-project-entry'),
                           leading: const Icon(Icons.folder_rounded),
