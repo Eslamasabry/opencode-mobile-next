@@ -48,6 +48,7 @@ Future<void> presentForm(
                 form: form,
                 onSubmit: onSubmit,
                 onCancel: onCancel,
+                routes: routes,
                 onClose: () => Navigator.of(routeContext).maybePop(),
               ),
             ),
@@ -76,6 +77,7 @@ Future<void> presentForm(
           form: form,
           onSubmit: onSubmit,
           onCancel: onCancel,
+          routes: routes,
           onClose: () => Navigator.of(sheetContext).maybePop(),
         ),
       );
@@ -97,6 +99,7 @@ class FormRenderer extends StatefulWidget {
     required this.onCancel,
     this.onClose,
     this.scrollController,
+    this.routes,
   });
 
   final Api2FormInfo form;
@@ -108,6 +111,9 @@ class FormRenderer extends StatefulWidget {
   final VoidCallback? onClose;
 
   final ScrollController? scrollController;
+
+  /// Also retires nested decisions when the presenting request is invalidated.
+  final RequestRoutes? routes;
 
   @override
   State<FormRenderer> createState() => _FormRendererState();
@@ -435,6 +441,7 @@ class _FormRendererState extends State<FormRenderer> {
       destructive: true,
       sheetKey: const Key('form-dismiss-confirm'),
       confirmKey: const Key('form-dismiss-confirm-button'),
+      routes: widget.routes,
     );
     if (!confirmed || !mounted) return;
     setState(() {

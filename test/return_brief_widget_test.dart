@@ -196,6 +196,71 @@ void main() {
     },
   );
 
+  for (final fullScreen in [false, true]) {
+    for (final changeProject in [false, true]) {
+      testWidgets(
+        '${fullScreen ? 'full-screen' : 'sheet'} form dismiss retires on '
+        '${changeProject ? 'project change' : 'request settlement'} without '
+        'closing an unrelated route',
+        (tester) async {
+          final c = await briefController();
+          addTearDown(c.dispose);
+          c.forms['f1'] = Api2FormInfo(
+            id: 'f1',
+            sessionID: 'results',
+            title: 'Choose deployment target',
+            fields: [
+              for (var i = 0; i < (fullScreen ? 5 : 1); i++)
+                Api2FormField(key: 'field-$i', type: Api2FormFieldType.string),
+            ],
+          );
+          await tester.pumpWidget(briefApp(c));
+          await frames(tester);
+          await tester.ensureVisible(inBrief('Answer'));
+          await tester.tap(inBrief('Answer').hitTestable());
+          await frames(tester);
+          final dismiss = find.byKey(const Key('form-cancel'));
+          expect(dismiss.hitTestable(), findsOneWidget);
+          await tester.tap(dismiss.hitTestable());
+          await frames(tester);
+          final confirmation = find.byKey(const Key('form-dismiss-confirm'));
+          expect(confirmation, findsOneWidget);
+          final navigator = Navigator.of(tester.element(confirmation));
+          unawaited(
+            navigator.push<void>(
+              MaterialPageRoute<void>(
+                builder: (_) => const Scaffold(body: Text('Unrelated details')),
+              ),
+            ),
+          );
+          await frames(tester);
+          expect(find.text('Unrelated details'), findsOneWidget);
+          if (changeProject) {
+            c.changeProject();
+          } else {
+            c.forms.remove('f1');
+            c.publish();
+          }
+          await frames(tester);
+          expect(
+            find.byKey(const Key('form-sheet'), skipOffstage: false),
+            findsNothing,
+          );
+          expect(
+            find.byKey(const Key('form-dismiss-confirm'), skipOffstage: false),
+            findsNothing,
+          );
+          expect(find.text('Unrelated details'), findsOneWidget);
+          expect((c.api as BriefApi).formReplies, isEmpty);
+          navigator.pop();
+          await frames(tester);
+          expect(find.text('Unrelated details'), findsNothing);
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+  }
+
   testWidgets(
     'known empty, unsupported and partial inventories have distinct presentation',
     (tester) async {

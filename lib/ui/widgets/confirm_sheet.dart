@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'request_routes.dart';
+
 /// Mobile-idiomatic confirmation: a bottom sheet with one clear primary
 /// action, replacing centered [AlertDialog] confirms. Returns true only when
 /// the confirming action is chosen.
@@ -14,11 +16,14 @@ Future<bool> showConfirmSheet(
   bool destructive = false,
   Key? sheetKey,
   Key? confirmKey,
+  RequestRoutes? routes,
 }) async {
+  if (routes?.isPending == false) return false;
   final result = await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
     builder: (context) {
+      routes?.own(ModalRoute.of(context));
       final theme = Theme.of(context);
       final accent = destructive
           ? theme.colorScheme.error
