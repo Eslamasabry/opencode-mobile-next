@@ -27,12 +27,15 @@ class _Notes extends ProductRepository implements SessionNoteGateway {
   String? value = 'Keep changes focused';
   final writes = <String?>[];
   Completer<void>? readGate;
+  Completer<void>? readStarted;
   Completer<void>? writeGate;
+  Completer<void>? writeStarted;
   Object? failure;
   @override
   bool get sessionNotesSupported => true;
   @override
   Future<String?> loadSessionNote(String id) async {
+    readStarted?.complete();
     await readGate?.future;
     return value;
   }
@@ -40,6 +43,7 @@ class _Notes extends ProductRepository implements SessionNoteGateway {
   @override
   Future<void> saveSessionNote(String id, String note) async {
     writes.add(note);
+    writeStarted?.complete();
     await writeGate?.future;
     if (failure != null) throw failure!;
     value = note;
@@ -388,6 +392,157 @@ void main() {
       expect(mapped.parts.single.filename, livePart.filename);
     },
   );
+
+  testWidgets(
+    'repository replacement disables a stale note review until refresh',
+    (tester) async {
+      final h = await _harness();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SessionNoteScreen(controller: h.controller, sessionID: 'ses_1'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      h.controller.repository = _Notes();
+      h.controller.notifyListeners();
+      await tester.pump();
+
+      final editor = tester.widget<TextField>(
+        find.byKey(const ValueKey('session-note-editor')),
+      );
+      final save = tester.widget<FilledButton>(
+        find.byKey(const ValueKey('save-session-note')),
+      );
+      expect(editor.readOnly, isTrue);
+      expect(save.onPressed, isNull);
+      expect(
+        find.textContaining('The session or its instructions changed.'),
+        findsOneWidget,
+      );
+      expect(find.text('Refresh saved note'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'an in-flight load completing after disposal does not update the screen',
+    (tester) async {
+      final h = await _harness();
+      h.notes.readStarted = Completer<void>();
+      h.notes.readGate = Completer<void>();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SessionNoteScreen(controller: h.controller, sessionID: 'ses_1'),
+        ),
+      );
+      await h.notes.readStarted!.future;
+
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+      h.notes.readGate!.complete();
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('an in-flight save cannot pop a replacement session editor', (
+    tester,
+  ) async {
+    final h = await _harness();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SessionNoteScreen(controller: h.controller, sessionID: 'ses_1'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('session-note-editor')),
+      'session one draft',
+    );
+    h.notes.writeStarted = Completer<void>();
+    h.notes.writeGate = Completer<void>();
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('save-session-note')));
+    await tester.pump();
+    expect(h.notes.writeStarted!.isCompleted, isTrue);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SessionNoteScreen(controller: h.controller, sessionID: 'ses_2'),
+      ),
+    );
+    await tester.pump();
+    h.notes.writeGate!.complete();
+    await tester.pumpAndSettle();
+
+    final editor = tester.widget<TextField>(
+      find.byKey(const ValueKey('session-note-editor')),
+    );
+    expect(editor.controller!.text, 'session one draft');
+    expect(editor.readOnly, isTrue);
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const ValueKey('save-session-note')))
+          .onPressed,
+      isNull,
+    );
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Discard your note changes?'), findsOneWidget);
+  });
+
+  testWidgets('a delayed old save failure cannot affect a fresh editor save', (
+    tester,
+  ) async {
+    final old = await _harness();
+    final fresh = await _harness();
+    old.notes.writeStarted = Completer<void>();
+    old.notes.writeGate = Completer<void>();
+    old.notes.failure = const Api2AuthRequired('Authentication required');
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SessionNoteScreen(
+          key: const ValueKey('old-editor'),
+          controller: old.controller,
+          sessionID: 'ses_1',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('session-note-editor')),
+      'old editor draft',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('save-session-note')));
+    await tester.pump();
+    expect(old.notes.writeStarted!.isCompleted, isTrue);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SessionNoteScreen(
+          key: const ValueKey('fresh-editor'),
+          controller: fresh.controller,
+          sessionID: 'ses_2',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    old.notes.writeGate!.complete();
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const ValueKey('session-note-editor')),
+      'fresh editor draft',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('save-session-note')));
+    await tester.pumpAndSettle();
+
+    expect(fresh.notes.writes, ['fresh editor draft']);
+  });
 
   testWidgets(
     'failed save retains draft and refresh shows remote note before replacing',

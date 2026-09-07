@@ -23,51 +23,81 @@ class SessionNoteScreen extends StatefulWidget {
 
 class _SessionNoteScreenState extends State<SessionNoteScreen> {
   final _text = TextEditingController();
-  late final int _location = widget.controller.locationRevision;
+  late final ConnectionController _boundController;
+  late final String _boundSessionID;
+  late final int _location;
   SessionNoteReview? _review;
+  Object? _reviewRepository;
   Object? _error;
   bool _loading = true;
   bool _saving = false;
   bool _allowLeave = false;
   bool _reviewRefreshed = false;
   int _maxBytes = SessionNoteGateway.maxBytes;
+  int _loadGeneration = 0;
+  int _saveGeneration = 0;
   bool get _dirty => _text.text != (_review?.value ?? '');
-  bool get _sameLocation => widget.controller.locationRevision == _location;
+  bool get _sameWidget =>
+      identical(widget.controller, _boundController) &&
+      widget.sessionID == _boundSessionID;
+  bool get _sameLocation =>
+      _sameWidget && _boundController.locationRevision == _location;
+  bool get _savingForScope =>
+      _saving &&
+      _sameLocation &&
+      identical(_boundController.repository, _reviewRepository);
 
   @override
   void initState() {
     super.initState();
+    _boundController = widget.controller;
+    _boundSessionID = widget.sessionID;
+    _location = _boundController.locationRevision;
     unawaited(_load());
   }
 
   Future<void> _load() async {
     if (!_sameLocation) return;
+    final loadGeneration = ++_loadGeneration;
     final keepDraft = _review != null;
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
-      final review = await widget.controller.loadSessionNote(widget.sessionID);
-      if (!mounted || !_sameLocation) return;
+      final review = await _boundController.loadSessionNote(_boundSessionID);
+      if (!mounted || !_sameLocation || loadGeneration != _loadGeneration) {
+        return;
+      }
       setState(() {
         _review = review;
+        _reviewRepository = _boundController.repository;
         _reviewRefreshed = keepDraft;
         if (!keepDraft) _text.text = review.value ?? '';
       });
     } catch (error) {
-      if (mounted) setState(() => _error = error);
+      if (mounted && _sameLocation && loadGeneration == _loadGeneration) {
+        setState(() => _error = error);
+      }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && loadGeneration == _loadGeneration) {
+        setState(() => _loading = false);
+      }
     }
   }
 
-  Future<void> _leave() async {
+  Future<void> _leave({bool Function()? stillTargetsThisEditor}) async {
+    if (stillTargetsThisEditor != null && !stillTargetsThisEditor()) return;
     final navigator = Navigator.of(context);
     final route = ModalRoute.of(context);
     setState(() => _allowLeave = true);
     await WidgetsBinding.instance.endOfFrame;
-    if (!mounted || route == null || !route.isActive) return;
+    if (!mounted ||
+        (stillTargetsThisEditor != null && !stillTargetsThisEditor()) ||
+        route == null ||
+        !route.isActive) {
+      return;
+    }
     if (route.isCurrent) {
       navigator.pop();
     } else {
@@ -76,7 +106,7 @@ class _SessionNoteScreenState extends State<SessionNoteScreen> {
   }
 
   Future<void> _confirmLeave() async {
-    if (_saving) return;
+    if (_savingForScope) return;
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final discard = await showDialog<bool>(
       context: context,
@@ -100,18 +130,28 @@ class _SessionNoteScreenState extends State<SessionNoteScreen> {
   Future<void> _save({bool remove = false}) async {
     final review = _review;
     if (_saving || review == null || !_sameLocation) return;
+    final saveController = _boundController;
+    final saveSessionID = _boundSessionID;
+    final saveRepository = saveController.repository;
+    final saveGeneration = ++_saveGeneration;
+    bool saveStillTargetsThisEditor() =>
+        mounted &&
+        saveGeneration == _saveGeneration &&
+        identical(_boundController, saveController) &&
+        _boundSessionID == saveSessionID &&
+        identical(saveController.repository, saveRepository) &&
+        _sameLocation;
     setState(() {
       _saving = true;
       _error = null;
     });
     try {
-      await widget.controller.saveSessionNote(
-        review,
-        remove ? null : _text.text,
-      );
-      if (mounted) await _leave();
+      await saveController.saveSessionNote(review, remove ? null : _text.text);
+      if (saveStillTargetsThisEditor()) {
+        await _leave(stillTargetsThisEditor: saveStillTargetsThisEditor);
+      }
     } catch (error) {
-      if (mounted) {
+      if (saveStillTargetsThisEditor()) {
         setState(() {
           _error = error;
           if (error is SessionNoteException &&
@@ -121,7 +161,9 @@ class _SessionNoteScreenState extends State<SessionNoteScreen> {
         });
       }
     } finally {
-      if (mounted) setState(() => _saving = false);
+      if (mounted && saveGeneration == _saveGeneration) {
+        setState(() => _saving = false);
+      }
     }
   }
 
@@ -143,6 +185,8 @@ class _SessionNoteScreenState extends State<SessionNoteScreen> {
 
   @override
   void dispose() {
+    _loadGeneration++;
+    _saveGeneration++;
     _text.dispose();
     super.dispose();
   }
@@ -151,16 +195,19 @@ class _SessionNoteScreenState extends State<SessionNoteScreen> {
   Widget build(BuildContext context) {
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     return ListenableBuilder(
-      listenable: widget.controller,
+      listenable: _boundController,
       builder: (context, _) {
         final current =
             _sameLocation &&
             (_review == null ||
-                widget.controller.isSessionNoteReviewCurrent(_review!));
+                (identical(_boundController.repository, _reviewRepository) &&
+                    _boundController.isSessionNoteReviewCurrent(_review!)));
+        final loading = _loading && _sameLocation;
+        final saving = _savingForScope;
         final bytes = SessionNoteGateway.encodedBytes(_text.text);
-        final enabled = current && !_loading && !_saving && _review != null;
+        final enabled = current && !loading && !saving && _review != null;
         return PopScope(
-          canPop: _allowLeave || (!_saving && !_dirty),
+          canPop: _allowLeave || (!saving && !_dirty),
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) unawaited(_confirmLeave());
           },
@@ -178,7 +225,7 @@ class _SessionNoteScreenState extends State<SessionNoteScreen> {
                       children: [
                         Text(l10n.sessionNoteDescription),
                         const SizedBox(height: 20),
-                        if (_loading) const LinearProgressIndicator(),
+                        if (loading) const LinearProgressIndicator(),
                         if (!current)
                           Text(
                             l10n.sessionNoteChanged,
@@ -210,7 +257,7 @@ class _SessionNoteScreenState extends State<SessionNoteScreen> {
                           TextField(
                             key: const ValueKey('session-note-editor'),
                             controller: _text,
-                            readOnly: _saving || !_sameLocation,
+                            readOnly: saving || !current,
                             minLines: 5,
                             maxLines: 12,
                             textCapitalization: TextCapitalization.sentences,
@@ -239,7 +286,7 @@ class _SessionNoteScreenState extends State<SessionNoteScreen> {
                                     bytes <= _maxBytes
                                 ? _save
                                 : null,
-                            icon: _saving
+                            icon: saving
                                 ? const SizedBox.square(
                                     dimension: 18,
                                     child: CircularProgressIndicator(
@@ -259,8 +306,8 @@ class _SessionNoteScreenState extends State<SessionNoteScreen> {
                             ),
                         ],
                         if (_sameLocation &&
-                            !_loading &&
-                            !_saving &&
+                            !loading &&
+                            !saving &&
                             (_error != null || !current))
                           TextButton(
                             onPressed: _load,
