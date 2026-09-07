@@ -4467,6 +4467,654 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Android may stop either app. Keeping the mobile connection alive does not guarantee the Termux server will keep running overnight.'**
   String get managedHealthLifetime;
+
+  /// No description provided for @quotaBudgetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal alert threshold'**
+  String get quotaBudgetTitle;
+
+  /// No description provided for @quotaBudgetDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a percentage used for this source, account and window. This does not change provider limits.'**
+  String get quotaBudgetDescription;
+
+  /// No description provided for @quotaBudgetOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get quotaBudgetOff;
+
+  /// No description provided for @quotaBudgetPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% used'**
+  String quotaBudgetPercent(String percent);
+
+  /// No description provided for @quotaBudgetOptIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Show threshold attention'**
+  String get quotaBudgetOptIn;
+
+  /// No description provided for @quotaBudgetAttentionScope.
+  ///
+  /// In en, this message translates to:
+  /// **'Only after a fresh read on this page. No background polling or device notifications. A window without a reset time alerts once until you change this rule.'**
+  String get quotaBudgetAttentionScope;
+
+  /// No description provided for @quotaBudgetSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save this budget change. Your last saved settings remain in effect.'**
+  String get quotaBudgetSaveFailed;
+
+  /// No description provided for @quotaBudgetAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'A personal threshold was reached in the latest provider reading. Review the reported windows below.'**
+  String get quotaBudgetAttention;
+
+  /// No description provided for @quotaGlm.
+  ///
+  /// In en, this message translates to:
+  /// **'GLM'**
+  String get quotaGlm;
+
+  /// No description provided for @quotaGlmAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Configured GLM Coding Plan source'**
+  String get quotaGlmAccount;
+
+  /// No description provided for @quotaGlmTokenWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported token-plan window'**
+  String get quotaGlmTokenWindow;
+
+  /// No description provided for @quotaGlmMcpWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported MCP window'**
+  String get quotaGlmMcpWindow;
+
+  /// No description provided for @usageBudgetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal consumption budgets'**
+  String get usageBudgetTitle;
+
+  /// No description provided for @usageBudgetDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Budgets use all reported consumption for the selected server, project, timezone and date-window start. Model filters do not change them. A new window start needs a new budget. These do not change subscription allowances or stop requests.'**
+  String get usageBudgetDescription;
+
+  /// No description provided for @usageBudgetUsd.
+  ///
+  /// In en, this message translates to:
+  /// **'Set USD budget'**
+  String get usageBudgetUsd;
+
+  /// No description provided for @usageBudgetTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'Set token budget'**
+  String get usageBudgetTokens;
+
+  /// No description provided for @usageBudgetAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget amount'**
+  String get usageBudgetAmount;
+
+  /// No description provided for @usageBudgetInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a positive finite amount. Token budgets must use whole numbers.'**
+  String get usageBudgetInvalid;
+
+  /// No description provided for @usageBudgetRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove budget'**
+  String get usageBudgetRemove;
+
+  /// No description provided for @usageBudgetProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {limit} {unit}'**
+  String usageBudgetProgress(String used, String limit, String unit);
+
+  /// No description provided for @usageBudgetTokenUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'tokens'**
+  String get usageBudgetTokenUnit;
+
+  /// No description provided for @usageBudgetReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal budget reached in this reading.'**
+  String get usageBudgetReached;
+
+  /// No description provided for @usageBudgetPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous reading reached this budget. Refresh to check current consumption.'**
+  String get usageBudgetPrevious;
+
+  /// No description provided for @usageBudgetClearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear saved consumption budgets'**
+  String get usageBudgetClearAll;
+
+  /// No description provided for @usageBudgetClearDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all current and past consumption budgets for this saved server? Provider thresholds are kept.'**
+  String get usageBudgetClearDescription;
+
+  /// No description provided for @monitorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved-server attention'**
+  String get monitorTitle;
+
+  /// No description provided for @monitorScope.
+  ///
+  /// In en, this message translates to:
+  /// **'Counts cover each server’s last selected location, not every project on that server.'**
+  String get monitorScope;
+
+  /// No description provided for @monitorDisclosure.
+  ///
+  /// In en, this message translates to:
+  /// **'Monitoring is off until you enable it for a server. Checks run about once a minute while this app is open. Background checks run no more often than every five minutes, only while Keep live is already on and Android’s service is running. Android can stop that service; no remaining runtime is promised.'**
+  String get monitorDisclosure;
+
+  /// No description provided for @monitorConfigure.
+  ///
+  /// In en, this message translates to:
+  /// **'Monitoring settings'**
+  String get monitorConfigure;
+
+  /// No description provided for @monitorRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Check monitored servers'**
+  String get monitorRefresh;
+
+  /// No description provided for @monitorOptIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Monitor this server'**
+  String get monitorOptIn;
+
+  /// No description provided for @monitorOptInDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Check pending permissions, questions and forms in its last selected location.'**
+  String get monitorOptInDetail;
+
+  /// No description provided for @monitorNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify when attention is needed'**
+  String get monitorNotifications;
+
+  /// No description provided for @monitorWifi.
+  ///
+  /// In en, this message translates to:
+  /// **'Wi-Fi only'**
+  String get monitorWifi;
+
+  /// No description provided for @monitorWifiDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Checks pause unless Android reports an active Wi-Fi network. VPN or unavailable network information may pause checks.'**
+  String get monitorWifiDetail;
+
+  /// No description provided for @monitorWifiUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Wi-Fi detection is unavailable on this platform.'**
+  String get monitorWifiUnsupported;
+
+  /// No description provided for @monitorQuiet.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet hours'**
+  String get monitorQuiet;
+
+  /// No description provided for @monitorQuietDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute attention alerts during these local times. Checks continue.'**
+  String get monitorQuietDetail;
+
+  /// No description provided for @monitorQuietStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet hours start'**
+  String get monitorQuietStart;
+
+  /// No description provided for @monitorQuietEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet hours end'**
+  String get monitorQuietEnd;
+
+  /// No description provided for @monitorDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Not monitored · attention unknown'**
+  String get monitorDisabled;
+
+  /// No description provided for @monitorWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for a check · attention unknown'**
+  String get monitorWaiting;
+
+  /// No description provided for @monitorChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking · attention unknown'**
+  String get monitorChecking;
+
+  /// No description provided for @monitorUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not check · attention unknown'**
+  String get monitorUnavailable;
+
+  /// No description provided for @monitorWifiRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for Wi-Fi · attention unknown'**
+  String get monitorWifiRequired;
+
+  /// No description provided for @monitorPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused in background · attention unknown'**
+  String get monitorPaused;
+
+  /// No description provided for @monitorCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current observation'**
+  String get monitorCurrent;
+
+  /// No description provided for @monitorAllClear.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending requests in the checked location'**
+  String get monitorAllClear;
+
+  /// No description provided for @monitorNoServers.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a server to monitor attention.'**
+  String get monitorNoServers;
+
+  /// No description provided for @monitorSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save monitoring settings. Try again.'**
+  String get monitorSaveFailed;
+
+  /// No description provided for @monitorOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'This request or its server location changed. Refresh the inbox and try again.'**
+  String get monitorOpenFailed;
+
+  /// No description provided for @monitorSwitchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch server to review?'**
+  String get monitorSwitchTitle;
+
+  /// No description provided for @monitorSwitchDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'A run is active on the selected server. Switching changes the connection shown in this app; it does not stop that server’s run.'**
+  String get monitorSwitchDetail;
+
+  /// No description provided for @monitorSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch server'**
+  String get monitorSwitch;
+
+  /// No description provided for @monitorSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Session'**
+  String get monitorSession;
+
+  /// No description provided for @monitorPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission needed'**
+  String get monitorPermission;
+
+  /// No description provided for @monitorQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer needed'**
+  String get monitorQuestion;
+
+  /// No description provided for @monitorForm.
+  ///
+  /// In en, this message translates to:
+  /// **'Form response needed'**
+  String get monitorForm;
+
+  /// No description provided for @monitorUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get monitorUnknown;
+
+  /// No description provided for @monitorLastChecked.
+  ///
+  /// In en, this message translates to:
+  /// **'Last checked'**
+  String get monitorLastChecked;
+
+  /// No description provided for @monitorNextCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Next check'**
+  String get monitorNextCheck;
+
+  /// No description provided for @monitorPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Current pending requests'**
+  String get monitorPending;
+
+  /// No description provided for @monitorUnknownServers.
+  ///
+  /// In en, this message translates to:
+  /// **'Servers with unknown attention'**
+  String get monitorUnknownServers;
+
+  /// No description provided for @monitorSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected location'**
+  String get monitorSelected;
+
+  /// No description provided for @monitorNoNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Background notifications also require Keep live and notification permission in Background settings.'**
+  String get monitorNoNotifications;
+
+  /// No description provided for @quotaBudgetClearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear saved provider thresholds'**
+  String get quotaBudgetClearAll;
+
+  /// No description provided for @quotaBudgetClearDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all provider thresholds and attention settings for this saved server, including previous accounts? Consumption budgets are kept.'**
+  String get quotaBudgetClearDescription;
+
+  /// No description provided for @managedStorageSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Termux storage: {available} GiB free of {total} GiB'**
+  String managedStorageSummary(String available, String total);
+
+  /// No description provided for @managedStorageFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Termux storage could not be checked. Retry Check status.'**
+  String get managedStorageFailed;
+
+  /// No description provided for @managedRecoveryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recover a crashed managed server'**
+  String get managedRecoveryTitle;
+
+  /// No description provided for @managedRecoveryPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Opt in to at most 3 restart attempts, with delays of at least 5, 15 and 45 seconds. Only while this app is in the foreground. No install or update.'**
+  String get managedRecoveryPolicy;
+
+  /// No description provided for @managedRecoveryAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Attempts used: {attempts} of 3. The limit survives app restarts.'**
+  String managedRecoveryAttempts(int attempts);
+
+  /// No description provided for @managedRecoveryExhausted.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery limit reached. Check the server and start it manually before resetting the retry budget.'**
+  String get managedRecoveryExhausted;
+
+  /// No description provided for @managedRecoveryBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery waits while the app is in the background.'**
+  String get managedRecoveryBackground;
+
+  /// No description provided for @managedRecoveryChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking the managed recovery operation…'**
+  String get managedRecoveryChecking;
+
+  /// No description provided for @managedRecoveryNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next recovery attempt no earlier than {time}.'**
+  String managedRecoveryNext(String time);
+
+  /// No description provided for @managedRecoveryCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Check recovery status'**
+  String get managedRecoveryCheck;
+
+  /// No description provided for @managedRecoveryReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset retry budget'**
+  String get managedRecoveryReset;
+
+  /// No description provided for @managedRecoverySaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery settings could not be saved. Retry.'**
+  String get managedRecoverySaveFailed;
+
+  /// No description provided for @managedRecoveryRevokeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save or revoke recovery. Keep this profile and retry before removing it.'**
+  String get managedRecoveryRevokeFailed;
+
+  /// No description provided for @managedRecoverySettingsUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery settings could not be read. Check the server before enabling recovery.'**
+  String get managedRecoverySettingsUnreadable;
+
+  /// No description provided for @managedRecoveryEnableFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not enable recovery. Start the managed server, then try again.'**
+  String get managedRecoveryEnableFailed;
+
+  /// No description provided for @managedRecoveryOwnershipChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The managed operation changed. Check the server before enabling recovery again.'**
+  String get managedRecoveryOwnershipChanged;
+
+  /// No description provided for @managedRecoveryUncertain.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery paused because Termux did not confirm the result. Check status to continue.'**
+  String get managedRecoveryUncertain;
+
+  /// No description provided for @managedRecoveryRetryDisable.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry disabling recovery'**
+  String get managedRecoveryRetryDisable;
+
+  /// No description provided for @managedRecoveryStoppedWithCleanupError.
+  ///
+  /// In en, this message translates to:
+  /// **'The local server is stopped. Recovery settings could not be fully cleared; retry disabling recovery in Servers before removing the profile.'**
+  String get managedRecoveryStoppedWithCleanupError;
+
+  /// No description provided for @pluginMappingPersonal.
+  ///
+  /// In en, this message translates to:
+  /// **'Your command links · not verified plugin ownership'**
+  String get pluginMappingPersonal;
+
+  /// No description provided for @pluginMappingReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review /{command}'**
+  String pluginMappingReview(String command);
+
+  /// No description provided for @pluginMappingManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Link commands'**
+  String get pluginMappingManage;
+
+  /// No description provided for @pluginMappingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose commands you associate with this plugin. These personal links apply only to this server location. Each action opens a review of the chat and arguments before you run it.'**
+  String get pluginMappingDescription;
+
+  /// No description provided for @pluginMappingEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No server commands are available to link.'**
+  String get pluginMappingEmpty;
+
+  /// No description provided for @pluginMappingUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This plugin or command is no longer available here. Refresh and review your links.'**
+  String get pluginMappingUnavailable;
+
+  /// No description provided for @pluginMappingLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose up to 16 commands for this plugin.'**
+  String get pluginMappingLimit;
+
+  /// No description provided for @pluginMappingSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save links'**
+  String get pluginMappingSave;
+
+  /// No description provided for @pluginMappingSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Links could not be saved. Check that this server location is still selected and try again.'**
+  String get pluginMappingSaveFailed;
+
+  /// No description provided for @pluginMappingLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Commands could not be loaded. Try again when connected.'**
+  String get pluginMappingLoadFailed;
+
+  /// No description provided for @mobileTasksDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Server-reported tasks · mobile view'**
+  String get mobileTasksDescription;
+
+  /// No description provided for @mobileTasksUnfinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Show unfinished only'**
+  String get mobileTasksUnfinished;
+
+  /// No description provided for @mobileTasksNoUnfinished.
+  ///
+  /// In en, this message translates to:
+  /// **'No unfinished tasks in this list.'**
+  String get mobileTasksNoUnfinished;
+
+  /// No description provided for @mobileTaskPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get mobileTaskPending;
+
+  /// No description provided for @mobileTaskInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get mobileTaskInProgress;
+
+  /// No description provided for @mobileTaskCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get mobileTaskCompleted;
+
+  /// No description provided for @mobileTaskCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get mobileTaskCancelled;
+
+  /// No description provided for @pluginMappingClearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear personal links'**
+  String get pluginMappingClearAll;
+
+  /// No description provided for @pluginMappingClearTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all personal command links?'**
+  String get pluginMappingClearTitle;
+
+  /// No description provided for @pluginMappingClearDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove personal plugin-command links for every location in this server profile, including previous locations. Server plugins and commands stay installed.'**
+  String get pluginMappingClearDescription;
+
+  /// No description provided for @pluginMappingClearConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear links'**
+  String get pluginMappingClearConfirm;
+
+  /// No description provided for @pluginMappingClearFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal links could not be cleared. Check that this server profile is still selected and try again.'**
+  String get pluginMappingClearFailed;
 }
 
 class _AppLocalizationsDelegate

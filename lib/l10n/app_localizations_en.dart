@@ -2631,4 +2631,378 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get managedHealthLifetime =>
       'Android may stop either app. Keeping the mobile connection alive does not guarantee the Termux server will keep running overnight.';
+
+  @override
+  String get quotaBudgetTitle => 'Personal alert threshold';
+
+  @override
+  String get quotaBudgetDescription =>
+      'Choose a percentage used for this source, account and window. This does not change provider limits.';
+
+  @override
+  String get quotaBudgetOff => 'Off';
+
+  @override
+  String quotaBudgetPercent(String percent) {
+    return '$percent% used';
+  }
+
+  @override
+  String get quotaBudgetOptIn => 'Show threshold attention';
+
+  @override
+  String get quotaBudgetAttentionScope =>
+      'Only after a fresh read on this page. No background polling or device notifications. A window without a reset time alerts once until you change this rule.';
+
+  @override
+  String get quotaBudgetSaveFailed =>
+      'Could not save this budget change. Your last saved settings remain in effect.';
+
+  @override
+  String get quotaBudgetAttention =>
+      'A personal threshold was reached in the latest provider reading. Review the reported windows below.';
+
+  @override
+  String get quotaGlm => 'GLM';
+
+  @override
+  String get quotaGlmAccount => 'Configured GLM Coding Plan source';
+
+  @override
+  String get quotaGlmTokenWindow => 'Reported token-plan window';
+
+  @override
+  String get quotaGlmMcpWindow => 'Reported MCP window';
+
+  @override
+  String get usageBudgetTitle => 'Personal consumption budgets';
+
+  @override
+  String get usageBudgetDescription =>
+      'Budgets use all reported consumption for the selected server, project, timezone and date-window start. Model filters do not change them. A new window start needs a new budget. These do not change subscription allowances or stop requests.';
+
+  @override
+  String get usageBudgetUsd => 'Set USD budget';
+
+  @override
+  String get usageBudgetTokens => 'Set token budget';
+
+  @override
+  String get usageBudgetAmount => 'Budget amount';
+
+  @override
+  String get usageBudgetInvalid =>
+      'Enter a positive finite amount. Token budgets must use whole numbers.';
+
+  @override
+  String get usageBudgetRemove => 'Remove budget';
+
+  @override
+  String usageBudgetProgress(String used, String limit, String unit) {
+    return '$used of $limit $unit';
+  }
+
+  @override
+  String get usageBudgetTokenUnit => 'tokens';
+
+  @override
+  String get usageBudgetReached => 'Personal budget reached in this reading.';
+
+  @override
+  String get usageBudgetPrevious =>
+      'Previous reading reached this budget. Refresh to check current consumption.';
+
+  @override
+  String get usageBudgetClearAll => 'Clear saved consumption budgets';
+
+  @override
+  String get usageBudgetClearDescription =>
+      'Remove all current and past consumption budgets for this saved server? Provider thresholds are kept.';
+
+  @override
+  String get monitorTitle => 'Saved-server attention';
+
+  @override
+  String get monitorScope =>
+      'Counts cover each server’s last selected location, not every project on that server.';
+
+  @override
+  String get monitorDisclosure =>
+      'Monitoring is off until you enable it for a server. Checks run about once a minute while this app is open. Background checks run no more often than every five minutes, only while Keep live is already on and Android’s service is running. Android can stop that service; no remaining runtime is promised.';
+
+  @override
+  String get monitorConfigure => 'Monitoring settings';
+
+  @override
+  String get monitorRefresh => 'Check monitored servers';
+
+  @override
+  String get monitorOptIn => 'Monitor this server';
+
+  @override
+  String get monitorOptInDetail =>
+      'Check pending permissions, questions and forms in its last selected location.';
+
+  @override
+  String get monitorNotifications => 'Notify when attention is needed';
+
+  @override
+  String get monitorWifi => 'Wi-Fi only';
+
+  @override
+  String get monitorWifiDetail =>
+      'Checks pause unless Android reports an active Wi-Fi network. VPN or unavailable network information may pause checks.';
+
+  @override
+  String get monitorWifiUnsupported =>
+      'Wi-Fi detection is unavailable on this platform.';
+
+  @override
+  String get monitorQuiet => 'Quiet hours';
+
+  @override
+  String get monitorQuietDetail =>
+      'Mute attention alerts during these local times. Checks continue.';
+
+  @override
+  String get monitorQuietStart => 'Quiet hours start';
+
+  @override
+  String get monitorQuietEnd => 'Quiet hours end';
+
+  @override
+  String get monitorDisabled => 'Not monitored · attention unknown';
+
+  @override
+  String get monitorWaiting => 'Waiting for a check · attention unknown';
+
+  @override
+  String get monitorChecking => 'Checking · attention unknown';
+
+  @override
+  String get monitorUnavailable => 'Could not check · attention unknown';
+
+  @override
+  String get monitorWifiRequired => 'Waiting for Wi-Fi · attention unknown';
+
+  @override
+  String get monitorPaused => 'Paused in background · attention unknown';
+
+  @override
+  String get monitorCurrent => 'Current observation';
+
+  @override
+  String get monitorAllClear => 'No pending requests in the checked location';
+
+  @override
+  String get monitorNoServers => 'Add a server to monitor attention.';
+
+  @override
+  String get monitorSaveFailed =>
+      'Could not save monitoring settings. Try again.';
+
+  @override
+  String get monitorOpenFailed =>
+      'This request or its server location changed. Refresh the inbox and try again.';
+
+  @override
+  String get monitorSwitchTitle => 'Switch server to review?';
+
+  @override
+  String get monitorSwitchDetail =>
+      'A run is active on the selected server. Switching changes the connection shown in this app; it does not stop that server’s run.';
+
+  @override
+  String get monitorSwitch => 'Switch server';
+
+  @override
+  String get monitorSession => 'Session';
+
+  @override
+  String get monitorPermission => 'Permission needed';
+
+  @override
+  String get monitorQuestion => 'Answer needed';
+
+  @override
+  String get monitorForm => 'Form response needed';
+
+  @override
+  String get monitorUnknown => 'Unknown';
+
+  @override
+  String get monitorLastChecked => 'Last checked';
+
+  @override
+  String get monitorNextCheck => 'Next check';
+
+  @override
+  String get monitorPending => 'Current pending requests';
+
+  @override
+  String get monitorUnknownServers => 'Servers with unknown attention';
+
+  @override
+  String get monitorSelected => 'Selected location';
+
+  @override
+  String get monitorNoNotifications =>
+      'Background notifications also require Keep live and notification permission in Background settings.';
+
+  @override
+  String get quotaBudgetClearAll => 'Clear saved provider thresholds';
+
+  @override
+  String get quotaBudgetClearDescription =>
+      'Remove all provider thresholds and attention settings for this saved server, including previous accounts? Consumption budgets are kept.';
+
+  @override
+  String managedStorageSummary(String available, String total) {
+    return 'Termux storage: $available GiB free of $total GiB';
+  }
+
+  @override
+  String get managedStorageFailed =>
+      'Termux storage could not be checked. Retry Check status.';
+
+  @override
+  String get managedRecoveryTitle => 'Recover a crashed managed server';
+
+  @override
+  String get managedRecoveryPolicy =>
+      'Opt in to at most 3 restart attempts, with delays of at least 5, 15 and 45 seconds. Only while this app is in the foreground. No install or update.';
+
+  @override
+  String managedRecoveryAttempts(int attempts) {
+    return 'Attempts used: $attempts of 3. The limit survives app restarts.';
+  }
+
+  @override
+  String get managedRecoveryExhausted =>
+      'Recovery limit reached. Check the server and start it manually before resetting the retry budget.';
+
+  @override
+  String get managedRecoveryBackground =>
+      'Recovery waits while the app is in the background.';
+
+  @override
+  String get managedRecoveryChecking =>
+      'Checking the managed recovery operation…';
+
+  @override
+  String managedRecoveryNext(String time) {
+    return 'Next recovery attempt no earlier than $time.';
+  }
+
+  @override
+  String get managedRecoveryCheck => 'Check recovery status';
+
+  @override
+  String get managedRecoveryReset => 'Reset retry budget';
+
+  @override
+  String get managedRecoverySaveFailed =>
+      'Recovery settings could not be saved. Retry.';
+
+  @override
+  String get managedRecoveryRevokeFailed =>
+      'Could not save or revoke recovery. Keep this profile and retry before removing it.';
+
+  @override
+  String get managedRecoverySettingsUnreadable =>
+      'Recovery settings could not be read. Check the server before enabling recovery.';
+
+  @override
+  String get managedRecoveryEnableFailed =>
+      'Could not enable recovery. Start the managed server, then try again.';
+
+  @override
+  String get managedRecoveryOwnershipChanged =>
+      'The managed operation changed. Check the server before enabling recovery again.';
+
+  @override
+  String get managedRecoveryUncertain =>
+      'Recovery paused because Termux did not confirm the result. Check status to continue.';
+
+  @override
+  String get managedRecoveryRetryDisable => 'Retry disabling recovery';
+
+  @override
+  String get managedRecoveryStoppedWithCleanupError =>
+      'The local server is stopped. Recovery settings could not be fully cleared; retry disabling recovery in Servers before removing the profile.';
+
+  @override
+  String get pluginMappingPersonal =>
+      'Your command links · not verified plugin ownership';
+
+  @override
+  String pluginMappingReview(String command) {
+    return 'Review /$command';
+  }
+
+  @override
+  String get pluginMappingManage => 'Link commands';
+
+  @override
+  String get pluginMappingDescription =>
+      'Choose commands you associate with this plugin. These personal links apply only to this server location. Each action opens a review of the chat and arguments before you run it.';
+
+  @override
+  String get pluginMappingEmpty => 'No server commands are available to link.';
+
+  @override
+  String get pluginMappingUnavailable =>
+      'This plugin or command is no longer available here. Refresh and review your links.';
+
+  @override
+  String get pluginMappingLimit => 'Choose up to 16 commands for this plugin.';
+
+  @override
+  String get pluginMappingSave => 'Save links';
+
+  @override
+  String get pluginMappingSaveFailed =>
+      'Links could not be saved. Check that this server location is still selected and try again.';
+
+  @override
+  String get pluginMappingLoadFailed =>
+      'Commands could not be loaded. Try again when connected.';
+
+  @override
+  String get mobileTasksDescription => 'Server-reported tasks · mobile view';
+
+  @override
+  String get mobileTasksUnfinished => 'Show unfinished only';
+
+  @override
+  String get mobileTasksNoUnfinished => 'No unfinished tasks in this list.';
+
+  @override
+  String get mobileTaskPending => 'Pending';
+
+  @override
+  String get mobileTaskInProgress => 'In progress';
+
+  @override
+  String get mobileTaskCompleted => 'Completed';
+
+  @override
+  String get mobileTaskCancelled => 'Cancelled';
+
+  @override
+  String get pluginMappingClearAll => 'Clear personal links';
+
+  @override
+  String get pluginMappingClearTitle => 'Clear all personal command links?';
+
+  @override
+  String get pluginMappingClearDescription =>
+      'Remove personal plugin-command links for every location in this server profile, including previous locations. Server plugins and commands stay installed.';
+
+  @override
+  String get pluginMappingClearConfirm => 'Clear links';
+
+  @override
+  String get pluginMappingClearFailed =>
+      'Personal links could not be cleared. Check that this server profile is still selected and try again.';
 }

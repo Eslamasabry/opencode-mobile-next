@@ -943,5 +943,164 @@
     }
   },
   "managedHealthUbuntu": "Runner: Ubuntu",
-  "managedHealthLifetime": "Android may stop either app. Keeping the mobile connection alive does not guarantee the Termux server will keep running overnight."
+  "managedHealthLifetime": "Android may stop either app. Keeping the mobile connection alive does not guarantee the Termux server will keep running overnight.",
+  "quotaBudgetTitle": "Personal alert threshold",
+  "quotaBudgetDescription": "Choose a percentage used for this source, account and window. This does not change provider limits.",
+  "quotaBudgetOff": "Off",
+  "quotaBudgetPercent": "{percent}% used",
+  "@quotaBudgetPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "quotaBudgetOptIn": "Show threshold attention",
+  "quotaBudgetAttentionScope": "Only after a fresh read on this page. No background polling or device notifications. A window without a reset time alerts once until you change this rule.",
+  "quotaBudgetSaveFailed": "Could not save this budget change. Your last saved settings remain in effect.",
+  "quotaBudgetAttention": "A personal threshold was reached in the latest provider reading. Review the reported windows below.",
+  "quotaGlm": "GLM",
+  "quotaGlmAccount": "Configured GLM Coding Plan source",
+  "quotaGlmTokenWindow": "Reported token-plan window",
+  "quotaGlmMcpWindow": "Reported MCP window",
+  "usageBudgetTitle": "Personal consumption budgets",
+  "usageBudgetDescription": "Budgets use all reported consumption for the selected server, project, timezone and date-window start. Model filters do not change them. A new window start needs a new budget. These do not change subscription allowances or stop requests.",
+  "usageBudgetUsd": "Set USD budget",
+  "usageBudgetTokens": "Set token budget",
+  "usageBudgetAmount": "Budget amount",
+  "usageBudgetInvalid": "Enter a positive finite amount. Token budgets must use whole numbers.",
+  "usageBudgetRemove": "Remove budget",
+  "usageBudgetProgress": "{used} of {limit} {unit}",
+  "@usageBudgetProgress": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "usageBudgetTokenUnit": "tokens",
+  "usageBudgetReached": "Personal budget reached in this reading.",
+  "usageBudgetPrevious": "Previous reading reached this budget. Refresh to check current consumption.",
+  "usageBudgetClearAll": "Clear saved consumption budgets",
+  "usageBudgetClearDescription": "Remove all current and past consumption budgets for this saved server? Provider thresholds are kept.",
+  "monitorTitle": "Saved-server attention",
+  "monitorScope": "Counts cover each server’s last selected location, not every project on that server.",
+  "monitorDisclosure": "Monitoring is off until you enable it for a server. Checks run about once a minute while this app is open. Background checks run no more often than every five minutes, only while Keep live is already on and Android’s service is running. Android can stop that service; no remaining runtime is promised.",
+  "monitorConfigure": "Monitoring settings",
+  "monitorRefresh": "Check monitored servers",
+  "monitorOptIn": "Monitor this server",
+  "monitorOptInDetail": "Check pending permissions, questions and forms in its last selected location.",
+  "monitorNotifications": "Notify when attention is needed",
+  "monitorWifi": "Wi-Fi only",
+  "monitorWifiDetail": "Checks pause unless Android reports an active Wi-Fi network. VPN or unavailable network information may pause checks.",
+  "monitorWifiUnsupported": "Wi-Fi detection is unavailable on this platform.",
+  "monitorQuiet": "Quiet hours",
+  "monitorQuietDetail": "Mute attention alerts during these local times. Checks continue.",
+  "monitorQuietStart": "Quiet hours start",
+  "monitorQuietEnd": "Quiet hours end",
+  "monitorDisabled": "Not monitored · attention unknown",
+  "monitorWaiting": "Waiting for a check · attention unknown",
+  "monitorChecking": "Checking · attention unknown",
+  "monitorUnavailable": "Could not check · attention unknown",
+  "monitorWifiRequired": "Waiting for Wi-Fi · attention unknown",
+  "monitorPaused": "Paused in background · attention unknown",
+  "monitorCurrent": "Current observation",
+  "monitorAllClear": "No pending requests in the checked location",
+  "monitorNoServers": "Add a server to monitor attention.",
+  "monitorSaveFailed": "Could not save monitoring settings. Try again.",
+  "monitorOpenFailed": "This request or its server location changed. Refresh the inbox and try again.",
+  "monitorSwitchTitle": "Switch server to review?",
+  "monitorSwitchDetail": "A run is active on the selected server. Switching changes the connection shown in this app; it does not stop that server’s run.",
+  "monitorSwitch": "Switch server",
+  "monitorSession": "Session",
+  "monitorPermission": "Permission needed",
+  "monitorQuestion": "Answer needed",
+  "monitorForm": "Form response needed",
+  "monitorUnknown": "Unknown",
+  "monitorLastChecked": "Last checked",
+  "monitorNextCheck": "Next check",
+  "monitorPending": "Current pending requests",
+  "monitorUnknownServers": "Servers with unknown attention",
+  "monitorSelected": "Selected location",
+  "monitorNoNotifications": "Background notifications also require Keep live and notification permission in Background settings.",
+  "quotaBudgetClearAll": "Clear saved provider thresholds",
+  "quotaBudgetClearDescription": "Remove all provider thresholds and attention settings for this saved server, including previous accounts? Consumption budgets are kept.",
+  "managedStorageSummary": "Termux storage: {available} GiB free of {total} GiB",
+  "@managedStorageSummary": {
+    "placeholders": {
+      "available": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "managedStorageFailed": "Termux storage could not be checked. Retry Check status.",
+  "managedRecoveryTitle": "Recover a crashed managed server",
+  "managedRecoveryPolicy": "Opt in to at most 3 restart attempts, with delays of at least 5, 15 and 45 seconds. Only while this app is in the foreground. No install or update.",
+  "managedRecoveryAttempts": "Attempts used: {attempts} of 3. The limit survives app restarts.",
+  "@managedRecoveryAttempts": {
+    "placeholders": {
+      "attempts": {
+        "type": "int"
+      }
+    }
+  },
+  "managedRecoveryExhausted": "Recovery limit reached. Check the server and start it manually before resetting the retry budget.",
+  "managedRecoveryBackground": "Recovery waits while the app is in the background.",
+  "managedRecoveryChecking": "Checking the managed recovery operation…",
+  "managedRecoveryNext": "Next recovery attempt no earlier than {time}.",
+  "@managedRecoveryNext": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "managedRecoveryCheck": "Check recovery status",
+  "managedRecoveryReset": "Reset retry budget",
+  "managedRecoverySaveFailed": "Recovery settings could not be saved. Retry.",
+  "managedRecoveryRevokeFailed": "Could not save or revoke recovery. Keep this profile and retry before removing it.",
+  "managedRecoverySettingsUnreadable": "Recovery settings could not be read. Check the server before enabling recovery.",
+  "managedRecoveryEnableFailed": "Could not enable recovery. Start the managed server, then try again.",
+  "managedRecoveryOwnershipChanged": "The managed operation changed. Check the server before enabling recovery again.",
+  "managedRecoveryUncertain": "Recovery paused because Termux did not confirm the result. Check status to continue.",
+  "managedRecoveryRetryDisable": "Retry disabling recovery",
+  "managedRecoveryStoppedWithCleanupError": "The local server is stopped. Recovery settings could not be fully cleared; retry disabling recovery in Servers before removing the profile.",
+  "pluginMappingPersonal": "Your command links · not verified plugin ownership",
+  "pluginMappingReview": "Review /{command}",
+  "@pluginMappingReview": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginMappingManage": "Link commands",
+  "pluginMappingDescription": "Choose commands you associate with this plugin. These personal links apply only to this server location. Each action opens a review of the chat and arguments before you run it.",
+  "pluginMappingEmpty": "No server commands are available to link.",
+  "pluginMappingUnavailable": "This plugin or command is no longer available here. Refresh and review your links.",
+  "pluginMappingLimit": "Choose up to 16 commands for this plugin.",
+  "pluginMappingSave": "Save links",
+  "pluginMappingSaveFailed": "Links could not be saved. Check that this server location is still selected and try again.",
+  "pluginMappingLoadFailed": "Commands could not be loaded. Try again when connected.",
+  "mobileTasksDescription": "Server-reported tasks · mobile view",
+  "mobileTasksUnfinished": "Show unfinished only",
+  "mobileTasksNoUnfinished": "No unfinished tasks in this list.",
+  "mobileTaskPending": "Pending",
+  "mobileTaskInProgress": "In progress",
+  "mobileTaskCompleted": "Completed",
+  "mobileTaskCancelled": "Cancelled",
+  "pluginMappingClearAll": "Clear personal links",
+  "pluginMappingClearTitle": "Clear all personal command links?",
+  "pluginMappingClearDescription": "Remove personal plugin-command links for every location in this server profile, including previous locations. Server plugins and commands stay installed.",
+  "pluginMappingClearConfirm": "Clear links",
+  "pluginMappingClearFailed": "Personal links could not be cleared. Check that this server profile is still selected and try again."
 }
