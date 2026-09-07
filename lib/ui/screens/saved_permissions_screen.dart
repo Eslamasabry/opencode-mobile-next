@@ -31,10 +31,70 @@ class _SavedPermissionsScreenState extends State<SavedPermissionsScreen> {
   bool _loading = false;
   String? _error;
   int _generation = 0;
+  Object? _scope;
+
+  Object get _currentScope {
+    final profile = widget.controller.profile;
+    return (
+      widget.controller,
+      profile?.id,
+      profile?.baseUrl,
+      profile?.username,
+      widget.controller.directory,
+      widget.controller.workspace,
+      widget.controller.locationRevision,
+      widget.controller.connectionRevision,
+      widget.controller.repository,
+    );
+  }
 
   @override
   void initState() {
     super.initState();
+    _scope = _currentScope;
+    widget.controller.addListener(_scopeChanged);
+    widget.controller.profileDataChanges.addListener(_scopeChanged);
+    unawaited(_load());
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_scopeChanged);
+    widget.controller.profileDataChanges.removeListener(_scopeChanged);
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant SavedPermissionsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (identical(oldWidget.controller, widget.controller)) return;
+    oldWidget.controller.removeListener(_scopeChanged);
+    oldWidget.controller.profileDataChanges.removeListener(_scopeChanged);
+    widget.controller.addListener(_scopeChanged);
+    widget.controller.profileDataChanges.addListener(_scopeChanged);
+    _generation++;
+    _scope = _currentScope;
+    setState(() {
+      _permissions = null;
+      _loading = false;
+      _error = null;
+      _removing.clear();
+    });
+    unawaited(_load());
+  }
+
+  void _scopeChanged() {
+    if (!mounted) return;
+    final scope = _currentScope;
+    if (scope == _scope) return;
+    _scope = scope;
+    _generation++;
+    setState(() {
+      _permissions = null;
+      _loading = false;
+      _error = null;
+      _removing.clear();
+    });
     unawaited(_load());
   }
 
@@ -44,7 +104,9 @@ class _SavedPermissionsScreenState extends State<SavedPermissionsScreen> {
 
   Future<void> _load() async {
     if (_loading || _removing.isNotEmpty) return;
+    if (!mounted) return;
     final generation = ++_generation;
+    final scope = _scope;
     setState(() {
       _loading = true;
       _error = null;
@@ -54,21 +116,26 @@ class _SavedPermissionsScreenState extends State<SavedPermissionsScreen> {
       if (repository == null) {
         throw const ProductException('OpenCode is reconnecting. Try again.');
       }
+      if (!mounted || generation != _generation || scope != _currentScope) {
+        return;
+      }
       final permissions = List<SavedPermission>.of(
         await repository.listSavedPermissions(),
       );
-      if (!mounted || generation != _generation) return;
+      if (!mounted || generation != _generation || scope != _currentScope) {
+        return;
+      }
       permissions.sort((a, b) {
         final action = a.action.compareTo(b.action);
         return action == 0 ? a.resource.compareTo(b.resource) : action;
       });
       setState(() => _permissions = permissions);
     } catch (error) {
-      if (mounted && generation == _generation) {
+      if (mounted && generation == _generation && scope == _currentScope) {
         setState(() => _error = productErrorText(error));
       }
     } finally {
-      if (mounted && generation == _generation) {
+      if (mounted && generation == _generation && scope == _currentScope) {
         setState(() => _loading = false);
       }
     }
@@ -76,6 +143,7 @@ class _SavedPermissionsScreenState extends State<SavedPermissionsScreen> {
 
   Future<void> _revoke(SavedPermission permission) async {
     if (_removing.contains(permission.id)) return;
+    final scope = _scope;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -120,7 +188,7 @@ class _SavedPermissionsScreenState extends State<SavedPermissionsScreen> {
         ],
       ),
     );
-    if (confirmed != true || !mounted) return;
+    if (confirmed != true || !mounted || scope != _currentScope) return;
 
     setState(() {
       _removing.add(permission.id);
@@ -131,8 +199,9 @@ class _SavedPermissionsScreenState extends State<SavedPermissionsScreen> {
       if (repository == null) {
         throw const ProductException('OpenCode is reconnecting. Try again.');
       }
+      if (!mounted || scope != _currentScope) return;
       await repository.removeSavedPermission(permission.id);
-      if (!mounted) return;
+      if (!mounted || scope != _currentScope) return;
       setState(() {
         _permissions = (_permissions ?? const [])
             .where((item) => item.id != permission.id)
@@ -142,11 +211,13 @@ class _SavedPermissionsScreenState extends State<SavedPermissionsScreen> {
         const SnackBar(content: Text('Always allowed action revoked')),
       );
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted || scope != _currentScope) return;
       setState(() => _error = productErrorText(error));
       showProductError(context, error);
     } finally {
-      if (mounted) setState(() => _removing.remove(permission.id));
+      if (mounted && scope == _currentScope) {
+        setState(() => _removing.remove(permission.id));
+      }
     }
   }
 

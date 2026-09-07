@@ -18,6 +18,7 @@ class _PermissionRepository implements ProductRepository {
   final List<String> removeCalls = [];
   Object? listError;
   Object? removeError;
+  Completer<List<SavedPermission>>? listGate;
 
   @override
   void setLocation({String? directory, String? workspace}) {}
@@ -26,6 +27,11 @@ class _PermissionRepository implements ProductRepository {
   Future<List<SavedPermission>> listSavedPermissions() async {
     listCalls += 1;
     if (listError case final error?) throw error;
+    final gate = listGate;
+    if (gate != null) {
+      listGate = null;
+      return gate.future;
+    }
     return List.of(permissions);
   }
 
@@ -188,6 +194,136 @@ void main() {
     expect(replacementRepository.listCalls, 1);
     expect(find.text('current.dart'), findsOneWidget);
     expect(find.text('stale.txt'), findsNothing);
+  });
+
+  testWidgets('late list results cannot cross a location change', (
+    tester,
+  ) async {
+    final repository = _PermissionRepository(
+      permissions: const [
+        SavedPermission(
+          id: 'current',
+          projectID: 'project-1',
+          action: 'edit',
+          resource: 'current.dart',
+        ),
+      ],
+    );
+    final lateResponse = Completer<List<SavedPermission>>();
+    repository.listGate = lateResponse;
+    final controller = await _controller(repository);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      _app(SavedPermissionsScreen(controller: controller)),
+    );
+    await tester.pump();
+    expect(repository.listCalls, 1);
+
+    controller.directory = '/replacement';
+    controller.locationRevision += 1;
+    controller.notifyListeners();
+    await tester.pumpAndSettle();
+
+    expect(repository.listCalls, 2);
+    expect(find.text('current.dart'), findsOneWidget);
+    lateResponse.complete(const [
+      SavedPermission(
+        id: 'stale',
+        projectID: 'project-1',
+        action: 'read',
+        resource: 'stale.txt',
+      ),
+    ]);
+    await tester.pumpAndSettle();
+
+    expect(find.text('current.dart'), findsOneWidget);
+    expect(find.text('stale.txt'), findsNothing);
+  });
+
+  testWidgets('replacement controller refreshes the saved permission scope', (
+    tester,
+  ) async {
+    final repository = _PermissionRepository(
+      permissions: const [
+        SavedPermission(
+          id: 'current',
+          projectID: 'project-1',
+          action: 'edit',
+          resource: 'current.dart',
+        ),
+      ],
+    );
+    final lateResponse = Completer<List<SavedPermission>>();
+    repository.listGate = lateResponse;
+    final firstController = await _controller(repository);
+    final replacementController = await _controller(repository);
+    addTearDown(firstController.dispose);
+    addTearDown(replacementController.dispose);
+
+    await tester.pumpWidget(
+      _app(SavedPermissionsScreen(controller: firstController)),
+    );
+    await tester.pump();
+    expect(repository.listCalls, 1);
+
+    await tester.pumpWidget(
+      _app(SavedPermissionsScreen(controller: replacementController)),
+    );
+    await tester.pumpAndSettle();
+    expect(repository.listCalls, 2);
+    expect(find.text('current.dart'), findsOneWidget);
+
+    lateResponse.complete(const [
+      SavedPermission(
+        id: 'stale',
+        projectID: 'project-1',
+        action: 'read',
+        resource: 'stale.txt',
+      ),
+    ]);
+    await tester.pumpAndSettle();
+
+    expect(find.text('current.dart'), findsOneWidget);
+    expect(find.text('stale.txt'), findsNothing);
+  });
+
+  testWidgets('late revocation is cancelled after route disposal', (
+    tester,
+  ) async {
+    final repository = _PermissionRepository(permissions: _permissions);
+    final ready = Completer<ProductRepository?>();
+    var resolveCount = 0;
+    final controller = await _controller(repository);
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      _app(
+        SavedPermissionsScreen(
+          controller: controller,
+          repositoryResolver: () {
+            resolveCount += 1;
+            return resolveCount == 1
+                ? Future<ProductRepository?>.value(repository)
+                : ready.future;
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('revoke-saved-permission-permission-bash')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Revoke access'));
+    await tester.pump();
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    ready.complete(repository);
+    await tester.pumpAndSettle();
+
+    expect(repository.removeCalls, isEmpty);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('unsupported servers show a scoped retryable error', (
