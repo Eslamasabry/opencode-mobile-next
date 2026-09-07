@@ -25,6 +25,7 @@ class ManagedServerHealth extends StatefulWidget {
 
 class _ManagedServerHealthState extends State<ManagedServerHealth> {
   TermuxSetupStatus? _status;
+  TermuxSetupStatus? _recoveryStatusAtLastCheck;
   DateTime? _checkedAt;
   bool _checking = false;
   bool _failed = false;
@@ -93,6 +94,9 @@ class _ManagedServerHealthState extends State<ManagedServerHealth> {
       if (!mounted) return;
       setState(() {
         _status = status;
+        _recoveryStatusAtLastCheck = _recovery?.enabled == true
+            ? _recovery?.status
+            : null;
         _checkedAt = DateTime.now();
       });
       try {
@@ -108,12 +112,24 @@ class _ManagedServerHealthState extends State<ManagedServerHealth> {
     }
   }
 
+  TermuxSetupStatus? get _displayedStatus {
+    if (_checking || _failed) return null;
+    final recoveryStatus = _recovery?.enabled == true
+        ? _recovery?.status
+        : null;
+    // A manual check supersedes the recovery observation that existed when
+    // it completed. A later recovery poll supplies a new observation object.
+    if (_status != null &&
+        identical(recoveryStatus, _recoveryStatusAtLastCheck)) {
+      return _status;
+    }
+    return recoveryStatus ?? _status;
+  }
+
   String _label(AppLocalizations l10n) {
     if (_checking) return l10n.managedHealthChecking;
     if (_failed) return l10n.managedHealthFailed;
-    final status = _recovery?.enabled == true
-        ? _recovery?.status ?? _status
-        : _status;
+    final status = _displayedStatus;
     if (status == null) return l10n.managedHealthUnchecked;
     if (status.isReady) return l10n.managedHealthReady;
     if (status.isRunning) return l10n.managedHealthWorking;
@@ -130,9 +146,7 @@ class _ManagedServerHealthState extends State<ManagedServerHealth> {
     if (!platformCapabilities.supportsTermux) return const SizedBox.shrink();
     final l10n = lookupAppLocalizations(Localizations.localeOf(context));
     final theme = Theme.of(context);
-    final status = _recovery?.enabled == true
-        ? _recovery?.status ?? _status
-        : _status;
+    final status = _displayedStatus;
     final version = status?.version ?? '';
     final safeVersion = RegExp(
       r'^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]+)?$',

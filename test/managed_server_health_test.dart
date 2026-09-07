@@ -6,7 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
 import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/termux/bridge.dart';
+import 'package:opencode_mobile/termux/managed_server_recovery.dart';
 import 'package:opencode_mobile/ui/widgets/managed_server_health.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -133,5 +135,54 @@ void main() {
     await pump(tester);
     expect(find.text('Check status'), findsNothing);
     expect(calls, isEmpty);
+  });
+
+  testWidgets('manual status supersedes an older recovery observation', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final recovery = ManagedServerRecovery.forProfile(prefs, 'managed');
+    addTearDown(() => ManagedServerRecovery.disposeForPreferences(prefs));
+    await recovery.setEnabled(true);
+    expect(recovery.enabled, isTrue);
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: ManagedServerHealth(
+              prefs: prefs,
+              profileID: 'managed',
+              onManage: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(find.text('Server process running'), findsOneWidget);
+    response = Completer()
+      ..complete({
+        'exitCode': 0,
+        'stdout': 'phase=failed\nrunner=proot\n',
+        'stderr': '',
+      });
+    await tester.scrollUntilVisible(
+      find.text('Check status').hitTestable(),
+      200,
+    );
+    await tester.tap(find.text('Check status').hitTestable());
+    await tester.pumpAndSettle();
+    expect(find.text('Setup needs attention'), findsOneWidget);
+    expect(find.text('Server process running'), findsNothing);
+    expect(find.text('OpenCode 1.18.29'), findsNothing);
+
+    response = null;
+    await recovery.checkNow();
+    await tester.pump();
+    expect(find.text('Server process running'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    ManagedServerRecovery.disposeForPreferences(prefs);
   });
 }

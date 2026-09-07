@@ -1,6 +1,6 @@
 // Synthetic captures of the real setup screen; no device commands or network.
 // Run: flutter test --concurrency=1 tool/capture/setup_progress_test.dart
-// Writes docs/qa/setup-progress/{light,dark,choices}.png at 390x844 logical px.
+// Writes docs/qa/setup-progress/{light,dark,choices,choices-dark}.png at 390x844 logical px.
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -44,6 +44,7 @@ void main() {
     (name: 'light', light: true, running: true),
     (name: 'dark', light: false, running: true),
     (name: 'choices', light: true, running: false),
+    (name: 'choices-dark', light: false, running: false),
   ]) {
     testWidgets('setup ${capture.name}', (tester) async {
       tester.view.physicalSize = const Size(1170, 2532);

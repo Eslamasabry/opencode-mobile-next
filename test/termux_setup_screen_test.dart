@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:opencode_mobile/api/opencode_api.dart';
 import 'package:opencode_mobile/api/sse.dart';
 import 'package:opencode_mobile/l10n/app_localizations.dart';
+import 'package:opencode_mobile/platform/platform_capabilities.dart';
 import 'package:opencode_mobile/state/connection.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/termux/bridge.dart';
@@ -115,20 +116,26 @@ class _SetupProgressFixture {
   Completer<Map<String, Object>>? pendingInventory;
   int statusReads = 0;
   bool launched = false;
+  bool termuxInstalled = true;
+  bool permissionGranted = true;
+  bool inventoryFails = false;
+  int commandCalls = 0;
 
   Future<Object?> handle(MethodCall call) async {
     if (call.method == 'getCapabilities') {
       return <String, Object>{
-        'installed': true,
+        'installed': termuxInstalled,
         'version': '0.118',
         'serviceAvailable': true,
         'protocolSupported': true,
-        'permissionGranted': true,
+        'permissionGranted': permissionGranted,
       };
     }
     if (call.method != 'runInTermux') return true;
+    commandCalls++;
     final script = (call.arguments as Map)['script'] as String;
     if (script.contains('ubuntu=absent')) {
+      if (inventoryFails) throw PlatformException(code: 'command_timeout');
       return pendingInventory?.future ??
           _commandResult(stdout: inventoryOutput);
     }
@@ -217,6 +224,10 @@ __OC_SETUP_OUTPUT__
             ).copyWith(textScaler: TextScaler.linear(textScale)),
             child: child!,
           ),
+          routes: {
+            '/servers': (_) =>
+                const Scaffold(body: Text('Server address entry')),
+          },
           home: const TermuxSetupScreen(),
         ),
       ),
@@ -387,6 +398,73 @@ void main() {
     );
   }
 
+  for (final missing in ['Termux', 'permission']) {
+    testWidgets('existing server stays reachable without $missing', (
+      tester,
+    ) async {
+      final fixture = await _setupFixture();
+      fixture.termuxInstalled = missing != 'Termux';
+      fixture.permissionGranted = missing != 'permission';
+      await fixture.mount(tester);
+      await tester.tap(find.text('Connect existing server'));
+      await tester.pumpAndSettle();
+      expect(find.text('Server address entry'), findsOneWidget);
+      expect(fixture.commandCalls, 0);
+      expect(fixture.store.savedProfiles, isEmpty);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
+
+  testWidgets('desktop setup offers existing server with large text', (
+    tester,
+  ) async {
+    debugPlatformCapabilities = const PlatformCapabilities.linuxDesktop();
+    addTearDown(() => debugPlatformCapabilities = null);
+    tester.view.physicalSize = const Size(390, 600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final fixture = await _setupFixture();
+    await fixture.mount(tester, textScale: 2);
+    await tester.scrollUntilVisible(find.text('Connect existing server'), 200);
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Connect existing server'));
+    await tester.pumpAndSettle();
+    expect(find.text('Server address entry'), findsOneWidget);
+    expect(fixture.commandCalls, 0);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets(
+    'failed inventory requires reviewed Ubuntu choice before launch',
+    (tester) async {
+      final fixture = await _setupFixture();
+      fixture.inventoryFails = true;
+      await fixture.mount(tester);
+      await tester.scrollUntilVisible(find.text('Install & start'), 200);
+      await tester.pump();
+      await tester.tap(find.text('Install & start'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Continue without an installation check?'),
+        findsOneWidget,
+      );
+      expect(fixture.launchCalls, 0);
+      expect(fixture.store.savedProfiles, isEmpty);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(fixture.launchCalls, 0);
+      await tester.tap(find.text('Install & start'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Continue with Ubuntu'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(fixture.launchCalls, 1);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
   testWidgets('checks the environment before enabling installation', (
     tester,
   ) async {
@@ -444,6 +522,35 @@ void main() {
     expect(fixture.launchCalls, 0);
     expect(find.text('Continue to app'), findsOneWidget);
     expect(fixture.store.selectedID, 'local');
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('reinstalling a detected version requires replacement review', (
+    tester,
+  ) async {
+    final fixture = await _setupFixture();
+    fixture.inventoryOutput = 'ubuntu=installed\nversion=1.18.29\n';
+    await fixture.mount(tester);
+    final reinstall = find.widgetWithText(OutlinedButton, 'Reinstall & start');
+    await tester.scrollUntilVisible(reinstall.hitTestable(), 200);
+    await tester.tap(reinstall.hitTestable());
+    await tester.pumpAndSettle();
+    expect(find.text('Replace installed OpenCode?'), findsOneWidget);
+    expect(
+      find.textContaining('Replace OpenCode 1.18.29 with 1.18.29'),
+      findsOneWidget,
+    );
+    expect(fixture.launchCalls, 0);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(fixture.launchCalls, 0);
+    await tester.tap(reinstall.hitTestable());
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Install & restart'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(fixture.launchCalls, 1);
+    expect(find.textContaining('elapsed'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
@@ -704,8 +811,8 @@ pid=
       // agreeing to install a specific server version.
       expect(
         find.textContaining(
-          'OpenCode ${TermuxBridge.defaultOpenCodeVersion} — the release this '
-          'app version is tested against',
+          'The app will install OpenCode ${TermuxBridge.defaultOpenCodeVersion}, '
+          'refresh its model catalog',
         ),
         findsOneWidget,
       );
@@ -822,10 +929,10 @@ __OC_SETUP_OUTPUT__
           ),
         );
         await tester.pumpAndSettle();
-        await tester.ensureVisible(
-          find.byKey(const Key('restart-managed-opencode')),
-        );
-        await tester.tap(find.byKey(const Key('restart-managed-opencode')));
+        final restartButton = find.byKey(const Key('restart-managed-opencode'));
+        await tester.scrollUntilVisible(restartButton.hitTestable(), 200);
+        await tester.pumpAndSettle();
+        await tester.tap(restartButton.hitTestable());
         await tester.pumpAndSettle();
         await tester.tap(find.widgetWithText(FilledButton, 'Restart'));
         await tester.pump();

@@ -378,7 +378,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       message: [
         if (currentVersion?.isNotEmpty == true)
           'Installed version: $currentVersion.',
-        'The app will install OpenCode ${TermuxBridge.defaultOpenCodeVersion} — the release this app version is tested against — refresh its model catalog, restart only the managed local server, and reconnect this profile.',
+        'The app will install OpenCode ${TermuxBridge.defaultOpenCodeVersion}, refresh its model catalog, restart only the managed local server, and reconnect this profile.',
         'The server will be briefly unavailable. Active generation should be stopped first.',
       ].join('\n\n'),
       confirmLabel: 'Update',
@@ -957,37 +957,41 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
         appBar: AppBar(
           title: Text(AppLocalizations.of(context).setupScreenTitle),
         ),
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Padding(
-              key: const Key('termux-setup-unsupported'),
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.phonelink_off_rounded,
-                    size: 40,
-                    color: AppTheme.mutedOf(theme),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'On-device setup is Android only',
-                    style: theme.textTheme.titleMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'It drives Termux, which has no desktop equivalent. On '
-                    'this machine, run `opencode serve` yourself and add it '
-                    'as a server.',
-                    style: theme.textTheme.bodySmall!.copyWith(
+        body: SingleChildScrollView(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Padding(
+                key: const Key('termux-setup-unsupported'),
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.phonelink_off_rounded,
+                      size: 40,
                       color: AppTheme.mutedOf(theme),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    Text(
+                      'On-device setup is Android only',
+                      style: theme.textTheme.titleMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'It drives Termux, which has no desktop equivalent. On '
+                      'this machine, run `opencode serve` yourself and add it '
+                      'as a server.',
+                      style: theme.textTheme.bodySmall!.copyWith(
+                        color: AppTheme.mutedOf(theme),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    _existingServerChoice(),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1023,7 +1027,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Run OpenCode on this phone',
+                      l10n.setupChooseServerTitle,
                       style: theme.textTheme.titleMedium,
                     ),
                   ),
@@ -1031,13 +1035,17 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
               ),
               const SizedBox(height: 6),
               Text(
-                'The app installs OpenCode in a private Ubuntu environment, starts '
-                'an authenticated local server, and reconnects automatically.',
+                l10n.setupChooseServerDescription,
                 style: theme.textTheme.bodySmall!.copyWith(
                   color: AppTheme.mutedOf(theme),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
+              _existingServerChoice(),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Divider(),
+              ),
               _stepTile(
                 n: 1,
                 title: 'Get Termux',
@@ -1398,18 +1406,75 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
           ),
           const SizedBox(height: 4),
           Text(
-            'Install the tested OpenCode ${TermuxBridge.defaultOpenCodeVersion} '
+            'Install OpenCode ${TermuxBridge.defaultOpenCodeVersion} '
             'in a full, app-managed Ubuntu environment. Existing Ubuntu files '
             'are reused.',
           ),
           const SizedBox(height: 10),
-          FilledButton.icon(
-            onPressed: _busy || _checkingInstallation ? null : _installAndStart,
-            icon: const Icon(Icons.rocket_launch_rounded),
-            label: Text(AppLocalizations.of(context).setupInstallStart),
-          ),
+          if (installed?.openCodeVersion != null)
+            OutlinedButton.icon(
+              onPressed: _busy || _checkingInstallation
+                  ? null
+                  : _reviewInstallChoice,
+              icon: const Icon(Icons.build_outlined),
+              label: Text(
+                installed?.openCodeVersion ==
+                        TermuxBridge.defaultOpenCodeVersion
+                    ? AppLocalizations.of(context).setupReinstallStart
+                    : AppLocalizations.of(context).setupInstallVersionStart(
+                        TermuxBridge.defaultOpenCodeVersion,
+                      ),
+              ),
+            )
+          else
+            FilledButton.icon(
+              onPressed: _busy || _checkingInstallation
+                  ? null
+                  : _reviewInstallChoice,
+              icon: const Icon(Icons.rocket_launch_rounded),
+              label: Text(AppLocalizations.of(context).setupInstallStart),
+            ),
         ],
-        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Future<void> _reviewInstallChoice() async {
+    if (_busy || _checkingInstallation) return;
+    final installedVersion = _installation?.openCodeVersion;
+    if (installedVersion != null) {
+      final l10n = AppLocalizations.of(context);
+      final confirmed = await showConfirmSheet(
+        context,
+        title: l10n.setupReplaceTitle,
+        message: l10n.setupReplaceDescription(
+          installedVersion,
+          TermuxBridge.defaultOpenCodeVersion,
+        ),
+        confirmLabel: l10n.setupInstallRestart,
+        icon: Icons.build_outlined,
+      );
+      if (!confirmed || !mounted) return;
+    }
+    if (_installation == null) {
+      final l10n = AppLocalizations.of(context);
+      final confirmed = await showConfirmSheet(
+        context,
+        title: l10n.setupUncheckedTitle,
+        message: l10n.setupUncheckedDescription,
+        confirmLabel: l10n.setupUncheckedContinue,
+        icon: Icons.help_outline_rounded,
+      );
+      if (!confirmed || !mounted) return;
+    }
+    await _installAndStart();
+  }
+
+  Widget _existingServerChoice() {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         Text(
           AppLocalizations.of(context).setupOwnOption,
           style: theme.textTheme.titleSmall,

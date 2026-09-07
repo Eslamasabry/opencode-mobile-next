@@ -8,7 +8,8 @@ import 'package:opencode_mobile/demo/demo_store.dart';
 import 'package:opencode_mobile/state/profiles.dart';
 import 'package:opencode_mobile/termux/bridge.dart';
 import 'package:opencode_mobile/termux/managed_server_recovery.dart';
-import 'package:opencode_mobile/ui/widgets/managed_server_health.dart';
+import 'package:opencode_mobile/ui/screens/servers_screen.dart';
+import 'package:opencode_mobile/ui/screens/termux_setup_screen.dart';
 
 import 'fixtures.dart';
 
@@ -57,20 +58,15 @@ void main() {
             controller: controller,
             store: store,
             light: light,
-            home: Scaffold(
-              appBar: AppBar(title: const Text('On this phone')),
-              body: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: ManagedServerHealth(
-                  prefs: prefs,
-                  profileID: 'synthetic-local',
-                  onManage: () {},
-                ),
-              ),
-            ),
+            home: const ServersScreen(),
+            routes: {'/termux-setup': (_) => const TermuxSetupScreen()},
           ),
         );
-        await tester.tap(find.text('Check status'));
+        await tester.scrollUntilVisible(
+          find.text('Check status').hitTestable(),
+          200,
+        );
+        await tester.tap(find.text('Check status').hitTestable());
         await tester.pumpAndSettle();
         expect(
           find.text('Termux storage: 35.0 GiB free of 120.0 GiB'),
