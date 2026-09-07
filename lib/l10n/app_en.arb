@@ -903,9 +903,9 @@
   "setupOutputWaitingDetail": "Setup messages will appear here when Termux responds.",
   "setupStartInstalled": "Start installed OpenCode",
   "setupMissingCredential": "This app has no saved credential for that installation. Connect with its server address, or run setup to configure it.",
-  "setupUbuntuOption": "Ubuntu · OpenCode 1",
+  "setupUbuntuOption": "Managed Ubuntu installation",
   "setupOwnOption": "Use your own setup",
-  "setupOwnDescription": "Connect an existing OpenCode 1 or OpenCode 2 server by address. OpenCode 2 and musl installation are not managed by this app yet; musl also needs a compatible Linux environment.",
+  "setupOwnDescription": "Connect an existing OpenCode 1 or OpenCode 2 server by address. A native musl installation needs a compatible Linux environment and is not managed by this app.",
   "setupConnectExisting": "Connect existing server",
   "setupScreenTitle": "On-device setup",
   "setupInstallStart": "Install & start",
@@ -1326,6 +1326,26 @@
   "queuedDiscardUnconfirmedMessage": "Its earlier send was never confirmed; it may already be in the session.",
   "@queuedDiscardUnconfirmedMessage": {
     "description": "Discard sheet body for a queued draft whose send was never confirmed"
+  },
+  "setupRuntimeTitle": "Which OpenCode would you like to use?",
+  "@setupRuntimeTitle": {"description": "First-time on-device server runtime selection"},
+  "setupRuntimeOne": "OpenCode 1",
+  "@setupRuntimeOne": {"description": "Existing OpenCode server generation"},
+  "setupRuntimeOneDetail": "Recommended for the widest feature support in this app.",
+  "@setupRuntimeOneDetail": {"description": "Description of the default first-run runtime"},
+  "setupRuntimeTwo": "OpenCode 2 beta",
+  "@setupRuntimeTwo": {"description": "Experimental new OpenCode server generation"},
+  "setupRuntimeTwoDetail": "Try the new server API. Some features are unavailable in this beta.",
+  "@setupRuntimeTwoDetail": {"description": "Honest support note for the optional beta runtime"},
+  "setupRuntimeInstallDetail": "Install {runtime} ({version}) in an app-managed Ubuntu environment. Existing Ubuntu files are reused.",
+  "@setupRuntimeInstallDetail": {
+    "description": "Names the exact runtime and pinned version before installation",
+    "placeholders": {"runtime": {"type": "String"}, "version": {"type": "String"}}
+  },
+  "setupRuntimeUpdateDetail": "The app will install {runtime} {version}, restart only the managed local server, and reconnect this profile.",
+  "@setupRuntimeUpdateDetail": {
+    "description": "Names the selected runtime and pinned version in the update confirmation",
+    "placeholders": {"runtime": {"type": "String"}, "version": {"type": "String"}}
   },
   "queuedBannerReview": "{count, plural, =1{1 draft with an unconfirmed send to review.} other{{count} drafts with an unconfirmed send to review.}}",
   "@queuedBannerReview": {

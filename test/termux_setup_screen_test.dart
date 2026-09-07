@@ -110,11 +110,14 @@ class _SetupProgressFixture {
   Completer<Map<String, Object>>? pendingLaunch;
   Completer<Map<String, Object>>? pendingStatus;
   int launchCalls = 0;
+  String? launchedScript;
+  TermuxRuntime runtime = TermuxRuntime.openCode1;
   int restartCalls = 0;
   String? restartOperation;
   String inventoryOutput = 'ubuntu=absent\nversion=\n';
   Completer<Map<String, Object>>? pendingInventory;
   int statusReads = 0;
+  String? statusOutput;
   bool launched = false;
   bool termuxInstalled = true;
   bool permissionGranted = true;
@@ -201,6 +204,7 @@ class _SetupProgressFixture {
     }
     if (script.contains('manager_tmp=')) {
       launchCalls++;
+      launchedScript = script;
       final result =
           await (pendingLaunch?.future ??
               Future.value(_commandResult(stdout: 'manager-started:123')));
@@ -217,37 +221,41 @@ class _SetupProgressFixture {
   }
 
   Map<String, Object> statusResult() => _commandResult(
-    stdout: restartOperation != null
-        ? '''phase=ready
+    stdout:
+        statusOutput ??
+        (restartOperation != null
+            ? '''phase=ready
 message=OpenCode is ready
 port=4096
 runner=proot
-version=1.18.29
+version=${runtime.pinnedVersion}
+runtime=${runtime.wireName}
 pid=123
 operation=$restartOperation
 operation_result=completed
 __OC_SETUP_OUTPUT__
 [oc] authenticated server ready
 '''
-        : launched
-        ? '''phase=installing_dependencies
+            : launched
+            ? '''phase=installing_dependencies
 message=Installing Termux dependencies
 port=4096
 runner=proot
 version=
 pid=123
+runtime=${runtime.wireName}
 ${startedAtEpochSeconds == null ? '' : 'started_at=$startedAtEpochSeconds'}
 __OC_SETUP_OUTPUT__
 [oc] Installing packages
 '''
-        : '''phase=idle
+            : '''phase=idle
 message=No setup has been started
 port=4096
 runner=
 version=
 pid=
 __OC_SETUP_OUTPUT__
-''',
+'''),
   );
 
   Future<void> mount(
@@ -870,6 +878,238 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
+  testWidgets(
+    'first installation asks and saves the selected beta before launch',
+    (tester) async {
+      final fixture = await _setupFixture();
+      fixture.runtime = TermuxRuntime.openCode2;
+      fixture.store.pendingSave = Completer<void>();
+      await fixture.mount(tester);
+      await _revealGuideTarget(
+        tester,
+        find.byKey(const Key('setup-runtime-opencode2')),
+      );
+      expect(
+        find.text('Which OpenCode would you like to use?'),
+        findsOneWidget,
+      );
+      expect(
+        tester
+            .widget<RadioGroup<TermuxRuntime>>(
+              find.byType(RadioGroup<TermuxRuntime>),
+            )
+            .groupValue,
+        TermuxRuntime.openCode1,
+      );
+      await tester.tap(
+        find.byKey(const Key('setup-runtime-opencode2')).hitTestable(),
+      );
+      await tester.pump();
+      expect(fixture.launchCalls, 0);
+      expect(fixture.store.savedProfiles, isEmpty);
+      expect(
+        tester
+            .widget<RadioGroup<TermuxRuntime>>(
+              find.byType(RadioGroup<TermuxRuntime>),
+            )
+            .groupValue,
+        TermuxRuntime.openCode2,
+      );
+      await _revealGuideTarget(tester, find.text('Install & start'));
+      expect(find.textContaining('0.0.0-beta-18600'), findsOneWidget);
+      await tester.tap(find.text('Install & start').hitTestable());
+      await tester.pump();
+      expect(fixture.launchCalls, 0);
+      fixture.store.pendingSave!.complete();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(fixture.launchCalls, 1);
+      expect(
+        fixture.launchedScript,
+        contains("setup '4096' '0.0.0-beta-18600'"),
+      );
+      final saved = fixture.store.savedProfiles.single;
+      expect(saved.flavor, ServerFlavor.v2);
+      expect(saved.username, 'opencode');
+      expect(saved.password, isNotEmpty);
+      expect(fixture.launchedScript, contains(saved.password));
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets(
+    'legacy stopped state does not override the visible beta choice',
+    (tester) async {
+      final fixture = await _setupFixture();
+      fixture.runtime = TermuxRuntime.openCode2;
+      fixture.statusOutput = 'phase=stopped\nmessage=Stopped\nversion=\n';
+      await fixture.mount(tester);
+      final beta = find.byKey(const Key('setup-runtime-opencode2'));
+      await _revealGuideTarget(tester, beta);
+      await tester.tap(beta.hitTestable());
+      await tester.pump();
+      await _revealGuideTarget(tester, find.text('Install & start'));
+      expect(find.textContaining('0.0.0-beta-18600'), findsOneWidget);
+      fixture.statusOutput = null;
+      await tester.tap(find.text('Install & start').hitTestable());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(fixture.launchCalls, 1);
+      expect(
+        fixture.launchedScript,
+        contains("setup '4096' '0.0.0-beta-18600'"),
+      );
+      expect(fixture.store.savedProfiles.single.flavor, ServerFlavor.v2);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets(
+    'fresh beta remains installed after ready and Stop on the same route',
+    (tester) async {
+      final fixture = await _setupFixture();
+      fixture.runtime = TermuxRuntime.openCode2;
+      await fixture.mount(tester);
+      final beta = find.byKey(const Key('setup-runtime-opencode2'));
+      await _revealGuideTarget(tester, beta);
+      await tester.tap(beta.hitTestable());
+      await tester.pump();
+      await _revealGuideTarget(tester, find.text('Install & start'));
+      await tester.tap(find.text('Install & start').hitTestable());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(fixture.launchCalls, 1);
+      fixture.statusOutput =
+          'phase=ready\nmessage=OpenCode is ready\nport=4096\n'
+          'runner=proot\nversion=0.0.0-beta-18600\nruntime=opencode2\npid=123\n';
+      fixture.inventoryOutput =
+          'ubuntu=installed\nversion=0.0.0-beta-18600\nruntime=opencode2\n';
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pumpAndSettle();
+      await _revealGuideTarget(tester, find.text('Stop local server'));
+      fixture.pendingInventory = Completer<Map<String, Object>>();
+      await tester.tap(find.text('Stop local server').hitTestable());
+      await tester.pump();
+      expect(find.byType(RadioGroup<TermuxRuntime>), findsNothing);
+      fixture.pendingInventory!.complete(
+        _commandResult(stdout: fixture.inventoryOutput),
+      );
+      await tester.pumpAndSettle();
+      await _revealGuideTarget(tester, find.text('Reinstall & start'));
+      expect(find.byType(RadioGroup<TermuxRuntime>), findsNothing);
+      expect(find.textContaining('0.0.0-beta-18600'), findsWidgets);
+      await tester.tap(find.text('Reinstall & start').hitTestable());
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining(
+          'Replace OpenCode 0.0.0-beta-18600 with 0.0.0-beta-18600',
+        ),
+        findsOneWidget,
+      );
+      expect(fixture.launchCalls, 1);
+      expect(fixture.store.savedProfiles, hasLength(1));
+      await tester.tap(find.text('Cancel').hitTestable());
+      await tester.pumpAndSettle();
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  for (final runtime in TermuxRuntime.values) {
+    testWidgets('existing ${runtime.wireName} retains its runtime on repair', (
+      tester,
+    ) async {
+      final fixture = await _setupFixture();
+      fixture.runtime = runtime;
+      // Legacy v1 installations have no runtime marker. Both forms are locked
+      // to their installed generation, including on a newly created route.
+      fixture.inventoryOutput =
+          'ubuntu=installed\nversion=${runtime.pinnedVersion}\n'
+          '${runtime == TermuxRuntime.openCode2 ? 'runtime=opencode2\n' : ''}';
+      await fixture.mount(tester);
+      await _revealGuideTarget(tester, find.text('Reinstall & start'));
+      expect(find.byType(RadioGroup<TermuxRuntime>), findsNothing);
+      await tester.tap(find.text('Reinstall & start').hitTestable());
+      await tester.pumpAndSettle();
+      expect(fixture.launchCalls, 0);
+      expect(
+        find.textContaining(
+          'Replace OpenCode ${runtime.pinnedVersion} with ${runtime.pinnedVersion}',
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Install & restart').hitTestable());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(fixture.launchCalls, 1);
+      expect(
+        fixture.launchedScript,
+        contains("setup '4096' '${runtime.pinnedVersion}'"),
+      );
+      expect(
+        fixture.store.savedProfiles.single.flavor,
+        runtime == TermuxRuntime.openCode2 ? ServerFlavor.v2 : ServerFlavor.v1,
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
+
+  testWidgets(
+    'beta start reuses its saved profile without installing or selecting a generation',
+    (tester) async {
+      final fixture = await _setupFixture();
+      fixture.runtime = TermuxRuntime.openCode2;
+      fixture.inventoryOutput =
+          'ubuntu=installed\nversion=0.0.0-beta-18600\nruntime=opencode2\n';
+      fixture.store.savedProfiles.add(
+        ServerProfile(
+          id: 'local-beta',
+          name: 'This device',
+          baseUrl: TermuxBridge.managedServerUrl,
+          username: 'opencode',
+          password: 'synthetic-test-secret',
+          flavor: ServerFlavor.v2,
+        ),
+      );
+      await fixture.mount(tester);
+      await _revealGuideTarget(tester, find.text('Start installed OpenCode'));
+      expect(find.byType(RadioGroup<TermuxRuntime>), findsNothing);
+      await tester.tap(find.text('Start installed OpenCode').hitTestable());
+      await tester.pumpAndSettle();
+      expect(fixture.restartCalls, 0);
+      await tester.tap(find.text('Start & connect').hitTestable());
+      await tester.pumpAndSettle();
+      expect(fixture.restartCalls, 1);
+      expect(fixture.launchCalls, 0);
+      expect(fixture.store.savedProfiles, hasLength(1));
+      expect(fixture.store.selectedID, 'local-beta');
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets('runtime choice wraps at 320 pixels with large text', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final fixture = await _setupFixture();
+    await fixture.mount(tester, textScale: 2);
+    await _revealGuideTarget(
+      tester,
+      find.byKey(const Key('setup-runtime-opencode2')),
+    );
+    await tester.tap(
+      find.byKey(const Key('setup-runtime-opencode2')).hitTestable(),
+    );
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    await _revealGuideTarget(tester, find.text('Install & start'));
+    expect(tester.takeException(), isNull);
+    expect(fixture.launchCalls, 0);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('starts the detected installation without downloading packages', (
     tester,
   ) async {
@@ -1015,7 +1255,11 @@ void main() {
               return {..._commandResult(), 'exitCode': 75};
             }
             if (script.contains('ubuntu=absent')) {
-              return _commandResult(stdout: 'ubuntu=absent\nversion=\n');
+              return _commandResult(
+                stdout: launchCalls > 0
+                    ? 'ubuntu=installed\nversion=1.18.21\nruntime=opencode1\n'
+                    : 'ubuntu=absent\nversion=\n',
+              );
             }
             if (script.contains("printf 'opencode-bridge-ok'")) {
               return _commandResult(stdout: 'opencode-bridge-ok');
@@ -1188,8 +1432,8 @@ pid=
       // agreeing to install a specific server version.
       expect(
         find.textContaining(
-          'The app will install OpenCode ${TermuxBridge.defaultOpenCodeVersion}, '
-          'refresh its model catalog',
+          'The app will install OpenCode 1 ${TermuxBridge.defaultOpenCodeVersion}, '
+          'restart only the managed local server',
         ),
         findsOneWidget,
       );
@@ -1215,7 +1459,9 @@ pid=
         find.textContaining('Recovery settings could not be fully cleared'),
         findsOneWidget,
       );
-      expect(find.text('Install & start'), findsOneWidget);
+      expect(find.text('Start installed OpenCode'), findsOneWidget);
+      expect(find.text('Install & start'), findsNothing);
+      expect(find.byType(RadioGroup<TermuxRuntime>), findsNothing);
     },
   );
 

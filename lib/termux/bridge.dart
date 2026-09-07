@@ -2,6 +2,26 @@ import 'package:flutter/services.dart';
 
 import '../platform/platform_capabilities.dart';
 
+/// The runtime selected for the one app-managed Ubuntu server. It is separate
+/// from a server's reported version and survives restarts in the manager state.
+enum TermuxRuntime {
+  openCode1('opencode1', '1.18.29'),
+  openCode2('opencode2', '0.0.0-beta-18600');
+
+  const TermuxRuntime(this.wireName, this.pinnedVersion);
+  final String wireName;
+  final String pinnedVersion;
+
+  static TermuxRuntime parse(String? value) => switch (value?.trim()) {
+    null || '' || 'opencode1' => openCode1,
+    'opencode2' => openCode2,
+    _ => throw const TermuxBridgeException(
+      'The managed server has an unsupported runtime selection.',
+      code: 'invalid_runtime',
+    ),
+  };
+}
+
 /// Drives Termux over the `oc/termux` method channel.
 ///
 /// Termux is an Android app and the channel is implemented only by the
@@ -201,22 +221,36 @@ exec "\$MANAGER" ${enable ? 'recovery-arm' : 'recovery-disarm'} '$token'
   static String installationScript() => r'''
 set -eu
 PREFIX="${PREFIX:-/data/data/com.termux/files/usr}"
+runtime=$(cat "$HOME/.oc/runtime" 2>/dev/null || true)
+recorded_runtime="$runtime"
+case "$runtime" in
+  ''|opencode1) runtime=opencode1; command=opencode ;;
+  opencode2) command=opencode2 ;;
+  *) echo 'unsupported-managed-runtime' >&2; exit 64 ;;
+esac
 if [ ! -d "$PREFIX/var/lib/proot-distro/containers/opencode-ubuntu/rootfs" ] &&
    [ ! -d "$PREFIX/var/lib/proot-distro/installed-rootfs/opencode-ubuntu" ]; then
   printf 'ubuntu=absent\nversion=\n'
+  [ -z "$recorded_runtime" ] || printf 'runtime=%s\n' "$runtime"
   exit 0
 fi
 # A missing/broken proot command or a hung version probe is an error, not an
 # absent installation. Bound the whole login, including container startup.
 timeout -k 2s 20s proot-distro login opencode-ubuntu -- bash -c '
 set -eu
-if ! command -v opencode >/dev/null 2>&1; then
+runtime="$1"
+binary="$2"
+recorded_runtime="$3"
+if ! command -v "$binary" >/dev/null 2>&1; then
   printf "ubuntu=installed\nversion=\n"
+  [ -z "$recorded_runtime" ] || printf "runtime=%s\n" "$runtime"
   exit 0
 fi
-version=$(opencode --version)
+version=$("$binary" --version)
+if [ "$runtime" = opencode2 ]; then version=${version#opencode2 v}; fi
 printf "ubuntu=installed\nversion=%s\n" "$version"
-'
+[ -z "$recorded_runtime" ] || printf "runtime=%s\n" "$runtime"
+' -- "$runtime" "$command" "$recorded_runtime"
 ''';
 
   static Future<String> diagnostics() async {
@@ -237,8 +271,10 @@ printf "ubuntu=installed\nversion=%s\n" "$version"
   static String installAndServeScript({
     int port = 4096,
     required String password,
-    String version = defaultOpenCodeVersion,
+    String? version,
+    TermuxRuntime runtime = TermuxRuntime.openCode1,
   }) {
+    final selectedVersion = version ?? runtime.pinnedVersion;
     if (port < 1024 || port > 65535) {
       throw ArgumentError.value(
         port,
@@ -246,7 +282,7 @@ printf "ubuntu=installed\nversion=%s\n" "$version"
         'Must be between 1024 and 65535.',
       );
     }
-    if (!RegExp(r'^[A-Za-z0-9._+-]+$').hasMatch(version)) {
+    if (!RegExp(r'^[A-Za-z0-9._+-]+$').hasMatch(selectedVersion)) {
       throw ArgumentError.value(version, 'version', 'Invalid package version.');
     }
     if (password.isEmpty) {
@@ -332,19 +368,30 @@ cleanup_dispatch() {
 }
 trap cleanup_dispatch EXIT
 
+# Changing generations in an existing installation is a separate migration.
+# First-run selection and same-runtime repair never rewrite that decision.
+old_runtime=\$(cat "\$OC_DIR/runtime" 2>/dev/null || true)
+old_version=\$(sed -n 's/^version=//p' "\$OC_DIR/state" 2>/dev/null || true)
+if { [ -n "\$old_runtime" ] || [ -n "\$old_version" ]; } &&
+   [ "\${old_runtime:-opencode1}" != '${runtime.wireName}' ]; then
+  echo 'managed-runtime-migration-required' >&2
+  exit 64
+fi
+printf '%s' '${runtime.wireName}' > "\$OC_DIR/runtime.tmp.\$\$"
+mv "\$OC_DIR/runtime.tmp.\$\$" "\$OC_DIR/runtime"
 password_tmp="\$OC_DIR/server.password.tmp.\$\$"
 printf '%s' $quotedPassword > "\$password_tmp"
 chmod 600 "\$password_tmp"
 mv "\$password_tmp" "\$OC_DIR/server.password"
 started_at=\$(date +%s)
-printf 'phase=queued\nmessage=Setup queued\nport=$port\nrunner=proot\nversion=\npid=\nstarted_at=%s\n' "\$started_at" > "\$OC_DIR/state"
+printf 'phase=queued\nmessage=Setup queued\nport=$port\nrunner=proot\nversion=\npid=\nstarted_at=%s\nruntime=${runtime.wireName}\n' "\$started_at" > "\$OC_DIR/state"
 # From this point a stale dispatcher lock is safer than deleting a lock while
 # the child is claiming it. Stop & retry handles stale ownership explicitly.
 trap - EXIT
 rm -f "\$OC_DIR/server-log.active"
 "\$MANAGER" rotate-log install
 set -m
-nohup "\$MANAGER" setup '$port' '$version' "\$\$" "\$self_start" > >("\$MANAGER" write-log install) 2>&1 </dev/null &
+nohup "\$MANAGER" setup '$port' '$selectedVersion' "\$\$" "\$self_start" '${runtime.wireName}' > >("\$MANAGER" write-log install) 2>&1 </dev/null &
 manager_pid=\$!
 manager_start=\$(process_start "\$manager_pid" || true)
 [ -n "\$manager_start" ] || {
@@ -657,6 +704,7 @@ SERVER_PID="$OC_DIR/server.pid"
 SERVER_LOG="$OC_DIR/server.log"
 SERVER_LOG_ACTIVE="$OC_DIR/server-log.active"
 PASSWORD_FILE="$OC_DIR/server.password"
+RUNTIME_FILE="$OC_DIR/runtime"
 RECOVERY_PERMIT="$OC_DIR/recovery-permit"
 LEGACY_MARKER="$OC_DIR/legacy-install"
 UBUNTU_INSTALL_MARKER="$OC_DIR/opencode-ubuntu-installing"
@@ -668,6 +716,32 @@ DISK_RESERVE_KIB=524288
 FRESH_SETUP_REQUIRED_KIB=1572864
 UPDATE_REQUIRED_KIB=786432
 mkdir -p "$OC_DIR"
+
+managed_runtime() {
+  local runtime="${CURRENT_RUNTIME:-$(cat "$RUNTIME_FILE" 2>/dev/null || true)}"
+  case "$runtime" in
+    ''|opencode1) printf opencode1 ;;
+    opencode2) printf opencode2 ;;
+    *) echo 'unsupported-managed-runtime' >&2; return 64 ;;
+  esac
+}
+
+runtime_command() {
+  case "$(managed_runtime)" in
+    opencode1) printf opencode ;;
+    opencode2) printf opencode2 ;;
+    *) return 64 ;;
+  esac
+}
+
+runtime_version() {
+  local runtime binary version
+  runtime=$(managed_runtime) || return
+  binary=$(runtime_command) || return
+  version=$(proot-distro login "$PROOT_NAME" -- "$binary" --version) || return
+  if [ "$runtime" = opencode2 ]; then version=${version#opencode2 v}; fi
+  printf '%s' "$version" | tr -d '\r\n'
+}
 
 log_path() {
   case "${1:-}" in
@@ -732,11 +806,18 @@ set -uo pipefail
 port="$1"
 password_file="$2"
 manager="$3"
+runtime="${4:-opencode1}"
+case "$runtime" in
+  opencode1) binary=opencode ;;
+  opencode2) binary=opencode2 ;;
+  *) exit 64 ;;
+esac
 "$manager" rotate-log server
 proot-distro login opencode-ubuntu -- env \
   OPENCODE_SERVER_USERNAME=opencode \
   OPENCODE_SERVER_PASSWORD="$(cat "$password_file")" \
-  opencode serve --hostname 127.0.0.1 --port "$port" \
+  OPENCODE_PASSWORD="$(cat "$password_file")" \
+  "$binary" serve --hostname 127.0.0.1 --port "$port" \
   2>&1 | "$manager" write-log server
 code="${PIPESTATUS[0]}"
 "$manager" server-exited "$port" "$$" "$code" >/dev/null 2>&1 || true
@@ -757,10 +838,12 @@ write_state() {
   # Phase/status writers retain the accepted operation's clock. Only a new
   # dispatcher or accepted restart initializes it; legacy state stays unknown.
   local started_at="${CURRENT_STARTED_AT-$(read_state_value started_at)}"
+  local runtime
+  runtime=$(managed_runtime) || return 64
   local tmp="$STATE.tmp.$$"
-  printf 'phase=%s\nmessage=%s\nport=%s\nrunner=%s\nversion=%s\npid=%s\noperation=%s\noperation_result=%s\nfailure_kind=%s\nrecovery_token=%s\nstarted_at=%s\n' \
+  printf 'phase=%s\nmessage=%s\nport=%s\nrunner=%s\nversion=%s\npid=%s\noperation=%s\noperation_result=%s\nfailure_kind=%s\nrecovery_token=%s\nstarted_at=%s\nruntime=%s\n' \
     "$phase" "$message" "$port" "$runner" "$version" "$pid" \
-    "${CURRENT_OPERATION:-}" "$operation_result" "${8:-${CURRENT_RECOVERY:+recovery}}" "${CURRENT_RECOVERY:-}" "$started_at" > "$tmp"
+    "${CURRENT_OPERATION:-}" "$operation_result" "${8:-${CURRENT_RECOVERY:+recovery}}" "${CURRENT_RECOVERY:-}" "$started_at" "$runtime" > "$tmp"
   mv "$tmp" "$STATE"
 }
 
@@ -1283,9 +1366,17 @@ install_ubuntu_base() {
 
 setup() {
   CURRENT_PORT="${1:-4096}"
-  local requested_version="${2:-1.18.29}"
+  local requested_version="${2:-}"
   local dispatcher_pid="${3:-}"
   local dispatcher_start="${4:-}"
+  CURRENT_RUNTIME="${5:-$(managed_runtime)}"
+  managed_runtime >/dev/null || return 64
+  if [ -z "$requested_version" ]; then
+    case "$CURRENT_RUNTIME" in
+      opencode1) requested_version=1.18.29 ;;
+      opencode2) requested_version=0.0.0-beta-18600 ;;
+    esac
+  fi
   SETUP_SUCCEEDED=0
   SERVER_STARTED=0
   if ! claim_setup_lock "$dispatcher_pid" "$dispatcher_start"; then
@@ -1313,7 +1404,7 @@ setup() {
   fi
 
   write_state installing_opencode 'Installing OpenCode' "$CURRENT_PORT"
-  proot-distro login "$PROOT_NAME" -- env OC_REQUESTED_VERSION="$requested_version" bash -s <<'OC_PROOT_SETUP'
+  proot-distro login "$PROOT_NAME" -- env OC_REQUESTED_VERSION="$requested_version" OC_RUNTIME="$CURRENT_RUNTIME" bash -s <<'OC_PROOT_SETUP'
 set -Eeuo pipefail
 export DEBIAN_FRONTEND=noninteractive
 # Keep Node filesystem calls visible to PRoot's path translation.
@@ -1331,15 +1422,28 @@ if ! command -v node >/dev/null 2>&1 ||
     nodejs npm curl ca-certificates git openssh-client
 fi
 export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--dns-result-order=ipv4first"
+case "${OC_RUNTIME:-opencode1}" in
+  opencode1) command=opencode ;;
+  opencode2) command=opencode2 ;;
+  *) printf '[oc] ERROR: Unsupported managed runtime\n' >&2; exit 64 ;;
+esac
 install_opencode() {
   local npm_cache
   local install_code
   local binary_package
+  local binary_suffix
+  local main_package=opencode-ai
   case "$(node -p 'process.arch')" in
-    arm64) binary_package=opencode-linux-arm64 ;;
-    x64) binary_package=opencode-linux-x64-baseline ;;
+    arm64) binary_suffix=linux-arm64 ;;
+    x64) binary_suffix=linux-x64-baseline ;;
     *) printf '[oc] ERROR: OpenCode requires a 64-bit ARM or x64 Ubuntu environment\n' >&2; return 64 ;;
   esac
+  if [ "${OC_RUNTIME:-opencode1}" = opencode2 ]; then
+    binary_package="@opencode-ai/cli-$binary_suffix"
+    main_package=@opencode-ai/cli
+  else
+    binary_package="opencode-$binary_suffix"
+  fi
   npm_cache=$(mktemp -d /tmp/opencode-mobile-npm.XXXXXX)
   # Make the compatible Ubuntu binary a required package. Optional dependency
   # failures must not silently leave postinstall trying a musl-only fallback.
@@ -1353,7 +1457,7 @@ install_opencode() {
     --fetch-retry-maxtimeout=60000 \
     --fetch-timeout=300000 \
     "$binary_package@$OC_REQUESTED_VERSION" \
-    "opencode-ai@$OC_REQUESTED_VERSION"; then
+    "$main_package@$OC_REQUESTED_VERSION"; then
     install_code=0
   else
     install_code=$?
@@ -1366,15 +1470,17 @@ install_opencode || {
   sleep 10
   install_opencode
 }
-opencode --version
+"$command" --version
 OC_PROOT_SETUP
 
   local installed_version
-  installed_version=$(proot-distro login "$PROOT_NAME" -- opencode --version 2>/dev/null | tr -d '\r\n')
+  installed_version=$(runtime_version 2>/dev/null)
   [ -n "$installed_version" ] || fail_setup 'OpenCode installed but did not report a version' "$CURRENT_PORT"
-  write_state refreshing_models 'Refreshing the OpenCode model catalog' "$CURRENT_PORT" proot "$installed_version"
-  proot-distro login "$PROOT_NAME" -- opencode models --refresh >/dev/null ||
-    fail_setup 'OpenCode updated, but its model catalog could not be refreshed' "$CURRENT_PORT"
+  if [ "$CURRENT_RUNTIME" = opencode1 ]; then
+    write_state refreshing_models 'Refreshing the OpenCode model catalog' "$CURRENT_PORT" proot "$installed_version"
+    proot-distro login "$PROOT_NAME" -- opencode models --refresh >/dev/null ||
+      fail_setup 'OpenCode updated, but its model catalog could not be refreshed' "$CURRENT_PORT"
+  fi
   [ -s "$PASSWORD_FILE" ] || fail_setup 'The local server password is missing' "$CURRENT_PORT"
 
   stop_legacy_server "$CURRENT_PORT"
@@ -1386,6 +1492,12 @@ start_server() {
   local installed_version="$1"
   local starting_phase="${2:-starting_server}"
   local password
+  local runtime health_path
+  runtime=$(managed_runtime) || return 64
+  case "$runtime" in
+    opencode1) health_path=/global/health ;;
+    opencode2) health_path=/api/health ;;
+  esac
   if [ -n "${CURRENT_RECOVERY:-}" ]; then
     recovery_permitted "$CURRENT_RECOVERY" || fail_setup 'Automatic recovery was disabled' "$CURRENT_PORT"
   fi
@@ -1398,7 +1510,7 @@ start_server() {
     write_state starting_server 'Starting the local server' "$CURRENT_PORT" proot "$installed_version"
   fi
   set -m
-  nohup "$SERVER_RUNNER" "$CURRENT_PORT" "$PASSWORD_FILE" "$MANAGER" \
+  nohup "$SERVER_RUNNER" "$CURRENT_PORT" "$PASSWORD_FILE" "$MANAGER" "$runtime" \
     >/dev/null 2>&1 </dev/null &
   local server_pid=$!
   SERVER_STARTED=1
@@ -1423,11 +1535,11 @@ start_server() {
       exec 3<&-
       local auth_codes
       auth_codes=$(proot-distro login "$PROOT_NAME" -- env \
-        OC_PORT="$CURRENT_PORT" OC_PASSWORD="$password" bash -s <<'OC_AUTH_CHECK'
+        OC_PORT="$CURRENT_PORT" OC_PASSWORD="$password" OC_HEALTH_PATH="$health_path" bash -s <<'OC_AUTH_CHECK'
 unauth=$(curl --max-time 2 -s -o /dev/null -w '%{http_code}' \
-  "http://127.0.0.1:$OC_PORT/global/health" || true)
+  "http://127.0.0.1:$OC_PORT$OC_HEALTH_PATH" || true)
 auth=$(curl --max-time 2 -s -o /dev/null -w '%{http_code}' \
-  -u "opencode:$OC_PASSWORD" "http://127.0.0.1:$OC_PORT/global/health" || true)
+  -u "opencode:$OC_PASSWORD" "http://127.0.0.1:$OC_PORT$OC_HEALTH_PATH" || true)
 printf '%s %s' "$unauth" "$auth"
 OC_AUTH_CHECK
 )
@@ -1556,7 +1668,7 @@ restart() {
   ubuntu_usable || fail_restart_preflight 'The managed Ubuntu environment is unavailable'
   [ -s "$PASSWORD_FILE" ] || fail_restart_preflight 'The local server password is missing'
   local installed_version
-  if ! installed_version=$(proot-distro login "$PROOT_NAME" -- opencode --version 2>/dev/null | tr -d '\r\n'); then
+  if ! installed_version=$(runtime_version 2>/dev/null); then
     fail_restart_preflight 'The installed OpenCode command is unavailable'
   fi
   [ -n "$installed_version" ] || fail_restart_preflight 'The installed OpenCode command is unavailable'
@@ -1736,15 +1848,19 @@ class TermuxStorageSnapshot {
 class TermuxInstallation {
   final bool ubuntuInstalled;
   final String? openCodeVersion;
+  final TermuxRuntime runtime;
+  final bool runtimeSelected;
 
   const TermuxInstallation({
     required this.ubuntuInstalled,
     this.openCodeVersion,
+    this.runtime = TermuxRuntime.openCode1,
+    this.runtimeSelected = false,
   });
 
   factory TermuxInstallation.parse(String output) {
     final match = RegExp(
-      r'^ubuntu=(absent|installed)\r?\nversion=([^\r\n]*)\r?\n?$',
+      r'^ubuntu=(absent|installed)\r?\nversion=([^\r\n]*)(?:\r?\nruntime=(opencode1|opencode2))?\r?\n?$',
     ).firstMatch(output.trim());
     if (match == null) {
       throw const TermuxBridgeException(
@@ -1767,6 +1883,8 @@ class TermuxInstallation {
     return TermuxInstallation(
       ubuntuInstalled: installed,
       openCodeVersion: version.isEmpty ? null : version,
+      runtime: TermuxRuntime.parse(match[3]),
+      runtimeSelected: match[3] != null,
     );
   }
 }
@@ -1861,6 +1979,8 @@ class TermuxSetupStatus {
   final String operationID;
   final String operationResult;
   final String failureKind;
+  final TermuxRuntime runtime;
+  final bool runtimeSelected;
 
   const TermuxSetupStatus({
     required this.phase,
@@ -1873,6 +1993,8 @@ class TermuxSetupStatus {
     this.operationID = '',
     this.operationResult = '',
     this.failureKind = '',
+    this.runtime = TermuxRuntime.openCode1,
+    this.runtimeSelected = false,
   });
 
   bool get isRunning => const {
@@ -1917,6 +2039,8 @@ class TermuxSetupStatus {
       operationID: values['operation'] ?? '',
       operationResult: values['operation_result'] ?? '',
       failureKind: values['failure_kind'] ?? '',
+      runtime: TermuxRuntime.parse(values['runtime']),
+      runtimeSelected: values['runtime']?.trim().isNotEmpty == true,
     );
   }
 }

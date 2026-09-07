@@ -2532,14 +2532,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'This app has no saved credential for that installation. Connect with its server address, or run setup to configure it.';
 
   @override
-  String get setupUbuntuOption => 'Ubuntu · OpenCode 1';
+  String get setupUbuntuOption => 'Managed Ubuntu installation';
 
   @override
   String get setupOwnOption => 'Use your own setup';
 
   @override
   String get setupOwnDescription =>
-      'Connect an existing OpenCode 1 or OpenCode 2 server by address. OpenCode 2 and musl installation are not managed by this app yet; musl also needs a compatible Linux environment.';
+      'Connect an existing OpenCode 1 or OpenCode 2 server by address. A native musl installation needs a compatible Linux environment and is not managed by this app.';
 
   @override
   String get setupConnectExisting => 'Connect existing server';
@@ -3511,6 +3511,33 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get queuedDiscardUnconfirmedMessage =>
       'Its earlier send was never confirmed; it may already be in the session.';
+
+  @override
+  String get setupRuntimeTitle => 'Which OpenCode would you like to use?';
+
+  @override
+  String get setupRuntimeOne => 'OpenCode 1';
+
+  @override
+  String get setupRuntimeOneDetail =>
+      'Recommended for the widest feature support in this app.';
+
+  @override
+  String get setupRuntimeTwo => 'OpenCode 2 beta';
+
+  @override
+  String get setupRuntimeTwoDetail =>
+      'Try the new server API. Some features are unavailable in this beta.';
+
+  @override
+  String setupRuntimeInstallDetail(String runtime, String version) {
+    return 'Install $runtime ($version) in an app-managed Ubuntu environment. Existing Ubuntu files are reused.';
+  }
+
+  @override
+  String setupRuntimeUpdateDetail(String runtime, String version) {
+    return 'The app will install $runtime $version, restart only the managed local server, and reconnect this profile.';
+  }
 
   @override
   String queuedBannerReview(int count) {

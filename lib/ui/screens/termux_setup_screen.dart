@@ -46,6 +46,32 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
   _Phase _phase = _Phase.checking;
   TermuxSetupStatus? _status;
   TermuxInstallation? _installation;
+  TermuxRuntime _selectedRuntime = TermuxRuntime.openCode1;
+  TermuxRuntime? _committedRuntime;
+
+  TermuxRuntime? get _knownRuntime {
+    final status = _status;
+    if (status != null &&
+        (status.runtimeSelected || status.version.isNotEmpty)) {
+      return status.runtime;
+    }
+    final installed = _installation;
+    if (installed != null &&
+        (installed.runtimeSelected || installed.openCodeVersion != null)) {
+      return installed.runtime;
+    }
+    return _committedRuntime;
+  }
+
+  TermuxRuntime get _runtime => _knownRuntime ?? _selectedRuntime;
+
+  String _runtimeName(TermuxRuntime runtime) {
+    final l10n = AppLocalizations.of(context);
+    return runtime == TermuxRuntime.openCode2
+        ? l10n.setupRuntimeTwo
+        : l10n.setupRuntimeOne;
+  }
+
   bool _checkingInstallation = false;
   String? _installationError;
   bool _startingExisting = false;
@@ -289,7 +315,12 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
     final store = ref.read(bootstrapProvider).store;
     ServerProfile? profile;
     for (final candidate in store.profiles) {
-      if (candidate.baseUrl == localUrl) {
+      if (candidate.backend == ServerBackend.openCode &&
+          candidate.baseUrl == localUrl &&
+          candidate.flavor ==
+              (_runtime == TermuxRuntime.openCode2
+                  ? ServerFlavor.v2
+                  : ServerFlavor.v1)) {
         profile = candidate;
         break;
       }
@@ -298,6 +329,9 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       name: 'This device (Termux)',
       baseUrl: localUrl,
+      flavor: _runtime == TermuxRuntime.openCode2
+          ? ServerFlavor.v2
+          : ServerFlavor.v1,
     );
     profile.username = 'opencode';
     if (profile.password.isEmpty) {
@@ -311,7 +345,13 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
 
   ServerProfile? _localProfile() {
     for (final profile in ref.read(bootstrapProvider).store.profiles) {
-      if (profile.baseUrl == localUrl && profile.password.isNotEmpty) {
+      if (profile.backend == ServerBackend.openCode &&
+          profile.baseUrl == localUrl &&
+          profile.password.isNotEmpty &&
+          profile.flavor ==
+              (_runtime == TermuxRuntime.openCode2
+                  ? ServerFlavor.v2
+                  : ServerFlavor.v1)) {
         return profile;
       }
     }
@@ -320,6 +360,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
 
   Future<void> _installAndStart() async {
     if (_busy || _phase == _Phase.installing) return;
+    _selectedRuntime = _runtime;
     var launchRequested = false;
     _stopPolling();
     _statusEpoch++;
@@ -349,6 +390,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       final command = TermuxBridge.installAndServeScript(
         port: port,
         password: profile.password,
+        runtime: _selectedRuntime,
       );
       launchRequested = true;
       final launch = await TermuxBridge.run(command);
@@ -432,13 +474,17 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       return;
     }
     final currentVersion = _status?.version.trim();
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showConfirmSheet(
       context,
       title: 'Update managed OpenCode?',
       message: [
         if (currentVersion?.isNotEmpty == true)
           'Installed version: $currentVersion.',
-        'The app will install OpenCode ${TermuxBridge.defaultOpenCodeVersion}, refresh its model catalog, restart only the managed local server, and reconnect this profile.',
+        l10n.setupRuntimeUpdateDetail(
+          _runtimeName(_runtime),
+          _runtime.pinnedVersion,
+        ),
         'The server will be briefly unavailable. Active generation should be stopped first.',
       ].join('\n\n'),
       confirmLabel: 'Update',
@@ -478,6 +524,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
     bool startExisting = false,
   }) async {
     if (_busy || (!startExisting && _phase != _Phase.connected)) return;
+    final runtime = _runtime;
     _startingExisting = startExisting;
     _statusEpoch++;
     final operationID = DateTime.now().microsecondsSinceEpoch.toRadixString(36);
@@ -499,6 +546,8 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
         version: '',
         pid: null,
         operationID: operationID,
+        runtime: runtime,
+        runtimeSelected: true,
       );
     });
     _startElapsedTimer();
@@ -709,6 +758,17 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                   _outputScrollController.position.pixels <
               48;
       _status = status;
+      if (status.runtimeSelected || status.version.isNotEmpty) {
+        _committedRuntime = status.runtime;
+      }
+      if (status.isReady && status.version.isNotEmpty) {
+        _installation = TermuxInstallation(
+          ubuntuInstalled: true,
+          openCodeVersion: status.version,
+          runtime: _runtime,
+          runtimeSelected: true,
+        );
+      }
       _setupOutput = snapshot.output;
       if (outputChanged && followOutput) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -945,6 +1005,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
 
   Future<void> _stopServer() async {
     if (_busy) return;
+    final runtime = _runtime;
     _stopPolling();
     setState(() {
       _busy = true;
@@ -974,7 +1035,9 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
       await ref.read(connProvider).disconnect();
       if (!mounted) return;
       setState(() {
+        _committedRuntime = runtime;
         _status = null;
+        _installation = null;
         _phase = _Phase.ready;
         _error = recoveryCleanupFailed
             ? lookupAppLocalizations(
@@ -982,6 +1045,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
               ).managedRecoveryStoppedWithCleanupError
             : 'The local server is stopped. Its installed files are kept.';
       });
+      await _checkInstallation();
     } on TermuxBridgeException catch (error) {
       if (!mounted) return;
       setState(() {
@@ -1417,7 +1481,18 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
     try {
       final installation = await TermuxBridge.inspectInstallation();
       if (!mounted || epoch != _statusEpoch) return;
-      setState(() => _installation = installation);
+      setState(() {
+        _installation = installation;
+        if (installation.runtimeSelected ||
+            installation.openCodeVersion != null) {
+          _selectedRuntime = installation.runtime;
+          _committedRuntime = installation.runtime;
+        } else if (!installation.ubuntuInstalled) {
+          // An authoritative empty inventory also covers a user removing
+          // Termux's installation outside this screen.
+          _committedRuntime = null;
+        }
+      });
     } on TermuxBridgeException {
       if (!mounted || epoch != _statusEpoch) return;
       setState(() {
@@ -1449,6 +1524,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
 
   Widget _setupChoices({bool showInstall = true}) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final installed = _installation;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1485,15 +1561,50 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
         ],
         if (showInstall) ...[
           const SizedBox(height: 12),
+          if (installed != null &&
+              installed.openCodeVersion == null &&
+              _knownRuntime == null) ...[
+            Text(l10n.setupRuntimeTitle, style: theme.textTheme.titleMedium),
+            const SizedBox(height: 8),
+            RadioGroup<TermuxRuntime>(
+              groupValue: _selectedRuntime,
+              onChanged: (value) {
+                if (_busy || _checkingInstallation || value == null) return;
+                setState(() => _selectedRuntime = value);
+              },
+              child: Column(
+                children: [
+                  RadioListTile<TermuxRuntime>(
+                    key: const Key('setup-runtime-opencode1'),
+                    value: TermuxRuntime.openCode1,
+                    enabled: !_busy && !_checkingInstallation,
+                    title: Text(l10n.setupRuntimeOne),
+                    subtitle: Text(l10n.setupRuntimeOneDetail),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  RadioListTile<TermuxRuntime>(
+                    key: const Key('setup-runtime-opencode2'),
+                    value: TermuxRuntime.openCode2,
+                    enabled: !_busy && !_checkingInstallation,
+                    title: Text(l10n.setupRuntimeTwo),
+                    subtitle: Text(l10n.setupRuntimeTwoDetail),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           Text(
             AppLocalizations.of(context).setupUbuntuOption,
             style: theme.textTheme.titleSmall,
           ),
           const SizedBox(height: 4),
           Text(
-            'Install OpenCode ${TermuxBridge.defaultOpenCodeVersion} '
-            'in a full, app-managed Ubuntu environment. Existing Ubuntu files '
-            'are reused.',
+            l10n.setupRuntimeInstallDetail(
+              _runtimeName(_runtime),
+              _runtime.pinnedVersion,
+            ),
           ),
           const SizedBox(height: 10),
           if (installed?.openCodeVersion != null)
@@ -1503,12 +1614,11 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
                   : _reviewInstallChoice,
               icon: const Icon(Icons.build_outlined),
               label: Text(
-                installed?.openCodeVersion ==
-                        TermuxBridge.defaultOpenCodeVersion
+                installed?.openCodeVersion == _runtime.pinnedVersion
                     ? AppLocalizations.of(context).setupReinstallStart
-                    : AppLocalizations.of(context).setupInstallVersionStart(
-                        TermuxBridge.defaultOpenCodeVersion,
-                      ),
+                    : AppLocalizations.of(
+                        context,
+                      ).setupInstallVersionStart(_runtime.pinnedVersion),
               ),
             )
           else
@@ -1534,7 +1644,7 @@ class _TermuxSetupScreenState extends ConsumerState<TermuxSetupScreen>
         title: l10n.setupReplaceTitle,
         message: l10n.setupReplaceDescription(
           installedVersion,
-          TermuxBridge.defaultOpenCodeVersion,
+          _runtime.pinnedVersion,
         ),
         confirmLabel: l10n.setupInstallRestart,
         icon: Icons.build_outlined,
