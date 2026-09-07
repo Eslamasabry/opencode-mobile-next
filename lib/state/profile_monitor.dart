@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:crypto/crypto.dart';
+
 import '../api2/models.dart' show Api2FormInfo;
 import '../api/models.dart';
 import '../domain/profile_monitor.dart';
@@ -86,6 +88,7 @@ class ProfileMonitor extends ChangeNotifier {
     _failures.remove(profile.id);
     await _dismissProfile(profile.id);
     await store.prefs.remove(routesKey(profile.id));
+    await _forgetBusy(profile.id);
   }
 
   final _snapshots = <String, ProfileAttentionSnapshot>{};
@@ -135,6 +138,100 @@ class ProfileMonitor extends ChangeNotifier {
   static String rulesKey(String id) => 'oc.notifyRules.$id';
   static String alertsKey(String id) => 'oc.monitorAlerts.$id';
   static String routesKey(String id) => 'oc.monitorRoutes.$id';
+  static String busyIntervalsKey(String id) => 'oc.monitorBusy.$id';
+
+  /// The longest silence after which a busy observation no longer joins the
+  /// one before it. Covers the background interval, the deepest failure
+  /// backoff (15 min) and one more poll; anything longer — the app was
+  /// killed, the phone slept, the server was unreachable — could hide an
+  /// idle→busy turn, so the interval restarts rather than claiming the
+  /// session ran continuously through the gap.
+  static const busyObservationGap = Duration(minutes: 20);
+
+  final _busy = <String, Map<String, ObservedBusyInterval>>{};
+
+  Map<String, ObservedBusyInterval> _busyIntervals(String id) =>
+      _busy.putIfAbsent(id, () {
+        try {
+          final raw = store.prefs.getString(busyIntervalsKey(id));
+          if (raw == null) return {};
+          final decoded = jsonDecode(raw);
+          if (decoded is! List) return {};
+          return {
+            for (final entry in decoded)
+              if (ObservedBusyInterval.fromJson(entry) case final interval?)
+                interval.sessionID: interval,
+          };
+        } catch (_) {
+          return {};
+        }
+      });
+
+  /// Folds one successful status read into the profile's busy intervals.
+  ///
+  /// Only a complete, successful poll gets here: a failed or partial poll
+  /// must neither end an interval (the session may still be working) nor
+  /// extend it (nothing was observed). A session that is idle or absent from
+  /// the status map ends its interval; a session seen busy again after more
+  /// than [busyObservationGap] starts a fresh one.
+  Future<List<ObservedBusyInterval>> _observeBusy(
+    String id,
+    Map<String, String> statuses,
+    Map<String, Session> sessions,
+    DateTime now,
+    String? directory,
+    String? workspace,
+  ) async {
+    final previous = _busyIntervals(id);
+    final next = <String, ObservedBusyInterval>{};
+    for (final entry in statuses.entries) {
+      if (entry.value == 'idle') continue;
+      final session = sessions[entry.key];
+      final prior = previous[entry.key];
+      final continues =
+          prior != null &&
+          !prior.lastObservedBusyAt.isAfter(now) &&
+          now.difference(prior.lastObservedBusyAt) <= busyObservationGap;
+      next[entry.key] = continues
+          ? prior.observedAgainAt(
+              now,
+              title: session?.title,
+              directory: session?.directory,
+              workspace: session?.workspaceID,
+            )
+          : ObservedBusyInterval(
+              sessionID: entry.key,
+              firstObservedBusyAt: now,
+              lastObservedBusyAt: now,
+              title: session?.title,
+              directory: session?.directory ?? directory,
+              workspace: session?.workspaceID ?? workspace,
+            );
+    }
+    _busy[id] = next;
+    try {
+      // Best effort: a refused write costs at most one duplicate reminder
+      // after a restart, never a missed idle observation.
+      if (next.isEmpty) {
+        await store.prefs.remove(busyIntervalsKey(id));
+      } else {
+        await store.prefs.setString(
+          busyIntervalsKey(id),
+          jsonEncode([for (final interval in next.values) interval.toJson()]),
+        );
+      }
+    } catch (_) {}
+    return next.values.toList()
+      ..sort((a, b) => a.firstObservedBusyAt.compareTo(b.firstObservedBusyAt));
+  }
+
+  Future<void> _forgetBusy(String id) async {
+    _busy.remove(id);
+    try {
+      await store.prefs.remove(busyIntervalsKey(id));
+    } catch (_) {}
+  }
+
   Map<String, dynamic> _routes(String id) {
     try {
       return Map<String, dynamic>.from(
@@ -318,6 +415,7 @@ class ProfileMonitor extends ChangeNotifier {
         .catchError((Object _) {})
         .then((_) async {
           if (_disposed || _blocked.contains(id)) return;
+          final before = rulesFor(id);
           if (!await store.prefs.setString(
             rulesKey(id),
             jsonEncode(value.toJson()),
@@ -329,7 +427,14 @@ class ProfileMonitor extends ChangeNotifier {
           if (_activeProfileID == id) _activeGateway?.close();
           _next.remove(id);
           _snapshots.remove(id);
-          if (!value.enabled || !value.notifications) await _dismissProfile(id);
+          if (!value.enabled || !value.notifications) {
+            await _dismissProfile(id);
+          } else if (value.checkInAfterMinutes != before.checkInAfterMinutes) {
+            // A changed or removed duration retires posted reminders; the
+            // next poll re-evaluates the intervals against the new rule.
+            await _dismissCheckIns(id);
+          }
+          if (!value.enabled) await _forgetBusy(id);
           if (!_disposed) {
             notifyListeners();
             _schedule();
@@ -350,6 +455,7 @@ class ProfileMonitor extends ChangeNotifier {
     _next.remove(id);
     _failures.remove(id);
     _sources.remove(id);
+    _busy.remove(id);
     unawaited(_dismissProfile(id));
     if (!_disposed) notifyListeners();
   }
@@ -385,6 +491,27 @@ class ProfileMonitor extends ChangeNotifier {
       await store.prefs.remove(alertsKey(id));
     } catch (_) {}
   }
+
+  /// Retires only the check-in reminders of [id]; request alerts stay.
+  Future<void> _dismissCheckIns(String id) async {
+    final keys = _alerts.putIfAbsent(id, () => _storedAlertKeys(id));
+    for (final key in keys.where(isCheckInAlertKey).toList()) {
+      try {
+        if (!await dismiss(key).timeout(timeout, onTimeout: () => false)) {
+          continue;
+        }
+      } catch (_) {
+        continue;
+      }
+      keys.remove(key);
+    }
+    try {
+      await store.prefs.setStringList(alertsKey(id), keys.take(256).toList());
+    } catch (_) {}
+  }
+
+  static bool isCheckInAlertKey(String key) =>
+      key.contains(':${MonitoredRequestKind.checkIn.name}%3A');
 
   Future<void> refresh() {
     if (_disposed || !runningAllowed) return Future.value();
@@ -585,6 +712,18 @@ class ProfileMonitor extends ChangeNotifier {
         for (final r in requests) r.identity: r,
       }.values.take(256).toList();
       final now = _now();
+      // Every read above succeeded, so this is a complete observation: the
+      // status map may end or extend a busy interval. (A throw lands in the
+      // catch below and leaves the intervals exactly as they were.)
+      final busy = await _observeBusy(
+        id,
+        statuses,
+        sessions,
+        now,
+        location?.directory,
+        location?.workspace,
+      );
+      if (!current()) return;
       _failures.remove(id);
       _next[id] = now.add(
         _foreground ? foregroundInterval : backgroundInterval,
@@ -598,15 +737,29 @@ class ProfileMonitor extends ChangeNotifier {
         directory: location?.directory,
         workspace: location?.workspace,
         requests: List.unmodifiable(unique),
+        busyIntervals: List.unmodifiable(busy),
         complete: requests.length <= 256,
         runningCount: statuses.values.where((v) => v != 'idle').length,
         nextCheckAt: _next[id],
       );
-      if (!_foreground &&
-          _backgroundAllowed &&
-          current() &&
-          _notificationPolicyCurrent(id)) {
-        await _publishAlerts(id, unique, current);
+      if (!_foreground && _backgroundAllowed && current()) {
+        final requestsAllowed = _notificationPolicyCurrent(id);
+        final checkInsAllowed = _checkInPolicyCurrent(id);
+        if (requestsAllowed || checkInsAllowed) {
+          await _publishAlerts(
+            id,
+            [
+              if (requestsAllowed) ...unique,
+              if (checkInsAllowed)
+                for (final interval in _snapshots[id]!.dueCheckIns(
+                  rulesFor(id),
+                ))
+                  interval.toRequest(),
+            ],
+            current,
+            () => _notificationPolicyCurrent(id) || _checkInPolicyCurrent(id),
+          );
+        }
       }
     } catch (_) {
       if (!current()) return;
@@ -632,19 +785,26 @@ class ProfileMonitor extends ChangeNotifier {
     }
   }
 
+  /// Reconciles posted alerts with [requests]: anything posted that is no
+  /// longer in the list is dismissed, anything new is posted once. Because
+  /// a check-in reminder's key names its observed busy interval, an interval
+  /// that ends removes its reminder and a later interval posts a new one —
+  /// and a key that was posted (or persisted from an earlier process) is
+  /// never posted again.
   Future<void> _publishAlerts(
     String id,
     List<MonitoredRequest> requests,
     bool Function() current,
+    bool Function() policy,
   ) async {
-    if (!current() || !_notificationPolicyCurrent(id)) {
+    if (!current() || !policy()) {
       await _dismissProfile(id);
       return;
     }
     final keys = _alerts.putIfAbsent(id, () => _storedAlertKeys(id));
     final valid = {for (final r in requests) alertKey(id, r)};
     for (final key in keys.difference(valid).toList()) {
-      if (!current() || !_notificationPolicyCurrent(id)) {
+      if (!current() || !policy()) {
         await _dismissProfile(id);
         return;
       }
@@ -656,7 +816,7 @@ class ProfileMonitor extends ChangeNotifier {
       } catch (_) {
         continue;
       }
-      if (!current() || !_notificationPolicyCurrent(id)) {
+      if (!current() || !policy()) {
         await _dismissProfile(id);
         return;
       }
@@ -664,10 +824,7 @@ class ProfileMonitor extends ChangeNotifier {
     }
     var dispatched = 0;
     for (final request in requests) {
-      if (!current() ||
-          !_notificationPolicyCurrent(id) ||
-          _foreground ||
-          !_backgroundAllowed) {
+      if (!current() || !policy() || _foreground || !_backgroundAllowed) {
         return;
       }
       final key = alertKey(id, request);
@@ -680,7 +837,7 @@ class ProfileMonitor extends ChangeNotifier {
       } catch (_) {
         return;
       }
-      if (!current() || !_notificationPolicyCurrent(id) || token == null) {
+      if (!current() || !policy() || token == null) {
         return;
       }
       final bool delivered;
@@ -694,7 +851,7 @@ class ProfileMonitor extends ChangeNotifier {
       } catch (_) {
         return;
       }
-      if (!current() || !_notificationPolicyCurrent(id)) {
+      if (!current() || !policy()) {
         if (delivered) {
           try {
             await dismiss(key).timeout(timeout, onTimeout: () => false);
@@ -706,7 +863,7 @@ class ProfileMonitor extends ChangeNotifier {
         keys.add(key);
       }
     }
-    if (current() && _notificationPolicyCurrent(id)) {
+    if (current() && policy()) {
       await store.prefs.setStringList(alertsKey(id), keys.take(256).toList());
     }
   }
@@ -719,6 +876,23 @@ class ProfileMonitor extends ChangeNotifier {
           rules.notifications &&
           !rules.quietAt(_now()) &&
           (alertsAllowed?.call(id) ?? true);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Check-in reminders follow every request-alert policy except
+  /// [alertsAllowed]: that hook exists because the active profile's live
+  /// connection posts its own request alerts, and it has no reminder of its
+  /// own to duplicate. The rule's duration must be set as well.
+  bool _checkInPolicyCurrent(String id) {
+    if (_disposed || !runningAllowed || _blocked.contains(id)) return false;
+    try {
+      final rules = rulesFor(id);
+      return rules.enabled &&
+          rules.notifications &&
+          rules.checkInAfterMinutes != null &&
+          !rules.quietAt(_now());
     } catch (_) {
       return false;
     }

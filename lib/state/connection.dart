@@ -274,9 +274,12 @@ class ConnectionController extends ChangeNotifier {
     dismiss: backgroundLive.dismissCodingAlert,
     alertsAllowed: (id) => id != profile?.id,
     alert: (id, request, key, token) => backgroundLive.showCodingAlert(
-      kind: request.kind == MonitoredRequestKind.permission
-          ? CodingAlertKind.permission
-          : CodingAlertKind.question,
+      kind: switch (request.kind) {
+        MonitoredRequestKind.permission => CodingAlertKind.permission,
+        MonitoredRequestKind.question ||
+        MonitoredRequestKind.form => CodingAlertKind.question,
+        MonitoredRequestKind.checkIn => CodingAlertKind.checkIn,
+      },
       profileID: id,
       sessionID: request.sessionID,
       key: key,
@@ -371,6 +374,10 @@ class ConnectionController extends ChangeNotifier {
                 (p) =>
                     p.id == target.requestID && p.sessionID == target.sessionID,
               ),
+        // A check-in has no server-side request to find: the session read
+        // below is the whole check, and it opens whether or not the run is
+        // still going — the user asked to look at it either way.
+        MonitoredRequestKind.checkIn => true,
       };
       if (!found) return false;
       if (target.sessionID != 'global') {
