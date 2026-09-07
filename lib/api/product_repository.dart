@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:opencode_sdk/opencode_sdk.dart' as sdk;
 
 import '../domain/server_gateway.dart';
+import '../domain/session_command_handoff.dart';
 import '../domain/parallel_requests.dart';
 import 'mcp_oauth.dart';
 import 'models.dart';
@@ -405,7 +406,7 @@ abstract class ProductRepository implements ServerOperationsGateway {
 }
 
 class SdkProductRepository extends ProductRepository
-    implements LocationAwareProductRepository {
+    implements LocationAwareProductRepository, SessionCommandHandoffGateway {
   static const _providerOAuthAttemptPrefix = 'provider-oauth-';
 
   final sdk.OpencodeSdk _client;
@@ -416,6 +417,20 @@ class SdkProductRepository extends ProductRepository
   int _providerOAuthAttemptSerial = 0;
 
   SdkProductRepository(this._client);
+
+  @override
+  SessionCommandHandoff createSessionCommandHandoff({
+    required String sessionID,
+    required String? directory,
+    required String? workspaceID,
+    required String username,
+  }) => SessionCommandHandoff.openCode1(
+    serverURL: _client.dio.options.baseUrl,
+    sessionID: sessionID,
+    directory: directory,
+    workspaceID: workspaceID ?? _workspace,
+    username: username,
+  );
 
   @override
   int get locationRevision => _locationRevision;
@@ -852,7 +867,9 @@ class SdkProductRepository extends ProductRepository
     final query = search?.trim();
     final legacyCursor = cursor == null ? null : int.tryParse(cursor);
     if (cursor != null && legacyCursor == null) {
-      throw const ProductException('Session pagination expired. Refresh the list.');
+      throw const ProductException(
+        'Session pagination expired. Refresh the list.',
+      );
     }
     // Deliberately omit the repository's selected directory/workspace. This
     // endpoint is the server-wide finder; passing the active directory would
@@ -874,7 +891,10 @@ class SdkProductRepository extends ProductRepository
         )
         .toList();
     final next = response.headers.value('x-next-cursor');
-    return ServerPage(items: items, nextCursor: next?.isNotEmpty == true ? next : null);
+    return ServerPage(
+      items: items,
+      nextCursor: next?.isNotEmpty == true ? next : null,
+    );
   });
 
   @override
@@ -1376,87 +1396,89 @@ class SdkProductRepository extends ProductRepository
       });
 
   @override
-  Future<CatalogSnapshot> loadCatalog() =>
-      _guard('Could not load models and agents', () async {
-        final providersRequest = _client.getProvidersApi().v2ProviderList(
-          locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
-          locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
-        );
-        final modelsRequest = _client.getModelsApi().v2ModelList(
-          locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
-          locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
-        );
-        final agentsRequest = _client.getOpencodeHttpApiApi().v2AgentList(
-          locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
-          locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
-        );
-        final (providerResponse, modelResponse, agentResponse) =
-            await waitForRequests(providersRequest, modelsRequest, agentsRequest);
-        final providers = (providerResponse.data?.data ?? const [])
-            .map((provider) {
-              return CatalogProvider(
-                id: provider.id,
-                name: provider.name,
-                enabled: provider.disabled != true,
-                integrationID: provider.integrationID,
-              );
-            })
-            .where((provider) => provider.id.isNotEmpty)
-            .toList();
-        final models = (modelResponse.data?.data ?? const [])
-            .map((model) {
-              final variants = model.variants
-                  .where((variant) => variant.id.isNotEmpty)
-                  .map(
-                    (variant) => CatalogVariant(
-                      id: variant.id,
-                      options: _stringMap(variant.body),
-                    ),
-                  )
-                  .toList();
-              return CatalogModel(
-                id: model.id,
-                providerID: model.providerID,
-                name: model.name,
-                family: model.family,
-                enabled: model.enabled,
-                status: model.status.value.toString(),
-                contextLimit: model.limit.context,
-                outputLimit: model.limit.output,
-                reasoning: false,
-                attachments: model.capabilities.input.any(
-                  (input) => input != 'text',
-                ),
-                tools: model.capabilities.tools,
-                variants: variants,
-                cost: _catalogModelCost(model.cost),
-                released: _catalogReleased(model.time.released),
-              );
-            })
-            .where((model) => model.id.isNotEmpty)
-            .toList();
-        final agents = (agentResponse.data?.data ?? const [])
-            .map((agent) {
-              final color = agent.color?.value;
-              final model = agent.model;
-              return CatalogAgent(
-                id: agent.id,
-                mode: agent.mode.value.toString(),
-                description: agent.description,
-                hidden: agent.hidden,
-                maxSteps: agent.steps,
-                color: color is String && color.isNotEmpty ? color : null,
-                model: model == null ? null : '${model.providerID}/${model.id}',
-              );
-            })
-            .where((agent) => agent.id.isNotEmpty)
-            .toList();
-        return CatalogSnapshot(
-          providers: providers,
-          models: models,
-          agents: agents,
-        );
-      });
+  Future<CatalogSnapshot> loadCatalog() => _guard(
+    'Could not load models and agents',
+    () async {
+      final providersRequest = _client.getProvidersApi().v2ProviderList(
+        locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
+        locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
+      );
+      final modelsRequest = _client.getModelsApi().v2ModelList(
+        locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
+        locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
+      );
+      final agentsRequest = _client.getOpencodeHttpApiApi().v2AgentList(
+        locationLeftSquareBracketDirectoryRightSquareBracket: _directory,
+        locationLeftSquareBracketWorkspaceRightSquareBracket: _workspace,
+      );
+      final (providerResponse, modelResponse, agentResponse) =
+          await waitForRequests(providersRequest, modelsRequest, agentsRequest);
+      final providers = (providerResponse.data?.data ?? const [])
+          .map((provider) {
+            return CatalogProvider(
+              id: provider.id,
+              name: provider.name,
+              enabled: provider.disabled != true,
+              integrationID: provider.integrationID,
+            );
+          })
+          .where((provider) => provider.id.isNotEmpty)
+          .toList();
+      final models = (modelResponse.data?.data ?? const [])
+          .map((model) {
+            final variants = model.variants
+                .where((variant) => variant.id.isNotEmpty)
+                .map(
+                  (variant) => CatalogVariant(
+                    id: variant.id,
+                    options: _stringMap(variant.body),
+                  ),
+                )
+                .toList();
+            return CatalogModel(
+              id: model.id,
+              providerID: model.providerID,
+              name: model.name,
+              family: model.family,
+              enabled: model.enabled,
+              status: model.status.value.toString(),
+              contextLimit: model.limit.context,
+              outputLimit: model.limit.output,
+              reasoning: false,
+              attachments: model.capabilities.input.any(
+                (input) => input != 'text',
+              ),
+              tools: model.capabilities.tools,
+              variants: variants,
+              cost: _catalogModelCost(model.cost),
+              released: _catalogReleased(model.time.released),
+            );
+          })
+          .where((model) => model.id.isNotEmpty)
+          .toList();
+      final agents = (agentResponse.data?.data ?? const [])
+          .map((agent) {
+            final color = agent.color?.value;
+            final model = agent.model;
+            return CatalogAgent(
+              id: agent.id,
+              mode: agent.mode.value.toString(),
+              description: agent.description,
+              hidden: agent.hidden,
+              maxSteps: agent.steps,
+              color: color is String && color.isNotEmpty ? color : null,
+              model: model == null ? null : '${model.providerID}/${model.id}',
+            );
+          })
+          .where((agent) => agent.id.isNotEmpty)
+          .toList();
+      return CatalogSnapshot(
+        providers: providers,
+        models: models,
+        agents: agents,
+      );
+    },
+  );
 
   /// v2 model prices are already USD per million tokens; take the base
   /// (untiered) entry, or the first one when every entry is a context tier.
