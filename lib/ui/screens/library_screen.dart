@@ -31,6 +31,7 @@ import 'mcp_setup_screen.dart';
 import 'settings_screen.dart';
 import 'session_import_screen.dart';
 import 'terminal_screen.dart';
+import 'plugins_screen.dart';
 
 part 'library/catalog_screen.dart';
 part 'library/integrations_screen.dart';
@@ -106,6 +107,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
             onTap: () =>
                 _open(context, CapabilitiesScreen(controller: controller)),
           ),
+          if (controller.capabilities.pluginInventory)
+            _DestinationRow(
+              icon: Icons.extension_outlined,
+              title: l10n.pluginsTitle,
+              keywords: 'plugin installed source status',
+              onTap: () =>
+                  _open(context, PluginsScreen(controller: controller)),
+            ),
           // §5: Terminal gives up its navigation slot to Activity and
           // is reached from here (and from a session) instead.
           _DestinationRow(

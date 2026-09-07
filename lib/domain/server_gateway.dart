@@ -832,6 +832,7 @@ class ServerCapabilities {
   final bool mcpRuntimeRemovals;
   final bool integrationCredentials;
   final bool integrationCommandAuth;
+  final bool pluginInventory;
   final bool sessionShare;
   final bool sessionArchive;
   final bool sessionTodos;
@@ -871,6 +872,7 @@ class ServerCapabilities {
     this.mcpRuntimeRemovals = false,
     this.integrationCredentials = false,
     this.integrationCommandAuth = false,
+    this.pluginInventory = false,
     this.sessionShare = true,
     this.sessionArchive = true,
     this.sessionTodos = true,

@@ -19,6 +19,8 @@ import '../api/models.dart';
 import '../api/product_repository.dart' show ProductRepository;
 import '../domain/server_gateway.dart';
 import '../domain/parallel_requests.dart';
+import '../domain/plugin_inventory.dart';
+import 'plugin_mapper.dart';
 import 'client.dart';
 import 'active_context_mapper.dart';
 import 'gateway_mappers.dart';
@@ -34,12 +36,33 @@ class Api2OperationsGateway extends ProductRepository
         SessionImportGateway,
         SessionSkillGateway,
         ActiveContextGateway,
+        PluginGateway,
         McpRemovalGateway,
         IntegrationCredentialGateway,
         IntegrationCommandGateway,
         IntegrationAuthRecoveryGateway,
         UsageStatisticsGateway {
   final Api2Client client;
+
+  @override
+  Future<List<PluginInfo>> listPlugins() async {
+    final location = _loc();
+    try {
+      final json = await _transport.getJson('/plugin', query: location);
+      if (json is! Map || json['data'] is! List) {
+        throw const FormatException('Invalid plugin inventory');
+      }
+      final rows = json['data'] as List;
+      if (rows.length > 1000 || rows.any((row) => row is! Map)) {
+        throw const FormatException('Invalid plugin inventory');
+      }
+      return List.unmodifiable(rows.cast<Map>().map(mapPluginInfo));
+    } catch (_) {
+      // Plugin failures and source URLs may contain credentials. Never retain
+      // the raw response/transport error in the product error or its cause.
+      throw const ProductException('Could not load plugins. Try again.');
+    }
+  }
 
   bool _activeContextSupported = true;
   @override

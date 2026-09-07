@@ -42,6 +42,7 @@ const ServerCapabilities api2ServerCapabilities = ServerCapabilities(
   mcpRuntimeRemovals: true,
   integrationCredentials: true,
   integrationCommandAuth: true,
+  pluginInventory: true,
   sessionShare: false,
   sessionArchive: false,
   sessionTodos: false,

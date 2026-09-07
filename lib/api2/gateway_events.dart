@@ -552,6 +552,9 @@ class Api2EventAdapter {
             return [_env('agent.updated', const {})];
           case 'config.updated':
             return [_env('config.updated', const {})];
+          case 'plugin.added':
+          case 'plugin.updated':
+            return [_env(envelope.type, const {})];
           case 'catalog.updated':
           case 'models-dev.refreshed':
             return [_env('catalog.updated', const {})];
