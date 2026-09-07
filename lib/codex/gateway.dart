@@ -5,10 +5,13 @@ import 'dart:async';
 
 import '../api/models.dart';
 import '../domain/server_gateway.dart';
+import '../domain/agent_account.dart';
+import 'account.dart';
 import 'mappers.dart';
 import 'transport.dart';
 
 const codexServerCapabilities = ServerCapabilities(
+  agentAccount: true,
   promptAttachments: false,
   promptAgentMentions: false,
   offlinePromptQueue: false,
@@ -80,7 +83,8 @@ class _CodexOperationContext {
   });
 }
 
-class CodexGateway implements ServerGateway, ServerOperationsGateway {
+class CodexGateway
+    implements ServerGateway, ServerOperationsGateway, AgentAccountGateway {
   final CodexTransport transport;
   String? _directory;
   bool _closed = false;
@@ -126,6 +130,15 @@ class CodexGateway implements ServerGateway, ServerOperationsGateway {
 
   @override
   ServerCapabilities get capabilities => codexServerCapabilities;
+  @override
+  AgentAccountSession openAccountSession() {
+    final location = _locationEpoch;
+    return CodexAccountSession(
+      transport,
+      () => !_closed && location == _locationEpoch,
+    );
+  }
+
   @override
   String? get directory => _directory;
   @override
@@ -463,9 +476,10 @@ class CodexGateway implements ServerGateway, ServerOperationsGateway {
       turns: true,
       operation: context,
     );
-    final active = codexList(
-      thread['turns'],
-    ).map(codexObject).where((turn) => turn['status'] == 'inProgress').toList();
+    final active = codexList(thread['turns'])
+        .map(codexObject)
+        .where((turn) => turn['status'] == 'inProgress')
+        .toList();
     if (active.length != 1) throw CodexFailure(CodexFailureKind.staleRequest);
     _checkOperation(context, mutation: true);
     await transport.request('turn/interrupt', {

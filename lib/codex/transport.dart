@@ -30,8 +30,7 @@ class CodexFailure extends ApiException {
   CodexFailure(this.kind)
     : super(
         switch (kind) {
-          CodexFailureKind.invalidEndpoint =>
-            'Use a secure Codex server address; plain WebSocket is limited to this device.',
+          CodexFailureKind.invalidEndpoint => 'Use a secure Codex server address; plain WebSocket is limited to this device.',
           CodexFailureKind.authentication =>
             'Codex rejected the server connection token.',
           CodexFailureKind.disconnected => 'The Codex server disconnected.',
@@ -41,8 +40,7 @@ class CodexFailure extends ApiException {
             'This action is unavailable for this Codex connection.',
           CodexFailureKind.overloaded =>
             'The Codex server is busy. Try again later.',
-          CodexFailureKind.deliveryUnknown =>
-            'Delivery is uncertain. Refresh the conversation before sending again.',
+          CodexFailureKind.deliveryUnknown => 'Delivery is uncertain. Refresh the conversation before sending again.',
           CodexFailureKind.staleRequest =>
             'This request has changed. Refresh before replying.',
           CodexFailureKind.scopeMismatch =>
@@ -71,8 +69,10 @@ abstract interface class CodexSocket {
   Future<void> close();
 }
 
-typedef CodexSocketFactory =
-    Future<CodexSocket> Function(Uri endpoint, String token);
+typedef CodexSocketFactory = Future<CodexSocket> Function(
+  Uri endpoint,
+  String token,
+);
 
 class _IoCodexSocket implements CodexSocket {
   final WebSocket socket;
@@ -231,7 +231,7 @@ class CodexTransport {
       cancelOnError: true,
     );
     try {
-      await _request(
+      final initialized = await _request(
         'initialize',
         {
           'clientInfo': {'name': 'opencode_mobile', 'version': '1.0.0'},
@@ -241,6 +241,9 @@ class CodexTransport {
         epoch: epoch,
         requireInitialized: false,
       );
+      final agent = initialized['userAgent'];
+      accountApiSupported =
+          agent is String && RegExp(r'(^|/)0\.153\.4(?:\s|$)').hasMatch(agent);
       _send({
         'method': 'initialized',
         'params': <String, dynamic>{},
@@ -267,6 +270,23 @@ class CodexTransport {
       requireInitialized: true,
     );
   }
+
+  /// A scope-owned mutation must not trigger or wait for a new connection.
+  Future<Map<String, dynamic>> requestInEpoch(
+    String method,
+    Map<String, dynamic> params, {
+    required int epoch,
+    bool mutation = false,
+  }) => _request(
+    method,
+    params,
+    mutation: mutation,
+    epoch: epoch,
+    requireInitialized: true,
+  );
+
+  /// Account methods are enabled only for the schema verified by this client.
+  bool accountApiSupported = false;
 
   Future<Map<String, dynamic>> _request(
     String method,

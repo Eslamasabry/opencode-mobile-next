@@ -20,6 +20,7 @@ import '../widgets/managed_server_health.dart';
 import '../widgets/product_states.dart';
 import 'demo_screen.dart';
 import 'attention_overview_screen.dart';
+import 'agent_account_screen.dart';
 import 'pairing_scanner_screen.dart';
 
 /// What the servers list learns back from the editor's save: whether the
@@ -263,6 +264,7 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
   @override
   Widget build(BuildContext context) {
     final bootstrap = ref.watch(bootstrapProvider);
+    final accountConnection = ref.watch(connProvider);
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -285,9 +287,8 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
         actions: [
           if (bootstrap.store.profiles.isNotEmpty)
             IconButton(
-              tooltip: lookupAppLocalizations(
-                Localizations.localeOf(context),
-              ).attentionTitle,
+              tooltip: lookupAppLocalizations(Localizations.localeOf(context))
+                  .attentionTitle,
               icon: const Icon(Icons.notifications_none_rounded),
               onPressed: _busy
                   ? null
@@ -384,13 +385,12 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            _connectionL10n(
-                              context,
-                            ).connectionCredentialUnavailable,
+                            _connectionL10n(context)
+                                .connectionCredentialUnavailable,
                             style: TextStyle(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onErrorContainer,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onErrorContainer,
                             ),
                           ),
                         ),
@@ -421,9 +421,8 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                 Card.filled(
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   color: p.id == activeId
-                      ? Theme.of(
-                          context,
-                        ).colorScheme.primaryContainer.withValues(alpha: .35)
+                      ? Theme.of(context).colorScheme.primaryContainer
+                            .withValues(alpha: .35)
                       : null,
                   child: ListTile(
                     enabled: !_busy,
@@ -434,9 +433,9 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                     leading: CircleAvatar(
                       backgroundColor: p.id == activeId
                           ? Theme.of(context).colorScheme.primary
-                          : Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
+                          : Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest,
                       child: Icon(
                         isLoopbackHost(Uri.tryParse(p.baseUrl)?.host ?? '')
                             ? Icons.smartphone_rounded
@@ -499,11 +498,35 @@ class _ServersScreenState extends ConsumerState<ServersScreen> {
                         if (v == 'edit') _edit(existing: p);
                         if (v == 'del') _delete(p);
                         if (v == 'conn') _connect(p);
+                        if (v == 'account') {
+                          Navigator.of(context).push<void>(
+                            MaterialPageRoute(
+                              builder: (_) => AgentAccountScreen(
+                                connection: accountConnection,
+                              ),
+                            ),
+                          );
+                        }
                       },
-                      itemBuilder: (_) => const [
-                        PopupMenuItem(value: 'conn', child: Text('Connect')),
-                        PopupMenuItem(value: 'edit', child: Text('Edit')),
-                        PopupMenuItem(value: 'del', child: Text('Remove')),
+                      itemBuilder: (_) => [
+                        if (p.id == activeId &&
+                            accountConnection.isConnected &&
+                            accountConnection.capabilities.agentAccount)
+                          PopupMenuItem(
+                            value: 'account',
+                            child: Text(
+                              _connectionL10n(context).agentAccountTitle,
+                            ),
+                          ),
+                        const PopupMenuItem(
+                          value: 'conn',
+                          child: Text('Connect'),
+                        ),
+                        const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                        const PopupMenuItem(
+                          value: 'del',
+                          child: Text('Remove'),
+                        ),
                       ],
                     ),
                   ),
@@ -1507,9 +1530,8 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
             Expanded(
               child: Text(
                 result.ok
-                    ? lookupAppLocalizations(
-                        Localizations.localeOf(context),
-                      ).codexConnectionVerified
+                    ? lookupAppLocalizations(Localizations.localeOf(context))
+                          .codexConnectionVerified
                     : result.message,
                 style: TextStyle(
                   color: result.ok
@@ -1643,8 +1665,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                     container: true,
                     liveRegion: true,
                     excludeSemantics: true,
-                    label:
-                        'The saved password is unavailable. Enter it again, or leave it empty only if this server no longer requires a password.',
+                    label: 'The saved password is unavailable. Enter it again, or leave it empty only if this server no longer requires a password.',
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -1665,9 +1686,8 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: Text(
-                      lookupAppLocalizations(
-                        Localizations.localeOf(context),
-                      ).codexApprovalRecoveryNotice,
+                      lookupAppLocalizations(Localizations.localeOf(context))
+                          .codexApprovalRecoveryNotice,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -1703,8 +1723,7 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                       hintText: '192.0.2.20:4096 or https://…',
                       errorText: _error,
                       errorMaxLines: 3,
-                      helperText:
-                          'Use HTTPS for remote machines. HTTP is limited to localhost or 127.0.0.1.',
+                      helperText: 'Use HTTPS for remote machines. HTTP is limited to localhost or 127.0.0.1.',
                       helperMaxLines: 3,
                     ),
                   ),
@@ -1719,9 +1738,8 @@ class _ProfileEditorScreenState extends State<_ProfileEditorScreen> {
                     onChanged: (_) => setState(_invalidateProbe),
                     decoration: InputDecoration(
                       labelText: _connectionL10n(context).connectionDisplayName,
-                      hintText: _connectionL10n(
-                        context,
-                      ).connectionDisplayNameHint,
+                      hintText: _connectionL10n(context)
+                          .connectionDisplayNameHint,
                     ),
                   ),
                   const SizedBox(height: 28),

@@ -819,6 +819,8 @@ class ProductException implements Exception {
 /// protocol generation. The v1 server exposes every listed feature, so its
 /// gateway reports [allV1]; a v2 gateway narrows these per endpoint support.
 class ServerCapabilities {
+  /// Optional official-runtime account panel. Disabled for other gateways.
+  final bool agentAccount;
   // Core operations differ across supported server backends.
   final bool promptAttachments;
   final bool promptAgentMentions;
@@ -886,6 +888,7 @@ class ServerCapabilities {
   final bool inbox;
 
   const ServerCapabilities({
+    this.agentAccount = false,
     this.promptAttachments = true,
     this.promptAgentMentions = true,
     this.offlinePromptQueue = true,
